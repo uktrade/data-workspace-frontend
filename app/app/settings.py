@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
+import json
 import os
+import urllib.request
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,8 +27,13 @@ SECRET_KEY = os.environ['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [os.environ['ALLOWED_HOST']]
+def aws_fargate_private_ip():
+    with urllib.request.urlopen('http://169.254.170.2/v2/metadata') as response:
+        return json.loads(response.read().decode('utf-8'))['Containers'][0]['Networks'][0]['IPv4Addresses'][0]
 
+ALLOWED_HOSTS = \
+    [os.environ['ALLOWED_HOST']] if os.environ['ALLOWED_HOST'] == 'localhost' else \
+    [os.environ['ALLOWED_HOST'], aws_fargate_private_ip()]
 
 # Application definition
 
