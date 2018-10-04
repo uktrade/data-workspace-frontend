@@ -17,7 +17,7 @@ RUN \
 
 ADD app .
 
-CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["gunicorn", "app.wsgi:application", "-c", "gunicorn_config.py"]
 
 RUN adduser -S django
 USER django
