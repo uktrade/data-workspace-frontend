@@ -6,5 +6,8 @@ Application that controls authorisation for data sources accessed from JupyterHu
 
 ```bash
 docker build . -t jupyterhub-data-auth-admin && \
-docker run --rm -it -p 8000:8000 -e SECRET_KEY=something-secret jupyterhub-data-auth-admin
+docker run --rm -it -p 8000:8000 \
+	-e SECRET_KEY=something-secret \
+	-e ALLOWED_HOST=localhost \
+	jupyterhub-data-auth-admin
 ```
