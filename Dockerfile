@@ -7,6 +7,7 @@ ENV \
 
 RUN \
 	apk add --no-cache \
+		openssl=1.0.2p-r0 \
 		python3=3.6.6-r0 && \
 	python3 -m ensurepip && \
 	pip3 install \
