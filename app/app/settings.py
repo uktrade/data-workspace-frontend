@@ -66,8 +66,6 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -86,3 +84,9 @@ LOGGING = {
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+# Only used when collectstatic is run
+STATIC_ROOT = '/static/'
+
+# Used when generating URLs for static files
+STATIC_URL = '/static/'

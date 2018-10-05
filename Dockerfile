@@ -9,6 +9,7 @@ ENV \
 
 RUN \
 	apk add --no-cache \
+		nginx=1.14.0-r1 \
 		openssl=1.0.2p-r0 \
 		python3=3.6.6-r0 && \
 	python3 -m ensurepip && \
@@ -16,9 +17,13 @@ RUN \
 		pip==18.00 && \
 	pip3 install \
 		gunicorn==19.9.0 \
-		django==2.1.2
+		django==2.1.2 && \
+	rm /etc/nginx/conf.d/default.conf && \
+	rm /etc/nginx/nginx.conf
 
 ADD app .
+RUN \
+	SECRET_KEY=dummy ALLOWED_HOST=localhost django-admin collectstatic
 
 CMD ["/start.sh"]
 
