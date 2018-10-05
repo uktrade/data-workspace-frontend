@@ -7,7 +7,7 @@ from django.urls import (
 from authbroker_client.client import authbroker_login_required
 
 from app.views import (
-    credentials_view,
+    databases_view,
     healthcheck_view,
 )
 
@@ -17,6 +17,6 @@ admin.site.login = authbroker_login_required(admin.site.login)
 urlpatterns = [
     path('auth/', include('authbroker_client.urls', namespace='authbroker')),
     path('admin/', admin.site.urls),
-    path('api/v1/credentials', credentials_view),
+    path('api/v1/databases', databases_view),
     path('healthcheck', healthcheck_view),
 ]

@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authbroker_client',
+    'app.apps.JupyterHubDataAuthAdminAppConfig',
 ]
 
 MIDDLEWARE = [

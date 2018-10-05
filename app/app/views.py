@@ -4,17 +4,26 @@ from django.http import (
     JsonResponse,
 )
 
+from app.models import (
+    PublicDatabase,
+)
+
 
 def healthcheck_view(_):
     return HttpResponse('OK')
 
 
-def credentials_view(request):
-    if request.method != 'POST':
-        return HttpResponseNotAllowed()
-
-    if 'email_address' not in request.POST:
-        return HttpResponseBadRequest()
-
+def databases_view(request):
     return JsonResponse({
-    })
+        'databases': [{
+            'id': database.id,
+            'memorable_name': database.memorable_name,
+            'db_name': database.db_name,
+            'db_host': database.db_host,
+            'db_port': database.db_port,
+            'db_user': database.db_user,
+            'db_password': database.db_password,
+        } for database in PublicDatabase.objects.all().order_by(
+            'memorable_name', 'created_date', 'id',
+        )]
+    }) if request.method == 'GET' else HttpResponseNotAllowed()
