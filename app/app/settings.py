@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'authbroker_client',
 ]
 
 MIDDLEWARE = [
@@ -33,6 +34,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'app.backends.AuthbrokerBackendAllSuperuser',
+]
+AUTHBROKER_URL = os.environ['AUTHBROKER_URL']
+AUTHBROKER_CLIENT_ID = os.environ['AUTHBROKER_CLIENT_ID']
+AUTHBROKER_CLIENT_SECRET = os.environ['AUTHBROKER_CLIENT_SECRET']
+LOGIN_REDIRECT_URL = '/admin'
 
 ROOT_URLCONF = 'app.urls'
 
@@ -55,6 +64,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'app.wsgi.application'
 
 DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ['DB_PORT'],
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -86,7 +103,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 # Only used when collectstatic is run
-STATIC_ROOT = '/static/'
+STATIC_ROOT = '/home/django/static/'
 
 # Used when generating URLs for static files
 STATIC_URL = '/static/'

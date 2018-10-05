@@ -1,5 +1,11 @@
 #!/bin/sh
 
+django-admin collectstatic
+
+# Not suitable on a cluster of size > 1, but for our purposes,
+# no need for more
+django-admin migrate
+
 gunicorn app.wsgi:application -D -c gunicorn_config.py
 
 RANDFILE="$HOME/openssl_rnd"
