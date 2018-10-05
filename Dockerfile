@@ -4,6 +4,7 @@ ENV \
 	LC_ALL=en_US.UTF-8 \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8 \
+	PYTHONPATH=/ \
 	DJANGO_SETTINGS_MODULE=app.settings
 
 RUN \
