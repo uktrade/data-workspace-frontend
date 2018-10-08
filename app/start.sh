@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 django-admin collectstatic
 
 # Not suitable on a cluster of size > 1, but for our purposes,

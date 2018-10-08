@@ -33,6 +33,17 @@ docker run --rm -it -p 8000:8000 \
     jupyterhub-data-auth-admin
 ```
 
+## Creating migrations
+
+Amend the end of the above command to create migrations.
+
+```bash
+    ...
+    --user root \
+    --volume=$PWD/app/app/migrations:/app/migrations \
+    jupyterhub-data-auth-admin django-admin makemigrations
+```
+
 ## Running management commands
 
 Append `django-admin [command]` to the command above to run a management command locally. For more complex operations, append `ash` to enter into a shell and run `django-admin` from there.
