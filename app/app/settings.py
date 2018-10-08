@@ -15,8 +15,8 @@ def aws_fargate_private_ip():
         return json.loads(response.read().decode('utf-8'))['Containers'][0]['Networks'][0]['IPv4Addresses'][0]
 
 ALLOWED_HOSTS = \
-    [env['ALLOWED_HOST']] if env['ALLOWED_HOST'] == 'localhost' else \
-    [env['ALLOWED_HOST'], aws_fargate_private_ip()]
+    env['ALLOWED_HOSTS'] if env['ALLOWED_HOSTS'] == ['localhost'] else \
+    env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin',

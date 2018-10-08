@@ -21,7 +21,7 @@ docker build . -t jupyterhub-data-auth-admin && \
 docker run --rm -it -p 8000:8000 \
     --link jupyteradminpostgres:jupyteradminpostgres \
     -e SECRET_KEY=something-secret \
-    -e ALLOWED_HOST=localhost \
+    -e ALLOWED_HOSTS__1=localhost \
     -e AUTHBROKER_URL='https://url.to.staff.sso/' \
     -e AUTHBROKER_CLIENT_ID='some-id' \
     -e AUTHBROKER_CLIENT_SECRET='some-secret' \
