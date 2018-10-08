@@ -41,7 +41,7 @@ def databases_view(request):
         } for database in PublicDatabase.objects.all().order_by(
             'memorable_name', 'created_date', 'id',
         )]
-    }) if request.method == 'GET' else HttpResponseNotAllowed()
+    }) if request.method == 'GET' else HttpResponseNotAllowed(['GET'])
 
 
 class HttpResponseUnauthorized(HttpResponse):
