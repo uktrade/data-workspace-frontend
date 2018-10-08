@@ -1,8 +1,14 @@
+import json
+from django.conf import (
+    settings,
+)
 from django.http import (
     HttpResponse,
+    HttpResponseBadRequest,
     HttpResponseNotAllowed,
     JsonResponse,
 )
+import requests
 
 from app.models import (
     PublicDatabase,
@@ -14,6 +20,15 @@ def healthcheck_view(_):
 
 
 def databases_view(request):
+    if 'HTTP_AUTHORIZATION' not in request.META:
+        return HttpResponseBadRequest(json.dumps({'detail': 'The Authorization header must be set.'}))
+
+    me_response = requests.get(settings.AUTHBROKER_URL + 'api/v1/user/me/', headers={
+        'Authorization': request.META['HTTP_AUTHORIZATION'],
+    })
+    if me_response.status_code != 200:
+        return HttpResponse(me_response.text, status=me_response.status_code)
+
     return JsonResponse({
         'databases': [{
             'id': database.id,
@@ -27,3 +42,7 @@ def databases_view(request):
             'memorable_name', 'created_date', 'id',
         )]
     }) if request.method == 'GET' else HttpResponseNotAllowed()
+
+
+class HttpResponseUnauthorized(HttpResponse):
+    status_code = 401
