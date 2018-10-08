@@ -2,9 +2,12 @@ import json
 import os
 import urllib.request
 
+from app.utils import normalise_environment
+
+env = normalise_environment(os.environ)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = env['SECRET_KEY']
 DEBUG = False
 
 def aws_fargate_private_ip():
@@ -12,8 +15,8 @@ def aws_fargate_private_ip():
         return json.loads(response.read().decode('utf-8'))['Containers'][0]['Networks'][0]['IPv4Addresses'][0]
 
 ALLOWED_HOSTS = \
-    [os.environ['ALLOWED_HOST']] if os.environ['ALLOWED_HOST'] == 'localhost' else \
-    [os.environ['ALLOWED_HOST'], aws_fargate_private_ip()]
+    [env['ALLOWED_HOST']] if env['ALLOWED_HOST'] == 'localhost' else \
+    [env['ALLOWED_HOST'], aws_fargate_private_ip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,9 +42,9 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = [
     'app.backends.AuthbrokerBackendAllSuperuser',
 ]
-AUTHBROKER_URL = os.environ['AUTHBROKER_URL']
-AUTHBROKER_CLIENT_ID = os.environ['AUTHBROKER_CLIENT_ID']
-AUTHBROKER_CLIENT_SECRET = os.environ['AUTHBROKER_CLIENT_SECRET']
+AUTHBROKER_URL = env['AUTHBROKER_URL']
+AUTHBROKER_CLIENT_ID = env['AUTHBROKER_CLIENT_ID']
+AUTHBROKER_CLIENT_SECRET = env['AUTHBROKER_CLIENT_SECRET']
 LOGIN_REDIRECT_URL = '/admin'
 
 ROOT_URLCONF = 'app.urls'
@@ -67,11 +70,11 @@ WSGI_APPLICATION = 'app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ['DB_NAME'],
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASSWORD'],
-        'HOST': os.environ['DB_HOST'],
-        'PORT': os.environ['DB_PORT'],
+        'NAME': env['DB_NAME'],
+        'USER': env['DB_USER'],
+        'PASSWORD': env['DB_PASSWORD'],
+        'HOST': env['DB_HOST'],
+        'PORT': env['DB_PORT'],
     }
 }
 
