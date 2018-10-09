@@ -33,22 +33,24 @@ def _databases(auth):
         'Authorization': auth,
     })
     databases_reponse = \
-        JsonResponse({
-                'databases': [{
-                    'id': database.id,
-                    'memorable_name': database.memorable_name,
-                    'db_name': settings.DATA_DB__[database.memorable_name]['NAME'],
-                    'db_host': settings.DATA_DB__[database.memorable_name]['HOST'],
-                    'db_port': int(settings.DATA_DB__[database.memorable_name]['PORT']),
-                    'db_user': settings.DATA_DB__[database.memorable_name]['USER'],
-                    'db_password': settings.DATA_DB__[database.memorable_name]['PASSWORD'],
-                } for database in Database.objects.all().order_by(
-                    'memorable_name', 'created_date', 'id',
-                )]
-            }) if me_response.status_code == 200 else \
+        JsonResponse({'databases': _public_databases()}) if me_response.status_code == 200 else \
         HttpResponse(me_response.text, status=me_response.status_code)
 
     return databases_reponse
+
+
+def _public_databases():
+    return [{
+        'id': database.id,
+        'memorable_name': database.memorable_name,
+        'db_name': settings.DATA_DB__[database.memorable_name]['NAME'],
+        'db_host': settings.DATA_DB__[database.memorable_name]['HOST'],
+        'db_port': int(settings.DATA_DB__[database.memorable_name]['PORT']),
+        'db_user': settings.DATA_DB__[database.memorable_name]['USER'],
+        'db_password': settings.DATA_DB__[database.memorable_name]['PASSWORD'],
+    } for database in Database.objects.all().order_by(
+        'memorable_name', 'created_date', 'id',
+    )]
 
 
 class HttpResponseUnauthorized(HttpResponse):
