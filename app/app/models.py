@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.auth.models import User
 from django.db import models
 from django.core.validators import RegexValidator
 
@@ -21,3 +22,38 @@ class Database(models.Model):
         blank=False,
         help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__',
     )
+    is_public = models.BooleanField(
+        default=False,
+        help_text='If public, the same credentials for the database will be shared with each user. If not public, each user must be explicilty given access, and temporary credentials will be created for each.'
+    )
+
+    def __str__(self):
+        return f'{self.memorable_name}'
+
+
+class Privilage(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    database = models.ForeignKey(Database, on_delete=models.CASCADE)
+    tables = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'(^([a-z][a-z0-9_]*,?)+(?<!,)$)|(^ALL TABLES$)')],
+        help_text='Comma-separated list of tables that can be accessed on this database. "ALL TABLES" (without quotes) to allow access to all tables',
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+        unique_together=('user', 'database')
+
+    def __str__(self):
+        return f'{self.user} / {self.database.memorable_name} / {self.tables}'
