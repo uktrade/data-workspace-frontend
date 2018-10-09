@@ -20,28 +20,35 @@ def healthcheck_view(_):
 
 
 def databases_view(request):
-    if 'HTTP_AUTHORIZATION' not in request.META:
-        return HttpResponseBadRequest(json.dumps({'detail': 'The Authorization header must be set.'}))
+    response = \
+        HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
+        HttpResponseBadRequest(json.dumps({'detail': 'The Authorization header must be set.'})) if 'HTTP_AUTHORIZATION' not in request.META else \
+        _databases(request.META['HTTP_AUTHORIZATION'])
 
+    return response
+
+
+def _databases(auth):
     me_response = requests.get(settings.AUTHBROKER_URL + 'api/v1/user/me/', headers={
-        'Authorization': request.META['HTTP_AUTHORIZATION'],
+        'Authorization': auth,
     })
-    if me_response.status_code != 200:
-        return HttpResponse(me_response.text, status=me_response.status_code)
+    databases_reponse = \
+        JsonResponse({
+                'databases': [{
+                    'id': database.id,
+                    'memorable_name': database.memorable_name,
+                    'db_name': settings.DATA_DB__[database.memorable_name]['NAME'],
+                    'db_host': settings.DATA_DB__[database.memorable_name]['HOST'],
+                    'db_port': int(settings.DATA_DB__[database.memorable_name]['PORT']),
+                    'db_user': settings.DATA_DB__[database.memorable_name]['USER'],
+                    'db_password': settings.DATA_DB__[database.memorable_name]['PASSWORD'],
+                } for database in Database.objects.all().order_by(
+                    'memorable_name', 'created_date', 'id',
+                )]
+            }) if me_response.status_code == 200 else \
+        HttpResponse(me_response.text, status=me_response.status_code)
 
-    return JsonResponse({
-        'databases': [{
-            'id': database.id,
-            'memorable_name': database.memorable_name,
-            'db_name': settings.DATA_DB__[database.memorable_name]['NAME'],
-            'db_host': settings.DATA_DB__[database.memorable_name]['HOST'],
-            'db_port': int(settings.DATA_DB__[database.memorable_name]['PORT']),
-            'db_user': settings.DATA_DB__[database.memorable_name]['USER'],
-            'db_password': settings.DATA_DB__[database.memorable_name]['PASSWORD'],
-        } for database in Database.objects.all().order_by(
-            'memorable_name', 'created_date', 'id',
-        )]
-    }) if request.method == 'GET' else HttpResponseNotAllowed(['GET'])
+    return databases_reponse
 
 
 class HttpResponseUnauthorized(HttpResponse):
