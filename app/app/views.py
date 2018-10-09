@@ -13,7 +13,7 @@ from django.http import (
     HttpResponseNotAllowed,
     JsonResponse,
 )
-import psycopg2
+from psycopg2 import connect, sql
 import requests
 
 from app.models import (
@@ -75,13 +75,19 @@ def _private_databases(email_address):
         tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
         dsn = f'host={database["HOST"]} port={database["PORT"]} dbname={database["NAME"]} user={database["USER"]} password={database["PASSWORD"]} sslmode=require'
         with \
-                psycopg2.connect(dsn) as conn, \
+                connect(dsn) as conn, \
                 conn.cursor() as cur:
 
-            cur.execute(f"CREATE USER {user} WITH PASSWORD '{password}' VALID UNTIL '{tomorrow}';")
-            cur.execute(f"GRANT CONNECT ON DATABASE {database['NAME']} TO {user};")
-            cur.execute(f"GRANT USAGE ON SCHEMA public TO {user};")
-            cur.execute(f"GRANT SELECT ON {tables} IN SCHEMA public TO {user};")
+            cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, tomorrow])
+            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database['NAME']), sql.Identifier(user)))
+            cur.execute(sql.SQL('GRANT USAGE ON SCHEMA public TO {};').format(sql.Identifier(user)))
+
+            tables_sql_list = sql.SQL(',').join([sql.Identifier(table) for table in tables.split(',')])
+            tables_sql = \
+                sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA public TO {};').format(sql.Identifier(user)) if tables == 'ALL TABLES' else \
+                sql.SQL('GRANT SELECT ON {} TO {};').format(tables_sql_list, sql.Identifier(user))
+            cur.execute(tables_sql)
+
 
     def get_new_credentials(database, tables):
         user = postgres_user()
