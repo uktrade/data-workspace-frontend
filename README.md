@@ -25,11 +25,16 @@ docker run --rm -it -p 8000:8000 \
     -e AUTHBROKER_URL='https://url.to.staff.sso/' \
     -e AUTHBROKER_CLIENT_ID='some-id' \
     -e AUTHBROKER_CLIENT_SECRET='some-secret' \
-    -e DB_NAME=postgres \
-    -e DB_USER=postgres \
-    -e DB_PASSWORD=postgres \
-    -e DB_HOST=jupyteradminpostgres \
-    -e DB_PORT=5432 \
+    -e ADMIN_DB__NAME=postgres \
+    -e ADMIN_DB__USER=postgres \
+    -e ADMIN_DB__PASSWORD=postgres \
+    -e ADMIN_DB__HOST=jupyteradminpostgres \
+    -e ADMIN_DB__PORT=5432 \
+    -e DATA_DB__my_database__NAME=postgres \
+    -e DATA_DB__my_database__USER=postgres \
+    -e DATA_DB__my_database__PASSWORD=postgres \
+    -e DATA_DB__my_database__HOST=jupyteradminpostgres \
+    -e DATA_DB__my_database__PORT=5432 \
     jupyterhub-data-auth-admin
 ```
 
