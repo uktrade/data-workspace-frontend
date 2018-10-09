@@ -4,7 +4,7 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
-class PublicDatabase(models.Model):
+class Database(models.Model):
     # Deliberately no indexes: current plan is only a few public databases.
 
     id = models.UUIDField(

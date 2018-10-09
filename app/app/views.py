@@ -11,7 +11,7 @@ from django.http import (
 import requests
 
 from app.models import (
-    PublicDatabase,
+    Database,
 )
 
 
@@ -38,7 +38,7 @@ def databases_view(request):
             'db_port': database.db_port,
             'db_user': database.db_user,
             'db_password': database.db_password,
-        } for database in PublicDatabase.objects.all().order_by(
+        } for database in Database.objects.all().order_by(
             'memorable_name', 'created_date', 'id',
         )]
     }) if request.method == 'GET' else HttpResponseNotAllowed(['GET'])

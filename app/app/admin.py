@@ -1,5 +1,5 @@
 from django.contrib import admin
-from app.models import PublicDatabase
+from app.models import Database
 
 
-admin.site.register(PublicDatabase)
+admin.site.register(Database)
