@@ -42,18 +42,24 @@ class Privilage(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
+    schema = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-z][a-z0-9_]*$')],
+        default='public'
+    )
     tables = models.CharField(
         max_length=1024,
         blank=False,
-        validators=[RegexValidator(regex=r'(^([a-z][a-z0-9_]*,?)+(?<!,)$)|(^ALL TABLES$)')],
-        help_text='Comma-separated list of tables that can be accessed on this database. "ALL TABLES" (without quotes) to allow access to all tables',
+        validators=[RegexValidator(regex=r'(([a-z][a-z0-9_]*,?)+(?<!,)$)|(^ALL TABLES$)')],
+        help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
     )
 
     class Meta:
         indexes = [
             models.Index(fields=['user']),
         ]
-        unique_together=('user', 'database')
+        unique_together=('user', 'database', 'schema')
 
     def __str__(self):
-        return f'{self.user} / {self.database.memorable_name} / {self.tables}'
+        return f'{self.user} / {self.database.memorable_name} / {self.schema} / {self.tables}'
