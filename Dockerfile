@@ -9,9 +9,9 @@ ENV \
 
 RUN \
 	apk add --no-cache \
-		git=2.18.0-r0 \
-		nginx=1.14.0-r1 \
-		openssl=1.0.2p-r0 \
+		git=2.18.1-r0 \
+		nginx=1.14.1-r0 \
+		openssl=1.0.2q-r0 \
 		py3-psycopg2=2.7.5-r0 \
 		python3=3.6.6-r0 && \
 	python3 -m ensurepip && \
