@@ -8,8 +8,6 @@ django-admin collectstatic
 # no need for more
 django-admin migrate
 
-gunicorn app.wsgi:application -D -c gunicorn_config.py
-
 RANDFILE="$HOME/openssl_rnd"
 openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj /CN=selfsigned \
 	-keyout /home/django/ssl.key \
@@ -19,4 +17,4 @@ openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj /CN=selfsigned \
 # it manages to read its config file. To avoid errors on startup,
 # we configure its prefix to be a writable location
 mkdir /home/django/logs
-nginx -p /home/django
+gunicorn app.wsgi:application -c gunicorn_config.py & nginx -p /home/django

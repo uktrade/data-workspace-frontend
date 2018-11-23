@@ -1,10 +1,11 @@
 import uuid
 
+from django.contrib.auth.models import User
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import RegexValidator
 
 
-class PublicDatabase(models.Model):
+class Database(models.Model):
     # Deliberately no indexes: current plan is only a few public databases.
 
     id = models.UUIDField(
@@ -16,29 +17,49 @@ class PublicDatabase(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
 
     memorable_name = models.CharField(
-        max_length=128,
-        default='',
-    )
-    db_name = models.CharField(
+        validators=[RegexValidator(regex=r'[A-Za-z0-9_]')],
         max_length=128,
         blank=False,
+        help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__',
     )
-    db_host = models.CharField(
-        max_length=128,
-        blank=False,
-    )
-    db_port = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(65535)],
-        default=5432,
-    )
-    db_user = models.CharField(
-        max_length=128,
-        blank=False,
+    is_public = models.BooleanField(
+        default=False,
+        help_text='If public, the same credentials for the database will be shared with each user. If not public, each user must be explicilty given access, and temporary credentials will be created for each.'
     )
 
-    # These are public datasets: all users will use the same password,
-    # they offer only read-only access, and so no need for anything
-    # fancier in terms of encryption
-    db_password = models.CharField(
-        max_length=128,
+    def __str__(self):
+        return f'{self.memorable_name}'
+
+
+class Privilage(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
     )
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    database = models.ForeignKey(Database, on_delete=models.CASCADE)
+    schema = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-z][a-z0-9_]*$')],
+        default='public'
+    )
+    tables = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'(([a-z][a-z0-9_]*,?)+(?<!,)$)|(^ALL TABLES$)')],
+        help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+        ]
+        unique_together=('user', 'database', 'schema')
+
+    def __str__(self):
+        return f'{self.user} / {self.database.memorable_name} / {self.schema} / {self.tables}'

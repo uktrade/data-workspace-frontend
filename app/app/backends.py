@@ -8,6 +8,7 @@ class AuthbrokerBackendAllSuperuser(AuthbrokerBackend):
     def authenticate(self, request, **kwargs):
         user = super().authenticate(request, **kwargs)
         if user is not None:
+            user.username = user.email
             user.is_staff = True
             user.is_superuser = True
             user.save()
