@@ -59,3 +59,12 @@ Amend the end of the above command to create migrations.
 ## Running management commands
 
 Append `django-admin [command]` to the command above to run a management command locally. For more complex operations, append `ash` to enter into a shell and run `django-admin` from there.
+
+
+# Building & pushing docker image to Quay
+
+```bash
+docker build -t jupyterhub-data-auth-admin . && \
+docker tag jupyterhub-data-auth-admin:latest  quay.io/uktrade/jupyterhub-data-auth-admin:latest && \
+docker push quay.io/uktrade/jupyterhub-data-auth-admin:latest
+```
