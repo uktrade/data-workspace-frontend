@@ -114,7 +114,7 @@ def _table_data(database, schema, table):
                     bytes_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]))
                 bytes_queue.put(csv_writer.writerow(row))
 
-            bytes_queue.put(csv_writer.writerow('Number of rows: ' + str(i + 1)))
+            bytes_queue.put(csv_writer.writerow(['Number of rows: ' + str(i + 1)]))
 
     def yield_bytes_from_queue():
         while put_db_rows_to_queue_job:
