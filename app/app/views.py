@@ -114,11 +114,11 @@ def _table_data(database, schema, table):
                 rows = cur.fetchmany(cursor_itersize)
                 if i == 0:
                     # Column names are not populated until the first row fetched
-                    bytes_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]))
+                    bytes_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]), timeout=10)
                 bytes_fetched = ''.join(
                     csv_writer.writerow(row) for row in rows
                 ).encode('utf-8')
-                bytes_queue.put(bytes_fetched)
+                bytes_queue.put(bytes_fetched, timeout=15)
                 i += len(rows)
                 if not rows:
                     break
