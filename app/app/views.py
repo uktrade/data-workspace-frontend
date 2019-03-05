@@ -104,11 +104,14 @@ def _table_data(database, schema, table):
                     {}.{}
             """).format(sql.Identifier(schema), sql.Identifier(table)))
 
+            i = -1
             for i, row in enumerate(cur):
                 if i == 0:
                     # Column names are not populated until the first row fetched
                     yield csv_writer.writerow([column_desc[0] for column_desc in cur.description])
                 yield csv_writer.writerow(row)
+
+            yield csv_writer.writerow('Number of rows: ' + str(i + 1))
 
     response = StreamingHttpResponse(yield_rows(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
