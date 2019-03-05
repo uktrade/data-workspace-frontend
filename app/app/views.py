@@ -77,9 +77,8 @@ def _private_databases(email_address):
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-        dsn = f'host={database_data["HOST"]} port={database_data["PORT"]} dbname={database_data["NAME"]} user={database_data["USER"]} password={database_data["PASSWORD"]} sslmode=require'
         with \
-                connect(dsn) as conn, \
+                connect(_database_dsn(database_data)) as conn, \
                 conn.cursor() as cur:
 
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, tomorrow])
@@ -111,6 +110,14 @@ def _private_databases(email_address):
         get_new_credentials(database_obj, privilages_for_database)
         for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
     ]
+
+
+def _database_dsn(database_data):
+    return (
+        f'host={database_data["HOST"]} port={database_data["PORT"]} ' \
+        f'dbname={database_data["NAME"]} user={database_data["USER"]} ' \
+        f'password={database_data["PASSWORD"]} sslmode=require'
+    )
 
 
 def _get_private_privilages(email_address):
