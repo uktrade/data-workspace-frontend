@@ -126,7 +126,11 @@ def _table_data(database, schema, table):
             except gevent.queue.Empty:
                 pass
 
+    def handle_exception(job):
+        logger.exception(job.exception)
+
     put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
+    put_db_rows_to_queue_job.link_exception(handle_exception)
 
     response = StreamingHttpResponse(yield_bytes_from_queue(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
