@@ -13,6 +13,7 @@ from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseNotAllowed,
+    HttpResponseNotFound,
     JsonResponse,
 )
 from psycopg2 import connect, sql
@@ -43,6 +44,7 @@ def table_data_view(request, database, schema, table):
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
         HttpResponseUnauthorized() if not _can_access_table(request.user.email, database, schema, table) else \
+        HttpResponseNotFound() if not _table_exists(database, schema, table) else \
         HttpResponse('You have access to the table')
 
     return response
@@ -55,6 +57,23 @@ def _can_access_table(email_address, database, schema, table):
         for privilage_table in privilage.tables.split(',')
         if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table == table or privilage_table == 'ALL TABLES')
     )
+
+
+def _table_exists(database, schema, table):
+    with \
+            connect(_database_dsn(settings.DATABASES_DATA[database])) as conn, \
+            conn.cursor() as cur:
+
+        cur.execute("""
+            SELECT 1
+            FROM
+                pg_tables
+            WHERE
+                schemaname = %s
+            AND
+                tablename = %s
+        """, (schema, table))
+        return bool(cur.fetchone())
 
 
 def _databases(auth):
