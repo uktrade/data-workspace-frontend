@@ -75,15 +75,15 @@ def _private_databases(email_address):
         user = postgres_user()
         password = postgres_password()
 
-        database = settings.DATABASES_DATA[database_obj.memorable_name]
+        database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-        dsn = f'host={database["HOST"]} port={database["PORT"]} dbname={database["NAME"]} user={database["USER"]} password={database["PASSWORD"]} sslmode=require'
+        dsn = f'host={database_data["HOST"]} port={database_data["PORT"]} dbname={database_data["NAME"]} user={database_data["USER"]} password={database_data["PASSWORD"]} sslmode=require'
         with \
                 connect(dsn) as conn, \
                 conn.cursor() as cur:
 
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, tomorrow])
-            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database['NAME']), sql.Identifier(user)))
+            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database_data['NAME']), sql.Identifier(user)))
 
             for privilage in privilages_for_database:
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)))
@@ -98,9 +98,9 @@ def _private_databases(email_address):
 
         return {
             'memorable_name': database_obj.memorable_name,
-            'db_name': database['NAME'],
-            'db_host': database['HOST'],
-            'db_port': database['PORT'],
+            'db_name': database_data['NAME'],
+            'db_host': database_data['HOST'],
+            'db_port': database_data['PORT'],
             'db_user': user,
             'db_password': password,
         }
