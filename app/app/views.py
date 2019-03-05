@@ -105,17 +105,22 @@ def _private_databases(email_address):
             'db_password': password,
         }
 
-    privilages = Privilage.objects.all().filter(
+    privilages = _get_private_privilages(email_address)
+
+    return [
+        get_new_credentials(database_obj, privilages_for_database)
+        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
+    ]
+
+
+def _get_private_privilages(email_address):
+    return Privilage.objects.all().filter(
         database__is_public=False,
         user__email=email_address,
     ).order_by(
         'database__memorable_name', 'database__created_date', 'database__id',
     )
 
-    return [
-        get_new_credentials(database_obj, privilages_for_database)
-        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
-    ]
 
 class HttpResponseUnauthorized(HttpResponse):
     status_code = 401
