@@ -1,5 +1,11 @@
-import os
-import subprocess
+from psycogreen.gevent import (
+	patch_psycopg,
+)
 
 bind = 'unix:/home/django/nginx_gunicorn_socket'
-workers = 4
+worker_class = 'gevent'
+workers = 1
+worker_connections = 1024
+
+def post_fork(_, __):
+    patch_psycopg()

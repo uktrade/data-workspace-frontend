@@ -1,6 +1,8 @@
+import csv
 import datetime
 import itertools
 import json
+import logging
 import re
 import secrets
 import string
@@ -12,8 +14,11 @@ from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseNotAllowed,
+    HttpResponseNotFound,
     JsonResponse,
+    StreamingHttpResponse,
 )
+import gevent
 from psycopg2 import connect, sql
 import requests
 
@@ -21,6 +26,8 @@ from app.models import (
     Database,
     Privilage,
 )
+
+logger = logging.getLogger('app')
 
 
 def healthcheck_view(_):
@@ -33,6 +40,96 @@ def databases_view(request):
         HttpResponseBadRequest(json.dumps({'detail': 'The Authorization header must be set.'})) if 'HTTP_AUTHORIZATION' not in request.META else \
         _databases(request.META['HTTP_AUTHORIZATION'])
 
+    return response
+
+
+def table_data_view(request, database, schema, table):
+    response = \
+        HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
+        HttpResponseUnauthorized() if not _can_access_table(request.user.email, database, schema, table) else \
+        HttpResponseNotFound() if not _table_exists(database, schema, table) else \
+        _table_data(database, schema, table)
+
+    return response
+
+
+def _can_access_table(email_address, database, schema, table):
+    return any(
+        True
+        for privilage in _get_private_privilages(email_address)
+        for privilage_table in privilage.tables.split(',')
+        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table == table or privilage_table == 'ALL TABLES')
+    )
+
+
+def _table_exists(database, schema, table):
+    with \
+            connect(_database_dsn(settings.DATABASES_DATA[database])) as conn, \
+            conn.cursor() as cur:
+
+        cur.execute("""
+            SELECT 1
+            FROM
+                pg_tables
+            WHERE
+                schemaname = %s
+            AND
+                tablename = %s
+        """, (schema, table))
+        return bool(cur.fetchone())
+
+
+def _table_data(database, schema, table):
+    cursor_itersize = 1000
+    row_queue = gevent.queue.Queue(maxsize=cursor_itersize)
+
+    def put_db_rows_to_queue():
+        # The csv writer "writes" its output by calling a file-like object
+        # with a `write` method.
+        class PseudoBuffer:
+            def write(self, value):
+                return value
+        csv_writer = csv.writer(PseudoBuffer())
+
+        with \
+                connect(_database_dsn(settings.DATABASES_DATA[database])) as conn, \
+                conn.cursor(name='all_table_data') as cur:  # Named cursor => server-side cursor
+
+            cur.itersize = cursor_itersize
+
+            # There is no ordering here. We just want a full dump.
+            # Also, there are not likely to be updates, so a long-running
+            # query shouldn't cause problems with concurrency/locking
+            cur.execute(sql.SQL("""
+                SELECT
+                    *
+                FROM
+                    {}.{}
+            """).format(sql.Identifier(schema), sql.Identifier(table)))
+
+            i = -1
+            for i, row in enumerate(cur):
+                if i == 0:
+                    # Column names are not populated until the first row fetched
+                    row_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]))
+                row_queue.put(csv_writer.writerow(row))
+
+            row_queue.put(csv_writer.writerow('Number of rows: ' + str(i + 1)))
+
+    def yield_rows_from_queue():
+        while put_db_rows_to_queue_job:
+            try:
+                # There will be a 0.1 second wait after the end of the data
+                # from the db to when the connection is closed. Might be able
+                # to avoid this, but KISS, and minor
+                yield row_queue.get(timeout=0.1)
+            except gevent.queue.Empty:
+                pass
+
+    put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
+
+    response = StreamingHttpResponse(yield_rows_from_queue(), content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
     return response
 
 
@@ -75,15 +172,14 @@ def _private_databases(email_address):
         user = postgres_user()
         password = postgres_password()
 
-        database = settings.DATABASES_DATA[database_obj.memorable_name]
+        database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
-        dsn = f'host={database["HOST"]} port={database["PORT"]} dbname={database["NAME"]} user={database["USER"]} password={database["PASSWORD"]} sslmode=require'
         with \
-                connect(dsn) as conn, \
+                connect(_database_dsn(database_data)) as conn, \
                 conn.cursor() as cur:
 
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, tomorrow])
-            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database['NAME']), sql.Identifier(user)))
+            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database_data['NAME']), sql.Identifier(user)))
 
             for privilage in privilages_for_database:
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)))
@@ -98,24 +194,38 @@ def _private_databases(email_address):
 
         return {
             'memorable_name': database_obj.memorable_name,
-            'db_name': database['NAME'],
-            'db_host': database['HOST'],
-            'db_port': database['PORT'],
+            'db_name': database_data['NAME'],
+            'db_host': database_data['HOST'],
+            'db_port': database_data['PORT'],
             'db_user': user,
             'db_password': password,
         }
 
-    privilages = Privilage.objects.all().filter(
+    privilages = _get_private_privilages(email_address)
+
+    return [
+        get_new_credentials(database_obj, privilages_for_database)
+        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
+    ]
+
+
+def _database_dsn(database_data):
+    return (
+        f'host={database_data["HOST"]} port={database_data["PORT"]} ' \
+        f'dbname={database_data["NAME"]} user={database_data["USER"]} ' \
+        f'password={database_data["PASSWORD"]} sslmode=require'
+    )
+
+
+def _get_private_privilages(email_address):
+    logger.info('Getting privilages for: %s', email_address)
+    return Privilage.objects.all().filter(
         database__is_public=False,
         user__email=email_address,
     ).order_by(
         'database__memorable_name', 'database__created_date', 'database__id',
     )
 
-    return [
-        get_new_credentials(database_obj, privilages_for_database)
-        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
-    ]
 
 class HttpResponseUnauthorized(HttpResponse):
     status_code = 401
