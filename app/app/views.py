@@ -53,7 +53,7 @@ def _can_access_table(email_address, database, schema, table):
         True
         for privilage in _get_private_privilages(email_address)
         for privilage_table in privilage.tables.split(',')
-        if privilage.database.memorable_name == database and privilage.schema == schema and privilage_table == table
+        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table == table or privilage_table == 'ALL TABLES')
     )
 
 
