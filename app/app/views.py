@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import json
+import logging
 import re
 import secrets
 import string
@@ -22,6 +23,8 @@ from app.models import (
     Privilage,
 )
 
+logger = logging.getLogger('app')
+
 
 def healthcheck_view(_):
     return HttpResponse('OK')
@@ -34,6 +37,24 @@ def databases_view(request):
         _databases(request.META['HTTP_AUTHORIZATION'])
 
     return response
+
+
+def table_data_view(request, database, schema, table):
+    response = \
+        HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
+        HttpResponseUnauthorized() if not _can_access_table(request.user.email, database, schema, table) else \
+        HttpResponse('You have access to the table')
+
+    return response
+
+
+def _can_access_table(email_address, database, schema, table):
+    return any(
+        True
+        for privilage in _get_private_privilages(email_address)
+        for privilage_table in privilage.tables.split(',')
+        if privilage.database.memorable_name == database and privilage.schema == schema and privilage_table == table
+    )
 
 
 def _databases(auth):
@@ -121,6 +142,7 @@ def _database_dsn(database_data):
 
 
 def _get_private_privilages(email_address):
+    logger.info('Getting privilages for: %s', email_address)
     return Privilage.objects.all().filter(
         database__is_public=False,
         user__email=email_address,
