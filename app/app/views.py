@@ -1,3 +1,4 @@
+import csv
 import datetime
 import itertools
 import json
@@ -15,6 +16,7 @@ from django.http import (
     HttpResponseNotAllowed,
     HttpResponseNotFound,
     JsonResponse,
+    StreamingHttpResponse,
 )
 from psycopg2 import connect, sql
 import requests
@@ -45,7 +47,7 @@ def table_data_view(request, database, schema, table):
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
         HttpResponseUnauthorized() if not _can_access_table(request.user.email, database, schema, table) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
-        HttpResponse('You have access to the table')
+        _table_data(database, schema, table)
 
     return response
 
@@ -74,6 +76,40 @@ def _table_exists(database, schema, table):
                 tablename = %s
         """, (schema, table))
         return bool(cur.fetchone())
+
+
+def _table_data(database, schema, table):
+
+    def yield_rows():
+        # The csv writer "writes" its output by calling a file-like object
+        # with a `write` method.
+        class PseudoBuffer:
+            def write(self, value):
+                return value
+        csv_writer = csv.writer(PseudoBuffer())
+
+        with \
+                connect(_database_dsn(settings.DATABASES_DATA[database])) as conn, \
+                conn.cursor(name='all_table_data') as cur:  # Named cursor => server-side cursor
+
+            cur.itersize = 1000
+
+            # There is no ordering here. We just want a full dump.
+            # Also, there are not likely to be updates, so a long-running
+            # query shouldn't cause problems with concurrency/locking
+            cur.execute(sql.SQL("""
+                SELECT
+                    *
+                FROM
+                    {}.{}
+            """).format(sql.Identifier(schema), sql.Identifier(table)))
+
+            for row in cur:
+                yield csv_writer.writerow(row)
+
+    response = StreamingHttpResponse(yield_rows(), content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
+    return response
 
 
 def _databases(auth):
