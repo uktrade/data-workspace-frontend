@@ -81,7 +81,8 @@ def _table_exists(database, schema, table):
 
 def _table_data(database, schema, table):
     cursor_itersize = 1000
-    bytes_queue = gevent.queue.Queue(maxsize=cursor_itersize)
+    queue_size = 5
+    bytes_queue = gevent.queue.Queue(maxsize=queue_size)
 
     def put_db_rows_to_queue():
         # The csv writer "writes" its output by calling a file-like object
@@ -96,6 +97,7 @@ def _table_data(database, schema, table):
                 conn.cursor(name='all_table_data') as cur:  # Named cursor => server-side cursor
 
             cur.itersize = cursor_itersize
+            cur.arraysize = cursor_itersize
 
             # There is no ordering here. We just want a full dump.
             # Also, there are not likely to be updates, so a long-running
@@ -107,14 +109,21 @@ def _table_data(database, schema, table):
                     {}.{}
             """).format(sql.Identifier(schema), sql.Identifier(table)))
 
-            i = -1
-            for i, row in enumerate(cur):
+            i = 0
+            while True:
+                rows = cur.fetchmany(cursor_itersize)
                 if i == 0:
                     # Column names are not populated until the first row fetched
                     bytes_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]))
-                bytes_queue.put(csv_writer.writerow(row))
+                bytes_fetched = ''.join(
+                    csv_writer.writerow(row) for row in rows
+                ).encode('utf-8')
+                bytes_queue.put(bytes_fetched)
+                i += len(rows)
+                if not rows:
+                    break
 
-            bytes_queue.put(csv_writer.writerow(['Number of rows: ' + str(i + 1)]))
+            bytes_queue.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
     def yield_bytes_from_queue():
         while put_db_rows_to_queue_job:
