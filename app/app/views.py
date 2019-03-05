@@ -81,7 +81,7 @@ def _table_exists(database, schema, table):
 
 def _table_data(database, schema, table):
     cursor_itersize = 1000
-    row_queue = gevent.queue.Queue(maxsize=cursor_itersize)
+    bytes_queue = gevent.queue.Queue(maxsize=cursor_itersize)
 
     def put_db_rows_to_queue():
         # The csv writer "writes" its output by calling a file-like object
@@ -111,24 +111,24 @@ def _table_data(database, schema, table):
             for i, row in enumerate(cur):
                 if i == 0:
                     # Column names are not populated until the first row fetched
-                    row_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]))
-                row_queue.put(csv_writer.writerow(row))
+                    bytes_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]))
+                bytes_queue.put(csv_writer.writerow(row))
 
-            row_queue.put(csv_writer.writerow('Number of rows: ' + str(i + 1)))
+            bytes_queue.put(csv_writer.writerow('Number of rows: ' + str(i + 1)))
 
-    def yield_rows_from_queue():
+    def yield_bytes_from_queue():
         while put_db_rows_to_queue_job:
             try:
                 # There will be a 0.1 second wait after the end of the data
                 # from the db to when the connection is closed. Might be able
                 # to avoid this, but KISS, and minor
-                yield row_queue.get(timeout=0.1)
+                yield bytes_queue.get(timeout=0.1)
             except gevent.queue.Empty:
                 pass
 
     put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
 
-    response = StreamingHttpResponse(yield_rows_from_queue(), content_type='text/csv')
+    response = StreamingHttpResponse(yield_bytes_from_queue(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
     return response
 
