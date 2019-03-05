@@ -98,6 +98,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
+        'app': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
     },
 }
 
