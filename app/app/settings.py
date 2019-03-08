@@ -40,7 +40,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'app.backends.AuthbrokerBackendAllSuperuser',
+    'app.backends.AuthbrokerBackendUsernameIsEmail',
 ]
 AUTHBROKER_URL = env['AUTHBROKER_URL']
 AUTHBROKER_CLIENT_ID = env['AUTHBROKER_CLIENT_ID']
