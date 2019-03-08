@@ -107,6 +107,7 @@ LOGGING = {
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Only used when collectstatic is run
 STATIC_ROOT = '/home/django/static/'
