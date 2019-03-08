@@ -44,6 +44,7 @@ def databases_view(request):
 
 
 def table_data_view(request, database, schema, table):
+    logger.info('table_data_view: %s %s %s', database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
         HttpResponseUnauthorized() if not _can_access_table(request.user.email, database, schema, table) else \
