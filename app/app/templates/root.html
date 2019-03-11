@@ -4,4 +4,9 @@
     <title>Analyst Access</title>
 </head>
 <body>
+    <ul>
+    {% for database_schema_table in database_schema_tables %}
+        <li>{{ database_schema_table.0 }} {{ database_schema_table.1 }} {{ database_schema_table.2 }}</li>
+    {% endfor %}
+    </ul>
 </body>

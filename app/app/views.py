@@ -34,10 +34,43 @@ logger = logging.getLogger('app')
 
 
 def root_view(request):
-    template = loader.get_template('root.html')
-    context = {}
-    return HttpResponse(template.render(context, request))
 
+    def tables_in_schema(cur, schema):
+        logger.info('tables_in_schema: %s', schema)
+        cur.execute("""
+            SELECT
+                tablename
+            FROM
+                pg_tables
+            WHERE
+                schemaname = %s
+        """, (schema, ))
+        results = [result[0] for result in cur.fetchall()]
+        logger.info('tables_in_schema: %s %s', schema, results)
+        return results
+
+    def allowed_tables_for_database_that_exist(database, database_privilages):
+        logger.info('allowed_tables_for_database_that_exist: %s %s', database, database_privilages)
+        with \
+                connect(_database_dsn(settings.DATABASES_DATA[database.memorable_name])) as conn, \
+                conn.cursor() as cur:
+            return [
+                (database.memorable_name, privilage.schema, table)
+                for privilage in database_privilages
+                for table in tables_in_schema(cur, privilage.schema)
+                if _can_access_table(database_privilages, database.memorable_name, privilage.schema, table)
+            ]
+
+    privilages = _get_private_privilages(request.user.email)
+    privilages_by_database = itertools.groupby(privilages, lambda privilage: privilage.database)
+    template = loader.get_template('root.html')
+    context = {
+        'database_schema_tables': _remove_duplicates(_flatten([
+            allowed_tables_for_database_that_exist(database, list(database_privilages))
+            for database, database_privilages in privilages_by_database
+        ]))
+    }
+    return HttpResponse(template.render(context, request))
 
 
 def healthcheck_view(_):
@@ -57,17 +90,17 @@ def table_data_view(request, database, schema, table):
     logger.info('table_data_view attempt: %s %s %s %s', request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
-        HttpResponseUnauthorized() if not _can_access_table(request.user.email, database, schema, table) else \
+        HttpResponseUnauthorized() if not _can_access_table(_get_private_privilages(request.user.email), database, schema, table) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
         _table_data(request.user.email, database, schema, table)
 
     return response
 
 
-def _can_access_table(email_address, database, schema, table):
+def _can_access_table(privilages, database, schema, table):
     return any(
         True
-        for privilage in _get_private_privilages(email_address)
+        for privilage in privilages
         for privilage_table in privilage.tables.split(',')
         if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table == table or privilage_table == 'ALL TABLES')
     )
@@ -253,8 +286,22 @@ def _get_private_privilages(email_address):
         database__is_public=False,
         user__email=email_address,
     ).order_by(
-        'database__memorable_name', 'database__created_date', 'database__id',
+        'database__memorable_name', 'schema', 'tables', 'id'
     )
+
+
+def _flatten(to_flatten):
+    return [
+        item
+        for sub_list in to_flatten
+        for item in sub_list
+    ]
+
+
+def _remove_duplicates(to_have_duplicates_removed):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in to_have_duplicates_removed if not (x in seen or seen_add(x))]
 
 
 class HttpResponseUnauthorized(HttpResponse):
