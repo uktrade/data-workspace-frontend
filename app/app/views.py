@@ -18,6 +18,9 @@ from django.http import (
     JsonResponse,
     StreamingHttpResponse,
 )
+from django.template import (
+    loader,
+)
 import gevent
 from psycopg2 import connect, sql
 import requests
@@ -28,6 +31,13 @@ from app.models import (
 )
 
 logger = logging.getLogger('app')
+
+
+def root_view(request):
+    template = loader.get_template('root.html')
+    context = {}
+    return HttpResponse(template.render(context, request))
+
 
 
 def healthcheck_view(_):
