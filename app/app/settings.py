@@ -40,7 +40,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'app.backends.AuthbrokerBackendAllSuperuser',
+    'app.backends.AuthbrokerBackendUsernameIsEmail',
 ]
 AUTHBROKER_URL = env['AUTHBROKER_URL']
 AUTHBROKER_CLIENT_ID = env['AUTHBROKER_CLIENT_ID']
@@ -56,10 +56,8 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
@@ -107,6 +105,7 @@ LOGGING = {
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Only used when collectstatic is run
 STATIC_ROOT = '/home/django/static/'
