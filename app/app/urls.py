@@ -36,7 +36,7 @@ urlpatterns = [
     path('', authbroker_login_required(root_view)),
     path('auth/', include('authbroker_client.urls', namespace='authbroker')),
     path('admin/', admin.site.urls),
-    path('table_data/<str:database>/<str:schema>/<str:table>', authbroker_login_required(table_data_view)),
+    path('table_data/<str:database>/<str:schema>/<str:table>', authbroker_login_required(table_data_view), name='table_data'),
     path('api/v1/databases', databases_view),
     path('healthcheck', healthcheck_view),
 ]
