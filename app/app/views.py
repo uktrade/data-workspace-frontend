@@ -236,12 +236,12 @@ def _private_databases(email_address):
         password = postgres_password()
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
-        tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+        valid_until = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
         with \
                 connect(_database_dsn(database_data)) as conn, \
                 conn.cursor() as cur:
 
-            cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, tomorrow])
+            cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, valid_until])
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database_data['NAME']), sql.Identifier(user)))
 
             for privilage in privilages_for_database:
