@@ -54,12 +54,12 @@ def databases_view(request):
 
 
 def table_data_view(request, database, schema, table):
-    logger.info('table_data_view: %s %s %s', database, schema, table)
+    logger.info('table_data_view attempt: %s %s %s %s', request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
         HttpResponseUnauthorized() if not _can_access_table(request.user.email, database, schema, table) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
-        _table_data(database, schema, table)
+        _table_data(request.user.email, database, schema, table)
 
     return response
 
@@ -90,7 +90,8 @@ def _table_exists(database, schema, table):
         return bool(cur.fetchone())
 
 
-def _table_data(database, schema, table):
+def _table_data(user_email, database, schema, table):
+    logger.info('table_data_view start: %s %s %s %s', user_email, database, schema, table)
     cursor_itersize = 1000
     queue_size = 5
     bytes_queue = gevent.queue.Queue(maxsize=queue_size)
@@ -146,8 +147,13 @@ def _table_data(database, schema, table):
             except gevent.queue.Empty:
                 pass
 
+        logger.info('table_data_view end: %s %s %s %s', user_email, database, schema, table)
+
     def handle_exception(job):
-        logger.exception(job.exception)
+        try:
+            raise job.exception
+        except:
+            logger.exception('table_data_view exception: %s %s %s %s', user_email, database, schema, table)
 
     put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
     put_db_rows_to_queue_job.link_exception(handle_exception)
