@@ -33,7 +33,7 @@ admin.autodiscover()
 admin.site.login = authbroker_login_required(admin.site.login)
 
 urlpatterns = [
-    path('', authbroker_login_required(root_view)),
+    path('', authbroker_login_required(root_view), name='root'),
     path('auth/', include('authbroker_client.urls', namespace='authbroker')),
     path('admin/', admin.site.urls),
     path('table_data/<str:database>/<str:schema>/<str:table>', authbroker_login_required(table_data_view), name='table_data'),

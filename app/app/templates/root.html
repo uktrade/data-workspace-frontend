@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Analyst Access</title>
-</head>
-<body>
-    <ul>
+{% extends 'govuk_template.html' %}
+
+{% block inner_content %}
+    <h1 class="heading-large">Available data</h1>
     {% for database_schema_table in database_schema_tables %}
         <li><a href="{% url 'table_data' database_schema_table.0 database_schema_table.1  database_schema_table.2 %}">{{ database_schema_table.0 }} / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
     {% endfor %}
-    </ul>
-</body>
+{% endblock %}

@@ -115,3 +115,10 @@ STATIC_ROOT = '/home/django/static/'
 
 # Used when generating URLs for static files
 STATIC_URL = '/static/'
+
+GOVUK_SERVICE_SETTINGS = {
+    'name': 'Analyst Access',
+    'phase': 'alpha',
+    'header_link_view_name': 'root',
+    'header_links': [],
+}
