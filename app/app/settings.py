@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'govuk_template_base',
+    'govuk_template',
     'authbroker_client',
     'app.apps.JupyterHubDataAuthAdminAppConfig',
 ]
@@ -58,6 +60,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'govuk_template_base.context_processors.govuk_template_base',
             ],
         },
     },
