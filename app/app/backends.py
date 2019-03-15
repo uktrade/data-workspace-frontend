@@ -24,6 +24,7 @@ class AuthbrokerBackendUsernameIsEmail():
             if created:
                 user.set_unusable_password()
 
+            user.profile.sso_id = profile['user_id']
             user.username = user.email
             user.save()
 
