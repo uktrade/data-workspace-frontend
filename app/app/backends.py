@@ -8,7 +8,8 @@ from authbroker_client.client import (
 )
 
 
-class AuthbrokerBackend():
+class AuthbrokerBackendUsernameIsEmail():
+
     def authenticate(self, request, **kwargs):
         client = get_client(request)
         if has_valid_token(client):
@@ -23,6 +24,9 @@ class AuthbrokerBackend():
             if created:
                 user.set_unusable_password()
 
+            user.username = user.email
+            user.save()
+
             return user
 
         return None
@@ -33,14 +37,3 @@ class AuthbrokerBackend():
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
             return None
-
-
-class AuthbrokerBackendUsernameIsEmail(AuthbrokerBackend):
-
-    def authenticate(self, request, **kwargs):
-        user = super().authenticate(request, **kwargs)
-        if user is not None:
-            user.username = user.email
-            user.save()
-
-        return user
