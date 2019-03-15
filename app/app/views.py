@@ -68,7 +68,10 @@ def root_view(request):
         'database_schema_tables': _remove_duplicates(_flatten([
             allowed_tables_for_database_that_exist(database, list(database_privilages))
             for database, database_privilages in privilages_by_database
-        ]))
+        ])),
+        'notebooks_url': settings.NOTEBOOKS_URL,
+        'appstream_url': settings.APPSTREAM_URL,
+        'support_url': settings.SUPPORT_URL,
     }
     return HttpResponse(template.render(context, request))
 
