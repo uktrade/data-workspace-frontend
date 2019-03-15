@@ -2,15 +2,15 @@ from django import forms
 from django.contrib import admin
 
 from django.contrib.auth.admin import (
-	UserAdmin,
+    UserAdmin,
 )
 from django.contrib.auth.models import (
-	User,
+    User,
 )
 
 from app.models import (
-	Database,
-	Privilage,
+    Database,
+    Privilage,
 )
 
 admin.site.register(Database)
