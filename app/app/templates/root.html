@@ -1,12 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Analyst Access</title>
-</head>
-<body>
-    <ul>
-    {% for database_schema_table in database_schema_tables %}
-        <li><a href="{% url 'table_data' database_schema_table.0 database_schema_table.1  database_schema_table.2 %}">{{ database_schema_table.0 }} / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
-    {% endfor %}
-    </ul>
-</body>
+{% extends 'govuk_template.html' %}
+
+{% block inner_content %}
+    <h1 class="heading-large">Services</h1>
+
+    {% if notebooks_url or appstream_url or support_url %}
+        <ul class="list">
+        {% if notebooks_url %}
+            <li><a href="{{ notebooks_url }}">JupyterLab</a></li>
+        {% endif %}
+        {% if appstream_url %}
+            <li><a href="{{ appstream_url }}">AppStream</a></li>
+        {% endif %}
+        {% if support_url %}
+            <li><a href="{{ support_url }}">Support and feedback</a></li>
+        {% endif %}
+        </ul>
+    {% else %}
+        <p>No services are available.</p>a
+    {% endif %}
+
+    <h1 class="heading-large">Available data</h1>
+
+    {% if database_schema_tables %}
+        <ul class="list">
+        {% for database_schema_table in database_schema_tables %}
+            <li><a href="{% url 'table_data' database_schema_table.0 database_schema_table.1  database_schema_table.2 %}">{{ database_schema_table.0 }} / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No data is available.</p>
+    {% endif %}
+
+{% endblock %}

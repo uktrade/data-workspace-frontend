@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'govuk_template_base',
+    'govuk_template',
     'authbroker_client',
     'app.apps.JupyterHubDataAuthAdminAppConfig',
 ]
@@ -58,6 +60,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'govuk_template_base.context_processors.govuk_template_base',
             ],
         },
     },
@@ -103,6 +106,10 @@ LOGGING = {
     },
 }
 
+APPSTREAM_URL = env['APPSTREAM_URL']
+NOTEBOOKS_URL = env['NOTEBOOKS_URL']
+SUPPORT_URL = env['SUPPORT_URL']
+
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -112,3 +119,10 @@ STATIC_ROOT = '/home/django/static/'
 
 # Used when generating URLs for static files
 STATIC_URL = '/static/'
+
+GOVUK_SERVICE_SETTINGS = {
+    'name': 'Analyst Access',
+    'phase': 'alpha',
+    'header_link_view_name': 'root',
+    'header_links': [],
+}
