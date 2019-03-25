@@ -5,13 +5,13 @@
 
     {% if notebooks_url or appstream_url or support_url %}
         <ul class="list">
-        {% if notebooks_url %}
+        {% if notebooks_url != "https:///" %}
             <li><a href="{{ notebooks_url }}">JupyterLab</a></li>
         {% endif %}
-        {% if appstream_url %}
+        {% if appstream_url != "https:///" %}
             <li><a href="{{ appstream_url }}">AppStream</a></li>
         {% endif %}
-        {% if support_url %}
+        {% if support_url != "https:///" %}
             <li><a href="{{ support_url }}">Support and feedback</a></li>
         {% endif %}
         </ul>
