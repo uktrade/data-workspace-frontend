@@ -12,25 +12,26 @@ class AuthbrokerBackendUsernameIsEmail():
 
     def authenticate(self, request, **kwargs):
         client = get_client(request)
-        if has_valid_token(client):
-            User = get_user_model()
 
-            profile = get_profile(client)
+        if not has_valid_token(client):
+            return None
 
-            user, created = User.objects.get_or_create(
-                email=profile['email'],
-                defaults={'first_name': profile['first_name'], 'last_name': profile['last_name']})
+        User = get_user_model()
 
-            if created:
-                user.set_unusable_password()
+        profile = get_profile(client)
 
-            user.profile.sso_id = profile['user_id']
-            user.username = user.email
-            user.save()
+        user, created = User.objects.get_or_create(
+            email=profile['email'],
+            defaults={'first_name': profile['first_name'], 'last_name': profile['last_name']})
 
-            return user
+        if created:
+            user.set_unusable_password()
 
-        return None
+        user.profile.sso_id = profile['user_id']
+        user.username = user.email
+        user.save()
+
+        return user
 
     def get_user(self, user_id):
         User = get_user_model()
