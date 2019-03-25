@@ -8,14 +8,14 @@ env = normalise_environment(os.environ)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env['SECRET_KEY']
-DEBUG = False
+DEBUG = env['ALLOWED_HOSTS'] == ['localhost']
 
 def aws_fargate_private_ip():
     with urllib.request.urlopen('http://169.254.170.2/v2/metadata') as response:
         return json.loads(response.read().decode('utf-8'))['Containers'][0]['Networks'][0]['IPv4Addresses'][0]
 
 ALLOWED_HOSTS = \
-    env['ALLOWED_HOSTS'] if env['ALLOWED_HOSTS'] == ['localhost'] else \
+    env['ALLOWED_HOSTS'] if DEBUG else \
     env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()]
 
 INSTALLED_APPS = [
