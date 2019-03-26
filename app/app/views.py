@@ -204,13 +204,13 @@ def _databases(auth):
         'Authorization': auth,
     })
     databases_reponse = \
-        JsonResponse({'databases': _public_databases() + _private_databases(me_response.json()['email'])}) if me_response.status_code == 200 else \
+        JsonResponse({'databases': _public_database_credentials() + _new_private_database_credentials(me_response.json()['email'])}) if me_response.status_code == 200 else \
         HttpResponse(me_response.text, status=me_response.status_code)
 
     return databases_reponse
 
 
-def _public_databases():
+def _public_database_credentials():
     return [{
         'memorable_name': database.memorable_name,
         'db_name': settings.DATABASES_DATA[database.memorable_name]['NAME'],
@@ -223,7 +223,7 @@ def _public_databases():
     )]
 
 
-def _private_databases(email_address):
+def _new_private_database_credentials(email_address):
     password_alphabet = string.ascii_letters + string.digits
     user_alphabet = string.ascii_lowercase + string.digits
 
