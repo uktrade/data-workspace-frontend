@@ -1,11 +1,7 @@
 import csv
-import datetime
 import itertools
 import json
 import logging
-import re
-import secrets
-import string
 
 from django.conf import (
     settings,
@@ -27,7 +23,11 @@ import requests
 
 from app.models import (
     Database,
-    Privilage,
+)
+from app.shared import (
+    database_dsn,
+    get_private_privilages,
+    new_private_database_credentials,
 )
 
 logger = logging.getLogger('app')
@@ -52,7 +52,7 @@ def root_view(request):
     def allowed_tables_for_database_that_exist(database, database_privilages):
         logger.info('allowed_tables_for_database_that_exist: %s %s', database, database_privilages)
         with \
-                connect(_database_dsn(settings.DATABASES_DATA[database.memorable_name])) as conn, \
+                connect(database_dsn(settings.DATABASES_DATA[database.memorable_name])) as conn, \
                 conn.cursor() as cur:
             return [
                 (database.memorable_name, privilage.schema, table)
@@ -61,7 +61,7 @@ def root_view(request):
                 if _can_access_table(database_privilages, database.memorable_name, privilage.schema, table)
             ]
 
-    privilages = _get_private_privilages(request.user.email)
+    privilages = get_private_privilages(request.user.email)
     privilages_by_database = itertools.groupby(privilages, lambda privilage: privilage.database)
     template = loader.get_template('root.html')
     context = {
@@ -93,7 +93,7 @@ def table_data_view(request, database, schema, table):
     logger.info('table_data_view attempt: %s %s %s %s', request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
-        HttpResponseUnauthorized() if not _can_access_table(_get_private_privilages(request.user.email), database, schema, table) else \
+        HttpResponseUnauthorized() if not _can_access_table(get_private_privilages(request.user.email), database, schema, table) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
         _table_data(request.user.email, database, schema, table)
 
@@ -111,7 +111,7 @@ def _can_access_table(privilages, database, schema, table):
 
 def _table_exists(database, schema, table):
     with \
-            connect(_database_dsn(settings.DATABASES_DATA[database])) as conn, \
+            connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
             conn.cursor() as cur:
 
         cur.execute("""
@@ -141,7 +141,7 @@ def _table_data(user_email, database, schema, table):
         csv_writer = csv.writer(PseudoBuffer())
 
         with \
-                connect(_database_dsn(settings.DATABASES_DATA[database])) as conn, \
+                connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
                 conn.cursor(name='all_table_data') as cur:  # Named cursor => server-side cursor
 
             cur.itersize = cursor_itersize
@@ -204,7 +204,7 @@ def _databases(auth):
         'Authorization': auth,
     })
     databases_reponse = \
-        JsonResponse({'databases': _public_database_credentials() + _new_private_database_credentials(me_response.json()['email'])}) if me_response.status_code == 200 else \
+        JsonResponse({'databases': _public_database_credentials() + new_private_database_credentials(me_response.json()['email'])}) if me_response.status_code == 200 else \
         HttpResponse(me_response.text, status=me_response.status_code)
 
     return databases_reponse
@@ -222,75 +222,6 @@ def _public_database_credentials():
         'memorable_name', 'created_date', 'id',
     )]
 
-
-def _new_private_database_credentials(email_address):
-    password_alphabet = string.ascii_letters + string.digits
-    user_alphabet = string.ascii_lowercase + string.digits
-
-    def postgres_user():
-        unique_enough = ''.join(secrets.choice(user_alphabet) for i in range(5))
-        return 'user_' + re.sub('[^a-z0-9]', '_', email_address.lower()) + '_' + unique_enough
-
-    def postgres_password():
-        return ''.join(secrets.choice(password_alphabet) for i in range(64))
-
-    def get_new_credentials(database_obj, privilages_for_database):
-        user = postgres_user()
-        password = postgres_password()
-
-        database_data = settings.DATABASES_DATA[database_obj.memorable_name]
-        valid_until = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
-        with \
-                connect(_database_dsn(database_data)) as conn, \
-                conn.cursor() as cur:
-
-            cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, valid_until])
-            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database_data['NAME']), sql.Identifier(user)))
-
-            for privilage in privilages_for_database:
-                cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)))
-                tables_sql_list = sql.SQL(',').join([
-                    sql.SQL('{}.{}').format(sql.Identifier(privilage.schema), sql.Identifier(table))
-                    for table in privilage.tables.split(',')
-                ])
-                tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)) if privilage.tables == 'ALL TABLES' else \
-                    sql.SQL('GRANT SELECT ON {} TO {};').format(tables_sql_list, sql.Identifier(user))
-                cur.execute(tables_sql)
-
-        return {
-            'memorable_name': database_obj.memorable_name,
-            'db_name': database_data['NAME'],
-            'db_host': database_data['HOST'],
-            'db_port': database_data['PORT'],
-            'db_user': user,
-            'db_password': password,
-        }
-
-    privilages = _get_private_privilages(email_address)
-
-    return [
-        get_new_credentials(database_obj, privilages_for_database)
-        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
-    ]
-
-
-def _database_dsn(database_data):
-    return (
-        f'host={database_data["HOST"]} port={database_data["PORT"]} ' \
-        f'dbname={database_data["NAME"]} user={database_data["USER"]} ' \
-        f'password={database_data["PASSWORD"]} sslmode=require'
-    )
-
-
-def _get_private_privilages(email_address):
-    logger.info('Getting privilages for: %s', email_address)
-    return Privilage.objects.all().filter(
-        database__is_public=False,
-        user__email=email_address,
-    ).order_by(
-        'database__memorable_name', 'schema', 'tables', 'id'
-    )
 
 
 def _flatten(to_flatten):
