@@ -42,6 +42,9 @@ docker run --rm -it -p 8000:8000 \
     -e DATA_DB__my_database__PASSWORD=postgres \
     -e DATA_DB__my_database__HOST=jupyteradminpostgres \
     -e DATA_DB__my_database__PORT=5432 \
+    -e APPSTREAM_URL='https://url.to.appstream/' \
+    -e SUPPORT_URL='https://url.to.support/' \
+    -e NOTEBOOKS_URL='https://url.to.notebooks/' \
     jupyterhub-data-auth-admin
 ```
 
