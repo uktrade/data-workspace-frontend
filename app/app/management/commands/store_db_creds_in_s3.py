@@ -2,6 +2,9 @@ import hashlib
 
 import boto3
 
+from django.conf import (
+    settings,
+)
 from django.contrib.auth import (
     get_user_model,
 )
@@ -17,13 +20,10 @@ from app.shared import (
 class Command(BaseCommand):
     help = 'Creates and saves DB credentials for all SSO users'
 
-    def add_arguments(self, parser):
-        parser.add_argument('--bucket', nargs=1, type=str)
-
     def handle(self, *args, **options):
         self.stdout.write('store_db_creds_in_s3 started')
 
-        bucket = options['bucket'][0]
+        bucket = settings.NOTEBOOKS_BUCKET
         self.stdout.write('Will store credentials in bucket {}'.format(bucket))
 
         s3_client = boto3.client('s3')
