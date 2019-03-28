@@ -20,6 +20,7 @@ class Command(BaseCommand):
         all_users = User.objects.order_by('last_name', 'first_name', 'id')
         for user in all_users:
             self.stdout.write(f'Creating credentials for {user.email}')
-            new_private_database_credentials(user.email)
+            creds = new_private_database_credentials(user.email)
+            self.stdout.write(str(creds))
 
         self.stdout.write(self.style.SUCCESS('store_db_creds_in_s3 finished'))
