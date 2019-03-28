@@ -13,8 +13,14 @@ from app.shared import (
 class Command(BaseCommand):
     help = 'Creates and saves DB credentials for all SSO users'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--bucket', nargs=1, type=str)
+
     def handle(self, *args, **options):
         self.stdout.write('store_db_creds_in_s3 started')
+
+        bucket = options['bucket'][0]
+        self.stdout.write('Will store credentials in bucket {}'.format(bucket))
 
         User = get_user_model()
         all_users = User.objects.order_by('last_name', 'first_name', 'id')
