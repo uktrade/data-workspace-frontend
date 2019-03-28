@@ -98,7 +98,7 @@ def new_private_database_credentials(user):
     s3_client = boto3.client('s3')
     s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
     for cred in creds:
-        key = f'{s3_prefix}.db_credentials_{cred["memorable_name"]}'
+        key = f'{s3_prefix}.db_credentials_{cred["db_name"]}'
         object_contents = (
             f'dbuser={cred["db_user"]}\n'
             f'dbpass={cred["db_password"]}\n'
