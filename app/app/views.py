@@ -64,7 +64,7 @@ def root_view(request):
                 if _can_access_table(database_privilages, database.memorable_name, privilage.schema, table)
             ]
 
-    privilages = get_private_privilages(request.user.email)
+    privilages = get_private_privilages(request.user)
     privilages_by_database = itertools.groupby(privilages, lambda privilage: privilage.database)
     template = loader.get_template('root.html')
     context = {

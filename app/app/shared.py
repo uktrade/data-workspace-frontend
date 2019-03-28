@@ -28,11 +28,11 @@ def database_dsn(database_data):
     )
 
 
-def get_private_privilages(email_address):
-    logger.info('Getting privilages for: %s', email_address)
+def get_private_privilages(user):
+    logger.info('Getting privilages for: %s', user)
     return Privilage.objects.all().filter(
         database__is_public=False,
-        user__email=email_address,
+        user=user,
     ).order_by(
         'database__memorable_name', 'schema', 'tables', 'id'
     )
@@ -82,7 +82,7 @@ def new_private_database_credentials(user):
             'db_password': password,
         }
 
-    privilages = get_private_privilages(user.email)
+    privilages = get_private_privilages(user)
 
     return [
         get_new_credentials(database_obj, privilages_for_database)
