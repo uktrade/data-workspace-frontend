@@ -1,9 +1,12 @@
 import datetime
+import hashlib
 import itertools
 import logging
 import re
 import secrets
 import string
+
+import boto3
 
 from django.conf import (
     settings,
@@ -84,7 +87,22 @@ def new_private_database_credentials(user):
 
     privilages = get_private_privilages(user)
 
-    return [
+    creds = [
         get_new_credentials(database_obj, privilages_for_database)
         for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
     ]
+
+    # Create a profile in case it doesn't have one
+    user.save()
+    bucket = settings.NOTEBOOKS_BUCKET
+    s3_client = boto3.client('s3')
+    s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
+    for cred in creds:
+        key = f'{s3_prefix}.db_credentials_{cred["memorable_name"]}'
+        s3_client.put_object(
+            Body=str(creds).encode('utf-8'),
+            Bucket=bucket,
+            Key=key,
+        )
+
+    return creds

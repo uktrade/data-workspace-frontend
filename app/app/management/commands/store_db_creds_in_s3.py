@@ -33,17 +33,6 @@ class Command(BaseCommand):
         for user in all_users:
             self.stdout.write(f'Creating credentials for {user.email}')
             creds = new_private_database_credentials(user)
-            # Create a profile in case it doesn't have one
-            user.save()
-            s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
-            for cred in creds:
-                key = f'{s3_prefix}.db_credentials_{cred["memorable_name"]}'
-                self.stdout.write(f'Putting credentials in {key}')
-                s3_client.put_object(
-                    Body=str(creds).encode('utf-8'), 
-                    Bucket=bucket,
-                    Key=key,
-                )
             self.stdout.write(str(creds))
 
         self.stdout.write(self.style.SUCCESS('store_db_creds_in_s3 finished'))
