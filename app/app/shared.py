@@ -105,6 +105,7 @@ def new_private_database_credentials(user):
             f'dbname={cred["db_name"]}\n'
             f'dbhost={cred["db_host"]}\n'
             f'dbport={cred["db_port"]}\n'
+            f'dbmemorablename={cred["memorable_name"]}\n'
         )
         s3_client.put_object(
             Body=object_contents.encode('utf-8'),
