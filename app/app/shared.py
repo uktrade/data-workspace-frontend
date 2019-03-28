@@ -99,8 +99,15 @@ def new_private_database_credentials(user):
     s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
     for cred in creds:
         key = f'{s3_prefix}.db_credentials_{cred["memorable_name"]}'
+        object_contents = (
+            f'dbuser={cred["db_user"]}\n'
+            f'dbpass={cred["db_password"]}\n'
+            f'dbname={cred["db_name"]}\n'
+            f'dbhost={cred["db_host"]}\n'
+            f'dbport={cred["db_port"]}\n'
+        )
         s3_client.put_object(
-            Body=str(creds).encode('utf-8'),
+            Body=object_contents.encode('utf-8'),
             Bucket=bucket,
             Key=key,
         )
