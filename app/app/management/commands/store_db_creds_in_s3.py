@@ -32,7 +32,7 @@ class Command(BaseCommand):
         all_users = User.objects.order_by('last_name', 'first_name', 'id')
         for user in all_users:
             self.stdout.write(f'Creating credentials for {user.email}')
-            creds = new_private_database_credentials(user.email)
+            creds = new_private_database_credentials(user)
             # Create a profile in case it doesn't have one
             user.save()
             s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'

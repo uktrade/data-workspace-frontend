@@ -38,13 +38,13 @@ def get_private_privilages(email_address):
     )
 
 
-def new_private_database_credentials(email_address):
+def new_private_database_credentials(user):
     password_alphabet = string.ascii_letters + string.digits
     user_alphabet = string.ascii_lowercase + string.digits
 
     def postgres_user():
         unique_enough = ''.join(secrets.choice(user_alphabet) for i in range(5))
-        return 'user_' + re.sub('[^a-z0-9]', '_', email_address.lower()) + '_' + unique_enough
+        return 'user_' + re.sub('[^a-z0-9]', '_', user.email.lower()) + '_' + unique_enough
 
     def postgres_password():
         return ''.join(secrets.choice(password_alphabet) for i in range(64))
@@ -82,7 +82,7 @@ def new_private_database_credentials(email_address):
             'db_password': password,
         }
 
-    privilages = get_private_privilages(email_address)
+    privilages = get_private_privilages(user.email)
 
     return [
         get_new_credentials(database_obj, privilages_for_database)

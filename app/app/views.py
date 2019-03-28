@@ -3,6 +3,9 @@ import itertools
 import json
 import logging
 
+from django.contrib.auth import (
+    get_user_model,
+)
 from django.conf import (
     settings,
 )
@@ -203,8 +206,11 @@ def _databases(auth):
     me_response = requests.get(settings.AUTHBROKER_URL + 'api/v1/user/me/', headers={
         'Authorization': auth,
     })
+    email = me_response.json()['email']
+    User = get_user_model()
+    user = User.objects.get(email=email)
     databases_reponse = \
-        JsonResponse({'databases': _public_database_credentials() + new_private_database_credentials(me_response.json()['email'])}) if me_response.status_code == 200 else \
+        JsonResponse({'databases': _public_database_credentials() + new_private_database_credentials(user)}) if me_response.status_code == 200 else \
         HttpResponse(me_response.text, status=me_response.status_code)
 
     return databases_reponse
