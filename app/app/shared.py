@@ -93,24 +93,29 @@ def new_private_database_credentials(user):
     ]
 
     # Create a profile in case it doesn't have one
-    user.save()
-    bucket = settings.NOTEBOOKS_BUCKET
-    s3_client = boto3.client('s3')
-    s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
-    for cred in creds:
-        key = f'{s3_prefix}.db_credentials_{cred["db_name"]}'
-        object_contents = (
-            f'dbuser={cred["db_user"]}\n'
-            f'dbpass={cred["db_password"]}\n'
-            f'dbname={cred["db_name"]}\n'
-            f'dbhost={cred["db_host"]}\n'
-            f'dbport={cred["db_port"]}\n'
-            f'dbmemorablename={cred["memorable_name"]}\n'
-        )
-        s3_client.put_object(
-            Body=object_contents.encode('utf-8'),
-            Bucket=bucket,
-            Key=key,
-        )
+    logger.info('settings.NOTEBOOKS_BUCKET %s', settings.NOTEBOOKS_BUCKET)
+    if settings.NOTEBOOKS_BUCKET is not None:
+        user.save()
+        bucket = settings.NOTEBOOKS_BUCKET
+        s3_client = boto3.client('s3')
+        s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
+
+        logger.info('Saving creds for %s to %s %s', user, bucket, s3_prefix)
+        for cred in creds:
+            key = f'{s3_prefix}.credentials/db_credentials_{cred["db_name"]}'
+            object_contents = (
+                f'dbuser={cred["db_user"]}\n'
+                f'dbpass={cred["db_password"]}\n'
+                f'dbname={cred["db_name"]}\n'
+                f'dbhost={cred["db_host"]}\n'
+                f'dbport={cred["db_port"]}\n'
+                f'dbmemorablename={cred["memorable_name"]}\n'
+            )
+            s3_client.put_object(
+                Body=object_contents.encode('utf-8'),
+                Bucket=bucket,
+                Key=key,
+                ACL='bucket-owner-full-control',
+            )
 
     return creds

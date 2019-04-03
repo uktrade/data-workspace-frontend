@@ -24,6 +24,9 @@ class AuthbrokerBackendUsernameIsEmail():
             email=profile['email'],
             defaults={'first_name': profile['first_name'], 'last_name': profile['last_name']})
 
+        # Ensure the user has a profile
+        user.save()
+
         user.profile.sso_id = profile['user_id']
         user.username = user.email
         user.set_unusable_password()

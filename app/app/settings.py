@@ -106,7 +106,8 @@ LOGGING = {
     },
 }
 
-NOTEBOOKS_BUCKET = env['NOTEBOOKS_BUCKET']
+# Not all installations have this set
+NOTEBOOKS_BUCKET = env.get('NOTEBOOKS_BUCKET', None)
 
 APPSTREAM_URL = env['APPSTREAM_URL']
 NOTEBOOKS_URL = env['NOTEBOOKS_URL']
