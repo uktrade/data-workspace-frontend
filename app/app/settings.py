@@ -124,7 +124,7 @@ STATIC_ROOT = '/home/django/static/'
 STATIC_URL = '/static/'
 
 GOVUK_SERVICE_SETTINGS = {
-    'name': 'Analyst Access',
+    'name': 'Analysis Workspace',
     'phase': 'alpha',
     'header_link_view_name': 'root',
     'header_links': [],
