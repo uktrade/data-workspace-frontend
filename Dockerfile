@@ -21,6 +21,7 @@ RUN \
 	pip3 install \
 		pip==18.00 && \
 	pip3 install \
+		boto3==1.9.123 \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
 		django==2.1.2 \
