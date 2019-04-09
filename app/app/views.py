@@ -96,7 +96,7 @@ def table_data_view(request, database, schema, table):
     logger.info('table_data_view attempt: %s %s %s %s', request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
-        HttpResponseUnauthorized() if not _can_access_table(get_private_privilages(request.user.email), database, schema, table) else \
+        HttpResponseUnauthorized() if not _can_access_table(get_private_privilages(request.user), database, schema, table) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
         _table_data(request.user.email, database, schema, table)
 
