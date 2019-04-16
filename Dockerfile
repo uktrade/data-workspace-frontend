@@ -4,7 +4,7 @@ ENV \
 	LC_ALL=en_US.UTF-8 \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8 \
-	PYTHONPATH=/ \
+	PYTHONPATH=/app \
 	DJANGO_SETTINGS_MODULE=app.settings
 
 RUN \
@@ -21,6 +21,9 @@ RUN \
 	pip3 install \
 		pip==18.00 && \
 	pip3 install \
+		aiohttp==3.5.4 \
+		aioredis==1.2.0 \
+		aiohttp_session==2.7.0 \
 		boto3==1.9.123 \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
@@ -31,9 +34,10 @@ RUN \
 	rm /etc/nginx/nginx.conf && \
 	apk del .build-deps
 
-ADD app .
+ADD app /app
+ADD etc /etc
 
-CMD ["/start.sh"]
+CMD ["/app/start.sh"]
 
 RUN adduser -S django
 USER django
