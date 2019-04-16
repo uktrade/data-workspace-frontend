@@ -14,5 +14,9 @@ set -e
     # it manages to read its config file. To avoid errors on startup,
     # we configure its prefix to be a writable location
     mkdir /home/django/logs
-    gunicorn app.wsgi:application -c gunicorn_config.py & nginx -p /home/django
+
+    # Start nginx, proxy and application
+    nginx -p /home/django &
+    PORT='8001' UPSTREAM_ROOT='http://127.0.0.1:8002' python3 -m proxy &
+    gunicorn app.wsgi:application -c gunicorn_config.py
 )

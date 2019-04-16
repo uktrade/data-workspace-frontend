@@ -28,9 +28,9 @@ async def async_main():
 
     port = int(os.environ['PORT'])
     upstream_root = os.environ['UPSTREAM_ROOT']
-    sso_base_url = os.environ['SSO_BASE_URL']
-    sso_client_id = os.environ['SSO_CLIENT_ID']
-    sso_client_secret = os.environ['SSO_CLIENT_SECRET']
+    sso_base_url = os.environ['AUTHBROKER_URL']
+    sso_client_id = os.environ['AUTHBROKER_CLIENT_ID']
+    sso_client_secret = os.environ['AUTHBROKER_CLIENT_SECRET']
     redis_url = os.environ['REDIS_URL']
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
