@@ -1,0 +1,13 @@
+FROM jupyterhub-data-auth-admin
+
+ENV \
+	PYTHONPATH=/app;/test
+
+USER root
+
+ADD test /test
+
+RUN \
+	pip install aiohttp==3.5.4
+
+USER django

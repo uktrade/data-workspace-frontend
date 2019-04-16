@@ -64,6 +64,27 @@ Amend the end of the above command to create migrations.
 Append `django-admin [command]` to the command above to run a management command locally. For more complex operations, append `ash` to enter into a shell and run `django-admin` from there.
 
 
+## Running tests
+
+Redis must be running in a docker container.
+
+```bash
+docker run --rm --name analysis-workspace-redis -d -p 6379:6379 redis:4.0.10
+```
+
+The tests themselves are also run in a docker container that builds on the production container, to fairly closely simulate the production environment.
+
+
+```bash
+docker build . -t jupyterhub-data-auth-admin && \
+docker build . -f Dockerfile-test -t analysis-workspace-test &&  \
+docker run --rm \
+    --link analysis-workspace-redis:analysis-workspace-redis \
+    analysis-workspace-test  \
+    python3 -m unittest test.test
+```
+
+
 # Building & pushing docker image to Quay
 
 ```bash
