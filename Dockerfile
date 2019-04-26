@@ -28,8 +28,8 @@ RUN \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
 		django==2.1.2 \
-		-e git+https://github.com/uktrade/django-staff-sso-client.git@bb18f6838682973b542c8521d5801832227d5d95#egg=authbroker_client \
-		django-govuk-template==0.8 && \
+		django-govuk-template==0.8 \
+		requests==2.21.0 && \
 	rm /etc/nginx/conf.d/default.conf && \
 	rm /etc/nginx/nginx.conf && \
 	apk del .build-deps

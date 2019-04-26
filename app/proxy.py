@@ -26,7 +26,7 @@ async def async_main():
         logger.setLevel(logging.DEBUG)
         logger.addHandler(stdout_handler)
 
-    port = int(os.environ['PORT'])
+    port = int(os.environ['PROXY_PORT'])
     upstream_root = os.environ['UPSTREAM_ROOT']
     sso_base_url = os.environ['AUTHBROKER_URL']
     sso_client_id = os.environ['AUTHBROKER_CLIENT_ID']
@@ -73,7 +73,10 @@ async def async_main():
             try:
                 async with client_session.ws_connect(
                         str(upstream_url),
-                        headers=without_transfer_encoding(downstream_request.headers)
+                        headers={
+                            **without_transfer_encoding(downstream_request.headers),
+                            **downstream_request['sso_profile_headers'],
+                        },
                 ) as upstream_ws:
                     upstream_connection.set_result(upstream_ws)
                     downstream_ws = await downstream_connection
@@ -111,7 +114,10 @@ async def async_main():
         async with client_session.request(
                 downstream_request.method, str(upstream_url),
                 params=downstream_request.url.query,
-                headers=without_transfer_encoding(downstream_request.headers),
+                headers={
+                    **without_transfer_encoding(downstream_request.headers),
+                    **downstream_request['sso_profile_headers'],
+                },
                 data=downstream_request.content,
         ) as upstream_response:
 
@@ -195,9 +201,17 @@ async def async_main():
             }) as me_response:
                 me_profile = await me_response.json()
 
-            request['me_profile'] = me_profile
+            async def handler_with_sso_headers():
+                request['sso_profile_headers'] = {
+                    'sso-profile-email': me_profile['email'],
+                    'sso-profile-user-id': me_profile['user_id'],
+                    'sso-profile-first-name': me_profile['first_name'],
+                    'sso-profile-last-name': me_profile['last_name'],
+                }
+                return await handler(request)
+
             return \
-                await handler(request) if me_response.status == 200 else \
+                await handler_with_sso_headers() if me_response.status == 200 else \
                 web.Response(status=302, headers={
                     'Location': get_redirect_uri_authenticate(session, request),
                 })

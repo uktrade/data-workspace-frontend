@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'govuk_template_base',
     'govuk_template',
-    'authbroker_client',
     'app.apps.JupyterHubDataAuthAdminAppConfig',
 ]
 
