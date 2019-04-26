@@ -49,7 +49,7 @@ docker run --rm -it -p 8000:8000 \
     -e DATA_DB__my_database__PASSWORD=postgres \
     -e DATA_DB__my_database__HOST=jupyteradminpostgres \
     -e DATA_DB__my_database__PORT=5432 \
-    -e REDIS_URL='http://127.0.0.1:6379' \
+    -e REDIS_URL='redis://analysis-workspace-redis:6379' \
     -e APPSTREAM_URL='https://url.to.appstream/' \
     -e SUPPORT_URL='https://url.to.support/' \
     -e NOTEBOOKS_URL='https://url.to.notebooks/' \
@@ -92,6 +92,7 @@ The tests themselves are also run in a docker container that builds on the produ
 docker build . -t jupyterhub-data-auth-admin && \
 docker build . -f Dockerfile-test -t analysis-workspace-test &&  \
 docker run --rm \
+    --link jupyteradminpostgres:jupyteradminpostgres \
     --link analysis-workspace-redis:analysis-workspace-redis \
     analysis-workspace-test  \
     python3 -m unittest test.test

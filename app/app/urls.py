@@ -1,15 +1,15 @@
-from django.contrib import admin
-from django.shortcuts import (
-        redirect,
+from django.contrib import (
+    admin,
+)
+from django.contrib.auth import (
+    authenticate,
+    login,
+)
+from django.http import (
+    HttpResponseForbidden,
 )
 from django.urls import (
-    include,
     path,
-)
-
-from authbroker_client.client import (
-    get_client,
-    has_valid_token,
 )
 
 from app.views import (
@@ -20,25 +20,27 @@ from app.views import (
     appstream_view,
 )
 
+def login_required(func):
+    def _login_required(request, *args, **kwargs):
 
-def authbroker_login_required(func):
-    def decorated(request, *args, **kwargs):
-        if not has_valid_token(get_client(request)):
-            return redirect('authbroker:login')
+        # We "login" on every request
+        user = authenticate(request)
+        if user is None:
+            return HttpResponseForbidden()
+        login(request, user)
 
         return func(request, *args, **kwargs)
-    return decorated
+    return _login_required
 
 
 admin.autodiscover()
-admin.site.login = authbroker_login_required(admin.site.login)
+admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
-    path('', authbroker_login_required(root_view), name='root'),
-    path('auth/', include('authbroker_client.urls', namespace='authbroker')),
+    path('', login_required(root_view), name='root'),
     path('admin/', admin.site.urls),
-    path('table_data/<str:database>/<str:schema>/<str:table>', authbroker_login_required(table_data_view), name='table_data'),
+    path('table_data/<str:database>/<str:schema>/<str:table>', login_required(table_data_view), name='table_data'),
     path('api/v1/databases', databases_view),
     path('healthcheck', healthcheck_view),
-    path('appstream/', authbroker_login_required(appstream_view)),
+    path('appstream/', login_required(appstream_view)),
 ]
