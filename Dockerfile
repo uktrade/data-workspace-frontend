@@ -11,12 +11,12 @@ RUN \
 	apk add --no-cache --virtual .build-deps \
 		build-base=0.5-r1 \
 		git=2.18.1-r0 \
-		python3-dev=3.6.6-r0 && \
+		python3-dev=3.6.8-r0 && \
 	apk add --no-cache \
 		nginx=1.14.2-r0 \
 		openssl=1.0.2r-r0 \
 		py3-psycopg2=2.7.5-r0 \
-		python3=3.6.6-r0 && \
+		python3=3.6.8-r0 && \
 	python3 -m ensurepip && \
 	pip3 install \
 		pip==18.00 && \
