@@ -104,12 +104,12 @@ def new_private_database_credentials(user):
         for cred in creds:
             key = f'{s3_prefix}.credentials/db_credentials_{cred["db_name"]}'
             object_contents = (
-                f'dbuser={cred["db_user"]}\n'
-                f'dbpass={cred["db_password"]}\n'
-                f'dbname={cred["db_name"]}\n'
-                f'dbhost={cred["db_host"]}\n'
-                f'dbport={cred["db_port"]}\n'
-                f'dbmemorablename={cred["memorable_name"]}\n'
+                f'dbuser {cred["db_user"]}\n'
+                f'dbpass {cred["db_password"]}\n'
+                f'dbname {cred["db_name"]}\n'
+                f'dbhost {cred["db_host"]}\n'
+                f'dbport {cred["db_port"]}\n'
+                f'dbmemorablename {cred["memorable_name"]}\n'
             )
             s3_client.put_object(
                 Body=object_contents.encode('utf-8'),
