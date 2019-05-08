@@ -1,6 +1,7 @@
-# jupyterhub-data-auth-admin
+# Analysis Workspace
 
-Application that controls authorisation for data sources accessed from JupyterHub
+Allows users to launch applications in order to analyse data
+
 
 ## Running locally
 
