@@ -2,6 +2,7 @@ import csv
 import itertools
 import json
 import logging
+import boto3
 
 from django.contrib.auth import (
     get_user_model,
@@ -81,6 +82,36 @@ def root_view(request):
 
 def healthcheck_view(_):
     return HttpResponse('OK')
+
+
+def appstream_view(request):
+    User = get_user_model()
+
+    client = boto3.client(
+        'appstream',
+        aws_access_key_id=settings.AWS_ACCESS_KEY,
+        aws_secret_access_key=settings.AWS_SECRET_KEY,
+        region_name='eu-west-1'
+    )
+
+    app_sessions = client.describe_sessions(
+        StackName='statav3',
+        FleetName='statav3'
+    )
+
+    fleet_status = client.describe_fleets(
+        Names=['statav3',]
+    )
+    for item in fleet_status['Fleets']:
+        ComputeCapacityStatus = item['ComputeCapacityStatus']
+
+    template = loader.get_template('appstream.html')
+    context = {
+        'app_sessions': app_sessions['Sessions'],
+        'fleet_status': ComputeCapacityStatus,
+    }
+
+    return HttpResponse(template.render(context, request))
 
 
 def databases_view(request):
