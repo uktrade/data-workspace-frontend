@@ -55,7 +55,7 @@ Amend the end of the above command to create migrations.
 ```bash
     ...
     --user root \
-    --volume=$PWD/app/app/migrations:/app/migrations \
+    --volume=$PWD/app/app/migrations:/app/app/migrations \
     jupyterhub-data-auth-admin django-admin makemigrations
 ```
 
