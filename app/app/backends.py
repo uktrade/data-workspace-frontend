@@ -1,6 +1,10 @@
+import logging
+
 from django.contrib.auth import (
     get_user_model,
 )
+
+logger = logging.getLogger('app')
 
 
 class AuthbrokerBackendUsernameIsEmail():
@@ -24,7 +28,8 @@ class AuthbrokerBackendUsernameIsEmail():
 
         user.profile.sso_id = user_id
         user.username = user.email
-        user.set_unusable_password()
+        if user.has_usable_password():
+            user.set_unusable_password()
         user.save()
 
         return user

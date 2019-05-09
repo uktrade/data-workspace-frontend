@@ -8,15 +8,15 @@ env = normalise_environment(os.environ)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env['SECRET_KEY']
-DEBUG = env['ALLOWED_HOSTS'] == ['localhost']
+DEBUG = 'localapps.com' in env['ALLOWED_HOSTS']
 
 def aws_fargate_private_ip():
     with urllib.request.urlopen('http://169.254.170.2/v2/metadata') as response:
         return json.loads(response.read().decode('utf-8'))['Containers'][0]['Networks'][0]['IPv4Addresses'][0]
 
 ALLOWED_HOSTS = \
-    env['ALLOWED_HOSTS'] if DEBUG else \
-    env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()]
+    (env['ALLOWED_HOSTS']) if DEBUG else \
+    (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -38,6 +38,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app.middleware.disable_client_side_caching',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -64,7 +65,9 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
                 'govuk_template_base.context_processors.govuk_template_base',
+                'app.context_processors.root_href',
             ],
         },
     },
@@ -113,28 +116,53 @@ LOGGING = {
 
 # Not all installations have this set
 NOTEBOOKS_BUCKET = env.get('NOTEBOOKS_BUCKET', None)
-
 APPSTREAM_URL = env['APPSTREAM_URL']
-NOTEBOOKS_URL = env['NOTEBOOKS_URL']
 SUPPORT_URL = env['SUPPORT_URL']
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': env['REDIS_URL'],
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+    },
+}
+
+# This deliberately the same as the proxy: it changes the cookie value on
+# login, which mitigates the risk of session fixation attack. Using the same
+# cookie also means there are fewer cases to consider in terms of cookie
+# expiration.
+SESSION_COOKIE_NAME = 'data_workspace_session'
+root_domain_no_port, _, _ = env['APPLICATION_ROOT_DOMAIN'].partition(':')
+SESSION_COOKIE_DOMAIN = root_domain_no_port
 SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_NAME = 'analysis_workspace_admin_session'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
 
 CSRF_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_NAME = 'analysis_workspace_admin_csrf'
+CSRF_COOKIE_NAME = 'data_workspace_csrf'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Only used when collectstatic is run
 STATIC_ROOT = '/home/django/static/'
 
-# Used when generating URLs for static files
-STATIC_URL = '/static/'
+# Used when generating URLs for static files, and routed by nginx _before_
+# hitting proxy.py, so must not conflict with an analysis application
+STATIC_URL = '/__django_static/'
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 GOVUK_SERVICE_SETTINGS = {
-    'name': 'Analysis Workspace',
+    'name': 'Data Workspace',
     'phase': 'alpha',
     'header_link_view_name': 'root',
     'header_links': [],
 }
+
+# The application template models are populated by environment variables,
+# since they can contain very low-level infrastructure details, and it means
+# tests don't have to worry about fixtures / editing the database
+APPLICATION_TEMPLATES = env['APPLICATION_TEMPLATES']
+APPLICATION_ROOT_DOMAIN = env['APPLICATION_ROOT_DOMAIN']

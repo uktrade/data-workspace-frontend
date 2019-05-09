@@ -17,6 +17,14 @@ and edit `.env`, specifically replacing `AUTHBROKER_*`. Start the application by
 docker-compose up --build
 ```
 
+With the default environment, you will need the below in your `/etc/hosts` file.
+
+```
+127.0.0.1       localapps.com
+```
+
+And the application will be visible at http://localapps.com. This is to be able to properly test cookies that are shared with subdomains.
+
 
 ## Creating migrations / running management commands
 

@@ -3,7 +3,7 @@
 {% load static %}
 {% load govuk_template_base %}
 
-{% block page_title %}{% get_service_settings as service_settings %}GOV.UK – {{ service_settings.localised_name }}{% endblock %}
+{% block page_title %}Data Workspace{% endblock %}
 
 {% block head %}
   {{ block.super }}
@@ -34,7 +34,7 @@
         <a href="#proposition-links" class="js-header-toggle menu">{% trans 'Menu' %}</a>
       {% endif %}
       <nav id="proposition-menu">
-        <a href="{{ service_settings.header_link_url|default:'/' }}" id="proposition-name">
+        <a href="{{ root_href }}" id="proposition-name">
           {% block proposition %}{{ service_settings.localised_name }}{% endblock %}
         </a>
         {% block proposition_menu %}

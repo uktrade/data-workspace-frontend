@@ -1,23 +1,53 @@
 {% extends 'govuk_template.html' %}
 
+{% block head %}
+    {{ block.super }}
+    <style>
+        .messages {
+            margin: 1em 0;
+            padding: 1em 1em;
+            color: #fff;
+            background: #28a197;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        .btn-stop {
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
+
 {% block inner_content %}
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
     <h1 class="heading-large">Services</h1>
 
-    {% if notebooks_url or appstream_url or support_url %}
-        <ul class="list">
-        {% if notebooks_url != "https:///" %}
-            <li><a href="{{ notebooks_url }}">JupyterLab</a></li>
-        {% endif %}
-        {% if appstream_url != "https:///" %}
-            <li><a href="{{ appstream_url }}">AppStream</a></li>
-        {% endif %}
-        {% if support_url != "https:///" %}
-            <li><a href="{{ support_url }}">Support and feedback</a></li>
-        {% endif %}
-        </ul>
-    {% else %}
-        <p>No services are available.</p>a
+    <ul class="list">
+        {% for application in applications %}
+        <li>
+            <a href="{{ application.link }}">{{ application.nice_name }}</a>
+            {% if application.instance and application.can_stop %}
+            <form method="POST" style="display: inline">
+                {% csrf_token %}
+                <button class="btn btn-stop" name="application_instance_id" value="{{ application.instance.id }}" type="submit">STOP</button>
+            <form>
+            {% endif %}
+        </li>
+
+        {% endfor %}
+    {% if appstream_url != "https:///" %}
+        <li><a href="{{ appstream_url }}">AppStream</a></li>
     {% endif %}
+    {% if support_url != "https:///" %}
+        <li><a href="{{ support_url }}">Support and feedback</a></li>
+    {% endif %}
+    </ul>
 
     <h1 class="heading-large">Available data</h1>
 

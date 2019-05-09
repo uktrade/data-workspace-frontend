@@ -1,0 +1,9 @@
+{% extends 'govuk_template.html' %}
+
+{% block inner_content %}
+    <h1 class="heading-large">Error. Refresh to retry.</h1>
+
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+{% endblock %}
