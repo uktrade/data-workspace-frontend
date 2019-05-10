@@ -40,5 +40,5 @@ urlpatterns = [
     path('table_data/<str:database>/<str:schema>/<str:table>', authbroker_login_required(table_data_view), name='table_data'),
     path('api/v1/databases', databases_view),
     path('healthcheck', healthcheck_view),
-	path('appstream/', appstream_view),
+    path('appstream/', appstream_view),
 ]
