@@ -91,18 +91,19 @@ def appstream_view(request):
         'appstream',
         aws_access_key_id=settings.AWS_ACCESS_KEY,
         aws_secret_access_key=settings.AWS_SECRET_KEY,
-        region_name='eu-west-1'
+        region_name=settings.AWS_REGION
     )
 
     fleet_status = client.describe_fleets(
-        Names=['statav3',]
+        Names=[settings.APPSTREAM_FLEET_NAME,]
     )
+    
     for item in fleet_status['Fleets']:
         ComputeCapacityStatus = item['ComputeCapacityStatus']
 
     app_sessions = client.describe_sessions(
-        StackName='statav3',
-        FleetName='statav3'
+        StackName=settings.APPSTREAM_STACK_NAME,
+        FleetName=settings.APPSTREAM_FLEET_NAME
     )
 
     app_sessions_users = [
