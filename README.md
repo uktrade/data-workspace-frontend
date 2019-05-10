@@ -45,6 +45,8 @@ docker run --rm -it -p 8000:8000 \
     -e APPSTREAM_URL='https://url.to.appstream/' \
     -e SUPPORT_URL='https://url.to.support/' \
     -e NOTEBOOKS_URL='https://url.to.notebooks/' \
+    -e AWS_SECRET_KEY='secret-key' \
+    -e AWS_ACCESS_KEY='access-key' \
     -e AWS_REGION='region' \
     -e APPSTREAM_FLEET_NAME='fleet-name' \
     -e APPSTREAM_STACK_NAME='stack-name' \
