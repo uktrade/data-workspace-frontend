@@ -94,21 +94,26 @@ def appstream_view(request):
         region_name='eu-west-1'
     )
 
-    app_sessions = client.describe_sessions(
-        StackName='statav3',
-        FleetName='statav3'
-    )
-
     fleet_status = client.describe_fleets(
         Names=['statav3',]
     )
     for item in fleet_status['Fleets']:
         ComputeCapacityStatus = item['ComputeCapacityStatus']
 
+    app_sessions = client.describe_sessions(
+        StackName='statav3',
+        FleetName='statav3'
+    )
+
+    app_sessions_users = [
+        (app_session, User.objects.get(profile__sso_id=app_session['UserId']))
+        for app_session in app_sessions['Sessions']
+    ]
+
     template = loader.get_template('appstream.html')
     context = {
-        'app_sessions': app_sessions['Sessions'],
         'fleet_status': ComputeCapacityStatus,
+        'app_sessions_users': app_sessions_users,
     }
 
     return HttpResponse(template.render(context, request))
