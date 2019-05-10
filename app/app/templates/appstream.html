@@ -1,18 +1,18 @@
 {% extends 'govuk_template.html' %}
 
 {% block inner_content %}
-  <h1 class="heading-large">Fleet Status</h1>
+  <h1 class="heading-large">Fleet status</h1>
       <h2> Instances desired:  {{ fleet_status.Desired }}</h2>
       <h2> Instances running:  {{ fleet_status.Running }}</h2>
       <h2> Sessions used: {{ fleet_status.InUse }}</h2>
       <h2> Sessions available: {{ fleet_status.Available }}</h2>
 
 
-  <h1 class="heading-large">Users Still logged in</h1>
+  <h1 class="heading-large">Users still logged in</h1>
       {% for item, user in app_sessions_users %}
-          <h2> Username: {{ user.first_name }}  {{ user.last_name }} </h2>
+          <h2> User: {{ user.first_name }}  {{ user.last_name }} </h2>
           <h2> State: {{ item.State }}</h2>
-          <h2> Session will expiry: {{ item.MaxExpirationTime }}</h2><br>
+          <h2> Session will expire: {{ item.MaxExpirationTime }}</h2><br>
       {% endfor %}
 
 {% endblock %}
