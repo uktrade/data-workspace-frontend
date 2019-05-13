@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.shortcuts import (
-	redirect,
+        redirect,
 )
 from django.urls import (
     include,
@@ -8,8 +8,8 @@ from django.urls import (
 )
 
 from authbroker_client.client import (
-	get_client,
-	has_valid_token,
+    get_client,
+    has_valid_token,
 )
 
 from app.views import (
@@ -17,6 +17,7 @@ from app.views import (
     databases_view,
     table_data_view,
     healthcheck_view,
+    appstream_view,
 )
 
 
@@ -39,4 +40,5 @@ urlpatterns = [
     path('table_data/<str:database>/<str:schema>/<str:table>', authbroker_login_required(table_data_view), name='table_data'),
     path('api/v1/databases', databases_view),
     path('healthcheck', healthcheck_view),
+    path('appstream/', authbroker_login_required(appstream_view)),
 ]
