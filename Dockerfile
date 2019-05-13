@@ -34,8 +34,8 @@ RUN \
 	rm /etc/nginx/nginx.conf && \
 	apk del .build-deps
 
-ADD app /app
-ADD etc /etc
+COPY app /app
+COPY etc /etc
 
 CMD ["/app/start.sh"]
 
