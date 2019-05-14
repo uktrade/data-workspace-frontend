@@ -171,6 +171,10 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
+            if request.url.path == '/healthcheck':
+                request['sso_profile_headers'] = {}
+                return await handler(request)
+
             session = await get_session(request)
 
             if request.path != redirect_from_sso_path and session_token_key not in session:
