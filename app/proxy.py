@@ -158,12 +158,15 @@ async def async_main():
                    f'client_id={sso_client_id}'
 
         def get_redirect_uri_callback(request):
-            uri = request.url.with_path(redirect_from_sso_path) \
+            scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
+            uri = request.url.with_scheme(scheme) \
+                             .with_path(redirect_from_sso_path) \
                              .with_query({})
             return str(uri)
 
         def set_redirect_uri_final(session, state, request):
-            session[state] = str(request.url)
+            scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
+            session[state] = str(request.url.with_scheme(scheme))
 
         def get_redirect_uri_final(session, request):
             state = request.query['state']
