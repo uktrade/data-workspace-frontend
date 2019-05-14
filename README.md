@@ -1,6 +1,7 @@
-# jupyterhub-data-auth-admin
+# Analysis Workspace
 
-Application that controls authorisation for data sources accessed from JupyterHub
+Allows users to launch applications in order to analyse data
+
 
 ## Running locally
 
@@ -21,12 +22,19 @@ docker run --name jupyteradminpostgres -d --rm -p 5432:5432 \
     -c ssl=on -c ssl_cert_file=/ssl.crt -c ssl_key_file=/ssl.key
 ```
 
+and redis
+
+```bash
+docker run --rm --name analysis-workspace-redis -d -p 6379:6379 redis:4.0.10
+```
+
 and then to start the application run
 
 ```bash
 docker build . -t jupyterhub-data-auth-admin && \
 docker run --rm -it -p 8000:8000 \
     --link jupyteradminpostgres:jupyteradminpostgres \
+    --link analysis-workspace-redis:analysis-workspace-redis \
     -e SECRET_KEY=something-secret \
     -e ALLOWED_HOSTS__1=localhost \
     -e AUTHBROKER_URL='https://url.to.staff.sso/' \
@@ -42,6 +50,7 @@ docker run --rm -it -p 8000:8000 \
     -e DATA_DB__my_database__PASSWORD=postgres \
     -e DATA_DB__my_database__HOST=jupyteradminpostgres \
     -e DATA_DB__my_database__PORT=5432 \
+    -e REDIS_URL='redis://analysis-workspace-redis:6379' \
     -e APPSTREAM_URL='https://url.to.appstream/' \
     -e SUPPORT_URL='https://url.to.support/' \
     -e NOTEBOOKS_URL='https://url.to.notebooks/' \
@@ -67,6 +76,28 @@ Amend the end of the above command to create migrations.
 ## Running management commands
 
 Append `django-admin [command]` to the command above to run a management command locally. For more complex operations, append `ash` to enter into a shell and run `django-admin` from there.
+
+
+## Running tests
+
+Redis must be running in a docker container.
+
+```bash
+docker run --rm --name analysis-workspace-redis -d -p 6379:6379 redis:4.0.10
+```
+
+The tests themselves are also run in a docker container that builds on the production container, to fairly closely simulate the production environment.
+
+
+```bash
+docker build . -t jupyterhub-data-auth-admin && \
+docker build . -f Dockerfile-test -t analysis-workspace-test &&  \
+docker run --rm \
+    --link jupyteradminpostgres:jupyteradminpostgres \
+    --link analysis-workspace-redis:analysis-workspace-redis \
+    analysis-workspace-test  \
+    python3 -m unittest test.test
+```
 
 
 # Building & pushing docker image to Quay

@@ -1,0 +1,10 @@
+FROM jupyterhub-data-auth-admin
+
+ENV \
+	PYTHONPATH=/app;/test
+
+USER root
+
+ADD test /test
+
+USER django

@@ -1,33 +1,28 @@
 from django.contrib.auth import (
     get_user_model,
 )
-from authbroker_client.client import (
-    get_client,
-    has_valid_token,
-    get_profile,
-)
 
 
 class AuthbrokerBackendUsernameIsEmail():
 
     def authenticate(self, request, **kwargs):
-        client = get_client(request)
-
-        if not has_valid_token(client):
+        try:
+            email = request.META['HTTP_SSO_PROFILE_EMAIL']
+            user_id = request.META['HTTP_SSO_PROFILE_USER_ID']
+            last_name = request.META['HTTP_SSO_PROFILE_LAST_NAME']
+            first_name  =  request.META['HTTP_SSO_PROFILE_FIRST_NAME']
+        except KeyError:
             return None
 
         User = get_user_model()
-
-        profile = get_profile(client)
-
         user, created = User.objects.get_or_create(
-            email=profile['email'],
-            defaults={'first_name': profile['first_name'], 'last_name': profile['last_name']})
+            email=email,
+            defaults={'first_name': first_name, 'last_name': last_name})
 
         # Ensure the user has a profile
         user.save()
 
-        user.profile.sso_id = profile['user_id']
+        user.profile.sso_id = user_id
         user.username = user.email
         user.set_unusable_password()
         user.save()
