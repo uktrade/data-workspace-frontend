@@ -137,9 +137,9 @@ async def async_main():
 
     def authenticate_by_staff_sso():
 
-        auth_path = '/o/authorize/'
-        token_path = '/o/token/'
-        me_path = '/api/v1/user/me/'
+        auth_path = 'o/authorize/'
+        token_path = 'o/token/'
+        me_path = 'api/v1/user/me/'
         grant_type = 'authorization_code'
         scope = 'read write'
         response_type = 'code'
@@ -174,7 +174,8 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-            if request.url.path == '/healthcheck':
+            # Database authentication is handled by the django app
+            if request.url.path in ['/healthcheck', '/api/v1/databases']:
                 request['sso_profile_headers'] = {}
                 return await handler(request)
 

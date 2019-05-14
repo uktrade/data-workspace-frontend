@@ -44,7 +44,7 @@ class TestApplication(unittest.TestCase):
                 # Dynamic: proxy and app settings populated at runtime
                 'AUTHBROKER_CLIENT_ID': 'some-id',
                 'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-                'AUTHBROKER_URL': 'http://localhost:8005',
+                'AUTHBROKER_URL': 'http://localhost:8005/',
                 'REDIS_URL': 'redis://analysis-workspace-redis:6379',
                 'SECRET_KEY': 'localhost',
                 'ALLOWED_HOSTS__1': 'localhost',
@@ -141,7 +141,7 @@ class TestApplication(unittest.TestCase):
                 # Dynamic: proxy and app settings populated at runtime
                 'AUTHBROKER_CLIENT_ID': 'some-id',
                 'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-                'AUTHBROKER_URL': 'http://localhost:8005',
+                'AUTHBROKER_URL': 'http://localhost:8005/',
                 'REDIS_URL': 'redis://analysis-workspace-redis:6379',
                 'SECRET_KEY': 'localhost',
                 'ALLOWED_HOSTS__1': 'localhost',
@@ -215,7 +215,7 @@ class TestApplication(unittest.TestCase):
                 # Dynamic: proxy and app settings populated at runtime
                 'AUTHBROKER_CLIENT_ID': 'some-id',
                 'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-                'AUTHBROKER_URL': 'http://localhost:8005',
+                'AUTHBROKER_URL': 'http://localhost:8005/',
                 'REDIS_URL': 'redis://analysis-workspace-redis:6379',
                 'SECRET_KEY': 'localhost',
                 'ALLOWED_HOSTS__1': 'localhost',
@@ -308,7 +308,7 @@ class TestHttpWebsocketsProxy(unittest.TestCase):
         'UPSTREAM_ROOT': 'http://localhost:9000',
         'AUTHBROKER_CLIENT_ID': 'some-id',
         'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-        'AUTHBROKER_URL': 'http://localhost:8010',
+        'AUTHBROKER_URL': 'http://localhost:8010/',
         'REDIS_URL': 'redis://analysis-workspace-redis:6379',
     })
     @async_test
