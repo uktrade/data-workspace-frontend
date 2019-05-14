@@ -137,9 +137,9 @@ async def async_main():
 
     def authenticate_by_staff_sso():
 
-        auth_path = '/o/authorize/'
-        token_path = '/o/token/'
-        me_path = '/api/v1/user/me/'
+        auth_path = 'o/authorize/'
+        token_path = 'o/token/'
+        me_path = 'api/v1/user/me/'
         grant_type = 'authorization_code'
         scope = 'read write'
         response_type = 'code'
@@ -158,12 +158,15 @@ async def async_main():
                    f'client_id={sso_client_id}'
 
         def get_redirect_uri_callback(request):
-            uri = request.url.with_path(redirect_from_sso_path) \
+            scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
+            uri = request.url.with_scheme(scheme) \
+                             .with_path(redirect_from_sso_path) \
                              .with_query({})
             return str(uri)
 
         def set_redirect_uri_final(session, state, request):
-            session[state] = str(request.url)
+            scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
+            session[state] = str(request.url.with_scheme(scheme))
 
         def get_redirect_uri_final(session, request):
             state = request.query['state']
@@ -171,6 +174,11 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
+            # Database authentication is handled by the django app
+            if request.url.path in ['/healthcheck', '/api/v1/databases']:
+                request['sso_profile_headers'] = {}
+                return await handler(request)
+
             session = await get_session(request)
 
             if request.path != redirect_from_sso_path and session_token_key not in session:
