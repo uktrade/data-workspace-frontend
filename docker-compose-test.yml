@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-test
+    image: analysis-workspace-test
     ports:
       - "8000:8000"
     links:
@@ -13,11 +14,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-postgres
+    image: analysis-workspace-postgres
     ports:
       - "5432:5432"
   analysis-workspace-redis:
     build:
       context: .
       dockerfile: Dockerfile-redis
+    image: analysis-workspace-redis
     ports:
       - "6379:6379"
