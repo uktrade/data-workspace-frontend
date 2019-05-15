@@ -8,18 +8,9 @@ Allows users to launch applications in order to analyse data
 You must initially start the database
 
 ```bash
-openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj /CN=jupyteradminpostgres \
-    -keyout ssl.key \
-    -out ssl.crt && \
-chmod 0600 ssl.key ssl.crt && \
+docker build . -f Dockerfile-postgres -t jupyteradminpostgres && \
 docker run --name jupyteradminpostgres -d --rm -p 5432:5432 \
-    -e POSTGRES_USER=postgres \
-    -e POSTGRES_PASSWORD=postgres \
-    -e POSTGRES_DB=postgres \
-    -v $PWD/ssl.crt:/ssl.crt \
-    -v $PWD/ssl.key:/ssl.key \
-    postgres:10.4 \
-    -c ssl=on -c ssl_cert_file=/ssl.crt -c ssl_key_file=/ssl.key
+    jupyteradminpostgres
 ```
 
 and redis
