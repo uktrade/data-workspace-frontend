@@ -278,7 +278,7 @@ class TestApplication(unittest.TestCase):
         sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
         await sso_site.start()
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(4)
 
         session = aiohttp.ClientSession()
         async def cleanup_session():
