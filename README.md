@@ -16,7 +16,9 @@ docker run --name analysis-workspace-postgres -d --rm -p 5432:5432 \
 and redis
 
 ```bash
-docker run --rm --name analysis-workspace-redis -d -p 6379:6379 redis:4.0.10
+docker build . -f Dockerfile-redis -t analysis-workspace-redis && \
+docker run --name analysis-workspace-redis -d --rm -p 6379:6379  \
+    analysis-workspace-redis
 ```
 
 and then to start the application run
