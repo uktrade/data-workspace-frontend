@@ -1,4 +1,4 @@
-# Analysis Workspace
+# Analysis Workspace [![CircleCI](https://circleci.com/gh/uktrade/analysis-workspace.svg?style=svg)](https://circleci.com/gh/uktrade/analysis-workspace)
 
 Allows users to launch applications in order to analyse data
 
@@ -34,6 +34,7 @@ For other commands, replace `makemigrations` with the name of the command.
 ## Running tests
 
 ```bash
+docker-compose build analysis-workspace && \
 docker-compose -f docker-compose-test.yml build && \
 docker-compose -f docker-compose-test.yml run analysis-workspace-test python3 -m unittest test.test
 ```
