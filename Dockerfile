@@ -15,11 +15,10 @@ RUN \
 	apk add --no-cache \
 		nginx=1.14.2-r0 \
 		openssl=1.0.2r-r0 \
+		py3-gevent==1.2.2-r0 \
 		py3-psycopg2=2.7.5-r0 \
 		python3=3.6.8-r0 && \
 	python3 -m ensurepip && \
-	pip3 install \
-		pip==18.00 && \
 	pip3 install \
 		aiohttp==3.5.4 \
 		aioredis==1.2.0 \
