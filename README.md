@@ -8,9 +8,9 @@ Allows users to launch applications in order to analyse data
 You must initially start the database
 
 ```bash
-docker build . -f Dockerfile-postgres -t jupyteradminpostgres && \
-docker run --name jupyteradminpostgres -d --rm -p 5432:5432 \
-    jupyteradminpostgres
+docker build . -f Dockerfile-postgres -t analysis-workspace-postgres && \
+docker run --name analysis-workspace-postgres -d --rm -p 5432:5432 \
+    analysis-workspace-postgres
 ```
 
 and redis
@@ -24,7 +24,7 @@ and then to start the application run
 ```bash
 docker build . -t jupyterhub-data-auth-admin && \
 docker run --rm -it -p 8000:8000 \
-    --link jupyteradminpostgres:jupyteradminpostgres \
+    --link analysis-workspace-postgres:analysis-workspace-postgres \
     --link analysis-workspace-redis:analysis-workspace-redis \
     -e SECRET_KEY=something-secret \
     -e ALLOWED_HOSTS__1=localhost \
@@ -34,12 +34,12 @@ docker run --rm -it -p 8000:8000 \
     -e ADMIN_DB__NAME=postgres \
     -e ADMIN_DB__USER=postgres \
     -e ADMIN_DB__PASSWORD=postgres \
-    -e ADMIN_DB__HOST=jupyteradminpostgres \
+    -e ADMIN_DB__HOST=analysis-workspace-postgres \
     -e ADMIN_DB__PORT=5432 \
     -e DATA_DB__my_database__NAME=postgres \
     -e DATA_DB__my_database__USER=postgres \
     -e DATA_DB__my_database__PASSWORD=postgres \
-    -e DATA_DB__my_database__HOST=jupyteradminpostgres \
+    -e DATA_DB__my_database__HOST=analysis-workspace-postgres \
     -e DATA_DB__my_database__PORT=5432 \
     -e REDIS_URL='redis://analysis-workspace-redis:6379' \
     -e APPSTREAM_URL='https://url.to.appstream/' \
@@ -84,7 +84,7 @@ The tests themselves are also run in a docker container that builds on the produ
 docker build . -t jupyterhub-data-auth-admin && \
 docker build . -f Dockerfile-test -t analysis-workspace-test &&  \
 docker run --rm \
-    --link jupyteradminpostgres:jupyteradminpostgres \
+    --link analysis-workspace-postgres:analysis-workspace-postgres \
     --link analysis-workspace-redis:analysis-workspace-redis \
     analysis-workspace-test  \
     python3 -m unittest test.test

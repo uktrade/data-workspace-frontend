@@ -2,7 +2,7 @@
 
 set -e
 
-openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj /CN=jupyteradminpostgres \
+openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj /CN=analysis-workspace-postgres \
     -keyout ssl.key \
     -out ssl.crt && \
 chown postgres:postgres ssl.key ssl.crt
