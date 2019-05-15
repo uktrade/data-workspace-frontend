@@ -28,30 +28,10 @@ docker build . -t analysis-workspace && \
 docker run --rm -it -p 8000:8000 \
     --link analysis-workspace-postgres:analysis-workspace-postgres \
     --link analysis-workspace-redis:analysis-workspace-redis \
-    -e SECRET_KEY=something-secret \
-    -e ALLOWED_HOSTS__1=localhost \
+    --env-file=analysis-workspace.env \
     -e AUTHBROKER_URL='https://url.to.staff.sso/' \
     -e AUTHBROKER_CLIENT_ID='some-id' \
     -e AUTHBROKER_CLIENT_SECRET='some-secret' \
-    -e ADMIN_DB__NAME=postgres \
-    -e ADMIN_DB__USER=postgres \
-    -e ADMIN_DB__PASSWORD=postgres \
-    -e ADMIN_DB__HOST=analysis-workspace-postgres \
-    -e ADMIN_DB__PORT=5432 \
-    -e DATA_DB__my_database__NAME=postgres \
-    -e DATA_DB__my_database__USER=postgres \
-    -e DATA_DB__my_database__PASSWORD=postgres \
-    -e DATA_DB__my_database__HOST=analysis-workspace-postgres \
-    -e DATA_DB__my_database__PORT=5432 \
-    -e REDIS_URL='redis://analysis-workspace-redis:6379' \
-    -e APPSTREAM_URL='https://url.to.appstream/' \
-    -e SUPPORT_URL='https://url.to.support/' \
-    -e NOTEBOOKS_URL='https://url.to.notebooks/' \
-    -e APPSTREAM_AWS_SECRET_KEY='secret-key' \
-    -e APPSTREAM_AWS_ACCESS_KEY='access-key' \
-    -e APPSTREAM_AWS_REGION='region' \
-    -e APPSTREAM_FLEET_NAME='fleet-name' \
-    -e APPSTREAM_STACK_NAME='stack-name' \
     analysis-workspace
 ```
 
