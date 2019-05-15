@@ -1,4 +1,4 @@
-FROM jupyterhub-data-auth-admin
+FROM analysis-workspace
 
 ENV \
 	PYTHONPATH=/app;/test

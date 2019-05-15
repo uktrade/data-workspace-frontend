@@ -24,7 +24,7 @@ docker run --name analysis-workspace-redis -d --rm -p 6379:6379  \
 and then to start the application run
 
 ```bash
-docker build . -t jupyterhub-data-auth-admin && \
+docker build . -t analysis-workspace && \
 docker run --rm -it -p 8000:8000 \
     --link analysis-workspace-postgres:analysis-workspace-postgres \
     --link analysis-workspace-redis:analysis-workspace-redis \
@@ -52,7 +52,7 @@ docker run --rm -it -p 8000:8000 \
     -e APPSTREAM_AWS_REGION='region' \
     -e APPSTREAM_FLEET_NAME='fleet-name' \
     -e APPSTREAM_STACK_NAME='stack-name' \
-    jupyterhub-data-auth-admin
+    analysis-workspace
 ```
 
 ## Creating migrations
@@ -63,7 +63,7 @@ Amend the end of the above command to create migrations.
     ...
     --user root \
     --volume=$PWD/app/app/migrations:/app/app/migrations \
-    jupyterhub-data-auth-admin django-admin makemigrations
+    analysis-workspace django-admin makemigrations
 ```
 
 ## Running management commands
@@ -83,7 +83,7 @@ The tests themselves are also run in a docker container that builds on the produ
 
 
 ```bash
-docker build . -t jupyterhub-data-auth-admin && \
+docker build . -t analysis-workspace && \
 docker build . -f Dockerfile-test -t analysis-workspace-test &&  \
 docker run --rm \
     --link analysis-workspace-postgres:analysis-workspace-postgres \
