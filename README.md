@@ -5,72 +5,46 @@ Allows users to launch applications in order to analyse data
 
 ## Running locally
 
-You must initially start PostgreSQL
+Set the required variables by
 
 ```bash
-docker build . -f Dockerfile-postgres -t analysis-workspace-postgres && \
-docker run --name analysis-workspace-postgres -d --rm -p 5432:5432 \
-    analysis-workspace-postgres
+cp example.env .env
 ```
 
-and Redis
+and edit `.env`, specifically replacing `AUTHBROKER_*`. Start the application by
 
 ```bash
-docker build . -f Dockerfile-redis -t analysis-workspace-redis && \
-docker run --name analysis-workspace-redis -d --rm -p 6379:6379  \
-    analysis-workspace-redis
+docker-compose up --build
 ```
 
-and then to start the application run
+
+## Creating migrations / running management commands
 
 ```bash
-docker build . -t analysis-workspace && \
-docker run --rm -it -p 8000:8000 \
-    --link analysis-workspace-postgres:analysis-workspace-postgres \
-    --link analysis-workspace-redis:analysis-workspace-redis \
-    --env-file=analysis-workspace.env \
-    -e AUTHBROKER_URL='https://url.to.staff.sso/' \
-    -e AUTHBROKER_CLIENT_ID='some-id' \
-    -e AUTHBROKER_CLIENT_SECRET='some-secret' \
-    analysis-workspace
-```
-
-## Creating migrations
-
-Amend the end of the above command to create migrations.
-
-```bash
-    ...
+docker-compose build && \
+docker-compose run \
     --user root \
     --volume=$PWD/app/app/migrations:/app/app/migrations \
     analysis-workspace django-admin makemigrations
 ```
 
-## Running management commands
-
-Append `django-admin [command]` to the command above to run a management command locally. For more complex operations, append `ash` to enter into a shell and run `django-admin` from there.
+For other commands, replace `makemigrations` with the name of the command.
 
 
 ## Running tests
 
-The tests themselves are also run in a docker container that builds on the production container, to fairly closely simulate the production environment.
-
-
 ```bash
-docker build . -t analysis-workspace && \
-docker build . -f Dockerfile-test -t analysis-workspace-test &&  \
-docker run --rm \
-    --link analysis-workspace-postgres:analysis-workspace-postgres \
-    --link analysis-workspace-redis:analysis-workspace-redis \
-    analysis-workspace-test  \
-    python3 -m unittest test.test
+docker-compose -f docker-compose-test.yml build && \
+docker-compose -f docker-compose-test.yml run analysis-workspace-test python3 -m unittest test.test
 ```
 
 
-# Building & pushing docker image to Quay
+# Building & pushing docker image to Quay.io
 
 ```bash
 docker build -t analysis-workspace . && \
 docker tag analysis-workspace:latest quay.io/uktrade/jupyterhub-data-auth-admin:latest && \
 docker push quay.io/uktrade/jupyterhub-data-auth-admin:latest
 ```
+
+Quay.io does not build the images: they are built locally and pushed.

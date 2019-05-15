@@ -1,0 +1,23 @@
+version: "3"
+services:
+  analysis-workspace-test:
+    build:
+      context: .
+      dockerfile: Dockerfile-test
+    ports:
+      - "8000:8000"
+    links:
+      - "analysis-workspace-postgres"
+      - "analysis-workspace-redis"
+  analysis-workspace-postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+    ports:
+      - "5432:5432"
+  analysis-workspace-redis:
+    build:
+      context: .
+      dockerfile: Dockerfile-redis
+    ports:
+      - "6379:6379"
