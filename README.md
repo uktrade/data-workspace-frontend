@@ -73,12 +73,6 @@ Append `django-admin [command]` to the command above to run a management command
 
 ## Running tests
 
-Redis must be running in a docker container.
-
-```bash
-docker run --rm --name analysis-workspace-redis -d -p 6379:6379 redis:4.0.10
-```
-
 The tests themselves are also run in a docker container that builds on the production container, to fairly closely simulate the production environment.
 
 
