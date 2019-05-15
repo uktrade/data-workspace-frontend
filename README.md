@@ -90,7 +90,7 @@ docker run --rm \
 # Building & pushing docker image to Quay
 
 ```bash
-docker build -t jupyterhub-data-auth-admin . && \
-docker tag jupyterhub-data-auth-admin:latest  quay.io/uktrade/jupyterhub-data-auth-admin:latest && \
+docker build -t analysis-workspace . && \
+docker tag analysis-workspace:latest quay.io/uktrade/jupyterhub-data-auth-admin:latest && \
 docker push quay.io/uktrade/jupyterhub-data-auth-admin:latest
 ```
