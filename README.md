@@ -5,7 +5,7 @@ Allows users to launch applications in order to analyse data
 
 ## Running locally
 
-You must initially start the database
+You must initially start PostgreSQL
 
 ```bash
 docker build . -f Dockerfile-postgres -t analysis-workspace-postgres && \
@@ -13,7 +13,7 @@ docker run --name analysis-workspace-postgres -d --rm -p 5432:5432 \
     analysis-workspace-postgres
 ```
 
-and redis
+and Redis
 
 ```bash
 docker build . -f Dockerfile-redis -t analysis-workspace-redis && \
