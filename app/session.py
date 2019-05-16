@@ -31,6 +31,9 @@ import time
 from aiohttp import (
     web,
 )
+from multidict import (
+    CIMultiDict,
+)
 
 
 COOKIE_NAME = 'analysis_workspace_proxy_session'
@@ -86,8 +89,13 @@ def redis_session_middleware(redis_pool):
                         await conn.execute('SET', redis_key, redis_value, 'EX', REDIS_MAX_AGE)
 
             expires = time.strftime('%a, %d-%b-%Y %T GMT', time.gmtime(time.time() + COOKIE_MAX_AGE))
-            secure = request.headers.get('x-forwarded-proto', request.url.scheme) == 'https'
-            response.set_cookie(COOKIE_NAME, cookie_value, max_age=COOKIE_MAX_AGE, expires=expires, httponly=True, secure=secure)
+            secure = \
+                '; Secure' if request.headers.get('x-forwarded-proto', request.url.scheme) == 'https' else \
+                ''
+            # aiohttp's set_cookie doesn't seem to support the SameSite attribute
+            response.headers.add(
+                'set-cookie', f'{COOKIE_NAME}={cookie_value}; expires={expires}; Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path=/; SameSite=Lax{secure}'
+            )
             return response
 
         request[SESSION_KEY] = get_value, set_value, with_new_cookie, with_cookie
