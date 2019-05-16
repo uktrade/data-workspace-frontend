@@ -86,7 +86,8 @@ def redis_session_middleware(redis_pool):
                         await conn.execute('SET', redis_key, redis_value, 'EX', REDIS_MAX_AGE)
 
             expires = time.strftime('%a, %d-%b-%Y %T GMT', time.gmtime(time.time() + COOKIE_MAX_AGE))
-            response.set_cookie(COOKIE_NAME, cookie_value, max_age=COOKIE_MAX_AGE, expires=expires, httponly=True)
+            secure = request.headers.get('x-forwarded-proto', request.url.scheme) == 'https'
+            response.set_cookie(COOKIE_NAME, cookie_value, max_age=COOKIE_MAX_AGE, expires=expires, httponly=True, secure=secure)
             return response
 
         request[SESSION_KEY] = get_value, set_value, with_new_cookie, with_cookie
