@@ -37,10 +37,10 @@ async def async_main():
     redis_storage = RedisStorage(redis_pool, max_age=60*60*24)
 
     def without_transfer_encoding(headers):
-        return {
-            key: value for key, value in headers.items()
+        return tuple(
+            (key, value) for key, value in headers.items()
             if key.lower() != 'transfer-encoding'
-        }
+        )
 
     async def handle(downstream_request):
         upstream_url = URL(upstream_root) \
@@ -73,10 +73,10 @@ async def async_main():
             try:
                 async with client_session.ws_connect(
                         str(upstream_url),
-                        headers={
-                            **without_transfer_encoding(downstream_request.headers),
-                            **downstream_request['sso_profile_headers'],
-                        },
+                        headers=(
+                            without_transfer_encoding(downstream_request.headers) +
+                            downstream_request['sso_profile_headers']
+                        ),
                 ) as upstream_ws:
                     upstream_connection.set_result(upstream_ws)
                     downstream_ws = await downstream_connection
@@ -114,16 +114,16 @@ async def async_main():
         async with client_session.request(
                 downstream_request.method, str(upstream_url),
                 params=downstream_request.url.query,
-                headers={
-                    **without_transfer_encoding(downstream_request.headers),
-                    **downstream_request['sso_profile_headers'],
-                },
+                headers=(
+                    without_transfer_encoding(downstream_request.headers) +
+                    downstream_request['sso_profile_headers']
+                ),
                 data=downstream_request.content,
         ) as upstream_response:
 
             downstream_response = web.StreamResponse(
                 status=upstream_response.status,
-                headers=without_transfer_encoding(upstream_response.headers)
+                headers=without_transfer_encoding(upstream_response.headers),
             )
             await downstream_response.prepare(downstream_request)
             while True:
@@ -210,12 +210,12 @@ async def async_main():
                 me_profile = await me_response.json()
 
             async def handler_with_sso_headers():
-                request['sso_profile_headers'] = {
-                    'sso-profile-email': me_profile['email'],
-                    'sso-profile-user-id': me_profile['user_id'],
-                    'sso-profile-first-name': me_profile['first_name'],
-                    'sso-profile-last-name': me_profile['last_name'],
-                }
+                request['sso_profile_headers'] = (
+                    ('sso-profile-email', me_profile['email']),
+                    ('sso-profile-user-id', me_profile['user_id']),
+                    ('sso-profile-first-name', me_profile['first_name']),
+                    ('sso-profile-last-name', me_profile['last_name']),
+                )
                 return await handler(request)
 
             return \
