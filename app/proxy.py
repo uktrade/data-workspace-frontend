@@ -116,7 +116,7 @@ async def async_main():
         async with client_session.request(
                 downstream_request.method, str(upstream_url),
                 params=downstream_request.url.query,
-                headers=(
+                headers=CIMultiDict(
                     without_transfer_encoding(downstream_request.headers) +
                     downstream_request['sso_profile_headers']
                 ),
@@ -126,7 +126,7 @@ async def async_main():
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(web.StreamResponse(
                 status=upstream_response.status,
-                headers=without_transfer_encoding(upstream_response.headers),
+                headers=CIMultiDict(without_transfer_encoding(upstream_response.headers)),
             ))
             await downstream_response.prepare(downstream_request)
             while True:
@@ -179,7 +179,7 @@ async def async_main():
         async def _authenticate_by_sso(request, handler):
             # Database authentication is handled by the django app
             if request.url.path in ['/healthcheck', '/api/v1/databases']:
-                request['sso_profile_headers'] = {}
+                request['sso_profile_headers'] = ()
                 return await handler(request)
 
             get_session_value, set_session_value, with_new_session_cookie, with_session_cookie = request[SESSION_KEY]
@@ -194,6 +194,18 @@ async def async_main():
             if request.path == redirect_from_sso_path:
                 code = request.query['code']
                 redirect_uri_final = await get_redirect_uri_final(get_session_value, request)
+
+                # If there isn't a redirect_uri_final, we might...
+                # - not be the same client as made the original request, and so should not proceed
+                # - be the same client, but have been overtaken by another concurrent login that
+                #   created a new session after its login, and so this request was made with that
+                #   new session
+                # We might have been redirected attempting to access a static asset, so we don't
+                # redirect to any particular HTML page, since it would be broken to "succeed" by
+                # returning something that wasn't asked for
+                if redirect_uri_final is None:
+                    return web.Response(status=401)
+
                 sso_response = await client_session.post(
                     f'{sso_base_url}{token_path}',
                     data={
