@@ -119,7 +119,11 @@ NOTEBOOKS_URL = env['NOTEBOOKS_URL']
 SUPPORT_URL = env['SUPPORT_URL']
 
 SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_NAME = 'analysis_workspace_admin_session'
+
 CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_NAME = 'analysis_workspace_admin_csrf'
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Only used when collectstatic is run
