@@ -8,14 +8,14 @@ import urllib
 import aiohttp
 from aiohttp import web
 
-from aiohttp_session import (
-    session_middleware,
-    get_session,
-)
-from aiohttp_session.redis_storage import RedisStorage
 import aioredis
 from yarl import (
     URL,
+)
+
+from session import (
+    SESSION_KEY,
+    redis_session_middleware,
 )
 
 
@@ -34,7 +34,6 @@ async def async_main():
     redis_url = os.environ['REDIS_URL']
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
-    redis_storage = RedisStorage(redis_pool, max_age=60*60*24)
 
     def without_transfer_encoding(headers):
         return tuple(
@@ -121,10 +120,11 @@ async def async_main():
                 data=downstream_request.content,
         ) as upstream_response:
 
-            downstream_response = web.StreamResponse(
+            _, _, with_session_cookie = downstream_request[SESSION_KEY]
+            downstream_response = await with_session_cookie(web.StreamResponse(
                 status=upstream_response.status,
                 headers=without_transfer_encoding(upstream_response.headers),
-            )
+            ))
             await downstream_response.prepare(downstream_request)
             while True:
                 chunk = await upstream_response.content.readany()
@@ -147,9 +147,9 @@ async def async_main():
         redirect_from_sso_path = '/__redirect_from_sso'
         session_token_key = 'staff_sso_access_token'
 
-        def get_redirect_uri_authenticate(session, request):
+        async def get_redirect_uri_authenticate(set_session_value, request):
             state = secrets.token_urlsafe(32)
-            set_redirect_uri_final(session, state, request)
+            await set_redirect_uri_final(set_session_value, state, request)
             redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(request), safe='')
             return f'{sso_base_url}{auth_path}?' \
                    f'scope={scope}&state={state}&' \
@@ -164,13 +164,13 @@ async def async_main():
                              .with_query({})
             return str(uri)
 
-        def set_redirect_uri_final(session, state, request):
+        async def set_redirect_uri_final(set_session_value, state, request):
             scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
-            session[state] = str(request.url.with_scheme(scheme))
+            await set_session_value(state, str(request.url.with_scheme(scheme)))
 
-        def get_redirect_uri_final(session, request):
+        async def get_redirect_uri_final(get_session_value, request):
             state = request.query['state']
-            return session[state]
+            return await get_session_value(state)
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
@@ -179,17 +179,18 @@ async def async_main():
                 request['sso_profile_headers'] = {}
                 return await handler(request)
 
-            session = await get_session(request)
+            get_session_value, set_session_value, with_session_cookie = request[SESSION_KEY]
 
-            if request.path != redirect_from_sso_path and session_token_key not in session:
-                location = get_redirect_uri_authenticate(session, request)
-                return web.Response(status=302, headers={
+            token = await get_session_value(session_token_key)
+            if request.path != redirect_from_sso_path and token is None:
+                location = await get_redirect_uri_authenticate(set_session_value, request)
+                return await with_session_cookie(web.Response(status=302, headers={
                     'Location': location,
-                })
+                }))
 
             if request.path == redirect_from_sso_path:
                 code = request.query['code']
-                redirect_uri_final = get_redirect_uri_final(session, request)
+                redirect_uri_final = await get_redirect_uri_final(get_session_value, request)
                 sso_response = await client_session.post(
                     f'{sso_base_url}{token_path}',
                     data={
@@ -200,10 +201,9 @@ async def async_main():
                         'redirect_uri': get_redirect_uri_callback(request),
                     },
                 )
-                session[session_token_key] = (await sso_response.json())['access_token']
-                return web.Response(status=302, headers={'Location': redirect_uri_final})
+                await set_session_value(session_token_key, (await sso_response.json())['access_token'])
+                return await with_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final}))
 
-            token = session[session_token_key]
             async with client_session.get(f'{sso_base_url}{me_path}', headers={
                     'Authorization': f'Bearer {token}'
             }) as me_response:
@@ -220,15 +220,15 @@ async def async_main():
 
             return \
                 await handler_with_sso_headers() if me_response.status == 200 else \
-                web.Response(status=302, headers={
-                    'Location': get_redirect_uri_authenticate(session, request),
-                })
+                await with_session_cookie(web.Response(status=302, headers={
+                    'Location': await get_redirect_uri_authenticate(set_session_value, request),
+                }))
 
         return _authenticate_by_sso
 
     async with aiohttp.ClientSession() as client_session:
         app = web.Application(middlewares=[
-            session_middleware(redis_storage),
+            redis_session_middleware(redis_pool),
             authenticate_by_staff_sso(),
         ])
         app.add_routes([

@@ -22,7 +22,6 @@ RUN \
 	pip3 install \
 		aiohttp==3.5.4 \
 		aioredis==1.2.0 \
-		aiohttp_session==2.7.0 \
 		boto3==1.9.123 \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
