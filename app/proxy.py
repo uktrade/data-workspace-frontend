@@ -9,6 +9,9 @@ import aiohttp
 from aiohttp import web
 
 import aioredis
+from multidict import (
+    CIMultiDict,
+)
 from yarl import (
     URL,
 )
@@ -72,7 +75,7 @@ async def async_main():
             try:
                 async with client_session.ws_connect(
                         str(upstream_url),
-                        headers=(
+                        headers=CIMultiDict(
                             without_transfer_encoding(downstream_request.headers) +
                             downstream_request['sso_profile_headers']
                         ),
@@ -120,7 +123,7 @@ async def async_main():
                 data=downstream_request.content,
         ) as upstream_response:
 
-            _, _, with_session_cookie = downstream_request[SESSION_KEY]
+            _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(web.StreamResponse(
                 status=upstream_response.status,
                 headers=without_transfer_encoding(upstream_response.headers),
@@ -179,7 +182,7 @@ async def async_main():
                 request['sso_profile_headers'] = {}
                 return await handler(request)
 
-            get_session_value, set_session_value, with_session_cookie = request[SESSION_KEY]
+            get_session_value, set_session_value, with_new_session_cookie, with_session_cookie = request[SESSION_KEY]
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
@@ -202,7 +205,8 @@ async def async_main():
                     },
                 )
                 await set_session_value(session_token_key, (await sso_response.json())['access_token'])
-                return await with_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final}))
+                # A new session cookie to migitate session fixation attack
+                return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final}))
 
             async with client_session.get(f'{sso_base_url}{me_path}', headers={
                     'Authorization': f'Bearer {token}'

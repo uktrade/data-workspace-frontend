@@ -20,7 +20,8 @@ RUN \
 		python3=3.6.8-r0 && \
 	python3 -m ensurepip && \
 	pip3 install \
-		aiohttp==3.5.4 \
+		# Not the latest due to https://github.com/aio-libs/aiohttp/issues/3700
+		aiohttp==3.4.4 \
 		aioredis==1.2.0 \
 		boto3==1.9.123 \
 		gunicorn[gevent]==19.9.0 \

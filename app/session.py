@@ -66,6 +66,12 @@ def redis_session_middleware(redis_pool):
         # Cookies have to be explicitly set on the response _before_ they are
         # prepared, which is done explicitly for streaming responses before
         # the handler returns
+
+        async def with_new_cookie(response):
+            nonlocal cookie_value
+            cookie_value = secrets.token_urlsafe(64)
+            return await with_cookie(response)
+
         async def with_cookie(response):
             nonlocal cookie_value
 
@@ -83,7 +89,7 @@ def redis_session_middleware(redis_pool):
             response.set_cookie(COOKIE_NAME, cookie_value, max_age=COOKIE_MAX_AGE, expires=expires, httponly=True)
             return response
 
-        request[SESSION_KEY] = get_value, set_value, with_cookie
+        request[SESSION_KEY] = get_value, set_value, with_new_cookie, with_cookie
 
         return await handler(request)
 
