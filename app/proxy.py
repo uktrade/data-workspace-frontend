@@ -16,7 +16,7 @@ from yarl import (
     URL,
 )
 
-from session import (
+from proxy_session import (
     SESSION_KEY,
     redis_session_middleware,
 )
