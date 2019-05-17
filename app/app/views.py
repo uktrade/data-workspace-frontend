@@ -18,8 +18,8 @@ from django.http import (
     JsonResponse,
     StreamingHttpResponse,
 )
-from django.template import (
-    loader,
+from django.shortcuts import (
+    render,
 )
 import gevent
 import gevent.queue
@@ -68,7 +68,6 @@ def root_view(request):
 
     privilages = get_private_privilages(request.user)
     privilages_by_database = itertools.groupby(privilages, lambda privilage: privilage.database)
-    template = loader.get_template('root.html')
     context = {
         'database_schema_tables': _remove_duplicates(_flatten([
             allowed_tables_for_database_that_exist(database, list(database_privilages))
@@ -78,7 +77,7 @@ def root_view(request):
         'appstream_url': settings.APPSTREAM_URL,
         'support_url': settings.SUPPORT_URL,
     }
-    return HttpResponse(template.render(context, request))
+    return render(request, 'root.html', context)
 
 
 def healthcheck_view(_):
@@ -112,13 +111,12 @@ def appstream_view(request):
         for app_session in app_sessions['Sessions']
     ]
 
-    template = loader.get_template('appstream.html')
     context = {
         'fleet_status': ComputeCapacityStatus,
         'app_sessions_users': app_sessions_users,
     }
 
-    return HttpResponse(template.render(context, request))
+    return render(request, 'appstream.html', context)
 
 
 def databases_view(request):
