@@ -9,7 +9,7 @@ from unittest.mock import (
 import aiohttp
 from aiohttp import web
 
-from app.proxy import async_main
+from proxy import async_main
 
 
 def async_test(func):
