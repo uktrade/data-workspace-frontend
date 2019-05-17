@@ -242,7 +242,11 @@ async def async_main():
 
         return _authenticate_by_sso
 
-    async with aiohttp.ClientSession() as client_session:
+    # Although less efficient, paranoia-avoid errors when the application is
+    # closing keep-alive connections, and mitigates running out of file
+    # handles. Could be changed, but KISS
+    conn = aiohttp.TCPConnector(force_close=True)
+    async with aiohttp.ClientSession(connector=conn) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool),
             authenticate_by_staff_sso(),
