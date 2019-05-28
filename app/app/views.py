@@ -22,6 +22,7 @@ from django.template import (
     loader,
 )
 import gevent
+import gevent.queue
 from psycopg2 import connect, sql
 import requests
 
