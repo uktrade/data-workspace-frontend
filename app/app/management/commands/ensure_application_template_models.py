@@ -44,7 +44,8 @@ class Command(BaseCommand):
                     name=desired_application_template['NAME'],
                     nice_name=desired_application_template['NICE_NAME'],
                     spawner=desired_application_template['SPAWNER'],
-                    spawner_options=json.dumps(desired_application_template.get('SPAWNER_OPTIONS', '{}')),
+                    spawner_options=json.dumps(
+                        desired_application_template.get('SPAWNER_OPTIONS', '{}')),
                 )
             except IntegrityError:
                 template = ApplicationTemplate.objects.get(
@@ -52,7 +53,8 @@ class Command(BaseCommand):
                 )
                 template.nice_name = desired_application_template['NICE_NAME']
                 template.spawner = desired_application_template['SPAWNER']
-                template.spawner_options = json.dumps(desired_application_template.get('SPAWNER_OPTIONS', '{}'))
+                template.spawner_options = json.dumps(
+                    desired_application_template.get('SPAWNER_OPTIONS', '{}'))
                 template.save()
                 self.stdout.write('Updated {}'.format(desired_application_template['NAME']))
             else:

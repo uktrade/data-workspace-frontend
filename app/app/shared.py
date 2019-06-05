@@ -25,8 +25,8 @@ logger = logging.getLogger('app')
 
 def database_dsn(database_data):
     return (
-        f'host={database_data["HOST"]} port={database_data["PORT"]} ' \
-        f'dbname={database_data["NAME"]} user={database_data["USER"]} ' \
+        f'host={database_data["HOST"]} port={database_data["PORT"]} '
+        f'dbname={database_data["NAME"]} user={database_data["USER"]} '
         f'password={database_data["PASSWORD"]} sslmode=require'
     )
 
@@ -62,18 +62,23 @@ def new_private_database_credentials(user):
                 connect(database_dsn(database_data)) as conn, \
                 conn.cursor() as cur:
 
-            cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(sql.Identifier(user)), [password, valid_until])
-            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(sql.Identifier(database_data['NAME']), sql.Identifier(user)))
+            cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
+                sql.Identifier(user)), [password, valid_until])
+            cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
+                sql.Identifier(database_data['NAME']), sql.Identifier(user)))
 
             for privilage in privilages_for_database:
-                cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)))
+                cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                    sql.Identifier(privilage.schema), sql.Identifier(user)))
                 tables_sql_list = sql.SQL(',').join([
-                    sql.SQL('{}.{}').format(sql.Identifier(privilage.schema), sql.Identifier(table))
+                    sql.SQL('{}.{}').format(sql.Identifier(
+                        privilage.schema), sql.Identifier(table))
                     for table in privilage.tables.split(',')
                 ])
                 tables_sql = \
                     sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)) if privilage.tables == 'ALL TABLES' else \
-                    sql.SQL('GRANT SELECT ON {} TO {};').format(tables_sql_list, sql.Identifier(user))
+                    sql.SQL('GRANT SELECT ON {} TO {};').format(
+                        tables_sql_list, sql.Identifier(user))
                 cur.execute(tables_sql)
 
         return {
@@ -98,7 +103,8 @@ def new_private_database_credentials(user):
         user.save()
         bucket = settings.NOTEBOOKS_BUCKET
         s3_client = boto3.client('s3')
-        s3_prefix = 'user/federated/' + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
+        s3_prefix = 'user/federated/' + \
+            hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
 
         logger.info('Saving creds for %s to %s %s', user, bucket, s3_prefix)
         for cred in creds:

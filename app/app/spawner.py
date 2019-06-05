@@ -12,7 +12,6 @@ import os
 import json
 import logging
 import subprocess
-import time
 
 import boto3
 import gevent
@@ -36,8 +35,7 @@ class ProcessSpawner():
     '''
 
     @staticmethod
-    def spawn(user_email_address, user_sso_id, application_instance_id,
-              spawner_options, db_credentials, set_id, set_url):
+    def spawn(_, __, application_instance_id, spawner_options, ___, set_id, set_url):
         cmd = json.loads(spawner_options)['CMD']
         proc = None
 
@@ -67,7 +65,7 @@ class ProcessSpawner():
         spawn_job.link_exception(_handle_exception)
 
     @staticmethod
-    def state(spawner_options, created_date, spawner_application_id, proxy_url):
+    def state(_, created_date, spawner_application_id, proxy_url):
         ten_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-10)
         twenty_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-20)
         spawner_application_id_parsed = json.loads(spawner_application_id)
@@ -98,7 +96,7 @@ class ProcessSpawner():
         return True
 
     @staticmethod
-    def stop(spawner_options, spawner_application_id):
+    def stop(_, spawner_application_id):
         spawner_application_id_parsed = json.loads(spawner_application_id)
         try:
             os.kill(int(spawner_application_id_parsed['process_id']), 9)
@@ -134,9 +132,11 @@ class FargateSpawner():
         cmd = options['CMD']
         env = options['ENV']
         port = options['PORT']
-        assume_role_policy_document = base64.b64decode(options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
+        assume_role_policy_document = base64.b64decode(
+            options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
         policy_name = options['POLICY_NAME']
-        policy_document_template = base64.b64decode(options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
+        policy_document_template = base64.b64decode(
+            options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
         permissions_boundary_arn = options['PERMISSIONS_BOUNDARY_ARN']
 
         s3_region = options['S3_REGION']
@@ -145,13 +145,11 @@ class FargateSpawner():
 
         task_arn = None
 
-        database_env = dict([
-            (
-                f'DATABASE_DSN__{database["memorable_name"]}',
-                f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} user={database["db_user"]} password={database["db_password"]}'
-            )
+        database_env = {
+            f'DATABASE_DSN__{database["memorable_name"]}':
+            f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} user={database["db_user"]} password={database["db_password"]}'
             for database in db_credentials
-        ])
+        }
 
         def _spawn():
             nonlocal task_arn
@@ -162,7 +160,8 @@ class FargateSpawner():
             iam_client = boto3.client('iam')
 
             role_name = role_prefix + user_email_address
-            s3_prefix = 'user/federated/' + hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
+            s3_prefix = 'user/federated/' + \
+                hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
 
             try:
                 iam_client.create_role(
@@ -190,7 +189,7 @@ class FargateSpawner():
             logger.debug('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
 
             s3_env = {
-                'S3_PREFIX':s3_prefix,
+                'S3_PREFIX': s3_prefix,
                 'S3_REGION': s3_region,
                 'S3_HOST': s3_host,
                 'S3_BUCKET': s3_bucket,
@@ -251,12 +250,12 @@ class FargateSpawner():
                 'RUNNING' if not proxy_url and three_minutes_ago < created_date else \
                 'STOPPED' if not proxy_url else \
                 get_task_status()
-        except Exception as exception:
+        except Exception:
             logger.exception('FARGATE %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
 
     @staticmethod
-    def can_stop(spawner_options, spawner_application_id):
+    def can_stop(_, spawner_application_id):
         return 'task_arn' in json.loads(spawner_application_id)
 
     @staticmethod
@@ -289,8 +288,6 @@ def _fargate_task_status(cluster_name, arn):
         'RUNNING' if status in ('', 'PROVISIONING', 'PENDING', 'RUNNING') else \
         'STOPPED'
 
-    return status
-
 
 def _fargate_task_describe(cluster_name, arn):
     client = boto3.client('ecs')
@@ -317,7 +314,7 @@ def _fargate_task_stop(cluster_name, task_arn):
 
 
 def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
-                        security_groups, subnets, command_and_args, env):
+                      security_groups, subnets, command_and_args, env):
     client = boto3.client('ecs')
 
     return client.run_task(

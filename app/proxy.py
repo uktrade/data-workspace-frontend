@@ -79,7 +79,8 @@ async def async_main():
                 await handle_admin(downstream_request, headers, method, path, query)
 
         except Exception as exception:
-            logger.exception('Exception during %s %s', downstream_request.method, downstream_request.url)
+            logger.exception('Exception during %s %s',
+                             downstream_request.method, downstream_request.url)
 
             if is_websocket:
                 raise
@@ -89,7 +90,6 @@ async def async_main():
                 {}
 
             return await handle_http(downstream_request, 'GET', headers, URL(admin_root).with_path('/error'), params, default_http_timeout)
-
 
     async def handle_application(is_websocket, downstream_request, headers, method, path, query):
         public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
@@ -104,7 +104,7 @@ async def async_main():
             if 'x-data-workspace-no-delete-application-instance' not in headers:
                 async with client_session.request(
                         'DELETE', host_api_url, headers=headers,
-                    ) as delete_response:
+                ) as delete_response:
                     await delete_response.read()
             raise UserException('Application ' + application['state'])
 
@@ -114,13 +114,14 @@ async def async_main():
                 application = await response.json()
 
         if not host_exists:
-             raise UserException('Unable to start the application')
+            raise UserException('Unable to start the application')
 
         if application['state'] not in ['SPAWNING', 'RUNNING']:
-            raise UserException('Attempted to start the application, but it ' + application['state'])
+            raise UserException(
+                'Attempted to start the application, but it ' + application['state'])
 
         if not application['proxy_url']:
-            return await handle_http(downstream_request, 'GET', headers, admin_root + host_html_path + '/spawning', {}, default_http_timeout) 
+            return await handle_http(downstream_request, 'GET', headers, admin_root + host_html_path + '/spawning', {}, default_http_timeout)
 
         return \
             await handle_application_websocket(downstream_request, headers, application['proxy_url'], path, query) if is_websocket else \
@@ -138,7 +139,7 @@ async def async_main():
             logger.debug('Spawning: Attempting to connect to %s', upstream_url)
             response = await handle_http(downstream_request, method, headers, upstream_url, query, spawning_http_timeout)
 
-        except Exception as exception:
+        except Exception:
             logger.debug('Spawning: Failed to connect to %s', upstream_url)
             return await handle_http(downstream_request, 'GET', headers, admin_root + host_html_path + '/spawning', {}, default_http_timeout)
 
@@ -148,25 +149,27 @@ async def async_main():
             # task. We set RUNNING in another task to avoid it being cancelled
             async def set_application_running():
                 async with client_session.request(
-                    'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=headers, timeout=default_http_timeout,
+                        'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=headers, timeout=default_http_timeout,
                 ) as patch_response:
                     await patch_response.read()
             asyncio.ensure_future(set_application_running())
 
             return response
 
-    async def handle_application_http_running(downstream_request, method, headers, proxy_url, path, query, host_api_url):
+    async def handle_application_http_running(downstream_request, method, headers, proxy_url, path, query, _):
         upstream_url = URL(proxy_url).with_path(path)
 
-        try:
-            return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
-        except (aiohttp.client_exceptions.ClientConnectionError, asyncio.TimeoutError):
-            # For the time being, we don't attempt to delete if an application has failed
-            # Since initial attempts were too sensistive, and would delete the application
-            # when it was still running
-            # async with client_session.request('DELETE', host_api_url, headers=headers) as delete_response:
-            #     await delete_response.read()
-            raise
+        # For the time being, we don't attempt to delete if an application has failed
+        # Since initial attempts were too sensistive, and would delete the application
+        # when it was still running
+        # try:
+        #     return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
+        # except (aiohttp.client_exceptions.ClientConnectionError, asyncio.TimeoutError):
+        # async with client_session.request('DELETE', host_api_url, headers=headers) as delete_response:
+        #     await delete_response.read()
+        #     raise
+
+        return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
 
     async def handle_admin(downstream_request, headers, method, path, query):
         upstream_url = URL(admin_root).with_path(path).with_query(query)
@@ -279,7 +282,6 @@ async def async_main():
 
         def get_redirect_uri_callback(request):
             scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
-            root_domain_no_port, _, root_port_str = root_domain.partition(':')
             try:
                 root_port = int(root_port_str)
             except ValueError:
@@ -307,7 +309,8 @@ async def async_main():
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
-            get_session_value, set_session_value, with_new_session_cookie, with_session_cookie = request[SESSION_KEY]
+            get_session_value, set_session_value, with_new_session_cookie, with_session_cookie = request[
+                SESSION_KEY]
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:

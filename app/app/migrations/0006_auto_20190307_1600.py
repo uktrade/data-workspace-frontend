@@ -14,11 +14,15 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='privilage',
             name='schema',
-            field=models.CharField(default='public', max_length=1024, validators=[django.core.validators.RegexValidator(regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$')]),
+            field=models.CharField(
+                default='public', max_length=1024, validators=[
+                    django.core.validators.RegexValidator(regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$')]),
         ),
         migrations.AlterField(
             model_name='privilage',
             name='tables',
-            field=models.CharField(help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.', max_length=1024, validators=[django.core.validators.RegexValidator(regex='(([a-zA-Z][a-zA-Z0-9_\\.]*,?)+(?<!,)$)|(^ALL TABLES$)')]),
+            field=models.CharField(
+                help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
+                max_length=1024, validators=[django.core.validators.RegexValidator(regex='(([a-zA-Z][a-zA-Z0-9_\\.]*,?)+(?<!,)$)|(^ALL TABLES$)')]),
         ),
     ]

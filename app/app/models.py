@@ -13,7 +13,7 @@ class Profile(models.Model):
 
 
 @receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
+def save_user_profile(instance, **_):
     try:
         profile = instance.profile
     except Profile.DoesNotExist:
@@ -75,10 +75,10 @@ class Privilage(models.Model):
         indexes = [
             models.Index(fields=['user']),
         ]
-        unique_together=('user', 'database', 'schema')
+        unique_together = ('user', 'database', 'schema')
 
     def __str__(self):
-        return f'{self.user} / {self.database.memorable_name} / {self.schema} / {self.tables}'
+        return f'{self.user} / {self.database} / {self.schema} / {self.tables}'
 
 
 class ApplicationTemplate(models.Model):

@@ -16,15 +16,8 @@ from django.contrib.auth import (
 from django.conf import (
     settings,
 )
-from django.db import (
-    transaction,
-)
-from django.db.models import (
-    Q,
-)
 from django.http import (
     HttpResponse,
-    HttpResponseBadRequest,
     HttpResponseNotAllowed,
     HttpResponseNotFound,
     JsonResponse,
@@ -37,12 +30,10 @@ from django.shortcuts import (
 import gevent
 import gevent.queue
 from psycopg2 import connect, sql
-import requests
 
 from app.models import (
     ApplicationInstance,
     ApplicationTemplate,
-    Database,
 )
 from app.shared import (
     database_dsn,
@@ -60,7 +51,8 @@ def root_view(request):
     return \
         root_view_GET(request) if request.method == 'GET' else \
         root_view_POST(request) if request.method == 'POST' else \
-        HttpReponse(status=405)
+        HttpResponse(status=405)
+
 
 def root_view_GET(request):
     def tables_in_schema(cur, schema):
@@ -163,9 +155,9 @@ def appstream_view(request):
     )
 
     fleet_status = client.describe_fleets(
-        Names=[settings.APPSTREAM_FLEET_NAME,]
+        Names=[settings.APPSTREAM_FLEET_NAME, ]
     )
-    
+
     for item in fleet_status['Fleets']:
         ComputeCapacityStatus = item['ComputeCapacityStatus']
 
@@ -188,7 +180,8 @@ def appstream_view(request):
 
 
 def table_data_view(request, database, schema, table):
-    logger.info('table_data_view attempt: %s %s %s %s', request.user.email, database, schema, table)
+    logger.info('table_data_view attempt: %s %s %s %s',
+                request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
         HttpResponseUnauthorized() if not _can_access_table(get_private_privilages(request.user), database, schema, table) else \
@@ -203,7 +196,7 @@ def _can_access_table(privilages, database, schema, table):
         True
         for privilage in privilages
         for privilage_table in privilage.tables.split(',')
-        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table == table or privilage_table == 'ALL TABLES')
+        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
     )
 
 
@@ -260,7 +253,8 @@ def _table_data(user_email, database, schema, table):
                 rows = cur.fetchmany(cursor_itersize)
                 if i == 0:
                     # Column names are not populated until the first row fetched
-                    bytes_queue.put(csv_writer.writerow([column_desc[0] for column_desc in cur.description]), timeout=10)
+                    bytes_queue.put(csv_writer.writerow(
+                        [column_desc[0] for column_desc in cur.description]), timeout=10)
                 bytes_fetched = ''.join(
                     csv_writer.writerow(row) for row in rows
                 ).encode('utf-8')
@@ -286,8 +280,9 @@ def _table_data(user_email, database, schema, table):
     def handle_exception(job):
         try:
             raise job.exception
-        except:
-            logger.exception('table_data_view exception: %s %s %s %s', user_email, database, schema, table)
+        except Exception:
+            logger.exception('table_data_view exception: %s %s %s %s',
+                             user_email, database, schema, table)
 
     put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
     put_db_rows_to_queue_job.link_exception(handle_exception)
@@ -401,7 +396,8 @@ def application_api_PUT(request, public_host):
 
     application_template_name, _, owner_sso_id_hex = public_host.partition('-')
 
-    request_sso_id_hex = hashlib.sha256(str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
+    request_sso_id_hex = hashlib.sha256(
+        str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
 
     if owner_sso_id_hex != request_sso_id_hex[:8]:
         logger.error('Error PUT %s != %s', owner_sso_id_hex, request_sso_id_hex[:8])

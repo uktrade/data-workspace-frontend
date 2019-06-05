@@ -34,9 +34,6 @@ import time
 from aiohttp import (
     web,
 )
-from multidict import (
-    CIMultiDict,
-)
 
 
 COOKIE_NAME = 'data_workspace_session'
@@ -94,7 +91,8 @@ def redis_session_middleware(redis_pool, root_domain_no_port):
                         redis_value = value.encode('ascii')
                         await conn.execute('SET', redis_key, redis_value, 'EX', REDIS_MAX_AGE)
 
-            expires = time.strftime('%a, %d-%b-%Y %T GMT', time.gmtime(time.time() + COOKIE_MAX_AGE))
+            expires = time.strftime('%a, %d-%b-%Y %T GMT',
+                                    time.gmtime(time.time() + COOKIE_MAX_AGE))
             secure = \
                 '; Secure' if request.headers.get('x-forwarded-proto', request.url.scheme) == 'https' else \
                 ''

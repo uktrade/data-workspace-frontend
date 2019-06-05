@@ -81,6 +81,7 @@ def login_required(func):
         return func(request, *args, **kwargs)
     return _login_required
 
+
 admin.autodiscover()
 admin.site.login = login_required(admin.site.login)
 
@@ -88,9 +89,10 @@ urlpatterns = [
     path('', login_required(root_view), name='root'),
     path('error', public_error_html_view),
     path('admin/', admin.site.urls),
-    path('table_data/<str:database>/<str:schema>/<str:table>', login_required(table_data_view), name='table_data'),
+    path('table_data/<str:database>/<str:schema>/<str:table>',
+         login_required(table_data_view), name='table_data'),
     path('appstream/', login_required(appstream_view)),
     path('application/<str:public_host>/spawning', login_required(application_spawning_html_view)),
-    path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))), 
+    path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
     path('healthcheck', healthcheck_view),  # No authentication
 ]

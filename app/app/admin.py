@@ -60,5 +60,6 @@ class AppUserAdmin(UserAdmin):
             return list()
         return super().get_inline_instances(request, obj)
 
+
 admin.site.unregister(User)
 admin.site.register(User, AppUserAdmin)

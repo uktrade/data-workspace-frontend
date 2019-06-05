@@ -3,14 +3,9 @@ import json
 import os
 import signal
 import unittest
-from unittest.mock import (
-    patch,
-)
 
 import aiohttp
 from aiohttp import web
-
-from proxy import async_main
 
 
 def async_test(func):
@@ -91,12 +86,14 @@ class TestApplication(unittest.TestCase):
             })
 
         token_request_code = None
+
         async def handle_token(request):
             nonlocal token_request_code
             token_request_code = (await request.post())['code']
             return web.json_response({'access_token': 'some-token'}, status=200)
 
         me_request_auth = None
+
         async def handle_me(request):
             nonlocal me_request_auth
             me_request_auth = request.headers['Authorization']
@@ -123,6 +120,7 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(4)
 
         session = aiohttp.ClientSession()
+
         async def cleanup_session():
             await session.close()
             await asyncio.sleep(0.25)
@@ -138,7 +136,8 @@ class TestApplication(unittest.TestCase):
 
         # Ensure the user sees the content from the application
         self.assertEqual(200, response.status)
-        self.assertIn('<a href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
+        self.assertIn(
+            '<a href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
 
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             application_content_1 = await response.text()
@@ -297,7 +296,7 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         # Start a limited mock SSO
-        async def handle_authorize(request):
+        async def handle_authorize(_):
             return web.Response(status=200, text='This is the login page')
 
         sso_app = web.Application()
@@ -313,6 +312,7 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(4)
 
         session = aiohttp.ClientSession()
+
         async def cleanup_session():
             await session.close()
             await asyncio.sleep(0.25)
@@ -380,6 +380,7 @@ class TestApplication(unittest.TestCase):
 
         # Start a mock SSO
         number_of_times_at_sso = 0
+
         async def handle_authorize(request):
             # The user would login here, and eventually redirect back to redirect_uri
             nonlocal number_of_times_at_sso
@@ -391,6 +392,7 @@ class TestApplication(unittest.TestCase):
             })
 
         tokens = iter(['token-1', 'token-2'])
+
         async def handle_token(_):
             return web.json_response({'access_token': next(tokens)}, status=200)
 
@@ -422,6 +424,7 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(4)
 
         session = aiohttp.ClientSession()
+
         async def cleanup_session():
             await session.close()
             await asyncio.sleep(0.25)
@@ -433,4 +436,5 @@ class TestApplication(unittest.TestCase):
 
         self.assertEqual(number_of_times_at_sso, 2)
         self.assertEqual(200, response.status)
-        self.assertIn('<a href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
+        self.assertIn(
+            '<a href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
