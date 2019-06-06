@@ -43,7 +43,7 @@ class ProcessSpawner():
             nonlocal proc
 
             gevent.sleep(1)
-            logger.debug('Starting %s', cmd)
+            logger.info('Starting %s', cmd)
             proc = subprocess.Popen(cmd, cwd='/home/django')
 
             set_id(json.dumps({
@@ -154,7 +154,7 @@ class FargateSpawner():
         def _spawn():
             nonlocal task_arn
 
-            logger.debug('Starting %s', options['CMD'])
+            logger.info('Starting %s', options['CMD'])
 
             # Create a role
             iam_client = boto3.client('iam')
@@ -186,7 +186,7 @@ class FargateSpawner():
             role_arn = iam_client.get_role(
                 RoleName=role_name
             )['Role']['Arn']
-            logger.debug('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
+            logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
 
             s3_env = {
                 'S3_PREFIX': s3_prefix,
@@ -220,7 +220,7 @@ class FargateSpawner():
             try:
                 raise job.exception
             except Exception:
-                logger.exception('FARAGATE %s %s', application_instance_id, spawner_options)
+                logger.exception('FARGATE %s %s', application_instance_id, spawner_options)
                 if task_arn:
                     _fargate_task_stop(cluster_name, task_arn)
 
@@ -229,7 +229,7 @@ class FargateSpawner():
 
     @staticmethod
     def state(spawner_options, created_date, spawner_application_id, proxy_url):
-        logger.error(spawner_options)
+        logger.info(spawner_options)
         spawner_options = json.loads(spawner_options)
         spawner_application_id_parsed = json.loads(spawner_application_id)
         cluster_name = spawner_options['CLUSTER_NAME']
@@ -241,7 +241,13 @@ class FargateSpawner():
         # task may now be using is IP address. We must query the ECS API
         def get_task_status():
             task_arn = spawner_application_id_parsed['task_arn']
-            return _fargate_task_status(cluster_name, task_arn)
+            # Newly created tasks may not yet report a status, or may report
+            # status inconsistently due to eventual consistency
+            status = _fargate_task_status(cluster_name, task_arn)
+            return \
+                'RUNNING' if status is None and three_minutes_ago < created_date else \
+                'STOPPED' if status is None else \
+                status
 
         try:
             return \
@@ -281,11 +287,14 @@ def _fargate_task_ip(cluster_name, arn):
 
 def _fargate_task_status(cluster_name, arn):
     described_task = _fargate_task_describe(cluster_name, arn)
-    status = described_task['lastStatus'] if described_task else ''
+    logger.info('Described task %s %s %s', cluster_name, arn, described_task)
 
     # Simplify the status. We just care if it's running or will be running
+    # Creation of task is eventually consistent, so we don't have a good way
+    # of differentiating between a task just created, or long destroyed
     return \
-        'RUNNING' if status in ('', 'PROVISIONING', 'PENDING', 'RUNNING') else \
+        None if not described_task else \
+        'RUNNING' if described_task['lastStatus'] in ('PROVISIONING', 'PENDING', 'RUNNING') else \
         'STOPPED'
 
 
