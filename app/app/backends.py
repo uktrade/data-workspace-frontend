@@ -1,6 +1,10 @@
+import logging
+
 from django.contrib.auth import (
     get_user_model,
 )
+
+logger = logging.getLogger('app')
 
 
 class AuthbrokerBackendUsernameIsEmail():
@@ -10,12 +14,12 @@ class AuthbrokerBackendUsernameIsEmail():
             email = request.META['HTTP_SSO_PROFILE_EMAIL']
             user_id = request.META['HTTP_SSO_PROFILE_USER_ID']
             last_name = request.META['HTTP_SSO_PROFILE_LAST_NAME']
-            first_name  =  request.META['HTTP_SSO_PROFILE_FIRST_NAME']
+            first_name = request.META['HTTP_SSO_PROFILE_FIRST_NAME']
         except KeyError:
             return None
 
         User = get_user_model()
-        user, created = User.objects.get_or_create(
+        user, _ = User.objects.get_or_create(
             email=email,
             defaults={'first_name': first_name, 'last_name': last_name})
 
@@ -24,7 +28,8 @@ class AuthbrokerBackendUsernameIsEmail():
 
         user.profile.sso_id = user_id
         user.username = user.email
-        user.set_unusable_password()
+        if user.has_usable_password():
+            user.set_unusable_password()
         user.save()
 
         return user

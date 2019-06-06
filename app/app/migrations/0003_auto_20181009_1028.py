@@ -34,6 +34,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='database',
             name='memorable_name',
-            field=models.CharField(help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__', max_length=128, validators=[django.core.validators.RegexValidator(regex='[A-Za-z0-9_]')]),
+            field=models.CharField(
+                help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__', max_length=128, validators=[
+                    django.core.validators.RegexValidator(regex='[A-Za-z0-9_]')]),
         ),
     ]

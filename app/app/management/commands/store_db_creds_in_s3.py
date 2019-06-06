@@ -1,7 +1,3 @@
-import hashlib
-
-import boto3
-
 from django.conf import (
     settings,
 )
@@ -25,8 +21,6 @@ class Command(BaseCommand):
 
         bucket = settings.NOTEBOOKS_BUCKET
         self.stdout.write('Will store credentials in bucket {}'.format(bucket))
-
-        s3_client = boto3.client('s3')
 
         User = get_user_model()
         all_users = User.objects.order_by('last_name', 'first_name', 'id')

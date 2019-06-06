@@ -1,0 +1,94 @@
+{% extends 'govuk_template.html' %}
+
+{% block page_title %}{{ application_nice_name }} - Data Workspace{% endblock %}
+
+{% block head %}
+    {{ block.super }}
+    <style>
+        .messages {
+            margin: 1em 0;
+            padding: 1em 1em;
+            color: #fff;
+            background: #28a197;
+            font-size: 24px;
+        }
+        strong {
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        (() => {
+            function getStatus(url) {
+                return new Promise((resolve, reject) => {
+                    var request = new XMLHttpRequest();
+                    request.addEventListener('load', () => {
+                        resolve(request.status);
+                    });
+                    request.addEventListener('error', reject);
+                    request.open('GET', url);
+                    // Usually the application is started by just going to the same URL that we're
+                    // on / we're querying, which is the same URL as the final application.
+                    // However, in the case of error the error is returned in the same request
+                    // change deletes the application instance on the server. In order to show
+                    // the error on a reload, we ensure we don't delete the application instance
+                    // from the XMLHttpRequest. We _could_ show error dynamically via JavaScript,
+                    // but we also want the errors to be shown on a full page load anyway, so we
+                    // choose to only show error using the one mechanism
+                    request.setRequestHeader('x-data-workspace-no-delete-application-instance', 'true')
+                    request.send(); 
+                });
+            }
+
+            async function reloadIfNot202() {
+                // In case of error, we do nothing other than reload.
+                // KISS for now until we're sure on what we do want on error
+                var status = await getStatus(window.location.href);
+                if (status != 202) {
+                    window.location.reload();
+                }
+                window.setTimeout(reloadIfNot202, 2000);
+            }
+
+            window.setTimeout(reloadIfNot202, 2000);
+        })();
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // User seconds remaining rather than server time to allow the
+            // server and browser to be different, and we use
+            // window.performance.now which is monotonically increasing even
+            // if the local clock changes
+            var element = document.getElementById('time-remaining');
+            var end_time = window.performance.now() + {{ seconds_remaining_float }} * 1000;
+
+            function leftPad(str, pad, length) {
+                while (str.length < length) {
+                    str = pad + str;
+                }
+                return str;
+            }
+
+            function showRemaining() {
+                var now = window.performance.now();
+                var remaining_total = Math.max(0, Math.ceil((end_time - now) / 1000));
+
+                var seconds = remaining_total % 60;
+                var minutes = (remaining_total - seconds) / 60;
+                element.textContent = minutes.toString() + ':' + leftPad(seconds.toString(), '0', 2);
+
+                if (remaining_total == 0) {
+                    return;
+                }
+                window.setTimeout(showRemaining, 50);
+            }
+            showRemaining();
+        });
+    </script>
+{% endblock %}
+
+{% block inner_content %}
+    <ul class="messages">
+        <li><strong>Starting {{ application_nice_name }}</strong> <br>Time remaining: <span id="time-remaining">{{ time_remaining }}</span></li>
+    </ul>
+
+    <p><span id="spawn-remaining">&nbsp;</span></p>
+{% endblock %}

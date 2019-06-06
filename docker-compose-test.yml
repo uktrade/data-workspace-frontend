@@ -10,6 +10,9 @@ services:
     links:
       - "analysis-workspace-postgres"
       - "analysis-workspace-redis"
+    extra_hosts:
+      - "localapps.com:127.0.0.1"
+      - "testapplication-23b40dd9.localapps.com:127.0.0.1"
   analysis-workspace-postgres:
     build:
       context: .

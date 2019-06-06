@@ -9,6 +9,8 @@ from django.contrib.auth.models import (
 )
 
 from app.models import (
+    ApplicationTemplate,
+    ApplicationInstance,
     Database,
     Privilage,
     Profile,
@@ -16,6 +18,8 @@ from app.models import (
 
 admin.site.register(Database)
 admin.site.register(Privilage)
+admin.site.register(ApplicationTemplate)
+admin.site.register(ApplicationInstance)
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -55,6 +59,7 @@ class AppUserAdmin(UserAdmin):
         if not obj:
             return list()
         return super().get_inline_instances(request, obj)
+
 
 admin.site.unregister(User)
 admin.site.register(User, AppUserAdmin)

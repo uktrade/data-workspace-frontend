@@ -13,11 +13,14 @@ requested concurrently.
 - Request 2 completes, JSON encoding its dict and saves to Redis, overwriting
   the one from Request 1
 
+This is more of an issue with the proxy than in other applications, since both
+requests can set the state in the session and redirect to SSO
+
 Note, we don't need to
 
 - remove keys (other than "eventually" to not keep them in Redis forever);
 - save anything other than ascii strings;
-- specfically, no need for a deep structure;
+- specifically, no need for a deep structure;
 - get a list of all keys in session;
 - read-back a value once set (in the same request).
 
@@ -31,21 +34,21 @@ import time
 from aiohttp import (
     web,
 )
-from multidict import (
-    CIMultiDict,
-)
 
 
-COOKIE_NAME = 'analysis_workspace_proxy_session'
+COOKIE_NAME = 'data_workspace_session'
 COOKIE_MAX_AGE = 60 * 60 * 10
 
-REDIS_KEY_PREFIX = 'cookie___analysis_workspace_proxy_session'
+REDIS_KEY_PREFIX = 'data_workspace_session___cookie'
 REDIS_MAX_AGE = 60 * 60 * 9
 
 SESSION_KEY = 'SESSION'
 
 
-def redis_session_middleware(redis_pool):
+def redis_session_middleware(redis_pool, root_domain_no_port):
+
+    def get_secret_cookie_value():
+        return secrets.token_urlsafe(64)
 
     @web.middleware
     async def _redis_session_middleware(request, handler):
@@ -72,14 +75,14 @@ def redis_session_middleware(redis_pool):
 
         async def with_new_cookie(response):
             nonlocal cookie_value
-            cookie_value = secrets.token_urlsafe(64)
+            cookie_value = get_secret_cookie_value()
             return await with_cookie(response)
 
         async def with_cookie(response):
             nonlocal cookie_value
 
             if not cookie_value:
-                cookie_value = secrets.token_urlsafe(64)
+                cookie_value = get_secret_cookie_value()
 
             if to_set:
                 with await redis_pool as conn:
@@ -88,13 +91,14 @@ def redis_session_middleware(redis_pool):
                         redis_value = value.encode('ascii')
                         await conn.execute('SET', redis_key, redis_value, 'EX', REDIS_MAX_AGE)
 
-            expires = time.strftime('%a, %d-%b-%Y %T GMT', time.gmtime(time.time() + COOKIE_MAX_AGE))
+            expires = time.strftime('%a, %d-%b-%Y %T GMT',
+                                    time.gmtime(time.time() + COOKIE_MAX_AGE))
             secure = \
                 '; Secure' if request.headers.get('x-forwarded-proto', request.url.scheme) == 'https' else \
                 ''
             # aiohttp's set_cookie doesn't seem to support the SameSite attribute
             response.headers.add(
-                'set-cookie', f'{COOKIE_NAME}={cookie_value}; expires={expires}; Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path=/; SameSite=Lax{secure}'
+                'set-cookie', f'{COOKIE_NAME}={cookie_value}; domain={root_domain_no_port}; expires={expires}; Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path=/; SameSite=Lax{secure}'
             )
             return response
 

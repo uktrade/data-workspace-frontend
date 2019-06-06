@@ -22,6 +22,10 @@ from proxy_session import (
 )
 
 
+class UserException(Exception):
+    pass
+
+
 async def async_main():
     stdout_handler = logging.StreamHandler(sys.stdout)
     for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access']:
@@ -30,13 +34,21 @@ async def async_main():
         logger.addHandler(stdout_handler)
 
     port = int(os.environ['PROXY_PORT'])
-    upstream_root = os.environ['UPSTREAM_ROOT']
+    admin_root = os.environ['UPSTREAM_ROOT']
     sso_base_url = os.environ['AUTHBROKER_URL']
     sso_client_id = os.environ['AUTHBROKER_CLIENT_ID']
     sso_client_secret = os.environ['AUTHBROKER_CLIENT_SECRET']
     redis_url = os.environ['REDIS_URL']
+    root_domain = os.environ['APPLICATION_ROOT_DOMAIN']
+    root_domain_no_port, _, root_port_str = root_domain.partition(':')
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
+
+    default_http_timeout = aiohttp.ClientTimeout()
+
+    # When spawning and tring to detect if the app is running,
+    # we fail quickly and often so a connection check is quick
+    spawning_http_timeout = aiohttp.ClientTimeout(sock_read=1, sock_connect=1)
 
     def without_transfer_encoding(headers):
         return tuple(
@@ -45,18 +57,125 @@ async def async_main():
         )
 
     async def handle(downstream_request):
-        upstream_url = URL(upstream_root) \
-            .with_path(downstream_request.url.path) \
-            .with_query(downstream_request.url.query)
+        method = downstream_request.method
+        path = downstream_request.url.path
+        query = downstream_request.url.query
+        headers = CIMultiDict(
+            without_transfer_encoding(downstream_request.headers) +
+            downstream_request['sso_profile_headers']
+        )
+        app_requested = downstream_request.url.host.endswith(f'.{root_domain_no_port}')
+
+        # Websocket connections
+        # - tend to close unexpectedly, both from the client and app
+        # - don't need to show anything nice to the user on error
         is_websocket = \
             downstream_request.headers.get('connection', '').lower() == 'upgrade' and \
             downstream_request.headers.get('upgrade', '').lower() == 'websocket'
 
-        return \
-            await handle_websocket(upstream_url, downstream_request) if is_websocket else \
-            await handle_http(upstream_url, downstream_request)
+        try:
+            return \
+                await handle_application(is_websocket, downstream_request, headers, method, path, query) if app_requested else \
+                await handle_admin(downstream_request, headers, method, path, query)
 
-    async def handle_websocket(upstream_url, downstream_request):
+        except Exception as exception:
+            logger.exception('Exception during %s %s',
+                             downstream_request.method, downstream_request.url)
+
+            if is_websocket:
+                raise
+
+            params = \
+                {'message': exception.args[0]} if isinstance(exception, UserException) else \
+                {}
+
+            return await handle_http(downstream_request, 'GET', headers, URL(admin_root).with_path('/error'), params, default_http_timeout)
+
+    async def handle_application(is_websocket, downstream_request, headers, method, path, query):
+        public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
+        host_api_url = admin_root + '/api/v1/application/' + public_host
+        host_html_path = '/application/' + public_host
+
+        async with client_session.request('GET', host_api_url, headers=headers) as response:
+            host_exists = response.status == 200
+            application = await response.json()
+
+        if host_exists and application['state'] not in ['SPAWNING', 'RUNNING']:
+            if 'x-data-workspace-no-delete-application-instance' not in headers:
+                async with client_session.request(
+                        'DELETE', host_api_url, headers=headers,
+                ) as delete_response:
+                    await delete_response.read()
+            raise UserException('Application ' + application['state'])
+
+        if not host_exists:
+            async with client_session.request('PUT', host_api_url, headers=headers) as response:
+                host_exists = response.status == 200
+                application = await response.json()
+
+        if not host_exists:
+            raise UserException('Unable to start the application')
+
+        if application['state'] not in ['SPAWNING', 'RUNNING']:
+            raise UserException(
+                'Attempted to start the application, but it ' + application['state'])
+
+        if not application['proxy_url']:
+            return await handle_http(downstream_request, 'GET', headers, admin_root + host_html_path + '/spawning', {}, default_http_timeout)
+
+        return \
+            await handle_application_websocket(downstream_request, headers, application['proxy_url'], path, query) if is_websocket else \
+            await handle_application_http_spawning(downstream_request, method, headers, application['proxy_url'], path, query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
+            await handle_application_http_running(downstream_request, method, headers, application['proxy_url'], path, query, host_api_url)
+
+    async def handle_application_websocket(downstream_request, headers, proxy_url, path, query):
+        upstream_url = URL(proxy_url).with_path(path).with_query(query)
+        return await handle_websocket(downstream_request, headers, upstream_url)
+
+    async def handle_application_http_spawning(downstream_request, method, headers, proxy_url, path, query, host_html_path, host_api_url):
+        upstream_url = URL(proxy_url).with_path(path)
+
+        try:
+            logger.debug('Spawning: Attempting to connect to %s', upstream_url)
+            response = await handle_http(downstream_request, method, headers, upstream_url, query, spawning_http_timeout)
+
+        except Exception:
+            logger.debug('Spawning: Failed to connect to %s', upstream_url)
+            return await handle_http(downstream_request, 'GET', headers, admin_root + host_html_path + '/spawning', {}, default_http_timeout)
+
+        else:
+            # Once a streaming response is done, if we have not yet returned
+            # from the handler, it looks like aiohttp can cancel the current
+            # task. We set RUNNING in another task to avoid it being cancelled
+            async def set_application_running():
+                async with client_session.request(
+                        'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=headers, timeout=default_http_timeout,
+                ) as patch_response:
+                    await patch_response.read()
+            asyncio.ensure_future(set_application_running())
+
+            return response
+
+    async def handle_application_http_running(downstream_request, method, headers, proxy_url, path, query, _):
+        upstream_url = URL(proxy_url).with_path(path)
+
+        # For the time being, we don't attempt to delete if an application has failed
+        # Since initial attempts were too sensistive, and would delete the application
+        # when it was still running
+        # try:
+        #     return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
+        # except (aiohttp.client_exceptions.ClientConnectionError, asyncio.TimeoutError):
+        # async with client_session.request('DELETE', host_api_url, headers=headers) as delete_response:
+        #     await delete_response.read()
+        #     raise
+
+        return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
+
+    async def handle_admin(downstream_request, headers, method, path, query):
+        upstream_url = URL(admin_root).with_path(path).with_query(query)
+        return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
+
+    async def handle_websocket(downstream_request, upstream_headers, upstream_url):
 
         async def proxy_msg(msg, to_ws):
             if msg.type == aiohttp.WSMsgType.TEXT:
@@ -75,10 +194,7 @@ async def async_main():
             try:
                 async with client_session.ws_connect(
                         str(upstream_url),
-                        headers=CIMultiDict(
-                            without_transfer_encoding(downstream_request.headers) +
-                            downstream_request['sso_profile_headers']
-                        ),
+                        headers=upstream_headers,
                 ) as upstream_ws:
                     upstream_connection.set_result(upstream_ws)
                     downstream_ws = await downstream_connection
@@ -88,6 +204,8 @@ async def async_main():
                 if not upstream_connection.done():
                     upstream_connection.set_exception(exception)
                 raise
+            finally:
+                await downstream_ws.close()
 
         # This is slightly convoluted, but aiohttp documents that reading
         # from websockets should be done in the same task as the websocket was
@@ -101,7 +219,9 @@ async def async_main():
 
         try:
             upstream_ws = await upstream_connection
-            downstream_ws = web.WebSocketResponse()
+            _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
+            downstream_ws = await with_session_cookie(web.WebSocketResponse())
+
             await downstream_ws.prepare(downstream_request)
             downstream_connection.set_result(downstream_ws)
 
@@ -112,15 +232,15 @@ async def async_main():
 
         return downstream_ws
 
-    async def handle_http(upstream_url, downstream_request):
+    async def handle_http(downstream_request, upstream_method, upstream_headers, upstream_url, upstream_query, timeout):
+
         async with client_session.request(
-                downstream_request.method, str(upstream_url),
-                params=downstream_request.url.query,
-                headers=CIMultiDict(
-                    without_transfer_encoding(downstream_request.headers) +
-                    downstream_request['sso_profile_headers']
-                ),
+                upstream_method, str(upstream_url),
+                params=upstream_query,
+                headers=upstream_headers,
                 data=downstream_request.content,
+                allow_redirects=False,
+                timeout=timeout,
         ) as upstream_response:
 
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
@@ -162,7 +282,13 @@ async def async_main():
 
         def get_redirect_uri_callback(request):
             scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
-            uri = request.url.with_scheme(scheme) \
+            try:
+                root_port = int(root_port_str)
+            except ValueError:
+                root_port = None
+            uri = request.url.with_host(root_domain_no_port) \
+                             .with_port(root_port) \
+                             .with_scheme(scheme) \
                              .with_path(redirect_from_sso_path) \
                              .with_query({})
             return str(uri)
@@ -177,12 +303,14 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
+
             # Database authentication is handled by the django app
-            if request.url.path in ['/healthcheck', '/api/v1/databases']:
+            if request.url.path in ['/healthcheck']:
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
-            get_session_value, set_session_value, with_new_session_cookie, with_session_cookie = request[SESSION_KEY]
+            get_session_value, set_session_value, with_new_session_cookie, with_session_cookie = request[
+                SESSION_KEY]
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
@@ -242,13 +370,9 @@ async def async_main():
 
         return _authenticate_by_sso
 
-    # Although less efficient, paranoia-avoid errors when the application is
-    # closing keep-alive connections, and mitigates running out of file
-    # handles. Could be changed, but KISS
-    conn = aiohttp.TCPConnector(force_close=True)
-    async with aiohttp.ClientSession(connector=conn) as client_session:
+    async with aiohttp.ClientSession() as client_session:
         app = web.Application(middlewares=[
-            redis_session_middleware(redis_pool),
+            redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),
         ])
         app.add_routes([
