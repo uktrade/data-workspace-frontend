@@ -50,20 +50,22 @@ async def async_main():
     # we fail quickly and often so a connection check is quick
     spawning_http_timeout = aiohttp.ClientTimeout(sock_read=1, sock_connect=1)
 
-    def without_transfer_encoding(headers):
-        return tuple(
-            (key, value) for key, value in headers.items()
+    def without_transfer_encoding(request_or_response):
+        return CIMultiDict(tuple(
+            (key, value) for key, value in request_or_response.headers.items()
             if key.lower() != 'transfer-encoding'
+        ))
+
+    def admin_headers(downstream_request):
+        return CIMultiDict(
+            tuple(without_transfer_encoding(downstream_request).items()) +
+            downstream_request['sso_profile_headers']
         )
 
     async def handle(downstream_request):
         method = downstream_request.method
         path = downstream_request.url.path
         query = downstream_request.url.query
-        headers = CIMultiDict(
-            without_transfer_encoding(downstream_request.headers) +
-            downstream_request['sso_profile_headers']
-        )
         app_requested = downstream_request.url.host.endswith(f'.{root_domain_no_port}')
 
         # Websocket connections
@@ -75,12 +77,12 @@ async def async_main():
 
         try:
             return \
-                await handle_application(is_websocket, downstream_request, headers, method, path, query) if app_requested else \
-                await handle_admin(downstream_request, headers, method, path, query)
+                await handle_application(is_websocket, downstream_request, method, path, query) if app_requested else \
+                await handle_admin(downstream_request, method, path, query)
 
         except Exception as exception:
-            logger.exception('Exception during %s %s',
-                             downstream_request.method, downstream_request.url)
+            logger.exception('Exception during %s %s %s',
+                             downstream_request.method, downstream_request.url, type(exception))
 
             if is_websocket:
                 raise
@@ -89,27 +91,27 @@ async def async_main():
                 {'message': exception.args[0]} if isinstance(exception, UserException) else \
                 {}
 
-            return await handle_http(downstream_request, 'GET', headers, URL(admin_root).with_path('/error'), params, default_http_timeout)
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), URL(admin_root).with_path('/error'), params, default_http_timeout)
 
-    async def handle_application(is_websocket, downstream_request, headers, method, path, query):
+    async def handle_application(is_websocket, downstream_request, method, path, query):
         public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
         host_api_url = admin_root + '/api/v1/application/' + public_host
         host_html_path = '/application/' + public_host
 
-        async with client_session.request('GET', host_api_url, headers=headers) as response:
+        async with client_session.request('GET', host_api_url, headers=admin_headers(downstream_request)) as response:
             host_exists = response.status == 200
             application = await response.json()
 
         if host_exists and application['state'] not in ['SPAWNING', 'RUNNING']:
-            if 'x-data-workspace-no-delete-application-instance' not in headers:
+            if 'x-data-workspace-no-delete-application-instance' not in downstream_request.headers:
                 async with client_session.request(
-                        'DELETE', host_api_url, headers=headers,
+                        'DELETE', host_api_url, headers=admin_headers(downstream_request),
                 ) as delete_response:
                     await delete_response.read()
             raise UserException('Application ' + application['state'])
 
         if not host_exists:
-            async with client_session.request('PUT', host_api_url, headers=headers) as response:
+            async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
                 host_exists = response.status == 200
                 application = await response.json()
 
@@ -121,27 +123,27 @@ async def async_main():
                 'Attempted to start the application, but it ' + application['state'])
 
         if not application['proxy_url']:
-            return await handle_http(downstream_request, 'GET', headers, admin_root + host_html_path + '/spawning', {}, default_http_timeout)
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), admin_root + host_html_path + '/spawning', {}, default_http_timeout)
 
         return \
-            await handle_application_websocket(downstream_request, headers, application['proxy_url'], path, query) if is_websocket else \
-            await handle_application_http_spawning(downstream_request, method, headers, application['proxy_url'], path, query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
-            await handle_application_http_running(downstream_request, method, headers, application['proxy_url'], path, query, host_api_url)
+            await handle_application_websocket(downstream_request, application['proxy_url'], path, query) if is_websocket else \
+            await handle_application_http_spawning(downstream_request, method, application['proxy_url'], path, query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
+            await handle_application_http_running(downstream_request, method, application['proxy_url'], path, query, host_api_url)
 
-    async def handle_application_websocket(downstream_request, headers, proxy_url, path, query):
+    async def handle_application_websocket(downstream_request, proxy_url, path, query):
         upstream_url = URL(proxy_url).with_path(path).with_query(query)
-        return await handle_websocket(downstream_request, headers, upstream_url)
+        return await handle_websocket(downstream_request, without_transfer_encoding(downstream_request), upstream_url)
 
-    async def handle_application_http_spawning(downstream_request, method, headers, proxy_url, path, query, host_html_path, host_api_url):
+    async def handle_application_http_spawning(downstream_request, method, proxy_url, path, query, host_html_path, host_api_url):
         upstream_url = URL(proxy_url).with_path(path)
 
         try:
             logger.debug('Spawning: Attempting to connect to %s', upstream_url)
-            response = await handle_http(downstream_request, method, headers, upstream_url, query, spawning_http_timeout)
+            response = await handle_http(downstream_request, method, without_transfer_encoding(downstream_request), upstream_url, query, spawning_http_timeout)
 
         except Exception:
             logger.debug('Spawning: Failed to connect to %s', upstream_url)
-            return await handle_http(downstream_request, 'GET', headers, admin_root + host_html_path + '/spawning', {}, default_http_timeout)
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), admin_root + host_html_path + '/spawning', {}, default_http_timeout)
 
         else:
             # Once a streaming response is done, if we have not yet returned
@@ -149,14 +151,14 @@ async def async_main():
             # task. We set RUNNING in another task to avoid it being cancelled
             async def set_application_running():
                 async with client_session.request(
-                        'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=headers, timeout=default_http_timeout,
+                        'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=admin_headers(downstream_request), timeout=default_http_timeout,
                 ) as patch_response:
                     await patch_response.read()
             asyncio.ensure_future(set_application_running())
 
             return response
 
-    async def handle_application_http_running(downstream_request, method, headers, proxy_url, path, query, _):
+    async def handle_application_http_running(downstream_request, method, proxy_url, path, query, _):
         upstream_url = URL(proxy_url).with_path(path)
 
         # For the time being, we don't attempt to delete if an application has failed
@@ -169,11 +171,11 @@ async def async_main():
         #     await delete_response.read()
         #     raise
 
-        return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
+        return await handle_http(downstream_request, method, without_transfer_encoding(downstream_request), upstream_url, query, default_http_timeout)
 
-    async def handle_admin(downstream_request, headers, method, path, query):
+    async def handle_admin(downstream_request, method, path, query):
         upstream_url = URL(admin_root).with_path(path).with_query(query)
-        return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
+        return await handle_http(downstream_request, method, admin_headers(downstream_request), upstream_url, query, default_http_timeout)
 
     async def handle_websocket(downstream_request, upstream_headers, upstream_url):
 
@@ -246,7 +248,7 @@ async def async_main():
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(web.StreamResponse(
                 status=upstream_response.status,
-                headers=CIMultiDict(without_transfer_encoding(upstream_response.headers)),
+                headers=without_transfer_encoding(upstream_response),
             ))
             await downstream_response.prepare(downstream_request)
             async for chunk in upstream_response.content.iter_any():
