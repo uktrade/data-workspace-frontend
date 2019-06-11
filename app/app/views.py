@@ -23,6 +23,9 @@ from django.http import (
     JsonResponse,
     StreamingHttpResponse,
 )
+from django.views.decorators.http import (
+    require_GET
+)
 from django.shortcuts import (
     redirect,
     render,
@@ -46,6 +49,15 @@ from app.spawner import (
 
 logger = logging.getLogger('app')
 
+
+@require_GET
+def landing_view(request):
+    context = {}
+    return render(request, 'landing.html', context)
+
+@require_GET
+def catalogue_view(request):
+    return HttpResponse(404)
 
 def root_view(request):
     return \

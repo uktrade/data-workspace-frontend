@@ -1,0 +1,43 @@
+{% extends 'govuk_template.html' %}
+
+{% block head %}
+    {{ block.super }}
+    <style>
+        .messages {
+            margin: 1em 0;
+            padding: 1em 1em;
+            color: #fff;
+            background: #28a197;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        .btn-stop {
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
+
+{% block inner_content %}
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="grid-row">
+        <div class="column-third card">
+            <h3 class="heading-small">
+                <a href="/catalogue">Data Catalogue</a>
+            </h3>
+            <h3 class="heading-small">
+                <a href="/analysis">Analyst Access</a>
+            </h3>
+        </div>
+
+    </div>
+    
+
+
+{% endblock %}

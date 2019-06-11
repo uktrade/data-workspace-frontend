@@ -127,7 +127,7 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_session)
 
         # Make a request to the home page
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request('GET', 'http://localapps.com:8000/analysis') as response:
             content = await response.text()
 
         # Ensure we sent the right thing to SSO
@@ -430,8 +430,8 @@ class TestApplication(unittest.TestCase):
             await asyncio.sleep(0.25)
         self.add_async_cleanup(cleanup_session)
 
-        # Make a request to the home page
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        # Make a request to the analysis home page
+        async with session.request('GET', 'http://localapps.com:8000/analysis') as response:
             content = await response.text()
 
         self.assertEqual(number_of_times_at_sso, 2)

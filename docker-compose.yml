@@ -11,6 +11,8 @@ services:
     links:
       - "analysis-workspace-postgres"
       - "analysis-workspace-redis"
+    volumes:
+      - "./app:/app"
   analysis-workspace-postgres:
     build:
       context: .
