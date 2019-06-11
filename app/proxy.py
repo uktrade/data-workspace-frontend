@@ -235,12 +235,20 @@ async def async_main():
         return downstream_ws
 
     async def handle_http(downstream_request, upstream_method, upstream_headers, upstream_url, upstream_query, timeout):
+        # Avoid aiohttp treating request as chunked unnecessarily, which works
+        # for some upstream servers, but not all. Specifically RStudio drops
+        # GET responses half way through if the request specified a chunked
+        # encoding. AFAIK RStudio uses a custom webserver, so this behaviour
+        # is not documented anywhere.
+        data = \
+            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else \
+            downstream_request.content
 
         async with client_session.request(
                 upstream_method, str(upstream_url),
                 params=upstream_query,
                 headers=upstream_headers,
-                data=downstream_request.content,
+                data=data,
                 allow_redirects=False,
                 timeout=timeout,
         ) as upstream_response:
