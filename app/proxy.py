@@ -249,12 +249,8 @@ async def async_main():
                 headers=CIMultiDict(without_transfer_encoding(upstream_response.headers)),
             ))
             await downstream_response.prepare(downstream_request)
-            while True:
-                chunk = await upstream_response.content.readany()
-                if chunk:
-                    await downstream_response.write(chunk)
-                else:
-                    break
+            async for chunk in upstream_response.content.iter_any():
+                await downstream_response.write(chunk)
 
         return downstream_response
 
