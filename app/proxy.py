@@ -63,7 +63,13 @@ async def async_main():
         )
 
     def application_headers(downstream_request):
-        return without_transfer_encoding(downstream_request)
+        return CIMultiDict(
+            tuple(without_transfer_encoding(downstream_request).items()) +
+            (
+                (('x-scheme', downstream_request.headers['x-forwarded-proto']),) if 'x-forwarded-proto' in downstream_request.headers else
+                ()
+            )
+        )
 
     async def handle(downstream_request):
         method = downstream_request.method
