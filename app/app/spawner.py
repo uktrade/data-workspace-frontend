@@ -129,7 +129,7 @@ class FargateSpawner():
         definition_arn = options['DEFINITION_ARN']
         security_groups = options['SECURITY_GROUPS']
         subnets = options['SUBNETS']
-        cmd = options['CMD']
+        cmd = options['CMD'] if 'CMD' in options else []
         env = options['ENV']
         port = options['PORT']
         assume_role_policy_document = base64.b64decode(
@@ -154,7 +154,7 @@ class FargateSpawner():
         def _spawn():
             nonlocal task_arn
 
-            logger.info('Starting %s', options['CMD'])
+            logger.info('Starting %s', cmd)
 
             # Create a role
             iam_client = boto3.client('iam')
@@ -332,7 +332,11 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
         overrides={
             'taskRoleArn': role_arn,
             'containerOverrides': [{
-                'command': command_and_args,
+                **(
+                    {
+                        'command': command_and_args,
+                    } if command_and_args else {}
+                ),
                 'environment': [
                     {
                         'name': name,
