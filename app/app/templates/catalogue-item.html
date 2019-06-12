@@ -1,0 +1,104 @@
+{% extends 'govuk_template.html' %}
+
+{% block head %}
+    {{ block.super }}
+    <style>
+        .messages {
+            margin: 1em 0;
+            padding: 1em 1em;
+            color: #fff;
+            background: #28a197;
+            font-weight: bold;
+            font-size: 24px;
+        }
+       
+    </style>
+{% endblock %}
+
+{% block inner_content %}
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="breadcrumbs">
+        <ol class="breadcrumbs__list">
+            <li class="breadcrumbs__list-item">
+                <a class="breadcrumbs__link" href="/">Home</a>
+            </li>
+            <li class="breadcrumbs__list-item">
+                <a class="breadcrumbs__link" href="/catalogue">Data Catalogue</a>
+            </li>
+            <li class="breadcrumbs__list-item">
+                {{ model.name }}
+            </li>
+        </ol>
+      </div>
+
+    <h1 class="heading-large">{{ model.name }}</h1>
+
+    <div class="grid-row">
+        <div class="column-two-thirds">
+
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Page Published</th>
+                        <td>[Publish Date]</td>
+                    </tr>
+                    <tr>    
+                        <td>Page last updated</td>
+                        <td>[Last Updated]</td>
+                    </tr>
+                    <tr>    
+                        <td>Information Asset Manager</td>
+                        <td>[Information Asset Manager]</td>
+                    </tr>
+                    <tr>    
+                        <td>Information Asset Owner</td>
+                        <td>[Information Asset Owner]</td>
+                    </tr>
+                    <tr>    
+                        <td>Shared with</td>
+                        <td>[Shared with]</td>
+                    </tr>
+                </tbody>
+            </table>    
+
+            <h3 style="padding-top:1rem;">Summary</h3>
+            <p>
+            {{ model.description }}
+            </p>
+
+        </div>  
+    </div>
+
+    <div class="grid-row">
+        <div class="column-two-thirds">
+            <h2 class="heading-medium">Company Data</h2>
+            <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Fusce quis maximus nisi. Sed tortor libero, fringilla vitae libero sed, varius fermentum magna. Aliquam erat volutpat. 
+            </p>
+        </div>
+    </div>
+
+    <div class="grid-row">
+        <div class="column-two-thirds">
+            <h2 class="heading-medium">
+                <a href="#">DataSet#1 name</a>
+            </h2>
+            <p>[DataSet#1 short description]</p>
+
+            <h2 class="heading-medium">
+                <a href="#">DataSet#2 name</a>
+            </h2>
+            <p>[DataSet#2 short description]</p>
+
+        </div>
+    </div>
+
+{% endblock %}

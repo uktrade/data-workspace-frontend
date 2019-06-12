@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-class Catalogue(models.Model):
+class DataGrouping(models.Model):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -15,8 +15,11 @@ class Catalogue(models.Model):
     )
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
-    name = models.TextField(unique=True, blank=False, null=False)
-    short_description = models.TextField(blank=False, null=False)
+    # 128 - small tweet in length
+    name = models.CharField(unique=True, blank=False, null=False, max_length=128)
+    # 256 i.e. a long tweet length
+    short_description = models.CharField(blank=False, null=False, max_length=256)
+    description = models.TextField(blank=False, null=False)
 
 
 class Profile(models.Model):

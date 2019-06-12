@@ -14,7 +14,7 @@ from app.models import (
     Database,
     Privilage,
     Profile,
-    Catalogue
+    DataGrouping
 )
 
 admin.site.register(Database)
@@ -22,7 +22,12 @@ admin.site.register(Privilage)
 admin.site.register(ApplicationTemplate)
 admin.site.register(ApplicationInstance)
 
-admin.site.register(Catalogue)
+
+
+class DataGroupingAdmin(admin.ModelAdmin):
+    list_display = ('name', 'short_description')
+
+admin.site.register(DataGrouping, DataGroupingAdmin)
 
 class AppUserCreationForm(forms.ModelForm):
 

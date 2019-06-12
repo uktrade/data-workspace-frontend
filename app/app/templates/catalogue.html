@@ -30,25 +30,28 @@
                 <a class="breadcrumbs__link" href="/">Home</a>
             </li>
             <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="/#">Data Catalogue</a>
+                Data Catalogue
             </li>
         </ol>
       </div>
 
     <h1 class="heading-large">Data at DIT</h1>
 
-    <h3><a href="#">Data Hub</a></h3>
-    <p>Data Hub contains records for all DIT interations with companies in the UK and overseas. It also includes
-    workflow tools for managing investment</p>
-
-<div class="grid-row">
-        <div class="column-two-thirds card">
-
-    {% for grouping in groupings %}
-        <h3>
-            <a href="{% url 'catalogue_item' grouping.id %}">{{ grouping.name }}</a>
-        <p>{{ grouping.short_description }}</p>
-    {% endfor %}
+    <div class="grid-row">
+    <div class="column-two-thirds">
+        <h3><a href="#">Data Hub</a></h3>
+        <p>Data Hub contains records for all DIT interations with companies in the UK and overseas. It also includes
+        workflow tools for managing investment</p>
+        </div>
+    </div>
+    <div class="grid-row">
+        <div class="column-two-thirds">
+        {% for grouping in groupings %}
+            <h3>
+                <a href="{% url 'catalogue_item' grouping.id %}">{{ grouping.name }}</a>
+            </h3>
+            <p>{{ grouping.short_description }}</p>
+        {% endfor %}
 
     </div>
     </div>

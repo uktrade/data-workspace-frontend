@@ -24,11 +24,12 @@ from django.http import (
     StreamingHttpResponse,
 )
 from django.views.decorators.http import (
-    require_GET
+    require_GET,
 )
 from django.shortcuts import (
     redirect,
     render,
+    get_object_or_404,
 )
 import gevent
 import gevent.queue
@@ -37,7 +38,7 @@ from psycopg2 import connect, sql
 from app.models import (
     ApplicationInstance,
     ApplicationTemplate,
-    Catalogue
+    DataGrouping
 )
 from app.shared import (
     database_dsn,
@@ -59,8 +60,14 @@ def landing_view(request):
 
 
 @require_GET
-def catalogue_item_view(request, catalogue_id):
-    return HttpResponse("OK")
+def catalogue_item_view(request, grouping_id):
+    item = get_object_or_404(DataGrouping, pk=grouping_id)
+
+    context = {
+        'model': item
+    }
+
+    return render(request, 'catalogue-item.html', context)
 
 
 @require_GET
@@ -70,7 +77,7 @@ def catalogue_view(request):
         'groupings': []
     }
 
-    groupings = Catalogue.objects.all()
+    groupings = DataGrouping.objects.all()
 
     for group in groupings:
         context['groupings'].append(
