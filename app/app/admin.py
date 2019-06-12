@@ -14,7 +14,8 @@ from app.models import (
     Database,
     Privilage,
     Profile,
-    DataGrouping
+    DataGrouping,
+    DataSet
 )
 
 admin.site.register(Database)
@@ -23,11 +24,17 @@ admin.site.register(ApplicationTemplate)
 admin.site.register(ApplicationInstance)
 
 
-
 class DataGroupingAdmin(admin.ModelAdmin):
     list_display = ('name', 'short_description')
 
+
+class DataSetAdmin(admin.ModelAdmin):
+    list_display = ('name', 'short_description')
+
+
 admin.site.register(DataGrouping, DataGroupingAdmin)
+admin.site.register(DataSet, DataSetAdmin)
+
 
 class AppUserCreationForm(forms.ModelForm):
 

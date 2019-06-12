@@ -68,16 +68,18 @@
                 </tbody>
             </table>    
 
+            {% if model.description %}
             <h3 style="padding-top:1rem;">Summary</h3>
-            <p>
-            {{ model.description }}
-            </p>
+            {{ model.description | linebreaks }}
+            {% endif %}
 
         </div>  
     </div>
+   
 
     <div class="grid-row">
         <div class="column-two-thirds">
+           
             <h2 class="heading-medium">Company Data</h2>
             <p>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
@@ -88,16 +90,12 @@
 
     <div class="grid-row">
         <div class="column-two-thirds">
-            <h2 class="heading-medium">
-                <a href="#">DataSet#1 name</a>
-            </h2>
-            <p>[DataSet#1 short description]</p>
-
-            <h2 class="heading-medium">
-                <a href="#">DataSet#2 name</a>
-            </h2>
-            <p>[DataSet#2 short description]</p>
-
+            {% for set in model.dataset_set.all %}
+                <h2 class="heading-medium">
+                        <a href="#">{{ set.name }}</a>
+                </h2>
+                <p>{{ set.short_description }}</p>
+            {% endfor %}
         </div>
     </div>
 

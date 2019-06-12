@@ -63,6 +63,10 @@ def landing_view(request):
 def catalogue_item_view(request, grouping_id):
     item = get_object_or_404(DataGrouping, pk=grouping_id)
 
+    logger.warn("here")
+    for dataset in item.dataset_set.all():
+        logger.warn(dataset.name)
+
     context = {
         'model': item
     }

@@ -16,11 +16,28 @@ class DataGrouping(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
     # 128 - small tweet in length
-    name = models.CharField(unique=True, blank=False, null=False, max_length=128)
+    name = models.CharField(unique=True, blank=False,
+                            null=False, max_length=128)
     # 256 i.e. a long tweet length
-    short_description = models.CharField(blank=False, null=False, max_length=256)
-    description = models.TextField(blank=False, null=False)
+    short_description = models.CharField(
+        blank=False, null=False, max_length=256)
+    description = models.TextField(blank=True, null=True)
 
+    def __str__(self):
+        return f'{self.name} {self.short_description}'
+
+
+class DataSet(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    name = models.CharField(blank=False, null=False, max_length=128)
+    short_description = models.CharField(
+        blank=False, null=False, max_length=256)
+
+    grouping = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
