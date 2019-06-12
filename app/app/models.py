@@ -7,6 +7,18 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+class Catalogue(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+    name = models.TextField(unique=True, blank=False, null=False)
+    short_description = models.TextField(blank=False, null=False)
+
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     sso_id = models.UUIDField(unique=True, default=uuid.uuid4)
@@ -67,7 +79,8 @@ class Privilage(models.Model):
     tables = models.CharField(
         max_length=1024,
         blank=False,
-        validators=[RegexValidator(regex=r'(([a-zA-Z][a-zA-Z0-9_\.]*,?)+(?<!,)$)|(^ALL TABLES$)')],
+        validators=[RegexValidator(
+            regex=r'(([a-zA-Z][a-zA-Z0-9_\.]*,?)+(?<!,)$)|(^ALL TABLES$)')],
         help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
     )
 
@@ -144,7 +157,8 @@ class ApplicationInstance(models.Model):
     )
 
     # Copy of the options to allow for spawners to be changed after (or during) spawning
-    application_template = models.ForeignKey(ApplicationTemplate, on_delete=models.PROTECT)
+    application_template = models.ForeignKey(
+        ApplicationTemplate, on_delete=models.PROTECT)
     spawner = models.CharField(
         max_length=15,
         help_text='The spawner used to start the application',

@@ -14,6 +14,7 @@ from app.models import (
     Database,
     Privilage,
     Profile,
+    Catalogue
 )
 
 admin.site.register(Database)
@@ -21,6 +22,7 @@ admin.site.register(Privilage)
 admin.site.register(ApplicationTemplate)
 admin.site.register(ApplicationInstance)
 
+admin.site.register(Catalogue)
 
 class AppUserCreationForm(forms.ModelForm):
 

@@ -37,6 +37,7 @@ from psycopg2 import connect, sql
 from app.models import (
     ApplicationInstance,
     ApplicationTemplate,
+    Catalogue
 )
 from app.shared import (
     database_dsn,
@@ -47,6 +48,7 @@ from app.spawner import (
     spawner,
 )
 
+
 logger = logging.getLogger('app')
 
 
@@ -55,9 +57,30 @@ def landing_view(request):
     context = {}
     return render(request, 'landing.html', context)
 
+
+@require_GET
+def catalogue_item_view(request, catalogue_id):
+    return HttpResponse("OK")
+
+
 @require_GET
 def catalogue_view(request):
-    return HttpResponse(404)
+
+    context = {
+        'groupings': []
+    }
+
+    groupings = Catalogue.objects.all()
+
+    for group in groupings:
+        context['groupings'].append(
+            {'name': group.name,
+             'short_description': group.short_description,
+             'id': group.id}
+        )
+
+    return render(request, 'catalogue.html', context)
+
 
 def root_view(request):
     return \
@@ -82,7 +105,8 @@ def root_view_GET(request):
         return results
 
     def allowed_tables_for_database_that_exist(database, database_privilages):
-        logger.info('allowed_tables_for_database_that_exist: %s %s', database, database_privilages)
+        logger.info('allowed_tables_for_database_that_exist: %s %s',
+                    database, database_privilages)
         with \
                 connect(database_dsn(settings.DATABASES_DATA[database.memorable_name])) as conn, \
                 conn.cursor() as cur:
@@ -94,9 +118,11 @@ def root_view_GET(request):
             ]
 
     privilages = get_private_privilages(request.user)
-    privilages_by_database = itertools.groupby(privilages, lambda privilage: privilage.database)
+    privilages_by_database = itertools.groupby(
+        privilages, lambda privilage: privilage.database)
 
-    sso_id_hex = hashlib.sha256(str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
+    sso_id_hex = hashlib.sha256(
+        str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
     sso_id_hex_short = sso_id_hex[:8]
 
     application_instances = {
@@ -105,7 +131,8 @@ def root_view_GET(request):
     }
 
     def can_stop(application_template):
-        application_instance = application_instances.get(application_template, None)
+        application_instance = application_instances.get(
+            application_template, None)
         return \
             application_instance is not None and spawner(application_instance.spawner).can_stop(
                 application_instance.spawner_application_template_options,
@@ -124,12 +151,14 @@ def root_view_GET(request):
             for application_template in ApplicationTemplate.objects.all().order_by('name')
         ],
         'database_schema_tables': _remove_duplicates(_flatten([
-            allowed_tables_for_database_that_exist(database, list(database_privilages))
+            allowed_tables_for_database_that_exist(
+                database, list(database_privilages))
             for database, database_privilages in privilages_by_database
         ])),
         'appstream_url': settings.APPSTREAM_URL,
         'support_url': settings.SUPPORT_URL,
     }
+
     return render(request, 'root.html', context)
 
 
@@ -148,7 +177,8 @@ def root_view_POST(request):
         )
         set_application_stopped(application_instance)
 
-    messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
+    messages.success(request, 'Stopped ' +
+                     application_instance.application_template.nice_name)
     return redirect('root')
 
 
@@ -230,7 +260,8 @@ def _table_exists(database, schema, table):
 
 
 def _table_data(user_email, database, schema, table):
-    logger.info('table_data_view start: %s %s %s %s', user_email, database, schema, table)
+    logger.info('table_data_view start: %s %s %s %s',
+                user_email, database, schema, table)
     cursor_itersize = 1000
     queue_size = 5
     bytes_queue = gevent.queue.Queue(maxsize=queue_size)
@@ -287,7 +318,8 @@ def _table_data(user_email, database, schema, table):
             except gevent.queue.Empty:
                 pass
 
-        logger.info('table_data_view end: %s %s %s %s', user_email, database, schema, table)
+        logger.info('table_data_view end: %s %s %s %s',
+                    user_email, database, schema, table)
 
     def handle_exception(job):
         try:
@@ -299,7 +331,8 @@ def _table_data(user_email, database, schema, table):
     put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
     put_db_rows_to_queue_job.link_exception(handle_exception)
 
-    response = StreamingHttpResponse(yield_bytes_from_queue(), content_type='text/csv')
+    response = StreamingHttpResponse(
+        yield_bytes_from_queue(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
     return response
 
@@ -312,7 +345,8 @@ def application_spawning_html_view(request, public_host):
 
 def application_spawning_html_GET(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host)
     except ApplicationInstance.DoesNotExist:
         return public_error_html_view(request)
     else:
@@ -384,7 +418,8 @@ def application_api_view(request, public_host):
 
 def application_api_GET(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
@@ -400,7 +435,8 @@ def application_api_PUT(request, public_host):
     # key prevents duplicate spawning/running applications at the same
     # public host
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host)
     except ApplicationInstance.DoesNotExist:
         pass
     else:
@@ -412,7 +448,8 @@ def application_api_PUT(request, public_host):
         str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
 
     if owner_sso_id_hex != request_sso_id_hex[:8]:
-        logger.error('Error PUT %s != %s', owner_sso_id_hex, request_sso_id_hex[:8])
+        logger.error('Error PUT %s != %s', owner_sso_id_hex,
+                     request_sso_id_hex[:8])
         return JsonResponse({'message': 'Cannot create an application instance for user other than yourself'}, status=401)
 
     try:
@@ -453,7 +490,8 @@ def application_api_PUT(request, public_host):
 
 def application_api_PATCH(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
@@ -470,7 +508,8 @@ def application_api_PATCH(request, public_host):
 
 def application_api_DELETE(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=200)
 
@@ -481,7 +520,8 @@ def application_api_DELETE(request, public_host):
 
 def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
-    application_instance.single_running_or_spawning_integrity = str(application_instance.id)
+    application_instance.single_running_or_spawning_integrity = str(
+        application_instance.id)
     application_instance.save()
 
 

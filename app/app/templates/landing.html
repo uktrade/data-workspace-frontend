@@ -26,14 +26,24 @@
     </ul>
     {% endif %}
 
+    <div class="breadcrumbs">
+        <ol class="breadcrumbs__list">
+          <li class="breadcrumbs__list-item">
+            <a class="breadcrumbs__link" href="#">Home</a>
+          </li>
+        </ol>
+      </div>
+
     <div class="grid-row">
         <div class="column-third card">
-            <h3 class="heading-small">
-                <a href="/catalogue">Data Catalogue</a>
-            </h3>
-            <h3 class="heading-small">
-                <a href="/analysis">Analyst Access</a>
-            </h3>
+            <a href="/catalogue" role="button" draggable="false" class="button button--start">
+                Data Catalogue
+            </a>
+            <br />
+            <br />
+            <a href="/analysis" role="button" draggable="false" class="button button--start">
+                Analyst Access
+            </a>
         </div>
 
     </div>

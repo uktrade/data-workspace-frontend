@@ -31,7 +31,8 @@ from app.views import (
     application_spawning_html_view,
     application_api_view,
     landing_view,
-    catalogue_view
+    catalogue_view,
+    catalogue_item_view
 )
 
 logger = logging.getLogger('app')
@@ -90,6 +91,7 @@ admin.site.login = login_required(admin.site.login)
 urlpatterns = [
     path('', login_required(landing_view), name='landing'),
     path('catalogue', login_required(catalogue_view), name='catalogue'),
+    path('catalogue/<str:catalogue_id>', login_required(catalogue_item_view), name='catalogue_item'),
     path('analysis', login_required(root_view), name='root'),
     path('error', public_error_html_view),
     path('admin/', admin.site.urls),
