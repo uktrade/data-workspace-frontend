@@ -194,6 +194,20 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content['content'], 'Some content'*10000)
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
+        # Assert that transfer-encoding does not become chunked unnecessarily
+        async with session.request(
+                'GET', 'http://testapplication-23b40dd9.localapps.com:8000/http') as response:
+            received_content = await response.json()
+        header_keys = [key.lower() for key in received_content['headers'].keys()]
+        self.assertNotIn('transfer-encoding', header_keys)
+
+        async with session.request(
+                'PATCH', 'http://testapplication-23b40dd9.localapps.com:8000/http', data=b'1234') as response:
+            received_content = await response.json()
+        header_keys = [key.lower() for key in received_content['headers'].keys()]
+        self.assertNotIn('transfer-encoding', header_keys)
+        self.assertEqual(received_content['content'], '1234')
+
         # Make a websockets connection to the proxy
         sent_headers = {
             'from-downstream-websockets': 'websockets-header-value',
