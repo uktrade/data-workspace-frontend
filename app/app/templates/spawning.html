@@ -67,6 +67,13 @@
                 return str;
             }
 
+            function timeToNextFrame(now) {
+                var remaining = Math.max(end_time - now, 0.0) / 1000.0;
+                var toNextMaybeZero = remaining - Math.floor(remaining);
+                var toNext = toNextMaybeZero === 0.0 ? 1000.0 : (toNextMaybeZero * 1000);
+                return toNext;
+            }
+
             function showRemaining() {
                 var now = window.performance.now();
                 var remaining_total = Math.max(0, Math.ceil((end_time - now) / 1000));
@@ -78,9 +85,10 @@
                 if (remaining_total == 0) {
                     return;
                 }
-                window.setTimeout(showRemaining, 50);
+                window.setTimeout(showRemaining, timeToNextFrame(now));
             }
-            showRemaining();
+
+            window.setTimeout(showRemaining, timeToNextFrame(window.performance.now()))
         });
     </script>
 {% endblock %}
