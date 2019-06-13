@@ -10,6 +10,7 @@ set -e
     # no need for more
     django-admin migrate
 
+    django-admin ensure_databases_configured
     django-admin ensure_application_template_models
 
     # nginx is configured to log to stdout/stderr, _except_ before

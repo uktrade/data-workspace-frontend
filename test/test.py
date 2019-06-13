@@ -32,7 +32,7 @@ class TestApplication(unittest.TestCase):
         # The environment must be the same as in the Dockerfile
         async def cleanup_application():
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
 
         async def create_application():
             nonlocal proc
@@ -237,7 +237,7 @@ class TestApplication(unittest.TestCase):
         await cleanup_application()
         await create_application()
 
-        await asyncio.sleep(4)
+        await asyncio.sleep(6)
 
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             error_content = await response.text()
@@ -269,7 +269,7 @@ class TestApplication(unittest.TestCase):
         # The environment must be the same as in the Dockerfile
         async def cleanup_application():
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
         proc = await asyncio.create_subprocess_exec(
             '/app/start.sh',
             env={
@@ -323,7 +323,7 @@ class TestApplication(unittest.TestCase):
         sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
         await sso_site.start()
 
-        await asyncio.sleep(4)
+        await asyncio.sleep(6)
 
         session = aiohttp.ClientSession()
 
@@ -352,7 +352,7 @@ class TestApplication(unittest.TestCase):
         # The environment must be the same as in the Dockerfile
         async def cleanup_application():
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
         proc = await asyncio.create_subprocess_exec(
             '/app/start.sh',
             env={
@@ -435,7 +435,7 @@ class TestApplication(unittest.TestCase):
         sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
         await sso_site.start()
 
-        await asyncio.sleep(4)
+        await asyncio.sleep(6)
 
         session = aiohttp.ClientSession()
 
