@@ -5,7 +5,13 @@ from django.contrib.auth.admin import (
     UserAdmin,
 )
 from django.contrib.auth.models import (
+    Permission,
+)
+from django.contrib.auth.models import (
     User,
+)
+from django.contrib.contenttypes.models import (
+    ContentType,
 )
 
 from app.models import (
@@ -13,7 +19,6 @@ from app.models import (
     ApplicationInstance,
     Database,
     Privilage,
-    Profile,
 )
 
 admin.site.register(Database)
@@ -37,11 +42,26 @@ class AppUserCreationForm(forms.ModelForm):
         return user
 
 
-class ProfileInline(admin.StackedInline):
-    model = Profile
-    can_delete = False
-    verbose_name_plural = 'Profile'
-    fk_name = 'user'
+class AppUserEditForm(forms.ModelForm):
+
+    can_start_all_applications = forms.BooleanField(
+        label='Can start applications',
+        help_text='Designates that the user can start applications',
+        required=False,
+    )
+
+    class Meta:
+        model = User
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs['instance']
+
+        self.fields['can_start_all_applications'].initial = instance.user_permissions.filter(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
 
 
 class AppUserAdmin(UserAdmin):
@@ -53,12 +73,38 @@ class AppUserAdmin(UserAdmin):
             'fields': ('email', ),
         }),
     )
-    inlines = (ProfileInline, )
 
-    def get_inline_instances(self, request, obj=None):
-        if not obj:
-            return list()
-        return super().get_inline_instances(request, obj)
+    form = AppUserEditForm
+
+    fieldsets = [
+        (None, {
+            'fields': ['email', 'sso_id', 'first_name', 'last_name']
+        }),
+        ('Permissions', {
+            'fields': ['can_start_all_applications', 'is_staff', 'is_superuser']}),
+    ]
+
+    readonly_fields = ['sso_id', 'first_name', 'last_name']
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields + ['email']
+        return self.readonly_fields
+
+    def save_model(self, request, obj, form, change):
+        permission = Permission.objects.get(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        if form.cleaned_data['can_start_all_applications']:
+            obj.user_permissions.add(permission)
+        else:
+            obj.user_permissions.remove(permission)
+
+        super().save_model(request, obj, form, change)
+
+    def sso_id(self, instance):
+        return instance.profile.sso_id
 
 
 admin.site.unregister(User)
