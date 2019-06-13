@@ -31,14 +31,19 @@ from app.views import (
     application_spawning_html_view,
     application_api_view,
     landing_view,
-    catalogue_view,
-    catalogue_item_view
+
+)
+
+from app.views_catalogue import (
+    datagroup_view,
+    datagroup_item_view,
+    dataset_item_view,
 )
 
 logger = logging.getLogger('app')
 
-def login_required(func):
 
+def login_required(func):
     def _fake_login(request, *args, **kwargs):
         return func(request, *args, **kwargs)
 
@@ -85,6 +90,7 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
+
     # return _login_required
     return _fake_login
 
@@ -94,8 +100,9 @@ admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
     path('', login_required(landing_view), name='landing'),
-    path('catalogue', catalogue_view, name='catalogue'),
-    path('catalogue/<str:grouping_id>', login_required(catalogue_item_view), name='catalogue_item'),
+    path('datagroup', datagroup_view, name='datagroup'),
+    path('datagroup/<str:grouping_id>', login_required(datagroup_item_view), name='datagroup_item'),
+    path('dataset/<str:dataset_id>', login_required(dataset_item_view), name='dataset_item'),
     path('analysis', login_required(root_view), name='root'),
     path('error', public_error_html_view),
     path('admin/', admin.site.urls),
@@ -105,5 +112,5 @@ urlpatterns = [
     path('application/<str:public_host>/spawning', login_required(application_spawning_html_view)),
     path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
     path('healthcheck', healthcheck_view),  # No authentication
-    path('check', healthcheck_view), # No authentication
+    path('check', healthcheck_view),  # No authentication
 ]

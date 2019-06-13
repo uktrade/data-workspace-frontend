@@ -7,6 +7,16 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+class ResponsiblePerson(models.Model):
+    email = models.EmailField(primary_key=True)
+    name = models.CharField(null=False, blank=False, max_length=128)
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.name} <{self.email}>'
+
+
 class DataGrouping(models.Model):
     id = models.UUIDField(
         primary_key=True,
@@ -23,6 +33,11 @@ class DataGrouping(models.Model):
         blank=False, null=False, max_length=256)
     description = models.TextField(blank=True, null=True)
 
+    information_asset_owner = models.ForeignKey(
+        ResponsiblePerson, on_delete=models.PROTECT, related_name='asset_owner', null=False)
+    information_asset_manager = models.ForeignKey(
+        ResponsiblePerson, on_delete=models.PROTECT, related_name='asset_manager', null=True, blank=True)
+
     def __str__(self):
         return f'{self.name} {self.short_description}'
 
@@ -38,6 +53,24 @@ class DataSet(models.Model):
         blank=False, null=False, max_length=256)
 
     grouping = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
+
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    description = models.TextField(null=False, blank=False)
+
+    enquiries_contact = models.ForeignKey(
+        ResponsiblePerson, on_delete=models.PROTECT)
+
+    reference = models.CharField(null=False, blank=False, max_length=128)
+    redactions = models.TextField(null=True, blank=True)
+    licence = models.CharField(null=True, blank=True, max_length=256)
+
+    volume = models.IntegerField(null=False, blank=False)
+
+    retention_policy = models.TextField(null=True, blank=True)
+    personal_data = models.CharField(null=True, blank=True, max_length=128)
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

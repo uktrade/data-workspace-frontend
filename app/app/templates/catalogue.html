@@ -48,7 +48,7 @@
         <div class="column-two-thirds">
         {% for grouping in groupings %}
             <h3>
-                <a href="{% url 'catalogue_item' grouping.id %}">{{ grouping.name }}</a>
+                <a href="{% url 'datagroup_item' grouping.id %}">{{ grouping.name }}</a>
             </h3>
             <p>{{ grouping.short_description }}</p>
         {% endfor %}

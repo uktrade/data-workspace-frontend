@@ -15,7 +15,8 @@ from app.models import (
     Privilage,
     Profile,
     DataGrouping,
-    DataSet
+    DataSet,
+    ResponsiblePerson,
 )
 
 admin.site.register(Database)
@@ -31,7 +32,7 @@ class DataGroupingAdmin(admin.ModelAdmin):
 class DataSetAdmin(admin.ModelAdmin):
     list_display = ('name', 'short_description')
 
-
+admin.site.register(ResponsiblePerson)
 admin.site.register(DataGrouping, DataGroupingAdmin)
 admin.site.register(DataSet, DataSetAdmin)
 

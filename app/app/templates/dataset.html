@@ -1,0 +1,152 @@
+{% extends 'govuk_template.html' %}
+
+{% block head %}
+    {{ block.super }}
+    <style>
+        .messages {
+            margin: 1em 0;
+            padding: 1em 1em;
+            color: #fff;
+            background: #28a197;
+            font-weight: bold;
+            font-size: 24px;
+        }
+       
+    </style>
+{% endblock %}
+
+{% block inner_content %}
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="breadcrumbs">
+        <ol class="breadcrumbs__list">
+            <li class="breadcrumbs__list-item">
+                <a class="breadcrumbs__link" href="/">Home</a>
+            </li>
+            <li class="breadcrumbs__list-item">
+                <a class="breadcrumbs__link" href="{% url 'datagroup'  %}">Data Catalogue</a>
+            </li>
+            <li class="breadcrumbs__list-item">
+                <a class="breadcrumbs__link" href="{% url 'datagroup_item' model.grouping.id %}">{{ model.grouping.name }}</a>
+            </li>
+            <li class="breadcrumbs__list-item">
+                {{ model.name }}
+            </li>
+        </ol>
+      </div>
+
+    <h1 class="heading-large">{{ model.name }}</h1>
+
+    <div class="grid-row">
+        <div class="column-two-thirds">
+            <table>
+                <tbody>
+                   <tr>
+                        <th>Page Published</th>
+                        <td>{{model.created_date}}</td>
+                    </tr>
+                    <tr>    
+                        <td>Page last updated</td>
+                        <td>{{ model.modified_date }}</td>
+                    </tr>
+
+            {% if model.description %}
+            <tr>
+                <td colspan="2">
+            <h3 style="padding-top:1rem;">Summary</h3>
+            {{ model.description | linebreaks }}
+                </td>
+            </tr>
+            {% endif %}
+                   <tr>
+                        <th>Contact</th>
+                        <td>
+                            {{ model.enquiries_contact.name }}
+                            <br />
+                            <a href="mailto://{{ model.enquiries_contact.email }}">
+                                {{ model.enquiries_contact.email }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>    
+                        <td>Page last updated</td>
+                        <td>{{ model.modified_date }}</td>
+                    </tr>
+                  
+                </tbody>
+            </table>    
+
+        </div>  
+    </div>
+
+    <h2 class="heading-medium">Data Links</h2>
+
+    <div class="grid-row">
+        <div class="column-two-thirds">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Link to the data</td>
+                        {% comment %} <th>Format</th> {% endcomment %}
+                        <th>File added</th>
+                        <th>Frequency</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <a href="#">
+                                [DataLink name] - linked to [DataLink url]</td>
+                            </a>
+                        {% comment %} <td>[DataLink format]</td> {% endcomment %}
+                        <td>[dd/mm/yyyy]</td>
+                        <td>[dd/mm/yyyy]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h2 class="heading-medium">Additional Information</h2>
+
+    <div class="grid-row">
+        <div class="column-two-thirds">
+            <table>
+                <tbody>
+                    <tr>    
+                        <td>Dataset Reference</td>
+                        <td>{{ model.reference }}</td>
+                    </tr>                
+                    <tr valign="top">    
+                        <td><p>Redaction Note</p></td>
+                        <td>{{ model.redactions | linebreaks }}</td>
+                    </tr>                
+                    <tr>    
+                        <td>Licence</td>
+                        <td>{{ model.licence }}</td>
+                    </tr>                
+                    <tr>    
+                        <td>Volume</td>
+                        <td>{{ model.volume }}</td>
+                    </tr>                
+                    <tr valign="top">   
+                        <td>Retention Policy</td>
+                        <td>{{ model.retention_policy | linebreaks }}</td>
+                    </tr>                
+                    <tr>    
+                        <td>Personal Data</td>
+                        <td>{{ model.personal_data }}</td>
+                    </tr>                
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}

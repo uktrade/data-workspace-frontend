@@ -30,7 +30,7 @@
                 <a class="breadcrumbs__link" href="/">Home</a>
             </li>
             <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="/catalogue">Data Catalogue</a>
+                <a class="breadcrumbs__link" href="{% url 'datagroup'  %}">Data Catalogue</a>
             </li>
             <li class="breadcrumbs__list-item">
                 {{ model.name }}
@@ -47,19 +47,19 @@
                 <tbody>
                     <tr>
                         <th>Page Published</th>
-                        <td>[Publish Date]</td>
+                        <td>{{model.created_date}}</td>
                     </tr>
                     <tr>    
                         <td>Page last updated</td>
-                        <td>[Last Updated]</td>
+                        <td>{{ model.modified_date }}</td>
                     </tr>
                     <tr>    
                         <td>Information Asset Manager</td>
-                        <td>[Information Asset Manager]</td>
+                        <td>{{ model.information_asset_manager.name }}</td>
                     </tr>
                     <tr>    
                         <td>Information Asset Owner</td>
-                        <td>[Information Asset Owner]</td>
+                        <td>{{ model.information_asset_owner.name }}</td>
                     </tr>
                     <tr>    
                         <td>Shared with</td>
@@ -76,23 +76,11 @@
         </div>  
     </div>
    
-
-    <div class="grid-row">
-        <div class="column-two-thirds">
-           
-            <h2 class="heading-medium">Company Data</h2>
-            <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-            Fusce quis maximus nisi. Sed tortor libero, fringilla vitae libero sed, varius fermentum magna. Aliquam erat volutpat. 
-            </p>
-        </div>
-    </div>
-
     <div class="grid-row">
         <div class="column-two-thirds">
             {% for set in datasets %}
                 <h2 class="heading-medium">
-                        <a href="#">{{ set.name }}</a>
+                        <a href="{% url 'dataset_item' set.id %}">{{ set.name }}</a>
                 </h2>
                 <p>{{ set.short_description }}</p>
             {% endfor %}

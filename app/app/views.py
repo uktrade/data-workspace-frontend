@@ -38,7 +38,6 @@ from psycopg2 import connect, sql
 from app.models import (
     ApplicationInstance,
     ApplicationTemplate,
-    DataGrouping
 )
 from app.shared import (
     database_dsn,
@@ -57,37 +56,6 @@ logger = logging.getLogger('app')
 def landing_view(request):
     context = {}
     return render(request, 'landing.html', context)
-
-
-@require_GET
-def catalogue_item_view(request, grouping_id):
-    item = get_object_or_404(DataGrouping, pk=grouping_id)
-
-    context = {
-        'model': item,
-        'datasets': item.dataset_set.all().order_by('name')
-    }
-
-    return render(request, 'catalogue-item.html', context)
-
-
-@require_GET
-def catalogue_view(request):
-
-    context = {
-        'groupings': []
-    }
-
-    groupings = DataGrouping.objects.all().order_by('name')
-
-    for group in groupings:
-        context['groupings'].append(
-            {'name': group.name,
-             'short_description': group.short_description,
-             'id': group.id}
-        )
-
-    return render(request, 'catalogue.html', context)
 
 
 def root_view(request):
