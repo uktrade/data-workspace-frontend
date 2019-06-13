@@ -9,6 +9,21 @@
   {{ block.super }}
   <link href="{% static 'stylesheets/base.css' %}" media="screen" rel="stylesheet" />
   <link href="{% static 'stylesheets/base-print.css' %}" media="print" rel="stylesheet"/>
+  <style>
+    .messages {
+        margin: 1em 0;
+        padding: 1em 1em;
+        color: #fff;
+        background: #28a197;
+        font-size: 24px;
+    }
+    strong {
+        font-weight: bold;
+    }
+    .phase-banner span {
+      width: 100%;
+    }
+  </style>
   <style media="print">
     a[href^="/"]:after {
       content: " ({{ request.scheme }}://{{ request.get_host }}" attr(href) ")";
@@ -60,6 +75,10 @@
           <p>
             <strong class="phase-tag">{{ service_settings.phase_name }}</strong>
             <span>{% block phase_banner_message %}{% trans 'This is a new service.' %}{% endblock %}</span>
+
+            {% if support_url != "https:///" %}
+                 <span style="text-align:right"><a href="{{ support_url }}">Support</a></span>
+            {% endif %}
           </p>
         </div>
       {% endif %}

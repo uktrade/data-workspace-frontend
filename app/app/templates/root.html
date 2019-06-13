@@ -3,14 +3,6 @@
 {% block head %}
     {{ block.super }}
     <style>
-        .messages {
-            margin: 1em 0;
-            padding: 1em 1em;
-            color: #fff;
-            background: #28a197;
-            font-weight: bold;
-            font-size: 24px;
-        }
         .btn-stop {
             vertical-align: middle;
         }
@@ -21,7 +13,7 @@
     {% if messages %}
     <ul class="messages">
         {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}><strong>{{ message }}</strong></li>
         {% endfor %}
     </ul>
     {% endif %}
@@ -43,9 +35,6 @@
         {% endfor %}
     {% if appstream_url != "https:///" %}
         <li><a href="{{ appstream_url }}">AppStream</a></li>
-    {% endif %}
-    {% if support_url != "https:///" %}
-        <li><a href="{{ support_url }}">Support and feedback</a></li>
     {% endif %}
     </ul>
 
