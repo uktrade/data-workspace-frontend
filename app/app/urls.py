@@ -105,4 +105,5 @@ urlpatterns = [
     path('application/<str:public_host>/spawning', login_required(application_spawning_html_view)),
     path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
     path('healthcheck', healthcheck_view),  # No authentication
+    path('check', healthcheck_view), # No authentication
 ]

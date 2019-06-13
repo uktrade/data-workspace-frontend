@@ -63,12 +63,9 @@ def landing_view(request):
 def catalogue_item_view(request, grouping_id):
     item = get_object_or_404(DataGrouping, pk=grouping_id)
 
-    logger.warn("here")
-    for dataset in item.dataset_set.all():
-        logger.warn(dataset.name)
-
     context = {
-        'model': item
+        'model': item,
+        'datasets': item.dataset_set.all().order_by('name')
     }
 
     return render(request, 'catalogue-item.html', context)
@@ -81,7 +78,7 @@ def catalogue_view(request):
         'groupings': []
     }
 
-    groupings = DataGrouping.objects.all()
+    groupings = DataGrouping.objects.all().order_by('name')
 
     for group in groupings:
         context['groupings'].append(
