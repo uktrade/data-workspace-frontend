@@ -187,6 +187,9 @@ class ApplicationInstance(models.Model):
             models.Index(fields=['owner', 'created_date']),
             models.Index(fields=['public_host', 'state']),
         ]
+        permissions = [
+            ('start_all_applications', 'Can start all applications'),
+        ]
 
     def __str__(self):
         return f'{self.owner} / {self.public_host} / {self.state}'

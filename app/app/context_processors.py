@@ -3,5 +3,8 @@ from django.conf import (
 )
 
 
-def root_href(request):
-    return {'root_href': f'{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/'}
+def common(request):
+    return {
+        'root_href': f'{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/',
+        'support_url': settings.SUPPORT_URL,
+    }
