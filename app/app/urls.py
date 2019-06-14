@@ -91,8 +91,8 @@ def login_required(func):
 
         return func(request, *args, **kwargs)
 
-    # return _login_required
-    return _fake_login
+    return _login_required
+    # return _fake_login
 
 
 admin.autodiscover()
