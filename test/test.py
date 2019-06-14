@@ -137,7 +137,7 @@ class TestApplication(unittest.TestCase):
         # Ensure the user sees the content from the application
         self.assertEqual(200, response.status)
         self.assertIn(
-            '<a href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
+            '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
 
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             application_content_1 = await response.text()
@@ -451,4 +451,4 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(number_of_times_at_sso, 2)
         self.assertEqual(200, response.status)
         self.assertIn(
-            '<a href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
+            '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/">Test Application</a>', content)
