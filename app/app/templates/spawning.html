@@ -82,12 +82,12 @@
 {% endblock %}
 
 {% block inner_content %}
-    <div class="govuk-panel govuk-panel--confirmation govuk-panel--confirmation--left">
-        <h1 class="govuk-panel__title govuk-!-font-size-36 govuk-!-margin-bottom-4">
+    <div class="govuk-panel govuk-panel--confirmation govuk-panel--confirmation--left govuk-!-padding-5">
+        <h1 class="govuk-panel__title govuk-!-font-size-27 govuk-!-margin-bottom-2">
             Starting {{ application_nice_name }}
         </h1>
 
-        <div class="govuk-panel__body">
+        <div class="govuk-!-font-size-27 govuk-panel__body">
             Time remaining: <span id="time-remaining">{{ time_remaining }}</span></li>
         </div>
     </div>
