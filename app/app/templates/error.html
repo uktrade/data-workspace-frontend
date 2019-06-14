@@ -1,9 +1,13 @@
-{% extends 'govuk_template.html' %}
+{% extends '_base.html' %}
+
+{% block page_title %}Error - {{ block.super }}{% endblock %}
 
 {% block inner_content %}
-    <h1 class="heading-large">Error. Refresh to retry.</h1>
+    <div class="govuk-form-group--error">
+        <h1 class="govuk-heading-l">Error. Refresh to retry.</h1>
 
-    {% if message %}
-    <p>{{ message }}</p>
-    {% endif %}
+        {% if message %}
+            <p class="govuk-body">{{ message }}</p>
+        {% endif %}
+    </div>
 {% endblock %}

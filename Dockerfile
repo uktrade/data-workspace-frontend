@@ -27,7 +27,6 @@ RUN \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
 		django==2.1.2 \
-		django-govuk-template==0.8 \
 		django-redis==4.10.0 \
 		requests==2.21.0 && \
 	rm /etc/nginx/conf.d/default.conf && \
