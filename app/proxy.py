@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 import secrets
@@ -24,6 +25,9 @@ from proxy_session import (
 
 class UserException(Exception):
     pass
+
+
+PROFILE_CACHE_PREFIX = 'data_workspace_profile'
 
 
 async def async_main():
@@ -363,10 +367,11 @@ async def async_main():
                 # A new session cookie to migitate session fixation attack
                 return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final}))
 
-            async with client_session.get(f'{sso_base_url}{me_path}', headers={
-                    'Authorization': f'Bearer {token}'
-            }) as me_response:
-                me_profile = await me_response.json()
+            # Get profile from Redis cache to avoid calling SSO on every request
+            redis_profile_key = f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode('ascii')
+            with await redis_pool as conn:
+                me_profile_raw = await conn.execute('GET', redis_profile_key)
+            me_profile = json.loads(me_profile_raw) if me_profile_raw else None
 
             async def handler_with_sso_headers():
                 request['sso_profile_headers'] = (
@@ -377,11 +382,31 @@ async def async_main():
                 )
                 return await handler(request)
 
-            return \
-                await handler_with_sso_headers() if me_response.status == 200 else \
-                await with_session_cookie(web.Response(status=302, headers={
+            if me_profile:
+                return await handler_with_sso_headers()
+
+            async with client_session.get(f'{sso_base_url}{me_path}', headers={
+                    'Authorization': f'Bearer {token}'
+            }) as me_response:
+                me_profile_full = \
+                    await me_response.json() if me_response.status == 200 else \
+                    None
+
+            if not me_profile_full:
+                return await with_session_cookie(web.Response(status=302, headers={
                     'Location': await get_redirect_uri_authenticate(set_session_value, request),
                 }))
+
+            me_profile = {
+                'email': me_profile_full['email'],
+                'user_id': me_profile_full['user_id'],
+                'first_name': me_profile_full['first_name'],
+                'last_name': me_profile_full['last_name'],
+            }
+            with await redis_pool as conn:
+                await conn.execute('SET', redis_profile_key, json.dumps(me_profile).encode('utf-8'), 'EX', 60)
+
+            return await handler_with_sso_headers()
 
         return _authenticate_by_sso
 
