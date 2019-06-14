@@ -385,7 +385,7 @@ async def async_main():
 
         return _authenticate_by_sso
 
-    async with aiohttp.ClientSession(auto_decompress=False) as client_session:
+    async with aiohttp.ClientSession(auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),
