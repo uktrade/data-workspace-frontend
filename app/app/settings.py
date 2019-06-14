@@ -27,8 +27,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'govuk_template_base',
-    'govuk_template',
     'app.apps.JupyterHubDataAuthAdminAppConfig',
 ]
 
@@ -68,8 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'govuk_template_base.context_processors.govuk_template_base',
-                'app.context_processors.root_href',
+                'app.context_processors.common',
             ],
         },
     },
@@ -155,13 +152,6 @@ STATIC_ROOT = '/home/django/static/'
 STATIC_URL = '/__django_static/'
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
-
-GOVUK_SERVICE_SETTINGS = {
-    'name': 'Data Workspace',
-    'phase': 'alpha',
-    'header_link_view_name': 'root',
-    'header_links': [],
-}
 
 # The application template models are populated by environment variables,
 # since they can contain very low-level infrastructure details, and it means

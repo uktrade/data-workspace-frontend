@@ -19,7 +19,7 @@ repos:
   hooks:
     - id: pylint
       name: pylint
-      entry: python3 -m pylint.__main__
+      entry: env PYTHONPATH=app python3 -m pylint.__main__
       language: system
       types: [python]
       args:

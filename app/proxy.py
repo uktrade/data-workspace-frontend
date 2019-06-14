@@ -62,6 +62,15 @@ async def async_main():
             downstream_request['sso_profile_headers']
         )
 
+    def application_headers(downstream_request):
+        return CIMultiDict(
+            tuple(without_transfer_encoding(downstream_request).items()) +
+            (
+                (('x-scheme', downstream_request.headers['x-forwarded-proto']),) if 'x-forwarded-proto' in downstream_request.headers else
+                ()
+            )
+        )
+
     async def handle(downstream_request):
         method = downstream_request.method
         path = downstream_request.url.path
@@ -132,14 +141,14 @@ async def async_main():
 
     async def handle_application_websocket(downstream_request, proxy_url, path, query):
         upstream_url = URL(proxy_url).with_path(path).with_query(query)
-        return await handle_websocket(downstream_request, without_transfer_encoding(downstream_request), upstream_url)
+        return await handle_websocket(downstream_request, application_headers(downstream_request), upstream_url)
 
     async def handle_application_http_spawning(downstream_request, method, proxy_url, path, query, host_html_path, host_api_url):
         upstream_url = URL(proxy_url).with_path(path)
 
         try:
             logger.debug('Spawning: Attempting to connect to %s', upstream_url)
-            response = await handle_http(downstream_request, method, without_transfer_encoding(downstream_request), upstream_url, query, spawning_http_timeout)
+            response = await handle_http(downstream_request, method, application_headers(downstream_request), upstream_url, query, spawning_http_timeout)
 
         except Exception:
             logger.debug('Spawning: Failed to connect to %s', upstream_url)
@@ -171,7 +180,7 @@ async def async_main():
         #     await delete_response.read()
         #     raise
 
-        return await handle_http(downstream_request, method, without_transfer_encoding(downstream_request), upstream_url, query, default_http_timeout)
+        return await handle_http(downstream_request, method, application_headers(downstream_request), upstream_url, query, default_http_timeout)
 
     async def handle_admin(downstream_request, method, path, query):
         upstream_url = URL(admin_root).with_path(path).with_query(query)
@@ -376,7 +385,7 @@ async def async_main():
 
         return _authenticate_by_sso
 
-    async with aiohttp.ClientSession(auto_decompress=False) as client_session:
+    async with aiohttp.ClientSession(auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),

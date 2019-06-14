@@ -1,16 +1,8 @@
-{% extends 'govuk_template.html' %}
+{% extends '_base.html' %}
 
 {% block head %}
     {{ block.super }}
     <style>
-        .messages {
-            margin: 1em 0;
-            padding: 1em 1em;
-            color: #fff;
-            background: #28a197;
-            font-weight: bold;
-            font-size: 24px;
-        }
         .btn-stop {
             vertical-align: middle;
         }
@@ -18,29 +10,12 @@
 {% endblock %}
 
 {% block inner_content %}
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+    <h1 class="govuk-heading-l">Services</h1>
 
-    <div class="breadcrumbs">
-        <ol class="breadcrumbs__list">
-            <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="{% url 'landing' %}">Home</a>
-            </li>
-            <li class="breadcrumbs__list-item">Analyst Access</li>
-        </ol>
-    </div>
-
-    <h1 class="heading-large">Services</h1>
-
-    <ul class="list">
+    <ul class="govuk-list">
         {% for application in applications %}
         <li>
-            <a href="{{ application.link }}">{{ application.nice_name }}</a>
+            <a class="govuk-link" href="{{ application.link }}">{{ application.nice_name }}</a>
             {% if application.instance and application.can_stop %}
             <form method="POST" style="display: inline">
                 {% csrf_token %}
@@ -53,21 +28,18 @@
     {% if appstream_url != "https:///" %}
         <li><a href="{{ appstream_url }}">AppStream</a></li>
     {% endif %}
-    {% if support_url != "https:///" %}
-        <li><a href="{{ support_url }}">Support and feedback</a></li>
-    {% endif %}
     </ul>
 
-    <h1 class="heading-large">Available data</h1>
+    <h1 class="govuk-heading-l">Available data</h1>
 
     {% if database_schema_tables %}
-        <ul class="list">
+        <ul class="govuk-list">
         {% for database_schema_table in database_schema_tables %}
-            <li><a href="{% url 'table_data' database_schema_table.0 database_schema_table.1  database_schema_table.2 %}">{{ database_schema_table.0 }} / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
+            <li><a class="govuk-link" href="{% url 'table_data' database_schema_table.0 database_schema_table.1  database_schema_table.2 %}">{{ database_schema_table.0 }} / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
         {% endfor %}
         </ul>
     {% else %}
-        <p>No data is available.</p>
+        <p class="govuk-body">No data is available.</p>
     {% endif %}
 
 {% endblock %}
