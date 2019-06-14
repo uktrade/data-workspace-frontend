@@ -38,6 +38,8 @@ class DataGrouping(models.Model):
     information_asset_manager = models.ForeignKey(
         ResponsiblePerson, on_delete=models.PROTECT, related_name='asset_manager', null=True, blank=True)
 
+    slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
+
     def __str__(self):
         return f'{self.name} {self.short_description}'
 
@@ -49,6 +51,8 @@ class DataSet(models.Model):
         editable=False
     )
     name = models.CharField(blank=False, null=False, max_length=128)
+    slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
+
     short_description = models.CharField(
         blank=False, null=False, max_length=256)
 
@@ -148,7 +152,6 @@ class Privilage(models.Model):
 
 
 class ApplicationTemplate(models.Model):
-
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -192,7 +195,6 @@ class ApplicationTemplate(models.Model):
 
 
 class ApplicationInstance(models.Model):
-
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,

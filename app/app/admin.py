@@ -31,11 +31,14 @@ admin.site.register(ApplicationInstance)
 
 
 class DataGroupingAdmin(admin.ModelAdmin):
-    list_display = ('name', 'short_description')
+    prepopulated_fields = {"slug": ("name",)}
+    list_display = ('name', 'slug', 'short_description')
 
 
 class DataSetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'short_description')
+    prepopulated_fields = {"slug": ("name",)}
+    list_display = ('name', 'slug', 'short_description')
+
 
 admin.site.register(ResponsiblePerson)
 admin.site.register(DataGrouping, DataGroupingAdmin)
@@ -43,10 +46,9 @@ admin.site.register(DataSet, DataSetAdmin)
 
 
 class AppUserCreationForm(forms.ModelForm):
-
     class Meta:
         model = User
-        fields = ('email', )
+        fields = ('email',)
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -58,7 +60,6 @@ class AppUserCreationForm(forms.ModelForm):
 
 
 class AppUserEditForm(forms.ModelForm):
-
     can_start_all_applications = forms.BooleanField(
         label='Can start applications',
         help_text='Designates that the user can start applications',
@@ -84,8 +85,8 @@ class AppUserAdmin(UserAdmin):
     add_form = AppUserCreationForm
     add_fieldsets = (
         (None, {
-            'classes': ('wide', ),
-            'fields': ('email', ),
+            'classes': ('wide',),
+            'fields': ('email',),
         }),
     )
 

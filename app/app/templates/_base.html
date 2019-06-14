@@ -70,6 +70,8 @@
       </p>
     </div>
 
+    {% block breadcrumbs %}{% endblock %}
+
     <main class="govuk-main-wrapper" id="main-content" role="main">
       {% for message in messages %}
       <div class="govuk-panel govuk-panel--confirmation govuk-panel--confirmation--left govuk-!-margin-bottom-5">

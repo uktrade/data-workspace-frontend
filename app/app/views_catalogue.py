@@ -12,7 +12,6 @@ from django.shortcuts import (
     get_object_or_404,
 )
 
-
 from app.models import (
     DataGrouping,
     DataSet,
@@ -22,8 +21,18 @@ logger = logging.getLogger(__name__)
 
 
 @require_GET
-def datagroup_view(request):
+def dataset_full_path_view(request, group_slug, set_slug):
+    found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)[0]
 
+    context = {
+        'model': found
+    }
+
+    return render(request, 'dataset.html', context)
+
+
+@require_GET
+def datagroup_view(request):
     context = {
         'groupings': []
     }
@@ -34,16 +43,16 @@ def datagroup_view(request):
         context['groupings'].append(
             {'name': group.name,
              'short_description': group.short_description,
-             'id': group.id}
+             'id': group.id,
+             'slug': group.slug}
         )
 
     return render(request, 'catalogue.html', context)
 
 
-
 @require_GET
-def datagroup_item_view(request, grouping_id):
-    item = get_object_or_404(DataGrouping, pk=grouping_id)
+def datagroup_item_view(request, slug):
+    item = get_object_or_404(DataGrouping, slug=slug)
 
     context = {
         'model': item,
@@ -57,10 +66,8 @@ def datagroup_item_view(request, grouping_id):
 def dataset_item_view(request, dataset_id):
     item = get_object_or_404(DataSet, pk=dataset_id)
 
-
-
     context = {
-        'model' : item
+        'model': item
     }
 
     return render(request, 'dataset.html', context)

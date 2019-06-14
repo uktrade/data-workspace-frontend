@@ -15,16 +15,8 @@
     </style>
 {% endblock %}
 
-{% block inner_content %}
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-
-    <div class="govuk-breadcrumbs">
+{% block breadcrumbs %}
+ <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
             <li class="govuk-breadcrumbs__list-item">
                 <a class="govuk-breadcrumbs__link" href="/">Home</a>
@@ -34,6 +26,18 @@
             </li>
         </ol>
       </div>
+{% endblock %}
+
+{% block inner_content %}
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+   
 
     <h1 class="govuk-heading-l">Data at DIT</h1>
 
@@ -42,7 +46,7 @@
         <div class="govuk-grid-column-two-thirds">
         {% for grouping in groupings %}
             <h3 class="govuk-heading-m">
-                <a class="govuk-link" href="{% url 'datagroup_item' grouping.id %}">{{ grouping.name }}</a>
+                <a class="govuk-link" href="{% url 'datagroup_item' grouping.slug %}">{{ grouping.name }}</a>
             </h3>
             <p class="govuk-body">{{ grouping.short_description }}</p>
         {% endfor %}

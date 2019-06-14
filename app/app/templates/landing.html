@@ -17,6 +17,17 @@
     </style>
 {% endblock %}
 
+{% block breadcrumbs %}
+ <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            Home
+          </li>
+        </ol>
+      </div>
+
+{% endblock %}
+
 {% block inner_content %}
     {% if messages %}
     <ul class="messages">
@@ -26,14 +37,7 @@
     </ul>
     {% endif %}
 
-    <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-          <li class="govuk-breadcrumbs__list-item">
-            Home
-          </li>
-        </ol>
-      </div>
-
+   
     <div class="grid-row">
         <div class="column-third card">
             <a href="{% url 'datagroup' %}" role="button" draggable="false" class="govuk-button govuk-button--start">
