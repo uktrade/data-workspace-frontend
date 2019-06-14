@@ -30,6 +30,8 @@ class AuthbrokerBackendUsernameIsEmail():
         user.is_staff = True
         user.is_superuser = True
 
+
+
         user.profile.sso_id = user_id
         user.username = user.email
         if user.has_usable_password():

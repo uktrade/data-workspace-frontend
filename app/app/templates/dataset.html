@@ -1,4 +1,4 @@
-{% extends 'govuk_template.html' %}
+{% extends '_base.html' %}
 
 {% block head %}
     {{ block.super }}
@@ -24,49 +24,49 @@
     </ul>
     {% endif %}
 
-    <div class="breadcrumbs">
-        <ol class="breadcrumbs__list">
-            <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="/">Home</a>
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
-            <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="{% url 'datagroup'  %}">Data Catalogue</a>
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="{% url 'datagroup'  %}">Data Catalogue</a>
             </li>
-            <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="{% url 'datagroup_item' model.grouping.id %}">{{ model.grouping.name }}</a>
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="{% url 'datagroup_item' model.grouping.id %}">{{ model.grouping.name }}</a>
             </li>
-            <li class="breadcrumbs__list-item">
+            <li class="govuk-breadcrumbs__list-item">
                 {{ model.name }}
             </li>
         </ol>
-      </div>
+    </div>
 
-    <h1 class="heading-large">{{ model.name }}</h1>
+    <h1 class="govuk-heading-l">{{ model.name }}</h1>
 
-    <div class="grid-row">
-        <div class="column-two-thirds">
-            <table>
-                <tbody>
-                   <tr>
-                        <th>Page Published</th>
-                        <td>{{model.created_date}}</td>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <table class="govuk-table">
+                <tbody class="govuk-table__body">
+                   <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">Page Published</td>
+                        <td class="govuk-table__cell">{{model.created_date}}</td>
                     </tr>
-                    <tr>    
-                        <td>Page last updated</td>
-                        <td>{{ model.modified_date }}</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Page last updated</td>
+                        <td class="govuk-table__cell">{{ model.modified_date }}</td>
                     </tr>
 
             {% if model.description %}
-            <tr>
+            <tr class="govuk-table__row">
                 <td colspan="2">
             <h3 style="padding-top:1rem;">Summary</h3>
             {{ model.description | linebreaks }}
                 </td>
             </tr>
             {% endif %}
-                   <tr>
-                        <th>Contact</th>
-                        <td>
+                   <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">Contact</td>
+                        <td class="govuk-table__cell">
                             {{ model.enquiries_contact.name }}
                             <br />
                             <a href="mailto://{{ model.enquiries_contact.email }}">
@@ -74,9 +74,9 @@
                             </a>
                         </td>
                     </tr>
-                    <tr>    
-                        <td>Page last updated</td>
-                        <td>{{ model.modified_date }}</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Page last updated</td>
+                        <td class="govuk-table__cell">{{ model.modified_date }}</td>
                     </tr>
                   
                 </tbody>
@@ -85,63 +85,63 @@
         </div>  
     </div>
 
-    <h2 class="heading-medium">Data Links</h2>
+    <h2 class="govuk-heading-m">Data Links</h2>
 
-    <div class="grid-row">
-        <div class="column-two-thirds">
-            <table>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <table class="govuk-table">
                 <thead>
-                    <tr>
-                        <th>Link to the data</td>
+                    <tr class="govuk-table__row">
+                        <th class="govuk-table__header">Link to the data</th>
                         {% comment %} <th>Format</th> {% endcomment %}
-                        <th>File added</th>
-                        <th>Frequency</th>
+                        <th class="govuk-table__header">File added</th>
+                        <th class="govuk-table__header">Frequency</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
                             <a href="#">
                                 [DataLink name] - linked to [DataLink url]</td>
                             </a>
-                        {% comment %} <td>[DataLink format]</td> {% endcomment %}
-                        <td>[dd/mm/yyyy]</td>
-                        <td>[dd/mm/yyyy]</td>
+                        {% comment %} <td class="govuk-table__cell">[DataLink format]</td> {% endcomment %}
+                        <td class="govuk-table__cell">[dd/mm/yyyy]</td>
+                        <td class="govuk-table__cell">[dd/mm/yyyy]</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <h2 class="heading-medium">Additional Information</h2>
+    <h2 class="govuk-heading-m">Additional Information</h2>
 
-    <div class="grid-row">
-        <div class="column-two-thirds">
-            <table>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <table class="govuk-table">
                 <tbody>
-                    <tr>    
-                        <td>Dataset Reference</td>
-                        <td>{{ model.reference }}</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Dataset Reference</td>
+                        <td class="govuk-table__cell">{{ model.reference }}</td>
                     </tr>                
                     <tr valign="top">    
-                        <td><p>Redaction Note</p></td>
-                        <td>{{ model.redactions | linebreaks }}</td>
+                        <td class="govuk-table__cell"><p>Redaction Note</p></td>
+                        <td class="govuk-table__cell">{{ model.redactions | linebreaks }}</td>
                     </tr>                
-                    <tr>    
-                        <td>Licence</td>
-                        <td>{{ model.licence }}</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Licence</td>
+                        <td class="govuk-table__cell">{{ model.licence }}</td>
                     </tr>                
-                    <tr>    
-                        <td>Volume</td>
-                        <td>{{ model.volume }}</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Volume</td>
+                        <td class="govuk-table__cell">{{ model.volume }}</td>
                     </tr>                
                     <tr valign="top">   
-                        <td>Retention Policy</td>
-                        <td>{{ model.retention_policy | linebreaks }}</td>
+                        <td class="govuk-table__cell">Retention Policy</td>
+                        <td class="govuk-table__cell">{{ model.retention_policy | linebreaks }}</td>
                     </tr>                
-                    <tr>    
-                        <td>Personal Data</td>
-                        <td>{{ model.personal_data }}</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Personal Data</td>
+                        <td class="govuk-table__cell">{{ model.personal_data }}</td>
                     </tr>                
 
                 </tbody>

@@ -1,4 +1,4 @@
-{% extends 'govuk_template.html' %}
+{% extends '_base.html' %}
 
 {% block head %}
     {{ block.super }}
@@ -24,33 +24,27 @@
     </ul>
     {% endif %}
 
-    <div class="breadcrumbs">
-        <ol class="breadcrumbs__list">
-            <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="/">Home</a>
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
-            <li class="breadcrumbs__list-item">
+            <li class="govuk-breadcrumbs__list-item">
                 Data Catalogue
             </li>
         </ol>
       </div>
 
-    <h1 class="heading-large">Data at DIT</h1>
+    <h1 class="govuk-heading-l">Data at DIT</h1>
 
-    <div class="grid-row">
-    <div class="column-two-thirds">
-        <h3><a href="#">Data Hub</a></h3>
-        <p>Data Hub contains records for all DIT interations with companies in the UK and overseas. It also includes
-        workflow tools for managing investment</p>
-        </div>
-    </div>
-    <div class="grid-row">
-        <div class="column-two-thirds">
+    
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
         {% for grouping in groupings %}
-            <h3>
-                <a href="{% url 'datagroup_item' grouping.id %}">{{ grouping.name }}</a>
+            <h3 class="govuk-heading-m">
+                <a class="govuk-link" href="{% url 'datagroup_item' grouping.id %}">{{ grouping.name }}</a>
             </h3>
-            <p>{{ grouping.short_description }}</p>
+            <p class="govuk-body">{{ grouping.short_description }}</p>
         {% endfor %}
 
     </div>

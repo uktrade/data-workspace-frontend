@@ -1,4 +1,4 @@
-{% extends 'govuk_template.html' %}
+{% extends '_base.html' %}
 
 {% block head %}
     {{ block.super }}
@@ -24,65 +24,66 @@
     </ul>
     {% endif %}
 
-    <div class="breadcrumbs">
-        <ol class="breadcrumbs__list">
-            <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="/">Home</a>
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
-            <li class="breadcrumbs__list-item">
-                <a class="breadcrumbs__link" href="{% url 'datagroup'  %}">Data Catalogue</a>
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="{% url 'datagroup'  %}">Data Catalogue</a>
             </li>
-            <li class="breadcrumbs__list-item">
+            <li class="govuk-breadcrumbs__list-item">
                 {{ model.name }}
             </li>
         </ol>
       </div>
 
-    <h1 class="heading-large">{{ model.name }}</h1>
+    <h1 class="govuk-heading-l">{{ model.name }}</h1>
 
-    <div class="grid-row">
-        <div class="column-two-thirds">
-
-            <table>
-                <tbody>
-                    <tr>
-                        <th>Page Published</th>
-                        <td>{{model.created_date}}</td>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <table class="govuk-table">
+                <tbody class="govuk-table__body">
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">Page Published</td>
+                        <td class="govuk-table__cell">{{model.created_date}}</td>
                     </tr>
-                    <tr>    
-                        <td>Page last updated</td>
-                        <td>{{ model.modified_date }}</td>
+                    <tr class="govuk-table__row">   
+                        <td class="govuk-table__cell">Page last updated</td>
+                        <td class="govuk-table__cell">{{ model.modified_date }}</td>
                     </tr>
-                    <tr>    
-                        <td>Information Asset Manager</td>
-                        <td>{{ model.information_asset_manager.name }}</td>
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">Information Asset Manager</td>
+                        <td class="govuk-table__cell">{{ model.information_asset_manager.name }}</td>
                     </tr>
-                    <tr>    
-                        <td>Information Asset Owner</td>
-                        <td>{{ model.information_asset_owner.name }}</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Information Asset Owner</td>
+                        <td class="govuk-table__cell">{{ model.information_asset_owner.name }}</td>
                     </tr>
-                    <tr>    
-                        <td>Shared with</td>
-                        <td>[Shared with]</td>
+                    <tr class="govuk-table__row">    
+                        <td class="govuk-table__cell">Shared with</td>
+                        <td class="govuk-table__cell">[Shared with]</td>
                     </tr>
                 </tbody>
             </table>    
 
             {% if model.description %}
-            <h3 style="padding-top:1rem;">Summary</h3>
-            {{ model.description | linebreaks }}
+            <h3 class="govuk-heading-m">Summary</h3>
+            <p class="govuk-body">
+            {{ model.description | linebreaksbr }}
+            </p>
             {% endif %}
 
         </div>  
     </div>
    
-    <div class="grid-row">
-        <div class="column-two-thirds">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
             {% for set in datasets %}
-                <h2 class="heading-medium">
-                        <a href="{% url 'dataset_item' set.id %}">{{ set.name }}</a>
+                <h2 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'dataset_item' set.id %}">{{ set.name }}</a>
                 </h2>
-                <p>{{ set.short_description }}</p>
+                <p class="govuk-body">{{ set.short_description }}</p>
             {% endfor %}
         </div>
     </div>
