@@ -79,7 +79,7 @@
                     <td class="govuk-table__cell">
                         {{ model.enquiries_contact.name }}
                         <br/>
-                        <a href="mailto://{{ model.enquiries_contact.email }}">
+                        <a class="govuk-link" href="mailto://{{ model.enquiries_contact.email }}">
                             {{ model.enquiries_contact.email }}
                         </a>
                     </td>
@@ -94,28 +94,37 @@
     <h2 class="govuk-heading-m">Data Links</h2>
 
     <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-grid-column-full">
             <table class="govuk-table">
                 <thead>
                 <tr class="govuk-table__row">
                     <th class="govuk-table__header">Link to the data</th>
-                    {% comment %}
-                        <th>Format</th> {% endcomment %}
+                    <th class="govuk-table__header">Format</th>
                     <th class="govuk-table__header">File added</th>
                     <th class="govuk-table__header">Frequency</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">
-                        <a href="#">
-                            [DataLink name] - linked to [DataLink url]</td>
-                    </a>
-                    {% comment %}
-                        <td class="govuk-table__cell">[DataLink format]</td> {% endcomment %}
-                    <td class="govuk-table__cell">[dd/mm/yyyy]</td>
-                    <td class="govuk-table__cell">[dd/mm/yyyy]</td>
-                </tr>
+                {% for link in links %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <a class="govuk-link" href="{{ link.url }}" target="_blank">
+                                {{ link.name }} - {{ link.url }}
+                            </a>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ link.format }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ link.created_date| date:"d/m/Y"   }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ link.frequency }}
+                        </td>
+                    </tr>
+                {% endfor %}
+
+
                 </tbody>
             </table>
         </div>

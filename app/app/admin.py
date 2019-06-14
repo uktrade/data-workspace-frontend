@@ -22,6 +22,7 @@ from app.models import (
     DataGrouping,
     DataSet,
     ResponsiblePerson,
+    DataLink,
 )
 
 admin.site.register(Database)
@@ -40,9 +41,14 @@ class DataSetAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'short_description')
 
 
+class DataLinkAdmin(admin.ModelAdmin):
+    list_display = ('name', 'format', 'url')
+
+
 admin.site.register(ResponsiblePerson)
 admin.site.register(DataGrouping, DataGroupingAdmin)
 admin.site.register(DataSet, DataSetAdmin)
+admin.site.register(DataLink, DataLinkAdmin)
 
 
 class AppUserCreationForm(forms.ModelForm):

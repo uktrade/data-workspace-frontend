@@ -25,7 +25,8 @@ def dataset_full_path_view(request, group_slug, set_slug):
     found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)[0]
 
     context = {
-        'model': found
+        'model': found,
+        'links': found.datalink_set.all().order_by('name')
     }
 
     return render(request, 'dataset.html', context)

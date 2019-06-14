@@ -75,6 +75,30 @@ class DataSet(models.Model):
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
 
+    def __str__(self):
+        return f'{self.name}'
+
+
+class DataLink(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+
+    dataset = models.ForeignKey(DataSet, on_delete=models.PROTECT)
+
+    name = models.CharField(blank=False, null=False, max_length=256)
+    format = models.CharField(blank=False, null=False, max_length=10)
+    url = models.CharField(blank=True, null=True, max_length=1024)
+
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    frequency = models.CharField(blank=False, null=False, max_length=50)
+
+    where_to_find = models.ForeignKey('Database', on_delete=models.SET_NULL, blank=True, null=True)
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
