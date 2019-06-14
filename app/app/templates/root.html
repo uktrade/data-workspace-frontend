@@ -25,6 +25,7 @@
         {% endif %}
     </div>
 
+    {% if perms.app.start_all_applications %}
     <div class="govuk-grid-column-one-third">
         <h1 class="govuk-heading-l">Tools</h1>
 
@@ -55,6 +56,7 @@
             {% endif %}
         </dl>
     </div>
+    {% endif %}
 </div>
 
 {% endblock %}

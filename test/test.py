@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import signal
+import textwrap
 import unittest
 
 import aiohttp
@@ -27,6 +28,44 @@ class TestApplication(unittest.TestCase):
     @async_test
     async def test_application_shows_content_if_authorized(self):
         proc = None
+        app_env = {
+            # Static: as in Dockerfile
+            'PYTHONPATH': '/app',
+            'DJANGO_SETTINGS_MODULE': 'app.settings',
+            # Dynamic: proxy and app settings populated at runtime
+            'AUTHBROKER_CLIENT_ID': 'some-id',
+            'AUTHBROKER_CLIENT_SECRET': 'some-secret',
+            'AUTHBROKER_URL': 'http://localhost:8005/',
+            'REDIS_URL': 'redis://analysis-workspace-redis:6379',
+            'SECRET_KEY': 'localhost',
+            'ALLOWED_HOSTS__1': 'localapps.com',
+            'ALLOWED_HOSTS__2': '.localapps.com',
+            'ADMIN_DB__NAME': 'postgres',
+            'ADMIN_DB__USER': 'postgres',
+            'ADMIN_DB__PASSWORD': 'postgres',
+            'ADMIN_DB__HOST': 'analysis-workspace-postgres',
+            'ADMIN_DB__PORT': '5432',
+            'DATA_DB__my_database__NAME': 'postgres',
+            'DATA_DB__my_database__USER': 'postgres',
+            'DATA_DB__my_database__PASSWORD': 'postgres',
+            'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
+            'DATA_DB__my_database__PORT': '5432',
+            'APPSTREAM_URL': 'https://url.to.appstream',
+            'SUPPORT_URL': 'https://url.to.support/',
+            'NOTEBOOKS_URL': 'https://url.to.notebooks/',
+            'OAUTHLIB_INSECURE_TRANSPORT': '1',
+            'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
+            'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
+            'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
+            'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
+            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
+            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
+        }
+
+        await (await asyncio.create_subprocess_shell(
+            'django-admin flush --no-input',
+            env=app_env
+        )).wait()
 
         # Run the application proper in a way that is as possible to production
         # The environment must be the same as in the Dockerfile
@@ -38,39 +77,7 @@ class TestApplication(unittest.TestCase):
             nonlocal proc
             proc = await asyncio.create_subprocess_exec(
                 '/app/start.sh',
-                env={
-                    # Static: as in Dockerfile
-                    'PYTHONPATH': '/app',
-                    'DJANGO_SETTINGS_MODULE': 'app.settings',
-                    # Dynamic: proxy and app settings populated at runtime
-                    'AUTHBROKER_CLIENT_ID': 'some-id',
-                    'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-                    'AUTHBROKER_URL': 'http://localhost:8005/',
-                    'REDIS_URL': 'redis://analysis-workspace-redis:6379',
-                    'SECRET_KEY': 'localhost',
-                    'ALLOWED_HOSTS__1': 'localapps.com',
-                    'ALLOWED_HOSTS__2': '.localapps.com',
-                    'ADMIN_DB__NAME': 'postgres',
-                    'ADMIN_DB__USER': 'postgres',
-                    'ADMIN_DB__PASSWORD': 'postgres',
-                    'ADMIN_DB__HOST': 'analysis-workspace-postgres',
-                    'ADMIN_DB__PORT': '5432',
-                    'DATA_DB__my_database__NAME': 'postgres',
-                    'DATA_DB__my_database__USER': 'postgres',
-                    'DATA_DB__my_database__PASSWORD': 'postgres',
-                    'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
-                    'DATA_DB__my_database__PORT': '5432',
-                    'APPSTREAM_URL': 'https://url.to.appstream',
-                    'SUPPORT_URL': 'https://url.to.support/',
-                    'NOTEBOOKS_URL': 'https://url.to.notebooks/',
-                    'OAUTHLIB_INSECURE_TRANSPORT': '1',
-                    'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
-                    'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
-                    'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
-                    'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
-                    'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
-                    'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
-                },
+                env=app_env,
                 preexec_fn=os.setsid,
             )
         await create_application()
@@ -126,15 +133,56 @@ class TestApplication(unittest.TestCase):
             await asyncio.sleep(0.25)
         self.add_async_cleanup(cleanup_session)
 
-        # Make a request to the home page
+        # Ensure the user doesn't see the application link since they don't
+        # have permission
         async with session.request('GET', 'http://localapps.com:8000/') as response:
             content = await response.text()
+        self.assertNotIn('Test Application', content)
 
         # Ensure we sent the right thing to SSO
         self.assertEqual('some-code', token_request_code)
         self.assertEqual('Bearer some-token', me_request_auth)
 
-        # Ensure the user sees the content from the application
+        # Give the user permission
+        code = textwrap.dedent("""\
+            from django.contrib.auth.models import (
+                Permission,
+            )
+            from django.contrib.auth.models import (
+                User,
+            )
+            from django.contrib.contenttypes.models import (
+                ContentType,
+            )
+            from app.models import (
+                ApplicationInstance,
+            )
+            permission = Permission.objects.get(
+                codename='start_all_applications',
+                content_type=ContentType.objects.get_for_model(ApplicationInstance),
+            )
+            user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+            user.user_permissions.add(permission)
+            """
+                               ).encode('ascii')
+        give_perm = await asyncio.create_subprocess_shell(
+            'django-admin shell',
+            env=app_env,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await give_perm.communicate(code)
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        code = await give_perm.wait()
+        self.assertEqual(code, 0)
+
+        # Make a request to the home page
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            content = await response.text()
+
+        # Ensure the user sees the link to the application
         self.assertEqual(200, response.status)
         self.assertIn(
             '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/" style="font-weight: normal;">Test Application</a>', content)
@@ -353,41 +401,49 @@ class TestApplication(unittest.TestCase):
         async def cleanup_application():
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             await asyncio.sleep(3)
+
+        app_env = {
+            # Static: as in Dockerfile
+            'PYTHONPATH': '/app',
+            'DJANGO_SETTINGS_MODULE': 'app.settings',
+            # Dynamic: proxy and app settings populated at runtime
+            'AUTHBROKER_CLIENT_ID': 'some-id',
+            'AUTHBROKER_CLIENT_SECRET': 'some-secret',
+            'AUTHBROKER_URL': 'http://localhost:8005/',
+            'REDIS_URL': 'redis://analysis-workspace-redis:6379',
+            'SECRET_KEY': 'localhost',
+            'ALLOWED_HOSTS__1': 'localapps.com',
+            'ALLOWED_HOSTS__2': '.localapps.com',
+            'ADMIN_DB__NAME': 'postgres',
+            'ADMIN_DB__USER': 'postgres',
+            'ADMIN_DB__PASSWORD': 'postgres',
+            'ADMIN_DB__HOST': 'analysis-workspace-postgres',
+            'ADMIN_DB__PORT': '5432',
+            'DATA_DB__my_database__NAME': 'postgres',
+            'DATA_DB__my_database__USER': 'postgres',
+            'DATA_DB__my_database__PASSWORD': 'postgres',
+            'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
+            'DATA_DB__my_database__PORT': '5432',
+            'APPSTREAM_URL': 'https://url.to.appstream',
+            'SUPPORT_URL': 'https://url.to.support/',
+            'NOTEBOOKS_URL': 'https://url.to.notebooks/',
+            'OAUTHLIB_INSECURE_TRANSPORT': '1',
+            'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
+            'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
+            'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
+            'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
+            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
+            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
+        }
+
+        await (await asyncio.create_subprocess_shell(
+            'django-admin flush --no-input',
+            env=app_env
+        )).wait()
+
         proc = await asyncio.create_subprocess_exec(
             '/app/start.sh',
-            env={
-                # Static: as in Dockerfile
-                'PYTHONPATH': '/app',
-                'DJANGO_SETTINGS_MODULE': 'app.settings',
-                # Dynamic: proxy and app settings populated at runtime
-                'AUTHBROKER_CLIENT_ID': 'some-id',
-                'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-                'AUTHBROKER_URL': 'http://localhost:8005/',
-                'REDIS_URL': 'redis://analysis-workspace-redis:6379',
-                'SECRET_KEY': 'localhost',
-                'ALLOWED_HOSTS__1': 'localapps.com',
-                'ALLOWED_HOSTS__2': '.localapps.com',
-                'ADMIN_DB__NAME': 'postgres',
-                'ADMIN_DB__USER': 'postgres',
-                'ADMIN_DB__PASSWORD': 'postgres',
-                'ADMIN_DB__HOST': 'analysis-workspace-postgres',
-                'ADMIN_DB__PORT': '5432',
-                'DATA_DB__my_database__NAME': 'postgres',
-                'DATA_DB__my_database__USER': 'postgres',
-                'DATA_DB__my_database__PASSWORD': 'postgres',
-                'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
-                'DATA_DB__my_database__PORT': '5432',
-                'APPSTREAM_URL': 'https://url.to.appstream',
-                'SUPPORT_URL': 'https://url.to.support/',
-                'NOTEBOOKS_URL': 'https://url.to.notebooks/',
-                'OAUTHLIB_INSECURE_TRANSPORT': '1',
-                'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
-                'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
-                'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
-                'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
-                'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
-                'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
-            },
+            env=app_env,
             preexec_fn=os.setsid,
         )
         self.add_async_cleanup(cleanup_application)
@@ -450,5 +506,44 @@ class TestApplication(unittest.TestCase):
 
         self.assertEqual(number_of_times_at_sso, 2)
         self.assertEqual(200, response.status)
+
+        # Give the user permission
+        code = textwrap.dedent("""\
+            from django.contrib.auth.models import (
+                Permission,
+            )
+            from django.contrib.auth.models import (
+                User,
+            )
+            from django.contrib.contenttypes.models import (
+                ContentType,
+            )
+            from app.models import (
+                ApplicationInstance,
+            )
+            permission = Permission.objects.get(
+                codename='start_all_applications',
+                content_type=ContentType.objects.get_for_model(ApplicationInstance),
+            )
+            user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+            user.user_permissions.add(permission)
+            """
+                               ).encode('ascii')
+        give_perm = await asyncio.create_subprocess_shell(
+            'django-admin shell',
+            env=app_env,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await give_perm.communicate(code)
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        code = await give_perm.wait()
+        self.assertEqual(code, 0)
+
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            content = await response.text()
+
         self.assertIn(
             '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/" style="font-weight: normal;">Test Application</a>', content)
