@@ -302,7 +302,7 @@ def application_spawning_html_GET(request, public_host):
     try:
         application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
-        return public_error_html_view(request)
+        return public_error_500_html_view(request)
     else:
         # There is some duplication between this and the front end, but
         # we avoid the occasional flash if missing content before the
@@ -473,10 +473,14 @@ def set_application_stopped(application_instance):
     application_instance.save()
 
 
-def public_error_html_view(request):
+def public_error_500_html_view(request):
     message = request.GET.get('message', None)
 
-    return render(request, 'error.html', {'message': message}, status=500)
+    return render(request, 'error_500.html', {'message': message}, status=500)
+
+
+def public_error_404_html_view(request, exception):
+    return render(request, 'error_404.html', status=404)
 
 
 def _flatten(to_flatten):

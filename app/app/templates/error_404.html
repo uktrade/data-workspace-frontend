@@ -1,0 +1,11 @@
+{% extends '_base.html' %}
+
+{% block page_title %}Page not found - {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+    <div class="govuk-form-group--error">
+        <h1 class="govuk-heading-l">Page not found</h1>
+
+        <p class="govuk-body">If you entered a web address please check it was correct.</p>
+    </div>
+{% endblock %}
