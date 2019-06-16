@@ -27,6 +27,7 @@ from app.views import (
     table_data_view,
     healthcheck_view,
     appstream_view,
+    public_error_403_html_view,
     public_error_404_html_view,
     public_error_500_html_view,
     application_spawning_html_view,
@@ -88,7 +89,9 @@ admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
     path('', login_required(root_view), name='root'),
-    path('error', public_error_500_html_view),
+    path('error_403', public_error_403_html_view),
+    path('error_404', public_error_404_html_view),
+    path('error_500', public_error_500_html_view),
     path('admin/', admin.site.urls),
     path('table_data/<str:database>/<str:schema>/<str:table>',
          login_required(table_data_view), name='table_data'),
@@ -98,5 +101,6 @@ urlpatterns = [
     path('healthcheck', healthcheck_view),  # No authentication
 ]
 
+handler403 = public_error_403_html_view
 handler404 = public_error_404_html_view
 handler500 = public_error_500_html_view

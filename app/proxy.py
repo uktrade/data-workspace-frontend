@@ -104,7 +104,11 @@ async def async_main():
                 {'message': exception.args[0]} if isinstance(exception, UserException) else \
                 {}
 
-            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), URL(admin_root).with_path('/error'), params, default_http_timeout)
+            status = \
+                exception.args[1] if isinstance(exception, UserException) else \
+                500
+
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), URL(admin_root).with_path(f'/error_{status}'), params, default_http_timeout)
 
     async def handle_application(is_websocket, downstream_request, method, path, query):
         public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
@@ -115,25 +119,28 @@ async def async_main():
             host_exists = response.status == 200
             application = await response.json()
 
+        if response.status != 200 and response.status != 404:
+            raise UserException('Unable to start the application', response.status)
+
         if host_exists and application['state'] not in ['SPAWNING', 'RUNNING']:
             if 'x-data-workspace-no-delete-application-instance' not in downstream_request.headers:
                 async with client_session.request(
                         'DELETE', host_api_url, headers=admin_headers(downstream_request),
                 ) as delete_response:
                     await delete_response.read()
-            raise UserException('Application ' + application['state'])
+            raise UserException('Application ' + application['state'], 500)
 
         if not host_exists:
             async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
                 host_exists = response.status == 200
                 application = await response.json()
 
-        if not host_exists:
-            raise UserException('Unable to start the application')
+        if response.status != 200:
+            raise UserException('Unable to start the application', response.status)
 
         if application['state'] not in ['SPAWNING', 'RUNNING']:
             raise UserException(
-                'Attempted to start the application, but it ' + application['state'])
+                'Attempted to start the application, but it ' + application['state'], 500)
 
         if not application['proxy_url']:
             return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), admin_root + host_html_path + '/spawning', {}, default_http_timeout)
