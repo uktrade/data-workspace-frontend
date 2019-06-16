@@ -45,8 +45,8 @@ class AppUserCreationForm(forms.ModelForm):
 class AppUserEditForm(forms.ModelForm):
 
     can_start_all_applications = forms.BooleanField(
-        label='Can start applications',
-        help_text='Designates that the user can start applications',
+        label='Can access tools',
+        help_text='Designates that the user can access tools',
         required=False,
     )
 
