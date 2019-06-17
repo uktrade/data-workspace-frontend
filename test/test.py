@@ -29,23 +29,6 @@ class TestApplication(unittest.TestCase):
     async def test_application_shows_content_if_authorized(self):
         await flush_database()
 
-        # Run the application proper in a way that is as possible to production
-        # The environment must be the same as in the Dockerfile
-        async def create_application():
-            proc = await asyncio.create_subprocess_exec(
-                '/app/start.sh',
-                env=APP_ENV,
-                preexec_fn=os.setsid,
-            )
-
-            async def _cleanup_application():
-                try:
-                    os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-                    await asyncio.sleep(3)
-                except ProcessLookupError:
-                    pass
-            return _cleanup_application
-
         cleanup_application_1 = await create_application()
         self.add_async_cleanup(cleanup_application_1)
 
@@ -301,19 +284,7 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
-        # Run the application proper in a way that is as possible to production
-        # The environment must be the same as in the Dockerfile
-        async def cleanup_application():
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            await asyncio.sleep(3)
-
-        await flush_database()
-
-        proc = await asyncio.create_subprocess_exec(
-            '/app/start.sh',
-            env=APP_ENV,
-            preexec_fn=os.setsid,
-        )
+        cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
         # Start a mock SSO
@@ -420,6 +391,24 @@ APP_ENV = {
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
 }
+
+
+# Run the application proper in a way that is as possible to production
+# The environment must be the same as in the Dockerfile
+async def create_application():
+    proc = await asyncio.create_subprocess_exec(
+        '/app/start.sh',
+        env=APP_ENV,
+        preexec_fn=os.setsid,
+    )
+
+    async def _cleanup_application():
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            await asyncio.sleep(3)
+        except ProcessLookupError:
+            pass
+    return _cleanup_application
 
 
 async def flush_database():
