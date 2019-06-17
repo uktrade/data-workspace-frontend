@@ -35,6 +35,10 @@
     </div>
 {% endblock %}
 
+{% block page_title %}
+    Data Workspace | {{ model.name }}
+{% endblock %}
+
 {% block inner_content %}
     {% if messages %}
         <ul class="messages">
@@ -62,11 +66,23 @@
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Information Asset Manager</td>
-                    <td class="govuk-table__cell">{{ model.information_asset_manager.name }}</td>
+                    <td class="govuk-table__cell">
+                        {{ model.information_asset_manager.name }}
+                          {% if model.information_asset_manager.email %}
+                            <br>
+                            <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email  }}</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Information Asset Owner</td>
-                    <td class="govuk-table__cell">{{ model.information_asset_owner }}</td>
+                    <td class="govuk-table__cell">
+                        {{ model.information_asset_owner.name }}
+                        {% if model.information_asset_owner.email %}
+                            <br>
+                            <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email  }}</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell" colspan="2">Shared with<br/>

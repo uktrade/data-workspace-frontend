@@ -43,7 +43,7 @@ class DataGrouping(models.Model):
     audience = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f'{self.name} {self.short_description}'
+        return f'{self.name}'
 
 
 class DataSet(models.Model):
