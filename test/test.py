@@ -29,10 +29,7 @@ class TestApplication(unittest.TestCase):
     async def test_application_shows_content_if_authorized(self):
         proc = None
 
-        await (await asyncio.create_subprocess_shell(
-            'django-admin flush --no-input --database default',
-            env=APP_ENV,
-        )).wait()
+        await flush_database()
 
         # Run the application proper in a way that is as possible to production
         # The environment must be the same as in the Dockerfile
@@ -337,10 +334,7 @@ class TestApplication(unittest.TestCase):
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             await asyncio.sleep(3)
 
-        await (await asyncio.create_subprocess_shell(
-            'django-admin flush --no-input --database default',
-            env=APP_ENV
-        )).wait()
+        await flush_database()
 
         proc = await asyncio.create_subprocess_exec(
             '/app/start.sh',
@@ -483,3 +477,10 @@ APP_ENV = {
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
 }
+
+
+async def flush_database():
+    await (await asyncio.create_subprocess_shell(
+        'django-admin flush --no-input --database default',
+        env=APP_ENV,
+    )).wait()
