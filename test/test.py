@@ -27,25 +27,27 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_application_shows_content_if_authorized(self):
-        proc = None
-
         await flush_database()
 
         # Run the application proper in a way that is as possible to production
         # The environment must be the same as in the Dockerfile
-        async def cleanup_application():
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            await asyncio.sleep(3)
-
         async def create_application():
-            nonlocal proc
             proc = await asyncio.create_subprocess_exec(
                 '/app/start.sh',
                 env=APP_ENV,
                 preexec_fn=os.setsid,
             )
-        await create_application()
-        self.add_async_cleanup(cleanup_application)
+
+            async def _cleanup_application():
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+                    await asyncio.sleep(3)
+                except ProcessLookupError:
+                    pass
+            return _cleanup_application
+
+        cleanup_application_1 = await create_application()
+        self.add_async_cleanup(cleanup_application_1)
 
         # Start a mock SSO
         async def handle_authorize(request):
@@ -216,8 +218,9 @@ class TestApplication(unittest.TestCase):
         # Test that if we will the application, and restart, we initially
         # see an error that the application stopped, but then after refresh
         # we load up the application succesfully
-        await cleanup_application()
-        await create_application()
+        await cleanup_application_1()
+        cleanup_application_2 = await create_application()
+        self.add_async_cleanup(cleanup_application_2)
 
         await asyncio.sleep(6)
 
