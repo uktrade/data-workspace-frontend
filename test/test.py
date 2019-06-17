@@ -28,43 +28,10 @@ class TestApplication(unittest.TestCase):
     @async_test
     async def test_application_shows_content_if_authorized(self):
         proc = None
-        app_env = {
-            # Static: as in Dockerfile
-            'PYTHONPATH': '/app',
-            'DJANGO_SETTINGS_MODULE': 'app.settings',
-            # Dynamic: proxy and app settings populated at runtime
-            'AUTHBROKER_CLIENT_ID': 'some-id',
-            'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-            'AUTHBROKER_URL': 'http://localhost:8005/',
-            'REDIS_URL': 'redis://analysis-workspace-redis:6379',
-            'SECRET_KEY': 'localhost',
-            'ALLOWED_HOSTS__1': 'localapps.com',
-            'ALLOWED_HOSTS__2': '.localapps.com',
-            'ADMIN_DB__NAME': 'postgres',
-            'ADMIN_DB__USER': 'postgres',
-            'ADMIN_DB__PASSWORD': 'postgres',
-            'ADMIN_DB__HOST': 'analysis-workspace-postgres',
-            'ADMIN_DB__PORT': '5432',
-            'DATA_DB__my_database__NAME': 'postgres',
-            'DATA_DB__my_database__USER': 'postgres',
-            'DATA_DB__my_database__PASSWORD': 'postgres',
-            'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
-            'DATA_DB__my_database__PORT': '5432',
-            'APPSTREAM_URL': 'https://url.to.appstream',
-            'SUPPORT_URL': 'https://url.to.support/',
-            'NOTEBOOKS_URL': 'https://url.to.notebooks/',
-            'OAUTHLIB_INSECURE_TRANSPORT': '1',
-            'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
-            'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
-            'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
-            'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
-            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
-            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
-        }
 
         await (await asyncio.create_subprocess_shell(
             'django-admin flush --no-input --database default',
-            env=app_env
+            env=APP_ENV,
         )).wait()
 
         # Run the application proper in a way that is as possible to production
@@ -77,7 +44,7 @@ class TestApplication(unittest.TestCase):
             nonlocal proc
             proc = await asyncio.create_subprocess_exec(
                 '/app/start.sh',
-                env=app_env,
+                env=APP_ENV,
                 preexec_fn=os.setsid,
             )
         await create_application()
@@ -167,7 +134,7 @@ class TestApplication(unittest.TestCase):
                                ).encode('ascii')
         give_perm = await asyncio.create_subprocess_shell(
             'django-admin shell',
-            env=app_env,
+            env=APP_ENV,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -320,39 +287,7 @@ class TestApplication(unittest.TestCase):
             await asyncio.sleep(3)
         proc = await asyncio.create_subprocess_exec(
             '/app/start.sh',
-            env={
-                # Static: as in Dockerfile
-                'PYTHONPATH': '/app',
-                'DJANGO_SETTINGS_MODULE': 'app.settings',
-                # Dynamic: proxy and app settings populated at runtime
-                'AUTHBROKER_CLIENT_ID': 'some-id',
-                'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-                'AUTHBROKER_URL': 'http://localhost:8005/',
-                'REDIS_URL': 'redis://analysis-workspace-redis:6379',
-                'SECRET_KEY': 'localhost',
-                'ALLOWED_HOSTS__1': 'localapps.com',
-                'ALLOWED_HOSTS__2': '.localapps.com',
-                'ADMIN_DB__NAME': 'postgres',
-                'ADMIN_DB__USER': 'postgres',
-                'ADMIN_DB__PASSWORD': 'postgres',
-                'ADMIN_DB__HOST': 'analysis-workspace-postgres',
-                'ADMIN_DB__PORT': '5432',
-                'DATA_DB__my_database__NAME': 'postgres',
-                'DATA_DB__my_database__USER': 'postgres',
-                'DATA_DB__my_database__PASSWORD': 'postgres',
-                'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
-                'DATA_DB__my_database__PORT': '5432',
-                'APPSTREAM_URL': 'https://url.to.appstream',
-                'SUPPORT_URL': 'https://url.to.support/',
-                'NOTEBOOKS_URL': 'https://url.to.notebooks/',
-                'OAUTHLIB_INSECURE_TRANSPORT': '1',
-                'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
-                'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
-                'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
-                'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
-                'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
-                'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
-            },
+            env=APP_ENV,
             preexec_fn=os.setsid,
         )
         self.add_async_cleanup(cleanup_application)
@@ -402,48 +337,14 @@ class TestApplication(unittest.TestCase):
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             await asyncio.sleep(3)
 
-        app_env = {
-            # Static: as in Dockerfile
-            'PYTHONPATH': '/app',
-            'DJANGO_SETTINGS_MODULE': 'app.settings',
-            # Dynamic: proxy and app settings populated at runtime
-            'AUTHBROKER_CLIENT_ID': 'some-id',
-            'AUTHBROKER_CLIENT_SECRET': 'some-secret',
-            'AUTHBROKER_URL': 'http://localhost:8005/',
-            'REDIS_URL': 'redis://analysis-workspace-redis:6379',
-            'SECRET_KEY': 'localhost',
-            'ALLOWED_HOSTS__1': 'localapps.com',
-            'ALLOWED_HOSTS__2': '.localapps.com',
-            'ADMIN_DB__NAME': 'postgres',
-            'ADMIN_DB__USER': 'postgres',
-            'ADMIN_DB__PASSWORD': 'postgres',
-            'ADMIN_DB__HOST': 'analysis-workspace-postgres',
-            'ADMIN_DB__PORT': '5432',
-            'DATA_DB__my_database__NAME': 'postgres',
-            'DATA_DB__my_database__USER': 'postgres',
-            'DATA_DB__my_database__PASSWORD': 'postgres',
-            'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
-            'DATA_DB__my_database__PORT': '5432',
-            'APPSTREAM_URL': 'https://url.to.appstream',
-            'SUPPORT_URL': 'https://url.to.support/',
-            'NOTEBOOKS_URL': 'https://url.to.notebooks/',
-            'OAUTHLIB_INSECURE_TRANSPORT': '1',
-            'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
-            'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
-            'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
-            'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
-            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
-            'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
-        }
-
         await (await asyncio.create_subprocess_shell(
             'django-admin flush --no-input --database default',
-            env=app_env
+            env=APP_ENV
         )).wait()
 
         proc = await asyncio.create_subprocess_exec(
             '/app/start.sh',
-            env=app_env,
+            env=APP_ENV,
             preexec_fn=os.setsid,
         )
         self.add_async_cleanup(cleanup_application)
@@ -531,7 +432,7 @@ class TestApplication(unittest.TestCase):
                                ).encode('ascii')
         give_perm = await asyncio.create_subprocess_shell(
             'django-admin shell',
-            env=app_env,
+            env=APP_ENV,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -547,3 +448,38 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn(
             '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/" style="font-weight: normal;">Test Application</a>', content)
+
+
+APP_ENV = {
+    # Static: as in Dockerfile
+    'PYTHONPATH': '/app',
+    'DJANGO_SETTINGS_MODULE': 'app.settings',
+    # Dynamic: proxy and app settings populated at runtime
+    'AUTHBROKER_CLIENT_ID': 'some-id',
+    'AUTHBROKER_CLIENT_SECRET': 'some-secret',
+    'AUTHBROKER_URL': 'http://localhost:8005/',
+    'REDIS_URL': 'redis://analysis-workspace-redis:6379',
+    'SECRET_KEY': 'localhost',
+    'ALLOWED_HOSTS__1': 'localapps.com',
+    'ALLOWED_HOSTS__2': '.localapps.com',
+    'ADMIN_DB__NAME': 'postgres',
+    'ADMIN_DB__USER': 'postgres',
+    'ADMIN_DB__PASSWORD': 'postgres',
+    'ADMIN_DB__HOST': 'analysis-workspace-postgres',
+    'ADMIN_DB__PORT': '5432',
+    'DATA_DB__my_database__NAME': 'postgres',
+    'DATA_DB__my_database__USER': 'postgres',
+    'DATA_DB__my_database__PASSWORD': 'postgres',
+    'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
+    'DATA_DB__my_database__PORT': '5432',
+    'APPSTREAM_URL': 'https://url.to.appstream',
+    'SUPPORT_URL': 'https://url.to.support/',
+    'NOTEBOOKS_URL': 'https://url.to.notebooks/',
+    'OAUTHLIB_INSECURE_TRANSPORT': '1',
+    'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
+    'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
+    'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
+    'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
+    'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
+    'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
+}
