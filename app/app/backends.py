@@ -1,5 +1,8 @@
 import logging
 
+from django.contrib.auth.backends import (
+    ModelBackend,
+)
 from django.contrib.auth import (
     get_user_model,
 )
@@ -7,9 +10,9 @@ from django.contrib.auth import (
 logger = logging.getLogger('app')
 
 
-class AuthbrokerBackendUsernameIsEmail():
+class AuthbrokerBackendUsernameIsEmail(ModelBackend):
 
-    def authenticate(self, request, **kwargs):
+    def authenticate(self, request, username=None, password=None, **kwargs):
         try:
             email = request.META['HTTP_SSO_PROFILE_EMAIL']
             user_id = request.META['HTTP_SSO_PROFILE_USER_ID']

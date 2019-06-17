@@ -1,0 +1,11 @@
+{% extends '_base.html' %}
+
+{% block page_title %}Forbidden - {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+    <div class="govuk-form-group--error">
+        <h1 class="govuk-heading-l">Forbidden</h1>
+
+        <p class="govuk-body">You are not allowed to access this page.</p>
+    </div>
+{% endblock %}

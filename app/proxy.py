@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 import secrets
@@ -24,6 +25,9 @@ from proxy_session import (
 
 class UserException(Exception):
     pass
+
+
+PROFILE_CACHE_PREFIX = 'data_workspace_profile'
 
 
 async def async_main():
@@ -100,7 +104,11 @@ async def async_main():
                 {'message': exception.args[0]} if isinstance(exception, UserException) else \
                 {}
 
-            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), URL(admin_root).with_path('/error'), params, default_http_timeout)
+            status = \
+                exception.args[1] if isinstance(exception, UserException) else \
+                500
+
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), URL(admin_root).with_path(f'/error_{status}'), params, default_http_timeout)
 
     async def handle_application(is_websocket, downstream_request, method, path, query):
         public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
@@ -111,25 +119,28 @@ async def async_main():
             host_exists = response.status == 200
             application = await response.json()
 
+        if response.status != 200 and response.status != 404:
+            raise UserException('Unable to start the application', response.status)
+
         if host_exists and application['state'] not in ['SPAWNING', 'RUNNING']:
             if 'x-data-workspace-no-delete-application-instance' not in downstream_request.headers:
                 async with client_session.request(
                         'DELETE', host_api_url, headers=admin_headers(downstream_request),
                 ) as delete_response:
                     await delete_response.read()
-            raise UserException('Application ' + application['state'])
+            raise UserException('Application ' + application['state'], 500)
 
         if not host_exists:
             async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
                 host_exists = response.status == 200
                 application = await response.json()
 
-        if not host_exists:
-            raise UserException('Unable to start the application')
+        if response.status != 200:
+            raise UserException('Unable to start the application', response.status)
 
         if application['state'] not in ['SPAWNING', 'RUNNING']:
             raise UserException(
-                'Attempted to start the application, but it ' + application['state'])
+                'Attempted to start the application, but it ' + application['state'], 500)
 
         if not application['proxy_url']:
             return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), admin_root + host_html_path + '/spawning', {}, default_http_timeout)
@@ -319,8 +330,10 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
-            # Database authentication is handled by the django app
-            if request.url.path in ['/healthcheck']:
+            # Suspect that concurrent requests for /favicon.ico break the
+            # auth flow, since they can return a set-cookie with a new session
+            # and state that is not the same as the primary
+            if request.url.path in ['/healthcheck', '/favicon.ico']:
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
@@ -363,10 +376,11 @@ async def async_main():
                 # A new session cookie to migitate session fixation attack
                 return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final}))
 
-            async with client_session.get(f'{sso_base_url}{me_path}', headers={
-                    'Authorization': f'Bearer {token}'
-            }) as me_response:
-                me_profile = await me_response.json()
+            # Get profile from Redis cache to avoid calling SSO on every request
+            redis_profile_key = f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode('ascii')
+            with await redis_pool as conn:
+                me_profile_raw = await conn.execute('GET', redis_profile_key)
+            me_profile = json.loads(me_profile_raw) if me_profile_raw else None
 
             async def handler_with_sso_headers():
                 request['sso_profile_headers'] = (
@@ -377,11 +391,31 @@ async def async_main():
                 )
                 return await handler(request)
 
-            return \
-                await handler_with_sso_headers() if me_response.status == 200 else \
-                await with_session_cookie(web.Response(status=302, headers={
+            if me_profile:
+                return await handler_with_sso_headers()
+
+            async with client_session.get(f'{sso_base_url}{me_path}', headers={
+                    'Authorization': f'Bearer {token}'
+            }) as me_response:
+                me_profile_full = \
+                    await me_response.json() if me_response.status == 200 else \
+                    None
+
+            if not me_profile_full:
+                return await with_session_cookie(web.Response(status=302, headers={
                     'Location': await get_redirect_uri_authenticate(set_session_value, request),
                 }))
+
+            me_profile = {
+                'email': me_profile_full['email'],
+                'user_id': me_profile_full['user_id'],
+                'first_name': me_profile_full['first_name'],
+                'last_name': me_profile_full['last_name'],
+            }
+            with await redis_pool as conn:
+                await conn.execute('SET', redis_profile_key, json.dumps(me_profile).encode('utf-8'), 'EX', 60)
+
+            return await handler_with_sso_headers()
 
         return _authenticate_by_sso
 

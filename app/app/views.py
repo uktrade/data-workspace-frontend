@@ -324,7 +324,7 @@ def application_spawning_html_GET(request, public_host):
         application_instance = get_api_visible_application_instance_by_public_host(
             public_host)
     except ApplicationInstance.DoesNotExist:
-        return public_error_html_view(request)
+        return public_error_500_html_view(request)
     else:
         # There is some duplication between this and the front end, but
         # we avoid the occasional flash if missing content before the
@@ -385,11 +385,21 @@ def api_application_dict(application_instance):
 
 def application_api_view(request, public_host):
     return \
+        JsonResponse({}, status=403) if not application_api_is_allowed(request, public_host) else \
         application_api_GET(request, public_host) if request.method == 'GET' else \
         application_api_PUT(request, public_host) if request.method == 'PUT' else \
         application_api_PATCH(request, public_host) if request.method == 'PATCH' else \
         application_api_DELETE(request, public_host) if request.method == 'DELETE' else \
         JsonResponse({}, status=405)
+
+
+def application_api_is_allowed(request, public_host):
+    _, _, owner_sso_id_hex = public_host.partition('-')
+
+    request_sso_id_hex = hashlib.sha256(
+        str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
+
+    return owner_sso_id_hex == request_sso_id_hex[:8] and request.user.has_perm('app.start_all_applications')
 
 
 def application_api_GET(request, public_host):
@@ -398,10 +408,6 @@ def application_api_GET(request, public_host):
             public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
-
-    is_allowed = application_instance.owner == request.user or request.user.is_superuser
-    if not is_allowed:
-        return JsonResponse({}, status=401)
 
     return JsonResponse(api_application_dict(application_instance), status=200)
 
@@ -418,15 +424,7 @@ def application_api_PUT(request, public_host):
     else:
         return JsonResponse({'message': 'Application instance already exists'}, status=409)
 
-    application_template_name, _, owner_sso_id_hex = public_host.partition('-')
-
-    request_sso_id_hex = hashlib.sha256(
-        str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
-
-    if owner_sso_id_hex != request_sso_id_hex[:8]:
-        logger.error('Error PUT %s != %s', owner_sso_id_hex,
-                     request_sso_id_hex[:8])
-        return JsonResponse({'message': 'Cannot create an application instance for user other than yourself'}, status=401)
+    application_template_name, _, _ = public_host.partition('-')
 
     try:
         application_template = ApplicationTemplate.objects.get(
@@ -501,10 +499,18 @@ def set_application_stopped(application_instance):
     application_instance.save()
 
 
-def public_error_html_view(request):
+def public_error_404_html_view(request, exception=None):
+    return render(request, 'error_404.html', status=404)
+
+
+def public_error_403_html_view(request, exception=None):
+    return render(request, 'error_403.html', status=403)
+
+
+def public_error_500_html_view(request):
     message = request.GET.get('message', None)
 
-    return render(request, 'error.html', {'message': message}, status=500)
+    return render(request, 'error_500.html', {'message': message}, status=500)
 
 
 def _flatten(to_flatten):
