@@ -12,6 +12,10 @@
             font-size: 24px;
         }
 
+        td {
+            vertical-align: top;
+        }
+
     </style>
 {% endblock %}
 
@@ -122,6 +126,13 @@
                             {{ link.frequency }}
                         </td>
                     </tr>
+                    {% empty %}
+                    <td colspan="4">
+                        <p>
+                            No data available right now
+                        </p>
+
+                    </td>
                 {% endfor %}
 
 
@@ -140,25 +151,25 @@
                     <td class="govuk-table__cell">Dataset Reference</td>
                     <td class="govuk-table__cell">{{ model.reference }}</td>
                 </tr>
-                <tr valign="top">
-                    <td class="govuk-table__cell"><p>Redaction Note</p></td>
-                    <td class="govuk-table__cell">{{ model.redactions | linebreaks }}</td>
+                <tr>
+                    <td class="govuk-table__cell">Redaction Note</td>
+                    <td class="govuk-table__cell">{{ model.redactions | linebreaksbr }}</td>
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Licence</td>
-                    <td class="govuk-table__cell">{{ model.licence }}</td>
+                    <td class="govuk-table__cell">{{ model.licence | default:"" }}</td>
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Volume</td>
                     <td class="govuk-table__cell">{{ model.volume }}</td>
                 </tr>
-                <tr valign="top">
+                <tr>
                     <td class="govuk-table__cell">Retention Policy</td>
-                    <td class="govuk-table__cell">{{ model.retention_policy | linebreaks }}</td>
+                    <td class="govuk-table__cell">{{ model.retention_policy | linebreaksbr }}</td>
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Personal Data</td>
-                    <td class="govuk-table__cell">{{ model.personal_data }}</td>
+                    <td class="govuk-table__cell">{{ model.personal_data | default:""}}</td>
                 </tr>
 
                 </tbody>

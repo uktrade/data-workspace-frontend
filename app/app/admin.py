@@ -38,11 +38,11 @@ class DataGroupingAdmin(admin.ModelAdmin):
 
 class DataSetAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
-    list_display = ('name', 'slug', 'short_description')
+    list_display = ('name', 'slug', 'short_description', 'grouping')
 
 
 class DataLinkAdmin(admin.ModelAdmin):
-    list_display = ('name', 'format', 'url')
+    list_display = ('name', 'format', 'url', 'dataset')
 
 
 admin.site.register(ResponsiblePerson)

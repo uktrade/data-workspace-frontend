@@ -65,8 +65,8 @@
                     <td class="govuk-table__cell">{{ model.information_asset_owner.name }}</td>
                 </tr>
                 <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Shared with</td>
-                    <td class="govuk-table__cell">[Shared with]</td>
+                    <td class="govuk-table__cell" colspan="2">Shared with<br/>
+                        {{ model.audience | linebreaksbr }}</td>
                 </tr>
                 </tbody>
             </table>
@@ -83,12 +83,20 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
+            {% if datasets %}
+                <hr class="govuk-!-margin-top-4 govuk-!-margin-bottom-4">
+            {% endif %}
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
                 </h2>
                 <p class="govuk-body">{{ set.short_description }}</p>
+                {% empty %}
+                <h2 class="govuk-heading-m">
+                    Message here for empty data sets within data group
+                </h2>
             {% endfor %}
+
         </div>
     </div>
 

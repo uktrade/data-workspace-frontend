@@ -40,6 +40,8 @@ class DataGrouping(models.Model):
 
     slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
 
+    audience = models.TextField(null=True, blank=True)
+
     def __str__(self):
         return f'{self.name} {self.short_description}'
 
@@ -74,6 +76,7 @@ class DataSet(models.Model):
 
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
+
 
     def __str__(self):
         return f'{self.name}'
