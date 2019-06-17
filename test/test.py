@@ -29,6 +29,9 @@ class TestApplication(unittest.TestCase):
     async def test_application_shows_content_if_authorized(self):
         await flush_database()
 
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
         cleanup_application_1 = await create_application()
         self.add_async_cleanup(cleanup_application_1)
 
@@ -74,13 +77,6 @@ class TestApplication(unittest.TestCase):
         await sso_site.start()
 
         await asyncio.sleep(4)
-
-        session = aiohttp.ClientSession()
-
-        async def cleanup_session():
-            await session.close()
-            await asyncio.sleep(0.25)
-        self.add_async_cleanup(cleanup_session)
 
         # Ensure the user doesn't see the application link since they don't
         # have permission
@@ -233,6 +229,9 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_application_redirects_to_sso_if_initially_not_authorized(self):
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
         cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
@@ -252,13 +251,6 @@ class TestApplication(unittest.TestCase):
 
         await asyncio.sleep(6)
 
-        session = aiohttp.ClientSession()
-
-        async def cleanup_session():
-            await session.close()
-            await asyncio.sleep(0.25)
-        self.add_async_cleanup(cleanup_session)
-
         # Make a request to the application home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
             content = await response.text()
@@ -275,6 +267,9 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
         cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
@@ -322,13 +317,6 @@ class TestApplication(unittest.TestCase):
         await sso_site.start()
 
         await asyncio.sleep(6)
-
-        session = aiohttp.ClientSession()
-
-        async def cleanup_session():
-            await session.close()
-            await asyncio.sleep(0.25)
-        self.add_async_cleanup(cleanup_session)
 
         # Make a request to the home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -382,6 +370,15 @@ APP_ENV = {
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
 }
+
+
+def client_session():
+    session = aiohttp.ClientSession()
+
+    async def _cleanup_session():
+        await session.close()
+        await asyncio.sleep(0.25)
+    return session, _cleanup_session
 
 
 # Run the application proper in a way that is as possible to production
