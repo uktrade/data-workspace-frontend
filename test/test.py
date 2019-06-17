@@ -7,6 +7,7 @@ import unittest
 
 import aiohttp
 from aiohttp import web
+import aioredis
 
 
 def async_test(func):
@@ -28,6 +29,7 @@ class TestApplication(unittest.TestCase):
     @async_test
     async def test_application_shows_content_if_authorized(self):
         await flush_database()
+        await flush_redis()
 
         session, cleanup_session = client_session()
         self.add_async_cleanup(cleanup_session)
@@ -198,6 +200,9 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_application_redirects_to_sso_if_initially_not_authorized(self):
+        await flush_database()
+        await flush_redis()
+
         session, cleanup_session = client_session()
         self.add_async_cleanup(cleanup_session)
 
@@ -229,6 +234,9 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
+        await flush_database()
+        await flush_redis()
+
         session, cleanup_session = client_session()
         self.add_async_cleanup(cleanup_session)
 
@@ -387,6 +395,11 @@ async def flush_database():
         'django-admin flush --no-input --database default',
         env=APP_ENV,
     )).wait()
+
+
+async def flush_redis():
+    redis_client = await aioredis.create_redis('redis://analysis-workspace-redis:6379')
+    await redis_client.execute('FLUSHDB')
 
 
 async def give_user_app_perms():
