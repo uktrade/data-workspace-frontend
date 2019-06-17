@@ -52,7 +52,7 @@ async def async_main():
 
     # When spawning and tring to detect if the app is running,
     # we fail quickly and often so a connection check is quick
-    spawning_http_timeout = aiohttp.ClientTimeout(sock_read=1, sock_connect=1)
+    spawning_http_timeout = aiohttp.ClientTimeout(sock_read=5, sock_connect=2)
 
     def without_transfer_encoding(request_or_response):
         return CIMultiDict(tuple(
