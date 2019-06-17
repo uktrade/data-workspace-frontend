@@ -35,46 +35,19 @@ class TestApplication(unittest.TestCase):
         cleanup_application_1 = await create_application()
         self.add_async_cleanup(cleanup_application_1)
 
-        # Start a mock SSO
-        async def handle_authorize(request):
-            # The user would login here, and eventually redirect back to redirect_uri
-            state = request.query['state']
-            code = 'some-code'
-            return web.Response(status=302, headers={
-                'Location': request.query['redirect_uri'] + f'?state={state}&code={code}',
-            })
-
-        token_request_code = None
-
-        async def handle_token(request):
-            nonlocal token_request_code
-            token_request_code = (await request.post())['code']
-            return web.json_response({'access_token': 'some-token'}, status=200)
-
-        me_request_auth = None
-
-        async def handle_me(request):
-            nonlocal me_request_auth
-            me_request_auth = request.headers['Authorization']
-            data = {
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
                 'email': 'test@test.com',
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
-            }
-            return web.json_response(data, status=200, headers={
-            })
-        sso_app = web.Application()
-        sso_app.add_routes([
-            web.get('/o/authorize/', handle_authorize),
-            web.post('/o/token/', handle_token),
-            web.get('/api/v1/user/me/', handle_me),
-        ])
-        sso_runner = web.AppRunner(sso_app)
-        await sso_runner.setup()
-        self.add_async_cleanup(sso_runner.cleanup)
-        sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
-        await sso_site.start()
+            },
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
 
         await asyncio.sleep(4)
 
@@ -83,10 +56,6 @@ class TestApplication(unittest.TestCase):
         async with session.request('GET', 'http://localapps.com:8000/') as response:
             content = await response.text()
         self.assertNotIn('Test Application', content)
-
-        # Ensure we sent the right thing to SSO
-        self.assertEqual('some-code', token_request_code)
-        self.assertEqual('Bearer some-token', me_request_auth)
 
         stdout, stderr, code = await give_user_app_perms()
         self.assertEqual(stdout, b'')
@@ -235,19 +204,12 @@ class TestApplication(unittest.TestCase):
         cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
-        # Start a limited mock SSO
-        async def handle_authorize(_):
-            return web.Response(status=200, text='This is the login page')
-
-        sso_app = web.Application()
-        sso_app.add_routes([
-            web.get('/o/authorize/', handle_authorize),
-        ])
-        sso_runner = web.AppRunner(sso_app)
-        await sso_runner.setup()
-        self.add_async_cleanup(sso_runner.cleanup)
-        sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
-        await sso_site.start()
+        is_logged_in = False
+        codes = iter([])
+        tokens = iter([])
+        auth_to_me = {}
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
 
         await asyncio.sleep(6)
 
@@ -273,48 +235,20 @@ class TestApplication(unittest.TestCase):
         cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
-        # Start a mock SSO
-        number_of_times_at_sso = 0
-
-        async def handle_authorize(request):
-            # The user would login here, and eventually redirect back to redirect_uri
-            nonlocal number_of_times_at_sso
-            number_of_times_at_sso += 1
-            state = request.query['state']
-            code = 'some-code'
-            return web.Response(status=302, headers={
-                'Location': request.query['redirect_uri'] + f'?state={state}&code={code}',
-            })
-
+        is_logged_in = True
+        codes = iter(['some-code', 'some-other-code'])
         tokens = iter(['token-1', 'token-2'])
-
-        async def handle_token(_):
-            return web.json_response({'access_token': next(tokens)}, status=200)
-
-        async def handle_me(request):
-            auth_header = request.headers['Authorization']
-
-            if auth_header == 'Bearer token-1':
-                return web.json_response({}, status=403)
-
-            data = {
+        auth_to_me = {
+            # No token-1
+            'Bearer token-2': {
                 'email': 'test@test.com',
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
-            }
-            return web.json_response(data, status=200)
-        sso_app = web.Application()
-        sso_app.add_routes([
-            web.get('/o/authorize/', handle_authorize),
-            web.post('/o/token/', handle_token),
-            web.get('/api/v1/user/me/', handle_me),
-        ])
-        sso_runner = web.AppRunner(sso_app)
-        await sso_runner.setup()
-        self.add_async_cleanup(sso_runner.cleanup)
-        sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
-        await sso_site.start()
+            },
+        }
+        sso_cleanup, number_of_times_at_sso = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
 
         await asyncio.sleep(6)
 
@@ -322,7 +256,7 @@ class TestApplication(unittest.TestCase):
         async with session.request('GET', 'http://localapps.com:8000/') as response:
             content = await response.text()
 
-        self.assertEqual(number_of_times_at_sso, 2)
+        self.assertEqual(number_of_times_at_sso(), 2)
         self.assertEqual(200, response.status)
 
         stdout, stderr, code = await give_user_app_perms()
@@ -379,6 +313,55 @@ def client_session():
         await session.close()
         await asyncio.sleep(0.25)
     return session, _cleanup_session
+
+
+async def create_sso(is_logged_in, codes, tokens, auth_to_me):
+    number_of_times = 0
+    latest_code = None
+
+    async def handle_authorize(request):
+        nonlocal number_of_times
+        nonlocal latest_code
+
+        number_of_times += 1
+
+        if not is_logged_in:
+            return web.Response(status=200, text='This is the login page')
+
+        state = request.query['state']
+        latest_code = next(codes)
+        return web.Response(status=302, headers={
+            'Location': request.query['redirect_uri'] + f'?state={state}&code={latest_code}',
+        })
+
+    async def handle_token(request):
+        if (await request.post())['code'] != latest_code:
+            return web.json_response({}, status=403)
+
+        token = next(tokens)
+        return web.json_response({'access_token': token}, status=200)
+
+    async def handle_me(request):
+        if request.headers['authorization'] in auth_to_me:
+            return web.json_response(auth_to_me[request.headers['authorization']], status=200)
+
+        return web.json_response({}, status=403)
+
+    sso_app = web.Application()
+    sso_app.add_routes([
+        web.get('/o/authorize/', handle_authorize),
+        web.post('/o/token/', handle_token),
+        web.get('/api/v1/user/me/', handle_me),
+    ])
+    sso_runner = web.AppRunner(sso_app)
+    await sso_runner.setup()
+    sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
+    await sso_site.start()
+
+    def get_number_of_times():
+        return number_of_times
+
+    return sso_runner.cleanup, get_number_of_times
 
 
 # Run the application proper in a way that is as possible to production
