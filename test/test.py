@@ -76,12 +76,6 @@ class TestApplication(unittest.TestCase):
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             application_content_1 = await response.text()
 
-        # The tests are not isolated from each other in the database, so we may have a running
-        # one that is "errored" from a previous run
-        if 'Application STOPPED' in application_content_1:
-            async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
-                application_content_1 = await response.text()
-
         self.assertIn('Starting Test Application', application_content_1)
 
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
