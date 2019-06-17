@@ -233,16 +233,7 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_application_redirects_to_sso_if_initially_not_authorized(self):
-        # Run the application proper in a way that is as possible to production
-        # The environment must be the same as in the Dockerfile
-        async def cleanup_application():
-            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            await asyncio.sleep(3)
-        proc = await asyncio.create_subprocess_exec(
-            '/app/start.sh',
-            env=APP_ENV,
-            preexec_fn=os.setsid,
-        )
+        cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
         # Start a limited mock SSO
