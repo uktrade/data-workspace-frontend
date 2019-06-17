@@ -107,39 +107,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual('some-code', token_request_code)
         self.assertEqual('Bearer some-token', me_request_auth)
 
-        # Give the user permission
-        code = textwrap.dedent("""\
-            from django.contrib.auth.models import (
-                Permission,
-            )
-            from django.contrib.auth.models import (
-                User,
-            )
-            from django.contrib.contenttypes.models import (
-                ContentType,
-            )
-            from app.models import (
-                ApplicationInstance,
-            )
-            permission = Permission.objects.get(
-                codename='start_all_applications',
-                content_type=ContentType.objects.get_for_model(ApplicationInstance),
-            )
-            user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
-            user.user_permissions.add(permission)
-            """
-                               ).encode('ascii')
-        give_perm = await asyncio.create_subprocess_shell(
-            'django-admin shell',
-            env=APP_ENV,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await give_perm.communicate(code)
+        stdout, stderr, code = await give_user_app_perms()
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
-        code = await give_perm.wait()
         self.assertEqual(code, 0)
 
         # Make a request to the home page
@@ -402,39 +372,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(number_of_times_at_sso, 2)
         self.assertEqual(200, response.status)
 
-        # Give the user permission
-        code = textwrap.dedent("""\
-            from django.contrib.auth.models import (
-                Permission,
-            )
-            from django.contrib.auth.models import (
-                User,
-            )
-            from django.contrib.contenttypes.models import (
-                ContentType,
-            )
-            from app.models import (
-                ApplicationInstance,
-            )
-            permission = Permission.objects.get(
-                codename='start_all_applications',
-                content_type=ContentType.objects.get_for_model(ApplicationInstance),
-            )
-            user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
-            user.user_permissions.add(permission)
-            """
-                               ).encode('ascii')
-        give_perm = await asyncio.create_subprocess_shell(
-            'django-admin shell',
-            env=APP_ENV,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await give_perm.communicate(code)
+        stdout, stderr, code = await give_user_app_perms()
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
-        code = await give_perm.wait()
         self.assertEqual(code, 0)
 
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -484,3 +424,37 @@ async def flush_database():
         'django-admin flush --no-input --database default',
         env=APP_ENV,
     )).wait()
+
+
+async def give_user_app_perms():
+    python_code = textwrap.dedent("""\
+        from django.contrib.auth.models import (
+            Permission,
+        )
+        from django.contrib.auth.models import (
+            User,
+        )
+        from django.contrib.contenttypes.models import (
+            ContentType,
+        )
+        from app.models import (
+            ApplicationInstance,
+        )
+        permission = Permission.objects.get(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user.user_permissions.add(permission)
+        """).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=APP_ENV,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
