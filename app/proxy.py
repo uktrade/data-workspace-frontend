@@ -330,8 +330,10 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
-            # Database authentication is handled by the django app
-            if request.url.path in ['/healthcheck']:
+            # Suspect that concurrent requests for /favicon.ico break the
+            # auth flow, since they can return a set-cookie with a new session
+            # and state that is not the same as the primary
+            if request.url.path in ['/healthcheck', '/favicon.ico']:
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
