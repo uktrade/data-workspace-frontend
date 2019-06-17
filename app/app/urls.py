@@ -24,7 +24,6 @@ from django.views.decorators.csrf import (
 
 from app.views import (
     root_view,
-    table_data_view,
     appstream_view,
     application_spawning_html_view,
     application_api_view,
@@ -37,6 +36,10 @@ from app.views_error import (
 from app.views_healthcheck import (
     healthcheck_view,
 )
+from app.views_table_data import (
+    table_data_view,
+)
+
 
 logger = logging.getLogger('app')
 
