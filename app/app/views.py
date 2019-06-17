@@ -36,6 +36,7 @@ from app.shared import (
     database_dsn,
     get_private_privilages,
     new_private_database_credentials,
+    set_application_stopped,
 )
 from app.spawner import (
     spawner,
@@ -347,12 +348,6 @@ def application_api_DELETE(request, public_host):
     set_application_stopped(application_instance)
 
     return JsonResponse({}, status=200)
-
-
-def set_application_stopped(application_instance):
-    application_instance.state = 'STOPPED'
-    application_instance.single_running_or_spawning_integrity = str(application_instance.id)
-    application_instance.save()
 
 
 def _flatten(to_flatten):
