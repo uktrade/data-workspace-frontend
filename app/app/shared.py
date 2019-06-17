@@ -11,8 +11,10 @@ import boto3
 from django.conf import (
     settings,
 )
+from django.db import (
+    connections,
+)
 from psycopg2 import (
-    connect,
     sql,
 )
 
@@ -58,9 +60,7 @@ def new_private_database_credentials(user):
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
-        with \
-                connect(database_dsn(database_data)) as conn, \
-                conn.cursor() as cur:
+        with connections[database_obj.memorable_name].cursor() as cur:
 
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
                 sql.Identifier(user)), [password, valid_until])
