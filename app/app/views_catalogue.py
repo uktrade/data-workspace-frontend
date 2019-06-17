@@ -21,6 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 @require_GET
+def landing_view(request):
+    context = {}
+    return render(request, 'landing.html', context)
+
+
+@require_GET
 def dataset_full_path_view(request, group_slug, set_slug):
     found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)[0]
 

@@ -22,24 +22,41 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
             return None
 
         User = get_user_model()
-        user, _ = User.objects.get_or_create(
-            email=email,
-            defaults={'first_name': first_name, 'last_name': last_name})
 
-        # Ensure the user has a profile
-        user.save()
+        # This allows a user to be created by email address before they
+        # have logged in
+        user, _ = User.objects.get_or_create(email=email)
 
-        # Ensure that the user can edit
-        user.is_staff = True
-        user.is_superuser = True
+        if not user.profile:
+            user.save()
 
+        changed = False
+        if user.profile.sso_id != user_id:
+            changed = True
+            user.profile.sso_id = user_id
 
+        if user.username != user.email:
+            changed = True
+            user.username = user.email
 
-        user.profile.sso_id = user_id
-        user.username = user.email
+        if user.email != email:
+            changed = True
+            user.email = email
+
+        if user.first_name != first_name:
+            changed = True
+            user.first_name = first_name
+
+        if user.last_name != last_name:
+            changed = True
+            user.last_name = last_name
+
         if user.has_usable_password():
+            changed = True
             user.set_unusable_password()
-        user.save()
+
+        if changed:
+            user.save()
 
         return user
 
