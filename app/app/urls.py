@@ -24,15 +24,24 @@ from django.views.decorators.csrf import (
 
 from app.views import (
     root_view,
-    table_data_view,
-    healthcheck_view,
     appstream_view,
-    public_error_403_html_view,
-    public_error_404_html_view,
-    public_error_500_html_view,
+)
+from app.views_application import (
     application_spawning_html_view,
     application_api_view,
 )
+from app.views_error import (
+    public_error_403_html_view,
+    public_error_404_html_view,
+    public_error_500_html_view,
+)
+from app.views_healthcheck import (
+    healthcheck_view,
+)
+from app.views_table_data import (
+    table_data_view,
+)
+
 
 logger = logging.getLogger('app')
 

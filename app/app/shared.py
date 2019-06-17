@@ -125,3 +125,18 @@ def new_private_database_credentials(user):
             )
 
     return creds
+
+
+def can_access_table(privilages, database, schema, table):
+    return any(
+        True
+        for privilage in privilages
+        for privilage_table in privilage.tables.split(',')
+        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
+    )
+
+
+def set_application_stopped(application_instance):
+    application_instance.state = 'STOPPED'
+    application_instance.single_running_or_spawning_integrity = str(application_instance.id)
+    application_instance.save()
