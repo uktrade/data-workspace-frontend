@@ -36,6 +36,7 @@ from app.models import (
     ApplicationTemplate,
 )
 from app.shared import (
+    can_access_table,
     database_dsn,
     get_private_privilages,
     new_private_database_credentials,
@@ -81,7 +82,7 @@ def root_view_GET(request):
                 (database.memorable_name, privilage.schema, table)
                 for privilage in database_privilages
                 for table in tables_in_schema(cur, privilage.schema)
-                if _can_access_table(database_privilages, database.memorable_name, privilage.schema, table)
+                if can_access_table(database_privilages, database.memorable_name, privilage.schema, table)
             ]
 
     privilages = get_private_privilages(request.user)
@@ -183,20 +184,11 @@ def table_data_view(request, database, schema, table):
                 request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
-        HttpResponseUnauthorized() if not _can_access_table(get_private_privilages(request.user), database, schema, table) else \
+        HttpResponseUnauthorized() if not can_access_table(get_private_privilages(request.user), database, schema, table) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
         _table_data(request.user.email, database, schema, table)
 
     return response
-
-
-def _can_access_table(privilages, database, schema, table):
-    return any(
-        True
-        for privilage in privilages
-        for privilage_table in privilage.tables.split(',')
-        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
-    )
 
 
 def _table_exists(database, schema, table):
