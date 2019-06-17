@@ -43,6 +43,9 @@ from app.shared import (
 from app.spawner import (
     spawner,
 )
+from app.views_error import (
+    public_error_500_html_view,
+)
 
 logger = logging.getLogger('app')
 
@@ -466,20 +469,6 @@ def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
     application_instance.single_running_or_spawning_integrity = str(application_instance.id)
     application_instance.save()
-
-
-def public_error_404_html_view(request, exception=None):
-    return render(request, 'error_404.html', status=404)
-
-
-def public_error_403_html_view(request, exception=None):
-    return render(request, 'error_403.html', status=403)
-
-
-def public_error_500_html_view(request):
-    message = request.GET.get('message', None)
-
-    return render(request, 'error_500.html', {'message': message}, status=500)
 
 
 def _flatten(to_flatten):

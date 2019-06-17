@@ -26,11 +26,13 @@ from app.views import (
     root_view,
     table_data_view,
     appstream_view,
+    application_spawning_html_view,
+    application_api_view,
+)
+from app.views_error import (
     public_error_403_html_view,
     public_error_404_html_view,
     public_error_500_html_view,
-    application_spawning_html_view,
-    application_api_view,
 )
 from app.views_healthcheck import (
     healthcheck_view,
