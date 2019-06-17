@@ -11,12 +11,12 @@
             font-weight: bold;
             font-size: 24px;
         }
-       
+
     </style>
 {% endblock %}
 
 {% block breadcrumbs %}
- <div class="govuk-breadcrumbs">
+    <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
             <li class="govuk-breadcrumbs__list-item">
                 <a class="govuk-breadcrumbs__link" href="/">Home</a>
@@ -25,32 +25,43 @@
                 Data Catalogue
             </li>
         </ol>
-      </div>
+    </div>
 {% endblock %}
 
 {% block inner_content %}
     {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
 
-   
+
 
     <h1 class="govuk-heading-l">Data at DIT</h1>
 
-    
+
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-        {% for grouping in groupings %}
-            <h3 class="govuk-heading-m">
-                <a class="govuk-link" href="{% url 'datagroup_item' grouping.slug %}">{{ grouping.name }}</a>
-            </h3>
-            <p class="govuk-body">{{ grouping.short_description }}</p>
-        {% endfor %}
 
-    </div>
+            <p class="govuk-body">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque ac malesuada purus. Aenean interdum at
+                velit in rutrum. Aenean sem ex, tristique id metus nec, eleifend aliquet neque. In congue sollicitudin
+                lorem, dapibus egestas ex varius nec. Suspendisse at vulputate odio. Aliquam eget interdum orci. Sed
+                quis sagittis leo. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum eu augue
+                facilisis nibh accumsan aliquam quis et risus. Duis aliquet, turpis vitae mattis sollicitudin, ligula
+                magna sollicitudin metus, eget suscipit lacus nisl vitae quam. Sed in facilisis turpis, id condimentum
+                ligula. Donec porttitor enim arcu. Donec sodales, sem sit amet sagittis feugiat, elit sapien iaculis
+                dui, ut condimentum nisi sem a neque.</p>
+
+
+            {% for grouping in groupings %}
+                <h3 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'datagroup_item' grouping.slug %}">{{ grouping.name }}</a>
+                </h3>
+                <p class="govuk-body">{{ grouping.short_description }}</p>
+            {% endfor %}
+
+        </div>
     </div>
 {% endblock %}
