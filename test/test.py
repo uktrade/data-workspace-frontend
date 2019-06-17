@@ -63,7 +63,7 @@ class TestApplication(unittest.TestCase):
         }
 
         await (await asyncio.create_subprocess_shell(
-            'django-admin flush --no-input',
+            'django-admin flush --no-input --database default',
             env=app_env
         )).wait()
 
@@ -437,7 +437,7 @@ class TestApplication(unittest.TestCase):
         }
 
         await (await asyncio.create_subprocess_shell(
-            'django-admin flush --no-input',
+            'django-admin flush --no-input --database default',
             env=app_env
         )).wait()
 

@@ -13,15 +13,15 @@ from django.contrib.auth import (
 from django.conf import (
     settings,
 )
+from django.db import (
+    connections,
+)
 from django.http import (
     HttpResponse,
 )
 from django.shortcuts import (
     redirect,
     render,
-)
-from psycopg2 import (
-    connect,
 )
 
 from app.models import (
@@ -30,7 +30,6 @@ from app.models import (
 )
 from app.shared import (
     can_access_table,
-    database_dsn,
     get_private_privilages,
     set_application_stopped,
 )
@@ -65,9 +64,7 @@ def root_view_GET(request):
 
     def allowed_tables_for_database_that_exist(database, database_privilages):
         logger.info('allowed_tables_for_database_that_exist: %s %s', database, database_privilages)
-        with \
-                connect(database_dsn(settings.DATABASES_DATA[database.memorable_name])) as conn, \
-                conn.cursor() as cur:
+        with connections[database.memorable_name].cursor() as cur:
             return [
                 (database.memorable_name, privilage.schema, table)
                 for privilage in database_privilages

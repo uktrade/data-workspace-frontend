@@ -79,6 +79,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         **env['ADMIN_DB'],
         'OPTIONS': {'sslmode': 'require'},
+    },
+    **{
+        database_name: {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            **database,
+            'OPTIONS': {'sslmode': 'require'},
+        }
+        for database_name, database in env['DATA_DB'].items()
     }
 }
 
