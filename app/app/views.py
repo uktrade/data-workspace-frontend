@@ -140,10 +140,6 @@ def root_view_POST(request):
     return redirect('root')
 
 
-def healthcheck_view(_):
-    return HttpResponse('OK')
-
-
 def appstream_view(request):
     User = get_user_model()
 
