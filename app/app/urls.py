@@ -25,6 +25,8 @@ from django.views.decorators.csrf import (
 from app.views import (
     root_view,
     appstream_view,
+)
+from app.views_application import (
     application_spawning_html_view,
     application_api_view,
 )
