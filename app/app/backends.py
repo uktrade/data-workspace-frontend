@@ -25,9 +25,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
 
         # This allows a user to be created by email address before they
         # have logged in
-        user, _ = User.objects.get_or_create(
-            email=email,
-            defaults={'first_name': first_name, 'last_name': last_name})
+        user, _ = User.objects.get_or_create(email=email)
 
         if not user.profile:
             user.save()
