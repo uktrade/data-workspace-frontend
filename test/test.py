@@ -304,7 +304,6 @@ APP_ENV = {
     'APPSTREAM_URL': 'https://url.to.appstream',
     'SUPPORT_URL': 'https://url.to.support/',
     'NOTEBOOKS_URL': 'https://url.to.notebooks/',
-    'OAUTHLIB_INSECURE_TRANSPORT': '1',
     'APPLICATION_ROOT_DOMAIN': 'localapps.com:8000',
     'APPLICATION_TEMPLATES__1__NAME': 'testapplication',
     'APPLICATION_TEMPLATES__1__NICE_NAME': 'Test Application',
