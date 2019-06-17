@@ -12,6 +12,10 @@
             font-size: 24px;
         }
 
+        td {
+            vertical-align: top;
+        }
+
     </style>
 {% endblock %}
 
@@ -62,7 +66,7 @@
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Information Asset Owner</td>
-                    <td class="govuk-table__cell">{{ model.information_asset_owner.name }}</td>
+                    <td class="govuk-table__cell">{{ model.information_asset_owner }}</td>
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell" colspan="2">Shared with<br/>
@@ -96,7 +100,7 @@
                 <p class="govuk-body">{{ set.short_description }}</p>
                 {% empty %}
                 <h2 class="govuk-heading-m">
-                    No data sets available ...
+                    No data sets available &hellip;
                 </h2>
             {% endfor %}
 
