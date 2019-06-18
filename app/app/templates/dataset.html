@@ -60,46 +60,7 @@
                 </p>
             {% endif %}
 
-            <h2 class="govuk-heading-m">Data Links</h2>
-            <table class="govuk-table">
-                <thead>
-                <tr class="govuk-table__row">
-                    <th class="govuk-table__header">Link to the data</th>
-                    <th class="govuk-table__header">Format</th>
-                    <th class="govuk-table__header">File added</th>
-                    <th class="govuk-table__header">Frequency</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for link in links %}
-                    <tr class="govuk-table__row">
-                        <td class="govuk-table__cell">
-                            <a class="govuk-link" href="{{ link.url }}" target="_blank">
-                                {{ link.name }} - {{ link.url }}
-                            </a>
-                        </td>
-                        <td class="govuk-table__cell">
-                            {{ link.format }}
-                        </td>
-                        <td class="govuk-table__cell">
-                            {{ link.created_date| date:"d/m/Y"   }}
-                        </td>
-                        <td class="govuk-table__cell">
-                            {{ link.frequency }}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <td colspan="4">
-                        <p>
-                            No data available right now
-                        </p>
 
-                    </td>
-                {% endfor %}
-
-
-                </tbody>
-            </table>
         </div>
 
         <div class="govuk-grid-column-one-third">
@@ -142,10 +103,54 @@
 
     </div>
 
-    <h2 class="govuk-heading-m">Additional Information</h2>
+    <div class="govuk-grid-row" style="overflow-x: auto;">
+        <div class="govuk-grid-column-full">
+             <h2 class="govuk-heading-m">Data Links</h2>
+            <table class="govuk-table">
+                <thead>
+                <tr class="govuk-table__row">
+                    <th class="govuk-table__header">Link to the data</th>
+                    <th class="govuk-table__header">Format</th>
+                    <th class="govuk-table__header">File added</th>
+                    <th class="govuk-table__header">Frequency</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for link in links %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <a class="govuk-link" href="{{ link.url }}" target="_blank">
+                                {{ link.name }} - {{ link.url }}
+                            </a>
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ link.format }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ link.created_date| date:"d/m/Y"   }}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ link.frequency }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <td colspan="4">
+                        <p>
+                            No data available right now
+                        </p>
+
+                    </td>
+                {% endfor %}
+
+
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
+            <h2 class="govuk-heading-m">Additional Information</h2>
             <table class="govuk-table">
                 <tbody>
                 <tr class="govuk-table__row">
