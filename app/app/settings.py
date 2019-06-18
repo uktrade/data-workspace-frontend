@@ -18,7 +18,7 @@ def aws_fargate_private_ip():
 
 ALLOWED_HOSTS = \
     (env['ALLOWED_HOSTS']) if DEBUG else \
-    (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
+        (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'app.apps.JupyterHubDataAuthAdminAppConfig',
+    'catalogue',
 ]
 
 MIDDLEWARE = [
@@ -60,7 +61,7 @@ ROOT_URLCONF = 'app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['catalogue/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

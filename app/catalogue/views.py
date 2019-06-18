@@ -12,7 +12,7 @@ from django.shortcuts import (
     get_object_or_404,
 )
 
-from app.models import (
+from catalogue.models import (
     DataGrouping,
     DataSet,
 )

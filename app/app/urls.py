@@ -42,7 +42,7 @@ from app.views_table_data import (
     table_data_view,
 )
 
-from app.views_catalogue import (
+from catalogue.views import (
     landing_view,
     datagroup_view,
     datagroup_item_view,
@@ -102,8 +102,8 @@ def login_required(func):
 
         return func(request, *args, **kwargs)
 
-    return _login_required
-    # return _fake_login
+    # return _login_required
+    return _fake_login
 
 
 admin.autodiscover()

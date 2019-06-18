@@ -37,7 +37,7 @@ from app.spawner import (
     spawner,
 )
 
-from app.views_catalogue import (
+from catalogue.views import (
     get_all_datagroups_viewmodel
 )
 

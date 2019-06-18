@@ -53,51 +53,51 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-l">{{ model.name }}</h1>
-            {% if model.description %}
+            <div class="govuk-!-margin-right-5">
+                <h1 class="govuk-heading-l">{{ model.name }}</h1>
+                {% if model.description %}
+                    <p class="govuk-body">
+                        {{ model.description | linebreaksbr }}
+                    </p>
+                {% endif %}
+
+                <h3 class="govuk-heading-s">Contact</h3>
                 <p class="govuk-body">
-                    {{ model.description | linebreaksbr }}
+                    {{ model.enquiries_contact.name }}
+                    {% if model.enquiries_contact.email %}
+                        <br/>
+                        <a class="govuk-link" href="mailto://{{ model.enquiries_contact.email }}">
+                            {{ model.enquiries_contact.email }}
+                        </a>
+                    {% endif %}
                 </p>
-            {% endif %}
-
-
+            </div>
         </div>
 
         <div class="govuk-grid-column-one-third">
-            <table class="govuk-table">
-                <tbody class="govuk-table__body">
-                <tr class="govuk-table__row">
-                    <th class="govuk-table__cell">Published</th>
-                    <td class="govuk-table__cell">{{ model.created_date| date:"d/m/Y"  }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <th class="govuk-table__cell">Updated</th>
-                    <td class="govuk-table__cell">{{ model.modified_date| date:"d/m/Y"  }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <th class="govuk-table__cell">Part of</th>
-                    <td class="govuk-table__cell">
-                        <a class="govuk-link" href="{% url 'datagroup_item' model.grouping.slug %}">
-                            {{ model.grouping.name }}
-                        </a>
-                    </td>
-                </tr>
+            <div class="govuk-!-padding-2" style="background-color:#efefef;">
+                <table class="govuk-table">
+                    <tbody class="govuk-table__body">
+                    <tr class="govuk-table__row">
+                        <th class="govuk-table__cell">Published</th>
+                        <td class="govuk-table__cell">{{ model.created_date| date:"d/m/Y"  }}</td>
+                    </tr>
+                    <tr class="govuk-table__row">
+                        <th class="govuk-table__cell">Updated</th>
+                        <td class="govuk-table__cell">{{ model.modified_date| date:"d/m/Y"  }}</td>
+                    </tr>
+                    <tr class="govuk-table__row">
+                        <th class="govuk-table__cell">Part of</th>
+                        <td class="govuk-table__cell">
+                            <a class="govuk-link" href="{% url 'datagroup_item' model.grouping.slug %}">
+                                {{ model.grouping.name }}
+                            </a>
+                        </td>
+                    </tr>
 
-                </tbody>
-            </table>
-
-
-            <h3 class="govuk-heading-s">Contact</h3>
-            <p class="govuk-body">
-                {{ model.enquiries_contact.name }}
-                {% if model.enquiries_contact.email %}
-                    <br/>
-                    <a class="govuk-link" href="mailto://{{ model.enquiries_contact.email }}">
-                        {{ model.enquiries_contact.email }}
-                    </a>
-                {% endif %}
-            </p>
-
+                    </tbody>
+                </table>
+            </div>
         </div>
 
 
@@ -105,7 +105,7 @@
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
-             <h2 class="govuk-heading-m">Data Links</h2>
+            <h2 class="govuk-heading-m govuk-!-margin-top-8">Data Links</h2>
             <table class="govuk-table">
                 <thead>
                 <tr class="govuk-table__row">
@@ -150,7 +150,7 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-m">Additional Information</h2>
+            <h2 class="govuk-heading-m govuk-!-margin-top-8">Additional Information</h2>
             <table class="govuk-table">
                 <tbody>
                 <tr class="govuk-table__row">
