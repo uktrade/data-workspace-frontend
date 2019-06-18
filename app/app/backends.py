@@ -33,7 +33,6 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
         user.is_staff = True
         user.is_superuser = True
 
-
         changed = False
         if user.profile.sso_id != user_id:
             changed = True
