@@ -28,12 +28,18 @@
             }
 
             async function reloadIfNot202() {
-                // In case of error, we do nothing other than reload.
-                // KISS for now until we're sure on what we do want on error
-                var status = await getStatus(window.location.href);
+                try {
+                    var status = await getStatus(window.location.href);
+                } catch {
+                    window.setTimeout(reloadIfNot202, 10000);
+                    return;
+                }
+
                 if (status != 202) {
                     window.location.reload();
+                    return;
                 }
+
                 window.setTimeout(reloadIfNot202, 2000);
             }
 

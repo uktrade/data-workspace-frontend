@@ -132,6 +132,7 @@ class Database(models.Model):
         validators=[RegexValidator(regex=r'[A-Za-z0-9_]')],
         max_length=128,
         blank=False,
+        unique=True,
         help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__',
     )
     is_public = models.BooleanField(
