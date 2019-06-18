@@ -122,6 +122,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
         },
+        'catalogue': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        }
     },
 }
 
