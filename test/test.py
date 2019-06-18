@@ -1,4 +1,6 @@
 import asyncio
+import csv
+import io
 import json
 import os
 import signal
@@ -272,6 +274,64 @@ class TestApplication(unittest.TestCase):
         self.assertIn(
             '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/" style="font-weight: normal;">Test Application</a>', content)
 
+    @async_test
+    async def test_application_download(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code', 'some-other-code'])
+        tokens = iter(['token-1', 'token-2'])
+        auth_to_me = {
+            # No token-1
+            'Bearer token-2': {
+                'email': 'test@test.com',
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            },
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(6)
+
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            content = await response.text()
+
+        self.assertNotIn('auth_user', content)
+
+        async with session.request('GET', 'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
+            content = await response.text()
+            status = response.status
+
+        self.assertEqual(status, 403)
+        self.assertEqual(content, '')
+
+        stdout, stderr, code = await give_user_database_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            content = await response.text()
+
+        self.assertIn('auth_user', content)
+
+        async with session.request('GET', 'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
+            content = await response.text()
+
+        rows = list(csv.reader(io.StringIO(content)))
+        self.assertEqual(rows[0], ['id', 'password', 'last_login', 'is_superuser', 'username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active', 'date_joined'])
+        self.assertEqual(rows[1][4], 'test@test.com')
+        self.assertEqual(rows[2][0], 'Number of rows: 1')
+
 
 APP_ENV = {
     # Static: as in Dockerfile
@@ -416,6 +476,37 @@ async def give_user_app_perms():
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
         """).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=APP_ENV,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def give_user_database_perms():
+    python_code = textwrap.dedent("""\
+        from django.contrib.auth.models import (
+            User,
+        )
+        from app.models import (
+            Database,
+            Privilage,
+        )
+        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        Privilage.objects.create(
+            user=user,
+            database=Database.objects.get(memorable_name="my_database"),
+            schema="public",
+            tables="auth_user",
+        )
+        """).encode('ascii')
+
     give_perm = await asyncio.create_subprocess_shell(
         'django-admin shell',
         env=APP_ENV,
