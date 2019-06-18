@@ -15,19 +15,13 @@ from django.contrib.contenttypes.models import (
 )
 
 from app.models import (
-    ApplicationTemplate,
     ApplicationInstance,
-    Database,
     Privilage,
 )
 
 
 admin.site.site_header = 'Data Workspace'
-
-admin.site.register(Database)
 admin.site.register(Privilage)
-admin.site.register(ApplicationTemplate)
-admin.site.register(ApplicationInstance)
 
 
 class AppUserCreationForm(forms.ModelForm):
