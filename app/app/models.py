@@ -34,7 +34,7 @@ class DataGrouping(models.Model):
     description = models.TextField(blank=True, null=True)
 
     information_asset_owner = models.ForeignKey(
-        ResponsiblePerson, on_delete=models.PROTECT, related_name='asset_owner', null=False)
+        ResponsiblePerson, on_delete=models.PROTECT, related_name='asset_owner', null=True, blank=True)
     information_asset_manager = models.ForeignKey(
         ResponsiblePerson, on_delete=models.PROTECT, related_name='asset_manager', null=True, blank=True)
 
