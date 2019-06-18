@@ -68,9 +68,9 @@
                     <td class="govuk-table__cell">Information Asset Manager</td>
                     <td class="govuk-table__cell">
                         {{ model.information_asset_manager.name }}
-                          {% if model.information_asset_manager.email %}
+                        {% if model.information_asset_manager.email %}
                             <br>
-                            <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email  }}</a>
+                            <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email }}</a>
                         {% endif %}
                     </td>
                 </tr>
@@ -80,7 +80,7 @@
                         {{ model.information_asset_owner.name }}
                         {% if model.information_asset_owner.email %}
                             <br>
-                            <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email  }}</a>
+                            <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email }}</a>
                         {% endif %}
                     </td>
                 </tr>
@@ -105,7 +105,7 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-        <hr class="govuk-!-margin-top-4 govuk-!-margin-bottom-4">
+            <hr class="govuk-!-margin-top-4 govuk-!-margin-bottom-4">
             {% if datasets %}
 
             {% endif %}
