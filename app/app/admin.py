@@ -21,6 +21,9 @@ from app.models import (
     Privilage,
 )
 
+
+admin.site.site_header = 'Data Workspace'
+
 admin.site.register(Database)
 admin.site.register(Privilage)
 admin.site.register(ApplicationTemplate)
