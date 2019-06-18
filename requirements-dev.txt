@@ -9,6 +9,7 @@ certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
 Django==2.1.2
+django-db-geventpool==3.1.0
 django-govuk-template==0.8
 django-redis==4.10.0
 docutils==0.14
