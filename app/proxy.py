@@ -362,17 +362,18 @@ async def async_main():
                 if redirect_uri_final is None:
                     return web.Response(status=401)
 
-                sso_response = await client_session.post(
-                    f'{sso_base_url}{token_path}',
-                    data={
-                        'grant_type': grant_type,
-                        'code': code,
-                        'client_id': sso_client_id,
-                        'client_secret': sso_client_secret,
-                        'redirect_uri': get_redirect_uri_callback(request),
-                    },
-                )
-                await set_session_value(session_token_key, (await sso_response.json())['access_token'])
+                async with client_session.post(
+                        f'{sso_base_url}{token_path}',
+                        data={
+                            'grant_type': grant_type,
+                            'code': code,
+                            'client_id': sso_client_id,
+                            'client_secret': sso_client_secret,
+                            'redirect_uri': get_redirect_uri_callback(request),
+                        },
+                ) as sso_response:
+                    sso_response_json = await sso_response.json()
+                await set_session_value(session_token_key, sso_response_json['access_token'])
                 # A new session cookie to migitate session fixation attack
                 return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final}))
 
