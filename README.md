@@ -56,4 +56,13 @@ docker tag analysis-workspace:latest quay.io/uktrade/jupyterhub-data-auth-admin:
 docker push quay.io/uktrade/jupyterhub-data-auth-admin:latest
 ```
 
+
+## Healthcheck
+
+```bash
+docker build -t data-workspace-healthcheck . -f Dockerfile-healthcheck && \
+docker tag data-workspace-healthcheck:latest quay.io/uktrade/data-workspace-healthcheck:latest && \
+docker push quay.io/uktrade/data-workspace-healthcheck:latest
+```
+
 Quay.io does not build the images: they are built locally and pushed.
