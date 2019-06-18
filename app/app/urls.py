@@ -43,13 +43,11 @@ from app.views_table_data import (
 )
 
 from catalogue.views import (
-    landing_view,
     datagroup_view,
     datagroup_item_view,
     dataset_item_view,
     dataset_full_path_view,
 )
-
 
 logger = logging.getLogger('app')
 
