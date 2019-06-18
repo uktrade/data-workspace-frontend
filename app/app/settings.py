@@ -76,17 +76,17 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'CONN_MAX_AGE': 600,
+        'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
+        'CONN_MAX_AGE': 0,
         **env['ADMIN_DB'],
-        'OPTIONS': {'sslmode': 'require'},
+        'OPTIONS': {'sslmode': 'require', 'MAX_CONNS': 20},
     },
     **{
         database_name: {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'CONN_MAX_AGE': 600,
+            'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
+            'CONN_MAX_AGE': 0,
             **database,
-            'OPTIONS': {'sslmode': 'require'},
+            'OPTIONS': {'sslmode': 'require', 'MAX_CONNS': 20},
         }
         for database_name, database in env['DATA_DB'].items()
     }
