@@ -9,54 +9,93 @@
     </style>
 {% endblock %}
 
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                Home
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
 {% block inner_content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-l">Data</h1>
 
-        {% if database_schema_tables %}
-            <ul class="govuk-list">
-            {% for database_schema_table in database_schema_tables %}
-                <li><a class="govuk-link" href="{% url 'table_data' database_schema_table.0 database_schema_table.1  database_schema_table.2 %}">{{ database_schema_table.0 }} / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">Data at DIT</h1>
+            <p class="govuk-body-lead" contenteditable spellcheck="false">
+                Aenean interdum at
+                velit in rutrum. Aenean sem ex, tristique id metus nec, eleifend aliquet neque. In congue sollicitudin
+                lorem, dapibus egestas ex varius nec. Suspendisse at vulputate odio. Aliquam eget interdum orci. Sed
+                quis sagittis leo. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum eu augue
+
+            </p>
+
+            {% for grouping in groupings %}
+                <h3 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'datagroup_item' grouping.slug %}">{{ grouping.name }}</a>
+                </h3>
+                <p class="govuk-body">{{ grouping.short_description }}</p>
             {% endfor %}
-            </ul>
-        {% else %}
-            <p class="govuk-body">No data is available.</p>
-        {% endif %}
-    </div>
 
-    {% if perms.app.start_all_applications %}
-    <div class="govuk-grid-column-one-third">
-        <h1 class="govuk-heading-l">Tools</h1>
+        </div>
 
-        <dl class="govuk-summary-list govuk-summary-list">
-            {% for application in applications %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    <a class="govuk-link" href="{{ application.link }}" style="font-weight: normal;">{{ application.nice_name }}</a>
-                </dt>
-                <dd class="govuk-summary-list__actions">
-                     {% if application.instance and application.can_stop %}
-                    <form method="POST" style="display: inline">
-                        {% csrf_token %}
-                        <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 btn-stop" name="application_instance_id" value="{{ application.instance.id }}" type="submit">Stop</button>
-                    <form>
+
+        <div class="govuk-grid-column-one-third">
+
+{#            <h2 class="govuk-heading-l">Links</h2>#}
+{#            <p class="govuk-body">#}
+{#                <a class="govuk-link" href="{% url 'datagroup' %}">View entire data catalogue</a>#}
+{#            </p>#}
+            {% if perms.app.start_all_applications %}
+                <h2 class="govuk-heading-l">Tools</h2>
+                <dl class="govuk-summary-list govuk-summary-list">
+                    {% for application in applications %}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                <a class="govuk-link" href="{{ application.link }}"
+                                   style="font-weight: normal;">{{ application.nice_name }}</a>
+                            </dt>
+                            <dd class="govuk-summary-list__actions">
+                                {% if application.instance and application.can_stop %}
+                                    <form method="POST" style="display: inline">
+                                        {% csrf_token %}
+                                        <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 btn-stop"
+                                                name="application_instance_id" value="{{ application.instance.id }}"
+                                                type="submit">Stop
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </dd>
+                        </div>
+                    {% endfor %}
+                    {% if appstream_url != "https:///" %}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                <a class="govuk-link" href="{{ appstream_url }}"
+                                   style="font-weight: normal;">AppStream</a>
+                            </dt>
+                            <dd class="govuk-summary-list__actions">
+                            </dd>
+                        </div>
                     {% endif %}
-                </dd>
-            </div>
-            {% endfor %}
-            {% if appstream_url != "https:///" %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    <a class="govuk-link" href="{{ appstream_url }}" style="font-weight: normal;">AppStream</a>
-                </dt>
-                <dd class="govuk-summary-list__actions">
-                </dd>
-            </div>
+                </dl>
             {% endif %}
-        </dl>
+
+            {% if database_schema_tables %}
+                <h1 class="govuk-heading-l">Data</h1>
+                <ul class="govuk-list">
+                    {% for database_schema_table in database_schema_tables %}
+                        <li><a class="govuk-link"
+                               href="{% url 'table_data' database_schema_table.0 database_schema_table.1 database_schema_table.2 %}">{{ database_schema_table.0 }}
+                            / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
+                        {% empty %}
+                        <p class="govuk-body">No data is available.</p>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
-</div>
 
 {% endblock %}

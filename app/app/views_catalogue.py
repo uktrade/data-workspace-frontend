@@ -38,21 +38,27 @@ def dataset_full_path_view(request, group_slug, set_slug):
     return render(request, 'dataset.html', context)
 
 
+def get_all_datagroups_viewmodel():
+    groupings = DataGrouping.objects.all().order_by('name')
+
+    vm = []
+
+    for group in groupings:
+        vm.append({
+            'name': group.name,
+            'short_description': group.short_description,
+            'id': group.id,
+            'slug': group.slug
+        })
+
+    return vm
+
+
 @require_GET
 def datagroup_view(request):
     context = {
-        'groupings': []
+        'groupings': get_all_datagroups_viewmodel()
     }
-
-    groupings = DataGrouping.objects.all().order_by('name')
-
-    for group in groupings:
-        context['groupings'].append(
-            {'name': group.name,
-             'short_description': group.short_description,
-             'id': group.id,
-             'slug': group.slug}
-        )
 
     return render(request, 'catalogue.html', context)
 

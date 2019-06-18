@@ -102,21 +102,21 @@ def login_required(func):
 
         return func(request, *args, **kwargs)
 
-    return _login_required
-    # return _fake_login
+    # return _login_required
+    return _fake_login
 
 
 admin.autodiscover()
 admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
-    path('', login_required(landing_view), name='landing'),
-    path('datagroup', datagroup_view, name='datagroup'),
+    path('', login_required(root_view), name='root'),
+    path('catalogue', datagroup_view, name='datagroup'),
     path('datagroup/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
     path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
          name='dataset_fullpath'),
     path('dataset/<str:dataset_id>', login_required(dataset_item_view), name='dataset_item'),
-    path('analysis', login_required(root_view), name='root'),
+    # path('analysis', login_required(root_view), name='root'),
     # path('', login_required(root_view), name='root'),
     path('error_403', public_error_403_html_view),
     path('error_404', public_error_404_html_view),

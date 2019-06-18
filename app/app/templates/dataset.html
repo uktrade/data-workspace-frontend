@@ -1,4 +1,5 @@
 {% extends '_base.html' %}
+{% load humanize %}
 
 {% block head %}
     {{ block.super }}
@@ -25,9 +26,7 @@
             <li class="govuk-breadcrumbs__list-item">
                 <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
-            <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link" href="{% url 'datagroup' %}">Data Catalogue</a>
-            </li>
+
             <li class="govuk-breadcrumbs__list-item">
                 <a class="govuk-breadcrumbs__link"
                    href="{% url 'datagroup_item' model.grouping.slug %}">{{ model.grouping.name }}</a>
@@ -116,7 +115,7 @@
     <h2 class="govuk-heading-m">Data Links</h2>
 
     <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
+        <div class="govuk-grid-column-two-thirds">
             <table class="govuk-table">
                 <thead>
                 <tr class="govuk-table__row">
@@ -179,7 +178,7 @@
                 </tr>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Volume</td>
-                    <td class="govuk-table__cell">{{ model.volume }}</td>
+                    <td class="govuk-table__cell">{{ model.volume | intcomma }}</td>
                 </tr>
                 <tr>
                     <td class="govuk-table__cell">Retention Policy</td>
