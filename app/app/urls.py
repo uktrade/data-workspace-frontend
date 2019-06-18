@@ -116,8 +116,6 @@ urlpatterns = [
     path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
          name='dataset_fullpath'),
     path('dataset/<str:dataset_id>', login_required(dataset_item_view), name='dataset_item'),
-    # path('analysis', login_required(root_view), name='root'),
-    # path('', login_required(root_view), name='root'),
     path('error_403', public_error_403_html_view),
     path('error_404', public_error_404_html_view),
     path('error_500', public_error_500_html_view),
