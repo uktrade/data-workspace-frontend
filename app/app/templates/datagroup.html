@@ -47,54 +47,72 @@
     {% endif %}
 
 
-
-    <h1 class="govuk-heading-l">{{ model.name }}</h1>
-
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <table class="govuk-table">
-                <tbody class="govuk-table__body">
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Page Published</td>
-                    <td class="govuk-table__cell">{{ model.created_date| date:"d/m/Y" }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Page last updated</td>
-                    <td class="govuk-table__cell">{{ model.modified_date| date:"d/m/Y"  }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Information Asset Manager</td>
-                    <td class="govuk-table__cell">
-                        {{ model.information_asset_manager.name }}
-                        {% if model.information_asset_manager.email %}
-                            <br>
-                            <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email }}</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Information Asset Owner</td>
-                    <td class="govuk-table__cell">
-                        {{ model.information_asset_owner.name }}
-                        {% if model.information_asset_owner.email %}
-                            <br>
-                            <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email }}</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell" colspan="2">Shared with<br/>
-                        {{ model.audience | linebreaksbr }}</td>
-                </tr>
-                </tbody>
-            </table>
-
+            <h1 class="govuk-heading-l">{{ model.name }}</h1>
             {% if model.description %}
-                <h3 class="govuk-heading-m">Summary</h3>
                 <p class="govuk-body">
                     {{ model.description | linebreaksbr }}
                 </p>
             {% endif %}
+
+            <h2 class="govuk-heading-l">Available Data Sets</h2>
+            {% for set in datasets %}
+                <h2 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
+                </h2>
+                <p class="govuk-body">{{ set.short_description }}</p>
+                {% empty %}
+                <h2 class="govuk-heading-s">
+                    No data sets available
+                </h2>
+            {% endfor %}
+
+        </div>
+        <div class="govuk-grid-column-one-third">
+            <table class="govuk-table" style="width:100%">
+                <tbody class="govuk-table__body">
+                <tr class="govuk-table__row">
+                    <th class="govuk-table__cell">Published date</th>
+                    <td class="govuk-table__cell">{{ model.created_date| date:"d/m/Y" }}</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <th class="govuk-table__cell">Updated date</th>
+                    <td class="govuk-table__cell">{{ model.modified_date| date:"d/m/Y"  }}</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <p class="govuk-body">
+                <strong>Information Asset Manager</strong>
+            </p>
+            <p class="govuk-body">
+                {{ model.information_asset_manager.name }}
+                {% if model.information_asset_manager.email %}
+                    <br>
+                    <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email }}</a>
+                {% else %}
+                    <br>
+                {% endif %}
+            </p>
+            <p class="govuk-body">
+                <strong>Information Asset Owner</strong>
+            </p>
+            <p class="govuk-body">
+                {{ model.information_asset_owner.name }}
+                {% if model.information_asset_owner.email %}
+                    <br>
+                    <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email }}</a>
+                {% endif %}
+
+            </p>
+            <p class="govuk-body">
+                <strong>Shared with</strong>
+                <br/>
+                {{ model.audience | linebreaksbr }}
+
+            </p>
+
 
         </div>
     </div>
@@ -103,20 +121,7 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <hr class="govuk-!-margin-top-4 govuk-!-margin-bottom-4">
-            {% if datasets %}
 
-            {% endif %}
-            {% for set in datasets %}
-                <h2 class="govuk-heading-m">
-                    <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
-                </h2>
-                <p class="govuk-body">{{ set.short_description }}</p>
-                {% empty %}
-                <h2 class="govuk-heading-m">
-                    No data sets available &hellip;
-                </h2>
-            {% endfor %}
 
         </div>
     </div>
