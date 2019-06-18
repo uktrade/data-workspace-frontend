@@ -7,7 +7,9 @@ from django.contrib.auth.admin import (
 from django.contrib.auth.models import (
     Permission,
 )
+
 from django.contrib.auth.models import (
+    Group,
     User,
 )
 from django.contrib.contenttypes.models import (
@@ -15,19 +17,13 @@ from django.contrib.contenttypes.models import (
 )
 
 from app.models import (
-    ApplicationTemplate,
     ApplicationInstance,
-    Database,
     Privilage,
 )
 
 
 admin.site.site_header = 'Data Workspace'
-
-admin.site.register(Database)
 admin.site.register(Privilage)
-admin.site.register(ApplicationTemplate)
-admin.site.register(ApplicationInstance)
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -110,5 +106,6 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
+admin.site.unregister(Group)
 admin.site.unregister(User)
 admin.site.register(User, AppUserAdmin)
