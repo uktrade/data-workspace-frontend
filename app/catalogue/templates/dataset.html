@@ -1,8 +1,12 @@
 {% extends '_base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block head %}
     {{ block.super }}
+
+     <link rel="stylesheet" type="text/css" href="{% static "/catalogue/data-catalogue.css" %}"/>
+
     <style>
         .messages {
             margin: 1em 0;
@@ -75,7 +79,7 @@
         </div>
 
         <div class="govuk-grid-column-one-third">
-            <div class="govuk-!-padding-2" style="background-color:#efefef;">
+            <div class="govuk-!-padding-2 container-gray" >
                 <table class="govuk-table">
                     <tbody class="govuk-table__body">
                     <tr class="govuk-table__row">

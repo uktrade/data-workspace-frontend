@@ -1,7 +1,11 @@
 {% extends '_base.html' %}
+{% load static %}
+
 
 {% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "/catalogue/data-catalogue.css" %}"/>
     {{ block.super }}
+
     <style>
         .messages {
             margin: 1em 0;
@@ -52,6 +56,8 @@
         </div>
     </div>
 
+
+
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <div class="govuk-!-margin-right-5">
@@ -88,7 +94,7 @@
             </div>
         </div>
         <div class="govuk-grid-column-one-third">
-            <div class="govuk-!-padding-2" style="background-color:#efefef;">
+            <div class="govuk-!-padding-left-2 container-gray">
                 <table class="govuk-table">
                     <tbody class="govuk-table__body">
                     <tr class="govuk-table__row">
@@ -103,11 +109,11 @@
                 </table>
 
 
-                <p class="govuk-body">
-                    <strong>Shared with</strong>
-                    <br/>
-                    {{ model.audience | linebreaksbr }}
-                </p>
+{#                <p class="govuk-body">#}
+{#                    <strong>Shared with</strong>#}
+{#                    <br/>#}
+{#                    {{ model.audience | linebreaksbr }}#}
+{#                </p>#}
             </div>
 
         </div>
