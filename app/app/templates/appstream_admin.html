@@ -2,19 +2,6 @@
 
 {% block head %}
     {{ block.super }}
-    <style>
-        .messages {
-            margin: 1em 0;
-            padding: 1em 1em;
-            color: #fff;
-            background: #28a197;
-            font-weight: bold;
-            font-size: 24px;
-        }
-        .btn-stop {
-            vertical-align: middle;
-        }
-    </style>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             var element = document.getElementById('fleet-status');
@@ -40,14 +27,6 @@
 {% endblock %}
 
 {% block inner_content %}
-
-{% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
 
   <h1 class="heading-large">Fleet admin</h1>
 
