@@ -1,40 +1,19 @@
 import logging
-import boto3
-import gevent
-
 from django.contrib import (
     messages,
 )
 from django.contrib.auth import (
     get_user_model,
 )
-from django.conf import (
-    settings,
-)
 from django.http import (
     HttpResponse,
-    HttpResponseNotAllowed,
-    HttpResponseNotFound,
-    HttpResponseRedirect,
-    JsonResponse,
-    StreamingHttpResponse,
 )
 from django.shortcuts import (
     redirect,
     render,
 )
+import gevent
 
-from .forms import AppstreamAdminForm
-
-from app.models import (
-    ApplicationInstance,
-    ApplicationTemplate,
-)
-from app.shared import (
-    database_dsn,
-    get_private_privilages,
-    new_private_database_credentials,
-)
 from app.appstream import (
     get_fleet_status,
     get_app_sessions,
@@ -44,6 +23,7 @@ from app.appstream import (
     restart_fleet,
 )
 
+from .forms import AppstreamAdminForm
 
 logger = logging.getLogger('app')
 
@@ -107,6 +87,7 @@ def appstream_admin_view(request):
 
     return render(request, 'appstream_admin.html', context)
 
+
 def appstream_restart(request):
     fleet_status = check_fleet_running()
 
@@ -131,6 +112,7 @@ def appstream_restart(request):
     }
 
     return render(request, 'appstream_admin.html', context)
+
 
 def appstream_fleetstatus(request):
     fleet_status = check_fleet_running()

@@ -2,13 +2,8 @@ import hashlib
 import itertools
 import logging
 
-import boto3
-
 from django.contrib import (
     messages,
-)
-from django.contrib.auth import (
-    get_user_model,
 )
 from django.conf import (
     settings,

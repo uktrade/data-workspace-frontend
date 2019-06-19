@@ -1,5 +1,5 @@
-import boto3
 import time
+import boto3
 
 from django.conf import (
     settings,
@@ -60,9 +60,9 @@ def get_fleet_scale():
     )
 
     return(scale_response[
-            'ScalableTargets'][0]['MinCapacity'],
-            scale_response['ScalableTargets'][0]['MaxCapacity'
-            ])
+        'ScalableTargets'][0]['MinCapacity'],
+        scale_response['ScalableTargets'][0]['MaxCapacity'])
+
 
 def check_fleet_running():
     fleet_status = get_fleet_status()
@@ -70,12 +70,14 @@ def check_fleet_running():
 
     return(fleet_status['Fleets'][0]['State'])
 
+
 def stop_fleet():
     client = connect_aws_client('appstream')
 
     stop_response = client.stop_fleet(
         Name=settings.APPSTREAM_FLEET_NAME
     )
+    print(stop_response)
 
 
 def start_fleet():
@@ -84,6 +86,7 @@ def start_fleet():
     start_response = client.start_fleet(
         Name=settings.APPSTREAM_FLEET_NAME
     )
+    print(start_response)
 
 
 def restart_fleet():

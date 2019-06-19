@@ -27,22 +27,21 @@
 {% endblock %}
 
 {% block inner_content %}
-
-  <h1 class="heading-large">Fleet admin</h1>
-
+  <h1 class="govuk-heading-l">Fleet admin</h1>
       <form method="post" action='/appstream-admin/'>
-          <h2> New fleet values</h2><br>
                 {% csrf_token %}
-                {{ form }}
-        <button class="button" name="submit" value="Submit" type="submit">Submit</button><br><br>
-        <h2>-----------------------------------------------------------------------------------------------------</h2>
+                {% for field in form %}
+                    <div class="govuk-form-group">
+                        <label class="govuk-label" for=“{{ field.name }}“>{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                {% endfor %}
+        <button class="govuk-button" name="submit" value="Submit" type="submit">Save</button><br><br>
+        <hr class=“govuk-section-break govuk-section-break--l govuk-section-break--visible”><br><br>
       </form>
-
       <form method="post" action='/appstream-restart/'>
-          <br><h2>Appstream fleet status: <span id="fleet-status">{{ fleet_status }}</span></h2><br>
+          <br><h2 class="govuk-heading-m">Appstream fleet status: <span id="fleet-status">{{ fleet_status }}</span></h2><br><br>
                 {% csrf_token %}
-        <h2> Restart fleet cluster</h2><br>
-        <button class="button" name="restart" value="Restart" type="submit">Restart</button>
+        <button class="govuk-button" name="restart" value="Restart" type="submit">Restart fleet</button>
       </form>
-
 {% endblock %}

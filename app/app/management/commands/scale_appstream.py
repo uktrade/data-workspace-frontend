@@ -1,6 +1,3 @@
-from django.conf import (
-    settings,
-)
 from django.core.management.base import (
     BaseCommand,
 )
@@ -9,6 +6,7 @@ from app.appstream import (
     scale_fleet,
     get_fleet_scale,
 )
+
 
 class Command(BaseCommand):
 
