@@ -4,6 +4,11 @@
 
 {% block head %}
     {{ block.super }}
+    <style>
+        .numeric {
+            font-family: ntatabularnumbers, nta, Arial, sans-serif;
+        }
+    </style>
     <script>
         (() => {
             function getStatus(url) {
@@ -94,7 +99,7 @@
         </h1>
 
         <div class="govuk-!-font-size-27 govuk-panel__body">
-            Time remaining: <span id="time-remaining">{{ time_remaining }}</span></li>
+            Time remaining: <span class="numeric" id="time-remaining">{{ time_remaining }}</span></li>
         </div>
     </div>
 {% endblock %}
