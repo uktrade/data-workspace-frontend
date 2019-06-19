@@ -64,68 +64,20 @@
         </div>
     </div>
 
-
-
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <div class="govuk-!-margin-right-5">
+            <div>
                 {% if model.description %}
-                    <p class="govuk-body govuk-!-padding-bottom-4">
+                    <p class="govuk-body">
                         {{ model.description | linebreaksbr }}
                     </p>
                 {% endif %}
-
-                <p class="govuk-body">
-                    <strong>Information Asset Manager</strong>
-                </p>
-                <p class="govuk-body">
-                    {{ model.information_asset_manager.name }}
-                    {% if model.information_asset_manager.email %}
-                        <br>
-                        <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email }}</a>
-                    {% else %}
-                        <br>
-                    {% endif %}
-                </p>
-
-                <p class="govuk-body">
-                    <strong>Information Asset Owner</strong>
-                </p>
-                <p class="govuk-body">
-                    {{ model.information_asset_owner.name }}
-                    {% if model.information_asset_owner.email %}
-                        <br>
-                        <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email }}</a>
-                    {% endif %}
-
-                </p>
             </div>
         </div>
-        <div class="govuk-grid-column-one-third">
-            <div class="govuk-!-margin-left-2 catalogue__container-gray">
-                <table class="govuk-table">
-                    <tbody class="govuk-table__body">
-                    <tr class="govuk-table__row">
-                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Published
-                            date
-                        </th>
-                        <td class="govuk-table__cell catalogue-table__cell-no-border">
-                            {{ model.created_date| date:"d/m/Y" }}</td>
-                    </tr>
-                    <tr class="govuk-table__row">
-                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Updated
-                            date
-                        </th>
-                        <td class="govuk-table__cell catalogue-table__cell-no-border">
-                            {{ model.modified_date| date:"d/m/Y"  }}</td>
-                    </tr>
-                    </tbody>
-                </table>
 
-            </div>
-
-        </div>
     </div>
+
+
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
@@ -152,7 +104,63 @@
                 </p>
             {% endif %}
 
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
+
+            <table class="govuk-table">
+                <tbody class="govuk-table__body">
+                <tr class="govuk-table__row">
+                    <th class="govuk-table__cell">Published
+                        date
+                    </th>
+                    <td class="govuk-table__cell">
+                        {{ model.created_date| date:"d/m/Y" }}</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <th class="govuk-table__cell">Updated
+                        date
+                    </th>
+                    <td class="govuk-table__cell">
+                        {{ model.modified_date| date:"d/m/Y"  }}</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <td colspan="2" class="govuk-table__cell">
+                        <p class="govuk-body">
+                            <strong>Information Asset Manager</strong>
+                        </p>
+                        <p class="govuk-body">
+                            {{ model.information_asset_manager.name }}
+                            {% if model.information_asset_manager.email %}
+                                <br>
+                                <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email }}</a>
+                            {% else %}
+                                <br>
+                            {% endif %}
+                        </p>
+                    </td>
+
+                </tr>
+                <tr>
+                    <td colspan="2" class="govuk-table__cell">
+                        <p class="govuk-body">
+                            <strong>Information Asset Owner</strong>
+                        </p>
+                        <p class="govuk-body">
+                            {{ model.information_asset_owner.name }}
+                            {% if model.information_asset_owner.email %}
+                                <br>
+                                <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email }}</a>
+                            {% endif %}
+
+                        </p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+
         </div>
     </div>
+
+
 
 {% endblock %}

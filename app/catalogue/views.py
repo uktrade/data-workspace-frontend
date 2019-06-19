@@ -13,7 +13,7 @@ from catalogue.models import (
     DataSet,
 )
 
-inline_edit = False
+inline_edit = True
 
 logger = logging.getLogger(__name__)
 

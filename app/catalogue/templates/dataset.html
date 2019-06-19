@@ -64,7 +64,7 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <div class="govuk-!-margin-right-5">
+            <div class="">
                 <h1 class="govuk-heading-l">{{ model.name }}</h1>
                 {% if model.description %}
                     <p class="govuk-body">
@@ -72,7 +72,7 @@
                     </p>
                 {% endif %}
 
-                <h3 class="govuk-heading-s">Contact</h3>
+                <h3 class="govuk-heading-l">Contact</h3>
                 <p class="govuk-body">
                     {{ model.enquiries_contact.name }}
                     {% if model.enquiries_contact.email %}
@@ -86,30 +86,10 @@
         </div>
 
         <div class="govuk-grid-column-one-third">
-            <div class="govuk-!-margin-2 catalogue__container-gray">
+            <div class="">
                 <table class="govuk-table">
                     <tbody class="govuk-table__body">
-                    <tr class="govuk-table__row">
-                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Published
-                        </th>
-                        <td class="govuk-table__cell catalogue-table__cell-no-border">
-                            {{ model.created_date| date:"d/m/Y"  }}</td>
-                    </tr>
-                    <tr class="govuk-table__row">
-                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Updated
-                        </th>
-                        <td class="govuk-table__cell catalogue-table__cell-no-border">
-                            {{ model.modified_date| date:"d/m/Y"  }}</td>
-                    </tr>
-                    <tr class="govuk-table__row">
-                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Part of
-                        </th>
-                        <td class="govuk-table__cell catalogue-table__cell-no-border">
-                            <a class="govuk-link" href="{% url 'datagroup_item' model.grouping.slug %}">
-                                {{ model.grouping.name }}
-                            </a>
-                        </td>
-                    </tr>
+
 
                     </tbody>
                 </table>
@@ -121,7 +101,7 @@
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
-            <h2 class="govuk-heading-m govuk-!-margin-top-8">Data Links</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
             <table class="govuk-table">
                 <thead>
                 <tr class="govuk-table__row">
@@ -140,7 +120,7 @@
                                    href="{% url 'admin:catalogue_datalink_change' link.id %}">[Edit]</a>
                             {% endif %}
                             <a class="govuk-link" href="{{ link.url }}" target="_blank">
-                                {{ link.name }} - {{ link.url }}
+                                {{ link.name }}
                             </a>
                         </td>
                         <td class="govuk-table__cell">
@@ -177,9 +157,30 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-m govuk-!-margin-top-8">Additional Information</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
             <table class="govuk-table">
                 <tbody>
+                <tr class="govuk-table__row">
+                    <td class="govuk-table__cell">Published
+                    </td>
+                    <td class="govuk-table__cell">
+                        {{ model.created_date| date:"d/m/Y"  }}</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <td class="govuk-table__cell">Updated
+                    </td>
+                    <td class="govuk-table__cell">
+                        {{ model.modified_date| date:"d/m/Y"  }}</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <td class="govuk-table__cell">Part of
+                    </td>
+                    <td class="govuk-table__cell">
+                        <a class="govuk-link" href="{% url 'datagroup_item' model.grouping.slug %}">
+                            {{ model.grouping.name }}
+                        </a>
+                    </td>
+                </tr>
                 <tr>
                     <td class="govuk-table__cell">Redaction Note</td>
                     <td class="govuk-table__cell">{{ model.redactions | linebreaksbr }}</td>
