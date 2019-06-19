@@ -1,3 +1,7 @@
-.container-gray {
+.catalogue__container-gray {
     background-color: #eee;
+}
+
+.catalogue-table__cell-no-border {
+    border: none;
 }

@@ -5,7 +5,7 @@
 {% block head %}
     {{ block.super }}
 
-     <link rel="stylesheet" type="text/css" href="{% static "/catalogue/data-catalogue.css" %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static "/catalogue/data-catalogue.css" %}"/>
 
     <style>
         .messages {
@@ -38,6 +38,13 @@
             <li class="govuk-breadcrumbs__list-item">
                 {{ model.name }}
             </li>
+            {% if perms.catalogue_dataset.change and inline_edit %}
+                <li class="govuk-breadcrumbs__list-item">
+                    <a target="_blank" href="{% url 'admin:catalogue_dataset_change' model.id %}"
+                       class="govuk-breadcrumbs__link">[Edit]</a>
+                </li>
+
+            {% endif %}
         </ol>
     </div>
 {% endblock %}
@@ -79,20 +86,25 @@
         </div>
 
         <div class="govuk-grid-column-one-third">
-            <div class="govuk-!-padding-2 container-gray" >
+            <div class="govuk-!-margin-2 catalogue__container-gray">
                 <table class="govuk-table">
                     <tbody class="govuk-table__body">
                     <tr class="govuk-table__row">
-                        <th class="govuk-table__cell">Published</th>
-                        <td class="govuk-table__cell">{{ model.created_date| date:"d/m/Y"  }}</td>
+                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Published
+                        </th>
+                        <td class="govuk-table__cell catalogue-table__cell-no-border">
+                            {{ model.created_date| date:"d/m/Y"  }}</td>
                     </tr>
                     <tr class="govuk-table__row">
-                        <th class="govuk-table__cell">Updated</th>
-                        <td class="govuk-table__cell">{{ model.modified_date| date:"d/m/Y"  }}</td>
+                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Updated
+                        </th>
+                        <td class="govuk-table__cell catalogue-table__cell-no-border">
+                            {{ model.modified_date| date:"d/m/Y"  }}</td>
                     </tr>
                     <tr class="govuk-table__row">
-                        <th class="govuk-table__cell">Part of</th>
-                        <td class="govuk-table__cell">
+                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Part of
+                        </th>
+                        <td class="govuk-table__cell catalogue-table__cell-no-border">
                             <a class="govuk-link" href="{% url 'datagroup_item' model.grouping.slug %}">
                                 {{ model.grouping.name }}
                             </a>
@@ -123,6 +135,10 @@
                 {% for link in links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
+                            {% if perms.catalogue_datalink.change and inline_edit %}
+                                <a target="_blank" class="govuk-link"
+                                   href="{% url 'admin:catalogue_datalink_change' link.id %}">[Edit]</a>
+                            {% endif %}
                             <a class="govuk-link" href="{{ link.url }}" target="_blank">
                                 {{ link.name }} - {{ link.url }}
                             </a>
@@ -135,17 +151,24 @@
                         </td>
                         <td class="govuk-table__cell">
                             {{ link.frequency }}
+
                         </td>
                     </tr>
                     {% empty %}
-                    <td colspan="4">
-                        <p>
+                    <tr class="govuk-table__row">
+                        <td colspan="4" class="govuk-table__cell">
                             No data available right now
-                        </p>
-
-                    </td>
+                        </td>
+                    </tr>
                 {% endfor %}
-
+                {% if perms.catalogue_datalink.add and inline_edit %}
+                    <tr>
+                        <td class="govuk-table__cell" colspan="4">
+                            <a target="_blank" class="govuk-link"
+                               href="{% url 'admin:catalogue_datalink_add' %}">[New]</a>
+                        </td>
+                    </tr>
+                {% endif %}
 
                 </tbody>
             </table>
@@ -157,10 +180,6 @@
             <h2 class="govuk-heading-m govuk-!-margin-top-8">Additional Information</h2>
             <table class="govuk-table">
                 <tbody>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Dataset Reference</td>
-                    <td class="govuk-table__cell">{{ model.reference }}</td>
-                </tr>
                 <tr>
                     <td class="govuk-table__cell">Redaction Note</td>
                     <td class="govuk-table__cell">{{ model.redactions | linebreaksbr }}</td>

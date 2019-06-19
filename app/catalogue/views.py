@@ -1,9 +1,5 @@
 import logging
 
-from django.http import (
-    HttpResponse,
-)
-
 from django.views.decorators.http import (
     require_GET,
 )
@@ -17,6 +13,8 @@ from catalogue.models import (
     DataSet,
 )
 
+inline_edit = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +24,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
     found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)[0]
 
     context = {
+        'inline_edit': inline_edit,
         'model': found,
         'links': found.datalink_set.all().order_by('name')
     }
@@ -63,6 +62,7 @@ def datagroup_item_view(request, slug):
     item = get_object_or_404(DataGrouping, slug=slug)
 
     context = {
+        'inline_edit': inline_edit,
         'model': item,
         'datasets': item.dataset_set.all().order_by('name')
     }
@@ -75,6 +75,7 @@ def dataset_item_view(request, dataset_id):
     item = get_object_or_404(DataSet, pk=dataset_id)
 
     context = {
+        'inline_edit': inline_edit,
         'model': item
     }
 

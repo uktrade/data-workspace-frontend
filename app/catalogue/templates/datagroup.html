@@ -33,6 +33,14 @@
             <li class="govuk-breadcrumbs__list-item">
                 {{ model.name }}
             </li>
+            {% if inline_edit and perms.catalogue_datagrouping_change %}
+                <li class="govuk-breadcrumbs__list-item">
+                    <a target="_blank" class="govuk-breadcrumbs__link"
+                       href="{% url 'admin:catalogue_datagrouping_change' model.id %}">[Edit]</a>
+                </li>
+
+            {% endif %}
+
         </ol>
     </div>
 {% endblock %}
@@ -94,26 +102,26 @@
             </div>
         </div>
         <div class="govuk-grid-column-one-third">
-            <div class="govuk-!-padding-left-2 container-gray">
+            <div class="govuk-!-margin-left-2 catalogue__container-gray">
                 <table class="govuk-table">
                     <tbody class="govuk-table__body">
                     <tr class="govuk-table__row">
-                        <th class="govuk-table__cell">Published date</th>
-                        <td class="govuk-table__cell">{{ model.created_date| date:"d/m/Y" }}</td>
+                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Published
+                            date
+                        </th>
+                        <td class="govuk-table__cell catalogue-table__cell-no-border">
+                            {{ model.created_date| date:"d/m/Y" }}</td>
                     </tr>
                     <tr class="govuk-table__row">
-                        <th class="govuk-table__cell">Updated date</th>
-                        <td class="govuk-table__cell">{{ model.modified_date| date:"d/m/Y"  }}</td>
+                        <th class="govuk-table__cell govuk-!-padding-left-2 catalogue-table__cell-no-border">Updated
+                            date
+                        </th>
+                        <td class="govuk-table__cell catalogue-table__cell-no-border">
+                            {{ model.modified_date| date:"d/m/Y"  }}</td>
                     </tr>
                     </tbody>
                 </table>
 
-
-{#                <p class="govuk-body">#}
-{#                    <strong>Shared with</strong>#}
-{#                    <br/>#}
-{#                    {{ model.audience | linebreaksbr }}#}
-{#                </p>#}
             </div>
 
         </div>
@@ -125,6 +133,11 @@
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
+                    {% if inline_edit and perms.catalogue_dataset_change %}
+                        <a target="_blank" class="govuk-link"
+                           href="{% url 'admin:catalogue_dataset_change' set.id %}">[Edit]</a>
+                    {% endif %}
+
                 </h2>
                 <p class="govuk-body">{{ set.short_description }}</p>
                 {% empty %}
@@ -132,6 +145,12 @@
                     No data sets available
                 </h2>
             {% endfor %}
+            {% if inline_edit and perms.catalogue_dataset_add %}
+                <p>
+                    <a target="_blank" class="govuk-link"
+                       href="{% url 'admin:catalogue_dataset_add' %}">[New]</a>
+                </p>
+            {% endif %}
 
         </div>
     </div>
