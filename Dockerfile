@@ -28,7 +28,6 @@ RUN \
 		psycogreen==1.0.1 \
 		django==2.1.2 \
 		django-db-geventpool==3.1.0 \
-		-e git+https://github.com/lgarvey/django-govuk-forms.git@master#egg=govuk_forms \
 		django-redis==4.10.0 \
 		requests==2.21.0 && \
 	rm /etc/nginx/conf.d/default.conf && \
