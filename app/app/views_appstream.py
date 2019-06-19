@@ -60,21 +60,12 @@ def appstream_admin_view(request):
     if request.method == 'POST':
         form = AppstreamAdminForm(request.POST)
 
-        if 'submit' in request.POST:
-            if form.is_valid():
-                new_min_capacity = int(form.cleaned_data['new_min_capacity'])
-                new_max_capacity = int(form.cleaned_data['new_max_capacity'])
-                print(new_min_capacity, new_max_capacity)
-                scale_fleet(new_min_capacity, new_max_capacity)
-                messages.success(request, 'New scaling values submitted')
-
-                return redirect('appstream_admin')
-
-        elif 'restart' in request.POST:
-            print('Retarting cluster')
-            messages.success(request, 'Restarting fleet')
-
-            gevent.spawn(restart_fleet)
+        if form.is_valid():
+            new_min_capacity = int(form.cleaned_data['new_min_capacity'])
+            new_max_capacity = int(form.cleaned_data['new_max_capacity'])
+            print(new_min_capacity, new_max_capacity)
+            scale_fleet(new_min_capacity, new_max_capacity)
+            messages.success(request, 'New scaling values submitted')
 
             return redirect('appstream_admin')
     else:

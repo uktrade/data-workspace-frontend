@@ -6,17 +6,19 @@ from app.appstream import (
 
 
 class AppstreamAdminForm(forms.Form):
-    min_capacity, max_capacity = get_fleet_scale()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        new_min_capacity, new_max_capacity = get_fleet_scale()
+        self.fields['new_min_capacity'].initial = new_min_capacity
+        self.fields['new_max_capacity'].initial = new_max_capacity
 
     new_min_capacity = forms.CharField(
         label='Minimum desired instances',
         max_length=2,
-        widget=forms.TextInput(attrs={'class': 'govuk-input govuk-input--width-3'}),
-        initial=min_capacity
+        widget=forms.TextInput(attrs={'class': 'govuk-input govuk-input--width-3'})
     )
     new_max_capacity = forms.CharField(
         label='Maximum desired instances',
         max_length=2,
         widget=forms.TextInput(attrs={'class': 'govuk-input govuk-input--width-3'}),
-        initial=max_capacity
     )
