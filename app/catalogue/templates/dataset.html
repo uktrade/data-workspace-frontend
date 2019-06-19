@@ -200,7 +200,10 @@
                     <td class="govuk-table__cell">Personal Data</td>
                     <td class="govuk-table__cell">{{ model.personal_data | default:""}}</td>
                 </tr>
-
+                <tr class="govuk-table__row">
+                    <td class="govuk-table__cell">Restrictions on usage</td>
+                    <td class="govuk-table__cell">{{ model.restrictions_on_usage | linebreaksbr }}</td>
+                </tr>
                 </tbody>
             </table>
         </div>

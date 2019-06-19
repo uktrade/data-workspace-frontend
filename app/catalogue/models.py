@@ -64,7 +64,6 @@ class DataSet(models.Model):
     enquiries_contact = models.ForeignKey(
         ResponsiblePerson, on_delete=models.PROTECT)
 
-    reference = models.CharField(null=False, blank=False, max_length=128)
     redactions = models.TextField(null=True, blank=True)
     licence = models.CharField(null=True, blank=True, max_length=256)
 
@@ -72,6 +71,8 @@ class DataSet(models.Model):
 
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
+
+    restrictions_on_usage = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'
