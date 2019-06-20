@@ -83,6 +83,7 @@ class Privilage(models.Model):
 
 
 class ApplicationTemplate(models.Model):
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -126,6 +127,7 @@ class ApplicationTemplate(models.Model):
 
 
 class ApplicationInstance(models.Model):
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
