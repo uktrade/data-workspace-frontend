@@ -1,4 +1,4 @@
-# Analysis Workspace [![CircleCI](https://circleci.com/gh/uktrade/analysis-workspace.svg?style=svg)](https://circleci.com/gh/uktrade/analysis-workspace)
+# Data Workspace [![CircleCI](https://circleci.com/gh/uktrade/data-workspace.svg?style=svg)](https://circleci.com/gh/uktrade/data-workspace)
 
 Allows users to launch applications in order to analyse data
 
