@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.contrib import admin
 
@@ -16,21 +18,31 @@ from django.contrib.contenttypes.models import (
     ContentType,
 )
 
-from app.models import (
+from .models import (
     ApplicationInstance,
     Privilage,
+    DataGrouping,
+    DataSet,
+    SourceLink,
+    SourceTables,
+    ResponsiblePerson,
 )
 
+logger = logging.getLogger('app')
 
 admin.site.site_header = 'Data Workspace'
 admin.site.register(Privilage)
 
+admin.site.register(DataGrouping)
+admin.site.register(DataSet)
+admin.site.register(SourceLink)
+admin.site.register(ResponsiblePerson)
+
 
 class AppUserCreationForm(forms.ModelForm):
-
     class Meta:
         model = User
-        fields = ('email', )
+        fields = ('email',)
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -42,7 +54,6 @@ class AppUserCreationForm(forms.ModelForm):
 
 
 class AppUserEditForm(forms.ModelForm):
-
     can_start_all_applications = forms.BooleanField(
         label='Can access tools',
         help_text='Designates that the user can access tools',
@@ -68,8 +79,8 @@ class AppUserAdmin(UserAdmin):
     add_form = AppUserCreationForm
     add_fieldsets = (
         (None, {
-            'classes': ('wide', ),
-            'fields': ('email', ),
+            'classes': ('wide',),
+            'fields': ('email',),
         }),
     )
 
@@ -95,10 +106,12 @@ class AppUserAdmin(UserAdmin):
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        if form.cleaned_data['can_start_all_applications']:
-            obj.user_permissions.add(permission)
-        else:
-            obj.user_permissions.remove(permission)
+
+        if 'can_start_all_applications' in form.cleaned_data:
+            if form.cleaned_data['can_start_all_applications']:
+                obj.user_permissions.add(permission)
+            else:
+                obj.user_permissions.remove(permission)
 
         super().save_model(request, obj, form, change)
 
