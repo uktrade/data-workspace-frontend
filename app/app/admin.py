@@ -30,8 +30,11 @@ from .models import (
 logger = logging.getLogger('app')
 
 admin.site.site_header = 'Data Workspace'
-admin.site.register(Privilage)
 
+admin.site.unregister(Group)
+admin.site.unregister(User)
+
+admin.site.register(Privilage)
 admin.site.register(DataGrouping)
 admin.site.register(DataSet)
 admin.site.register(SourceLink)
@@ -118,6 +121,4 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
-admin.site.unregister(Group)
-admin.site.unregister(User)
 admin.site.register(User, AppUserAdmin)
