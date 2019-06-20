@@ -1,5 +1,5 @@
-import time
 import boto3
+import gevent
 
 from django.conf import (
     settings,
@@ -95,7 +95,7 @@ def restart_fleet():
 
     while check_fleet_running() != 'STOPPED':
         print('Still running')
-        time.sleep(15)
+        gevent.sleep(15)
 
     print('Fleet stopped')
     print('Starting fleet')
@@ -103,6 +103,6 @@ def restart_fleet():
 
     while check_fleet_running() != 'RUNNING':
         print('Still starting')
-        time.sleep(15)
+        gevent.sleep(15)
 
     print('Fleet running')

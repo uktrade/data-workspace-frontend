@@ -15,10 +15,10 @@ class AppstreamAdminForm(forms.Form):
     new_min_capacity = forms.CharField(
         label='Minimum desired instances',
         max_length=2,
-        widget=forms.TextInput(attrs={'class': 'govuk-input govuk-input--width-3'})
+        widget=forms.TextInput(attrs={'class': 'govuk-input govuk-input--width-3', 'type': 'number'})
     )
     new_max_capacity = forms.CharField(
         label='Maximum desired instances',
         max_length=2,
-        widget=forms.TextInput(attrs={'class': 'govuk-input govuk-input--width-3'}),
+        widget=forms.TextInput(attrs={'class': 'govuk-input govuk-input--width-3', 'type': 'number'}),
     )
