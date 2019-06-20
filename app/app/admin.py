@@ -24,17 +24,20 @@ from .models import (
     DataGrouping,
     DataSet,
     SourceLink,
+    SourceSchema,
+    SourceTables,
     ResponsiblePerson,
 )
 
 logger = logging.getLogger('app')
 
 admin.site.site_header = 'Data Workspace'
-admin.site.register(Privilage)
 
+admin.site.unregister(Group)
+admin.site.unregister(User)
+
+admin.site.register(Privilage)
 admin.site.register(DataGrouping)
-admin.site.register(DataSet)
-admin.site.register(SourceLink)
 admin.site.register(ResponsiblePerson)
 
 
@@ -118,6 +121,25 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
-admin.site.unregister(Group)
-admin.site.unregister(User)
+class SourceLinkInline(admin.TabularInline):
+    model = SourceLink
+
+
+class SourceSchemaInline(admin.TabularInline):
+    model = SourceSchema
+
+
+class SourceTablesInline(admin.TabularInline):
+    model = SourceTables
+
+
+class DataSetAdmin(admin.ModelAdmin):
+    inlines = [
+        SourceLinkInline,
+        SourceSchemaInline,
+        SourceTablesInline,
+    ]
+
+
 admin.site.register(User, AppUserAdmin)
+admin.site.register(DataSet, DataSetAdmin)
