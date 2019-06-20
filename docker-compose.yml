@@ -13,8 +13,8 @@ services:
       - "data-workspace-redis"
   data-workspace-postgres:
     build:
-      context: .
-      dockerfile: Dockerfile-postgres
+      context: postgres
+      dockerfile: Dockerfile
     image: data-workspace-postgres
     ports:
       - "5432:5432"
