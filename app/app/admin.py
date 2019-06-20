@@ -40,12 +40,12 @@ admin.site.register(Privilage)
 
 
 class DataGroupingAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
+    prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'slug', 'short_description')
 
 
 class DataSetAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
+    prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'slug', 'short_description', 'grouping')
 
 
