@@ -1,5 +1,6 @@
 import logging
 
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.http import (
     require_GET,
 )
@@ -8,14 +9,28 @@ from django.shortcuts import (
     get_object_or_404,
 )
 
+from .forms import (
+    ContactForm
+)
+
 from catalogue.models import (
     DataGrouping,
     DataSet,
 )
 
-inline_edit = True
-
 logger = logging.getLogger(__name__)
+
+
+def contact_view(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            return render(request, 'contact_thankyou.html', {'form': form})
+
+    else:
+        form = ContactForm()
+
+    return render(request, 'contact.html', {'form': form})
 
 
 @require_GET
@@ -24,7 +39,6 @@ def dataset_full_path_view(request, group_slug, set_slug):
     found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)[0]
 
     context = {
-        'inline_edit': inline_edit,
         'model': found,
         'links': found.datalink_set.all().order_by('name')
     }
@@ -62,7 +76,6 @@ def datagroup_item_view(request, slug):
     item = get_object_or_404(DataGrouping, slug=slug)
 
     context = {
-        'inline_edit': inline_edit,
         'model': item,
         'datasets': item.dataset_set.all().order_by('name')
     }
@@ -75,7 +88,6 @@ def dataset_item_view(request, dataset_id):
     item = get_object_or_404(DataSet, pk=dataset_id)
 
     context = {
-        'inline_edit': inline_edit,
         'model': item
     }
 

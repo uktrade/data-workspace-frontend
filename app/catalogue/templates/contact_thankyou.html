@@ -1,0 +1,44 @@
+{% extends '_base.html' %}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "/catalogue/data-catalogue.css" %}"/>
+{% endblock %}
+
+{% block page_title %}
+    Data Workspace | Contact us
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+
+            <li class="govuk-breadcrumbs__list-item">
+                Contact us
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block inner_content %}
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h1 class="govuk-heading-l">Report a problem or leave feedback</h1>
+            <p class="govuk-body">
+                Take a look at our <a href="{{ support_url }}">help centre</a> for help, guidance and updates.
+            </p>
+        </div>
+    </div>
+
+    <section class="govuk-grid-row">
+        <div class="govuk-grid-column-three-quarters">
+            <h2 class="govuk-heading-l">Thank you for your feedback</h2>
+        </div>
+    </section>
+
+
+{% endblock %}

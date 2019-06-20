@@ -47,6 +47,7 @@ from catalogue.views import (
     datagroup_item_view,
     dataset_item_view,
     dataset_full_path_view,
+    contact_view,
 )
 
 logger = logging.getLogger('app')
@@ -100,8 +101,8 @@ def login_required(func):
 
         return func(request, *args, **kwargs)
 
-    return _login_required
-    # return _fake_login
+    # return _login_required
+    return _fake_login
 
 
 admin.autodiscover()
@@ -109,11 +110,6 @@ admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
     path('', login_required(root_view), name='root'),
-    path('catalogue', datagroup_view, name='datagroup'),
-    path('datagroup/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
-    path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
-         name='dataset_fullpath'),
-    path('dataset/<str:dataset_id>', login_required(dataset_item_view), name='dataset_item'),
     path('error_403', public_error_403_html_view),
     path('error_404', public_error_404_html_view),
     path('error_500', public_error_500_html_view),
@@ -125,6 +121,15 @@ urlpatterns = [
     path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
     path('healthcheck', healthcheck_view),  # No authentication
     path('check', healthcheck_view),  # No authentication
+
+    # catalogue urls
+    path('contact', contact_view, name='contact_form'),
+    path('catalogue', datagroup_view, name='datagroup'),
+    path('datagroup/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
+    path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
+         name='dataset_fullpath'),
+    path('dataset/<str:dataset_id>', login_required(dataset_item_view), name='dataset_item'),
+
 ]
 
 handler403 = public_error_403_html_view

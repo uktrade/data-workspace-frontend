@@ -1,0 +1,100 @@
+{% extends '_base.html' %}
+{% load static %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "/catalogue/data-catalogue.css" %}"/>
+{% endblock %}
+
+{% block page_title %}
+    Data Workspace | Contact us
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+
+            <li class="govuk-breadcrumbs__list-item">
+                Contact us
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block inner_content %}
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h1 class="govuk-heading-l">Report a problem or leave feedback</h1>
+            <p class="govuk-body">
+                Take a look at our <a href="{{ support_url }}">help centre</a> for help, guidance and updates.
+            </p>
+        </div>
+    </div>
+
+    <section class="govuk-grid-row">
+        <div class="govuk-grid-column-three-quarters">
+            <form method="post">
+                {% csrf_token %}
+                <fieldset class="govuk-fieldset">
+                    <div class="govuk-form-group">
+
+                        <label class="govuk-label">A summary of your feedback or problem<sup>*</sup></label>
+                        <input class="govuk-input" type="text" maxlength="255" name="summary" autocomplete="off"
+                               autocapitalize="off" required />
+                    </div>
+                </fieldset>
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">Please select an option</legend>
+                    <div class="govuk-form-group">
+                        <div class="govuk-radios">
+                            <div class="govuk-radios__item">
+                                <input type="radio" class="govuk-radios__input" id="input-no-access" name="issue_type"
+                                       value="No Access"/>
+                                <label class="govuk-label govuk-radios__label" for="input-no-access">
+                                    I don't have access
+                                </label>
+                            </div>
+                            <div class="govuk-radios__item">
+                                <input type="radio" class="govuk-radios__input" id="input-another-problem"
+                                       name="issue_type" value="Another Problem"/>
+                                <label class="govuk-label govuk-radios__label" for="input-another-problem">I have
+                                    another
+                                    problem</label>
+                            </div>
+                            <div class="govuk-radios__item">
+                                <input type="radio" class="govuk-radios__input" id="input-feedback" name="issue_type"
+                                       value="Feedback"/>
+                                <label class="govuk-label govuk-radios__label" for="input-feedback">I have some
+                                    feedback</label>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset class="govuk-fieldset">
+                    <div class="govuk-form-group">
+                        <label class="govuk-label govuk-label--m">Description</label>
+                        <label class="govuk-hint" id="problem-hint" for="more-detail">
+                            If you were having a problem, explain what you did, what happened and what you expected to
+                            happen. If you want to provide feedback or a suggestion, describe it here.
+                        </label>
+                        <textarea class="govuk-textarea" id="more-detail" name="more-detail" rows="5"
+                                  aria-describedby="problem-hint"></textarea>
+                    </div>
+                    <div class="govuk-form-group">
+                        <label class="govuk-label" for="email">Contact email<sup>*</sup></label>
+                        <input class="govuk-input" name="email" id="email" type="email" autocapitalize="off"
+                               autocomplete="email" required value="{{ user.email }}" />
+                    </div>
+
+                    <div class="govuk-form-group">
+                        <button type="submit" class="govuk-button">Send</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </section>
+
+{% endblock %}

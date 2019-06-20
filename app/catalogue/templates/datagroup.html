@@ -1,26 +1,12 @@
 {% extends '_base.html' %}
 {% load static %}
 
-
 {% block head %}
     <link rel="stylesheet" type="text/css" href="{% static "/catalogue/data-catalogue.css" %}"/>
-    {{ block.super }}
+{% endblock %}
 
-    <style>
-        .messages {
-            margin: 1em 0;
-            padding: 1em 1em;
-            color: #fff;
-            background: #28a197;
-            font-weight: bold;
-            font-size: 24px;
-        }
-
-        td {
-            vertical-align: top;
-        }
-
-    </style>
+{% block page_title %}
+    Data Workspace | {{ model.name }}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -38,25 +24,13 @@
                     <a target="_blank" class="govuk-breadcrumbs__link"
                        href="{% url 'admin:catalogue_datagrouping_change' model.id %}">[Edit]</a>
                 </li>
-
             {% endif %}
 
         </ol>
     </div>
 {% endblock %}
 
-{% block page_title %}
-    Data Workspace | {{ model.name }}
-{% endblock %}
-
 {% block inner_content %}
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
@@ -64,24 +38,18 @@
         </div>
     </div>
 
+
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <div>
-                {% if model.description %}
-                    <p class="govuk-body">
-                        {{ model.description | linebreaksbr }}
-                    </p>
-                {% endif %}
-            </div>
+            <p class="govuk-body">
+                {{ model.description | linebreaksbr }}
+            </p>
         </div>
-
     </div>
 
-
-
-    <div class="govuk-grid-row">
+    <div class="govuk-grid-row govuk-!-margin-top-8">
         <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l govuk-!-margin-top-4">Available Data Sets</h2>
+            <h2 class="govuk-heading-l">Available Data Sets</h2>
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
@@ -89,7 +57,6 @@
                         <a target="_blank" class="govuk-link"
                            href="{% url 'admin:catalogue_dataset_change' set.id %}">[Edit]</a>
                     {% endif %}
-
                 </h2>
                 <p class="govuk-body">{{ set.short_description }}</p>
                 {% empty %}
@@ -103,9 +70,13 @@
                        href="{% url 'admin:catalogue_dataset_add' %}">[New]</a>
                 </p>
             {% endif %}
+        </div>
+    </div>
 
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
 
+    <div class="govuk-grid-row govuk-!-margin-top-8">
+        <div class="govuk-grid-column-two-thirds">
+            <h2 class="govuk-heading-l">Additional Information</h2>
             <table class="govuk-table">
                 <tbody class="govuk-table__body">
                 <tr class="govuk-table__row">
@@ -156,11 +127,7 @@
                 </tr>
                 </tbody>
             </table>
-
-
         </div>
     </div>
-
-
 
 {% endblock %}

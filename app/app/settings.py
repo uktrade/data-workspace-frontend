@@ -174,3 +174,7 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # tests don't have to worry about fixtures / editing the database
 APPLICATION_TEMPLATES = env['APPLICATION_TEMPLATES']
 APPLICATION_ROOT_DOMAIN = env['APPLICATION_ROOT_DOMAIN']
+
+DISPLAY_INLINE_EDIT_LINKS = False
+if 'DISPLAY_INLINE_EDIT_LINKS' in env:
+    DISPLAY_INLINE_EDIT_LINKS = True
