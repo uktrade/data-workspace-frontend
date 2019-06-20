@@ -60,7 +60,7 @@ docker push quay.io/uktrade/jupyterhub-data-auth-admin:latest
 ## Healthcheck
 
 ```bash
-docker build -t data-workspace-healthcheck . -f Dockerfile-healthcheck && \
+docker build -t data-workspace-healthcheck healthcheck && \
 docker tag data-workspace-healthcheck:latest quay.io/uktrade/data-workspace-healthcheck:latest && \
 docker push quay.io/uktrade/data-workspace-healthcheck:latest
 ```
