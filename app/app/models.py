@@ -239,8 +239,6 @@ class DataGrouping(models.Model):
 
     slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
 
-    audience = models.TextField(null=True, blank=True)
-
     def __str__(self):
         return f'{self.name}'
 

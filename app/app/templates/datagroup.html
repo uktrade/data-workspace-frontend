@@ -73,7 +73,7 @@
     <div class="govuk-grid-row govuk-!-margin-top-8">
         <div class="govuk-grid-column-two-thirds">
             <h2 class="govuk-heading-l">Additional Information</h2>
-            <table class="govuk-table">
+            <table class="govuk-table catalogue-table">
                 <tbody class="govuk-table__body">
                 <tr class="govuk-table__row">
                     <th class="govuk-table__cell">Published
@@ -94,15 +94,7 @@
                         <p class="govuk-body">
                             <strong>Information Asset Manager</strong>
                         </p>
-                        <p class="govuk-body">
-                            {{ model.information_asset_manager.first_name }} {{ model.information_asset_manager.last_name }}
-                            {% if model.information_asset_manager.email %}
-                                <br>
-                                <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email }}</a>
-                            {% else %}
-                                <br>
-                            {% endif %}
-                        </p>
+                        {% include 'partials/contact.html' with model=model.information_asset_manager only %}
                     </td>
 
                 </tr>
@@ -111,13 +103,7 @@
                         <p class="govuk-body">
                             <strong>Information Asset Owner</strong>
                         </p>
-                        <p class="govuk-body">
-                            {{ model.information_asset_owner.first_name }} {{ model.information_asset_owner.last_name }}
-                            {% if model.information_asset_owner.email %}
-                                <br>
-                                <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email }}</a>
-                            {% endif %}
-                        </p>
+                        {% include 'partials/contact.html' with model=model.information_asset_owner only %}
                     </td>
                 </tr>
                 </tbody>

@@ -24,7 +24,6 @@ from .models import (
     DataGrouping,
     DataSet,
     SourceLink,
-    ResponsiblePerson,
 )
 
 logger = logging.getLogger('app')
@@ -32,10 +31,24 @@ logger = logging.getLogger('app')
 admin.site.site_header = 'Data Workspace'
 admin.site.register(Privilage)
 
-admin.site.register(DataGrouping)
-admin.site.register(DataSet)
-admin.site.register(SourceLink)
-admin.site.register(ResponsiblePerson)
+
+class DataGroupingAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("name",)}
+    list_display = ('name', 'slug', 'short_description')
+
+
+class DataSetAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("name",)}
+    list_display = ('name', 'slug', 'short_description', 'grouping')
+
+
+class DataLinkAdmin(admin.ModelAdmin):
+    list_display = ('name', 'format', 'url', 'dataset')
+
+
+admin.site.register(DataGrouping, DataGroupingAdmin)
+admin.site.register(DataSet, DataSetAdmin)
+admin.site.register(SourceLink, DataLinkAdmin)
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -79,7 +92,7 @@ class AppUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email',),
+            'fields': ('email', 'first_name', 'last_name'),
         }),
     )
 
@@ -93,7 +106,7 @@ class AppUserAdmin(UserAdmin):
             'fields': ['can_start_all_applications', 'is_staff', 'is_superuser']}),
     ]
 
-    readonly_fields = ['sso_id', 'first_name', 'last_name']
+    readonly_fields = ['sso_id']
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

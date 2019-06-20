@@ -41,15 +41,8 @@
             </p>
 
             <h3 class="govuk-heading-l">Contact</h3>
-            <p class="govuk-body">
-                {{ model.enquiries_contact.name }}
-                {% if model.enquiries_contact.email %}
-                    <br/>
-                    <a class="govuk-link" href="mailto://{{ model.enquiries_contact.email }}">
-                        {{ model.enquiries_contact.email }}
-                    </a>
-                {% endif %}
-            </p>
+            {% include 'partials/contact.html' with model=model.enquiries_contact only %}
+
         </div>
 
         <div class="govuk-grid-column-one-third">
@@ -61,7 +54,7 @@
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
-            <table class="govuk-table">
+            <table class="govuk-table catalogue-table">
                 <thead>
                 <tr class="govuk-table__row">
                     <th class="govuk-table__header">Link to the data</th>
@@ -117,7 +110,7 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
-            <table class="govuk-table">
+            <table class="govuk-table catalogue-table">
                 <tbody>
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">Published
