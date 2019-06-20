@@ -37,14 +37,18 @@ from app.spawner import (
     spawner,
 )
 
+from app.views_catalogue import (
+    get_all_datagroups_viewmodel,
+)
+
 logger = logging.getLogger('app')
 
 
 def root_view(request):
     return \
         root_view_GET(request) if request.method == 'GET' else \
-        root_view_POST(request) if request.method == 'POST' else \
-        HttpResponse(status=405)
+            root_view_POST(request) if request.method == 'POST' else \
+                HttpResponse(status=405)
 
 
 def root_view_GET(request):
@@ -57,7 +61,7 @@ def root_view_GET(request):
                 pg_tables
             WHERE
                 schemaname = %s
-        """, (schema, ))
+        """, (schema,))
         results = [result[0] for result in cur.fetchall()]
         logger.info('tables_in_schema: %s %s', schema, results)
         return results
@@ -107,7 +111,7 @@ def root_view_GET(request):
             for database, database_privilages in privilages_by_database
         ])),
         'appstream_url': settings.APPSTREAM_URL,
-        'support_url': settings.SUPPORT_URL,
+        'groupings': get_all_datagroups_viewmodel()
     }
     return render(request, 'root.html', context)
 

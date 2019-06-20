@@ -1,0 +1,128 @@
+{% extends '_base.html' %}
+{% load static %}
+
+{% block page_title %}
+    Data Workspace | {{ model.name }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+
+            <li class="govuk-breadcrumbs__list-item">
+                {{ model.name }}
+            </li>
+            {% if inline_edit and perms.app_datagrouping_change %}
+                <li class="govuk-breadcrumbs__list-item">
+                    <a target="_blank" class="govuk-breadcrumbs__link"
+                       href="{% url 'admin:app_datagrouping_change' model.id %}">[Edit]</a>
+                </li>
+            {% endif %}
+
+        </ol>
+    </div>
+{% endblock %}
+
+{% block inner_content %}
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h1 class="govuk-heading-l">{{ model.name }}</h1>
+        </div>
+    </div>
+
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <p class="govuk-body">
+                {{ model.description | linebreaksbr }}
+            </p>
+        </div>
+    </div>
+
+    <div class="govuk-grid-row govuk-!-margin-top-8">
+        <div class="govuk-grid-column-two-thirds">
+            <h2 class="govuk-heading-l">Available Data Sets</h2>
+            {% for set in datasets %}
+                <h2 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
+                    {% if inline_edit and perms.app_dataset_change %}
+                        <a target="_blank" class="govuk-link"
+                           href="{% url 'admin:app_dataset_change' set.id %}">[Edit]</a>
+                    {% endif %}
+                </h2>
+                <p class="govuk-body">{{ set.short_description }}</p>
+                {% empty %}
+                <h2 class="govuk-heading-s">
+                    No data sets available
+                </h2>
+            {% endfor %}
+            {% if inline_edit and perms.app_dataset_add %}
+                <p>
+                    <a target="_blank" class="govuk-link"
+                       href="{% url 'admin:app_dataset_add' %}">[New]</a>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <div class="govuk-grid-row govuk-!-margin-top-8">
+        <div class="govuk-grid-column-two-thirds">
+            <h2 class="govuk-heading-l">Additional Information</h2>
+            <table class="govuk-table">
+                <tbody class="govuk-table__body">
+                <tr class="govuk-table__row">
+                    <th class="govuk-table__cell">Published
+                        date
+                    </th>
+                    <td class="govuk-table__cell">
+                        {{ model.created_date| date:"d/m/Y" }}</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <th class="govuk-table__cell">Updated
+                        date
+                    </th>
+                    <td class="govuk-table__cell">
+                        {{ model.modified_date| date:"d/m/Y"  }}</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <td colspan="2" class="govuk-table__cell">
+                        <p class="govuk-body">
+                            <strong>Information Asset Manager</strong>
+                        </p>
+                        <p class="govuk-body">
+                            {{ model.information_asset_manager.first_name }} {{ model.information_asset_manager.last_name }}
+                            {% if model.information_asset_manager.email %}
+                                <br>
+                                <a href="mailto://{{ model.information_asset_manager.email }}">{{ model.information_asset_manager.email }}</a>
+                            {% else %}
+                                <br>
+                            {% endif %}
+                        </p>
+                    </td>
+
+                </tr>
+                <tr>
+                    <td colspan="2" class="govuk-table__cell">
+                        <p class="govuk-body">
+                            <strong>Information Asset Owner</strong>
+                        </p>
+                        <p class="govuk-body">
+                            {{ model.information_asset_owner.first_name }} {{ model.information_asset_owner.last_name }}
+                            {% if model.information_asset_owner.email %}
+                                <br>
+                                <a href="mailto://{{ model.information_asset_owner.email }}">{{ model.information_asset_owner.email }}</a>
+                            {% endif %}
+                        </p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}

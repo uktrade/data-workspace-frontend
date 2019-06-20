@@ -18,7 +18,7 @@ def aws_fargate_private_ip():
 
 ALLOWED_HOSTS = \
     (env['ALLOWED_HOSTS']) if DEBUG else \
-    (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
+        (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'app.apps.JupyterHubDataAuthAdminAppConfig',
 ]
 

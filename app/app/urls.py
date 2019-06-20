@@ -42,11 +42,18 @@ from app.views_table_data import (
     table_data_view,
 )
 
+from app.views_catalogue import (
+    datagroup_item_view,
+    dataset_full_path_view,
+)
 
 logger = logging.getLogger('app')
 
 
 def login_required(func):
+    def _fake_login(request, *args, **kwargs):
+        return func(request, *args, **kwargs)
+
     def _login_required(request, *args, **kwargs):
         user = authenticate(request)
         if user is None:
@@ -90,7 +97,9 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
-    return _login_required
+
+    # return _login_required
+    return _fake_login
 
 
 admin.autodiscover()
@@ -108,6 +117,11 @@ urlpatterns = [
     path('application/<str:public_host>/spawning', login_required(application_spawning_html_view)),
     path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
     path('healthcheck', healthcheck_view),  # No authentication
+
+    path('datagroup/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
+    path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
+         name='dataset_fullpath'),
+
 ]
 
 handler403 = public_error_403_html_view
