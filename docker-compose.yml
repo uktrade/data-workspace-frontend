@@ -1,27 +1,27 @@
 version: "3"
 services:
-  analysis-workspace:
+  data-workspace:
     build:
       context: .
       dockerfile: Dockerfile
-    image: analysis-workspace
+    image: data-workspace
     ports:
       - "8000:8000"
     env_file: .env
     links:
-      - "analysis-workspace-postgres"
-      - "analysis-workspace-redis"
-  analysis-workspace-postgres:
+      - "data-workspace-postgres"
+      - "data-workspace-redis"
+  data-workspace-postgres:
     build:
       context: .
       dockerfile: Dockerfile-postgres
-    image: analysis-workspace-postgres
+    image: data-workspace-postgres
     ports:
       - "5432:5432"
-  analysis-workspace-redis:
+  data-workspace-redis:
     build:
       context: .
       dockerfile: Dockerfile-redis
-    image: analysis-workspace-redis
+    image: data-workspace-redis
     ports:
       - "6379:6379"
