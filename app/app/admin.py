@@ -24,6 +24,8 @@ from .models import (
     DataGrouping,
     DataSet,
     SourceLink,
+    SourceSchema,
+    SourceTables,
     ResponsiblePerson,
 )
 
@@ -123,9 +125,19 @@ class SourceLinkInline(admin.TabularInline):
     model = SourceLink
 
 
+class SourceSchemaInline(admin.TabularInline):
+    model = SourceSchema
+
+
+class SourceTablesInline(admin.TabularInline):
+    model = SourceTables
+
+
 class DataSetAdmin(admin.ModelAdmin):
     inlines = [
         SourceLinkInline,
+        SourceSchemaInline,
+        SourceTablesInline,
     ]
 
 
