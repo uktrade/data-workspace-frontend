@@ -36,8 +36,6 @@ admin.site.unregister(User)
 
 admin.site.register(Privilage)
 admin.site.register(DataGrouping)
-admin.site.register(DataSet)
-admin.site.register(SourceLink)
 admin.site.register(ResponsiblePerson)
 
 
@@ -121,4 +119,15 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
+class SourceLinkInline(admin.TabularInline):
+    model = SourceLink
+
+
+class DataSetAdmin(admin.ModelAdmin):
+    inlines = [
+        SourceLinkInline,
+    ]
+
+
 admin.site.register(User, AppUserAdmin)
+admin.site.register(DataSet, DataSetAdmin)
