@@ -20,9 +20,9 @@
             <li class="govuk-breadcrumbs__list-item">
                 {{ model.name }}
             </li>
-            {% if perms.app_dataset.change and inline_edit %}
+            {% if perms.app_dataset.change %}
                 <li class="govuk-breadcrumbs__list-item">
-                    <a target="_blank" href="{% url 'admin:app_dataset_change' model.id %}"
+                    <a href="{% url 'admin:app_dataset_change' model.id %}"
                        class="govuk-breadcrumbs__link">[Edit]</a>
                 </li>
 
@@ -67,11 +67,11 @@
                 {% for link in links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if perms.app_sourcelink.change and inline_edit %}
-                                <a target="_blank" class="govuk-link"
+                            {% if perms.app_sourcelink.change %}
+                                <a class="govuk-link"
                                    href="{% url 'admin:app_sourcelink_change' link.id %}">[Edit]</a>
                             {% endif %}
-                            <a class="govuk-link" href="{{ link.url }}" target="_blank">
+                            <a class="govuk-link" href="{{ link.url }}">
                                 {{ link.name }}
                             </a>
                         </td>
@@ -92,10 +92,10 @@
                         </td>
                     </tr>
                 {% endfor %}
-                {% if perms.app_sourcelink.add and inline_edit %}
+                {% if perms.app_sourcelink.add %}
                     <tr>
                         <td class="govuk-table__cell" colspan="4">
-                            <a target="_blank" class="govuk-link"
+                            <a class="govuk-link"
                                href="{% url 'admin:app_sourcelink_add' %}">[New]</a>
                         </td>
                     </tr>
@@ -106,59 +106,65 @@
     </div>
 
 
-
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
-            <table class="govuk-table catalogue-table">
-                <tbody>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Published
-                    </td>
-                    <td class="govuk-table__cell">
-                        {{ model.created_date| date:"d/m/Y"  }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Updated
-                    </td>
-                    <td class="govuk-table__cell">
-                        {{ model.modified_date| date:"d/m/Y"  }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Part of
-                    </td>
-                    <td class="govuk-table__cell">
+
+            <dl class="govuk-summary-list">
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">
+                        Published Date
+                    </dt>
+                    <dd class="govuk-summary-list__value">
+                        {{ model.created_date| date:"d/m/Y" }}
+                    </dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">
+                        Updated Date
+                    </dt>
+                    <dd class="govuk-summary-list__value">
+                        {{ model.modified_date| date:"d/m/Y" }}
+                    </dd>
+                </div>
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">
+                        Part of
+                    </dt>
+                    <dd class="govuk-summary-list__value">
                         <a class="govuk-link" href="{% url 'datagroup_item' model.grouping.slug %}">
                             {{ model.grouping.name }}
                         </a>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="govuk-table__cell">Redaction Note</td>
-                    <td class="govuk-table__cell">{{ model.redactions | linebreaksbr }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Licence</td>
-                    <td class="govuk-table__cell">{{ model.licence|default:"" }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Volume</td>
-                    <td class="govuk-table__cell">{{ model.volume | intcomma }}</td>
-                </tr>
-                <tr>
-                    <td class="govuk-table__cell">Retention Policy</td>
-                    <td class="govuk-table__cell">{{ model.retention_policy | linebreaksbr }}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Personal Data</td>
-                    <td class="govuk-table__cell">{{ model.personal_data|default:''}}</td>
-                </tr>
-                <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">Restrictions on usage</td>
-                    <td class="govuk-table__cell">{{ model.restrictions_on_usage | linebreaksbr }}</td>
-                </tr>
-                </tbody>
-            </table>
+                    </dd>
+                </div>
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Redaction Note</dt>
+                    <dd class="govuk-summary-list__value">{{ model.redactions | linebreaksbr }}</dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Licence</dt>
+                    <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Volume</dt>
+                    <dd class="govuk-summary-list__value">{{ model.volume | intcomma }}</dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Retention Policy</dt>
+                    <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Personal Data</dt>
+                    <dd class="govuk-summary-list__value">{{ model.personal_data|default:''}}</dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Restrictions on usage</dt>
+                    <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
+                </div>
+
+            </dl>
         </div>
     </div>
 {% endblock %}
