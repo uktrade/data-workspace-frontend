@@ -12,9 +12,9 @@ RUN \
 	pip3 install \
 		aiohttp==3.5.4
 
-COPY healthcheck /healthcheck
+COPY healthcheck.py /
 
-CMD ["python3", "healthcheck/healthcheck.py"]
+CMD ["python3", "/healthcheck.py"]
 
 RUN adduser -S healthcheck
 USER healthcheck

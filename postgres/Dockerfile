@@ -1,5 +1,5 @@
 FROM postgres:10.4
 
-COPY postgres/entrypoint.sh .
+COPY /entrypoint.sh /
 
 ENTRYPOINT /entrypoint.sh
