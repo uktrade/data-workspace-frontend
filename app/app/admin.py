@@ -24,7 +24,6 @@ from .models import (
     DataGrouping,
     DataSet,
     SourceLink,
-    SourceTables,
     ResponsiblePerson,
 )
 
