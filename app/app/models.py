@@ -194,3 +194,92 @@ class ApplicationInstance(models.Model):
 
     def __str__(self):
         return f'{self.owner} / {self.public_host} / {self.state}'
+
+
+class DataSet(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    name = models.CharField(
+        blank=False,
+        null=False,
+        max_length=128,
+    )
+
+
+class SourceSchema(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    dataset = models.ForeignKey(
+        DataSet,
+        # We expect a single schema per DataSet, but do not use OneToOneField
+        # for explicit compatibility with other Source types
+        unique=True,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        blank=False,
+        null=False,
+        max_length=128,
+    )
+    schema = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        default='public'
+    )
+
+
+class SourceTables(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    dataset = models.ForeignKey(
+        DataSet,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        blank=False,
+        null=False,
+        max_length=128,
+    )
+    schema = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        default='public'
+    )
+    tables = models.CharField(
+        max_length=1024,
+        blank=False,
+        # ALL TABLES is for backwards compatibility
+        validators=[RegexValidator(regex=r'(([a-zA-Z][a-zA-Z0-9_\.]*,?)+(?<!,)$)|(^ALL TABLES$)')],
+        help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
+    )
+
+
+class SourceLink(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+    dataset = models.ForeignKey(
+        DataSet,
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        blank=False,
+        null=False,
+        max_length=128,
+    )
+    url = models.CharField(
+        max_length=256,
+    )
