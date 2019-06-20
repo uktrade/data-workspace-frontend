@@ -22,8 +22,8 @@ services:
       - "5432:5432"
   data-workspace-redis:
     build:
-      context: .
-      dockerfile: Dockerfile-redis
+      context: redis
+      dockerfile: Dockerfile
     image: data-workspace-redis
     ports:
       - "6379:6379"
