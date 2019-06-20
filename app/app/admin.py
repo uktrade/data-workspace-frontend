@@ -24,11 +24,18 @@ from .models import (
     DataGrouping,
     DataSet,
     SourceLink,
+    SourceSchema,
+    SourceTables,
+    ResponsiblePerson,
 )
 
 logger = logging.getLogger('app')
 
 admin.site.site_header = 'Data Workspace'
+
+admin.site.unregister(Group)
+admin.site.unregister(User)
+
 admin.site.register(Privilage)
 
 
@@ -92,7 +99,7 @@ class AppUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name'),
+            'fields': ('email',),
         }),
     )
 
@@ -106,7 +113,7 @@ class AppUserAdmin(UserAdmin):
             'fields': ['can_start_all_applications', 'is_staff', 'is_superuser']}),
     ]
 
-    readonly_fields = ['sso_id']
+    readonly_fields = ['sso_id', 'first_name', 'last_name']
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -131,6 +138,24 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
-admin.site.unregister(Group)
-admin.site.unregister(User)
+class SourceLinkInline(admin.TabularInline):
+    model = SourceLink
+
+
+class SourceSchemaInline(admin.TabularInline):
+    model = SourceSchema
+
+
+class SourceTablesInline(admin.TabularInline):
+    model = SourceTables
+
+
+class DataSetAdmin(admin.ModelAdmin):
+    inlines = [
+        SourceLinkInline,
+        SourceSchemaInline,
+        SourceTablesInline,
+    ]
+
+
 admin.site.register(User, AppUserAdmin)
