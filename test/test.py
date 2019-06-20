@@ -341,19 +341,19 @@ APP_ENV = {
     'AUTHBROKER_CLIENT_ID': 'some-id',
     'AUTHBROKER_CLIENT_SECRET': 'some-secret',
     'AUTHBROKER_URL': 'http://localhost:8005/',
-    'REDIS_URL': 'redis://analysis-workspace-redis:6379',
+    'REDIS_URL': 'redis://data-workspace-redis:6379',
     'SECRET_KEY': 'localhost',
     'ALLOWED_HOSTS__1': 'localapps.com',
     'ALLOWED_HOSTS__2': '.localapps.com',
     'ADMIN_DB__NAME': 'postgres',
     'ADMIN_DB__USER': 'postgres',
     'ADMIN_DB__PASSWORD': 'postgres',
-    'ADMIN_DB__HOST': 'analysis-workspace-postgres',
+    'ADMIN_DB__HOST': 'data-workspace-postgres',
     'ADMIN_DB__PORT': '5432',
     'DATA_DB__my_database__NAME': 'postgres',
     'DATA_DB__my_database__USER': 'postgres',
     'DATA_DB__my_database__PASSWORD': 'postgres',
-    'DATA_DB__my_database__HOST': 'analysis-workspace-postgres',
+    'DATA_DB__my_database__HOST': 'data-workspace-postgres',
     'DATA_DB__my_database__PORT': '5432',
     'APPSTREAM_URL': 'https://url.to.appstream',
     'SUPPORT_URL': 'https://url.to.support/',
@@ -451,7 +451,7 @@ async def flush_database():
 
 
 async def flush_redis():
-    redis_client = await aioredis.create_redis('redis://analysis-workspace-redis:6379')
+    redis_client = await aioredis.create_redis('redis://data-workspace-redis:6379')
     await redis_client.execute('FLUSHDB')
 
 

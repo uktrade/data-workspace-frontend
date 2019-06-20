@@ -33,7 +33,7 @@ docker-compose build && \
 docker-compose run \
     --user root \
     --volume=$PWD/app/app/migrations:/app/app/migrations \
-    analysis-workspace django-admin makemigrations
+    data-workspace django-admin makemigrations
 ```
 
 For other commands, replace `makemigrations` with the name of the command.
@@ -42,17 +42,17 @@ For other commands, replace `makemigrations` with the name of the command.
 ## Running tests
 
 ```bash
-docker-compose build analysis-workspace && \
+docker-compose build data-workspace && \
 docker-compose -f docker-compose-test.yml build && \
-docker-compose -f docker-compose-test.yml run analysis-workspace-test python3 -m unittest test.test
+docker-compose -f docker-compose-test.yml run data-workspace-test python3 -m unittest test.test
 ```
 
 
 # Building & pushing docker image to Quay.io
 
 ```bash
-docker build -t analysis-workspace . && \
-docker tag analysis-workspace:latest quay.io/uktrade/jupyterhub-data-auth-admin:latest && \
+docker build -t data-workspace . && \
+docker tag data-workspace:latest quay.io/uktrade/jupyterhub-data-auth-admin:latest && \
 docker push quay.io/uktrade/jupyterhub-data-auth-admin:latest
 ```
 
