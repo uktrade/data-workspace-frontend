@@ -278,6 +278,10 @@ class TestApplication(unittest.TestCase):
             '>Test Application</a>',
             content)
 
+        self.assertIn(
+            'http://testapplication-23b40dd9.localapps.com:8000/',
+            content)
+
     @async_test
     async def test_application_download(self):
         await flush_database()
