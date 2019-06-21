@@ -94,8 +94,8 @@ def appstream_restart(request):
             messages.success(request, 'Fleet is already in process of restarting')
 
         return redirect('appstream_admin')
-    else:
-        form = AppstreamAdminForm()
+
+    form = AppstreamAdminForm()
 
     context = {
         'fleet_status': fleet_status,

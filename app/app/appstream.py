@@ -13,7 +13,7 @@ def connect_aws_client(aws_service):
         aws_secret_access_key=settings.APPSTREAM_AWS_SECRET_KEY,
         region_name=settings.APPSTREAM_AWS_REGION
     )
-    return (client)
+    return client
 
 
 def get_fleet_status():
@@ -22,7 +22,7 @@ def get_fleet_status():
     fleet_status = client.describe_fleets(
         Names=[settings.APPSTREAM_FLEET_NAME, ]
     )
-    return (fleet_status)
+    return fleet_status
 
 
 def get_app_sessions():
@@ -33,7 +33,7 @@ def get_app_sessions():
         FleetName=settings.APPSTREAM_FLEET_NAME
     )
 
-    return (app_sessions)
+    return app_sessions
 
 
 def scale_fleet(min_capacity, max_capacity):
@@ -60,15 +60,14 @@ def get_fleet_scale():
     )
 
     return(scale_response[
-        'ScalableTargets'][0]['MinCapacity'],
-        scale_response['ScalableTargets'][0]['MaxCapacity'])
+        'ScalableTargets'][0]['MinCapacity'], scale_response['ScalableTargets'][0]['MaxCapacity'])
 
 
 def check_fleet_running():
     fleet_status = get_fleet_status()
     print(fleet_status['Fleets'][0]['State'])
 
-    return(fleet_status['Fleets'][0]['State'])
+    return fleet_status['Fleets'][0]['State']
 
 
 def stop_fleet():
