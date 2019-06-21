@@ -10,53 +10,78 @@
 {% endblock %}
 
 {% block inner_content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-l">Data</h1>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">Data at DIT</h1>
+            <p class="govuk-body">
+                The Department for International Trade’s Data Catalogue shows collections of the different data sets
+                that the department generates, uses, publishes and holds - the purpose of this is to increase
+                availability and visibility of data within the department. A dataset can take many forms (tables,
+                spreadsheets, database reports) but is essentially a structured set of data.
+            </p>
+            <p class="govuk-body">
+                Some of the data will be available to download, other data sets will require that you request
+                access.
+            </p>
 
-        {% if database_schema_tables %}
-            <ul class="govuk-list">
-            {% for database_schema_table in database_schema_tables %}
-                <li><a class="govuk-link" href="{% url 'table_data' database_schema_table.0 database_schema_table.1  database_schema_table.2 %}">{{ database_schema_table.0 }} / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
+            {% for grouping in groupings %}
+                <h3 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'datagroup_item' grouping.slug %}">{{ grouping.name }}</a>
+                </h3>
+                <p class="govuk-body">{{ grouping.short_description }}</p>
             {% endfor %}
-            </ul>
-        {% else %}
-            <p class="govuk-body">No data is available.</p>
-        {% endif %}
-    </div>
 
-    {% if perms.app.start_all_applications %}
-    <div class="govuk-grid-column-one-third">
-        <h1 class="govuk-heading-l">Tools</h1>
-
-        <dl class="govuk-summary-list govuk-summary-list">
-            {% for application in applications %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    <a class="govuk-link" href="{{ application.link }}" style="font-weight: normal;">{{ application.nice_name }}</a>
-                </dt>
-                <dd class="govuk-summary-list__actions">
-                     {% if application.instance and application.can_stop %}
-                    <form method="POST" style="display: inline">
-                        {% csrf_token %}
-                        <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 btn-stop" name="application_instance_id" value="{{ application.instance.id }}" type="submit">Stop</button>
-                    <form>
-                    {% endif %}
-                </dd>
-            </div>
-            {% endfor %}
-            {% if appstream_url != "https:///" %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    <a class="govuk-link" href="{{ appstream_url }}" style="font-weight: normal;">SPSS / STATA</a>
-                </dt>
-                <dd class="govuk-summary-list__actions">
-                </dd>
-            </div>
+            <h1 class="govuk-heading-l">Data</h1>
+            {% if database_schema_tables %}
+                <ul class="govuk-list">
+                    {% for database_schema_table in database_schema_tables %}
+                        <li><a class="govuk-link"
+                               href="{% url 'table_data' database_schema_table.0 database_schema_table.1 database_schema_table.2 %}">{{ database_schema_table.0 }}
+                            / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="govuk-body">No data is available.</p>
             {% endif %}
-        </dl>
-    </div>
-    {% endif %}
-</div>
+        </div>
 
+        <div class="govuk-grid-column-one-third">
+            {% if perms.app.start_all_applications %}
+                <h1 class="govuk-heading-l">Tools</h1>
+
+                <dl class="govuk-summary-list govuk-summary-list">
+                    {% for application in applications %}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                <a class="govuk-link" href="{{ application.link }}"
+                                   style="font-weight: normal;">{{ application.nice_name }}</a>
+                            </dt>
+                            <dd class="govuk-summary-list__actions">
+                                {% if application.instance and application.can_stop %}
+                                    <form method="POST" style="display: inline">
+                                        {% csrf_token %}
+                                        <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 btn-stop"
+                                                name="application_instance_id" value="{{ application.instance.id }}"
+                                                type="submit">Stop
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </dd>
+                        </div>
+                    {% endfor %}
+                    {% if appstream_url != "https:///" %}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                <a class="govuk-link" href="{{ appstream_url }}" style="font-weight: normal;">SPSS /
+                                    STATA</a>
+                            </dt>
+                            <dd class="govuk-summary-list__actions">
+                            </dd>
+                        </div>
+                    {% endif %}
+                </dl>
+            {% endif %}
+        </div>
+
+    </div>
 {% endblock %}
