@@ -2,6 +2,20 @@
 
 {% block page_title %}{{ application_nice_name }} - {{ block.super }}{% endblock %}
 
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="{{ root_href }}">Home</a>
+            </li>
+
+            <li class="govuk-breadcrumbs__list-item">
+                {{ application_nice_name }}
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
 {% block head %}
     {{ block.super }}
     <style>
