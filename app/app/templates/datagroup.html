@@ -29,23 +29,13 @@
 {% block inner_content %}
 
     <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-            <h1 class="govuk-heading-l">{{ model.name }}</h1>
-        </div>
-    </div>
-
-
-    <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">{{ model.name }}</h1>
             <p class="govuk-body">
                 {{ model.description | linebreaksbr }}
             </p>
-        </div>
-    </div>
 
-    <div class="govuk-grid-row govuk-!-margin-top-8">
-        <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l">Available Data Sets</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Available Data Sets</h2>
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
@@ -66,12 +56,8 @@
                        href="{% url 'admin:app_dataset_add' %}">[New]</a>
                 </p>
             {% endif %}
-        </div>
-    </div>
 
-    <div class="govuk-grid-row govuk-!-margin-top-8">
-        <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l">Additional Information</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
 
             <dl class="govuk-summary-list">
                 <div class="govuk-summary-list__row">
