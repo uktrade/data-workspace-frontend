@@ -83,13 +83,14 @@
                             {{ link.frequency }}
                         </td>
                     </tr>
-                    {% empty %}
+                {% endfor %}
+                {% if not links %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available
                         </td>
                     </tr>
-                {% endfor %}
+                {% endif %}
                 {% if perms.app_sourcelink.add %}
                     <tr>
                         <td class="govuk-table__cell" colspan="4">
