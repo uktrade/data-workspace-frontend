@@ -1,7 +1,10 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import (
+    User,
+    Permission,
+)
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.signals import post_save
@@ -256,6 +259,7 @@ class DataSet(models.Model):
         null=False,
         max_length=128,
     )
+    required_permissions = models.ManyToManyField(Permission)
     slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
 
     short_description = models.CharField(
@@ -287,6 +291,11 @@ class DataSet(models.Model):
 
     def __str__(self):
         return f'{self.name}'
+
+    class Meta:
+        permissions = [
+            ('security_clearance', 'Security clearance'),
+        ]
 
 
 class SourceSchema(models.Model):
