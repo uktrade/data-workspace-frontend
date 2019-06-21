@@ -300,10 +300,10 @@ class SourceSchema(models.Model):
         unique=True,
         on_delete=models.CASCADE,
     )
-    name = models.CharField(
-        blank=False,
-        null=False,
-        max_length=128,
+    database = models.ForeignKey(
+        Database,
+        default=None,
+        on_delete=models.CASCADE,
     )
     schema = models.CharField(
         max_length=1024,
@@ -323,10 +323,10 @@ class SourceTables(models.Model):
         DataSet,
         on_delete=models.CASCADE,
     )
-    name = models.CharField(
-        blank=False,
-        null=False,
-        max_length=128,
+    database = models.ForeignKey(
+        Database,
+        default=None,
+        on_delete=models.CASCADE,
     )
     schema = models.CharField(
         max_length=1024,
