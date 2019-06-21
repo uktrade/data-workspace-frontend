@@ -121,16 +121,19 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
-class SourceLinkInline(admin.TabularInline):
+class SourceLinkInline(admin.StackedInline):
     model = SourceLink
+    extra = 1
 
 
-class SourceSchemaInline(admin.TabularInline):
+class SourceSchemaInline(admin.StackedInline):
     model = SourceSchema
+    max_num = 1
 
 
-class SourceTablesInline(admin.TabularInline):
+class SourceTablesInline(admin.StackedInline):
     model = SourceTables
+    extra = 1
 
 
 class DataSetAdmin(admin.ModelAdmin):
