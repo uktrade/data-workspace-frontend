@@ -44,7 +44,7 @@ admin.site.register(ResponsiblePerson)
 class AppUserCreationForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('email',)
+        fields = ('email', 'first_name', 'last_name')
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -82,7 +82,7 @@ class AppUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email',),
+            'fields': ('email', 'first_name', 'last_name', ),
         }),
     )
 
@@ -96,7 +96,7 @@ class AppUserAdmin(UserAdmin):
             'fields': ['can_start_all_applications', 'is_staff', 'is_superuser']}),
     ]
 
-    readonly_fields = ['sso_id', 'first_name', 'last_name']
+    readonly_fields = ['sso_id']
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
