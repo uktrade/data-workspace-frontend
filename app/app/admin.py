@@ -136,7 +136,30 @@ class SourceTablesInline(admin.StackedInline):
     extra = 1
 
 
+class DataSetForm(forms.ModelForm):
+    requires_security_clearance = forms.BooleanField(
+        label='Requires security clearance',
+        required=False,
+    )
+
+    class Meta:
+        model = DataSet
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        is_instance = 'instance' in kwargs and kwargs['instance']
+        self.fields['requires_security_clearance'].initial = \
+            kwargs['instance'].required_permissions.filter(
+                codename='security_clearance',
+                content_type=ContentType.objects.get_for_model(DataSet)).exists() if is_instance else \
+            False
+
+
 class DataSetAdmin(admin.ModelAdmin):
+    form = DataSetForm
+
     inlines = [
         SourceLinkInline,
         SourceSchemaInline,
@@ -147,7 +170,6 @@ class DataSetAdmin(admin.ModelAdmin):
         (None, {
             'fields': [
                 'name',
-                'required_permissions',
                 'slug',
                 'short_description',
                 'grouping',
@@ -161,7 +183,25 @@ class DataSetAdmin(admin.ModelAdmin):
                 'restrictions_on_usage',
             ]
         }),
+        ('Permissions', {
+            'fields': [
+                'requires_security_clearance',
+            ]
+        })
     ]
+
+    def save_model(self, request, obj, form, change):
+        permission = Permission.objects.get(
+            codename='security_clearance',
+            content_type=ContentType.objects.get_for_model(DataSet),
+        )
+
+        super().save_model(request, obj, form, change)
+
+        if form.cleaned_data['requires_security_clearance']:
+            obj.required_permissions.add(permission)
+        else:
+            obj.required_permissions.remove(permission)
 
 
 admin.site.register(User, AppUserAdmin)
