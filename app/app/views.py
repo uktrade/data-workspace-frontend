@@ -2,13 +2,8 @@ import hashlib
 import itertools
 import logging
 
-import boto3
-
 from django.contrib import (
     messages,
-)
-from django.contrib.auth import (
-    get_user_model,
 )
 from django.conf import (
     settings,
@@ -129,41 +124,6 @@ def root_view_POST(request):
 
     messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
     return redirect('root')
-
-
-def appstream_view(request):
-    User = get_user_model()
-
-    client = boto3.client(
-        'appstream',
-        aws_access_key_id=settings.APPSTREAM_AWS_ACCESS_KEY,
-        aws_secret_access_key=settings.APPSTREAM_AWS_SECRET_KEY,
-        region_name=settings.APPSTREAM_AWS_REGION
-    )
-
-    fleet_status = client.describe_fleets(
-        Names=[settings.APPSTREAM_FLEET_NAME, ]
-    )
-
-    for item in fleet_status['Fleets']:
-        ComputeCapacityStatus = item['ComputeCapacityStatus']
-
-    app_sessions = client.describe_sessions(
-        StackName=settings.APPSTREAM_STACK_NAME,
-        FleetName=settings.APPSTREAM_FLEET_NAME
-    )
-
-    app_sessions_users = [
-        (app_session, User.objects.get(profile__sso_id=app_session['UserId']))
-        for app_session in app_sessions['Sessions']
-    ]
-
-    context = {
-        'fleet_status': ComputeCapacityStatus,
-        'app_sessions_users': app_sessions_users,
-    }
-
-    return render(request, 'appstream.html', context)
 
 
 def filter_api_visible_application_instances_by_owner(owner):
