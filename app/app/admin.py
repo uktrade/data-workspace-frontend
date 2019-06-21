@@ -143,6 +143,26 @@ class DataSetAdmin(admin.ModelAdmin):
         SourceTablesInline,
     ]
 
+    fieldsets = [
+        (None, {
+            'fields': [
+                'name',
+                'required_permissions',
+                'slug',
+                'short_description',
+                'grouping',
+                'description',
+                'enquiries_contact',
+                'redactions',
+                'licence',
+                'volume',
+                'retention_policy',
+                'personal_data',
+                'restrictions_on_usage',
+            ]
+        }),
+    ]
+
 
 admin.site.register(User, AppUserAdmin)
 admin.site.register(DataSet, DataSetAdmin)
