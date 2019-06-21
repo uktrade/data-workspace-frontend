@@ -1,9 +1,7 @@
 {% extends '_base.html' %}
 {% load static %}
 
-{% block page_title %}
-    Data Workspace | {{ model.name }}
-{% endblock %}
+{% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
