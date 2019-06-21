@@ -20,6 +20,7 @@ from psycopg2 import (
 
 from app.models import (
     Privilage,
+    SourceSchema,
 )
 
 logger = logging.getLogger('app')
@@ -128,7 +129,14 @@ def new_private_database_credentials(user):
 
 
 def can_access_table(privilages, database, schema, table):
-    return any(
+    # At the time of writing, anything in a SourceSchema is available to
+    # everyone who has access to the environment. To change in later versions
+    is_in_dataset = SourceSchema.objects.filter(
+        schema=schema,
+        database__memorable_name=database,
+    ).exists()
+
+    return is_in_dataset or any(
         True
         for privilage in privilages
         for privilage_table in privilage.tables.split(',')
