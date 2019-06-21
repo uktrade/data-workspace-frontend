@@ -61,6 +61,11 @@ class AppUserEditForm(forms.ModelForm):
         help_text='Designates that the user can access tools',
         required=False,
     )
+    has_security_clearance = forms.BooleanField(
+        label='Has security clearance',
+        help_text='Designates that the user can access data requiring security clearance',
+        required=False,
+    )
 
     class Meta:
         model = User
@@ -73,6 +78,11 @@ class AppUserEditForm(forms.ModelForm):
         self.fields['can_start_all_applications'].initial = instance.user_permissions.filter(
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+
+        self.fields['has_security_clearance'].initial = instance.user_permissions.filter(
+            codename='security_clearance',
+            content_type=ContentType.objects.get_for_model(DataSet),
         ).exists()
 
 
@@ -95,6 +105,7 @@ class AppUserAdmin(UserAdmin):
         ('Permissions', {
             'fields': [
                 'can_start_all_applications',
+                'has_security_clearance',
                 'is_staff',
                 'is_superuser',
             ]}
@@ -119,6 +130,17 @@ class AppUserAdmin(UserAdmin):
                 obj.user_permissions.add(can_start_all_applications_permission)
             else:
                 obj.user_permissions.remove(can_start_all_applications_permission)
+
+        has_security_clearance_permission = Permission.objects.get(
+            codename='security_clearance',
+            content_type=ContentType.objects.get_for_model(DataSet),
+        )
+
+        if 'has_security_clearance' in form.cleaned_data:
+            if form.cleaned_data['has_security_clearance']:
+                obj.user_permissions.add(has_security_clearance_permission)
+            else:
+                obj.user_permissions.remove(has_security_clearance_permission)
 
         super().save_model(request, obj, form, change)
 
