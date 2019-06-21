@@ -47,7 +47,6 @@ def datagroup_item_view(request, slug):
 
 @require_GET
 def dataset_full_path_view(request, group_slug, set_slug):
-    logger.info(f'looking for dataset {group_slug}/{set_slug}')
     found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)[0]
 
     context = {

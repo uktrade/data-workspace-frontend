@@ -195,16 +195,6 @@ class ApplicationInstance(models.Model):
         return f'{self.owner} / {self.public_host} / {self.state}'
 
 
-class ResponsiblePerson(models.Model):
-    email = models.EmailField(primary_key=True)
-    name = models.CharField(null=False, blank=False, max_length=128)
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f'{self.name} <{self.email}>'
-
-
 class DataGrouping(models.Model):
     id = models.UUIDField(
         primary_key=True,
