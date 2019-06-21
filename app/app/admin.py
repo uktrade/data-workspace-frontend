@@ -109,16 +109,16 @@ class AppUserAdmin(UserAdmin):
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
-        permission = Permission.objects.get(
+        can_start_all_applications_permission = Permission.objects.get(
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
 
         if 'can_start_all_applications' in form.cleaned_data:
             if form.cleaned_data['can_start_all_applications']:
-                obj.user_permissions.add(permission)
+                obj.user_permissions.add(can_start_all_applications_permission)
             else:
-                obj.user_permissions.remove(permission)
+                obj.user_permissions.remove(can_start_all_applications_permission)
 
         super().save_model(request, obj, form, change)
 
