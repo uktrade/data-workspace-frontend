@@ -102,6 +102,7 @@ def login_required(func):
         return func(request, *args, **kwargs)
     return _login_required
 
+
 admin.autodiscover()
 admin.site.login = login_required(admin.site.login)
 
