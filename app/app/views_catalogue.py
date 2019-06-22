@@ -1,5 +1,6 @@
 import logging
 
+from django.http import Http404
 from django.shortcuts import (
     render,
     get_object_or_404,
@@ -47,11 +48,16 @@ def datagroup_item_view(request, slug):
 
 @require_GET
 def dataset_full_path_view(request, group_slug, set_slug):
-    found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)[0]
+    found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)
+
+    if not found:
+        raise Http404
+
+    dataset = found[0]
 
     context = {
-        'model': found,
-        'links': found.sourcelink_set.all().order_by('name')
+        'model': dataset,
+        'links': dataset.sourcelink_set.all().order_by('name')
     }
 
     return render(request, 'dataset.html', context)
