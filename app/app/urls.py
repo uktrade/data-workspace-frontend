@@ -57,9 +57,6 @@ logger = logging.getLogger('app')
 
 
 def login_required(func):
-    def _fake_login(request, *args, **kwargs):
-        return func(request, *args, **kwargs)
-
     def _login_required(request, *args, **kwargs):
         user = authenticate(request)
         if user is None:
@@ -103,10 +100,7 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
-
     return _login_required
-    # return _fake_login
-
 
 admin.autodiscover()
 admin.site.login = login_required(admin.site.login)
