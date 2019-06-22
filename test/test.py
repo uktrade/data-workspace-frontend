@@ -77,6 +77,10 @@ class TestApplication(unittest.TestCase):
             'Test Application</a>',
             content)
 
+        self.assertIn(
+            'href="http://testapplication-23b40dd9.localapps.com:8000/"',
+            content)
+
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             application_content_1 = await response.text()
 
