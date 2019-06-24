@@ -26,7 +26,7 @@ RUN \
 		boto3==1.9.123 \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
-		django==2.1.2 \
+		django==2.2.2 \
 		django-db-geventpool==3.1.0 \
 		django-redis==4.10.0 \
 		requests==2.21.0 && \
