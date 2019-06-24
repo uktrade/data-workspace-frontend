@@ -26,7 +26,6 @@ from .models import (
     SourceLink,
     SourceSchema,
     SourceTables,
-    ResponsiblePerson,
 )
 
 logger = logging.getLogger('app')
@@ -37,8 +36,20 @@ admin.site.unregister(Group)
 admin.site.unregister(User)
 
 admin.site.register(Privilage)
-admin.site.register(DataGrouping)
-admin.site.register(ResponsiblePerson)
+
+
+class DataGroupingAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug': ('name',)}
+    list_display = ('name', 'slug', 'short_description')
+
+
+class DataLinkAdmin(admin.ModelAdmin):
+    list_display = ('name', 'format', 'url', 'dataset')
+
+
+admin.site.register(DataGrouping, DataGroupingAdmin)
+
+admin.site.register(SourceLink, DataLinkAdmin)
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -82,7 +93,7 @@ class AppUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name', ),
+            'fields': ('email', 'first_name', 'last_name',),
         }),
     )
 
@@ -137,6 +148,8 @@ class SourceTablesInline(admin.StackedInline):
 
 
 class DataSetAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug': ('name',)}
+    list_display = ('name', 'slug', 'short_description', 'grouping')
     inlines = [
         SourceLinkInline,
         SourceSchemaInline,

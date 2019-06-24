@@ -17,6 +17,7 @@ def async_test(func):
         future = func(*args, **kwargs)
         loop = asyncio.get_event_loop()
         loop.run_until_complete(future)
+
     return wrapper
 
 
@@ -73,7 +74,12 @@ class TestApplication(unittest.TestCase):
         # Ensure the user sees the link to the application
         self.assertEqual(200, response.status)
         self.assertIn(
-            '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/" style="font-weight: normal;">Test Application</a>', content)
+            'Test Application</a>',
+            content)
+
+        self.assertIn(
+            'href="http://testapplication-23b40dd9.localapps.com:8000/"',
+            content)
 
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             application_content_1 = await response.text()
@@ -109,6 +115,7 @@ class TestApplication(unittest.TestCase):
         async def sent_content():
             for _ in range(10000):
                 yield b'Some content'
+
         sent_headers = {
             'from-downstream': 'downstream-header-value',
         }
@@ -121,7 +128,7 @@ class TestApplication(unittest.TestCase):
         # Assert that we received the echo
         self.assertEqual(received_content['method'], 'PATCH')
         self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_content['content'], 'Some content'*10000)
+        self.assertEqual(received_content['content'], 'Some content' * 10000)
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
         # Assert that transfer-encoding does not become chunked unnecessarily
@@ -272,7 +279,12 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
 
         self.assertIn(
-            '<a class="govuk-link" href="http://testapplication-23b40dd9.localapps.com:8000/" style="font-weight: normal;">Test Application</a>', content)
+            '>Test Application</a>',
+            content)
+
+        self.assertIn(
+            'http://testapplication-23b40dd9.localapps.com:8000/',
+            content)
 
     @async_test
     async def test_application_download(self):
@@ -307,7 +319,8 @@ class TestApplication(unittest.TestCase):
 
         self.assertNotIn('auth_user', content)
 
-        async with session.request('GET', 'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
+        async with session.request('GET',
+                                   'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
             content = await response.text()
             status = response.status
 
@@ -324,11 +337,14 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('auth_user', content)
 
-        async with session.request('GET', 'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
+        async with session.request('GET',
+                                   'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
             content = await response.text()
 
         rows = list(csv.reader(io.StringIO(content)))
-        self.assertEqual(rows[0], ['id', 'password', 'last_login', 'is_superuser', 'username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active', 'date_joined'])
+        self.assertEqual(rows[0],
+                         ['id', 'password', 'last_login', 'is_superuser', 'username', 'first_name', 'last_name',
+                          'email', 'is_staff', 'is_active', 'date_joined'])
         self.assertEqual(rows[1][4], 'test@test.com')
         self.assertEqual(rows[2][0], 'Number of rows: 1')
 
@@ -373,6 +389,7 @@ def client_session():
     async def _cleanup_session():
         await session.close()
         await asyncio.sleep(0.25)
+
     return session, _cleanup_session
 
 
@@ -440,6 +457,7 @@ async def create_application():
             await asyncio.sleep(3)
         except ProcessLookupError:
             pass
+
     return _cleanup_application
 
 
