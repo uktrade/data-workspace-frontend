@@ -83,13 +83,32 @@
                             {{ link.frequency }}
                         </td>
                     </tr>
-                    {% empty %}
+                {% endfor %}
+                {% for database_schema_table in database_schema_tables %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <a
+                                class="govuk-link"
+                                href="{% url 'table_data' database_schema_table.0 database_schema_table.1 database_schema_table.2 %}">
+                                {{ database_schema_table.1 }} / {{ database_schema_table.2 }}
+                            </a>
+                        </td>
+                        <td class="govuk-table__cell">
+                            CSV
+                        </td>
+                        <td class="govuk-table__cell">
+                        </td>
+                        <td class="govuk-table__cell">
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% if not links and not database_schema_tables %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available
                         </td>
                     </tr>
-                {% endfor %}
+                {% endif %}
                 {% if perms.app_sourcelink.add %}
                     <tr>
                         <td class="govuk-table__cell" colspan="4">

@@ -1,5 +1,8 @@
 import logging
 
+from django.db import (
+    connections
+)
 from django.http import Http404
 from django.shortcuts import (
     render,
@@ -13,6 +16,9 @@ from django.views.decorators.http import (
 from app.models import (
     DataGrouping,
     DataSet,
+)
+from app.shared import (
+    tables_in_schema,
 )
 
 logger = logging.getLogger('app')
@@ -54,10 +60,24 @@ def dataset_full_path_view(request, group_slug, set_slug):
         raise Http404
 
     dataset = found[0]
+    schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
+
+    # Could be more efficient if we have multiple schemas in the same db
+    # but we only really expect the one schema anyway
+    def connect_and_tables_in_schema(schema):
+        with connections[schema.database.memorable_name].cursor() as cur:
+            return tables_in_schema(cur, schema.schema)
+
+    database_schema_tables = [
+        (schema.database.memorable_name, schema.schema, table)
+        for schema in schemas
+        for table in connect_and_tables_in_schema(schema)
+    ]
 
     context = {
         'model': dataset,
-        'links': dataset.sourcelink_set.all().order_by('name')
+        'links': dataset.sourcelink_set.all().order_by('name'),
+        'database_schema_tables': database_schema_tables,
     }
 
     return render(request, 'dataset.html', context)

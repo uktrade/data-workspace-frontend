@@ -27,6 +27,7 @@ from app.shared import (
     can_access_table,
     get_private_privilages,
     set_application_stopped,
+    tables_in_schema,
 )
 from app.spawner import (
     spawner,
@@ -47,20 +48,6 @@ def root_view(request):
 
 
 def root_view_GET(request):
-    def tables_in_schema(cur, schema):
-        logger.info('tables_in_schema: %s', schema)
-        cur.execute("""
-            SELECT
-                tablename
-            FROM
-                pg_tables
-            WHERE
-                schemaname = %s
-        """, (schema,))
-        results = [result[0] for result in cur.fetchall()]
-        logger.info('tables_in_schema: %s %s', schema, results)
-        return results
-
     def allowed_tables_for_database_that_exist(database, database_privilages):
         logger.info('allowed_tables_for_database_that_exist: %s %s', database, database_privilages)
         with connections[database.memorable_name].cursor() as cur:
