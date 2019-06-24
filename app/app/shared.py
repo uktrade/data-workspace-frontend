@@ -19,6 +19,7 @@ from psycopg2 import (
 )
 
 from app.models import (
+    DataSet,
     Privilage,
     SourceSchema,
 )
@@ -131,10 +132,14 @@ def new_private_database_credentials(user):
 def can_access_table(privilages, database, schema, table):
     # At the time of writing, anything in a SourceSchema is available to
     # everyone who has access to the environment. To change in later versions
-    is_in_dataset = SourceSchema.objects.filter(
+    sourceschema = SourceSchema.objects.filter(
         schema=schema,
         database__memorable_name=database,
-    ).exists()
+    )
+    dataset = DataSet.objects.filter(
+        sourceschema__in=sourceschema,
+    )
+    is_in_dataset = dataset.exists()
 
     return is_in_dataset or any(
         True
