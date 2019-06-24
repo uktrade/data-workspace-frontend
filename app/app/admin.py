@@ -148,7 +148,28 @@ class SourceTablesInline(admin.StackedInline):
     extra = 1
 
 
+class DataSetForm(forms.ModelForm):
+    requires_authorization = forms.BooleanField(
+        label='Each user must be individually authorized to access the data',
+        required=False,
+    )
+
+    class Meta:
+        model = DataSet
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        is_instance = 'instance' in kwargs and kwargs['instance']
+        self.fields['requires_authorization'].initial = \
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION' if is_instance else \
+            False
+
+
 class DataSetAdmin(admin.ModelAdmin):
+    form = DataSetForm
+
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'slug', 'short_description', 'grouping')
     inlines = [
@@ -171,10 +192,21 @@ class DataSetAdmin(admin.ModelAdmin):
                 'retention_policy',
                 'personal_data',
                 'restrictions_on_usage',
-                'user_access_type',
             ]
         }),
+        ('Permissions', {
+            'fields': [
+                'requires_authorization',
+            ]
+        })
     ]
+
+    def save_model(self, request, obj, form, change):
+        obj.user_access_type = \
+            'REQUIRES_AUTHORIZATION' if form.cleaned_data['requires_authorization'] else \
+            'REQUIRES_AUTHENTICATION'
+
+        super().save_model(request, obj, form, change)
 
 
 admin.site.register(User, AppUserAdmin)
