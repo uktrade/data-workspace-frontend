@@ -13,16 +13,19 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">Data at DIT</h1>
-            <p class="govuk-body">
-                The Department for International Trade’s Data Catalogue shows collections of the different data sets
-                that the department generates, uses, publishes and holds - the purpose of this is to increase
-                availability and visibility of data within the department. A dataset can take many forms (tables,
-                spreadsheets, database reports) but is essentially a structured set of data.
-            </p>
-            <p class="govuk-body">
-                Some of the data will be available to download, other data sets will require that you request
-                access.
-            </p>
+            {% if groupings %}
+
+                <p class="govuk-body">
+                    The Department for International Trade’s Data Catalogue shows collections of the different data sets
+                    that the department generates, uses, publishes and holds - the purpose of this is to increase
+                    availability and visibility of data within the department. A dataset can take many forms (tables,
+                    spreadsheets, database reports) but is essentially a structured set of data.
+                </p>
+                <p class="govuk-body">
+                    Some of the data will be available to download, other data sets will require that you request
+                    access.
+                </p>
+            {% endif %}
 
             {% for grouping in groupings %}
                 <h3 class="govuk-heading-m">
@@ -31,8 +34,8 @@
                 <p class="govuk-body">{{ grouping.short_description }}</p>
             {% endfor %}
 
-            <h1 class="govuk-heading-l">Data</h1>
             {% if database_schema_tables %}
+                <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
                 <ul class="govuk-list">
                     {% for database_schema_table in database_schema_tables %}
                         <li><a class="govuk-link"
@@ -40,9 +43,13 @@
                             / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
                     {% endfor %}
                 </ul>
-            {% else %}
+
+            {% endif %}
+
+            {% if not groupings and not data_schema_tables %}
                 <p class="govuk-body">No data is available.</p>
             {% endif %}
+
         </div>
 
         <div class="govuk-grid-column-one-third">
