@@ -55,7 +55,7 @@ def root_view_GET(request):
                 (database.memorable_name, privilage.schema, table)
                 for privilage in database_privilages
                 for table in tables_in_schema(cur, privilage.schema)
-                if can_access_table(database_privilages, database.memorable_name, privilage.schema, table)
+                if can_access_table(request.user, database_privilages, database.memorable_name, privilage.schema, table)
             ]
 
     privilages = get_private_privilages(request.user)

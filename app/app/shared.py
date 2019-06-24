@@ -129,7 +129,7 @@ def new_private_database_credentials(user):
     return creds
 
 
-def can_access_table(privilages, database, schema, table):
+def can_access_table(_, privilages, database, schema, table):
     # At the time of writing, anything in a SourceSchema is available to
     # everyone who has access to the environment. To change in later versions
     sourceschema = SourceSchema.objects.filter(
