@@ -130,6 +130,15 @@ def new_private_database_credentials(user):
 
 
 def can_access_table(_, privilages, database, schema, table):
+    return can_access_schema(database, schema) or any(
+        True
+        for privilage in privilages
+        for privilage_table in privilage.tables.split(',')
+        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
+    )
+
+
+def can_access_schema(database, schema):
     # At the time of writing, anything in a SourceSchema is available to
     # everyone who has access to the environment. To change in later versions
     sourceschema = SourceSchema.objects.filter(
@@ -139,14 +148,7 @@ def can_access_table(_, privilages, database, schema, table):
     dataset = DataSet.objects.filter(
         sourceschema__in=sourceschema,
     )
-    can_access = dataset.exists()
-
-    return can_access or any(
-        True
-        for privilage in privilages
-        for privilage_table in privilage.tables.split(',')
-        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
-    )
+    return dataset.exists()
 
 
 def set_application_stopped(application_instance):
