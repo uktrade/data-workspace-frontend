@@ -272,9 +272,31 @@ class DataSet(models.Model):
     personal_data = models.CharField(null=True, blank=True, max_length=128)
 
     restrictions_on_usage = models.TextField(null=True, blank=True)
+    user_access_type = models.CharField(
+        max_length=64,
+        choices=(
+            ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
+            ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
+        ),
+        default='REQUIRES_AUTHENTICATION',
+    )
 
     def __str__(self):
         return f'{self.name}'
+
+
+class DataSetUserPermission(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+    dataset = models.ForeignKey(
+        DataSet,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        unique_together = ('user', 'dataset')
 
 
 class SourceSchema(models.Model):

@@ -84,7 +84,7 @@
                         </td>
                     </tr>
                 {% endfor %}
-                {% for database, schema, table in database_schema_tables %}
+                {% for database, schema, table, access in database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
                             <a
@@ -102,7 +102,7 @@
                         </td>
                     </tr>
                 {% endfor %}
-                {% if not links and not database_schema_tables %}
+                {% if not links and not database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available

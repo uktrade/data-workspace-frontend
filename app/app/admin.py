@@ -23,6 +23,7 @@ from .models import (
     Privilage,
     DataGrouping,
     DataSet,
+    DataSetUserPermission,
     SourceLink,
     SourceSchema,
     SourceTables,
@@ -159,3 +160,4 @@ class DataSetAdmin(admin.ModelAdmin):
 
 admin.site.register(User, AppUserAdmin)
 admin.site.register(DataSet, DataSetAdmin)
+admin.site.register(DataSetUserPermission)
