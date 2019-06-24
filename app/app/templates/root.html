@@ -37,10 +37,10 @@
             {% if database_schema_tables %}
                 <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
                 <ul class="govuk-list">
-                    {% for database_schema_table in database_schema_tables %}
+                    {% for database, schema, table in database_schema_tables %}
                         <li><a class="govuk-link"
-                               href="{% url 'table_data' database_schema_table.0 database_schema_table.1 database_schema_table.2 %}">{{ database_schema_table.0 }}
-                            / {{ database_schema_table.1 }} / {{ database_schema_table.2 }}</a></li>
+                               href="{% url 'table_data' database schema table %}">{{ database }}
+                            / {{ schema }} / {{ table }}</a></li>
                     {% endfor %}
                 </ul>
 
