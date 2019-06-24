@@ -139,9 +139,9 @@ def can_access_table(_, privilages, database, schema, table):
     dataset = DataSet.objects.filter(
         sourceschema__in=sourceschema,
     )
-    is_in_dataset = dataset.exists()
+    can_access = dataset.exists()
 
-    return is_in_dataset or any(
+    return can_access or any(
         True
         for privilage in privilages
         for privilage_table in privilage.tables.split(',')
