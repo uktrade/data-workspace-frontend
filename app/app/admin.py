@@ -1,6 +1,10 @@
 import logging
 
 from django import forms
+
+from django.forms.widgets import (
+    CheckboxSelectMultiple,
+)
 from django.contrib import admin
 
 from django.contrib.auth.admin import (
@@ -73,6 +77,12 @@ class AppUserEditForm(forms.ModelForm):
         help_text='Designates that the user can access tools',
         required=False,
     )
+    authorized_datasets = forms.ModelMultipleChoiceField(
+        label='Authorized datasets',
+        required=False,
+        widget=CheckboxSelectMultiple,
+        queryset=None,
+    )
 
     class Meta:
         model = User
@@ -86,6 +96,11 @@ class AppUserEditForm(forms.ModelForm):
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
+
+        self.fields['authorized_datasets'].queryset = DataSet.objects.all().order_by('grouping__name', 'name', 'id')
+        self.fields['authorized_datasets'].initial = DataSet.objects.filter(
+            datasetuserpermission__user=instance,
+        )
 
 
 class AppUserAdmin(UserAdmin):
@@ -109,6 +124,7 @@ class AppUserAdmin(UserAdmin):
                 'can_start_all_applications',
                 'is_staff',
                 'is_superuser',
+                'authorized_datasets',
             ]}),
     ]
 
@@ -130,6 +146,23 @@ class AppUserAdmin(UserAdmin):
                 obj.user_permissions.add(permission)
             else:
                 obj.user_permissions.remove(permission)
+
+        if 'authorized_datasets' in form.cleaned_data:
+            current_datasets = DataSet.objects.filter(
+                datasetuserpermission__user=obj,
+            )
+            for dataset in form.cleaned_data['authorized_datasets']:
+                if dataset not in current_datasets.all():
+                    DataSetUserPermission.objects.create(
+                        dataset=dataset,
+                        user=obj,
+                    )
+            for dataset in current_datasets:
+                if dataset not in form.cleaned_data['authorized_datasets']:
+                    DataSetUserPermission.objects.filter(
+                        dataset=dataset,
+                        user=obj,
+                    ).delete()
 
         super().save_model(request, obj, form, change)
 
@@ -215,4 +248,3 @@ class DataSetAdmin(admin.ModelAdmin):
 
 admin.site.register(User, AppUserAdmin)
 admin.site.register(DataSet, DataSetAdmin)
-admin.site.register(DataSetUserPermission)

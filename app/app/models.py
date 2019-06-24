@@ -282,7 +282,7 @@ class DataSet(models.Model):
     )
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.grouping.name} - {self.name}'
 
 
 class DataSetUserPermission(models.Model):
