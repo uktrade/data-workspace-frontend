@@ -105,7 +105,11 @@ class AppUserAdmin(UserAdmin):
             'fields': ['email', 'sso_id', 'first_name', 'last_name']
         }),
         ('Permissions', {
-            'fields': ['can_start_all_applications', 'is_staff', 'is_superuser']}),
+            'fields': [
+                'can_start_all_applications',
+                'is_staff',
+                'is_superuser',
+            ]}),
     ]
 
     readonly_fields = ['sso_id']
