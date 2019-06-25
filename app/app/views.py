@@ -24,7 +24,7 @@ from app.models import (
     ApplicationTemplate,
 )
 from app.shared import (
-    can_access_table,
+    can_access_schema,
     get_private_privilages,
     set_application_stopped,
     tables_in_schema,
@@ -55,7 +55,7 @@ def root_view_GET(request):
                 (database.memorable_name, privilage.schema, table)
                 for privilage in database_privilages
                 for table in tables_in_schema(cur, privilage.schema)
-                if can_access_table(request.user, database_privilages, database.memorable_name, privilage.schema)
+                if can_access_schema(request.user, database_privilages, database.memorable_name, privilage.schema)
             ]
 
     privilages = get_private_privilages(request.user)

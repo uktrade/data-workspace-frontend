@@ -18,7 +18,7 @@ from app.models import (
     DataSet,
 )
 from app.shared import (
-    can_access_schema,
+    can_access_source_schema,
     tables_in_schema,
 )
 
@@ -64,7 +64,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
 
     can_access_schemas = {
-        (schema.database.memorable_name, schema.schema): can_access_schema(request.user, schema.database.memorable_name, schema.schema)
+        (schema.database.memorable_name, schema.schema): can_access_source_schema(request.user, schema.database.memorable_name, schema.schema)
         for schema in schemas
     }
 

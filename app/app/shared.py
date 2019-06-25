@@ -125,15 +125,15 @@ def new_private_database_credentials(user):
     return creds
 
 
-def can_access_table(user, privilages, database, schema):
-    return can_access_schema(user, database, schema) or any(
+def can_access_schema(user, privilages, database, schema):
+    return can_access_source_schema(user, database, schema) or any(
         True
         for privilage in privilages
         if privilage.database.memorable_name == database and privilage.schema == schema
     )
 
 
-def can_access_schema(user, database, schema):
+def can_access_source_schema(user, database, schema):
     sourceschema = SourceSchema.objects.filter(
         schema=schema,
         database__memorable_name=database,
