@@ -80,7 +80,7 @@ class Privilage(models.Model):
         unique_together = ('user', 'database', 'schema')
 
     def __str__(self):
-        return f'{self.user} / {self.database} / {self.schema} / {self.tables}'
+        return f'{self.user} / {self.database} / {self.schema}'
 
 
 class ApplicationTemplate(models.Model):

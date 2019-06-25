@@ -32,7 +32,7 @@ def table_data_view(request, database, schema, table):
                 request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
-        HttpResponseForbidden() if not can_access_table(request.user, get_private_privilages(request.user), database, schema, table) else \
+        HttpResponseForbidden() if not can_access_table(request.user, get_private_privilages(request.user), database, schema) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
         _table_data(request.user.email, database, schema, table)
 

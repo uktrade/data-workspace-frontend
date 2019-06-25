@@ -44,7 +44,7 @@ def get_private_privilages(user):
         database__is_public=False,
         user=user,
     ).order_by(
-        'database__memorable_name', 'schema', 'tables', 'id'
+        'database__memorable_name', 'schema', 'id'
     )
 
 
@@ -75,15 +75,8 @@ def new_private_database_credentials(user):
             for privilage in privilages_for_database:
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
                     sql.Identifier(privilage.schema), sql.Identifier(user)))
-                tables_sql_list = sql.SQL(',').join([
-                    sql.SQL('{}.{}').format(sql.Identifier(
-                        privilage.schema), sql.Identifier(table))
-                    for table in privilage.tables.split(',')
-                ])
                 tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)) if privilage.tables == 'ALL TABLES' else \
-                    sql.SQL('GRANT SELECT ON {} TO {};').format(
-                        tables_sql_list, sql.Identifier(user))
+                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user))
                 cur.execute(tables_sql)
 
         return {
@@ -132,12 +125,11 @@ def new_private_database_credentials(user):
     return creds
 
 
-def can_access_table(user, privilages, database, schema, table):
+def can_access_table(user, privilages, database, schema):
     return can_access_schema(user, database, schema) or any(
         True
         for privilage in privilages
-        for privilage_table in privilage.tables.split(',')
-        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
+        if privilage.database.memorable_name == database and privilage.schema == schema
     )
 
 
