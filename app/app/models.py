@@ -325,36 +325,6 @@ class SourceSchema(models.Model):
     )
 
 
-class SourceTables(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
-    dataset = models.ForeignKey(
-        DataSet,
-        on_delete=models.CASCADE,
-    )
-    database = models.ForeignKey(
-        Database,
-        default=None,
-        on_delete=models.CASCADE,
-    )
-    schema = models.CharField(
-        max_length=1024,
-        blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
-        default='public'
-    )
-    tables = models.CharField(
-        max_length=1024,
-        blank=False,
-        # ALL TABLES is for backwards compatibility
-        validators=[RegexValidator(regex=r'(([a-zA-Z][a-zA-Z0-9_\.]*,?)+(?<!,)$)|(^ALL TABLES$)')],
-        help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
-    )
-
-
 class SourceLink(models.Model):
     id = models.UUIDField(
         primary_key=True,
