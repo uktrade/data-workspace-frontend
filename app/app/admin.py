@@ -30,7 +30,6 @@ from .models import (
     DataSetUserPermission,
     SourceLink,
     SourceSchema,
-    SourceTables,
 )
 
 logger = logging.getLogger('app')
@@ -178,11 +177,6 @@ class SourceSchemaInline(admin.StackedInline):
     max_num = 1
 
 
-class SourceTablesInline(admin.StackedInline):
-    model = SourceTables
-    extra = 1
-
-
 class DataSetForm(forms.ModelForm):
     requires_authorization = forms.BooleanField(
         label='Each user must be individually authorized to access the data',
@@ -210,7 +204,6 @@ class DataSetAdmin(admin.ModelAdmin):
     inlines = [
         SourceLinkInline,
         SourceSchemaInline,
-        SourceTablesInline,
     ]
     fieldsets = [
         (None, {

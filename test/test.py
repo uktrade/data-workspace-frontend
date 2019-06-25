@@ -521,7 +521,6 @@ async def give_user_database_perms():
             user=user,
             database=Database.objects.get(memorable_name="my_database"),
             schema="public",
-            tables="auth_user",
         )
         """).encode('ascii')
 
