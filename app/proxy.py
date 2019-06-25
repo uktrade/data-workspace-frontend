@@ -303,8 +303,7 @@ async def async_main():
         async def get_redirect_uri_authenticate(set_session_value, request):
             state = secrets.token_hex(32)
 
-            scheme = request_scheme(request)
-            redirect_uri_final = str(request.url.with_scheme(scheme))
+            redirect_uri_final = str(request.url.with_scheme(request_scheme(request)))
             await set_redirect_uri_final(set_session_value, state, redirect_uri_final)
 
             redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(request), safe='')
