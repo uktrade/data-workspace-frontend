@@ -315,14 +315,12 @@ async def async_main():
                    f'client_id={sso_client_id}'
 
         def get_redirect_uri_callback(request):
-            scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
-            uri = URL.build(
+            return str(URL.build(
                 host=root_domain_no_port,
                 port=root_port,
-                scheme=scheme,
+                scheme=request.headers.get('x-forwarded-proto', request.url.scheme),
                 path=redirect_from_sso_path,
-            )
-            return str(uri)
+            ))
 
         async def set_redirect_uri_final(set_session_value, state, redirect_uri_final):
             await set_session_value(state, redirect_uri_final)
