@@ -65,10 +65,6 @@
                 {% for link in links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if perms.app_sourcelink.change %}
-                                <a class="govuk-link"
-                                   href="{% url 'admin:app_sourcelink_change' link.id %}">[Edit]</a>
-                            {% endif %}
                             <a class="govuk-link" href="{{ link.url }}">
                                 {{ link.name }}
                             </a>
@@ -106,14 +102,6 @@
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available
-                        </td>
-                    </tr>
-                {% endif %}
-                {% if perms.app_sourcelink.add %}
-                    <tr>
-                        <td class="govuk-table__cell" colspan="4">
-                            <a class="govuk-link"
-                               href="{% url 'admin:app_sourcelink_add' %}">[New]</a>
                         </td>
                     </tr>
                 {% endif %}
