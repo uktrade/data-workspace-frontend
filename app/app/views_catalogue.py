@@ -4,6 +4,7 @@ from django.db import (
     connections
 )
 from django import forms
+from django.conf import settings
 
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import (
@@ -15,10 +16,14 @@ from django.views.decorators.http import (
     require_GET,
     require_http_methods)
 
+from zenpy import Zenpy
+from zenpy.lib.api_objects import Ticket, User
+
 from app.models import (
     DataGrouping,
     DataSet,
     DataSetUserPermission)
+
 from app.shared import (
     can_access_schema,
     tables_in_schema,
@@ -56,7 +61,30 @@ def datagroup_item_view(request, slug):
 
 
 class RequestAccessForm(forms.Form):
-    justification = forms.Textarea()
+    justification = forms.CharField(widget=forms.Textarea)
+
+
+def create_zendesk_ticket(email, username, justification_text, dataset_url):
+    zenpy_client = Zenpy(
+        subdomain=settings.ZENDESK_SUBDOMAIN,
+        email=settings.ZENDESK_EMAIL,
+        token=settings.ZENDESK_TOKEN,
+    )
+
+    formatted_text = f'{justification_text}'
+
+    zenpy_client.tickets.create(
+        Ticket(
+            subject='Data Catalogue Access Request',
+            description=formatted_text,
+            tags=['datacatalogue'],
+            requester=User(
+                email=email,
+                name=username)
+        )
+    )
+
+    return "this is the ticket reference"
 
 
 @require_http_methods(["GET", "POST"])
@@ -67,17 +95,22 @@ def dataset_full_path_view(request, group_slug, set_slug):
     if request.method == 'POST':
         form = RequestAccessForm(request.POST)
         if form.is_valid():
+            justification = form.cleaned_data['justification']
+            name = f'{request.user.first_name} {request.user.last_name}'
+            ticket_reference = create_zendesk_ticket(request.user.email,
+                                                     name,
+                                                     justification,
+                                                     "/path/to/ticket")
 
-            # OBVIOUSLY THIS IS A MASSIVE HACK AND A WORK IN PROGRESS
-            perm = DataSetUserPermission()
-            perm.user = request.user
-            perm.dataset = dataset
-
-            perm.save()
+            # perm = DataSetUserPermission()
+            # perm.user = request.user
+            # perm.dataset = dataset
+            #
+            # perm.save()
 
             # Send the request to zendesk
-            messages.append("Thank you so very much for requesting access\n Your case reference is abcdefg")
-
+            messages.append(
+                "Thank you so very much for requesting access\n Your case reference is %s" % ticket_reference)
 
     return dataset_full_path_view_get(request, dataset, form, messages)
 

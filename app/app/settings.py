@@ -18,7 +18,7 @@ def aws_fargate_private_ip():
 
 ALLOWED_HOSTS = \
     (env['ALLOWED_HOSTS']) if DEBUG else \
-    (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
+        (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -169,3 +169,7 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # tests don't have to worry about fixtures / editing the database
 APPLICATION_TEMPLATES = env['APPLICATION_TEMPLATES']
 APPLICATION_ROOT_DOMAIN = env['APPLICATION_ROOT_DOMAIN']
+
+ZENDESK_EMAIL = env['ZENDESK_EMAIL']
+ZENDESK_SUBDOMAIN = env['ZENDESK_SUBDOMAIN']
+ZENDESK_TOKEN = env['ZENDESK_TOKEN']

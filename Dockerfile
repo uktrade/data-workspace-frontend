@@ -29,6 +29,7 @@ RUN \
 		django==2.2.2 \
 		django-db-geventpool==3.1.0 \
 		django-redis==4.10.0 \
+		zenpy==2.0.12 \
 		requests==2.21.0 && \
 	rm /etc/nginx/conf.d/default.conf && \
 	rm /etc/nginx/nginx.conf && \

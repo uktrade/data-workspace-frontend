@@ -124,12 +124,11 @@
                             {% csrf_token %}
                             <fieldset class="govuk-fieldset">
                                 <div class="govuk-form-group">
-                                    <label class="govuk-hint" id="problem-hint" for="requestText">
+                                    <label class="govuk-hint" id="problem-hint" for="justification">
                                         Please provide justification supporting your request for access.
                                     </label>
-                                    {{ form.justification }}
-                                    <textarea class="govuk-textarea" id="requestText" name="request-text" rows="5"
-                                              aria-describedby="problem-hint" required></textarea>
+                                    <textarea class="govuk-textarea" id="justification" name="justification" rows="5"
+                                              aria-describedby="justification" required></textarea>
                                 </div>
                                 <div class="govuk-form-group">
                                     <button data-prevent-double-click="true" type="submit" class="govuk-button">Send</button>
