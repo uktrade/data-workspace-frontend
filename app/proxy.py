@@ -297,7 +297,7 @@ async def async_main():
         session_token_key = 'staff_sso_access_token'
 
         async def get_redirect_uri_authenticate(set_session_value, request):
-            state = secrets.token_urlsafe(32)
+            state = secrets.token_hex(32)
 
             scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
             redirect_uri_final = str(request.url.with_scheme(scheme))
