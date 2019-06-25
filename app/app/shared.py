@@ -14,11 +14,15 @@ from django.conf import (
 from django.db import (
     connections,
 )
+from django.db.models import (
+    Q,
+)
 from psycopg2 import (
     sql,
 )
 
 from app.models import (
+    DataSet,
     Privilage,
     SourceSchema,
 )
@@ -128,20 +132,26 @@ def new_private_database_credentials(user):
     return creds
 
 
-def can_access_table(privilages, database, schema, table):
-    # At the time of writing, anything in a SourceSchema is available to
-    # everyone who has access to the environment. To change in later versions
-    is_in_dataset = SourceSchema.objects.filter(
-        schema=schema,
-        database__memorable_name=database,
-    ).exists()
-
-    return is_in_dataset or any(
+def can_access_table(user, privilages, database, schema, table):
+    return can_access_schema(user, database, schema) or any(
         True
         for privilage in privilages
         for privilage_table in privilage.tables.split(',')
         if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
     )
+
+
+def can_access_schema(user, database, schema):
+    sourceschema = SourceSchema.objects.filter(
+        schema=schema,
+        database__memorable_name=database,
+    )
+    return DataSet.objects.filter(
+        Q(sourceschema__in=sourceschema) & (
+            Q(user_access_type='REQUIRES_AUTHENTICATION') |
+            Q(datasetuserpermission__user=user)
+        ),
+    ).exists()
 
 
 def set_application_stopped(application_instance):

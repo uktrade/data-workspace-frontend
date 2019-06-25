@@ -84,13 +84,13 @@
                         </td>
                     </tr>
                 {% endfor %}
-                {% for database_schema_table in database_schema_tables %}
+                {% for database, schema, table, access in database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
                             <a
                                 class="govuk-link"
-                                href="{% url 'table_data' database_schema_table.0 database_schema_table.1 database_schema_table.2 %}">
-                                {{ database_schema_table.1 }} / {{ database_schema_table.2 }}
+                                href="{% url 'table_data' database schema table %}">
+                                {{ schema }} / {{ table }}
                             </a>
                         </td>
                         <td class="govuk-table__cell">
@@ -102,7 +102,7 @@
                         </td>
                     </tr>
                 {% endfor %}
-                {% if not links and not database_schema_tables %}
+                {% if not links and not database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available
