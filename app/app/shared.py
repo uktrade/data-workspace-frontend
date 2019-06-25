@@ -64,7 +64,7 @@ def new_private_database_credentials(user):
         password = postgres_password()
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
-        valid_until = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
+        valid_until = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
         with connections[database_obj.memorable_name].cursor() as cur:
 
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
