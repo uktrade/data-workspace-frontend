@@ -4,6 +4,57 @@
 
 {% block page_title %}{{ model.name }} - {{ model.grouping.name }} - {{ block.super }}{% endblock %}
 
+{% block head %}
+    {{ block.super }}
+    <style>
+        .request-access-container {
+            max-height: 0px;
+            padding: 0;
+            overflow: hidden;
+            transition: max-height 0.15s ease-out;
+        }
+
+        .request-access-container--visible {
+            max-height: 500px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block bottom_page_scripts %}
+    <script>
+        (function (document) {
+            function ready(fn) {
+                if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+                    fn();
+                } else {
+                    document.addEventListener('DOMContentLoaded', fn);
+                }
+            }
+
+            var $toggle, $requestAccessContainer;
+
+            function onToggleClick(e) {
+                $requestAccessContainer.classList.toggle('request-access-container--visible');
+                //document.getElementById("requestText").focus();
+                e.preventDefault();
+                return false;
+            }
+
+            ready(function () {
+                console.log('ready')
+                $toggle = document.getElementById('toggleRequestLink');
+                $requestAccessContainer = document.getElementById('requestAccessContainer')
+
+                $toggle.addEventListener('click', onToggleClick);
+            });
+
+        })(document);
+
+
+    </script>
+{% endblock %}
+
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
@@ -52,6 +103,43 @@
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
+            {% if must_request_download_access %}
+
+                <div class="govuk-warning-text">
+                    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+                    <div class="govuk-warning-text__text">
+                        <strong>
+                            <span class="govuk-warning-text__assistive">Warning</span>
+                            You do not currently have access to download these links.
+                            <br>
+                            <a class="govuk-link--no-visited-state" href="#" id="toggleRequestLink">Request access
+                                now</a>
+                        </strong>
+                    </div>
+
+                </div>
+                <div class="govuk-warning-text request-access-container" id="requestAccessContainer">
+                    <div class="govuk-warning-text__text">
+                        <form method="post">
+                            {% csrf_token %}
+                            <fieldset class="govuk-fieldset">
+                                <div class="govuk-form-group">
+                                    <label class="govuk-hint" id="problem-hint" for="requestText">
+                                        Please provide justification supporting your request for access.
+                                    </label>
+                                    {{ form.justification }}
+                                    <textarea class="govuk-textarea" id="requestText" name="request-text" rows="5"
+                                              aria-describedby="problem-hint" required></textarea>
+                                </div>
+                                <div class="govuk-form-group">
+                                    <button data-prevent-double-click="true" type="submit" class="govuk-button">Send</button>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
             <table class="govuk-table catalogue-table">
                 <thead>
                 <tr class="govuk-table__row">
@@ -65,13 +153,13 @@
                 {% for link in links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if perms.app_sourcelink.change %}
-                                <a class="govuk-link"
-                                   href="{% url 'admin:app_sourcelink_change' link.id %}">[Edit]</a>
-                            {% endif %}
-                            <a class="govuk-link" href="{{ link.url }}">
+                            {% if must_request_download_access %}
                                 {{ link.name }}
-                            </a>
+                            {% else %}
+                                <a class="govuk-link" href="{{ link.url }}">
+                                    {{ link.name }}
+                                </a>
+                            {% endif %}
                         </td>
                         <td class="govuk-table__cell">
                             {{ link.format }}
@@ -87,11 +175,16 @@
                 {% for database, schema, table, access in database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            <a
-                                class="govuk-link"
-                                href="{% url 'table_data' database schema table %}">
+                            {% if access %}
+                                <a
+                                        class="govuk-link"
+                                        href="{% url 'table_data' database schema table %}">
+                                    {{ schema }} / {{ table }}
+                                </a>
+                            {% else %}
                                 {{ schema }} / {{ table }}
-                            </a>
+                            {% endif %}
+
                         </td>
                         <td class="govuk-table__cell">
                             CSV
@@ -109,14 +202,7 @@
                         </td>
                     </tr>
                 {% endif %}
-                {% if perms.app_sourcelink.add %}
-                    <tr>
-                        <td class="govuk-table__cell" colspan="4">
-                            <a class="govuk-link"
-                               href="{% url 'admin:app_sourcelink_add' %}">[New]</a>
-                        </td>
-                    </tr>
-                {% endif %}
+
                 </tbody>
             </table>
         </div>

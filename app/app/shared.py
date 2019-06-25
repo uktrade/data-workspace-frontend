@@ -66,7 +66,6 @@ def new_private_database_credentials(user):
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
         with connections[database_obj.memorable_name].cursor() as cur:
-
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
                 sql.Identifier(user)), [password, valid_until])
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
@@ -81,9 +80,11 @@ def new_private_database_credentials(user):
                     for table in privilage.tables.split(',')
                 ])
                 tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user)) if privilage.tables == 'ALL TABLES' else \
-                    sql.SQL('GRANT SELECT ON {} TO {};').format(
-                        tables_sql_list, sql.Identifier(user))
+                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema),
+                                                                                     sql.Identifier(
+                                                                                         user)) if privilage.tables == 'ALL TABLES' else \
+                        sql.SQL('GRANT SELECT ON {} TO {};').format(
+                            tables_sql_list, sql.Identifier(user))
                 cur.execute(tables_sql)
 
         return {
@@ -109,7 +110,7 @@ def new_private_database_credentials(user):
         bucket = settings.NOTEBOOKS_BUCKET
         s3_client = boto3.client('s3')
         s3_prefix = 'user/federated/' + \
-            hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
+                    hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
 
         logger.info('Saving creds for %s to %s %s', user, bucket, s3_prefix)
         for cred in creds:
@@ -137,7 +138,8 @@ def can_access_table(user, privilages, database, schema, table):
         True
         for privilage in privilages
         for privilage_table in privilage.tables.split(',')
-        if privilage.database.memorable_name == database and privilage.schema == schema and (privilage_table in [table, 'ALL TABLES'])
+        if privilage.database.memorable_name == database and privilage.schema == schema and (
+                    privilage_table in [table, 'ALL TABLES'])
     )
 
 
@@ -148,10 +150,21 @@ def can_access_schema(user, database, schema):
     )
     return DataSet.objects.filter(
         Q(sourceschema__in=sourceschema) & (
-            Q(user_access_type='REQUIRES_AUTHENTICATION') |
-            Q(datasetuserpermission__user=user)
+                Q(user_access_type='REQUIRES_AUTHENTICATION') |
+                Q(datasetuserpermission__user=user)
         ),
     ).exists()
+
+
+def can_access_dataset(user, dataset):
+    """
+
+    :type dataset: DataSet
+    """
+
+    dataset.objects.filter(Q(user_access_type='REQUIRES_AUTHENTICATION'))
+
+    return False
 
 
 def set_application_stopped(application_instance):

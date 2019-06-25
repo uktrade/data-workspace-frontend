@@ -3,7 +3,9 @@ import logging
 from django.db import (
     connections
 )
-from django.http import Http404
+from django import forms
+
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import (
     render,
     get_object_or_404,
@@ -11,16 +13,16 @@ from django.shortcuts import (
 
 from django.views.decorators.http import (
     require_GET,
-)
+    require_http_methods)
 
 from app.models import (
     DataGrouping,
     DataSet,
-)
+    DataSetUserPermission)
 from app.shared import (
     can_access_schema,
     tables_in_schema,
-)
+    can_access_dataset)
 
 logger = logging.getLogger('app')
 
@@ -53,18 +55,49 @@ def datagroup_item_view(request, slug):
     return render(request, 'datagroup.html', context)
 
 
-@require_GET
+class RequestAccessForm(forms.Form):
+    justification = forms.Textarea()
+
+
+@require_http_methods(["GET", "POST"])
 def dataset_full_path_view(request, group_slug, set_slug):
+    dataset = find_dataset(group_slug, set_slug)
+    form = RequestAccessForm()
+    messages = []
+    if request.method == 'POST':
+        form = RequestAccessForm(request.POST)
+        if form.is_valid():
+
+            # OBVIOUSLY THIS IS A MASSIVE HACK AND A WORK IN PROGRESS
+            perm = DataSetUserPermission()
+            perm.user = request.user
+            perm.dataset = dataset
+
+            perm.save()
+
+            # Send the request to zendesk
+            messages.append("Thank you so very much for requesting access\n Your case reference is abcdefg")
+
+
+    return dataset_full_path_view_get(request, dataset, form, messages)
+
+
+def find_dataset(group_slug, set_slug):
     found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)
 
     if not found:
         raise Http404
 
     dataset = found[0]
+    return dataset
+
+
+def dataset_full_path_view_get(request, dataset, form, messages):
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
 
     can_access_schemas = {
-        (schema.database.memorable_name, schema.schema): can_access_schema(request.user, schema.database.memorable_name, schema.schema)
+        (schema.database.memorable_name, schema.schema):
+            can_access_schema(request.user, schema.database.memorable_name, schema.schema)
         for schema in schemas
     }
 
@@ -85,10 +118,17 @@ def dataset_full_path_view(request, group_slug, set_slug):
         for table in connect_and_tables_in_schema(schema)
     ]
 
+    must_request_download_access = not dataset.datasetuserpermission_set.filter(user=request.user).exists()
+
     context = {
         'model': dataset,
+        'form': form,
+        'must_request_download_access': must_request_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
         'database_schema_table_accesses': database_schema_table_accesses,
     }
+
+    if messages:
+        context['messages'] = messages
 
     return render(request, 'dataset.html', context)
