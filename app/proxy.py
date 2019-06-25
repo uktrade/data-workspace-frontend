@@ -306,7 +306,7 @@ async def async_main():
             redirect_uri_final = str(request.url.with_scheme(request_scheme(request)))
             await set_redirect_uri_final(set_session_value, state, redirect_uri_final)
 
-            redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(request), safe='')
+            redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(request_scheme(request)), safe='')
             return f'{sso_base_url}{auth_path}?' \
                    f'scope={scope}&state={state}&' \
                    f'redirect_uri={redirect_uri_callback}&' \
@@ -316,11 +316,11 @@ async def async_main():
         def request_scheme(request):
             return request.headers.get('x-forwarded-proto', request.url.scheme)
 
-        def get_redirect_uri_callback(request):
+        def get_redirect_uri_callback(scheme):
             return str(URL.build(
                 host=root_domain_no_port,
                 port=root_port,
-                scheme=request_scheme(request),
+                scheme=scheme,
                 path=redirect_from_sso_path,
             ))
 
@@ -373,7 +373,7 @@ async def async_main():
                             'code': code,
                             'client_id': sso_client_id,
                             'client_secret': sso_client_secret,
-                            'redirect_uri': get_redirect_uri_callback(request),
+                            'redirect_uri': get_redirect_uri_callback(request_scheme(request)),
                         },
                 ) as sso_response:
                     sso_response_json = await sso_response.json()
