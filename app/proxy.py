@@ -303,8 +303,7 @@ async def async_main():
         async def get_redirect_uri_authenticate(set_session_value, request):
             state = secrets.token_hex(32)
 
-            redirect_uri_final = str(request.url.with_scheme(request_scheme(request)))
-            await set_redirect_uri_final(set_session_value, state, redirect_uri_final)
+            await set_redirect_uri_final(set_session_value, state, request_url(request))
 
             redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(request_scheme(request)), safe='')
             return f'{sso_base_url}{auth_path}?' \
@@ -315,6 +314,9 @@ async def async_main():
 
         def request_scheme(request):
             return request.headers.get('x-forwarded-proto', request.url.scheme)
+
+        def request_url(request):
+            return str(request.url.with_scheme(request_scheme(request)))
 
         def get_redirect_uri_callback(scheme):
             return str(URL.build(
