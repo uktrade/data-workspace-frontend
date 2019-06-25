@@ -300,12 +300,13 @@ async def async_main():
         redirect_from_sso_path = '/__redirect_from_sso'
         session_token_key = 'staff_sso_access_token'
 
-        async def get_redirect_uri_authenticate(set_session_value, request):
+        async def get_redirect_uri_authenticate(set_session_value, redirect_uri_final):
             state = secrets.token_hex(32)
 
-            await set_redirect_uri_final(set_session_value, state, request_url(request))
+            scheme = URL(redirect_uri_final).scheme
+            await set_redirect_uri_final(set_session_value, state, redirect_uri_final)
 
-            redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(request_scheme(request)), safe='')
+            redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(scheme), safe='')
             return f'{sso_base_url}{auth_path}?' \
                    f'scope={scope}&state={state}&' \
                    f'redirect_uri={redirect_uri_callback}&' \
@@ -348,7 +349,7 @@ async def async_main():
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
-                location = await get_redirect_uri_authenticate(set_session_value, request)
+                location = await get_redirect_uri_authenticate(set_session_value, request_url(request))
                 return await with_session_cookie(web.Response(status=302, headers={
                     'Location': location,
                 }))
@@ -410,7 +411,7 @@ async def async_main():
 
             if not me_profile_full:
                 return await with_session_cookie(web.Response(status=302, headers={
-                    'Location': await get_redirect_uri_authenticate(set_session_value, request),
+                    'Location': await get_redirect_uri_authenticate(set_session_value, request_url(request)),
                 }))
 
             me_profile = {
