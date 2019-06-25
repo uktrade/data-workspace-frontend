@@ -66,12 +66,6 @@ class Privilage(models.Model):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public'
     )
-    tables = models.CharField(
-        max_length=1024,
-        blank=False,
-        validators=[RegexValidator(regex=r'(([a-zA-Z][a-zA-Z0-9_\.]*,?)+(?<!,)$)|(^ALL TABLES$)')],
-        help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
-    )
 
     class Meta:
         indexes = [
