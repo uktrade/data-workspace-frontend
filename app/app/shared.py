@@ -73,6 +73,9 @@ def new_private_database_credentials(user):
                 sql.Identifier(database_data['NAME']), sql.Identifier(user)))
 
             for schema in schemas:
+                logger.info(
+                    'Granting permissions to %s %s to %s',
+                    database_obj.memorable_name, schema, user)
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
                     sql.Identifier(schema), sql.Identifier(user)))
                 tables_sql = \
