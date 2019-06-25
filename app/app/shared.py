@@ -59,7 +59,7 @@ def new_private_database_credentials(user):
     def postgres_password():
         return ''.join(secrets.choice(password_alphabet) for i in range(64))
 
-    def get_new_credentials(database_obj, privilages_for_database):
+    def get_new_credentials(database_obj, schemas):
         user = postgres_user()
         password = postgres_password()
 
@@ -72,11 +72,14 @@ def new_private_database_credentials(user):
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
                 sql.Identifier(database_data['NAME']), sql.Identifier(user)))
 
-            for privilage in privilages_for_database:
+            for schema in schemas:
+                logger.info(
+                    'Granting permissions to %s %s to %s',
+                    database_obj.memorable_name, schema, user)
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                    sql.Identifier(privilage.schema), sql.Identifier(user)))
+                    sql.Identifier(schema), sql.Identifier(user)))
                 tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema), sql.Identifier(user))
+                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(schema), sql.Identifier(user))
                 cur.execute(tables_sql)
 
         return {
@@ -89,10 +92,16 @@ def new_private_database_credentials(user):
         }
 
     privilages = get_private_privilages(user)
+    database_to_schemas = {
+        database_obj: [
+            privilage.schema for privilage in privilages_for_database
+        ]
+        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
+    }
 
     creds = [
-        get_new_credentials(database_obj, privilages_for_database)
-        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
+        get_new_credentials(database_obj, schemas)
+        for database_obj, schemas in database_to_schemas.items()
     ]
 
     # Create a profile in case it doesn't have one
