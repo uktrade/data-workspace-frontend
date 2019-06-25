@@ -301,14 +301,12 @@ async def async_main():
         session_token_key = 'staff_sso_access_token'
 
         async def get_redirect_uri_authenticate(set_session_value, redirect_uri_final):
-            state = secrets.token_hex(32)
-
             scheme = URL(redirect_uri_final).scheme
-            await set_redirect_uri_final(set_session_value, state, redirect_uri_final)
+            sso_state = await set_redirect_uri_final(set_session_value, redirect_uri_final)
 
             redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(scheme), safe='')
             return f'{sso_base_url}{auth_path}?' \
-                   f'scope={scope}&state={state}&' \
+                   f'scope={scope}&state={sso_state}&' \
                    f'redirect_uri={redirect_uri_callback}&' \
                    f'response_type={response_type}&' \
                    f'client_id={sso_client_id}'
@@ -327,12 +325,17 @@ async def async_main():
                 path=redirect_from_sso_path,
             ))
 
-        async def set_redirect_uri_final(set_session_value, state, redirect_uri_final):
-            await set_session_value(state, redirect_uri_final)
+        async def set_redirect_uri_final(set_session_value, redirect_uri_final):
+            session_key = secrets.token_hex(32)
+            sso_state = urllib.parse.quote(f'{session_key}_{redirect_uri_final}', safe='')
 
-        async def get_redirect_uri_final(get_session_value, request):
-            state = request.query['state']
-            return await get_session_value(state)
+            await set_session_value(session_key, redirect_uri_final)
+
+            return sso_state
+
+        async def get_redirect_uri_final(get_session_value, sso_state):
+            session_key, _, state_redirect_url = urllib.parse.unquote(sso_state).partition('_')
+            return state_redirect_url, await get_session_value(session_key)
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
@@ -356,18 +359,17 @@ async def async_main():
 
             if request.path == redirect_from_sso_path:
                 code = request.query['code']
-                redirect_uri_final = await get_redirect_uri_final(get_session_value, request)
+                sso_state = request.query['state']
+                redirect_uri_final_from_url, redirect_uri_final_from_session = await get_redirect_uri_final(get_session_value, sso_state)
 
-                # If there isn't a redirect_uri_final, we might...
-                # - not be the same client as made the original request, and so should not proceed
-                # - be the same client, but have been overtaken by another concurrent login that
-                #   created a new session after its login, and so this request was made with that
-                #   new session
-                # We might have been redirected attempting to access a static asset, so we don't
-                # redirect to any particular HTML page, since it would be broken to "succeed" by
-                # returning something that wasn't asked for
-                if redirect_uri_final is None:
-                    return web.Response(status=401)
+                if redirect_uri_final_from_url != redirect_uri_final_from_session:
+                    # We might have been overtaken by a parallel request initiating another auth
+                    # flow, and so another session. However, because we haven't retrieved the final
+                    # URL from the session, we can't be sure that this is the same client that
+                    # initiated this flow. However, we can redirect back to SSO
+                    return await with_session_cookie(web.Response(status=302, headers={
+                        'Location': await get_redirect_uri_authenticate(set_session_value, redirect_uri_final_from_url),
+                    }))
 
                 async with client_session.post(
                         f'{sso_base_url}{token_path}',
@@ -382,7 +384,7 @@ async def async_main():
                     sso_response_json = await sso_response.json()
                 await set_session_value(session_token_key, sso_response_json['access_token'])
                 # A new session cookie to migitate session fixation attack
-                return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final}))
+                return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final_from_session}))
 
             # Get profile from Redis cache to avoid calling SSO on every request
             redis_profile_key = f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode('ascii')
