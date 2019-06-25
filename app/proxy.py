@@ -316,11 +316,12 @@ async def async_main():
                 root_port = int(root_port_str)
             except ValueError:
                 root_port = None
-            uri = request.url.with_host(root_domain_no_port) \
-                             .with_port(root_port) \
-                             .with_scheme(scheme) \
-                             .with_path(redirect_from_sso_path) \
-                             .with_query({})
+            uri = URL.build(
+                host=root_domain_no_port,
+                port=root_port,
+                scheme=scheme,
+                path=redirect_from_sso_path,
+            )
             return str(uri)
 
         async def set_redirect_uri_final(set_session_value, state, redirect_uri_final):
