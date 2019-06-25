@@ -45,6 +45,10 @@ async def async_main():
     redis_url = os.environ['REDIS_URL']
     root_domain = os.environ['APPLICATION_ROOT_DOMAIN']
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
+    try:
+        root_port = int(root_port_str)
+    except ValueError:
+        root_port = None
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
 
@@ -312,10 +316,6 @@ async def async_main():
 
         def get_redirect_uri_callback(request):
             scheme = request.headers.get('x-forwarded-proto', request.url.scheme)
-            try:
-                root_port = int(root_port_str)
-            except ValueError:
-                root_port = None
             uri = URL.build(
                 host=root_domain_no_port,
                 port=root_port,
