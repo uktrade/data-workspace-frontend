@@ -340,10 +340,7 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
-            # Suspect that concurrent requests for /favicon.ico break the
-            # auth flow, since they can return a set-cookie with a new session
-            # and state that is not the same as the primary
-            if request.url.path in ['/healthcheck', '/favicon.ico']:
+            if request.url.path == '/healthcheck':
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
