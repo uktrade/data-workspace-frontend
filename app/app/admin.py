@@ -54,8 +54,6 @@ class DataLinkAdmin(admin.ModelAdmin):
 
 admin.site.register(DataGrouping, DataGroupingAdmin)
 
-admin.site.register(SourceLink, DataLinkAdmin)
-
 
 class AppUserCreationForm(forms.ModelForm):
     class Meta:
