@@ -272,7 +272,7 @@ class DataSet(models.Model):
             ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
             ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
         ),
-        default='REQUIRES_AUTHENTICATION',
+        default='REQUIRES_AUTHORIZATION',
     )
 
     def __str__(self):

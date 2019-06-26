@@ -1,6 +1,6 @@
 {% extends '_base.html' %}
 
-{% block page_title %}Privacy Policy - {{ block.super }}{% endblock %}
+{% block page_title %}Access Request - {{ block.super }}{% endblock %}
 
 
 {% block breadcrumbs %}
@@ -11,7 +11,7 @@
             </li>
 
 
-            <li class="govuk-breadcrumbs__list-item">Privacy Policy
+            <li class="govuk-breadcrumbs__list-item">Request Access
             </li>
 
         </ol>
@@ -21,14 +21,11 @@
 {% block inner_content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-l">Privacy Policy</h1>
+            <h1 class="govuk-heading-l">Request access</h1>
 
             <p class="govuk-body">
-                {% lorem 50 w  %}
-            </p>
-
-            <p class="govuk-body">
-                {% lorem 50 w random %}
+                Your request has been received by our Zendesk ticketing system. <br/>
+                Your reference is: <strong>{{ ticket }}</strong>
             </p>
 
         </div>

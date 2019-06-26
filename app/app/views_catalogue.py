@@ -4,8 +4,8 @@ from django.db import (
     connections
 )
 from django import forms
-from django.conf import settings
 
+from django.urls import reverse
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import (
     render,
@@ -16,18 +16,16 @@ from django.views.decorators.http import (
     require_GET,
     require_http_methods)
 
-from zenpy import Zenpy
-from zenpy.lib.api_objects import Ticket, User
-
 from app.models import (
     DataGrouping,
     DataSet,
-    DataSetUserPermission)
+)
 
 from app.shared import (
     can_access_source_schema,
     tables_in_schema,
-    can_access_dataset)
+)
+from app.zendesk import create_zendesk_ticket
 
 logger = logging.getLogger('app')
 
@@ -61,33 +59,19 @@ def datagroup_item_view(request, slug):
 
 
 class RequestAccessForm(forms.Form):
-    justification = forms.CharField(widget=forms.Textarea)
+    justification = forms.CharField(widget=forms.Textarea, required=True)
 
 
-def create_zendesk_ticket(email, username, justification_text, dataset_url):
-    zenpy_client = Zenpy(
-        subdomain=settings.ZENDESK_SUBDOMAIN,
-        email=settings.ZENDESK_EMAIL,
-        token=settings.ZENDESK_TOKEN,
-    )
+@require_GET
+def request_access_view(request):
+    ticket = request.GET.get('ticket', 'Not specified')
 
-    formatted_text = f'{justification_text}'
-
-    zenpy_client.tickets.create(
-        Ticket(
-            subject='Data Catalogue Access Request',
-            description=formatted_text,
-            tags=['datacatalogue'],
-            requester=User(
-                email=email,
-                name=username)
-        )
-    )
-
-    return "this is the ticket reference"
+    return render(request, 'request_access_success.html', {
+        'ticket': ticket
+    })
 
 
-@require_http_methods(["GET", "POST"])
+@require_http_methods(['GET', 'POST'])
 def dataset_full_path_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
     form = RequestAccessForm()
@@ -97,20 +81,23 @@ def dataset_full_path_view(request, group_slug, set_slug):
         if form.is_valid():
             justification = form.cleaned_data['justification']
             name = f'{request.user.first_name} {request.user.last_name}'
+
+            user_edit_relative = reverse('admin:auth_user_change', args=[request.user.id])
+            user_url = request.build_absolute_uri(user_edit_relative)
+
+            dataset_name = f'{dataset.grouping.name} > {dataset.name}'
+
+            dataset_url = request.build_absolute_uri()
+
             ticket_reference = create_zendesk_ticket(request.user.email,
                                                      name,
                                                      justification,
-                                                     "/path/to/ticket")
+                                                     user_url,
+                                                     dataset_name,
+                                                     dataset_url)
 
-            # perm = DataSetUserPermission()
-            # perm.user = request.user
-            # perm.dataset = dataset
-            #
-            # perm.save()
-
-            # Send the request to zendesk
-            messages.append(
-                "Thank you so very much for requesting access\n Your case reference is %s" % ticket_reference)
+            url = reverse('request_access_success')
+            return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
 
     return dataset_full_path_view_get(request, dataset, form, messages)
 
@@ -129,7 +116,9 @@ def dataset_full_path_view_get(request, dataset, form, messages):
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
 
     can_access_schemas = {
-        (schema.database.memorable_name, schema.schema): can_access_source_schema(request.user, schema.database.memorable_name, schema.schema)
+        (schema.database.memorable_name, schema.schema): can_access_source_schema(request.user,
+                                                                                  schema.database.memorable_name,
+                                                                                  schema.schema)
         for schema in schemas
     }
 
@@ -150,7 +139,9 @@ def dataset_full_path_view_get(request, dataset, form, messages):
         for table in connect_and_tables_in_schema(schema)
     ]
 
-    must_request_download_access = not dataset.datasetuserpermission_set.filter(user=request.user).exists()
+    must_request_download_access = \
+        dataset.user_access_type == 'REQUIRES_AUTHORIZATION' and \
+        not dataset.datasetuserpermission_set.filter(user=request.user).exists()
 
     context = {
         'model': dataset,

@@ -78,7 +78,8 @@ def new_private_database_credentials(user):
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
                     sql.Identifier(schema), sql.Identifier(user)))
                 tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(schema), sql.Identifier(user))
+                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(schema),
+                                                                                     sql.Identifier(user))
                 cur.execute(tables_sql)
 
         return {
@@ -148,21 +149,10 @@ def can_access_source_schema(user, database, schema):
     )
     return DataSet.objects.filter(
         Q(sourceschema__in=sourceschema) & (
-                Q(user_access_type='REQUIRES_AUTHENTICATION') |
-                Q(datasetuserpermission__user=user)
+            Q(user_access_type='REQUIRES_AUTHENTICATION') |
+            Q(datasetuserpermission__user=user)
         ),
     ).exists()
-
-
-def can_access_dataset(user, dataset):
-    """
-
-    :type dataset: DataSet
-    """
-
-    dataset.objects.filter(Q(user_access_type='REQUIRES_AUTHENTICATION'))
-
-    return False
 
 
 def set_application_stopped(application_instance):

@@ -22,6 +22,8 @@
 {% endblock %}
 
 {% block bottom_page_scripts %}
+
+
     <script>
         (function (document) {
             function ready(fn) {
@@ -47,6 +49,11 @@
                 $requestAccessContainer = document.getElementById('requestAccessContainer')
 
                 $toggle.addEventListener('click', onToggleClick);
+
+                {% if form.justification.errors %}
+                    $requestAccessContainer.classList.toggle('request-access-container--visible');
+                {% endif %}
+
             });
 
         })(document);
@@ -81,7 +88,6 @@
 {% endblock %}
 
 {% block inner_content %}
-
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">{{ model.name }}</h1>
@@ -116,7 +122,6 @@
                                 now</a>
                         </strong>
                     </div>
-
                 </div>
                 <div class="govuk-warning-text request-access-container" id="requestAccessContainer">
                     <div class="govuk-warning-text__text">
@@ -124,14 +129,17 @@
                             {% csrf_token %}
                             <fieldset class="govuk-fieldset">
                                 <div class="govuk-form-group">
-                                    <label class="govuk-hint" id="problem-hint" for="justification">
+                                    <label class="
+                                            {{ form.justification.errors|yesno:"govuk-error-message,govuk-hint" }}"
+                                           id="problem-hint" for="justification">
                                         Please provide justification supporting your request for access.
                                     </label>
                                     <textarea class="govuk-textarea" id="justification" name="justification" rows="5"
                                               aria-describedby="justification" required></textarea>
                                 </div>
                                 <div class="govuk-form-group">
-                                    <button data-prevent-double-click="true" type="submit" class="govuk-button">Send</button>
+                                    <button data-prevent-double-click="true" type="submit" class="govuk-button">Send
+                                    </button>
                                 </div>
                             </fieldset>
                         </form>
