@@ -344,7 +344,7 @@ async def async_main():
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
-            get_session_value, set_session_value, with_new_session_cookie, with_session_cookie = request[
+            get_session_value, set_session_value, with_new_session_cookie, _ = request[
                 SESSION_KEY]
 
             token = await get_session_value(session_token_key)
@@ -407,7 +407,7 @@ async def async_main():
                     None
 
             if not me_profile_full:
-                return await with_session_cookie(web.Response(status=302, headers={
+                return await with_new_session_cookie(web.Response(status=302, headers={
                     'Location': await get_redirect_uri_authenticate(set_session_value, request_url(request)),
                 }))
 
