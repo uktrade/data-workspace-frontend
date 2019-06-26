@@ -91,12 +91,11 @@ def new_private_database_credentials(user):
             'db_password': password,
         }
 
-    privilages = get_private_privilages(user)
     database_to_schemas = {
         database_obj: [
             privilage.schema for privilage in privilages_for_database
         ]
-        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
+        for database_obj, privilages_for_database in itertools.groupby(get_private_privilages(user), lambda privilage: privilage.database)
     }
 
     creds = [
