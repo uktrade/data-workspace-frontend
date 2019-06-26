@@ -350,7 +350,7 @@ async def async_main():
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
                 location = await get_redirect_uri_authenticate(set_session_value, request_url(request))
-                return await with_session_cookie(web.Response(status=302, headers={
+                return await with_new_session_cookie(web.Response(status=302, headers={
                     'Location': location,
                 }))
 
@@ -364,7 +364,7 @@ async def async_main():
                     # flow, and so another session. However, because we haven't retrieved the final
                     # URL from the session, we can't be sure that this is the same client that
                     # initiated this flow. However, we can redirect back to SSO
-                    return await with_session_cookie(web.Response(status=302, headers={
+                    return await with_new_session_cookie(web.Response(status=302, headers={
                         'Location': await get_redirect_uri_authenticate(set_session_value, redirect_uri_final_from_url),
                     }))
 
@@ -380,7 +380,6 @@ async def async_main():
                 ) as sso_response:
                     sso_response_json = await sso_response.json()
                 await set_session_value(session_token_key, sso_response_json['access_token'])
-                # A new session cookie to migitate session fixation attack
                 return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final_from_session}))
 
             # Get profile from Redis cache to avoid calling SSO on every request
