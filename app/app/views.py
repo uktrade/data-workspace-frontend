@@ -26,6 +26,7 @@ from app.models import (
 from app.shared import (
     can_access_schema,
     get_private_privilages,
+    remove_duplicates,
     set_application_stopped,
     tables_in_schema,
 )
@@ -88,7 +89,7 @@ def root_view_GET(request):
             }
             for application_template in ApplicationTemplate.objects.all().order_by('name')
         ],
-        'database_schema_tables': _remove_duplicates(_flatten([
+        'database_schema_tables': remove_duplicates(_flatten([
             allowed_tables_for_database_that_exist(database, list(database_privilages))
             for database, database_privilages in privilages_by_database
         ])),
@@ -131,9 +132,3 @@ def _flatten(to_flatten):
         for sub_list in to_flatten
         for item in sub_list
     ]
-
-
-def _remove_duplicates(to_have_duplicates_removed):
-    seen = set()
-    seen_add = seen.add
-    return [x for x in to_have_duplicates_removed if not (x in seen or seen_add(x))]
