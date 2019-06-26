@@ -337,6 +337,11 @@ async def async_main():
             session_key, _, state_redirect_url = urllib.parse.unquote(sso_state).partition('_')
             return state_redirect_url, await get_session_value(session_key)
 
+        async def redirection_to_sso(with_new_session_cookie, set_session_value, redirect_uri_final):
+            return await with_new_session_cookie(web.Response(status=302, headers={
+                'Location': await get_redirect_uri_authenticate(set_session_value, redirect_uri_final),
+            }))
+
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
@@ -349,9 +354,7 @@ async def async_main():
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
-                return await with_new_session_cookie(web.Response(status=302, headers={
-                    'Location': await get_redirect_uri_authenticate(set_session_value, request_url(request)),
-                }))
+                return await redirection_to_sso(with_new_session_cookie, set_session_value, request_url(request))
 
             if request.path == redirect_from_sso_path:
                 code = request.query['code']
@@ -363,9 +366,7 @@ async def async_main():
                     # flow, and so another session. However, because we haven't retrieved the final
                     # URL from the session, we can't be sure that this is the same client that
                     # initiated this flow. However, we can redirect back to SSO
-                    return await with_new_session_cookie(web.Response(status=302, headers={
-                        'Location': await get_redirect_uri_authenticate(set_session_value, redirect_uri_final_from_url),
-                    }))
+                    return await redirection_to_sso(with_new_session_cookie, set_session_value, redirect_uri_final_from_url)
 
                 async with client_session.post(
                         f'{sso_base_url}{token_path}',
@@ -407,9 +408,7 @@ async def async_main():
                     None
 
             if not me_profile_full:
-                return await with_new_session_cookie(web.Response(status=302, headers={
-                    'Location': await get_redirect_uri_authenticate(set_session_value, request_url(request)),
-                }))
+                return await redirection_to_sso(with_new_session_cookie, set_session_value, request_url(request))
 
             me_profile = {
                 'email': me_profile_full['email'],
