@@ -349,9 +349,8 @@ async def async_main():
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
-                location = await get_redirect_uri_authenticate(set_session_value, request_url(request))
                 return await with_new_session_cookie(web.Response(status=302, headers={
-                    'Location': location,
+                    'Location': await get_redirect_uri_authenticate(set_session_value, request_url(request)),
                 }))
 
             if request.path == redirect_from_sso_path:
