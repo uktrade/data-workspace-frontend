@@ -21,47 +21,6 @@
     </style>
 {% endblock %}
 
-{% block bottom_page_scripts %}
-
-
-    <script>
-        (function (document) {
-            function ready(fn) {
-                if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
-                    fn();
-                } else {
-                    document.addEventListener('DOMContentLoaded', fn);
-                }
-            }
-
-            var $toggle, $requestAccessContainer;
-
-            function onToggleClick(e) {
-                $requestAccessContainer.classList.toggle('request-access-container--visible');
-                //document.getElementById("requestText").focus();
-                e.preventDefault();
-                return false;
-            }
-
-            ready(function () {
-                console.log('ready')
-                $toggle = document.getElementById('toggleRequestLink');
-                $requestAccessContainer = document.getElementById('requestAccessContainer')
-
-                $toggle.addEventListener('click', onToggleClick);
-
-                {% if form.justification.errors %}
-                    $requestAccessContainer.classList.toggle('request-access-container--visible');
-                {% endif %}
-
-            });
-
-        })(document);
-
-
-    </script>
-{% endblock %}
-
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
@@ -110,39 +69,16 @@
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
             {% if must_request_download_access %}
-
                 <div class="govuk-warning-text">
                     <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
                     <div class="govuk-warning-text__text">
                         <strong>
                             <span class="govuk-warning-text__assistive">Warning</span>
-                            You do not currently have access to download these links.
+                            You do not have permission to access these links.
                             <br>
-                            <a class="govuk-link--no-visited-state" href="#" id="toggleRequestLink">Request access
+                            <a class="govuk-link--no-visited-state" href="{% url 'request_access' model.grouping.slug model.slug %}">Request access
                                 now</a>
                         </strong>
-                    </div>
-                </div>
-                <div class="govuk-warning-text request-access-container" id="requestAccessContainer">
-                    <div class="govuk-warning-text__text">
-                        <form method="post">
-                            {% csrf_token %}
-                            <fieldset class="govuk-fieldset">
-                                <div class="govuk-form-group">
-                                    <label class="
-                                            {{ form.justification.errors|yesno:"govuk-error-message,govuk-hint" }}"
-                                           id="problem-hint" for="justification">
-                                        Please provide justification supporting your request for access.
-                                    </label>
-                                    <textarea class="govuk-textarea" id="justification" name="justification" rows="5"
-                                              aria-describedby="justification" required></textarea>
-                                </div>
-                                <div class="govuk-form-group">
-                                    <button data-prevent-double-click="true" type="submit" class="govuk-button">Send
-                                    </button>
-                                </div>
-                            </fieldset>
-                        </form>
                     </div>
                 </div>
             {% endif %}

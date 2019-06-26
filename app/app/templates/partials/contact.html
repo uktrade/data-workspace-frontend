@@ -2,8 +2,9 @@
     {{ model.first_name }} {{ model.last_name }}
     {% if model.email %}
         <br/>
-        <a class="govuk-link govuk-link--no-visited-state" href="mailto://{{ model.email }}">
-            {{ model.email }}
-        </a>
+        {{ model.email }}
+{#        <a class="govuk-link govuk-link--no-visited-state" href="mailto://{{ model.email }}">#}
+{#            #}
+{#        </a>#}
     {% endif %}
 </p>

@@ -1,0 +1,63 @@
+{% extends '_base.html' %}
+
+{% block page_title %}Access Request - {{ block.super }}{% endblock %}
+
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+
+
+            <li class="govuk-breadcrumbs__list-item">Request Access
+            </li>
+
+        </ol>
+    </div>
+{% endblock %}
+
+{% block inner_content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">Request Access to Data Set</h1>
+            <p class="govuk-body">
+                <a href="{% url 'dataset_fullpath' dataset.grouping.slug dataset.slug %}">
+                    {{ dataset.grouping.name }} &gt; {{ dataset.name }}</a>
+            </p>
+            <p class="govuk-body">
+
+
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <fieldset class="govuk-fieldset">
+                    <div class="govuk-form-group">
+                        <label class="govuk-label" for="email">Contact Email</label>
+                        <span class="govuk-hint">
+                             You are logged in as {{ authenticated_user.email }}
+                        </span>
+                        <input class="govuk-input" type="email" name="email" name="email" id="email" required>
+                    </div>
+                    <div class="govuk-form-group">
+                        <label class="govuk-label" for="team">Team name.</label>
+                        <input type="text" class="govuk-input" name="team" id="team" required>
+                    </div>
+                    <div class="govuk-form-group">
+                        <label class="govuk-label" for="justification">
+                            Explain why you need access to this data.
+                        </label>
+                        <textarea class="govuk-textarea" id="justification" name="justification" rows="5"
+                                  aria-describedby="justification" required></textarea>
+                    </div>
+                    <div class="govuk-form-group">
+                        <button data-prevent-double-click="true" type="submit" class="govuk-button">Send
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+
+    </div>
+{% endblock %}

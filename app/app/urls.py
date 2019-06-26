@@ -46,7 +46,7 @@ from app.views_table_data import (
 from app.views_catalogue import (
     datagroup_item_view,
     dataset_full_path_view,
-    request_access_view)
+    request_access_view, request_access_success_view)
 
 from app.views_appstream import (
     appstream_view,
@@ -103,9 +103,11 @@ def login_required(func):
 
         return func(request, *args, **kwargs)
 
-    return _login_required
+    # return _login_required
+    def _fake(request, *args, **kwargs):
+        return func(request, *args, **kwargs)
 
-
+    return _fake
 
 
 admin.autodiscover()
@@ -128,9 +130,13 @@ urlpatterns = [
     path('healthcheck', healthcheck_view),  # No authentication
 
     path('datagroup/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
+    path('<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
     path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
          name='dataset_fullpath'),
-    path('request_access_success/', login_required(request_access_view),
+    path('<str:group_slug>/<str:set_slug>', login_required(dataset_full_path_view),
+         name='dataset_fullpath'),
+    path('request-access/<str:group_slug>/<str:set_slug>', login_required(request_access_view), name='request_access'),
+    path('request_access_success/', login_required(request_access_success_view),
          name='request_access_success'),
     path('privacy', login_required(privacy_view), name='privacy'),
 

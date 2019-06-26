@@ -59,28 +59,21 @@ def datagroup_item_view(request, slug):
 
 
 class RequestAccessForm(forms.Form):
+    email = forms.CharField(widget=forms.TextInput, required=True)
     justification = forms.CharField(widget=forms.Textarea, required=True)
-
-
-@require_GET
-def request_access_view(request):
-    ticket = request.GET.get('ticket', 'Not specified')
-
-    return render(request, 'request_access_success.html', {
-        'ticket': ticket
-    })
+    team = forms.CharField(widget=forms.TextInput, required=True)
 
 
 @require_http_methods(['GET', 'POST'])
-def dataset_full_path_view(request, group_slug, set_slug):
+def request_access_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
-    form = RequestAccessForm()
-    messages = []
+
     if request.method == 'POST':
         form = RequestAccessForm(request.POST)
         if form.is_valid():
             justification = form.cleaned_data['justification']
-            name = f'{request.user.first_name} {request.user.last_name}'
+            contact_email = form.cleaned_data['email']
+            team_name = form.cleaned_data['team']
 
             user_edit_relative = reverse('admin:auth_user_change', args=[request.user.id])
             user_url = request.build_absolute_uri(user_edit_relative)
@@ -89,17 +82,23 @@ def dataset_full_path_view(request, group_slug, set_slug):
 
             dataset_url = request.build_absolute_uri()
 
-            ticket_reference = create_zendesk_ticket(request.user.email,
-                                                     name,
+            ticket_reference = create_zendesk_ticket(contact_email,
+                                                     request.user,
+                                                     team_name,
                                                      justification,
                                                      user_url,
                                                      dataset_name,
-                                                     dataset_url)
+                                                     dataset_url,
+                                                     dataset.grouping.information_asset_owner,
+                                                     dataset.grouping.information_asset_manager)
 
             url = reverse('request_access_success')
             return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
 
-    return dataset_full_path_view_get(request, dataset, form, messages)
+    return render(request, 'request_access.html', {
+        'dataset': dataset,
+        'authenticated_user': request.user
+    })
 
 
 def find_dataset(group_slug, set_slug):
@@ -112,7 +111,19 @@ def find_dataset(group_slug, set_slug):
     return dataset
 
 
-def dataset_full_path_view_get(request, dataset, form, messages):
+@require_GET
+def request_access_success_view(request):
+    ticket = request.GET.get('ticket', 'Not specified')
+
+    return render(request, 'request_access_success.html', {
+        'ticket': ticket
+    })
+
+
+@require_GET
+def dataset_full_path_view(request, group_slug, set_slug):
+    dataset = find_dataset(group_slug, set_slug)
+
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
 
     can_access_schemas = {
@@ -145,13 +156,9 @@ def dataset_full_path_view_get(request, dataset, form, messages):
 
     context = {
         'model': dataset,
-        'form': form,
         'must_request_download_access': must_request_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
         'database_schema_table_accesses': database_schema_table_accesses,
     }
-
-    if messages:
-        context['messages'] = messages
 
     return render(request, 'dataset.html', context)
