@@ -24,10 +24,18 @@
             <h1 class="govuk-heading-l">Request access</h1>
 
             <p class="govuk-body">
-                Your request has been received by our Zendesk ticketing system. <br/>
-                Your reference is: <strong>{{ ticket }}</strong>
+                Your request has been received. Your reference is: <strong>{{ ticket }}</strong>
+                <br/>
+                You will receive a confirmation email to {{ confirmation_email }}
             </p>
 
+            {% if dataset %}
+                <p class="govuk-body">
+                    Return to <a href="{% url 'dataset_fullpath' dataset.grouping.slug dataset.slug %}">
+                    {{ dataset }}
+                </a>
+                </p>
+            {% endif %}
         </div>
 
     </div>

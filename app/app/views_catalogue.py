@@ -93,7 +93,7 @@ def request_access_view(request, group_slug, set_slug):
                                                      dataset.grouping.information_asset_manager)
 
             url = reverse('request_access_success')
-            return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
+            return HttpResponseRedirect(f'{url}?ticket={ticket_reference}&group={group_slug}&set={set_slug}&email={contact_email}')
 
     return render(request, 'request_access.html', {
         'dataset': dataset,
@@ -114,9 +114,20 @@ def find_dataset(group_slug, set_slug):
 @require_GET
 def request_access_success_view(request):
     ticket = request.GET.get('ticket', 'Not specified')
+    group_slug = request.GET.get('group', '@')  # @ is not a valid path
+    set_slug = request.GET.get('set', '@')
+    email = request.GET.get('email', request.user.email)
+    found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)
+
+    dataset = None
+
+    if found:
+        dataset = found[0]
 
     return render(request, 'request_access_success.html', {
-        'ticket': ticket
+        'ticket': ticket,
+        'dataset': dataset,
+        'confirmation_email': email,
     })
 
 
