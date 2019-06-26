@@ -91,11 +91,25 @@ def new_private_database_credentials(user):
             'db_password': password,
         }
 
-    database_to_schemas = {
+    database_to_schemas_from_privilages = {
         database_obj: [
             privilage.schema for privilage in privilages_for_database
         ]
         for database_obj, privilages_for_database in itertools.groupby(get_private_privilages(user), lambda privilage: privilage.database)
+    }
+    database_to_schemas_from_source_schemas = {
+        database_obj: [
+            source_schema.schema for source_schema in source_schemas_for_database
+        ]
+        for database_obj, source_schemas_for_database in itertools.groupby(source_schemas_for_user(user), lambda source_schema: source_schema.database)
+    }
+
+    databases = remove_duplicates(list(database_to_schemas_from_privilages.keys()) + list(database_to_schemas_from_source_schemas.keys()))
+    database_to_schemas = {
+        database:
+        (database_to_schemas_from_privilages[database] if database in database_to_schemas_from_privilages else []) +
+            (database_to_schemas_from_source_schemas[database] if database in database_to_schemas_from_source_schemas else [])
+        for database in databases
     }
 
     creds = [
@@ -154,6 +168,13 @@ def can_access_source_schema(user, database, schema):
     ).exists()
 
 
+def source_schemas_for_user(user):
+    return SourceSchema.objects.filter(
+        Q(dataset__user_access_type='REQUIRES_AUTHENTICATION') |
+        Q(dataset__datasetuserpermission__user=user)
+    ).order_by('database__memorable_name', 'schema', 'id')
+
+
 def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
     application_instance.single_running_or_spawning_integrity = str(application_instance.id)
@@ -173,3 +194,9 @@ def tables_in_schema(cur, schema):
     results = [result[0] for result in cur.fetchall()]
     logger.info('tables_in_schema: %s %s', schema, results)
     return results
+
+
+def remove_duplicates(to_have_duplicates_removed):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in to_have_duplicates_removed if not (x in seen or seen_add(x))]
