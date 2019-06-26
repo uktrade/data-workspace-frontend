@@ -1,0 +1,37 @@
+{% extends '_base.html' %}
+
+{% block page_title %}Privacy Policy - {{ block.super }}{% endblock %}
+
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+
+
+            <li class="govuk-breadcrumbs__list-item">Privacy Policy
+            </li>
+
+        </ol>
+    </div>
+{% endblock %}
+
+{% block inner_content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">Privacy Policy</h1>
+
+            <p class="govuk-body">
+                {% lorem 50 w  %}
+            </p>
+
+            <p class="govuk-body">
+                {% lorem 50 w random %}
+            </p>
+
+        </div>
+
+    </div>
+{% endblock %}

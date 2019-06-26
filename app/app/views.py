@@ -43,8 +43,8 @@ logger = logging.getLogger('app')
 def root_view(request):
     return \
         root_view_GET(request) if request.method == 'GET' else \
-        root_view_POST(request) if request.method == 'POST' else \
-        HttpResponse(status=405)
+            root_view_POST(request) if request.method == 'POST' else \
+                HttpResponse(status=405)
 
 
 def root_view_GET(request):
@@ -137,3 +137,7 @@ def _remove_duplicates(to_have_duplicates_removed):
     seen = set()
     seen_add = seen.add
     return [x for x in to_have_duplicates_removed if not (x in seen or seen_add(x))]
+
+
+def privacy_view(request):
+    return render(request, 'privacy.html', {})
