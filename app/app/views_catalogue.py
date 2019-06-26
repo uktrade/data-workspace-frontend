@@ -80,7 +80,7 @@ def request_access_view(request, group_slug, set_slug):
 
             dataset_name = f'{dataset.grouping.name} > {dataset.name}'
 
-            dataset_url = request.build_absolute_uri()
+            dataset_url = request.build_absolute_uri(reverse('dataset_fullpath', args=[group_slug, set_slug]))
 
             ticket_reference = create_zendesk_ticket(contact_email,
                                                      request.user,
@@ -93,7 +93,8 @@ def request_access_view(request, group_slug, set_slug):
                                                      dataset.grouping.information_asset_manager)
 
             url = reverse('request_access_success')
-            return HttpResponseRedirect(f'{url}?ticket={ticket_reference}&group={group_slug}&set={set_slug}&email={contact_email}')
+            return HttpResponseRedirect(
+                f'{url}?ticket={ticket_reference}&group={group_slug}&set={set_slug}&email={contact_email}')
 
     return render(request, 'request_access.html', {
         'dataset': dataset,
