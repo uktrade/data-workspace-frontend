@@ -24,7 +24,9 @@ from django.views.decorators.csrf import (
 
 from app.views import (
     root_view,
+    privacy_view,
 )
+
 from app.views_application import (
     application_spawning_html_view,
     application_api_view,
@@ -44,7 +46,7 @@ from app.views_table_data import (
 from app.views_catalogue import (
     datagroup_item_view,
     dataset_full_path_view,
-)
+    request_access_view)
 
 from app.views_appstream import (
     appstream_view,
@@ -100,7 +102,10 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
+
     return _login_required
+
+
 
 
 admin.autodiscover()
@@ -125,6 +130,9 @@ urlpatterns = [
     path('datagroup/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
     path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
          name='dataset_fullpath'),
+    path('request_access_success/', login_required(request_access_view),
+         name='request_access_success'),
+    path('privacy', login_required(privacy_view), name='privacy'),
 
 ]
 
