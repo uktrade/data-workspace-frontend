@@ -129,12 +129,11 @@ urlpatterns = [
     path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
     path('healthcheck', healthcheck_view),  # No authentication
 
-    path('datagroup/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
-    path('<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
-    path('datagroup/<str:group_slug>/dataset/<str:set_slug>', login_required(dataset_full_path_view),
+    path('catalogue/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
+
+    path('catalogue/<str:group_slug>/<str:set_slug>', login_required(dataset_full_path_view),
          name='dataset_fullpath'),
-    path('<str:group_slug>/<str:set_slug>', login_required(dataset_full_path_view),
-         name='dataset_fullpath'),
+
     path('request-access/<str:group_slug>/<str:set_slug>', login_required(request_access_view), name='request_access'),
     path('request_access_success/', login_required(request_access_success_view),
          name='request_access_success'),
