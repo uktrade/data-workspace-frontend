@@ -66,12 +66,6 @@ class Privilage(models.Model):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public'
     )
-    tables = models.CharField(
-        max_length=1024,
-        blank=False,
-        validators=[RegexValidator(regex=r'(([a-zA-Z][a-zA-Z0-9_\.]*,?)+(?<!,)$)|(^ALL TABLES$)')],
-        help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
-    )
 
     class Meta:
         indexes = [
@@ -80,7 +74,7 @@ class Privilage(models.Model):
         unique_together = ('user', 'database', 'schema')
 
     def __str__(self):
-        return f'{self.user} / {self.database} / {self.schema} / {self.tables}'
+        return f'{self.user} / {self.database} / {self.schema}'
 
 
 class ApplicationTemplate(models.Model):
@@ -322,36 +316,6 @@ class SourceSchema(models.Model):
         blank=False,
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public'
-    )
-
-
-class SourceTables(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
-    dataset = models.ForeignKey(
-        DataSet,
-        on_delete=models.CASCADE,
-    )
-    database = models.ForeignKey(
-        Database,
-        default=None,
-        on_delete=models.CASCADE,
-    )
-    schema = models.CharField(
-        max_length=1024,
-        blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
-        default='public'
-    )
-    tables = models.CharField(
-        max_length=1024,
-        blank=False,
-        # ALL TABLES is for backwards compatibility
-        validators=[RegexValidator(regex=r'(([a-zA-Z][a-zA-Z0-9_\.]*,?)+(?<!,)$)|(^ALL TABLES$)')],
-        help_text='Comma-separated list of tables that can be accessed on this schema. "ALL TABLES" (without quotes) to allow access to all tables.',
     )
 
 

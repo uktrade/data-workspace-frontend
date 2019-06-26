@@ -44,7 +44,7 @@ def get_private_privilages(user):
         database__is_public=False,
         user=user,
     ).order_by(
-        'database__memorable_name', 'schema', 'tables', 'id'
+        'database__memorable_name', 'schema', 'id'
     )
 
 
@@ -59,32 +59,26 @@ def new_private_database_credentials(user):
     def postgres_password():
         return ''.join(secrets.choice(password_alphabet) for i in range(64))
 
-    def get_new_credentials(database_obj, privilages_for_database):
+    def get_new_credentials(database_obj, schemas):
         user = postgres_user()
         password = postgres_password()
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
-        valid_until = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
+        valid_until = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
         with connections[database_obj.memorable_name].cursor() as cur:
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
                 sql.Identifier(user)), [password, valid_until])
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
                 sql.Identifier(database_data['NAME']), sql.Identifier(user)))
 
-            for privilage in privilages_for_database:
+            for schema in schemas:
+                logger.info(
+                    'Granting permissions to %s %s to %s',
+                    database_obj.memorable_name, schema, user)
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                    sql.Identifier(privilage.schema), sql.Identifier(user)))
-                tables_sql_list = sql.SQL(',').join([
-                    sql.SQL('{}.{}').format(sql.Identifier(
-                        privilage.schema), sql.Identifier(table))
-                    for table in privilage.tables.split(',')
-                ])
+                    sql.Identifier(schema), sql.Identifier(user)))
                 tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(privilage.schema),
-                                                                                     sql.Identifier(
-                                                                                         user)) if privilage.tables == 'ALL TABLES' else \
-                        sql.SQL('GRANT SELECT ON {} TO {};').format(
-                            tables_sql_list, sql.Identifier(user))
+                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(schema), sql.Identifier(user))
                 cur.execute(tables_sql)
 
         return {
@@ -97,10 +91,16 @@ def new_private_database_credentials(user):
         }
 
     privilages = get_private_privilages(user)
+    database_to_schemas = {
+        database_obj: [
+            privilage.schema for privilage in privilages_for_database
+        ]
+        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
+    }
 
     creds = [
-        get_new_credentials(database_obj, privilages_for_database)
-        for database_obj, privilages_for_database in itertools.groupby(privilages, lambda privilage: privilage.database)
+        get_new_credentials(database_obj, schemas)
+        for database_obj, schemas in database_to_schemas.items()
     ]
 
     # Create a profile in case it doesn't have one
@@ -133,17 +133,15 @@ def new_private_database_credentials(user):
     return creds
 
 
-def can_access_table(user, privilages, database, schema, table):
-    return can_access_schema(user, database, schema) or any(
+def can_access_schema(user, privilages, database, schema):
+    return can_access_source_schema(user, database, schema) or any(
         True
         for privilage in privilages
-        for privilage_table in privilage.tables.split(',')
-        if privilage.database.memorable_name == database and privilage.schema == schema and (
-                    privilage_table in [table, 'ALL TABLES'])
+        if privilage.database.memorable_name == database and privilage.schema == schema
     )
 
 
-def can_access_schema(user, database, schema):
+def can_access_source_schema(user, database, schema):
     sourceschema = SourceSchema.objects.filter(
         schema=schema,
         database__memorable_name=database,
