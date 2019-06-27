@@ -4,23 +4,6 @@
 
 {% block page_title %}{{ model.name }} - {{ model.grouping.name }} - {{ block.super }}{% endblock %}
 
-{% block head %}
-    {{ block.super }}
-    <style>
-        .request-access-container {
-            max-height: 0px;
-            padding: 0;
-            overflow: hidden;
-            transition: max-height 0.15s ease-out;
-        }
-
-        .request-access-container--visible {
-            max-height: 500px;
-        }
-
-    </style>
-{% endblock %}
-
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
