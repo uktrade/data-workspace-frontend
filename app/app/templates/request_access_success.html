@@ -2,18 +2,14 @@
 
 {% block page_title %}Access Request Confirmed - {{ block.super }}{% endblock %}
 
-
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
             <li class="govuk-breadcrumbs__list-item">
                 <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
-
-
             <li class="govuk-breadcrumbs__list-item">Request Access
             </li>
-
         </ol>
     </div>
 {% endblock %}
@@ -31,12 +27,12 @@
 
             {% if dataset %}
                 <p class="govuk-body">
-                    Return to <a href="{% url 'dataset_fullpath' dataset.grouping.slug dataset.slug %}">
-                    {{ dataset }}
-                </a>
+                    Return to
+                    <a href="{% url 'dataset_fullpath' dataset.grouping.slug dataset.slug %}">
+                        {{ dataset }}
+                    </a>
                 </p>
             {% endif %}
         </div>
-
     </div>
 {% endblock %}
