@@ -18,7 +18,7 @@ def aws_fargate_private_ip():
 
 ALLOWED_HOSTS = \
     (env['ALLOWED_HOSTS']) if DEBUG else \
-    (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
+        (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -174,5 +174,5 @@ ZENDESK_EMAIL = env['ZENDESK_EMAIL']
 ZENDESK_SUBDOMAIN = env['ZENDESK_SUBDOMAIN']
 ZENDESK_TOKEN = env['ZENDESK_TOKEN']
 
-ZENDESK_SERVICE_FIELD_ID = '44394845'
-ZENDESK_SERVICE_FIELD_VALUE = 'data_catalogue'
+ZENDESK_SERVICE_FIELD_ID = env['ZENDESK_SERVICE_FIELD_ID']  # '44394845'
+ZENDESK_SERVICE_FIELD_VALUE = env['ZENDESK_SERVICE_FIELD_VALUE']  # 'data_catalogue'
