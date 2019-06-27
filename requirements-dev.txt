@@ -5,8 +5,10 @@ astroid==2.2.5
 async-timeout==3.0.1
 attrs==19.1.0
 autopep8==1.4.4
+beautifulsoup4==4.7.1
 boto3==1.9.123
 botocore==1.12.166
+cachetools==3.1.1
 certifi==2019.3.9
 cfgv==2.0.0
 chardet==3.0.4
@@ -17,6 +19,7 @@ django-govuk-template==0.8
 django-redis==4.10.0
 docutils==0.14
 Flask==1.0.3
+future==0.17.1
 gevent==1.4.0
 govuk-template==0.2.42
 greenlet==0.4.15
@@ -57,4 +60,5 @@ virtualenv==16.6.1
 Werkzeug==0.15.4
 wrapt==1.11.2
 yarl==1.3.0
+zenpy==2.0.12
 zipp==0.5.1

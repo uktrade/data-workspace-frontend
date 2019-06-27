@@ -1,0 +1,38 @@
+{% extends '_base.html' %}
+
+{% block page_title %}Access request confirmed - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">Request access
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block inner_content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">Request access</h1>
+
+            <p class="govuk-body">
+                Your request has been received. Your reference is: <strong>{{ ticket }}</strong>
+                <br/>
+                You will receive a confirmation email to {{ confirmation_email }}
+            </p>
+
+            {% if dataset %}
+                <p class="govuk-body">
+                    Return to
+                    <a href="{% url 'dataset_fullpath' dataset.grouping.slug dataset.slug %}">
+                        {{ dataset }}
+                    </a>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

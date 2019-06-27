@@ -380,6 +380,12 @@ APP_ENV = {
     'APPLICATION_TEMPLATES__1__SPAWNER': 'PROCESS',
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1': 'python3',
     'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2': '/test/echo_server.py',
+    'ZENDESK_EMAIL': 'test@test.com',
+    'ZENDESK_SUBDOMAIN': 'subdomain',
+    'ZENDESK_TOKEN': 'abcd',
+    'ZENDESK_SERVICE_FIELD_ID': '654321',
+    'ZENDESK_SERVICE_FIELD_VALUE': 'field_value'
+
 }
 
 

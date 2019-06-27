@@ -66,7 +66,6 @@ def new_private_database_credentials(user):
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
         with connections[database_obj.memorable_name].cursor() as cur:
-
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
                 sql.Identifier(user)), [password, valid_until])
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
@@ -79,7 +78,8 @@ def new_private_database_credentials(user):
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
                     sql.Identifier(schema), sql.Identifier(user)))
                 tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(schema), sql.Identifier(user))
+                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(schema),
+                                                                                     sql.Identifier(user))
                 cur.execute(tables_sql)
 
         return {
@@ -124,7 +124,7 @@ def new_private_database_credentials(user):
         bucket = settings.NOTEBOOKS_BUCKET
         s3_client = boto3.client('s3')
         s3_prefix = 'user/federated/' + \
-            hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
+                    hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest() + '/'
 
         logger.info('Saving creds for %s to %s %s', user, bucket, s3_prefix)
         for cred in creds:

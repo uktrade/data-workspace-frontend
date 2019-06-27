@@ -193,7 +193,7 @@ class DataSetForm(forms.ModelForm):
         is_instance = 'instance' in kwargs and kwargs['instance']
         self.fields['requires_authorization'].initial = \
             kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION' if is_instance else \
-            False
+            True
 
 
 class DataSetAdmin(admin.ModelAdmin):

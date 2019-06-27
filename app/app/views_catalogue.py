@@ -3,7 +3,10 @@ import logging
 from django.db import (
     connections
 )
-from django.http import Http404
+from django import forms
+
+from django.urls import reverse
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import (
     render,
     get_object_or_404,
@@ -11,16 +14,19 @@ from django.shortcuts import (
 
 from django.views.decorators.http import (
     require_GET,
+    require_http_methods,
 )
 
 from app.models import (
     DataGrouping,
     DataSet,
 )
+
 from app.shared import (
     can_access_source_schema,
     tables_in_schema,
 )
+from app.zendesk import create_zendesk_ticket
 
 logger = logging.getLogger('app')
 
@@ -53,18 +59,87 @@ def datagroup_item_view(request, slug):
     return render(request, 'datagroup.html', context)
 
 
-@require_GET
-def dataset_full_path_view(request, group_slug, set_slug):
+class RequestAccessForm(forms.Form):
+    email = forms.CharField(widget=forms.TextInput, required=True)
+    justification = forms.CharField(widget=forms.Textarea, required=True)
+    team = forms.CharField(widget=forms.TextInput, required=True)
+
+
+@require_http_methods(['GET', 'POST'])
+def request_access_view(request, group_slug, set_slug):
+    dataset = find_dataset(group_slug, set_slug)
+
+    if request.method == 'POST':
+        form = RequestAccessForm(request.POST)
+        if form.is_valid():
+            justification = form.cleaned_data['justification']
+            contact_email = form.cleaned_data['email']
+            team_name = form.cleaned_data['team']
+
+            user_edit_relative = reverse('admin:auth_user_change', args=[request.user.id])
+            user_url = request.build_absolute_uri(user_edit_relative)
+
+            dataset_name = f'{dataset.grouping.name} > {dataset.name}'
+
+            dataset_url = request.build_absolute_uri(reverse('dataset_fullpath', args=[group_slug, set_slug]))
+
+            ticket_reference = create_zendesk_ticket(contact_email,
+                                                     request.user,
+                                                     team_name,
+                                                     justification,
+                                                     user_url,
+                                                     dataset_name,
+                                                     dataset_url,
+                                                     dataset.grouping.information_asset_owner,
+                                                     dataset.grouping.information_asset_manager)
+
+            url = reverse('request_access_success')
+            return HttpResponseRedirect(
+                f'{url}?ticket={ticket_reference}&group={group_slug}&set={set_slug}&email={contact_email}')
+
+    return render(request, 'request_access.html', {
+        'dataset': dataset,
+        'authenticated_user': request.user
+    })
+
+
+def find_dataset(group_slug, set_slug):
     found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)
 
     if not found:
         raise Http404
 
     dataset = found[0]
+    return dataset
+
+
+@require_GET
+def request_access_success_view(request):
+    # yes this could cause 400 errors but Todo - replace with session / messages
+    ticket = request.GET['ticket']
+    group_slug = request.GET['group']
+    set_slug = request.GET['set']
+    email = request.GET['email']
+
+    dataset = find_dataset(group_slug, set_slug)
+
+    return render(request, 'request_access_success.html', {
+        'ticket': ticket,
+        'dataset': dataset,
+        'confirmation_email': email,
+    })
+
+
+@require_GET
+def dataset_full_path_view(request, group_slug, set_slug):
+    dataset = find_dataset(group_slug, set_slug)
+
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
 
     can_access_schemas = {
-        (schema.database.memorable_name, schema.schema): can_access_source_schema(request.user, schema.database.memorable_name, schema.schema)
+        (schema.database.memorable_name, schema.schema): can_access_source_schema(request.user,
+                                                                                  schema.database.memorable_name,
+                                                                                  schema.schema)
         for schema in schemas
     }
 
@@ -85,8 +160,13 @@ def dataset_full_path_view(request, group_slug, set_slug):
         for table in connect_and_tables_in_schema(schema)
     ]
 
+    must_request_download_access = \
+        dataset.user_access_type == 'REQUIRES_AUTHORIZATION' and \
+        not dataset.datasetuserpermission_set.filter(user=request.user).exists()
+
     context = {
         'model': dataset,
+        'must_request_download_access': must_request_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
         'database_schema_table_accesses': database_schema_table_accesses,
     }

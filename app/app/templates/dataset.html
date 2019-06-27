@@ -30,7 +30,6 @@
 {% endblock %}
 
 {% block inner_content %}
-
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">{{ model.name }}</h1>
@@ -42,16 +41,26 @@
             {% include 'partials/contact.html' with model=model.enquiries_contact only %}
 
         </div>
-
-        <div class="govuk-grid-column-one-third">
-            <!-- nav -->
-        </div>
     </div>
-
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
+
+            {% if must_request_download_access %}
+                <div class="govuk-warning-text">
+                    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+                    <div class="govuk-warning-text__text">
+                        <strong>
+                            <span class="govuk-warning-text__assistive">Warning</span>
+                            You do not have permission to access these links.
+                            <br>
+                            <a class="govuk-link--no-visited-state" href="{% url 'request_access' model.grouping.slug model.slug %}">Request access</a>
+                        </strong>
+                    </div>
+                </div>
+            {% endif %}
+
             <table class="govuk-table catalogue-table">
                 <thead>
                 <tr class="govuk-table__row">
@@ -62,12 +71,17 @@
                 </tr>
                 </thead>
                 <tbody>
+
                 {% for link in links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            <a class="govuk-link" href="{{ link.url }}">
+                            {% if must_request_download_access %}
                                 {{ link.name }}
-                            </a>
+                            {% else %}
+                                <a class="govuk-link" href="{{ link.url }}">
+                                    {{ link.name }}
+                                </a>
+                            {% endif %}
                         </td>
                         <td class="govuk-table__cell">
                             {{ link.format }}
@@ -80,14 +94,20 @@
                         </td>
                     </tr>
                 {% endfor %}
+
                 {% for database, schema, table, access in database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            <a
-                                class="govuk-link"
-                                href="{% url 'table_data' database schema table %}">
+                            {% if access %}
+                                <a
+                                        class="govuk-link"
+                                        href="{% url 'table_data' database schema table %}">
+                                    {{ schema }} / {{ table }}
+                                </a>
+                            {% else %}
                                 {{ schema }} / {{ table }}
-                            </a>
+                            {% endif %}
+
                         </td>
                         <td class="govuk-table__cell">
                             CSV
@@ -98,6 +118,7 @@
                         </td>
                     </tr>
                 {% endfor %}
+
                 {% if not links and not database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
@@ -105,6 +126,7 @@
                         </td>
                     </tr>
                 {% endif %}
+
                 </tbody>
             </table>
         </div>
