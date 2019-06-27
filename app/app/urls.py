@@ -24,7 +24,6 @@ from django.views.decorators.csrf import (
 
 from app.views import (
     root_view,
-    privacy_view,
 )
 
 from app.views_application import (
@@ -125,7 +124,6 @@ urlpatterns = [
     path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
     path('healthcheck', healthcheck_view),  # No authentication
 
-    path('privacy', login_required(privacy_view), name='privacy'),
     path('catalogue/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
 
     path('catalogue/<str:group_slug>/<str:set_slug>', login_required(dataset_full_path_view),

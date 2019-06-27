@@ -44,8 +44,8 @@ logger = logging.getLogger('app')
 def root_view(request):
     return \
         root_view_GET(request) if request.method == 'GET' else \
-        root_view_POST(request) if request.method == 'POST' else \
-        HttpResponse(status=405)
+            root_view_POST(request) if request.method == 'POST' else \
+                HttpResponse(status=405)
 
 
 def root_view_GET(request):
@@ -132,12 +132,3 @@ def _flatten(to_flatten):
         for sub_list in to_flatten
         for item in sub_list
     ]
-
-
-def privacy_view(request):
-    return render(request, 'privacy.html', {
-        # Yes hardcoded dates - but this policy is not data driven so will
-        # require a code deployment to change
-        'published_date': '26 June 2019 @ 13:35 UTC',
-        'updated_date': '26 June 2019 @ 13:35 UTC',
-    })
