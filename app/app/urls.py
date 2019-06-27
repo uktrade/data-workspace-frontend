@@ -45,7 +45,9 @@ from app.views_table_data import (
 from app.views_catalogue import (
     datagroup_item_view,
     dataset_full_path_view,
-    request_access_view, request_access_success_view)
+    request_access_view,
+    request_access_success_view,
+)
 
 from app.views_appstream import (
     appstream_view,
@@ -101,7 +103,6 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
-
     return _login_required
 
 

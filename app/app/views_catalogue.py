@@ -14,7 +14,8 @@ from django.shortcuts import (
 
 from django.views.decorators.http import (
     require_GET,
-    require_http_methods)
+    require_http_methods,
+)
 
 from app.models import (
     DataGrouping,

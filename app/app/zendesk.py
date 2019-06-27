@@ -77,10 +77,17 @@ def create_zendesk_ticket(contact_email,
         token=settings.ZENDESK_TOKEN,
     )
 
-    ticket_description = build_ticket_description_text(dataset_name, dataset_url, contact_email, user,
-                                                       justification_text, team_name)
+    ticket_description = build_ticket_description_text(dataset_name,
+                                                       dataset_url,
+                                                       contact_email,
+                                                       user,
+                                                       justification_text,
+                                                       team_name)
 
-    private_comment = build_private_comment_text(information_asset_owner, information_asset_manager, approval_url)
+    private_comment = build_private_comment_text(information_asset_owner,
+                                                 information_asset_manager,
+                                                 approval_url)
+
     username = get_username(user)
     subject = f'Access Request for {dataset_name}'
 
