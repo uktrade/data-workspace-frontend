@@ -115,16 +115,13 @@ def find_dataset(group_slug, set_slug):
 
 @require_GET
 def request_access_success_view(request):
-    ticket = request.GET.get('ticket', 'Not specified')
-    group_slug = request.GET.get('group', '@')  # @ is not a valid path
-    set_slug = request.GET.get('set', '@')
-    email = request.GET.get('email', request.user.email)
-    found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)
+    # yes this could cause 400 errors but Todo - replace with session / messages
+    ticket = request.GET['ticket']
+    group_slug = request.GET['group']
+    set_slug = request.GET['set']
+    email = request.GET['email']
 
-    dataset = None
-
-    if found:
-        dataset = found[0]
+    dataset = find_dataset(group_slug, set_slug)
 
     return render(request, 'request_access_success.html', {
         'ticket': ticket,
