@@ -41,16 +41,12 @@
             {% include 'partials/contact.html' with model=model.enquiries_contact only %}
 
         </div>
-
-        <div class="govuk-grid-column-one-third">
-            <!-- nav -->
-        </div>
     </div>
-
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
+
             {% if must_request_download_access %}
                 <div class="govuk-warning-text">
                     <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -75,6 +71,7 @@
                 </tr>
                 </thead>
                 <tbody>
+
                 {% for link in links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
@@ -97,6 +94,7 @@
                         </td>
                     </tr>
                 {% endfor %}
+
                 {% for database, schema, table, access in database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
@@ -120,6 +118,7 @@
                         </td>
                     </tr>
                 {% endfor %}
+
                 {% if not links and not database_schema_table_accesses %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
@@ -127,6 +126,7 @@
                         </td>
                     </tr>
                 {% endif %}
+                
                 </tbody>
             </table>
         </div>
