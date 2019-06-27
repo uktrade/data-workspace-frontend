@@ -2,18 +2,14 @@
 
 {% block page_title %}Request Access - {{ dataset.name }}- {{ block.super }}{% endblock %}
 
-
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
             <li class="govuk-breadcrumbs__list-item">
                 <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
-
-
             <li class="govuk-breadcrumbs__list-item">Request Access
             </li>
-
         </ol>
     </div>
 {% endblock %}
@@ -26,10 +22,7 @@
                 <a href="{% url 'dataset_fullpath' dataset.grouping.slug dataset.slug %}">
                     {{ dataset.grouping.name }} &gt; {{ dataset.name }}</a>
             </p>
-            <p class="govuk-body">
 
-
-            </p>
             <form method="post">
                 {% csrf_token %}
                 <fieldset class="govuk-fieldset">
@@ -57,7 +50,7 @@
                     </div>
                 </fieldset>
             </form>
+            
         </div>
-
     </div>
 {% endblock %}
