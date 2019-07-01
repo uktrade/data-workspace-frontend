@@ -45,30 +45,27 @@ class ProcessSpawner():
     @staticmethod
     def spawn(_, __, application_instance_id, spawner_options, ___):
 
-        def _spawn():
-            try:
-                gevent.sleep(1)
-                cmd = json.loads(spawner_options)['CMD']
-                logger.info('Starting %s', cmd)
-                proc = subprocess.Popen(cmd, cwd='/home/django')
+        try:
+            gevent.sleep(1)
+            cmd = json.loads(spawner_options)['CMD']
+            logger.info('Starting %s', cmd)
+            proc = subprocess.Popen(cmd, cwd='/home/django')
 
-                application_instance = ApplicationInstance.objects.get(
-                    id=application_instance_id,
-                )
-                application_instance.spawner_application_instance_id = json.dumps({
-                    'process_id': proc.pid,
-                })
-                application_instance.save()
+            application_instance = ApplicationInstance.objects.get(
+                id=application_instance_id,
+            )
+            application_instance.spawner_application_instance_id = json.dumps({
+                'process_id': proc.pid,
+            })
+            application_instance.save()
 
-                gevent.sleep(1)
-                application_instance.proxy_url = 'http://localhost:8888/'
-                application_instance.save()
-            except Exception:
-                logger.exception('PROCESS %s %s', application_instance_id, spawner_options)
-                if proc:
-                    os.kill(int(proc.pid), 9)
-
-        gevent.spawn(_spawn)
+            gevent.sleep(1)
+            application_instance.proxy_url = 'http://localhost:8888/'
+            application_instance.save()
+        except Exception:
+            logger.exception('PROCESS %s %s', application_instance_id, spawner_options)
+            if proc:
+                os.kill(int(proc.pid), 9)
 
     @staticmethod
     def state(_, created_date, spawner_application_id, proxy_url):
@@ -128,109 +125,106 @@ class FargateSpawner():
     @staticmethod
     def spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
 
-        def _spawn():
+        try:
+            task_arn = None
+            options = json.loads(spawner_options)
+
+            role_prefix = options['ROLE_PREFIX']
+            cluster_name = options['CLUSTER_NAME']
+            container_name = options['CONTAINER_NAME']
+            definition_arn = options['DEFINITION_ARN']
+            security_groups = options['SECURITY_GROUPS']
+            subnets = options['SUBNETS']
+            cmd = options['CMD'] if 'CMD' in options else []
+            env = options['ENV']
+            port = options['PORT']
+            assume_role_policy_document = base64.b64decode(
+                options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
+            policy_name = options['POLICY_NAME']
+            policy_document_template = base64.b64decode(
+                options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
+            permissions_boundary_arn = options['PERMISSIONS_BOUNDARY_ARN']
+
+            s3_region = options['S3_REGION']
+            s3_host = options['S3_HOST']
+            s3_bucket = options['S3_BUCKET']
+
+            database_env = {
+                f'DATABASE_DSN__{database["memorable_name"]}':
+                f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} user={database["db_user"]} password={database["db_password"]}'
+                for database in db_credentials
+            }
+
+            logger.info('Starting %s', cmd)
+
+            # Create a role
+            iam_client = boto3.client('iam')
+
+            role_name = role_prefix + user_email_address
+            s3_prefix = 'user/federated/' + \
+                hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
+
             try:
-                task_arn = None
-                options = json.loads(spawner_options)
-
-                role_prefix = options['ROLE_PREFIX']
-                cluster_name = options['CLUSTER_NAME']
-                container_name = options['CONTAINER_NAME']
-                definition_arn = options['DEFINITION_ARN']
-                security_groups = options['SECURITY_GROUPS']
-                subnets = options['SUBNETS']
-                cmd = options['CMD'] if 'CMD' in options else []
-                env = options['ENV']
-                port = options['PORT']
-                assume_role_policy_document = base64.b64decode(
-                    options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
-                policy_name = options['POLICY_NAME']
-                policy_document_template = base64.b64decode(
-                    options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
-                permissions_boundary_arn = options['PERMISSIONS_BOUNDARY_ARN']
-
-                s3_region = options['S3_REGION']
-                s3_host = options['S3_HOST']
-                s3_bucket = options['S3_BUCKET']
-
-                database_env = {
-                    f'DATABASE_DSN__{database["memorable_name"]}':
-                    f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} user={database["db_user"]} password={database["db_password"]}'
-                    for database in db_credentials
-                }
-
-                logger.info('Starting %s', cmd)
-
-                # Create a role
-                iam_client = boto3.client('iam')
-
-                role_name = role_prefix + user_email_address
-                s3_prefix = 'user/federated/' + \
-                    hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
-
-                try:
-                    iam_client.create_role(
-                        RoleName=role_name,
-                        Path='/',
-                        AssumeRolePolicyDocument=assume_role_policy_document,
-                        PermissionsBoundary=permissions_boundary_arn,
-                    )
-                except iam_client.exceptions.EntityAlreadyExistsException:
-                    pass
-                else:
-                    gevent.sleep(10)
-
-                iam_client.put_role_policy(
+                iam_client.create_role(
                     RoleName=role_name,
-                    PolicyName=policy_name,
-                    PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
+                    Path='/',
+                    AssumeRolePolicyDocument=assume_role_policy_document,
+                    PermissionsBoundary=permissions_boundary_arn,
                 )
+            except iam_client.exceptions.EntityAlreadyExistsException:
+                pass
+            else:
+                gevent.sleep(10)
 
+            iam_client.put_role_policy(
+                RoleName=role_name,
+                PolicyName=policy_name,
+                PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
+            )
+
+            gevent.sleep(3)
+
+            role_arn = iam_client.get_role(
+                RoleName=role_name
+            )['Role']['Arn']
+            logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
+
+            s3_env = {
+                'S3_PREFIX': s3_prefix,
+                'S3_REGION': s3_region,
+                'S3_HOST': s3_host,
+                'S3_BUCKET': s3_bucket,
+            }
+
+            start_task_response = _fargate_task_run(
+                role_arn, cluster_name, container_name, definition_arn, security_groups, subnets,
+                cmd, {**s3_env, **database_env, **env},
+            )
+
+            task_arn = \
+                start_task_response['tasks'][0]['taskArn'] if 'tasks' in start_task_response else \
+                start_task_response['task']['taskArn']
+            application_instance = ApplicationInstance.objects.get(
+                id=application_instance_id,
+            )
+            application_instance.spawner_application_instance_id = json.dumps({
+                'task_arn': task_arn,
+            })
+            application_instance.save()
+
+            for _ in range(0, 60):
+                ip_address = _fargate_task_ip(options['CLUSTER_NAME'], task_arn)
+                if ip_address:
+                    application_instance.proxy_url = f'http://{ip_address}:{port}'
+                    application_instance.save()
+                    return
                 gevent.sleep(3)
 
-                role_arn = iam_client.get_role(
-                    RoleName=role_name
-                )['Role']['Arn']
-                logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
-
-                s3_env = {
-                    'S3_PREFIX': s3_prefix,
-                    'S3_REGION': s3_region,
-                    'S3_HOST': s3_host,
-                    'S3_BUCKET': s3_bucket,
-                }
-
-                start_task_response = _fargate_task_run(
-                    role_arn, cluster_name, container_name, definition_arn, security_groups, subnets,
-                    cmd, {**s3_env, **database_env, **env},
-                )
-
-                task_arn = \
-                    start_task_response['tasks'][0]['taskArn'] if 'tasks' in start_task_response else \
-                    start_task_response['task']['taskArn']
-                application_instance = ApplicationInstance.objects.get(
-                    id=application_instance_id,
-                )
-                application_instance.spawner_application_instance_id = json.dumps({
-                    'task_arn': task_arn,
-                })
-                application_instance.save()
-
-                for _ in range(0, 60):
-                    ip_address = _fargate_task_ip(options['CLUSTER_NAME'], task_arn)
-                    if ip_address:
-                        application_instance.proxy_url = f'http://{ip_address}:{port}'
-                        application_instance.save()
-                        return
-                    gevent.sleep(3)
-
-                raise Exception('Spawner timed out before finding ip address')
-            except Exception:
-                logger.exception('FARGATE %s %s', application_instance_id, spawner_options)
-                if task_arn:
-                    _fargate_task_stop(cluster_name, task_arn)
-
-        gevent.spawn(_spawn)
+            raise Exception('Spawner timed out before finding ip address')
+        except Exception:
+            logger.exception('FARGATE %s %s', application_instance_id, spawner_options)
+            if task_arn:
+                _fargate_task_stop(cluster_name, task_arn)
 
     @staticmethod
     def state(spawner_options, created_date, spawner_application_id, proxy_url):
