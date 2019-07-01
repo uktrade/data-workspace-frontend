@@ -180,8 +180,8 @@ def application_api_PUT(request, public_host):
         single_running_or_spawning_integrity=public_host,
     )
 
-    spawn(
-        get_spawner(application_template.spawner),
+    spawn.delay(
+        application_template.spawner,
         request.user.email, str(request.user.profile.sso_id), application_instance.id,
         application_template.spawner_options, credentials)
 

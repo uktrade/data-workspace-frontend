@@ -12,6 +12,9 @@ import subprocess
 import boto3
 import gevent
 
+from app.cel import (
+    celery_app,
+)
 from app.models import (
     ApplicationInstance,
 )
@@ -27,8 +30,9 @@ def get_spawner(name):
     }[name]
 
 
-def spawn(spawner, user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
-    spawner.spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials)
+@celery_app.task()
+def spawn(name, user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
+    get_spawner(name).spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials)
 
 
 class ProcessSpawner():
