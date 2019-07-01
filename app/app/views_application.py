@@ -180,17 +180,9 @@ def application_api_PUT(request, public_host):
         single_running_or_spawning_integrity=public_host,
     )
 
-    def set_url(proxy_url):
-        application_instance.proxy_url = proxy_url
-        application_instance.save()
-
-    def set_id(spawner_application_instance_id):
-        application_instance.spawner_application_instance_id = spawner_application_instance_id
-        application_instance.save()
-
     spawner_class.spawn(
         request.user.email, str(request.user.profile.sso_id), application_instance.id,
-        application_template.spawner_options, credentials, set_id, set_url)
+        application_template.spawner_options, credentials)
 
     return JsonResponse(api_application_dict(application_instance), status=200)
 

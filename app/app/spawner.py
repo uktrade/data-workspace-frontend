@@ -1,8 +1,4 @@
 ''' Spawners control and report on application instances
-
-A spawner is a collection of functions that don't known anything about
-Django models, and stores no state.
-
 '''
 
 import base64
@@ -15,6 +11,10 @@ import subprocess
 
 import boto3
 import gevent
+
+from app.models import (
+    ApplicationInstance,
+)
 
 
 logger = logging.getLogger('app')
@@ -35,7 +35,7 @@ class ProcessSpawner():
     '''
 
     @staticmethod
-    def spawn(_, __, application_instance_id, spawner_options, ___, set_id, set_url):
+    def spawn(_, __, application_instance_id, spawner_options, ___):
 
         def _spawn():
             try:
@@ -44,12 +44,17 @@ class ProcessSpawner():
                 logger.info('Starting %s', cmd)
                 proc = subprocess.Popen(cmd, cwd='/home/django')
 
-                set_id(json.dumps({
+                application_instance = ApplicationInstance.objects.get(
+                    id=application_instance_id,
+                )
+                application_instance.spawner_application_instance_id = json.dumps({
                     'process_id': proc.pid,
-                }))
+                })
+                application_instance.save()
 
                 gevent.sleep(1)
-                set_url('http://localhost:8888/')
+                application_instance.proxy_url = 'http://localhost:8888/'
+                application_instance.save()
             except Exception:
                 logger.exception('PROCESS %s %s', application_instance_id, spawner_options)
                 if proc:
@@ -113,7 +118,7 @@ class FargateSpawner():
     '''
 
     @staticmethod
-    def spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials, set_id, set_url):
+    def spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
 
         def _spawn():
             try:
@@ -195,14 +200,19 @@ class FargateSpawner():
                 task_arn = \
                     start_task_response['tasks'][0]['taskArn'] if 'tasks' in start_task_response else \
                     start_task_response['task']['taskArn']
-                set_id(json.dumps({
+                application_instance = ApplicationInstance.objects.get(
+                    id=application_instance_id,
+                )
+                application_instance.spawner_application_instance_id = json.dumps({
                     'task_arn': task_arn,
-                }))
+                })
+                application_instance.save()
 
                 for _ in range(0, 60):
                     ip_address = _fargate_task_ip(options['CLUSTER_NAME'], task_arn)
                     if ip_address:
-                        set_url(f'http://{ip_address}:{port}')
+                        application_instance.proxy_url = f'http://{ip_address}:{port}'
+                        application_instance.save()
                         return
                     gevent.sleep(3)
 
