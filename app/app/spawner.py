@@ -36,13 +36,13 @@ class ProcessSpawner():
 
     @staticmethod
     def spawn(_, __, application_instance_id, spawner_options, ___, set_id, set_url):
-        cmd = json.loads(spawner_options)['CMD']
         proc = None
 
         def _spawn():
             nonlocal proc
 
             gevent.sleep(1)
+            cmd = json.loads(spawner_options)['CMD']
             logger.info('Starting %s', cmd)
             proc = subprocess.Popen(cmd, cwd='/home/django')
 
