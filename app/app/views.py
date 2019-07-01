@@ -23,7 +23,7 @@ from app.shared import (
     set_application_stopped,
 )
 from app.spawner import (
-    spawner,
+    get_spawner,
 )
 
 from app.views_catalogue import (
@@ -52,7 +52,7 @@ def root_view_GET(request):
     def can_stop(application_template):
         application_instance = application_instances.get(application_template, None)
         return \
-            application_instance is not None and spawner(application_instance.spawner).can_stop(
+            application_instance is not None and get_spawner(application_instance.spawner).can_stop(
                 application_instance.spawner_application_template_options,
                 application_instance.spawner_application_instance_id,
             )
@@ -83,7 +83,7 @@ def root_view_POST(request):
     )
 
     if application_instance.state != 'STOPPED':
-        spawner(application_instance.spawner).stop(
+        get_spawner(application_instance.spawner).stop(
             application_instance.spawner_application_template_options,
             application_instance.spawner_application_instance_id,
         )

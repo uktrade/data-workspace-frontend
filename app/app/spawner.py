@@ -20,11 +20,15 @@ from app.models import (
 logger = logging.getLogger('app')
 
 
-def spawner(name):
+def get_spawner(name):
     return {
         'PROCESS': ProcessSpawner,
         'FARGATE': FargateSpawner,
     }[name]
+
+
+def spawn(spawner, user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
+    spawner.spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials)
 
 
 class ProcessSpawner():
