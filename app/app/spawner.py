@@ -121,38 +121,40 @@ class FargateSpawner():
 
     @staticmethod
     def spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials, set_id, set_url):
-        options = json.loads(spawner_options)
 
-        role_prefix = options['ROLE_PREFIX']
-        cluster_name = options['CLUSTER_NAME']
-        container_name = options['CONTAINER_NAME']
-        definition_arn = options['DEFINITION_ARN']
-        security_groups = options['SECURITY_GROUPS']
-        subnets = options['SUBNETS']
-        cmd = options['CMD'] if 'CMD' in options else []
-        env = options['ENV']
-        port = options['PORT']
-        assume_role_policy_document = base64.b64decode(
-            options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
-        policy_name = options['POLICY_NAME']
-        policy_document_template = base64.b64decode(
-            options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
-        permissions_boundary_arn = options['PERMISSIONS_BOUNDARY_ARN']
-
-        s3_region = options['S3_REGION']
-        s3_host = options['S3_HOST']
-        s3_bucket = options['S3_BUCKET']
-
+        cluster_name = None
         task_arn = None
-
-        database_env = {
-            f'DATABASE_DSN__{database["memorable_name"]}':
-            f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} user={database["db_user"]} password={database["db_password"]}'
-            for database in db_credentials
-        }
 
         def _spawn():
             nonlocal task_arn
+
+            options = json.loads(spawner_options)
+
+            role_prefix = options['ROLE_PREFIX']
+            cluster_name = options['CLUSTER_NAME']
+            container_name = options['CONTAINER_NAME']
+            definition_arn = options['DEFINITION_ARN']
+            security_groups = options['SECURITY_GROUPS']
+            subnets = options['SUBNETS']
+            cmd = options['CMD'] if 'CMD' in options else []
+            env = options['ENV']
+            port = options['PORT']
+            assume_role_policy_document = base64.b64decode(
+                options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
+            policy_name = options['POLICY_NAME']
+            policy_document_template = base64.b64decode(
+                options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
+            permissions_boundary_arn = options['PERMISSIONS_BOUNDARY_ARN']
+
+            s3_region = options['S3_REGION']
+            s3_host = options['S3_HOST']
+            s3_bucket = options['S3_BUCKET']
+
+            database_env = {
+                f'DATABASE_DSN__{database["memorable_name"]}':
+                f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} user={database["db_user"]} password={database["db_password"]}'
+                for database in db_credentials
+            }
 
             logger.info('Starting %s', cmd)
 
