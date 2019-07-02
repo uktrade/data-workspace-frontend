@@ -27,31 +27,30 @@ logger = logging.getLogger('app')
 
 
 class JsonReader:
+    def __init__(self, database, schema, table):
+        database_connection_string = database_dsn(database)
 
-    def __init__(self, connection, schema, table):
         self.column_names = []
         self.row_num = 0
         self.last_row = False
 
-        self.cur = connection.cursor()
+        self.connection = connect(database_connection_string)
+        self.cur = self.connection.cursor(name='server_side_cursor')
 
-        sql_command = sql.SQL("""
-                        SELECT
-                            *
-                        FROM
-                            {}.{}
-                    """).format(sql.Identifier(schema), sql.Identifier(table))
-
-        logger.debug(sql_command)
+        sql_command = self._get_sql(schema, table)
         # TODO: Perhaps validate that this table exists and raise a custom error
         self.cur.execute(sql_command)
 
-        for column_desc in self.cur.description:
-            self.column_names.append(column_desc[0])
-            logger.debug(column_desc[0])
-
     def __iter__(self):
         return self
+
+    def _get_sql(self, schema, table):
+        return sql.SQL("""
+                                SELECT
+                                    *
+                                FROM
+                                    {}.{}
+                            """).format(sql.Identifier(schema), sql.Identifier(table))
 
     def _get_row_as_json(self, row):
         result = {}
@@ -68,6 +67,11 @@ class JsonReader:
 
         return f'{prefix}{json_text}'
 
+    def _read_column_names(self):
+        for column_desc in self.cur.description:
+            self.column_names.append(column_desc[0])
+            logger.debug(column_desc[0])
+
     def __next__(self):
         self.row_num += 1
         if self.row_num == 1:
@@ -79,17 +83,21 @@ class JsonReader:
         row = self.cur.fetchone()
 
         if row:
+            if self.row_num == 2:
+                self._read_column_names()
+
             json_text = self._get_row_as_json(row)
             return self._escape_row(json_text)
 
         self.last_row = True
         self.cur.close()
+        self.connection.close()
         return ']'
 
 
 def reference_data_view(request, database, schema, table):
     results = ReferenceData.objects.filter(database__memorable_name=database, table_name=table,
-                                       schema=schema)
+                                           schema=schema)
 
     if not results:
         return HttpResponseForbidden()
@@ -97,6 +105,5 @@ def reference_data_view(request, database, schema, table):
     reference_data = results[0]
     logger.debug(f'found key_field is {reference_data.key_field_name}')
 
-    with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
-        reader = JsonReader(conn, schema, table)
-        return StreamingHttpResponse(reader, content_type='application/json')
+    reader = JsonReader(settings.DATABASES_DATA[database], schema, table)
+    return StreamingHttpResponse(reader, content_type='application/json')
