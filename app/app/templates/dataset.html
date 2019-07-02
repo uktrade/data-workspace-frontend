@@ -47,18 +47,20 @@
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
 
-            {% if must_request_download_access %}
-                <div class="govuk-warning-text">
-                    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-                    <div class="govuk-warning-text__text">
-                        <strong>
-                            <span class="govuk-warning-text__assistive">Warning</span>
-                            You do not have permission to access these links.
-                            <br>
-                            <a class="govuk-link--no-visited-state" href="{% url 'request_access' model.grouping.slug model.slug %}">Request access</a>
-                        </strong>
+            {% if links or database_schema_table_accesses %}
+                {% if must_request_download_access %}
+                    <div class="govuk-warning-text">
+                        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+                        <div class="govuk-warning-text__text">
+                            <strong>
+                                <span class="govuk-warning-text__assistive">Warning</span>
+                                You do not have permission to access these links.
+                                <br>
+                                <a class="govuk-link--no-visited-state" href="{% url 'request_access' model.grouping.slug model.slug %}">Request access</a>
+                            </strong>
+                        </div>
                     </div>
-                </div>
+                {% endif %}
             {% endif %}
 
             <table class="govuk-table catalogue-table">
