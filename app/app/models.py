@@ -364,6 +364,9 @@ class ReferenceData(models.Model):
     table_name = models.CharField(max_length=1024, blank=False)
     key_field_name = models.CharField(max_length=128, blank=False, null=False)
 
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f'{self.database} / {self.schema} / {self.table_name}'
 

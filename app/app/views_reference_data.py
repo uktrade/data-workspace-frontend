@@ -11,6 +11,7 @@ from django.http import (
 from django.shortcuts import (
     get_object_or_404,
 )
+from django.views.decorators.http import require_GET
 
 from psycopg2 import (
     connect,
@@ -26,8 +27,9 @@ from .models import (
 logger = logging.getLogger('app')
 
 
-class JsonReader:
-    def __init__(self, database, schema, table):
+class JsonWriter:
+    def __init__(self, reference_data):
+        database = settings.DATABASES_DATA[reference_data.database.memorable_name]
         database_connection_string = database_dsn(database)
 
         self.column_names = []
@@ -37,7 +39,7 @@ class JsonReader:
         self.connection = connect(database_connection_string)
         self.cur = self.connection.cursor(name='server_side_cursor')
 
-        sql_command = self._get_sql(schema, table)
+        sql_command = self._get_sql(reference_data.schema, reference_data.table_name)
         # TODO: Perhaps validate that this table exists and raise a custom error
         self.cur.execute(sql_command)
 
@@ -95,7 +97,16 @@ class JsonReader:
         return ']'
 
 
+@require_GET
 def reference_data_view(request, database, schema, table):
+    response = _get_json_as_streaming_response(database, schema, table)
+    # not sure if requirements are for a downloadable file
+    # response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.json"'
+
+    return response
+
+
+def _get_json_as_streaming_response(database, schema, table):
     results = ReferenceData.objects.filter(database__memorable_name=database, table_name=table,
                                            schema=schema)
 
@@ -103,7 +114,7 @@ def reference_data_view(request, database, schema, table):
         return HttpResponseForbidden()
 
     reference_data = results[0]
-    logger.debug(f'found key_field is {reference_data.key_field_name}')
+    reader = JsonWriter(reference_data)
 
-    reader = JsonReader(settings.DATABASES_DATA[database], schema, table)
-    return StreamingHttpResponse(reader, content_type='application/json')
+    response = StreamingHttpResponse(reader, content_type='application/json')
+    return response

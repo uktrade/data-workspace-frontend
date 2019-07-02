@@ -45,7 +45,7 @@
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Data sets</h2>
 
             {% if links or database_schema_table_accesses %}
                 {% if must_request_download_access %}
@@ -56,7 +56,8 @@
                                 <span class="govuk-warning-text__assistive">Warning</span>
                                 You do not have permission to access these links.
                                 <br>
-                                <a class="govuk-link--no-visited-state" href="{% url 'request_access' model.grouping.slug model.slug %}">Request access</a>
+                                <a class="govuk-link--no-visited-state"
+                                   href="{% url 'request_access' model.grouping.slug model.slug %}">Request access</a>
                             </strong>
                         </div>
                     </div>
@@ -73,19 +74,6 @@
                 </tr>
                 </thead>
                 <tbody>
-
-                {% for table in reference_data %}
-                    <tr class="govuk-table__row">
-                        <td class="govuk-table__cell">
-                            <a href="{% url 'reference_data' table.database table.schema table.table_name %}">
-                                {{ table.database }} / {{ table.schema }} / {{ table.table_name }}
-                            </a>
-                        </td>
-                        <td class="govuk-table__cell"></td>
-                        <td class="govuk-table__cell"></td>
-                        <td class="govuk-table__cell"></td>
-                    </tr>
-                {% endfor %}
 
                 {% for link in links %}
                     <tr class="govuk-table__row">
@@ -144,13 +132,40 @@
 
                 </tbody>
             </table>
+
+            {% if reference_data %}
+                <h2 class="govuk-heading-l">Public data</h2>
+                <table class="govuk-table catalogue-table">
+                    <thead>
+                    <tr class="govuk-table__row">
+                        <th class="govuk-table__header">Link to the data</th>
+                        <th class="govuk-table__header">Format</th>
+                        <th class="govuk-table__header">Updated</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for table in reference_data %}
+                        <tr class="govuk-table__row">
+                            <td class="govuk-table__cell">
+                                <a href="{% url 'reference_data' table.database table.schema table.table_name %}">
+                                    {{ table.database }} / {{ table.schema }} / {{ table.table_name }}
+                                </a>
+                            </td>
+                            <td class="govuk-table__cell">JSON</td>
+                            <td class="govuk-table__cell">{{ table.modified_date | date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+
         </div>
     </div>
 
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
 
             <dl class="govuk-summary-list">
                 <div class="govuk-summary-list__row">
