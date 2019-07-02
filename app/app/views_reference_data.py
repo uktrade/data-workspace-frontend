@@ -38,19 +38,21 @@ class JsonWriter:
         self.connection = connect(database_connection_string)
         self.cur = self.connection.cursor(name='server_side_cursor')
 
-        sql_command = self._get_sql(reference_data.schema, reference_data.table_name)
+        sql_command = self._get_sql(reference_data.schema, reference_data.table_name, reference_data.key_field_name)
+        logger.debug(sql_command)
         self.cur.execute(sql_command)
 
     def __iter__(self):
         return self
 
-    def _get_sql(self, schema, table):
+    def _get_sql(self, schema, table, key_name):
         return sql.SQL("""
                                 SELECT
                                     *
                                 FROM
                                     {}.{}
-                            """).format(sql.Identifier(schema), sql.Identifier(table))
+                                ORDER BY {}
+                            """).format(sql.Identifier(schema), sql.Identifier(table), sql.Identifier(key_name))
 
     def _get_row_as_json(self, row):
         result = {}
