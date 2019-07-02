@@ -55,7 +55,8 @@
                             <span class="govuk-warning-text__assistive">Warning</span>
                             You do not have permission to access these links.
                             <br>
-                            <a class="govuk-link--no-visited-state" href="{% url 'request_access' model.grouping.slug model.slug %}">Request access</a>
+                            <a class="govuk-link--no-visited-state"
+                               href="{% url 'request_access' model.grouping.slug model.slug %}">Request access</a>
                         </strong>
                     </div>
                 </div>
@@ -71,6 +72,19 @@
                 </tr>
                 </thead>
                 <tbody>
+
+                {% for table in reference_data %}
+                    <tr class="govuk-table__row">
+                        <td class="govuk-table__cell">
+                            <a href="{% url 'reference_data' table.database table.schema table.table_name %}">
+                                {{ table.database }} / {{ table.schema }} / {{ table.table_name }}
+                            </a>
+                        </td>
+                        <td class="govuk-table__cell"></td>
+                        <td class="govuk-table__cell"></td>
+                        <td class="govuk-table__cell"></td>
+                    </tr>
+                {% endfor %}
 
                 {% for link in links %}
                     <tr class="govuk-table__row">

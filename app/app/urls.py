@@ -38,6 +38,10 @@ from app.views_error import (
 from app.views_healthcheck import (
     healthcheck_view,
 )
+from app.views_reference_data import (
+    reference_data_view,
+)
+
 from app.views_table_data import (
     table_data_view,
 )
@@ -103,7 +107,11 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
-    return _login_required
+
+    def fake_login(request, *args, **kwargs):
+        return func(request, *args, **kwargs)
+
+    return fake_login
 
 
 admin.autodiscover()
@@ -134,6 +142,7 @@ urlpatterns = [
     path('request_access_success/', login_required(request_access_success_view),
          name='request_access_success'),
 
+    path('reference-data/<str:database>/<str:schema>/<str:table>', reference_data_view, name='reference_data'),
 ]
 
 handler403 = public_error_403_html_view

@@ -30,6 +30,7 @@ from .models import (
     DataSetUserPermission,
     SourceLink,
     SourceSchema,
+    ReferenceData,
 )
 
 logger = logging.getLogger('app')
@@ -40,6 +41,8 @@ admin.site.unregister(Group)
 admin.site.unregister(User)
 
 admin.site.register(Privilage)
+
+admin.site.register(ReferenceData)
 
 
 class DataGroupingAdmin(admin.ModelAdmin):

@@ -160,6 +160,8 @@ def dataset_full_path_view(request, group_slug, set_slug):
         for table in connect_and_tables_in_schema(schema)
     ]
 
+    reference_data = dataset.referencedata_set.all()
+
     must_request_download_access = \
         dataset.user_access_type == 'REQUIRES_AUTHORIZATION' and \
         not dataset.datasetuserpermission_set.filter(user=request.user).exists()
@@ -168,6 +170,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
         'model': dataset,
         'must_request_download_access': must_request_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
+        'reference_data': reference_data,
         'database_schema_table_accesses': database_schema_table_accesses,
     }
 
