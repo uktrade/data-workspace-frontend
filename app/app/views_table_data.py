@@ -21,6 +21,7 @@ from app.shared import (
     can_access_schema,
     database_dsn,
     get_private_privilages,
+    table_exists,
 )
 
 
@@ -33,27 +34,10 @@ def table_data_view(request, database, schema, table):
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
         HttpResponseForbidden() if not can_access_schema(request.user, get_private_privilages(request.user), database, schema) else \
-        HttpResponseNotFound() if not _table_exists(database, schema, table) else \
+        HttpResponseNotFound() if not table_exists(database, schema, table) else \
         _table_data(request.user.email, database, schema, table)
 
     return response
-
-
-def _table_exists(database, schema, table):
-    with \
-            connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
-            conn.cursor() as cur:
-
-        cur.execute("""
-            SELECT 1
-            FROM
-                pg_tables
-            WHERE
-                schemaname = %s
-            AND
-                tablename = %s
-        """, (schema, table))
-        return bool(cur.fetchone())
 
 
 def _table_data(user_email, database, schema, table):

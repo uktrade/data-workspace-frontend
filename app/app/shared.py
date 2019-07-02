@@ -19,6 +19,7 @@ from django.db.models import (
 )
 from psycopg2 import (
     sql,
+    connect,
 )
 
 from app.models import (
@@ -36,6 +37,23 @@ def database_dsn(database_data):
         f'dbname={database_data["NAME"]} user={database_data["USER"]} '
         f'password={database_data["PASSWORD"]} sslmode=require'
     )
+
+
+def table_exists(database, schema, table):
+    with \
+            connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
+            conn.cursor() as cur:
+
+        cur.execute("""
+            SELECT 1
+            FROM
+                pg_tables
+            WHERE
+                schemaname = %s
+            AND
+                tablename = %s
+        """, (schema, table))
+        return bool(cur.fetchone())
 
 
 def get_private_privilages(user):

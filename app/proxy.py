@@ -345,7 +345,7 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
-            if 'public' in request.url.path:
+            if request.url.path.startswith('/public'):
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 

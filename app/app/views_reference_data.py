@@ -6,7 +6,9 @@ from django.conf import (
 )
 from django.http import (
     StreamingHttpResponse,
-    HttpResponseForbidden)
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+)
 
 from django.views.decorators.http import require_GET
 
@@ -15,7 +17,7 @@ from psycopg2 import (
     sql,
 )
 
-from app.shared import database_dsn
+from app.shared import database_dsn, table_exists
 
 from .models import (
     ReferenceData,
@@ -37,7 +39,6 @@ class JsonWriter:
         self.cur = self.connection.cursor(name='server_side_cursor')
 
         sql_command = self._get_sql(reference_data.schema, reference_data.table_name)
-        # TODO: Perhaps validate that this table exists and raise a custom error
         self.cur.execute(sql_command)
 
     def __iter__(self):
@@ -110,8 +111,13 @@ def _get_json_as_streaming_response(database, schema, table):
     if not results:
         return HttpResponseForbidden()
 
+    if not table_exists(database, schema, table):
+        return HttpResponseNotFound()
+
     reference_data = results[0]
     reader = JsonWriter(reference_data)
 
+    # pylint suggests that we use jsonresponse but that doesn't support streaming
+    # pylint: disable=R5102
     response = StreamingHttpResponse(reader, content_type='application/json')
     return response
