@@ -74,7 +74,8 @@ async def async_main():
         return CIMultiDict(
             tuple(without_transfer_encoding(downstream_request).items()) +
             (
-                (('x-scheme', downstream_request.headers['x-forwarded-proto']),) if 'x-forwarded-proto' in downstream_request.headers else
+                (('x-scheme', downstream_request.headers[
+                    'x-forwarded-proto']),) if 'x-forwarded-proto' in downstream_request.headers else
                 ()
             )
         )
@@ -95,7 +96,7 @@ async def async_main():
         try:
             return \
                 await handle_application(is_websocket, downstream_request, method, path, query) if app_requested else \
-                await handle_admin(downstream_request, method, path, query)
+                    await handle_admin(downstream_request, method, path, query)
 
         except Exception as exception:
             logger.exception('Exception during %s %s %s',
@@ -106,13 +107,14 @@ async def async_main():
 
             params = \
                 {'message': exception.args[0]} if isinstance(exception, UserException) else \
-                {}
+                    {}
 
             status = \
                 exception.args[1] if isinstance(exception, UserException) else \
-                500
+                    500
 
-            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), URL(admin_root).with_path(f'/error_{status}'), params, default_http_timeout)
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request),
+                                     URL(admin_root).with_path(f'/error_{status}'), params, default_http_timeout)
 
     async def handle_application(is_websocket, downstream_request, method, path, query):
         public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
@@ -135,7 +137,8 @@ async def async_main():
             raise UserException('Application ' + application['state'], 500)
 
         if not host_exists:
-            async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
+            async with client_session.request('PUT', host_api_url,
+                                              headers=admin_headers(downstream_request)) as response:
                 host_exists = response.status == 200
                 application = await response.json()
 
@@ -147,27 +150,35 @@ async def async_main():
                 'Attempted to start the application, but it ' + application['state'], 500)
 
         if not application['proxy_url']:
-            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), admin_root + host_html_path + '/spawning', {}, default_http_timeout)
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request),
+                                     admin_root + host_html_path + '/spawning', {}, default_http_timeout)
 
         return \
-            await handle_application_websocket(downstream_request, application['proxy_url'], path, query) if is_websocket else \
-            await handle_application_http_spawning(downstream_request, method, application['proxy_url'], path, query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
-            await handle_application_http_running(downstream_request, method, application['proxy_url'], path, query, host_api_url)
+            await handle_application_websocket(downstream_request, application['proxy_url'], path,
+                                               query) if is_websocket else \
+                await handle_application_http_spawning(downstream_request, method, application['proxy_url'], path,
+                                                       query, host_html_path, host_api_url) if application[
+                                                                                                   'state'] == 'SPAWNING' else \
+                    await handle_application_http_running(downstream_request, method, application['proxy_url'], path,
+                                                          query, host_api_url)
 
     async def handle_application_websocket(downstream_request, proxy_url, path, query):
         upstream_url = URL(proxy_url).with_path(path).with_query(query)
         return await handle_websocket(downstream_request, application_headers(downstream_request), upstream_url)
 
-    async def handle_application_http_spawning(downstream_request, method, proxy_url, path, query, host_html_path, host_api_url):
+    async def handle_application_http_spawning(downstream_request, method, proxy_url, path, query, host_html_path,
+                                               host_api_url):
         upstream_url = URL(proxy_url).with_path(path)
 
         try:
             logger.debug('Spawning: Attempting to connect to %s', upstream_url)
-            response = await handle_http(downstream_request, method, application_headers(downstream_request), upstream_url, query, spawning_http_timeout)
+            response = await handle_http(downstream_request, method, application_headers(downstream_request),
+                                         upstream_url, query, spawning_http_timeout)
 
         except Exception:
             logger.debug('Spawning: Failed to connect to %s', upstream_url)
-            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request), admin_root + host_html_path + '/spawning', {}, default_http_timeout)
+            return await handle_http(downstream_request, 'GET', admin_headers(downstream_request),
+                                     admin_root + host_html_path + '/spawning', {}, default_http_timeout)
 
         else:
             # Once a streaming response is done, if we have not yet returned
@@ -175,9 +186,11 @@ async def async_main():
             # task. We set RUNNING in another task to avoid it being cancelled
             async def set_application_running():
                 async with client_session.request(
-                        'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=admin_headers(downstream_request), timeout=default_http_timeout,
+                        'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=admin_headers(downstream_request),
+                        timeout=default_http_timeout,
                 ) as patch_response:
                     await patch_response.read()
+
             asyncio.ensure_future(set_application_running())
 
             return response
@@ -195,11 +208,13 @@ async def async_main():
         #     await delete_response.read()
         #     raise
 
-        return await handle_http(downstream_request, method, application_headers(downstream_request), upstream_url, query, default_http_timeout)
+        return await handle_http(downstream_request, method, application_headers(downstream_request), upstream_url,
+                                 query, default_http_timeout)
 
     async def handle_admin(downstream_request, method, path, query):
         upstream_url = URL(admin_root).with_path(path).with_query(query)
-        return await handle_http(downstream_request, method, admin_headers(downstream_request), upstream_url, query, default_http_timeout)
+        return await handle_http(downstream_request, method, admin_headers(downstream_request), upstream_url, query,
+                                 default_http_timeout)
 
     async def handle_websocket(downstream_request, upstream_headers, upstream_url):
 
@@ -265,8 +280,9 @@ async def async_main():
         # encoding. AFAIK RStudio uses a custom webserver, so this behaviour
         # is not documented anywhere.
         data = \
-            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else \
-            downstream_request.content
+            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding',
+                                                                                               '').lower() != 'chunked' else \
+                downstream_request.content
 
         async with client_session.request(
                 upstream_method, str(upstream_url),
@@ -276,7 +292,6 @@ async def async_main():
                 allow_redirects=False,
                 timeout=timeout,
         ) as upstream_response:
-
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(web.StreamResponse(
                 status=upstream_response.status,
@@ -306,10 +321,10 @@ async def async_main():
 
             redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(scheme), safe='')
             return f'{sso_base_url}{auth_path}?' \
-                   f'scope={scope}&state={sso_state}&' \
-                   f'redirect_uri={redirect_uri_callback}&' \
-                   f'response_type={response_type}&' \
-                   f'client_id={sso_client_id}'
+                f'scope={scope}&state={sso_state}&' \
+                f'redirect_uri={redirect_uri_callback}&' \
+                f'response_type={response_type}&' \
+                f'client_id={sso_client_id}'
 
         def request_scheme(request):
             return request.headers.get('x-forwarded-proto', request.url.scheme)
@@ -345,6 +360,10 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
+            if 'public' in request.url.path:
+                request['sso_profile_headers'] = ()
+                return await handler(request)
+
             if request.url.path == '/healthcheck':
                 request['sso_profile_headers'] = ()
                 return await handler(request)
@@ -359,14 +378,16 @@ async def async_main():
             if request.path == redirect_from_sso_path:
                 code = request.query['code']
                 sso_state = request.query['state']
-                redirect_uri_final_from_url, redirect_uri_final_from_session = await get_redirect_uri_final(get_session_value, sso_state)
+                redirect_uri_final_from_url, redirect_uri_final_from_session = await get_redirect_uri_final(
+                    get_session_value, sso_state)
 
                 if redirect_uri_final_from_url != redirect_uri_final_from_session:
                     # We might have been overtaken by a parallel request initiating another auth
                     # flow, and so another session. However, because we haven't retrieved the final
                     # URL from the session, we can't be sure that this is the same client that
                     # initiated this flow. However, we can redirect back to SSO
-                    return await redirection_to_sso(with_new_session_cookie, set_session_value, redirect_uri_final_from_url)
+                    return await redirection_to_sso(with_new_session_cookie, set_session_value,
+                                                    redirect_uri_final_from_url)
 
                 async with client_session.post(
                         f'{sso_base_url}{token_path}',
@@ -380,7 +401,8 @@ async def async_main():
                 ) as sso_response:
                     sso_response_json = await sso_response.json()
                 await set_session_value(session_token_key, sso_response_json['access_token'])
-                return await with_new_session_cookie(web.Response(status=302, headers={'Location': redirect_uri_final_from_session}))
+                return await with_new_session_cookie(
+                    web.Response(status=302, headers={'Location': redirect_uri_final_from_session}))
 
             # Get profile from Redis cache to avoid calling SSO on every request
             redis_profile_key = f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode('ascii')
@@ -401,11 +423,11 @@ async def async_main():
                 return await handler_with_sso_headers()
 
             async with client_session.get(f'{sso_base_url}{me_path}', headers={
-                    'Authorization': f'Bearer {token}'
+                'Authorization': f'Bearer {token}'
             }) as me_response:
                 me_profile_full = \
                     await me_response.json() if me_response.status == 200 else \
-                    None
+                        None
 
             if not me_profile_full:
                 return await redirection_to_sso(with_new_session_cookie, set_session_value, request_url(request))

@@ -107,7 +107,6 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
-
     return _login_required
 
 
@@ -139,7 +138,7 @@ urlpatterns = [
     path('request_access_success/', login_required(request_access_success_view),
          name='request_access_success'),
 
-    path('reference-data/<str:database>/<str:schema>/<str:table>', reference_data_view, name='reference_data'),
+    path('public/<str:database>/<str:schema>/<str:table>', reference_data_view, name='reference_data'),
 ]
 
 handler403 = public_error_403_html_view
