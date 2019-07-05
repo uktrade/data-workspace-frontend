@@ -6,7 +6,6 @@ from django.conf import (
 )
 from django.http import (
     StreamingHttpResponse,
-    HttpResponseForbidden,
     HttpResponseNotFound,
 )
 
@@ -111,7 +110,7 @@ def _get_json_as_streaming_response(database, schema, table):
                                            schema=schema)
 
     if not results:
-        return HttpResponseForbidden()
+        return HttpResponseNotFound()
 
     if not table_exists(database, schema, table):
         return HttpResponseNotFound()
