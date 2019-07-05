@@ -174,7 +174,7 @@ class SourceLinkInline(admin.StackedInline):
 
 class SourceSchemaInline(admin.StackedInline):
     model = SourceSchema
-    max_num = 1
+    extra = 1
 
 
 class DataSetForm(forms.ModelForm):

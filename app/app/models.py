@@ -301,9 +301,6 @@ class SourceSchema(models.Model):
     )
     dataset = models.ForeignKey(
         DataSet,
-        # We expect a single schema per DataSet, but do not use OneToOneField
-        # for explicit compatibility with other Source types
-        unique=True,
         on_delete=models.CASCADE,
     )
     database = models.ForeignKey(
