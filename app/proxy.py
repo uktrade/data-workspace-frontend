@@ -1,4 +1,5 @@
 import asyncio
+import ipaddress
 import json
 import logging
 import os
@@ -344,7 +345,30 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
-            if request.url.path == '/healthcheck':
+            try:
+                # We can only trust the last IP in X-Forwarded-For
+                peer_ip = request.headers['x-forwarded-for'].split(',')[-1].strip()
+            except KeyError:
+                # This will only be run locally
+                logger.debug('Remote IP found from transport')
+                peer_ip, _ = request.transport.get_extra_info('peername')
+
+            is_private = True
+            try:
+                is_private = ipaddress.ip_address(peer_ip).is_private
+            except ValueError:
+                is_private = False
+
+            logger.debug('Peer IP %s', peer_ip)
+
+            is_healthcheck_alb = request.url.path == '/healthcheck' and is_private and request.method == 'GET'
+            is_healthcheck_application = request.url.path == '/healthcheck' and request.url.host == root_domain_no_port and request.method == 'GET'
+            sso_auth_required = (
+                not is_healthcheck_alb and
+                not is_healthcheck_application
+            )
+
+            if not sso_auth_required:
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
