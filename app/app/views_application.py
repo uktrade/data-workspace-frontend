@@ -162,7 +162,7 @@ def application_api_PUT(request, public_host):
         application_instance.save()
 
     spawner_class.spawn(
-        request.user.email, request.user.profile.sso_id, application_instance.id,
+        request.user.email, str(request.user.profile.sso_id), application_instance.id,
         application_template.spawner_options, credentials, set_id, set_url)
 
     return JsonResponse(api_application_dict(application_instance), status=200)
