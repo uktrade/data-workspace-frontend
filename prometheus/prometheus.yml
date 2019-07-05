@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: tools
+    metrics_path: /__metrics
+    scheme: http
+    file_sd_configs:
+      - files:
+        - /etc/prometheus/files.json

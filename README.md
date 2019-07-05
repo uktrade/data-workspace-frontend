@@ -65,4 +65,24 @@ docker tag data-workspace-healthcheck:latest quay.io/uktrade/data-workspace-heal
 docker push quay.io/uktrade/data-workspace-healthcheck:latest
 ```
 
+
+## Metrics
+
+Metrics are exposed for each user-launched application in a sidecar-container.
+
+```bash
+docker build -t data-workspace-metrics metrics && \
+docker tag data-workspace-metrics:latest quay.io/uktrade/data-workspace-metrics:latest && \
+docker push quay.io/uktrade/data-workspace-metrics:latest
+```
+
+These are collected via Prometheus.
+
+```bash
+docker build -t data-workspace-prometheus prometheus && \
+docker tag data-workspace-prometheus:latest quay.io/uktrade/data-workspace-prometheus:latest && \
+docker push quay.io/uktrade/data-workspace-prometheus:latest
+```
+
+
 Quay.io does not build the images: they are built locally and pushed.

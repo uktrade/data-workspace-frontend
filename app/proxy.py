@@ -1,4 +1,6 @@
 import asyncio
+import base64
+import hmac
 import ipaddress
 import json
 import logging
@@ -45,6 +47,8 @@ async def async_main():
     sso_client_secret = os.environ['AUTHBROKER_CLIENT_SECRET']
     redis_url = os.environ['REDIS_URL']
     root_domain = os.environ['APPLICATION_ROOT_DOMAIN']
+    basic_auth_user = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
+    basic_auth_password = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
@@ -79,6 +83,9 @@ async def async_main():
                 ()
             )
         )
+
+    def is_service_discovery(request):
+        return request.url.path == '/api/v1/application' and request.url.host == root_domain_no_port and request.method == 'GET'
 
     async def handle(downstream_request):
         method = downstream_request.method
@@ -365,7 +372,8 @@ async def async_main():
             is_healthcheck_application = request.url.path == '/healthcheck' and request.url.host == root_domain_no_port and request.method == 'GET'
             sso_auth_required = (
                 not is_healthcheck_alb and
-                not is_healthcheck_application
+                not is_healthcheck_application and
+                not is_service_discovery(request)
             )
 
             if not sso_auth_required:
@@ -446,10 +454,33 @@ async def async_main():
 
         return _authenticate_by_sso
 
+    def authenticate_by_basic_auth():
+        @web.middleware
+        async def _authenticate_by_basic_auth(request, handler):
+            basic_auth_required = is_service_discovery(request)
+
+            if not basic_auth_required:
+                return await handler(request)
+
+            if 'Authorization' not in request.headers:
+                return web.Response(status=401)
+
+            basic_auth_prefix = 'Basic '
+            auth_value = request.headers['Authorization'][len(basic_auth_prefix):].strip().encode('ascii')
+            required_auth_value = base64.b64encode(f'{basic_auth_user}:{basic_auth_password}'.encode('ascii'))
+
+            if len(auth_value) != len(required_auth_value) or not hmac.compare_digest(auth_value, required_auth_value):
+                return web.Response(status=401)
+
+            return await handler(request)
+
+        return _authenticate_by_basic_auth
+
     async with aiohttp.ClientSession(auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),
+            authenticate_by_basic_auth(),
         ])
         app.add_routes([
             getattr(web, method)(r'/{path:.*}', handle)

@@ -29,6 +29,7 @@ from app.views import (
 from app.views_application import (
     application_spawning_html_view,
     application_api_view,
+    applications_api_view,
 )
 from app.views_error import (
     public_error_403_html_view,
@@ -123,6 +124,7 @@ urlpatterns = [
     path('appstream-admin/fleetstatus', appstream_fleetstatus, name='appstream_fleetstatus'),
     path('application/<str:public_host>/spawning', login_required(application_spawning_html_view)),
     path('api/v1/application/<str:public_host>', csrf_exempt(login_required(application_api_view))),
+    path('api/v1/application', csrf_exempt(applications_api_view)),
     path('healthcheck', healthcheck_view),  # No authentication
 
     path('catalogue/<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
