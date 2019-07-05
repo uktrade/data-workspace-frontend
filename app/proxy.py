@@ -151,16 +151,17 @@ async def async_main():
 
         return \
             await handle_application_websocket(downstream_request, application['proxy_url'], path, query) if is_websocket else \
-            await handle_application_http_spawning(downstream_request, method, application['proxy_url'], path, query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
-            await handle_application_http_running(downstream_request, method, application['proxy_url'], path, query, host_api_url)
+            await handle_application_http_spawning(downstream_request, method, application_upstream(application['proxy_url'], path), query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
+            await handle_application_http_running(downstream_request, method, application_upstream(application['proxy_url'], path), query, host_api_url)
 
     async def handle_application_websocket(downstream_request, proxy_url, path, query):
         upstream_url = URL(proxy_url).with_path(path).with_query(query)
         return await handle_websocket(downstream_request, application_headers(downstream_request), upstream_url)
 
-    async def handle_application_http_spawning(downstream_request, method, proxy_url, path, query, host_html_path, host_api_url):
-        upstream_url = URL(proxy_url).with_path(path)
+    def application_upstream(proxy_url, path):
+        return URL(proxy_url).with_path(path)
 
+    async def handle_application_http_spawning(downstream_request, method, upstream_url, query, host_html_path, host_api_url):
         try:
             logger.debug('Spawning: Attempting to connect to %s', upstream_url)
             response = await handle_http(downstream_request, method, application_headers(downstream_request), upstream_url, query, spawning_http_timeout)
@@ -182,9 +183,7 @@ async def async_main():
 
             return response
 
-    async def handle_application_http_running(downstream_request, method, proxy_url, path, query, _):
-        upstream_url = URL(proxy_url).with_path(path)
-
+    async def handle_application_http_running(downstream_request, method, upstream_url, query, _):
         # For the time being, we don't attempt to delete if an application has failed
         # Since initial attempts were too sensistive, and would delete the application
         # when it was still running
