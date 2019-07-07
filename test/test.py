@@ -314,10 +314,15 @@ class TestApplication(unittest.TestCase):
 
         await asyncio.sleep(6)
 
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        stdout, stderr, code = await create_private_dataset()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request('GET', 'http://localapps.com:8000/catalogue/test_slug_g/test_slug_s') as response:
             content = await response.text()
 
-        self.assertNotIn('auth_user', content)
+        self.assertIn('You do not have permission to access these links', content)
 
         async with session.request('GET',
                                    'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
@@ -327,15 +332,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertEqual(content, '')
 
-        stdout, stderr, code = await give_user_database_perms()
+        stdout, stderr, code = await give_user_dataset_perms()
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request('GET', 'http://localapps.com:8000/catalogue/test_slug_g/test_slug_s') as response:
             content = await response.text()
 
-        self.assertIn('auth_user', content)
+        self.assertNotIn('You do not have permission to access these links', content)
 
         async with session.request('GET',
                                    'http://localapps.com:8000/table_data/my_database/public/auth_user') as response:
@@ -513,20 +518,63 @@ async def give_user_app_perms():
     return stdout, stderr, code
 
 
-async def give_user_database_perms():
+async def create_private_dataset():
+    python_code = textwrap.dedent("""\
+        from app.models import (
+            Database,
+            DataGrouping,
+            DataSet,
+            SourceSchema,
+        )
+        grouping = DataGrouping.objects.create(
+            name="test_datagrouping",
+            short_description="test_short_desc",
+            slug="test_slug_g",
+        )
+        dataset = DataSet.objects.create(
+            name="test_dataset",
+            description="test_desc",
+            short_description="test_short_desc",
+            slug="test_slug_s",
+            volume=1,
+            grouping=grouping,
+        )
+        SourceSchema.objects.create(
+            dataset=dataset,
+            database=Database.objects.get(memorable_name="my_database"),
+            schema="public",
+        )
+        """).encode('ascii')
+
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=APP_ENV,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def give_user_dataset_perms():
     python_code = textwrap.dedent("""\
         from django.contrib.auth.models import (
             User,
         )
         from app.models import (
-            Database,
-            Privilage,
+            DataSet,
+            DataSetUserPermission,
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
-        Privilage.objects.create(
+        dataset = DataSet.objects.get(
+            name="test_dataset",
+        )
+        DataSetUserPermission.objects.create(
+            dataset=dataset,
             user=user,
-            database=Database.objects.get(memorable_name="my_database"),
-            schema="public",
         )
         """).encode('ascii')
 
