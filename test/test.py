@@ -54,7 +54,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(4)
+        await asyncio.sleep(6)
 
         # Ensure the user doesn't see the application link since they don't
         # have permission

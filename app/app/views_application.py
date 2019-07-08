@@ -21,7 +21,8 @@ from app.shared import (
     set_application_stopped,
 )
 from app.spawner import (
-    spawner,
+    get_spawner,
+    spawn,
 )
 from app.views_error import (
     public_error_500_html_view,
@@ -77,7 +78,7 @@ def get_running_applications():
 
 
 def api_application_dict(application_instance):
-    spawner_state = spawner(application_instance.application_template.spawner).state(
+    spawner_state = get_spawner(application_instance.application_template.spawner).state(
         application_instance.spawner_application_template_options,
         application_instance.created_date.replace(tzinfo=None),
         application_instance.spawner_application_instance_id,
@@ -168,7 +169,6 @@ def application_api_PUT(request, public_host):
 
     credentials = new_private_database_credentials(request.user)
 
-    spawner_class = spawner(application_template.spawner)
     application_instance = ApplicationInstance.objects.create(
         owner=request.user,
         application_template=application_template,
@@ -180,17 +180,10 @@ def application_api_PUT(request, public_host):
         single_running_or_spawning_integrity=public_host,
     )
 
-    def set_url(proxy_url):
-        application_instance.proxy_url = proxy_url
-        application_instance.save()
-
-    def set_id(spawner_application_instance_id):
-        application_instance.spawner_application_instance_id = spawner_application_instance_id
-        application_instance.save()
-
-    spawner_class.spawn(
+    spawn.delay(
+        application_template.spawner,
         request.user.email, str(request.user.profile.sso_id), application_instance.id,
-        application_template.spawner_options, credentials, set_id, set_url)
+        application_template.spawner_options, credentials)
 
     return JsonResponse(api_application_dict(application_instance), status=200)
 
