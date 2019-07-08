@@ -22,7 +22,7 @@ from django.contrib.contenttypes.models import (
     ContentType,
 )
 
-from .models import (
+from app.models import (
     ApplicationInstance,
     DataGrouping,
     DataSet,
