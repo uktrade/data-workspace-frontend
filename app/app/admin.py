@@ -236,6 +236,8 @@ class DataSetAdmin(admin.ModelAdmin):
 
 class ApplicationInstanceAdmin(admin.ModelAdmin):
 
+    list_display = ('owner', 'public_host', 'created_date', )
+
     def has_add_permission(self, request):
         return False
 
