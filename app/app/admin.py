@@ -235,6 +235,10 @@ class DataSetAdmin(admin.ModelAdmin):
 
 
 class ApplicationInstanceAdmin(admin.ModelAdmin):
+
+    def has_add_permission(self, request):
+        return False
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(state='RUNNING')
