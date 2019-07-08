@@ -24,7 +24,6 @@ from django.contrib.contenttypes.models import (
 
 from .models import (
     ApplicationInstance,
-    Privilage,
     DataGrouping,
     DataSet,
     DataSetUserPermission,
@@ -38,8 +37,6 @@ admin.site.site_header = 'Data Workspace'
 
 admin.site.unregister(Group)
 admin.site.unregister(User)
-
-admin.site.register(Privilage)
 
 
 class DataGroupingAdmin(admin.ModelAdmin):

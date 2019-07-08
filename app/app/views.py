@@ -1,5 +1,4 @@
 import hashlib
-import itertools
 import logging
 
 from django.contrib import (
@@ -7,9 +6,6 @@ from django.contrib import (
 )
 from django.conf import (
     settings,
-)
-from django.db import (
-    connections,
 )
 from django.http import (
     HttpResponse,
@@ -24,11 +20,7 @@ from app.models import (
     ApplicationTemplate,
 )
 from app.shared import (
-    can_access_schema,
-    get_private_privilages,
-    remove_duplicates,
     set_application_stopped,
-    tables_in_schema,
 )
 from app.spawner import (
     spawner,
@@ -49,19 +41,6 @@ def root_view(request):
 
 
 def root_view_GET(request):
-    def allowed_tables_for_database_that_exist(database, database_privilages):
-        logger.info('allowed_tables_for_database_that_exist: %s %s', database, database_privilages)
-        with connections[database.memorable_name].cursor() as cur:
-            return [
-                (database.memorable_name, privilage.schema, table)
-                for privilage in database_privilages
-                for table in tables_in_schema(cur, privilage.schema)
-                if can_access_schema(request.user, database_privilages, database.memorable_name, privilage.schema)
-            ]
-
-    privilages = get_private_privilages(request.user)
-    privilages_by_database = itertools.groupby(privilages, lambda privilage: privilage.database)
-
     sso_id_hex = hashlib.sha256(str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
     sso_id_hex_short = sso_id_hex[:8]
 
@@ -89,10 +68,6 @@ def root_view_GET(request):
             }
             for application_template in ApplicationTemplate.objects.all().order_by('name')
         ],
-        'database_schema_tables': remove_duplicates(_flatten([
-            allowed_tables_for_database_that_exist(database, list(database_privilages))
-            for database, database_privilages in privilages_by_database
-        ])),
         'appstream_url': settings.APPSTREAM_URL,
         'groupings': get_all_datagroups_viewmodel()
     }

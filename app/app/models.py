@@ -49,34 +49,6 @@ class Database(models.Model):
         return f'{self.memorable_name}'
 
 
-class Privilage(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    database = models.ForeignKey(Database, on_delete=models.CASCADE)
-    schema = models.CharField(
-        max_length=1024,
-        blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
-        default='public'
-    )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['user']),
-        ]
-        unique_together = ('user', 'database', 'schema')
-
-    def __str__(self):
-        return f'{self.user} / {self.database} / {self.schema}'
-
-
 class ApplicationTemplate(models.Model):
     id = models.UUIDField(
         primary_key=True,
