@@ -70,6 +70,12 @@ def get_api_visible_application_instance_by_public_host(public_host):
     )
 
 
+def get_running_applications():
+    return ApplicationInstance.objects.filter(
+        state='RUNNING',
+    )
+
+
 def api_application_dict(application_instance):
     spawner_state = spawner(application_instance.application_template.spawner).state(
         application_instance.spawner_application_template_options,
@@ -85,10 +91,31 @@ def api_application_dict(application_instance):
         application_instance.state if spawner_state == 'RUNNING' else \
         spawner_state
 
+    template_name = application_instance.application_template.name
+    sso_id_hex = hashlib.sha256(str(application_instance.owner.profile.sso_id).encode('utf-8')).hexdigest()
+    sso_id_hex_short = sso_id_hex[:8]
+
     return {
         'proxy_url': application_instance.proxy_url,
         'state': api_state,
+        'user': sso_id_hex_short,
+        'name': template_name,
     }
+
+
+def applications_api_view(request):
+    return \
+        applications_api_GET(request) if request.method == 'GET' else \
+        JsonResponse({}, status=405)
+
+
+def applications_api_GET(request):
+    return JsonResponse({
+        'applications': [
+            api_application_dict(application)
+            for application in get_running_applications()
+        ]
+    }, status=200)
 
 
 def application_api_view(request, public_host):
@@ -162,7 +189,7 @@ def application_api_PUT(request, public_host):
         application_instance.save()
 
     spawner_class.spawn(
-        request.user.email, request.user.profile.sso_id, application_instance.id,
+        request.user.email, str(request.user.profile.sso_id), application_instance.id,
         application_template.spawner_options, credentials, set_id, set_url)
 
     return JsonResponse(api_application_dict(application_instance), status=200)

@@ -1,4 +1,7 @@
 import asyncio
+import base64
+import hmac
+import ipaddress
 import json
 import logging
 import os
@@ -44,6 +47,8 @@ async def async_main():
     sso_client_secret = os.environ['AUTHBROKER_CLIENT_SECRET']
     redis_url = os.environ['REDIS_URL']
     root_domain = os.environ['APPLICATION_ROOT_DOMAIN']
+    basic_auth_user = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
+    basic_auth_password = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
@@ -78,6 +83,9 @@ async def async_main():
                 ()
             )
         )
+
+    def is_service_discovery(request):
+        return request.url.path == '/api/v1/application' and request.url.host == root_domain_no_port and request.method == 'GET'
 
     async def handle(downstream_request):
         method = downstream_request.method
@@ -151,16 +159,17 @@ async def async_main():
 
         return \
             await handle_application_websocket(downstream_request, application['proxy_url'], path, query) if is_websocket else \
-            await handle_application_http_spawning(downstream_request, method, application['proxy_url'], path, query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
-            await handle_application_http_running(downstream_request, method, application['proxy_url'], path, query, host_api_url)
+            await handle_application_http_spawning(downstream_request, method, application_upstream(application['proxy_url'], path), query, host_html_path, host_api_url) if application['state'] == 'SPAWNING' else \
+            await handle_application_http_running(downstream_request, method, application_upstream(application['proxy_url'], path), query, host_api_url)
 
     async def handle_application_websocket(downstream_request, proxy_url, path, query):
         upstream_url = URL(proxy_url).with_path(path).with_query(query)
         return await handle_websocket(downstream_request, application_headers(downstream_request), upstream_url)
 
-    async def handle_application_http_spawning(downstream_request, method, proxy_url, path, query, host_html_path, host_api_url):
-        upstream_url = URL(proxy_url).with_path(path)
+    def application_upstream(proxy_url, path):
+        return URL(proxy_url).with_path(path)
 
+    async def handle_application_http_spawning(downstream_request, method, upstream_url, query, host_html_path, host_api_url):
         try:
             logger.debug('Spawning: Attempting to connect to %s', upstream_url)
             response = await handle_http(downstream_request, method, application_headers(downstream_request), upstream_url, query, spawning_http_timeout)
@@ -182,9 +191,7 @@ async def async_main():
 
             return response
 
-    async def handle_application_http_running(downstream_request, method, proxy_url, path, query, _):
-        upstream_url = URL(proxy_url).with_path(path)
-
+    async def handle_application_http_running(downstream_request, method, upstream_url, query, _):
         # For the time being, we don't attempt to delete if an application has failed
         # Since initial attempts were too sensistive, and would delete the application
         # when it was still running
@@ -345,7 +352,31 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_sso(request, handler):
 
-            if request.url.path == '/healthcheck':
+            try:
+                # We can only trust the last IP in X-Forwarded-For
+                peer_ip = request.headers['x-forwarded-for'].split(',')[-1].strip()
+            except KeyError:
+                # This will only be run locally
+                logger.debug('Remote IP found from transport')
+                peer_ip, _ = request.transport.get_extra_info('peername')
+
+            is_private = True
+            try:
+                is_private = ipaddress.ip_address(peer_ip).is_private
+            except ValueError:
+                is_private = False
+
+            logger.debug('Peer IP %s', peer_ip)
+
+            is_healthcheck_alb = request.url.path == '/healthcheck' and is_private and request.method == 'GET'
+            is_healthcheck_application = request.url.path == '/healthcheck' and request.url.host == root_domain_no_port and request.method == 'GET'
+            sso_auth_required = (
+                not is_healthcheck_alb and
+                not is_healthcheck_application and
+                not is_service_discovery(request)
+            )
+
+            if not sso_auth_required:
                 request['sso_profile_headers'] = ()
                 return await handler(request)
 
@@ -423,10 +454,33 @@ async def async_main():
 
         return _authenticate_by_sso
 
+    def authenticate_by_basic_auth():
+        @web.middleware
+        async def _authenticate_by_basic_auth(request, handler):
+            basic_auth_required = is_service_discovery(request)
+
+            if not basic_auth_required:
+                return await handler(request)
+
+            if 'Authorization' not in request.headers:
+                return web.Response(status=401)
+
+            basic_auth_prefix = 'Basic '
+            auth_value = request.headers['Authorization'][len(basic_auth_prefix):].strip().encode('ascii')
+            required_auth_value = base64.b64encode(f'{basic_auth_user}:{basic_auth_password}'.encode('ascii'))
+
+            if len(auth_value) != len(required_auth_value) or not hmac.compare_digest(auth_value, required_auth_value):
+                return web.Response(status=401)
+
+            return await handler(request)
+
+        return _authenticate_by_basic_auth
+
     async with aiohttp.ClientSession(auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),
+            authenticate_by_basic_auth(),
         ])
         app.add_routes([
             getattr(web, method)(r'/{path:.*}', handle)
