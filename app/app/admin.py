@@ -235,7 +235,9 @@ class DataSetAdmin(admin.ModelAdmin):
 
 
 class ApplicationInstanceAdmin(admin.ModelAdmin):
-    pass
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(state='RUNNING')
 
 
 admin.site.register(User, AppUserAdmin)
