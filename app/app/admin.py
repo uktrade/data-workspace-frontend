@@ -234,6 +234,10 @@ class DataSetAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+class ApplicationInstanceAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(User, AppUserAdmin)
 admin.site.register(DataSet, DataSetAdmin)
-admin.site.register(ApplicationInstance)
+admin.site.register(ApplicationInstance, ApplicationInstanceAdmin)
