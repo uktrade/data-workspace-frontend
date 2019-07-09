@@ -152,13 +152,13 @@ def dataset_full_path_view(request, group_slug, set_slug):
         for table in connect_and_tables_in_schema(schema)
     ]
 
-    must_request_download_access = \
-        dataset.user_access_type == 'REQUIRES_AUTHORIZATION' and \
-        not dataset.datasetuserpermission_set.filter(user=request.user).exists()
+    has_download_access = \
+        dataset.user_access_type == 'REQUIRES_AUTHENTICATION' or \
+        dataset.datasetuserpermission_set.filter(user=request.user).exists()
 
     context = {
         'model': dataset,
-        'must_request_download_access': must_request_download_access,
+        'has_download_access': has_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
         'database_schema_table_name': database_schema_table_name,
     }
