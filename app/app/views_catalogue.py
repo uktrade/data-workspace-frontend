@@ -134,6 +134,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
 
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
+    tables = dataset.sourcetable_set.all().order_by('schema', 'table', 'database__memorable_name', 'database__id')
 
     # Could be more efficient if we have multiple schemas in the same db
     # but we only really expect the one schema anyway
@@ -150,6 +151,14 @@ def dataset_full_path_view(request, group_slug, set_slug):
         )
         for schema in schemas
         for table in connect_and_tables_in_schema(schema)
+    ] + [
+        (
+            table.database.memorable_name,
+            table.schema,
+            table.table,
+            table.name
+        )
+        for table in tables
     ]
 
     has_download_access = \
