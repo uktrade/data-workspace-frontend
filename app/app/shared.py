@@ -109,11 +109,11 @@ def new_private_database_credentials(user):
             database_to_schemas.get(database, []),
             database_to_tables.get(database, []),
         )
-        for database in _remove_duplicates(list(database_to_schemas.keys()) + list(database_to_schemas.keys()))
+        for database in _remove_duplicates(list(database_to_schemas.keys()) + list(database_to_tables.keys()))
     }
     creds = [
         get_new_credentials(database_obj, schemas, tables)
-        for database_obj, schemas, tables in database_to_schemas_and_tables.items()
+        for database_obj, (schemas, tables) in database_to_schemas_and_tables.items()
     ]
 
     # Create a profile in case it doesn't have one
