@@ -301,6 +301,7 @@ class SourceTable(models.Model):
     name = models.CharField(
         max_length=1024,
         blank=False,
+        help_text='Used as the displayed text in the download link',
     )
     database = models.ForeignKey(
         Database,
@@ -334,6 +335,7 @@ class SourceLink(models.Model):
         blank=False,
         null=False,
         max_length=128,
+        help_text='Used as the displayed text in the download link',
     )
     url = models.CharField(
         max_length=256,
