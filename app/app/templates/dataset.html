@@ -47,7 +47,7 @@
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
 
-            {% if links or database_schema_table_accesses %}
+            {% if links or database_schema_table %}
                 {% if must_request_download_access %}
                     <div class="govuk-warning-text">
                         <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -97,10 +97,10 @@
                     </tr>
                 {% endfor %}
 
-                {% for database, schema, table, access in database_schema_table_accesses %}
+                {% for database, schema, table in database_schema_table %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if access %}
+                            {% if not must_request_download_access %}
                                 <a
                                         class="govuk-link"
                                         href="{% url 'table_data' database schema table %}">

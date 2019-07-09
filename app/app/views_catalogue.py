@@ -23,7 +23,6 @@ from app.models import (
 )
 
 from app.shared import (
-    can_access_source_schema,
     tables_in_schema,
 )
 from app.zendesk import create_zendesk_ticket
@@ -136,25 +135,17 @@ def dataset_full_path_view(request, group_slug, set_slug):
 
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
 
-    can_access_schemas = {
-        (schema.database.memorable_name, schema.schema): can_access_source_schema(request.user,
-                                                                                  schema.database.memorable_name,
-                                                                                  schema.schema)
-        for schema in schemas
-    }
-
     # Could be more efficient if we have multiple schemas in the same db
     # but we only really expect the one schema anyway
     def connect_and_tables_in_schema(schema):
         with connections[schema.database.memorable_name].cursor() as cur:
             return tables_in_schema(cur, schema.schema)
 
-    database_schema_table_accesses = [
+    database_schema_table = [
         (
             schema.database.memorable_name,
             schema.schema,
             table,
-            can_access_schemas[(schema.database.memorable_name, schema.schema)],
         )
         for schema in schemas
         for table in connect_and_tables_in_schema(schema)
@@ -168,7 +159,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
         'model': dataset,
         'must_request_download_access': must_request_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
-        'database_schema_table_accesses': database_schema_table_accesses,
+        'database_schema_table': database_schema_table,
     }
 
     return render(request, 'dataset.html', context)
