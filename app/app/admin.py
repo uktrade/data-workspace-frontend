@@ -1,7 +1,11 @@
+import datetime
 import logging
+import urllib.parse
 
 from django import forms
-
+from django.conf import (
+    settings,
+)
 from django.forms.widgets import (
     CheckboxSelectMultiple,
 )
@@ -21,6 +25,8 @@ from django.contrib.auth.models import (
 from django.contrib.contenttypes.models import (
     ContentType,
 )
+
+import requests
 
 from app.models import (
     ApplicationInstance,
@@ -243,10 +249,11 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
                 'owner',
                 'public_host',
                 'created_date',
+                'max_cpu',
             ]
         }),
     ]
-    readonly_fields = ('owner', 'public_host', 'created_date', )
+    readonly_fields = ('owner', 'public_host', 'created_date', 'max_cpu')
 
     def has_add_permission(self, request):
         return False
@@ -257,6 +264,59 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(state='RUNNING')
+
+    def max_cpu(self, obj):
+        return application_instance_max_cpu(obj)
+
+    max_cpu.short_description = 'Max recent CPU'
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        kwargs.update({
+            'help_texts': {
+                'max_cpu': 'The highest CPU usage in the past two hours',
+            },
+        })
+        return super().get_form(request, obj, change, **kwargs)
+
+
+def application_instance_max_cpu(application_instance):
+    # If we don't have the proxy url yet, we can't have any metrics yet.
+    # This is expected and should not be shown as an error
+    if application_instance.proxy_url is None:
+        return 'Unknown'
+
+    instance = urllib.parse.urlsplit(application_instance.proxy_url).hostname + ':8889'
+    url = f'https://{settings.PROMETHEUS_DOMAIN}/api/v1/query'
+    params = {
+        'query': f'increase(precpu_stats__cpu_usage__total_usage{{instance="{instance}"}}[30s])[2h:30s]'
+    }
+    try:
+        response = requests.get(url, params)
+    except requests.RequestException:
+        return 'Error connecting to metrics server'
+
+    response_dict = response.json()
+    if response_dict['status'] != 'success':
+        return f'Metrics server return value is {response_dict["status"]}'
+
+    try:
+        values = response_dict['data']['result'][0]['values']
+    except (IndexError, KeyError):
+        # The server not having metrics yet should not be reported as an error
+        return f'Unknown'
+
+    max_cpu = 0.0
+    ts_at_max = 0
+    for ts, cpu in values:
+        cpu_float = float(cpu) / (1000000000 * 30) * 100
+        if cpu_float >= max_cpu:
+            max_cpu = cpu_float
+            ts_at_max = ts
+
+    return '{0:.2f}% at {1}'.format(
+        max_cpu,
+        datetime.datetime.fromtimestamp(ts_at_max).strftime('%-I:%M %p').replace('AM', 'a.m.').replace('PM', 'p.m'),
+    )
 
 
 admin.site.register(User, AppUserAdmin)
