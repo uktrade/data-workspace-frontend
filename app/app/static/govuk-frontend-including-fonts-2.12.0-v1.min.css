@@ -1,4 +1,5 @@
 /*! Copyright (c) 2011 by Margaret Calvert & Henrik Kubel. All rights reserved. The font has been customised for exclusive use on gov.uk. This cut is not commercially available. */
+/*! Fonts are embedded in CSS to avoid FOUT. Done manually on the command line with `base64` and copy/paste */
 
 @font-face {
     font-family: nta;
