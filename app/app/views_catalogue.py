@@ -141,11 +141,12 @@ def dataset_full_path_view(request, group_slug, set_slug):
         with connections[schema.database.memorable_name].cursor() as cur:
             return tables_in_schema(cur, schema.schema)
 
-    database_schema_table = [
+    database_schema_table_name = [
         (
             schema.database.memorable_name,
             schema.schema,
             table,
+            f'{schema.schema} / {table}'
         )
         for schema in schemas
         for table in connect_and_tables_in_schema(schema)
@@ -159,7 +160,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
         'model': dataset,
         'must_request_download_access': must_request_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
-        'database_schema_table': database_schema_table,
+        'database_schema_table_name': database_schema_table_name,
     }
 
     return render(request, 'dataset.html', context)
