@@ -23,7 +23,6 @@ from app.models import (
 )
 
 from app.shared import (
-    can_access_source_schema,
     tables_in_schema,
 )
 from app.zendesk import create_zendesk_ticket
@@ -135,13 +134,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
 
     schemas = dataset.sourceschema_set.all().order_by('schema', 'database__memorable_name', 'database__id')
-
-    can_access_schemas = {
-        (schema.database.memorable_name, schema.schema): can_access_source_schema(request.user,
-                                                                                  schema.database.memorable_name,
-                                                                                  schema.schema)
-        for schema in schemas
-    }
+    tables = dataset.sourcetable_set.all().order_by('schema', 'table', 'database__memorable_name', 'database__id')
 
     # Could be more efficient if we have multiple schemas in the same db
     # but we only really expect the one schema anyway
@@ -149,26 +142,34 @@ def dataset_full_path_view(request, group_slug, set_slug):
         with connections[schema.database.memorable_name].cursor() as cur:
             return tables_in_schema(cur, schema.schema)
 
-    database_schema_table_accesses = [
+    database_schema_table_name = [
         (
             schema.database.memorable_name,
             schema.schema,
             table,
-            can_access_schemas[(schema.database.memorable_name, schema.schema)],
+            f'{schema.schema} / {table}'
         )
         for schema in schemas
         for table in connect_and_tables_in_schema(schema)
+    ] + [
+        (
+            table.database.memorable_name,
+            table.schema,
+            table.table,
+            table.name
+        )
+        for table in tables
     ]
 
-    must_request_download_access = \
-        dataset.user_access_type == 'REQUIRES_AUTHORIZATION' and \
-        not dataset.datasetuserpermission_set.filter(user=request.user).exists()
+    has_download_access = \
+        dataset.user_access_type == 'REQUIRES_AUTHENTICATION' or \
+        dataset.datasetuserpermission_set.filter(user=request.user).exists()
 
     context = {
         'model': dataset,
-        'must_request_download_access': must_request_download_access,
+        'has_download_access': has_download_access,
         'links': dataset.sourcelink_set.all().order_by('name'),
-        'database_schema_table_accesses': database_schema_table_accesses,
+        'database_schema_table_name': database_schema_table_name,
     }
 
     return render(request, 'dataset.html', context)
