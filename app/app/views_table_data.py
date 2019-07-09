@@ -18,7 +18,7 @@ from psycopg2 import (
 )
 
 from app.shared import (
-    can_access_source_schema,
+    can_access_schema_table,
     database_dsn,
 )
 
@@ -31,7 +31,7 @@ def table_data_view(request, database, schema, table):
                 request.user.email, database, schema, table)
     response = \
         HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
-        HttpResponseForbidden() if not can_access_source_schema(request.user, database, schema) else \
+        HttpResponseForbidden() if not can_access_schema_table(request.user, database, schema, table) else \
         HttpResponseNotFound() if not _table_exists(database, schema, table) else \
         _table_data(request.user.email, database, schema, table)
 

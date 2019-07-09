@@ -121,7 +121,7 @@ def new_private_database_credentials(user):
     return creds
 
 
-def can_access_source_schema(user, database, schema):
+def can_access_schema_table(user, database, schema, _):
     sourceschema = SourceSchema.objects.filter(
         schema=schema,
         database__memorable_name=database,
