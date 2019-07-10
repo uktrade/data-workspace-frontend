@@ -527,7 +527,7 @@ async def create_private_dataset():
             Database,
             DataGrouping,
             DataSet,
-            SourceSchema,
+            SourceTable,
         )
         grouping = DataGrouping.objects.create(
             name="test_datagrouping",
@@ -542,10 +542,11 @@ async def create_private_dataset():
             volume=1,
             grouping=grouping,
         )
-        SourceSchema.objects.create(
+        SourceTable.objects.create(
             dataset=dataset,
             database=Database.objects.get(memorable_name="my_database"),
             schema="public",
+            table="auth_user",
         )
         """).encode('ascii')
 

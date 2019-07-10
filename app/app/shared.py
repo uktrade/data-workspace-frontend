@@ -23,7 +23,6 @@ from psycopg2 import (
 
 from app.models import (
     DataSet,
-    SourceSchema,
     SourceTable,
 )
 
@@ -49,7 +48,7 @@ def new_private_database_credentials(user):
     def postgres_password():
         return ''.join(secrets.choice(password_alphabet) for i in range(64))
 
-    def get_new_credentials(database_obj, schemas, tables):
+    def get_new_credentials(database_obj, tables):
         user = postgres_user()
         password = postgres_password()
 
@@ -60,17 +59,6 @@ def new_private_database_credentials(user):
                 sql.Identifier(user)), [password, valid_until])
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
                 sql.Identifier(database_data['NAME']), sql.Identifier(user)))
-
-            for schema in schemas:
-                logger.info(
-                    'Granting permissions to %s %s to %s',
-                    database_obj.memorable_name, schema, user)
-                cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                    sql.Identifier(schema), sql.Identifier(user)))
-                tables_sql = \
-                    sql.SQL('GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {};').format(sql.Identifier(schema),
-                                                                                     sql.Identifier(user))
-                cur.execute(tables_sql)
 
             for schema, table in tables:
                 logger.info(
@@ -92,28 +80,15 @@ def new_private_database_credentials(user):
             'db_password': password,
         }
 
-    database_to_schemas = {
-        database_obj: [
-            source_schema.schema for source_schema in source_schemas_for_database
-        ]
-        for database_obj, source_schemas_for_database in itertools.groupby(source_schemas_for_user(user), lambda source_schema: source_schema.database)
-    }
     database_to_tables = {
         database_obj: [
             (source_table.schema, source_table.table) for source_table in source_tables_for_database
         ]
         for database_obj, source_tables_for_database in itertools.groupby(source_tables_for_user(user), lambda source_table: source_table.database)
     }
-    database_to_schemas_and_tables = {
-        database: (
-            database_to_schemas.get(database, []),
-            database_to_tables.get(database, []),
-        )
-        for database in _remove_duplicates(list(database_to_schemas.keys()) + list(database_to_tables.keys()))
-    }
     creds = [
-        get_new_credentials(database_obj, schemas, tables)
-        for database_obj, (schemas, tables) in database_to_schemas_and_tables.items()
+        get_new_credentials(database_obj, tables)
+        for database_obj, tables in database_to_tables.items()
     ]
 
     # Create a profile in case it doesn't have one
@@ -147,17 +122,6 @@ def new_private_database_credentials(user):
 
 
 def can_access_schema_table(user, database, schema, table):
-    sourceschema = SourceSchema.objects.filter(
-        schema=schema,
-        database__memorable_name=database,
-    )
-    has_source_schema_perms = DataSet.objects.filter(
-        Q(sourceschema__in=sourceschema) & (
-            Q(user_access_type='REQUIRES_AUTHENTICATION') |
-            Q(datasetuserpermission__user=user)
-        ),
-    ).exists()
-
     sourcetable = SourceTable.objects.filter(
         schema=schema,
         table=table,
@@ -170,14 +134,7 @@ def can_access_schema_table(user, database, schema, table):
         ),
     ).exists()
 
-    return has_source_schema_perms or has_source_table_perms
-
-
-def source_schemas_for_user(user):
-    return SourceSchema.objects.filter(
-        Q(dataset__user_access_type='REQUIRES_AUTHENTICATION') |
-        Q(dataset__datasetuserpermission__user=user)
-    ).order_by('database__memorable_name', 'schema', 'id')
+    return has_source_table_perms
 
 
 def source_tables_for_user(user):
@@ -191,24 +148,3 @@ def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
     application_instance.single_running_or_spawning_integrity = str(application_instance.id)
     application_instance.save()
-
-
-def tables_in_schema(cur, schema):
-    logger.info('tables_in_schema: %s', schema)
-    cur.execute("""
-        SELECT
-            tablename
-        FROM
-            pg_tables
-        WHERE
-            schemaname = %s
-    """, (schema,))
-    results = [result[0] for result in cur.fetchall()]
-    logger.info('tables_in_schema: %s %s', schema, results)
-    return results
-
-
-def _remove_duplicates(to_have_duplicates_removed):
-    seen = set()
-    seen_add = seen.add
-    return [x for x in to_have_duplicates_removed if not (x in seen or seen_add(x))]

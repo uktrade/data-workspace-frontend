@@ -34,7 +34,6 @@ from app.models import (
     DataSet,
     DataSetUserPermission,
     SourceLink,
-    SourceSchema,
     SourceTable,
 )
 
@@ -176,11 +175,6 @@ class SourceLinkInline(admin.StackedInline):
     extra = 1
 
 
-class SourceSchemaInline(admin.StackedInline):
-    model = SourceSchema
-    extra = 1
-
-
 class SourceTableInline(admin.StackedInline):
     model = SourceTable
     extra = 1
@@ -212,7 +206,6 @@ class DataSetAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'short_description', 'grouping')
     inlines = [
         SourceLinkInline,
-        SourceSchemaInline,
         SourceTableInline,
     ]
     fieldsets = [

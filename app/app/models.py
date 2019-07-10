@@ -265,29 +265,6 @@ class DataSetUserPermission(models.Model):
         unique_together = ('user', 'dataset')
 
 
-class SourceSchema(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
-    dataset = models.ForeignKey(
-        DataSet,
-        on_delete=models.CASCADE,
-    )
-    database = models.ForeignKey(
-        Database,
-        default=None,
-        on_delete=models.CASCADE,
-    )
-    schema = models.CharField(
-        max_length=1024,
-        blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
-        default='public'
-    )
-
-
 class SourceTable(models.Model):
     id = models.UUIDField(
         primary_key=True,
