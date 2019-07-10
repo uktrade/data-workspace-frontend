@@ -9,6 +9,7 @@ beautifulsoup4==4.7.1
 boto3==1.9.123
 botocore==1.12.166
 cachetools==3.1.1
+celery==4.3.0
 certifi==2019.3.9
 cfgv==2.0.0
 chardet==3.0.4
@@ -18,6 +19,7 @@ django-db-geventpool==3.1.0
 django-govuk-template==0.8
 django-redis==4.10.0
 docutils==0.14
+factory_boy==2.12.0
 Flask==1.0.3
 future==0.17.1
 gevent==1.4.0

@@ -5,6 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile-test
     image: data-workspace-test
+    env_file:
+      - ./.envs/test.env
     ports:
       - "8000:8000"
     links:
