@@ -26,6 +26,7 @@ RUN \
 		aioredis==1.2.0 \
 		boto3==1.9.123 \
 		celery==4.3.0 \
+		celery-redbeat==0.13.0 \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
 		django==2.2.3 \
