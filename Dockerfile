@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.10
 
 ENV \
 	LC_ALL=en_US.UTF-8 \
@@ -10,14 +10,14 @@ ENV \
 RUN \
 	apk add --no-cache --virtual .build-deps \
 		build-base=0.5-r1 \
-		git=2.18.1-r0 \
-		python3-dev=3.6.8-r0 && \
+		git=2.22.0-r0 \
+		python3-dev=3.7.3-r0 && \
 	apk add --no-cache \
-		nginx=1.14.2-r0 \
-		openssl=1.0.2r-r0 \
-		py3-gevent==1.2.2-r0 \
-		py3-psycopg2=2.7.5-r0 \
-		python3=3.6.8-r0 && \
+		nginx=1.16.0-r2 \
+		openssl=1.1.1c-r0 \
+		py3-gevent==1.3.4-r2 \
+		py3-psycopg2=2.7.7-r1 \
+		python3=3.7.3-r0 && \
 	python3 -m ensurepip && \
 	pip3 install \
 		# Not the latest due to https://github.com/aio-libs/aiohttp/issues/3700
