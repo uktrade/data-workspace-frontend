@@ -1,5 +1,3 @@
-import uuid
-
 from django.test import TestCase
 
 
@@ -7,7 +5,7 @@ class BaseTestCase(TestCase):
     def setUp(self):
         self.user_data = {
             'HTTP_SSO_PROFILE_EMAIL': 'bob.testerson@test.com',
-            'HTTP_SSO_PROFILE_USER_ID': uuid.uuid4(),
+            'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
             'HTTP_SSO_PROFILE_LAST_NAME': 'Bob',
             'HTTP_SSO_PROFILE_FIRST_NAME': 'Testerson'
         }
