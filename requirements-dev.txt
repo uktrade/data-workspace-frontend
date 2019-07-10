@@ -19,6 +19,7 @@ django-db-geventpool==3.1.0
 django-govuk-template==0.8
 django-redis==4.10.0
 docutils==0.14
+factory_boy==2.12.0
 Flask==1.0.3
 future==0.17.1
 gevent==1.4.0
