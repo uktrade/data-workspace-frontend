@@ -27,6 +27,9 @@ from app.models import (
     DataSet,
     SourceTable,
 )
+from app.spawner import (
+    get_spawner,
+)
 
 logger = logging.getLogger('app')
 
@@ -144,6 +147,14 @@ def source_tables_for_user(user):
         Q(dataset__user_access_type='REQUIRES_AUTHENTICATION') |
         Q(dataset__datasetuserpermission__user=user)
     ).order_by('database__memorable_name', 'schema', 'table', 'id')
+
+
+def stop_spawner_and_application(application_instance):
+    get_spawner(application_instance.spawner).stop(
+        application_instance.spawner_application_template_options,
+        application_instance.spawner_application_instance_id,
+    )
+    set_application_stopped(application_instance)
 
 
 def set_application_stopped(application_instance):

@@ -20,7 +20,7 @@ from app.models import (
     ApplicationTemplate,
 )
 from app.shared import (
-    set_application_stopped,
+    stop_spawner_and_application,
 )
 from app.spawner import (
     get_spawner,
@@ -83,11 +83,7 @@ def root_view_POST(request):
     )
 
     if application_instance.state != 'STOPPED':
-        get_spawner(application_instance.spawner).stop(
-            application_instance.spawner_application_template_options,
-            application_instance.spawner_application_instance_id,
-        )
-        set_application_stopped(application_instance)
+        stop_spawner_and_application(application_instance)
 
     messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
     return redirect('root')
