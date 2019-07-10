@@ -278,7 +278,7 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         kwargs.update({
             'help_texts': {
-                'max_cpu': 'The highest CPU usage in the past two hours',
+                'max_cpu': 'The highest CPU usage in the past two hours. The application will be stopped automatically if the usage is less than 1% for two hours.',
             },
         })
         return super().get_form(request, obj, change, **kwargs)

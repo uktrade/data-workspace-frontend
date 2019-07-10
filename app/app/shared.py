@@ -23,7 +23,11 @@ from psycopg2 import (
 )
 import requests
 
+from app.cel import (
+    celery_app,
+)
 from app.models import (
+    ApplicationInstance,
     DataSet,
     SourceTable,
 )
@@ -198,3 +202,37 @@ def application_instance_max_cpu(application_instance):
             ts_at_max = ts
 
     return max_cpu, ts_at_max
+
+
+@celery_app.task()
+def kill_idle_fargate():
+    logger.info('kill_idle_fargate: Start')
+
+    two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=-2)
+    instances = ApplicationInstance.objects.filter(
+        spawner='FARGATE',
+        state='RUNNING',
+        created_date__lt=two_hours_ago,
+    )
+
+    for instance in instances:
+        logger.info('kill_idle_fargate: Attempting to find CPU usage of %s', instance)
+        try:
+            max_cpu, _ = application_instance_max_cpu(instance)
+        except Exception:
+            logger.exception('kill_idle_fargate: Unable to find CPU usage for %s', instance)
+            continue
+
+        logger.info('kill_idle_fargate: CPU usage for %s is %s', instance, max_cpu)
+
+        if max_cpu >= 1.0:
+            continue
+
+        try:
+            stop_spawner_and_application(instance)
+        except Exception:
+            logger.exception('kill_idle_fargate: Unable to stop %s', instance)
+
+        logger.info('kill_idle_fargate: Stopped application %s', instance)
+
+    logger.info('kill_idle_fargate: End')
