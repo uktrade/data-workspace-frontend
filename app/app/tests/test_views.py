@@ -28,10 +28,6 @@ class TestViews(BaseTestCase):
         ds2 = factories.DataSetFactory.create(grouping=group)
         ds3 = factories.DataSetFactory.create()
 
-        rd1 = factories.ReferenceDatasetFactory(group=group)
-        rd2 = factories.ReferenceDatasetFactory(group=group)
-        rd3 = factories.ReferenceDatasetFactory()
-
         response = self._authenticated_get(
             reverse('datagroup_item', kwargs={'slug': group.slug})
         )
@@ -43,13 +39,6 @@ class TestViews(BaseTestCase):
 
         # Ensure datasets not in group are not displayed
         self.assertNotContains(response, ds3.name)
-
-        # Ensure reference datasets in group are displayed
-        self.assertContains(response, rd1.name, 1)
-        self.assertContains(response, rd2.name, 1)
-
-        # Ensure reference datasets not in group are not displayed
-        self.assertNotContains(response, rd3.name)
 
     def test_dataset_detail_view(self):
         group = factories.DataGroupingFactory.create()
