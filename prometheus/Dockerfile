@@ -10,6 +10,7 @@ RUN \
 	PROMETHEUS_VERSION=2.10.0 && \
 	apk add --no-cache \
 		ca-certificates \
+		parallel \
 		python3 && \
 	apk add --no-cache --virtual .build-deps \
 		curl && \
