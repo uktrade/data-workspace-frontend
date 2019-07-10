@@ -47,6 +47,11 @@ docker-compose -f docker-compose-test.yml build && \
 docker-compose -f docker-compose-test.yml run data-workspace-test python3 -m unittest test.test
 ```
 
+Django tests
+```bash
+docker-compose -f docker-compose-test.yml run data-workspace-test django-admin test /app
+```
+
 
 # Building & pushing docker image to Quay.io
 
