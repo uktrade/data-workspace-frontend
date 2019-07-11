@@ -20,6 +20,10 @@ ALLOWED_HOSTS = \
     (env['ALLOWED_HOSTS']) if DEBUG else \
     (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 
+INTERNAL_IPS = (
+    '127.0.0.1',
+)
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -66,6 +70,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
                 'django.contrib.messages.context_processors.messages',
                 'app.context_processors.common',
             ],
@@ -180,3 +185,5 @@ ZENDESK_SERVICE_FIELD_VALUE = env['ZENDESK_SERVICE_FIELD_VALUE']
 CELERY_BROKER_URL = env['REDIS_URL']
 
 PROMETHEUS_DOMAIN = env['PROMETHEUS_DOMAIN']
+
+GOOGLE_ANALYTICS_SITE_ID = env['GOOGLE_ANALYTICS_SITE_ID']
