@@ -2,6 +2,7 @@
 
 Allows users to launch applications in order to analyse data
 
+![Data Workspace architecture](data-workspace-architecture.png)
 
 ## Running locally
 
