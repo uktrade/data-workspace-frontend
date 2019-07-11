@@ -20,9 +20,7 @@ ALLOWED_HOSTS = \
     (env['ALLOWED_HOSTS']) if DEBUG else \
     (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 
-INTERNAL_IPS = (
-    '127.0.0.1',
-)
+INTERNAL_IPS = ['127.0.0.1'] if DEBUG else []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
