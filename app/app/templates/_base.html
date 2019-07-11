@@ -25,19 +25,17 @@
       text-align:left;
     }
   </style>
-
-  {% block head %}
-    {% if not debug %}
-       <!-- Global site tag (gtag.js) - Google Analytics -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_site_id }}"></script>
-      <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '{{ google_analytics_site_id }}');
-      </script>
-    {% endif %}
-  {% endblock %}
+  {% if not debug %}
+     <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_site_id }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ google_analytics_site_id }}');
+    </script>
+  {% endif %}
+  {% block head %}{% endblock %}
 </head>
 
 <body class="govuk-template__body">
