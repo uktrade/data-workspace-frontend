@@ -178,5 +178,13 @@ ZENDESK_SERVICE_FIELD_ID = env['ZENDESK_SERVICE_FIELD_ID']
 ZENDESK_SERVICE_FIELD_VALUE = env['ZENDESK_SERVICE_FIELD_VALUE']
 
 CELERY_BROKER_URL = env['REDIS_URL']
+CELERY_BEAT_SCHEDULE = {
+    'kill-idle-fargate-containers': {
+        'task': 'app.shared.kill_idle_fargate',
+        'schedule': 60 * 10,
+        'args': (),
+    },
+}
+CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
 
 PROMETHEUS_DOMAIN = env['PROMETHEUS_DOMAIN']
