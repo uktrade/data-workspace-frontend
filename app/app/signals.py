@@ -46,7 +46,7 @@ def reference_dataset_post_delete(sender, instance, **kwargs):
             instance.id,
 
         )
-        instance.table_name = '{}_{}_DEL'.format(
+        instance.table_name = '{}_{}_del'.format(
             orig_table_name,
             instance.id,
         )
