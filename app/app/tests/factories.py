@@ -55,7 +55,6 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     group = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
-    table_name = factory.fuzzy.FuzzyText(length=10)
 
     class Meta:
         model = 'app.ReferenceDataset'

@@ -323,11 +323,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     )
     name = models.CharField(
         max_length=255,
-        unique=True
-    )
-    table_name = models.CharField(
-        max_length=50,
-        unique=True
     )
     slug = models.SlugField()
     short_description = models.CharField(
@@ -370,15 +365,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self.name
         )
 
-    def _generate_table_name(self) -> str:
-        """
-        Generate a table name based off the name of the model.
-        :return:
-        """
-        name = re.sub(r'[^\w\s-]', '', self.name).strip().lower()
-        return 'reference__{}'.format(
-            re.sub(r'[-\s]+', '_', name)
-        )
+    @property
+    def table_name(self):
+        return 'refdata__{}'.format(self.id)
 
     @property
     def field_names(self) -> List[str]:
@@ -395,14 +384,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return:
         """
         return self.fields.get(is_identifier=True)
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        # Generate the table name if this is the first save
-        if not self.pk:
-            self.table_name = self._generate_table_name()
-        return super().save(
-            force_insert, force_update, using, update_fields
-        )
 
     def get_records(self) -> List[dict]:
         """
