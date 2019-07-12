@@ -50,7 +50,7 @@ docker-compose -f docker-compose-test.yml run data-workspace-test python3 -m uni
 
 Django tests
 ```bash
-docker-compose -f docker-compose-test.yml run data-workspace-test django-admin test /app
+docker-compose -f docker-compose-test.yml run data-workspace-test django-admin test /app/app
 ```
 
 
