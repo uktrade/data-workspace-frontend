@@ -1,11 +1,16 @@
+import re
 import uuid
+from typing import Optional, List, Type
 
+from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
-from django.db import models
+from django.db import models, connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from app.common.models import TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel
 
 
 class Profile(models.Model):
@@ -22,7 +27,7 @@ def save_user_profile(instance, **_):
     profile.save()
 
 
-class Database(models.Model):
+class Database(TimeStampedModel):
     # Deliberately no indexes: current plan is only a few public databases.
 
     id = models.UUIDField(
@@ -30,8 +35,6 @@ class Database(models.Model):
         default=uuid.uuid4,
         editable=False,
     )
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
 
     memorable_name = models.CharField(
         validators=[RegexValidator(regex=r'[A-Za-z0-9_]')],
@@ -49,14 +52,12 @@ class Database(models.Model):
         return f'{self.memorable_name}'
 
 
-class ApplicationTemplate(models.Model):
+class ApplicationTemplate(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
     )
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
 
     name = models.CharField(
         validators=[RegexValidator(regex=r'^[a-z]+$')],
@@ -92,14 +93,12 @@ class ApplicationTemplate(models.Model):
         return f'{self.name}'
 
 
-class ApplicationInstance(models.Model):
+class ApplicationInstance(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
     )
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
 
     owner = models.ForeignKey(User, on_delete=models.PROTECT)
 
@@ -161,14 +160,12 @@ class ApplicationInstance(models.Model):
         return f'{self.owner} / {self.public_host} / {self.state}'
 
 
-class DataGrouping(models.Model):
+class DataGrouping(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False
     )
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
     # 128 - small tweet in length
     name = models.CharField(unique=True, blank=False,
                             null=False, max_length=128)
@@ -199,7 +196,7 @@ class DataGrouping(models.Model):
         return f'{self.name}'
 
 
-class DataSet(models.Model):
+class DataSet(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -216,9 +213,6 @@ class DataSet(models.Model):
         blank=False, null=False, max_length=256)
 
     grouping = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
-
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
 
     description = models.TextField(null=False, blank=False)
 
@@ -298,7 +292,7 @@ class SourceTable(models.Model):
     )
 
 
-class SourceLink(models.Model):
+class SourceLink(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -319,7 +313,295 @@ class SourceLink(models.Model):
     )
 
     format = models.CharField(blank=False, null=False, max_length=10)
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
-
     frequency = models.CharField(blank=False, null=False, max_length=50)
+
+
+class ReferenceDataset(DeletableTimestampedUserModel):
+    group = models.ForeignKey(
+        DataGrouping,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    table_name = models.CharField(
+        max_length=50,
+        unique=True
+    )
+    slug = models.SlugField()
+    short_description = models.CharField(
+        max_length=255
+    )
+    description = models.TextField(
+        null=True,
+        blank=True
+    )
+    enquiries_contact = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    licence = models.CharField(
+        null=True,
+        blank=True,
+        max_length=256
+    )
+    restrictions_on_usage = models.TextField(
+        null=True,
+        blank=True
+    )
+    valid_from = models.DateField(
+        null=True,
+        blank=True
+    )
+    valid_to = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = 'Reference Data Set'
+
+    def __str__(self):
+        return '{}: {}'.format(
+            self.group.name,
+            self.name
+        )
+
+    def _generate_table_name(self) -> str:
+        """
+        Generate a table name based off the name of the model.
+        :return:
+        """
+        name = re.sub(r'[^\w\s-]', '', self.name).strip().lower()
+        return 'reference__{}'.format(
+            re.sub(r'[-\s]+', '_', name)
+        )
+
+    @property
+    def field_names(self) -> List[str]:
+        """
+        Returns the column name for all associated fields.
+        :return: list of field names
+        """
+        return [x.name for x in self.fields.all()]
+
+    @property
+    def identifier_field(self) -> 'ReferenceDatasetField':
+        """
+        Returns the associated `ReferenceDataField` with `is_identifier`=True
+        :return:
+        """
+        return self.fields.get(is_identifier=True)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        # Generate the table name if this is the first save
+        if not self.pk:
+            self.table_name = self._generate_table_name()
+        return super().save(
+            force_insert, force_update, using, update_fields
+        )
+
+    def get_records(self) -> List[dict]:
+        """
+        Return a list of associated records containing the internal id and row data
+        :return:
+        """
+        records = []
+        if self.field_names:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    'SELECT dw_int_id, {} FROM {} ORDER BY {}'.format(
+                        ', '.join(self.field_names),
+                        self.table_name,
+                        self.identifier_field.name
+                    )
+                )
+                for row in cursor.fetchall():
+                    records.append({
+                        'id': row[0],
+                        'data': row[1:]
+                    })
+        return records
+
+    def get_record_by_internal_id(self, internal_id: int) -> Optional[dict]:
+        """
+        Return a record using django's internal id
+        :param internal_id:
+        :return:
+        """
+        return self._get_record('dw_int_id', internal_id)
+
+    def get_record_by_custom_id(self, record_id: any) -> Optional[dict]:
+        """
+        Return the record matching the custom identifier provided.
+        :param record_id:
+        :return:
+        """
+        return self._get_record(self.identifier_field.name, record_id)
+
+    def _get_record(self, field_name: str, identifier: any) -> Optional[dict]:
+        """
+        Return the record with `field_name`=`identifier` for this reference dataset
+        :param field_name: the identifier column name for the field
+        :param identifier: the identifier value
+        :return:
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                'SELECT dw_int_id, {} FROM {} WHERE {}=%s'.format(
+                    ', '.join(self.field_names),
+                    self.table_name,
+                    field_name
+                ), [
+                    identifier
+                ]
+            )
+            row = cursor.fetchone()
+            if row is not None:
+                record = {}
+                for idx, name in enumerate([x.name for x in cursor.description]):
+                    record[name] = row[idx]
+                return record
+            return None
+
+    def save_record(self, internal_id: Optional[int], form_data: dict):
+        """
+        Save a record to the database and associate it with this reference dataset
+        :param internal_id: the django id for the model (None if doesn't exist)
+        :param form_data: a dictionary containing values to be saved to the row
+        :return:
+        """
+        with connection.cursor() as cursor:
+            if internal_id is None:
+                cursor.execute(
+                    'INSERT INTO {} (reference_dataset_id, {}) VALUES (%s, {})'.format(
+                        self.table_name,
+                        ', '.join(form_data.keys()),
+                        ','.join(['%s'.format(k) for k in form_data.keys()])
+                    ),
+                    [self.id] + list(form_data.values())
+                )
+            else:
+                cursor.execute(
+                    'UPDATE {} SET {} WHERE dw_int_id=%s'.format(
+                        self.table_name,
+                        ','.join(['{}=%s'.format(k) for k in form_data.keys()])
+                    ),
+                    list(form_data.values()) + [internal_id]
+                )
+
+    def delete_record(self, internal_id: int):
+        """
+        Delete a record from the reference dataset table
+        :param internal_id: the django id for the record
+        :return:
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                'DELETE FROM {} WHERE dw_int_id=%s'.format(
+                    self.table_name,
+                ), [
+                    internal_id
+                ]
+            )
+
+
+class ReferenceDatasetField(TimeStampedUserModel):
+    DATA_TYPE_CHAR = 1
+    DATA_TYPE_INT = 2
+    DATA_TYPE_FLOAT = 3
+    DATA_TYPE_DATE = 4
+    DATA_TYPE_TIME = 5
+    DATA_TYPE_DATETIME = 6
+    DATA_TYPE_BOOLEAN = 7
+    _DATA_TYPES = (
+        (DATA_TYPE_CHAR, 'Character field'),
+        (DATA_TYPE_INT, 'Integer field'),
+        (DATA_TYPE_FLOAT, 'Float field'),
+        (DATA_TYPE_DATE, 'Date field'),
+        (DATA_TYPE_TIME, 'Time field'),
+        (DATA_TYPE_DATETIME, 'Datetime field'),
+        (DATA_TYPE_BOOLEAN, 'Boolean field'),
+    )
+    DATA_TYPE_MAP = {
+        DATA_TYPE_CHAR: 'varchar(255)',
+        DATA_TYPE_INT: 'integer',
+        DATA_TYPE_FLOAT: 'float',
+        DATA_TYPE_DATE: 'date',
+        DATA_TYPE_TIME: 'time',
+        DATA_TYPE_DATETIME: 'timestamp',
+        DATA_TYPE_BOOLEAN: 'boolean',
+    }
+    _DATA_TYPE_FIELD_MAP = {
+        DATA_TYPE_CHAR: forms.CharField(),
+        DATA_TYPE_INT: forms.IntegerField(),
+        DATA_TYPE_FLOAT: forms.FloatField(),
+        DATA_TYPE_DATE: forms.DateField(widget=forms.DateInput(attrs={'type': 'date'})),
+        DATA_TYPE_TIME: forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'})),
+        DATA_TYPE_DATETIME: forms.DateTimeField(),
+        DATA_TYPE_BOOLEAN: forms.BooleanField(),
+    }
+    reference_dataset = models.ForeignKey(
+        ReferenceDataset,
+        on_delete=models.CASCADE,
+        related_name='fields'
+    )
+    data_type = models.IntegerField(
+        choices=_DATA_TYPES
+    )
+    is_identifier = models.BooleanField(
+        default=False,
+        help_text='This field is the unique identifier for the record'
+    )
+    name = models.CharField(
+        max_length=60,
+        help_text='The name of the field. May only contain letters '
+                  'numbers and underscores (no spaces)',
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')]
+    )
+    description = models.TextField(
+        blank=True,
+        null=True
+    )
+    required = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('reference_dataset', 'name')
+        verbose_name = 'Reference Data Set Field'
+        ordering = ('id',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Save the models current values so they can be compared
+        # in the post save signal handler
+        self._original_values = {
+            'name': self.name,
+            'required': self.required,
+            'data_type': self.data_type,
+        }
+
+    def __str__(self):
+        return '{} field: {}'.format(
+            self.reference_dataset.name,
+            self.name
+        )
+
+    def get_postgres_datatype(self) -> str:
+        """
+        Maps ReferenceDatasetField with Postgres' data types
+        :return:
+        """
+        return self.DATA_TYPE_MAP.get(self.data_type)
+
+    def get_form_field(self):
+        """
+        Instantiates a form field based on this models selected `data_type`.
+        Falls back to `CharField` if not found.
+        :return:
+        """
+        return self._DATA_TYPE_FIELD_MAP.get(
+            self.data_type, forms.CharField()
+        )
