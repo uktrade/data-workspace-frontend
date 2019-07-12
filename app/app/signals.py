@@ -6,7 +6,7 @@ from app import models
 
 
 @receiver(post_save, sender=models.ReferenceDataset)
-def reference_data_post_save(sender, instance, created, **kwargs):
+def reference_dataset_post_save(sender, instance, created, **kwargs):
     """
     On ReferenceDataset save create the associated table
     :param sender:
@@ -29,8 +29,42 @@ def reference_data_post_save(sender, instance, created, **kwargs):
             )
 
 
+@receiver(post_delete, sender=models.ReferenceDataset)
+def reference_dataset_post_delete(sender, instance, **kwargs):
+    """
+    On ReferenceDataset delete update the name of the table so it can be reused
+    but the data is kept.
+    :param sender:
+    :param instance:
+    :param kwargs:
+    :return:
+    """
+    if getattr(instance, 'deleted'):
+        orig_table_name = instance.table_name
+        instance.name = '{} ({}) - DELETED'.format(
+            instance.name,
+            instance.id,
+
+        )
+        instance.table_name = '{}_{}_DEL'.format(
+            orig_table_name,
+            instance.id,
+        )
+        instance.save()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                ALTER TABLE {orig_table_name} 
+                RENAME TO {new_table_name}
+                '''.format(
+                    orig_table_name=orig_table_name,
+                    new_table_name=instance.table_name,
+                )
+            )
+
+
 @receiver(post_save, sender=models.ReferenceDatasetField)
-def reference_data_field_post_save(sender, instance, created, **kwargs):
+def reference_dataset_field_post_save(sender, instance, created, **kwargs):
     """
     On ReferenceDatasetField save update the associated table.
     :param sender:
@@ -82,7 +116,7 @@ def reference_data_field_post_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_delete, sender=models.ReferenceDatasetField)
-def reference_data_field_post_delete(sender, instance, **kwargs):
+def reference_dataset_field_post_delete(sender, instance, **kwargs):
     """
     On ReferenceDataField delete drop the column
     :param sender:

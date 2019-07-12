@@ -358,3 +358,14 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
     def get_queryset(self, request):
         # Only show non-deleted reference datasets in admin
         return self.model.objects.live()
+
+    def get_actions(self, request):
+        """
+        Disable bulk delete so tables can be managed.
+        :param request:
+        :return:
+        """
+        actions = super().get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
