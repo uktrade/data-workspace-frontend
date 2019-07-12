@@ -17,6 +17,7 @@ from django.contrib.sessions.backends.base import (
 )
 from django.urls import (
     path,
+    include
 )
 from django.views.decorators.csrf import (
     csrf_exempt,
@@ -56,6 +57,9 @@ from app.views_appstream import (
     appstream_restart,
     appstream_fleetstatus,
 )
+
+from app import signals  ## noqa
+
 
 logger = logging.getLogger('app')
 
@@ -115,7 +119,6 @@ urlpatterns = [
     path('error_403', public_error_403_html_view),
     path('error_404', public_error_404_html_view),
     path('error_500', public_error_500_html_view),
-    path('admin/', admin.site.urls),
     path('table_data/<str:database>/<str:schema>/<str:table>',
          login_required(table_data_view), name='table_data'),
     path('appstream/', login_required(appstream_view), name='appstream'),
@@ -135,7 +138,8 @@ urlpatterns = [
     path('request-access/<str:group_slug>/<str:set_slug>', login_required(request_access_view), name='request_access'),
     path('request_access_success/', login_required(request_access_success_view),
          name='request_access_success'),
-
+    path('admin/', include(('app.wd_admin.urls', 'app'), namespace='wd-admin')),
+    path('admin/', admin.site.urls),
 ]
 
 handler403 = public_error_403_html_view

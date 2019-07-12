@@ -29,10 +29,14 @@ from app.models import (
     DataSetUserPermission,
     SourceLink,
     SourceTable,
+    ReferenceDataset,
+    ReferenceDatasetField
 )
 from app.shared import (
     application_instance_max_cpu,
 )
+from app.common.admin import TimeStampedUserAdmin
+from app.wd_admin.forms import ReferenceDataFieldInlineForm
 
 logger = logging.getLogger('app')
 
@@ -287,3 +291,70 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
 admin.site.register(User, AppUserAdmin)
 admin.site.register(DataSet, DataSetAdmin)
 admin.site.register(ApplicationInstance, ApplicationInstanceAdmin)
+
+
+class ReferenceDataInlineFormset(forms.BaseInlineFormSet):
+    model = ReferenceDatasetField
+
+    def clean(self):
+        # Ensure one and only one field is set as identifier
+        identifiers = [
+            x for x in self.forms
+            if x.cleaned_data.get('is_identifier') and not x.cleaned_data['DELETE']
+        ]
+        if len(identifiers) == 0:
+            raise forms.ValidationError(
+                'Please ensure one field is set as the unique identifier'
+            )
+        if len(identifiers) > 1:
+            raise forms.ValidationError(
+                'Please select only one unique identifier field'
+            )
+
+
+class ReferenceDataFieldInline(admin.TabularInline):
+    form = ReferenceDataFieldInlineForm
+    formset = ReferenceDataInlineFormset
+    model = ReferenceDatasetField
+    min_num = 1
+    extra = 1
+    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
+    fieldsets = [
+        (None, {
+            'fields': [
+                'name',
+                'data_type',
+                'description',
+                'is_identifier'
+            ]
+        })
+    ]
+
+
+@admin.register(ReferenceDataset)
+class ReferenceDatasetAdmin(TimeStampedUserAdmin):
+    change_form_template = 'admin/reference_dataset_changeform.html'
+    prepopulated_fields = {'slug': ('name',)}
+    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
+    list_display = ('name', 'slug', 'short_description', 'group')
+    inlines = [ReferenceDataFieldInline]
+    fieldsets = [
+        (None, {
+            'fields': [
+                'name',
+                'slug',
+                'group',
+                'short_description',
+                'description',
+                'valid_from',
+                'valid_to',
+                'enquiries_contact',
+                'licence',
+                'restrictions_on_usage',
+            ]
+        })
+    ]
+
+    def get_queryset(self, request):
+        # Only show non-deleted reference datasets in admin
+        return self.model.objects.live()
