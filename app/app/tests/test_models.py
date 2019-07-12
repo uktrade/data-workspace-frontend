@@ -50,7 +50,7 @@ class TestModels(BaseTestCase):
         # Ensure database table name is correct
         self.assertEqual(
             ref_dataset.table_name,
-            'reference__test_reference_dataset_1'
+            'refdata__{}'.format(ref_dataset.id)
         )
 
         # Ensure the table was created in the db
