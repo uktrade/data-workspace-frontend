@@ -1,4 +1,6 @@
 import logging
+
+from django.conf import settings
 from django.contrib import (
     messages,
 )
@@ -29,7 +31,7 @@ logger = logging.getLogger('app')
 
 
 def appstream_view(request):
-    User = get_user_model()
+    User = settings.AUTH_USER_MODEL
     fleet_status = get_fleet_status()
 
     for item in fleet_status['Fleets']:
