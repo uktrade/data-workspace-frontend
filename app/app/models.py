@@ -9,6 +9,7 @@ from django.core.validators import RegexValidator
 from django.db import models, connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from psycopg2 import sql
 
 from app.common.models import TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel
 
@@ -411,10 +412,17 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         if self.field_names:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    'SELECT dw_int_id, {} FROM {} ORDER BY {}'.format(
-                        ', '.join(self.field_names),
-                        self.table_name,
-                        self.identifier_field.name
+                    sql.SQL(
+                        '''
+                        SELECT dw_int_id, {field_names}
+                        FROM {table_name}
+                        ORDER BY {column_name}
+                        '''
+                    ).format(
+                        field_names=sql.SQL(', ').join(map(sql.Identifier, self.field_names)),
+                        table_name=sql.Identifier(self.table_name),
+                        column_name=sql.Identifier(self.identifier_field.name)
+
                     )
                 )
                 for row in cursor.fetchall():
@@ -449,10 +457,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT dw_int_id, {} FROM {} WHERE {}=%s'.format(
-                    ', '.join(self.field_names),
-                    self.table_name,
-                    field_name
+                sql.SQL(
+                    '''
+                    SELECT dw_int_id, {field_names}
+                    FROM {table_name}
+                    WHERE {column_name}=%s
+                    '''
+                ).format(
+                    field_names=sql.SQL(', ').join(map(sql.Identifier, self.field_names)),
+                    table_name=sql.Identifier(self.table_name),
+                    column_name=sql.Identifier(self.identifier_field.name)
                 ), [
                     identifier
                 ]
@@ -475,18 +489,33 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         with connection.cursor() as cursor:
             if internal_id is None:
                 cursor.execute(
-                    'INSERT INTO {} (reference_dataset_id, {}) VALUES (%s, {})'.format(
-                        self.table_name,
-                        ', '.join(form_data.keys()),
-                        ','.join(['%s'.format(k) for k in form_data.keys()])
+                    sql.SQL(
+                        '''
+                        INSERT INTO {table_name} (reference_dataset_id, {columns}) 
+                        VALUES (%s, {values})
+                        '''
+                    ).format(
+                        table_name=sql.Identifier(self.table_name),
+                        columns=sql.SQL(', ').join(map(sql.Identifier, form_data.keys())),
+                        values=sql.SQL(', ').join(sql.Placeholder() * len(form_data)),
                     ),
                     [self.id] + list(form_data.values())
                 )
             else:
                 cursor.execute(
-                    'UPDATE {} SET {} WHERE dw_int_id=%s'.format(
-                        self.table_name,
-                        ','.join(['{}=%s'.format(k) for k in form_data.keys()])
+                    sql.SQL(
+                        '''
+                        UPDATE {table_name}
+                        SET {params}
+                        WHERE dw_int_id=%s
+                        '''
+                    ).format(
+                        table_name=sql.Identifier(self.table_name),
+                        params=sql.SQL(', ').join([
+                            sql.SQL('{}={}').format(
+                                sql.Identifier(k), sql.Placeholder()
+                            ) for k in form_data.keys()
+                        ])
                     ),
                     list(form_data.values()) + [internal_id]
                 )
@@ -499,8 +528,13 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         with connection.cursor() as cursor:
             cursor.execute(
-                'DELETE FROM {} WHERE dw_int_id=%s'.format(
-                    self.table_name,
+                sql.SQL(
+                    '''
+                    DELETE FROM {}
+                    WHERE dw_int_id=%s
+                    '''
+                ).format(
+                    sql.Identifier(self.table_name)
                 ), [
                     internal_id
                 ]
