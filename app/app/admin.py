@@ -369,3 +369,10 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
+
+    def save_formset(self, request, form, formset, change):
+        for f in formset.forms:
+            if not change:
+                f.instance.created_by = request.user
+            f.instance.updated_by = request.user
+        super().save_formset(request, form, formset, change)
