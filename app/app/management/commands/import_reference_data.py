@@ -13,7 +13,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--dataset',
             type=int,
-            help='The id of the dataset to import records to',
+            help='The id of the data set to import records to',
             required=True
         )
         parser.add_argument(
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         try:
             dataset = models.ReferenceDataset.objects.get(pk=kwargs['dataset'], deleted=False)
         except models.ReferenceDataset.DoesNotExist:
-            raise ValueError('Dataset with id {} does not exist'.format(kwargs['dataset']))
+            raise ValueError('Data set with id {} does not exist'.format(kwargs['dataset']))
 
         fields = dataset.fields.all()
         update_count = 0
@@ -70,7 +70,7 @@ class Command(BaseCommand):
                 else:
                     update_count += 1
 
-        print('Created {} and updated {} reference datasets'.format(
+        print('Created {} and updated {} reference data sets'.format(
             create_count,
             update_count
         ))
