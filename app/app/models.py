@@ -517,13 +517,13 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_BOOLEAN: 'boolean',
     }
     _DATA_TYPE_FIELD_MAP = {
-        DATA_TYPE_CHAR: forms.CharField(),
-        DATA_TYPE_INT: forms.IntegerField(),
-        DATA_TYPE_FLOAT: forms.FloatField(),
-        DATA_TYPE_DATE: forms.DateField(widget=forms.DateInput(attrs={'type': 'date'})),
-        DATA_TYPE_TIME: forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'})),
-        DATA_TYPE_DATETIME: forms.DateTimeField(),
-        DATA_TYPE_BOOLEAN: forms.BooleanField(),
+        DATA_TYPE_CHAR: forms.CharField,
+        DATA_TYPE_INT: forms.IntegerField,
+        DATA_TYPE_FLOAT: forms.FloatField,
+        DATA_TYPE_DATE: forms.DateField,
+        DATA_TYPE_TIME: forms.TimeField,
+        DATA_TYPE_DATETIME: forms.DateTimeField,
+        DATA_TYPE_BOOLEAN: forms.BooleanField,
     }
     reference_dataset = models.ForeignKey(
         ReferenceDataset,
@@ -583,6 +583,11 @@ class ReferenceDatasetField(TimeStampedUserModel):
         Falls back to `CharField` if not found.
         :return:
         """
-        return self._DATA_TYPE_FIELD_MAP.get(
-            self.data_type, forms.CharField()
-        )
+        field = self._DATA_TYPE_FIELD_MAP.get(self.data_type, forms.CharField)()
+        if self.data_type == self.DATA_TYPE_DATE:
+            field.widget = forms.DateInput(attrs={'type': 'date'})
+        elif self.data_type == self.DATA_TYPE_TIME:
+            field.widget = forms.DateInput(attrs={'type': 'time'})
+        field.required = self.is_identifier or self.required
+        field.widget.attrs['required'] = field.required
+        return field
