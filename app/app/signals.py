@@ -21,7 +21,8 @@ def reference_dataset_post_save(sender, instance, created, **kwargs):
                 '''
                 CREATE TABLE {table_name} (
                     dw_int_id SERIAL NOT NULL CONSTRAINT {table_name}_pkey PRIMARY KEY,
-                    reference_dataset_id INTEGER NOT NULL
+                    reference_dataset_id INTEGER NOT NULL,
+                    updated_date timestamp not null default CURRENT_TIMESTAMP
                 )
                 '''.format(
                     table_name=instance.table_name

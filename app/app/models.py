@@ -385,6 +385,23 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         return self.fields.get(is_identifier=True)
 
+    @property
+    def data_last_updated(self):
+        """
+        Return the most recent date a record was updated in the dataset
+        :return:
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                'SELECT MAX(updated_date) FROM {}'.format(
+                    self.table_name
+                )
+            )
+            record = cursor.fetchone()
+            if record is not None:
+                return record[0]
+            return None
+
     def get_records(self) -> List[dict]:
         """
         Return a list of associated records containing the internal id and row data
