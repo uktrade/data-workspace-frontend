@@ -2,6 +2,6 @@
     {{ model.first_name }} {{ model.last_name }}
     {% if model.email %}
         <br/>
-        {{ model.email }}
+        <a href="mailto:{{ model.email }}">{{ model.email }}</a>
     {% endif %}
 </p>
