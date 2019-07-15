@@ -394,8 +394,13 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         with connection.cursor() as cursor:
             cursor.execute(
-                'SELECT MAX(updated_date) FROM {}'.format(
-                    self.table_name
+                sql.SQL(
+                    '''
+                    SELECT MAX(updated_date)
+                    FROM {}
+                    '''
+                ).format(
+                    sql.Identifier(self.table_name)
                 )
             )
             record = cursor.fetchone()
