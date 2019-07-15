@@ -32,7 +32,6 @@
             <p class="govuk-body">
                 {{ model.description | linebreaksbr }}
             </p>
-
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Available Data Sets</h2>
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
@@ -53,6 +52,26 @@
                     <a class="govuk-link"
                        href="{% url 'admin:app_dataset_add' %}">[New]</a>
                 </p>
+            {% endif %}
+            {% if model.referencedataset_set.live.exists %}
+              <h2 class="govuk-heading-l govuk-!-margin-top-8">Available Reference Data Sets</h2>
+              {% for set in model.referencedataset_set.live %}
+                  <h2 class="govuk-heading-m">
+                      <a class="govuk-link" href="{% url 'reference_dataset' model.slug set.slug %}">
+                        {{ set.name }}
+                      </a>
+                      {% if perms.app_referencedataset_change %}
+                          &nbsp;<a class="govuk-link" href="{% url 'admin:app_referencedataset_change' set.id %}">[Edit]</a>
+                      {% endif %}
+                  </h2>
+                  <p class="govuk-body">{{ set.short_description }}</p>
+              {% endfor %}
+              {% if perms.app_referencedataset_add %}
+                  <p>
+                      <a class="govuk-link"
+                         href="{% url 'admin:app_referencedataset_add' %}">[New]</a>
+                  </p>
+              {% endif %}
             {% endif %}
 
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
