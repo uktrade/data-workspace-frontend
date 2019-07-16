@@ -138,7 +138,7 @@ urlpatterns = [
     path('request-access/<str:group_slug>/<str:set_slug>', login_required(request_access_view), name='request_access'),
     path('request_access_success/', login_required(request_access_success_view),
          name='request_access_success'),
-    path('admin/', include(('app.wd_admin.urls', 'app'), namespace='wd-admin')),
+    path('admin/', include(('app.dw_admin.urls', 'app'), namespace='dw-admin')),
     path('admin/', admin.site.urls),
 ]
 

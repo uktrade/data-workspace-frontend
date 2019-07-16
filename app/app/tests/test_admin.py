@@ -402,7 +402,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         })
         num_records = len(reference_dataset.get_records())
         response = self._authenticated_post(
-            reverse('wd-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
+            reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
             {
                 'field1': 1,
                 'field2': 'record2',
@@ -431,7 +431,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         })
         num_records = len(reference_dataset.get_records())
         response = self._authenticated_post(
-            reverse('wd-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
+            reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
             {
                 'field1': '',
                 'field2': 'record2',
@@ -448,7 +448,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        url = reverse('wd-admin:reference-dataset-record-add', args=(reference_dataset.id,))
+        url = reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,))
         num_records = len(reference_dataset.get_records())
 
         # Int
@@ -533,7 +533,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
             'bool': True,
         }
         response = self._authenticated_post(
-            reverse('wd-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
+            reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
             fields
         )
         self.assertContains(response, 'Reference data set record added successfully')
@@ -555,7 +555,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         num_records = len(reference_dataset.get_records())
         record = reference_dataset.get_records()[0]
         response = self._authenticated_post(
-            reverse('wd-admin:reference-dataset-record-edit', args=(reference_dataset.id, record['id'])),
+            reverse('dw-admin:reference-dataset-record-edit', args=(reference_dataset.id, record['id'])),
             {
                 'id': 2,
             }
@@ -622,7 +622,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
             'bool': True,
         }
         response = self._authenticated_post(
-            reverse('wd-admin:reference-dataset-record-edit', args=(reference_dataset.id, record['id'])),
+            reverse('dw-admin:reference-dataset-record-edit', args=(reference_dataset.id, record['id'])),
             update_fields
         )
         self.assertContains(response, 'Reference data set record updated successfully')
@@ -643,7 +643,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         num_records = len(reference_dataset.get_records())
         record = reference_dataset.get_records()[0]
         response = self._authenticated_post(
-            reverse('wd-admin:reference-dataset-record-delete', args=(reference_dataset.id, record['id'])),
+            reverse('dw-admin:reference-dataset-record-delete', args=(reference_dataset.id, record['id'])),
         )
         self.assertContains(
             response,
@@ -663,7 +663,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         num_records = len(reference_dataset.get_records())
         record = reference_dataset.get_records()[0]
         response = self._authenticated_post(
-            reverse('wd-admin:reference-dataset-record-delete', args=(reference_dataset.id, record['id'])), {
+            reverse('dw-admin:reference-dataset-record-delete', args=(reference_dataset.id, record['id'])), {
                 'id': record['id']
             }
         )

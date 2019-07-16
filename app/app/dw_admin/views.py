@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from app import models
-from app.wd_admin.forms import ReferenceDataRecordEditForm, ReferenceDataRowDeleteForm
+from app.dw_admin.forms import ReferenceDataRecordEditForm, ReferenceDataRowDeleteForm
 
 
 class ReferenceDataRecordMixin(UserPassesTestMixin):
