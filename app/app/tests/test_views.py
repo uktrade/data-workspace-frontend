@@ -1,10 +1,12 @@
 from django.urls import reverse
 
+import mock
+
 from app.tests import factories
 from app.tests.common import BaseTestCase
 
 
-class TestViews(BaseTestCase):
+class TestDatasetViews(BaseTestCase):
     def test_homepage_unauth(self):
         response = self.client.get(reverse('root'))
         self.assertEqual(response.status_code, 403)
@@ -131,3 +133,34 @@ class TestViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 404)
+
+
+class TestSupportView(BaseTestCase):
+    def test_create_support_request_invalid_email(self):
+        response = self._authenticated_post(reverse('support'), {
+            'email': 'x',
+            'message': 'test message',
+        })
+        self.assertContains(response, 'Enter a valid email address')
+
+    def test_create_support_request_invalid_message(self):
+        response = self._authenticated_post(reverse('support'), {
+            'email': 'noreply@example.com',
+            'message': '',
+        })
+        self.assertContains(response, 'This field is required')
+
+    @mock.patch('zenpy.lib.api.TicketApi.create')
+    def test_create_support_request_valid(self, mock_create_ticket):
+        mock_create_ticket.return_value = 999
+        response = self._authenticated_post(reverse('support'), {
+            'email': 'noreply@example.com',
+            'message': 'A test message',
+        })
+        self.assertContains(
+            response,
+            'Your request has been received. Your reference is: '
+            '<strong>999</strong>.',
+            html=True
+        )
+        mock_create_ticket.assert_called_once()

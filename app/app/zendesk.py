@@ -107,3 +107,21 @@ def create_zendesk_ticket(contact_email,
     client.tickets.update(ticket_audit.ticket)
 
     return ticket_audit.ticket.id
+
+
+def create_support_request(user, email, message):
+    client = Zenpy(
+        subdomain=settings.ZENDESK_SUBDOMAIN,
+        email=settings.ZENDESK_EMAIL,
+        token=settings.ZENDESK_TOKEN,
+    )
+    return client.tickets.create(
+        Ticket(
+            subject='Data Workspace Support Request',
+            description=message,
+            requester=User(
+                email=email,
+                name=user.get_full_name()
+            )
+        )
+    )
