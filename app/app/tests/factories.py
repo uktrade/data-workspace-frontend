@@ -49,3 +49,22 @@ class SourceLinkFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'app.SourceLink'
+
+
+class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
+    group = factory.SubFactory(DataGroupingFactory)
+    name = factory.fuzzy.FuzzyText()
+    slug = factory.fuzzy.FuzzyText(length=10)
+
+    class Meta:
+        model = 'app.ReferenceDataset'
+
+
+class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
+    reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
+    name = factory.fuzzy.FuzzyText()
+    data_type = 1
+
+    class Meta:
+        model = 'app.ReferenceDatasetField'
+

@@ -1,10 +1,17 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 
 
 class BaseTestCase(TestCase):
     def setUp(self):
+        self.user = User.objects.create(
+            username='bob.testerson@test.com',
+            is_staff=True,
+            is_superuser=True
+        )
+
         self.user_data = {
-            'HTTP_SSO_PROFILE_EMAIL': 'bob.testerson@test.com',
+            'HTTP_SSO_PROFILE_EMAIL': self.user.email,
             'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
             'HTTP_SSO_PROFILE_LAST_NAME': 'Bob',
             'HTTP_SSO_PROFILE_FIRST_NAME': 'Testerson'
@@ -21,5 +28,6 @@ class BaseTestCase(TestCase):
         return self.client.post(
             url,
             data=data,
-            **self.user_data
+            **self.user_data,
+            follow=True
         )
