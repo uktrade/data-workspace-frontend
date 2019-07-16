@@ -28,7 +28,7 @@
     {{ form }}
     <div>
       <input type="submit" value="Yes, I'm sure">
-      <a href="{% url 'wd-admin:reference-dataset-record-edit' reference_dataset_id=ref_model.id record_id=record_id %}" class="button cancel-link">No, take me back</a>
+      <a href="{% url 'dw-admin:reference-dataset-record-edit' reference_dataset_id=ref_model.id record_id=record_id %}" class="button cancel-link">No, take me back</a>
     </div>
   </form>
 {% endblock content %}

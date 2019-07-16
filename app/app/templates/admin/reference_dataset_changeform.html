@@ -32,7 +32,7 @@
                         </td>
                       {% endfor %}
                       <td class="edit">
-                        <a href="{% url 'wd-admin:reference-dataset-record-edit' reference_dataset_id=instance.id record_id=record.id %}" class="button">
+                        <a href="{% url 'dw-admin:reference-dataset-record-edit' reference_dataset_id=instance.id record_id=record.id %}" class="button">
                           Edit Record
                         </a>
                       </td>
@@ -41,7 +41,7 @@
                 {% endfor %}
                 <tr class="add-row">
                   <td colspan="{{ column_names|length|add:1 }}">
-                    <a href="{% url 'wd-admin:reference-dataset-record-add' reference_dataset_id=instance.id %}">
+                    <a href="{% url 'dw-admin:reference-dataset-record-add' reference_dataset_id=instance.id %}">
                       Add a record
                     </a>
                   </td>

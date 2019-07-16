@@ -36,7 +36,7 @@ from app.shared import (
     application_instance_max_cpu,
 )
 from app.common.admin import TimeStampedUserAdmin
-from app.wd_admin.forms import ReferenceDataFieldInlineForm
+from app.dw_admin.forms import ReferenceDataFieldInlineForm
 
 logger = logging.getLogger('app')
 

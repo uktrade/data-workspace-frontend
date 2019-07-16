@@ -34,7 +34,7 @@
         <input type="submit" value="Save" class="default" name="_save">
         {% if record_id is not None %}
           <p class="deletelink-box">
-            <a href="{% url 'wd-admin:reference-dataset-record-delete' reference_dataset_id=ref_model.id record_id=record_id %}" class="deletelink">
+            <a href="{% url 'dw-admin:reference-dataset-record-delete' reference_dataset_id=ref_model.id record_id=record_id %}" class="deletelink">
               Delete
             </a>
           </p>

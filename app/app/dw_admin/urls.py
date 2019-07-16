@@ -1,6 +1,6 @@
 from django.urls import path
 
-from app.wd_admin.views import ReferenceDatasetAdminEditView, ReferenceDatasetAdminDeleteView
+from app.dw_admin.views import ReferenceDatasetAdminEditView, ReferenceDatasetAdminDeleteView
 
 urlpatterns = [
     path(
