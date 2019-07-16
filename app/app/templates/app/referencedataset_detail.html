@@ -135,7 +135,7 @@
               {% endfor %}
               {% if perms.app_referencedataset.change %}
                 <td class="govuk-table__cell">
-                  <a href="{% url 'wd-admin:reference-dataset-record-edit' object.id record.id %}">
+                  <a href="{% url 'dw-admin:reference-dataset-record-edit' object.id record.id %}">
                     Edit
                   </a>
                 </td>
