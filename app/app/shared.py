@@ -211,7 +211,7 @@ def kill_idle_fargate():
     two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=-2)
     instances = ApplicationInstance.objects.filter(
         spawner='FARGATE',
-        state='RUNNING',
+        state__in=['RUNNING', 'SPAWNING'],
         created_date__lt=two_hours_ago,
     )
 
