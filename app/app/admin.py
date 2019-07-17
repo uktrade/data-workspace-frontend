@@ -204,7 +204,7 @@ class DataSetAdmin(admin.ModelAdmin):
     form = DataSetForm
 
     prepopulated_fields = {'slug': ('name',)}
-    list_display = ('name', 'slug', 'short_description', 'grouping')
+    list_display = ('name', 'slug', 'short_description', 'grouping', 'published')
     inlines = [
         SourceLinkInline,
         SourceTableInline,
@@ -212,6 +212,7 @@ class DataSetAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {
             'fields': [
+                'published',
                 'name',
                 'slug',
                 'short_description',
@@ -336,11 +337,12 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
-    list_display = ('name', 'slug', 'short_description', 'group')
+    list_display = ('name', 'slug', 'short_description', 'group', 'published')
     inlines = [ReferenceDataFieldInline]
     fieldsets = [
         (None, {
             'fields': [
+                'published',
                 'name',
                 'slug',
                 'group',
