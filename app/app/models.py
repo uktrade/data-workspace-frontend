@@ -340,7 +340,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         blank=True
     )
     licence = models.CharField(
-        null=True,
+        null=False,
         blank=True,
         max_length=256
     )
