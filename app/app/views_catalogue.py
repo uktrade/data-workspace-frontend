@@ -1,9 +1,14 @@
+import csv
+import json
 import logging
+import io
+from contextlib import closing
 
 from django import forms
+from django.core.serializers.json import DjangoJSONEncoder
 
 from django.urls import reverse
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import (
     render,
     get_object_or_404,
@@ -13,10 +18,12 @@ from django.views.decorators.http import (
     require_GET,
     require_http_methods,
 )
+from django.views.generic import DetailView
 
 from app.models import (
     DataGrouping,
     DataSet,
+    ReferenceDataset
 )
 
 from app.zendesk import create_zendesk_ticket
@@ -154,3 +161,55 @@ def dataset_full_path_view(request, group_slug, set_slug):
     }
 
     return render(request, 'dataset.html', context)
+
+
+class ReferenceDatasetDetailView(DetailView):
+    model = ReferenceDataset
+
+    def get_object(self, queryset=None):
+        group = get_object_or_404(
+            DataGrouping,
+            slug=self.kwargs.get('group_slug')
+        )
+        return get_object_or_404(
+            ReferenceDataset,
+            deleted=False,
+            group=group,
+            slug=self.kwargs.get('reference_slug')
+        )
+
+
+class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
+
+    def get(self, request, *args, **kwargs):
+        dl_format = self.kwargs.get('format')
+        if dl_format not in ['json', 'csv']:
+            raise Http404
+        ref_dataset = self.get_object()
+        field_names = ref_dataset.field_names
+        records = [
+            {
+                field: row['data'][idx]
+                for idx, field in enumerate(field_names)
+            }
+            for row in ref_dataset.get_records()
+        ]
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename={}.{}'.format(
+            ref_dataset.slug,
+            dl_format
+        )
+        if dl_format == 'json':
+            response['Content-Type'] = 'application/json'
+            response.write(json.dumps(records, cls=DjangoJSONEncoder))
+        else:
+            response['Content-Type'] = 'text/csv'
+            with closing(io.StringIO()) as outfile:
+                writer = csv.DictWriter(
+                    outfile,
+                    fieldnames=ref_dataset.field_names
+                )
+                writer.writeheader()
+                writer.writerows(records)
+                response.write(outfile.getvalue())
+        return response

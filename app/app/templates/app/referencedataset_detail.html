@@ -1,0 +1,201 @@
+{% extends '_base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block page_title %}{{ object.name }} - {{ object.grouping.name }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'datagroup_item' object.group.slug %}">
+          {{ object.group.name }}
+        </a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        {{ object.name }}
+      </li>
+      {% if perms.app_referencedataset.change %}
+        <li class="govuk-breadcrumbs__list-item">
+          <a href="{% url 'admin:app_referencedataset_change' object.id %}" class="govuk-breadcrumbs__link">
+            [Edit]
+          </a>
+        </li>
+      {% endif %}
+    </ol>
+  </div>
+{% endblock %}
+
+{% block inner_content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-l">{{ object.name }}</h1>
+      <p class="govuk-body">
+        {{ object.description|linebreaksbr }}
+      </p>
+      {% if object.enquiries_contact %}
+        <h3 class="govuk-heading-m">Contact</h3>
+        {% include 'partials/contact.html' with model=object.enquiries_contact only %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="govuk-grid-row" style="overflow-x: auto;">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-m govuk-!-margin-top-8">Data links</h2>
+      <table class="govuk-table">
+        <thead>
+          <tr class="govuk-table__row">
+            <th class="govuk-table__header">Link to the data</th>
+            <th class="govuk-table__header">Format</th>
+            <th class="govuk-table__header">Last updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              <a class="govuk-link" href="{% url 'reference_dataset_download' object.group.slug object.slug 'json'%}">
+                {{ object.slug }}.json
+              </a>
+            </td>
+            <td class="govuk-table__cell">JSON</td>
+            <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              <a class="govuk-link" href="{% url 'reference_dataset_download' object.group.slug object.slug 'csv' %}">
+                {{ object.slug }}.csv
+              </a>
+            </td>
+            <td class="govuk-table__cell">
+              CSV
+            </td>
+            <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-m govuk-!-margin-top-8">
+        Field definitions
+      </h2>
+      <dl class="govuk-summary-list">
+        {% for field in object.fields.all %}
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+              {{ field.name }}
+            </dt>
+            <dd class="govuk-summary-list__value">
+              {{ field.description }}
+            </dd>
+          </div>
+        {% empty %}
+          <div class="govuk-summary-list__row">
+            <p>No fields have been defined for this reference data set yet.</p>
+          </div>
+        {% endfor %}
+      </dl>
+    </div>
+  </div>
+
+  <div class="govuk-grid-row" style="overflow-x: auto;">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-m govuk-!-margin-top-8">
+        Data preview
+      </h2>
+      {% with object.get_records|length as num_records %}
+        <p class="govuk-body">
+          Showing <strong>{% if num_records < 5 %}{{ num_records }}{% else %}5{% endif %}</strong> of <strong>{{ num_records }}</strong> record{{ num_records|pluralize }}
+        </p>
+      {% endwith %}
+      <table class="govuk-table govuk-!-font-size-16">
+        <thead>
+          <tr class="govuk-table__row">
+            {% for field_name in object.field_names %}
+              <th class="govuk-table__header">{{ field_name }}</th>
+            {% endfor %}
+            {% if perms.app_referencedataset.change %}
+              <th class="govuk-table__header">&nbsp;</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in object.get_records|slice:":5" %}
+            <tr class="govuk-table__row">
+              {% for field in record.data %}
+                <td class="govuk-table__cell">
+                  {% if field is None %}
+                    <span class="unknown">No data</span>
+                  {% else %}
+                    {{ field }}
+                  {% endif %}
+                </td>
+              {% endfor %}
+              {% if perms.app_referencedataset.change %}
+                <td class="govuk-table__cell">
+                  <a href="{% url 'dw-admin:reference-dataset-record-edit' object.id record.id %}">
+                    Edit
+                  </a>
+                </td>
+              {% endif %}
+            </tr>
+          {% empty %}
+            <tr class="govuk-table__row">
+              <td colspan="{{ object.field_names|length }}">
+                This reference data set doesn't have any data yet.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">
+            Published date
+          </dt>
+          <dd class="govuk-summary-list__value">
+            {{ object.created_date| date:"d/m/Y" }}
+          </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">
+            Updated date
+          </dt>
+          <dd class="govuk-summary-list__value">
+            {{ object.data_last_updated| date:"d/m/Y" }}
+          </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">
+            Part of
+          </dt>
+          <dd class="govuk-summary-list__value">
+            <a class="govuk-link" href="{% url 'datagroup_item' object.group.slug %}">
+              {{ object.group.name }}
+            </a>
+          </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Licence</dt>
+          <dd class="govuk-summary-list__value">{{ object.licence }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Restrictions on usage</dt>
+          <dd class="govuk-summary-list__value">{{ object.restrictions_on_usage | linebreaksbr }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+{% endblock %}

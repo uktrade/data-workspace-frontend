@@ -20,8 +20,10 @@
   <h2>Summary</h2>
   <dl class="record-summary">
     {% for field, value in record.items %}
-      <dt>{{ field|title }}</dt>
-      <dd>{{ value|default:"Not set" }}</dd>
+      {% if field != 'dw_int_id' %}
+        <dt>{{ field|title }}</dt>
+        <dd>{{ value|default:"Not set" }}</dd>
+      {% endif %}
     {% endfor %}
   </dl>
   <form method="post">{% csrf_token %}

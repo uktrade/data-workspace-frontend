@@ -341,7 +341,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         blank=True
     )
     licence = models.CharField(
-        null=True,
+        null=False,
         blank=True,
         max_length=256
     )
@@ -387,6 +387,28 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return:
         """
         return self.fields.get(is_identifier=True)
+
+    @property
+    def data_last_updated(self):
+        """
+        Return the most recent date a record was updated in the dataset
+        :return:
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                sql.SQL(
+                    '''
+                    SELECT MAX(updated_date)
+                    FROM {}
+                    '''
+                ).format(
+                    sql.Identifier(self.table_name)
+                )
+            )
+            record = cursor.fetchone()
+            if record is not None:
+                return record[0]
+            return None
 
     def get_records(self) -> List[dict]:
         """
@@ -451,7 +473,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 ).format(
                     field_names=sql.SQL(', ').join(map(sql.Identifier, self.field_names)),
                     table_name=sql.Identifier(self.table_name),
-                    column_name=sql.Identifier(self.identifier_field.name)
+                    column_name=sql.Identifier(field_name)
                 ), [
                     identifier
                 ]
@@ -575,9 +597,13 @@ class ReferenceDatasetField(TimeStampedUserModel):
     )
     name = models.CharField(
         max_length=60,
-        help_text='The name of the field. May only contain letters '
-                  'numbers and underscores (no spaces)',
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')]
+        help_text='Field name must start with a letter and may only contain '
+                  'lowercase letters, numbers and underscores (no spaces)',
+        validators=[RegexValidator(
+            regex=r'^[a-z][a-z0-9_\.]*$',
+            message='Name must start with a character and contain only '
+                    'lowercase letters, numbers and underscores'
+        )]
     )
     description = models.TextField(
         blank=True,
