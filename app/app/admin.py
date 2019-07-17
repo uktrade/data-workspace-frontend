@@ -74,8 +74,13 @@ class AppUserCreationForm(forms.ModelForm):
 
 class AppUserEditForm(forms.ModelForm):
     can_start_all_applications = forms.BooleanField(
-        label='Can access tools',
-        help_text='Designates that the user can access tools',
+        label='Can start local tools',
+        help_text='For JupyterLab, rStudio and pgAdmin',
+        required=False,
+    )
+    can_access_appstream = forms.BooleanField(
+        label='Can access AppStream',
+        help_text='For SPSS and STATA',
         required=False,
     )
     authorized_datasets = forms.ModelMultipleChoiceField(
@@ -95,6 +100,11 @@ class AppUserEditForm(forms.ModelForm):
 
         self.fields['can_start_all_applications'].initial = instance.user_permissions.filter(
             codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+
+        self.fields['can_access_appstream'].initial = instance.user_permissions.filter(
+            codename='can_access_appstream',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
@@ -123,6 +133,7 @@ class AppUserAdmin(UserAdmin):
         ('Permissions', {
             'fields': [
                 'can_start_all_applications',
+                'can_access_appstream',
                 'is_staff',
                 'is_superuser',
                 'authorized_datasets',
@@ -141,12 +152,22 @@ class AppUserAdmin(UserAdmin):
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
+        access_appstream_permission = Permission.objects.get(
+            codename='access_appstream',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
 
         if 'can_start_all_applications' in form.cleaned_data:
             if form.cleaned_data['can_start_all_applications']:
                 obj.user_permissions.add(start_all_applications_permission)
             else:
                 obj.user_permissions.remove(start_all_applications_permission)
+
+        if 'can_access_appstream' in form.cleaned_data:
+            if form.cleaned_data['can_access_appstream']:
+                obj.user_permissions.add(access_appstream_permission)
+            else:
+                obj.user_permissions.remove(access_appstream_permission)
 
         if 'authorized_datasets' in form.cleaned_data:
             current_datasets = DataSet.objects.filter(
