@@ -498,6 +498,7 @@ async def create_private_dataset():
             slug="test_slug_s",
             volume=1,
             grouping=grouping,
+            published=True
         )
         SourceTable.objects.create(
             dataset=dataset,
