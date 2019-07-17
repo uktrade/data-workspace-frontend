@@ -71,12 +71,6 @@ def get_api_visible_application_instance_by_public_host(public_host):
     )
 
 
-def get_running_applications():
-    return ApplicationInstance.objects.filter(
-        state='RUNNING',
-    )
-
-
 def api_application_dict(application_instance):
     spawner_state = get_spawner(application_instance.application_template.spawner).state(
         application_instance.spawner_application_template_options,
@@ -114,7 +108,9 @@ def applications_api_GET(request):
     return JsonResponse({
         'applications': [
             api_application_dict(application)
-            for application in get_running_applications()
+            for application in ApplicationInstance.objects.filter(
+                state='RUNNING',
+            )
         ]
     }, status=200)
 
