@@ -89,8 +89,17 @@ class TestViews(BaseTestCase):
         rds = factories.ReferenceDatasetFactory.create(group=group)
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
+            name='id',
+            data_type=2,
             is_identifier=True
         )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='name',
+            data_type=1,
+        )
+        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
+        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -99,14 +108,28 @@ class TestViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [{
+            "id": 1, "name": "Test recórd"
+        }, {
+            "id": 2, "name": "Ánd again"
+        }])
 
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
         rds = factories.ReferenceDatasetFactory.create(group=group)
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
+            name='id',
+            data_type=2,
             is_identifier=True
         )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='name',
+            data_type=1,
+        )
+        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
+        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -115,6 +138,10 @@ class TestViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.content,
+            b'id,name\r\n1,Test rec\xc3\xb3rd\r\n2,\xc3\x81nd again\r\n'
+        )
 
     def test_reference_dataset_unknown_download(self):
         group = factories.DataGroupingFactory.create()
