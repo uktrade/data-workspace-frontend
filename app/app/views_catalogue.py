@@ -187,12 +187,13 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
             raise Http404
         ref_dataset = self.get_object()
         field_names = ref_dataset.field_names
-        records = []
-        for row in ref_dataset.get_records():
-            record = {}
-            for idx, field in enumerate(field_names):
-                record[field] = row['data'][idx]
-            records.append(record)
+        records = [
+            {
+                field: row['data'][idx]
+                for idx, field in enumerate(field_names)
+            }
+            for row in ref_dataset.get_records()
+        ]
         response = HttpResponse()
         response['Content-Disposition'] = 'attachment; filename={}.{}'.format(
             ref_dataset.slug,
