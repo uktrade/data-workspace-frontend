@@ -2,13 +2,6 @@ from django import forms
 
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):
-    name = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'style': 'text-transform:lowercase'
-            }
-        )
-    )
     description = forms.CharField(
         widget=forms.Textarea(
             attrs={

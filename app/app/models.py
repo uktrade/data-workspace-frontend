@@ -597,11 +597,12 @@ class ReferenceDatasetField(TimeStampedUserModel):
     )
     name = models.CharField(
         max_length=60,
-        help_text='The name of the field. May only contain lowercase '
-                  'letters numbers and underscores (no spaces)',
+        help_text='Field name must start with a letter and may only contain '
+                  'lowercase letters, numbers and underscores (no spaces)',
         validators=[RegexValidator(
             regex=r'^[a-z][a-z0-9_\.]*$',
-            message='Please only enter lowercase letters, numbers and underscores'
+            message='Name must start with a character and contain only '
+                    'lowercase letters, numbers and underscores'
         )]
     )
     description = models.TextField(
