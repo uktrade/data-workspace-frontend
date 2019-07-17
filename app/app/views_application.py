@@ -109,7 +109,7 @@ def applications_api_GET(request):
         'applications': [
             api_application_dict(application)
             for application in ApplicationInstance.objects.filter(
-                state='RUNNING',
+                state__in=['RUNNING', 'SPAWNING'],
             )
         ]
     }, status=200)
