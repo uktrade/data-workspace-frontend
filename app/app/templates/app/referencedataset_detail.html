@@ -46,7 +46,7 @@
   <div class="govuk-grid-row" style="overflow-x: auto;">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-m govuk-!-margin-top-8">Data Links</h2>
-      <table class="govuk-table catalogue-table">
+      <table class="govuk-table">
         <thead>
           <tr class="govuk-table__row">
             <th class="govuk-table__header">Link to the data</th>
@@ -110,7 +110,7 @@
         Data Preview
       </h2>
       <p class="govuk-body">Showing <strong>5</strong> of <strong>{{ object.get_records|length }}</strong> records</p>
-      <table class="govuk-table catalogue-table govuk-!-font-size-16">
+      <table class="govuk-table govuk-!-font-size-16">
         <thead>
           <tr class="govuk-table__row">
             {% for field_name in object.field_names %}
