@@ -471,7 +471,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 ).format(
                     field_names=sql.SQL(', ').join(map(sql.Identifier, self.field_names)),
                     table_name=sql.Identifier(self.table_name),
-                    column_name=sql.Identifier(self.identifier_field.name)
+                    column_name=sql.Identifier(field_name)
                 ), [
                     identifier
                 ]
@@ -595,9 +595,12 @@ class ReferenceDatasetField(TimeStampedUserModel):
     )
     name = models.CharField(
         max_length=60,
-        help_text='The name of the field. May only contain letters '
-                  'numbers and underscores (no spaces)',
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')]
+        help_text='The name of the field. May only contain lowercase '
+                  'letters numbers and underscores (no spaces)',
+        validators=[RegexValidator(
+            regex=r'^[a-z][a-z0-9_\.]*$',
+            message='Please only enter lowercase letters, numbers and underscores'
+        )]
     )
     description = models.TextField(
         blank=True,
