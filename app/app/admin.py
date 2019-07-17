@@ -303,7 +303,7 @@ class ReferenceDataInlineFormset(forms.BaseInlineFormSet):
             x for x in self.forms
             if x.cleaned_data.get('is_identifier') and not x.cleaned_data['DELETE']
         ]
-        if len(identifiers) == 0:
+        if not identifiers:
             raise forms.ValidationError(
                 'Please ensure one field is set as the unique identifier'
             )
