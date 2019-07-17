@@ -26,8 +26,8 @@ class TestDatasetViews(BaseTestCase):
     def test_group_detail_view(self):
         group = factories.DataGroupingFactory.create()
 
-        ds1 = factories.DataSetFactory.create(grouping=group)
-        ds2 = factories.DataSetFactory.create(grouping=group)
+        ds1 = factories.DataSetFactory.create(grouping=group, published=True)
+        ds2 = factories.DataSetFactory.create(grouping=group, published=False)
         ds3 = factories.DataSetFactory.create()
 
         rd1 = factories.ReferenceDatasetFactory(group=group)
@@ -41,22 +41,31 @@ class TestDatasetViews(BaseTestCase):
 
         # Ensure datasets in group are displayed
         self.assertContains(response, ds1.name, 1)
-        self.assertContains(response, ds2.name, 1)
+
+        # Ensure unpublished datasets are not displayed
+        self.assertContains(response, ds2.name, 0)
 
         # Ensure datasets not in group are not displayed
         self.assertNotContains(response, ds3.name)
 
-        # Ensure reference datasets in group are displayed
-        self.assertContains(response, rd1.name, 1)
-        self.assertContains(response, rd2.name, 1)
-
-        # Ensure reference datasets not in group are not displayed
-        self.assertNotContains(response, rd3.name)
-
-    def test_dataset_detail_view(self):
+    def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
         ds = factories.DataSetFactory.create(grouping=group)
+        sl1 = factories.SourceLinkFactory(dataset=ds)
+        sl2 = factories.SourceLinkFactory(dataset=ds)
+        response = self._authenticated_get(
+            reverse('dataset_fullpath', kwargs={
+                'group_slug': group.slug,
+                'set_slug': ds.slug
+            })
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_dataset_detail_view_published(self):
+        group = factories.DataGroupingFactory.create()
+        factories.DataSetFactory.create()
+        ds = factories.DataSetFactory.create(grouping=group, published=True)
         sl1 = factories.SourceLinkFactory(dataset=ds)
         sl2 = factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(
@@ -91,8 +100,17 @@ class TestDatasetViews(BaseTestCase):
         rds = factories.ReferenceDatasetFactory.create(group=group)
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
+            name='id',
+            data_type=2,
             is_identifier=True
         )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='name',
+            data_type=1,
+        )
+        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
+        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -101,14 +119,28 @@ class TestDatasetViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [{
+            "id": 1, "name": "Test recórd"
+        }, {
+            "id": 2, "name": "Ánd again"
+        }])
 
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
         rds = factories.ReferenceDatasetFactory.create(group=group)
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
+            name='id',
+            data_type=2,
             is_identifier=True
         )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='name',
+            data_type=1,
+        )
+        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
+        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -117,6 +149,10 @@ class TestDatasetViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.content,
+            b'id,name\r\n1,Test rec\xc3\xb3rd\r\n2,\xc3\x81nd again\r\n'
+        )
 
     def test_reference_dataset_unknown_download(self):
         group = factories.DataGroupingFactory.create()

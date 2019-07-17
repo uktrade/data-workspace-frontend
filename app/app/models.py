@@ -241,6 +241,7 @@ class DataSet(TimeStampedModel):
         ),
         default='REQUIRES_AUTHORIZATION',
     )
+    published = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.grouping.name} - {self.name}'
@@ -340,7 +341,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         blank=True
     )
     licence = models.CharField(
-        null=True,
+        null=False,
         blank=True,
         max_length=256
     )
@@ -356,6 +357,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         null=True,
         blank=True
     )
+    published = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Reference Data Set'
@@ -471,7 +473,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 ).format(
                     field_names=sql.SQL(', ').join(map(sql.Identifier, self.field_names)),
                     table_name=sql.Identifier(self.table_name),
-                    column_name=sql.Identifier(self.identifier_field.name)
+                    column_name=sql.Identifier(field_name)
                 ), [
                     identifier
                 ]
@@ -595,9 +597,13 @@ class ReferenceDatasetField(TimeStampedUserModel):
     )
     name = models.CharField(
         max_length=60,
-        help_text='The name of the field. May only contain letters '
-                  'numbers and underscores (no spaces)',
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')]
+        help_text='Field name must start with a letter and may only contain '
+                  'lowercase letters, numbers and underscores (no spaces)',
+        validators=[RegexValidator(
+            regex=r'^[a-z][a-z0-9_\.]*$',
+            message='Name must start with a character and contain only '
+                    'lowercase letters, numbers and underscores'
+        )]
     )
     description = models.TextField(
         blank=True,
