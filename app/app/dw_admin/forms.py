@@ -2,6 +2,13 @@ from django import forms
 
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):
+    name = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                'style': 'text-transform:lowercase'
+            }
+        )
+    )
     description = forms.CharField(
         widget=forms.Textarea(
             attrs={
@@ -9,6 +16,9 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             }
         )
     )
+
+    def clean_name(self):
+        return self.cleaned_data['name'].lower()
 
 
 class ReferenceDataRecordEditForm(forms.Form):
