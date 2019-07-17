@@ -109,7 +109,11 @@
       <h2 class="govuk-heading-m govuk-!-margin-top-8">
         Data Preview
       </h2>
-      <p class="govuk-body">Showing <strong>5</strong> of <strong>{{ object.get_records|length }}</strong> records</p>
+      {% with object.get_records|length as num_records %}
+        <p class="govuk-body">
+          Showing <strong>{% if num_records < 5 %}{{ num_records }}{% else %}5{% endif %}</strong> of <strong>{{ num_records }}</strong> record{{ num_records|pluralize }}
+        </p>
+      {% endwith %}
       <table class="govuk-table govuk-!-font-size-16">
         <thead>
           <tr class="govuk-table__row">
