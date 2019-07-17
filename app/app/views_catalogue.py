@@ -176,7 +176,6 @@ class ReferenceDatasetDetailView(DetailView):
 
 
 class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
-    lookup_value_regex = r"[\w.]+"
 
     def get(self, request, *args, **kwargs):
         dl_format = self.kwargs.get('format')
