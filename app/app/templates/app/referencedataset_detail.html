@@ -89,7 +89,7 @@
         {% for field in object.fields.all %}
           <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">
-              {{ field.name|title }}
+              {{ field.name|capfirst }}
             </dt>
             <dd class="govuk-summary-list__value">
               {{ field.description }}
@@ -118,7 +118,7 @@
         <thead>
           <tr class="govuk-table__row">
             {% for field_name in object.field_names %}
-              <th class="govuk-table__header">{{ field_name|title }}</th>
+              <th class="govuk-table__header">{{ field_name|capfirst }}</th>
             {% endfor %}
             {% if perms.app_referencedataset.change %}
               <th class="govuk-table__header">&nbsp;</th>
