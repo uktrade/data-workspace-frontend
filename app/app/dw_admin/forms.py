@@ -10,9 +10,6 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         )
     )
 
-    def clean_name(self):
-        return self.cleaned_data['name'].lower()
-
 
 class ReferenceDataRecordEditForm(forms.Form):
     def __init__(self, *args, **kwargs):
