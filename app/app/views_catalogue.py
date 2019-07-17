@@ -53,7 +53,7 @@ def datagroup_item_view(request, slug):
 
     context = {
         'model': item,
-        'datasets': item.dataset_set.all().order_by('name')
+        'datasets': item.dataset_set.filter(published=True).order_by('name')
     }
 
     return render(request, 'datagroup.html', context)
@@ -104,7 +104,11 @@ def request_access_view(request, group_slug, set_slug):
 
 
 def find_dataset(group_slug, set_slug):
-    found = DataSet.objects.filter(grouping__slug=group_slug, slug=set_slug)
+    found = DataSet.objects.filter(
+        grouping__slug=group_slug,
+        slug=set_slug,
+        published=True
+    )
 
     if not found:
         raise Http404

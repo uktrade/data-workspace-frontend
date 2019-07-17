@@ -241,6 +241,7 @@ class DataSet(TimeStampedModel):
         ),
         default='REQUIRES_AUTHORIZATION',
     )
+    published = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.grouping.name} - {self.name}'
@@ -356,6 +357,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         null=True,
         blank=True
     )
+    published = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Reference Data Set'
