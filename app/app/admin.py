@@ -357,6 +357,10 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
         })
     ]
 
+    def get_model_perms(self, request):
+        # Hide the admin from the index page while developing
+        return {}
+
     def get_queryset(self, request):
         # Only show non-deleted reference datasets in admin
         return self.model.objects.live()
