@@ -1,3 +1,6 @@
+.govuk-panel--confirmation--left {
+  text-align:left;
+}
 .unknown {
   color: #bfc1c3;
 }
