@@ -216,6 +216,10 @@ def kill_idle_fargate():
     )
 
     for instance in instances:
+        if instance.state == 'SPAWNING':
+            set_application_stopped(instance)
+            continue
+
         logger.info('kill_idle_fargate: Attempting to find CPU usage of %s', instance)
         try:
             max_cpu, _ = application_instance_max_cpu(instance)
