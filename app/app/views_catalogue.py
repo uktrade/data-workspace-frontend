@@ -180,6 +180,8 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
 
     def get(self, request, *args, **kwargs):
         dl_format = self.kwargs.get('format')
+        if dl_format not in ['json', 'csv']:
+            raise Http404
         ref_dataset = self.get_object()
         field_names = ref_dataset.field_names
         records = []
@@ -188,12 +190,16 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
             for idx, field in enumerate(field_names):
                 record[field] = row['data'][idx]
             records.append(record)
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename={}.{}'.format(
+            ref_dataset.slug,
+            dl_format
+        )
         if dl_format == 'json':
-            return HttpResponse(
-                json.dumps(records, cls=DjangoJSONEncoder),
-                content_type='application/json'
-            )
-        elif dl_format == 'csv':
+            response['Content-Type'] = 'application/json'
+            response.write(json.dumps(records, cls=DjangoJSONEncoder))
+        else:
+            response['Content-Type'] = 'text/csv'
             with closing(io.StringIO()) as outfile:
                 writer = csv.DictWriter(
                     outfile,
@@ -201,10 +207,5 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 )
                 writer.writeheader()
                 writer.writerows(records)
-                response = HttpResponse(content_type='text/csv')
-                response['Content-Disposition'] = 'attachment; filename={}.csv'.format(
-                    ref_dataset.slug
-                )
                 response.write(outfile.getvalue())
-                return response
-        raise Http404
+        return response

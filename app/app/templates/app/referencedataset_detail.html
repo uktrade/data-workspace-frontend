@@ -57,7 +57,7 @@
         <tbody>
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
-              <a class="govuk-link" target="_blank" href="{% url 'reference_dataset_download' object.group.slug object.slug 'json'%}">
+              <a class="govuk-link" href="{% url 'reference_dataset_download' object.group.slug object.slug 'json'%}">
                 {{ object.slug }}.json
               </a>
             </td>
