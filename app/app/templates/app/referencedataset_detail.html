@@ -51,7 +51,7 @@
           <tr class="govuk-table__row">
             <th class="govuk-table__header">Link to the data</th>
             <th class="govuk-table__header">Format</th>
-            <th class="govuk-table__header">Last Updated</th>
+            <th class="govuk-table__header">Last updated</th>
           </tr>
         </thead>
         <tbody>
@@ -89,7 +89,7 @@
         {% for field in object.fields.all %}
           <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">
-              {{ field.name|capfirst }}
+              {{ field.name }}
             </dt>
             <dd class="govuk-summary-list__value">
               {{ field.description }}
@@ -118,7 +118,7 @@
         <thead>
           <tr class="govuk-table__row">
             {% for field_name in object.field_names %}
-              <th class="govuk-table__header">{{ field_name|capfirst }}</th>
+              <th class="govuk-table__header">{{ field_name }}</th>
             {% endfor %}
             {% if perms.app_referencedataset.change %}
               <th class="govuk-table__header">&nbsp;</th>
@@ -163,7 +163,7 @@
       <dl class="govuk-summary-list">
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">
-            Published Date
+            Published date
           </dt>
           <dd class="govuk-summary-list__value">
             {{ object.created_date| date:"d/m/Y" }}
@@ -171,7 +171,7 @@
         </div>
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">
-            Updated Date
+            Updated date
           </dt>
           <dd class="govuk-summary-list__value">
             {{ object.data_last_updated| date:"d/m/Y" }}
