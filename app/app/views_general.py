@@ -2,8 +2,9 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import FormView
 
-from app.forms import SupportForm
 from app.zendesk import create_support_request
+
+from app.forms import SupportForm
 
 
 class SupportView(FormView):
@@ -23,10 +24,14 @@ class SupportView(FormView):
         return kwargs
 
     def form_valid(self, form):
+        cleaned = form.cleaned_data
         ticket_id = create_support_request(
             self.request.user,
-            form.cleaned_data['email'],
-            form.cleaned_data['message']
+            cleaned['email'],
+            cleaned['message'],
+            attachments=[cleaned[x] for x in [
+                'attachment1', 'attachment2', 'attachment3'
+            ] if cleaned[x] is not None]
         )
         return HttpResponseRedirect(
             reverse('support-success', kwargs={'ticket_id': ticket_id})

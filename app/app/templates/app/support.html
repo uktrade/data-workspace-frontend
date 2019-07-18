@@ -25,11 +25,14 @@
         <a class="govuk-button" href="{% url 'root' %}">Go home</a>
       {% else %}
         <h1 class="govuk-heading-l">Tell us how we can help</h1>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <fieldset class="govuk-fieldset">
             {% include 'partials/form_field.html' with field=form.message %}
             {% include 'partials/form_field.html' with field=form.email %}
+            {% include 'partials/form_field.html' with field=form.attachment1 %}
+            {% include 'partials/form_field.html' with field=form.attachment2 %}
+            {% include 'partials/form_field.html' with field=form.attachment3 %}
           </fieldset>
           <button type="submit" class="govuk-button">Send</button>
         </form>

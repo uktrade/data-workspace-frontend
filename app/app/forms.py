@@ -40,3 +40,19 @@ class SupportForm(forms.Form):
             'what you expected to happen.'
         )
     )
+    attachment1 = forms.FileField(
+        label='Please attach screenshots or small data files.',
+        help_text='Do not submit sensitive data.',
+        widget=forms.FileInput(attrs={'class': 'govuk-file-upload'}),
+        required=False
+    )
+    attachment2 = forms.FileField(
+        label='',
+        widget=forms.FileInput(attrs={'class': 'govuk-file-upload'}),
+        required=False
+    )
+    attachment3 = forms.FileField(
+        label='',
+        widget=forms.FileInput(attrs={'class': 'govuk-file-upload'}),
+        required=False
+    )
