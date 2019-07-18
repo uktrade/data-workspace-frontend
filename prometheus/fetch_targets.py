@@ -39,6 +39,7 @@ async def async_main(logger, target_file, url, username, password):
                         urllib.parse.urlsplit(application['proxy_url']).hostname + ':8889'
                     ],
                 } for application in applications
+                if application['proxy_url'] is not None
             ]
             logger.debug('Saving %s to %s', file_sd_config, target_file)
             with open(target_file, 'w') as file:
