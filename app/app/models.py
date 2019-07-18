@@ -154,6 +154,7 @@ class ApplicationInstance(TimeStampedModel):
         ]
         permissions = [
             ('start_all_applications', 'Can start all applications'),
+            ('access_appstream', 'Can access appstream'),
         ]
 
     def __str__(self):
