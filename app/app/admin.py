@@ -104,7 +104,7 @@ class AppUserEditForm(forms.ModelForm):
         ).exists()
 
         self.fields['can_access_appstream'].initial = instance.user_permissions.filter(
-            codename='can_access_appstream',
+            codename='access_appstream',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
