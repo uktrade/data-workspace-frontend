@@ -1,6 +1,5 @@
-import re
 import uuid
-from typing import Optional, List, Type
+from typing import Optional, List
 
 from django import forms
 from django.conf import settings
@@ -498,7 +497,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 cursor.execute(
                     sql.SQL(
                         '''
-                        INSERT INTO {table_name} (reference_dataset_id, {columns}) 
+                        INSERT INTO {table_name} (reference_dataset_id, {columns})
                         VALUES (%s, {values})
                         '''
                     ).format(
