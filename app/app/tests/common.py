@@ -24,10 +24,11 @@ class BaseTestCase(TestCase):
             **self.user_data
         )
 
-    def _authenticated_post(self, url, data=None):
+    def _authenticated_post(self, url, data=None, post_format=None):
         return self.client.post(
             url,
             data=data,
+            follow=True,
+            format=post_format,
             **self.user_data,
-            follow=True
         )
