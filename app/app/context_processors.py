@@ -6,6 +6,6 @@ from django.conf import (
 def common(request):
     return {
         'root_href': f'{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/',
-        'support_url': settings.SUPPORT_URL,
+        'support_url': None,
         'google_analytics_site_id': settings.GOOGLE_ANALYTICS_SITE_ID
     }

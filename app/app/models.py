@@ -2,6 +2,7 @@ import uuid
 from typing import Optional, List
 
 from django import forms
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
@@ -368,6 +369,13 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self.name
         )
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        create = self.pk is None
+        super().save(force_insert, force_update, using, update_fields)
+        if create:
+            with connection.schema_editor() as editor:
+                editor.create_model(self.get_record_model_class())
+
     @property
     def table_name(self):
         return 'refdata__{}'.format(self.id)
@@ -375,10 +383,18 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     @property
     def field_names(self) -> List[str]:
         """
-        Returns the column name for all associated fields.
+        Returns the display name for all associated fields.
         :return: list of field names
         """
         return [x.name for x in self.fields.all()]
+
+    @property
+    def column_names(self) -> List[str]:
+        """
+        Returns the column name for all associated fields.
+        :return: list of field names
+        """
+        return [x.column_name for x in self.fields.all()]
 
     @property
     def identifier_field(self) -> 'ReferenceDatasetField':
@@ -394,50 +410,45 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         Return the most recent date a record was updated in the dataset
         :return:
         """
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL(
-                    '''
-                    SELECT MAX(updated_date)
-                    FROM {}
-                    '''
-                ).format(
-                    sql.Identifier(self.table_name)
-                )
-            )
-            record = cursor.fetchone()
-            if record is not None:
-                return record[0]
-            return None
+        records = self.get_records()
+        if records.exists():
+            return records.latest('updated_date').updated_date
+        return None
+
+    def get_record_model_class(self) -> object:
+        """
+        Dynamically build a model class to represent a record in a dataset.
+        If the class has been registered previously remove it from the cache before recreating.
+        :return: dynamic model class
+        """
+        try:
+            del apps.all_models['app'][self.table_name]
+        except KeyError:
+            pass
+
+        class Meta:
+            app_label = 'app'
+            db_table = self.table_name
+            ordering = ('updated_date',)
+
+        attrs = {f.column_name: f.get_model_field() for f in self.fields.all()}
+        attrs.update({
+            '__module__': 'app',
+            'Meta': Meta,
+            'reference_dataset': models.ForeignKey(
+                'app.ReferenceDataset',
+                on_delete=models.CASCADE
+            ),
+            'updated_date': models.DateTimeField(auto_now=True),
+        })
+        return type(self.table_name, (models.Model,), attrs)
 
     def get_records(self) -> List[dict]:
         """
         Return a list of associated records containing the internal id and row data
         :return:
         """
-        records = []
-        if self.field_names:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    sql.SQL(
-                        '''
-                        SELECT dw_int_id, {field_names}
-                        FROM {table_name}
-                        ORDER BY {column_name}
-                        '''
-                    ).format(
-                        field_names=sql.SQL(', ').join(map(sql.Identifier, self.field_names)),
-                        table_name=sql.Identifier(self.table_name),
-                        column_name=sql.Identifier(self.identifier_field.name)
-
-                    )
-                )
-                for row in cursor.fetchall():
-                    records.append({
-                        'id': row[0],
-                        'data': row[1:]
-                    })
-        return records
+        return self.get_record_model_class().objects.filter(reference_dataset=self)
 
     def get_record_by_internal_id(self, internal_id: int) -> Optional[dict]:
         """
@@ -445,7 +456,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param internal_id:
         :return:
         """
-        return self._get_record('dw_int_id', internal_id)
+        return self._get_record('id', internal_id)
 
     def get_record_by_custom_id(self, record_id: any) -> Optional[dict]:
         """
@@ -453,7 +464,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param record_id:
         :return:
         """
-        return self._get_record(self.identifier_field.name, record_id)
+        return self._get_record(self.identifier_field.column_name, record_id)
 
     def _get_record(self, field_name: str, identifier: any) -> Optional[dict]:
         """
@@ -462,29 +473,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param identifier: the identifier value
         :return:
         """
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL(
-                    '''
-                    SELECT dw_int_id, {field_names}
-                    FROM {table_name}
-                    WHERE {column_name}=%s
-                    '''
-                ).format(
-                    field_names=sql.SQL(', ').join(map(sql.Identifier, self.field_names)),
-                    table_name=sql.Identifier(self.table_name),
-                    column_name=sql.Identifier(field_name)
-                ), [
-                    identifier
-                ]
-            )
-            row = cursor.fetchone()
-            if row is not None:
-                record = {}
-                for idx, name in enumerate([x.name for x in cursor.description]):
-                    record[name] = row[idx]
-                return record
-            return None
+        return self.get_records().get(**{field_name: identifier})
 
     def save_record(self, internal_id: Optional[int], form_data: dict):
         """
@@ -493,39 +482,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param form_data: a dictionary containing values to be saved to the row
         :return:
         """
-        with connection.cursor() as cursor:
-            if internal_id is None:
-                cursor.execute(
-                    sql.SQL(
-                        '''
-                        INSERT INTO {table_name} (reference_dataset_id, {columns})
-                        VALUES (%s, {values})
-                        '''
-                    ).format(
-                        table_name=sql.Identifier(self.table_name),
-                        columns=sql.SQL(', ').join(map(sql.Identifier, form_data.keys())),
-                        values=sql.SQL(', ').join(sql.Placeholder() * len(form_data)),
-                    ),
-                    [self.id] + list(form_data.values())
-                )
-            else:
-                cursor.execute(
-                    sql.SQL(
-                        '''
-                        UPDATE {table_name}
-                        SET {params}
-                        WHERE dw_int_id=%s
-                        '''
-                    ).format(
-                        table_name=sql.Identifier(self.table_name),
-                        params=sql.SQL(', ').join([
-                            sql.SQL('{}={}').format(
-                                sql.Identifier(k), sql.Placeholder()
-                            ) for k in form_data.keys()
-                        ])
-                    ),
-                    list(form_data.values()) + [internal_id]
-                )
+        if internal_id is None:
+            return self.get_record_model_class().objects.create(**form_data)
+        records = self.get_records().filter(id=internal_id)
+        records.update(**form_data)
+        return records.first()
 
     def delete_record(self, internal_id: int):
         """
@@ -533,19 +494,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param internal_id: the django id for the record
         :return:
         """
-        with connection.cursor() as cursor:
-            cursor.execute(
-                sql.SQL(
-                    '''
-                    DELETE FROM {}
-                    WHERE dw_int_id=%s
-                    '''
-                ).format(
-                    sql.Identifier(self.table_name)
-                ), [
-                    internal_id
-                ]
-            )
+        self.get_record_by_internal_id(internal_id).delete()
 
 
 class ReferenceDatasetField(TimeStampedUserModel):
@@ -574,7 +523,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_DATETIME: 'timestamp',
         DATA_TYPE_BOOLEAN: 'boolean',
     }
-    _DATA_TYPE_FIELD_MAP = {
+    _DATA_TYPE_FORM_FIELD_MAP = {
         DATA_TYPE_CHAR: forms.CharField,
         DATA_TYPE_INT: forms.IntegerField,
         DATA_TYPE_FLOAT: forms.FloatField,
@@ -582,6 +531,15 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_TIME: forms.TimeField,
         DATA_TYPE_DATETIME: forms.DateTimeField,
         DATA_TYPE_BOOLEAN: forms.BooleanField,
+    }
+    _DATA_TYPE_MODEL_FIELD_MAP = {
+        DATA_TYPE_CHAR: models.CharField,
+        DATA_TYPE_INT: models.IntegerField,
+        DATA_TYPE_FLOAT: models.FloatField,
+        DATA_TYPE_DATE: models.DateField,
+        DATA_TYPE_TIME: models.TimeField,
+        DATA_TYPE_DATETIME: models.DateTimeField,
+        DATA_TYPE_BOOLEAN: models.BooleanField,
     }
     reference_dataset = models.ForeignKey(
         ReferenceDataset,
@@ -596,14 +554,8 @@ class ReferenceDatasetField(TimeStampedUserModel):
         help_text='This field is the unique identifier for the record'
     )
     name = models.CharField(
-        max_length=60,
-        help_text='Field name must start with a letter and may only contain '
-                  'lowercase letters, numbers and underscores (no spaces)',
-        validators=[RegexValidator(
-            regex=r'^[a-z][a-z0-9_\.]*$',
-            message='Name must start with a character and contain only '
-                    'lowercase letters, numbers and underscores'
-        )]
+        max_length=255,
+        help_text='The display name for the field',
     )
     description = models.TextField(
         blank=True,
@@ -618,19 +570,62 @@ class ReferenceDatasetField(TimeStampedUserModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Save the models current values so they can be compared
-        # in the post save signal handler
-        self._original_values = {
-            'name': self.name,
-            'required': self.required,
-            'data_type': self.data_type,
-        }
+        # Stash the current data type so it can be compared on save
+        self._original_data_type = self.data_type
 
     def __str__(self):
         return '{} field: {}'.format(
             self.reference_dataset.name,
             self.name
         )
+
+    @property
+    def column_name(self):
+        return 'field_{}'.format(self.id)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        """
+        On ReferenceDatasetField save update the associated table.
+        :param force_insert:
+        :param force_update:
+        :param using:
+        :param update_fields:
+        :return:
+        """
+        created = self.id is None
+        super().save(force_insert, force_update, using, update_fields)
+        if created:
+            model_class = self.reference_dataset.get_record_model_class()
+            with connection.schema_editor() as editor:
+                editor.add_field(
+                    model_class,
+                    model_class._meta.get_field(self.column_name),
+                )
+        elif self._original_data_type != self.data_type:
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    sql.SQL(
+                        '''
+                        ALTER TABLE {table_name}
+                        ALTER COLUMN {column_name} TYPE {data_type}
+                        USING {column_name}::text::{data_type}
+                        '''
+                    ).format(
+                        table_name=sql.Identifier(self.reference_dataset.table_name),
+                        column_name=sql.Identifier(self.column_name),
+                        data_type=sql.SQL(self.get_postgres_datatype()),
+                    )
+                )
+
+    def delete(self, using=None, keep_parents=False):
+        model_class = self.reference_dataset.get_record_model_class()
+        with connection.schema_editor() as editor:
+            editor.remove_field(
+                model_class,
+                model_class._meta.get_field(self.column_name),
+            )
+        super().delete(using, keep_parents)
 
     def get_postgres_datatype(self) -> str:
         """
@@ -645,11 +640,27 @@ class ReferenceDatasetField(TimeStampedUserModel):
         Falls back to `CharField` if not found.
         :return:
         """
-        field = self._DATA_TYPE_FIELD_MAP.get(self.data_type, forms.CharField)()
+        field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type, forms.CharField)(
+            label=self.name,
+        )
         if self.data_type == self.DATA_TYPE_DATE:
             field.widget = forms.DateInput(attrs={'type': 'date'})
         elif self.data_type == self.DATA_TYPE_TIME:
             field.widget = forms.DateInput(attrs={'type': 'time'})
         field.required = self.is_identifier or self.required
         field.widget.attrs['required'] = field.required
+        return field
+
+    def get_model_field(self):
+        """
+        Instantiates a django model field based on this models selected `data_type`.
+        Falls back to `CharField` if not found.
+        :return:
+        """
+        field = self._DATA_TYPE_MODEL_FIELD_MAP.get(self.data_type)(
+            verbose_name=self.name,
+            blank=not self.is_identifier and not self.required,
+            null=not self.is_identifier and not self.required,
+            max_length=255
+        )
         return field

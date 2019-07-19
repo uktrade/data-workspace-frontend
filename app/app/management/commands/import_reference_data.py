@@ -1,6 +1,7 @@
 import csv
 import os
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import BaseCommand
 from django.db import DataError
 
@@ -42,19 +43,22 @@ class Command(BaseCommand):
             reader = csv.DictReader(fh)
 
             # Check that all fields are provided
-            column_names = [x.lower() for x in reader.fieldnames]
+            column_names = [x for x in reader.fieldnames]
             for field in fields:
-                if field.name.lower() not in column_names:
+                if field.name not in column_names:
                     raise ValueError('Column {} does not exist in csv'.format(field.name.lower()))
 
             for row in reader:
-                existing = dataset.get_record_by_custom_id(row[dataset.identifier_field.name])
-                record_id = existing['dw_int_id'] if existing is not None else None
-                data = {}
+                try:
+                    record_id = dataset.get_record_by_custom_id(
+                        row[dataset.identifier_field.name]
+                    ).id
+                except ObjectDoesNotExist:
+                    record_id = None
+
+                data = {'reference_dataset': dataset}
                 for k, v in row.items():
-                    if v == '':
-                        v = None
-                    data[k] = v
+                    data[fields.get(name=k).column_name] = None if v == '' else v
 
                 try:
                     dataset.save_record(record_id, data)

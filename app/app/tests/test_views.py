@@ -28,9 +28,9 @@ class TestViews(BaseTestCase):
         ds2 = factories.DataSetFactory.create(grouping=group, published=False)
         ds3 = factories.DataSetFactory.create()
 
-        rd1 = factories.ReferenceDatasetFactory(group=group)
-        rd2 = factories.ReferenceDatasetFactory(group=group)
-        rd3 = factories.ReferenceDatasetFactory()
+        factories.ReferenceDatasetFactory(group=group)
+        factories.ReferenceDatasetFactory(group=group)
+        factories.ReferenceDatasetFactory()
 
         response = self._authenticated_get(
             reverse('datagroup_item', kwargs={'slug': group.slug})
@@ -50,8 +50,8 @@ class TestViews(BaseTestCase):
         group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
         ds = factories.DataSetFactory.create(grouping=group)
-        sl1 = factories.SourceLinkFactory(dataset=ds)
-        sl2 = factories.SourceLinkFactory(dataset=ds)
+        factories.SourceLinkFactory(dataset=ds)
+        factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(
             reverse('dataset_fullpath', kwargs={
                 'group_slug': group.slug,
@@ -96,19 +96,27 @@ class TestViews(BaseTestCase):
     def test_reference_dataset_json_download(self):
         group = factories.DataGroupingFactory.create()
         rds = factories.ReferenceDatasetFactory.create(group=group)
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
             data_type=2,
             is_identifier=True
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='name',
             data_type=1,
         )
-        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
-        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 1,
+            field2.column_name: 'Test recórd'
+        })
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 2,
+            field2.column_name: 'Ánd again'
+        })
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -118,27 +126,35 @@ class TestViews(BaseTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [{
-            "id": 1, "name": "Test recórd"
+            'id': 1, 'name': 'Test recórd'
         }, {
-            "id": 2, "name": "Ánd again"
+            'id': 2, 'name': 'Ánd again'
         }])
 
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
         rds = factories.ReferenceDatasetFactory.create(group=group)
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
             data_type=2,
             is_identifier=True
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='name',
             data_type=1,
         )
-        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
-        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 1,
+            field2.column_name: 'Test recórd'
+        })
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 2,
+            field2.column_name: 'Ánd again'
+        })
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,

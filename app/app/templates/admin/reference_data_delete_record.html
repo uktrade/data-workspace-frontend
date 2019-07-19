@@ -1,5 +1,5 @@
 {% extends "admin/delete_selected_confirmation.html" %}
-{% load static admin_urls %}
+{% load static admin_urls common_tags %}
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static "admin.css" %}">
@@ -8,7 +8,6 @@
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">Home</a>
     &rsaquo; <a href="{% url 'admin:app_list' app_label='app' %}">{{ opts.app_config.verbose_name }}</a>
-    &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
     &rsaquo; <a href="{% url 'admin:app_referencedataset_change' ref_model.id %}">{{ ref_model }}</a>
     &rsaquo; Delete Record
   </div>
@@ -19,11 +18,13 @@
   <p>This will permanently remove it from the database.</p>
   <h2>Summary</h2>
   <dl class="record-summary">
-    {% for field, value in record.items %}
-      {% if field != 'dw_int_id' %}
-        <dt>{{ field|title }}</dt>
-        <dd>{{ value|default:"Not set" }}</dd>
-      {% endif %}
+    {% for field in record.reference_dataset.fields.all %}
+      <dt>{{ field.name }}</dt>
+      {% with record|get_attr:field.column_name as value %}
+        <dd{% if value is None %} style="color: #bfc1c3"{% endif %}>
+          {{ value|default_if_none:"Not set" }}
+        </dd>
+      {% endwith %}
     {% endfor %}
   </dl>
   <form method="post">{% csrf_token %}

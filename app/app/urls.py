@@ -60,8 +60,6 @@ from app.views_appstream import (
     appstream_fleetstatus,
 )
 
-from app import signals  ## noqa
-
 
 logger = logging.getLogger('app')
 

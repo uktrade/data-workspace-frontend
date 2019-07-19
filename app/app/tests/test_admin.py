@@ -384,28 +384,30 @@ class TestReferenceDatasetAdmin(BaseTestCase):
 
     def test_reference_data_record_create_duplicate_identifier(self):
         reference_dataset = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             name='field1',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             name='field2',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=False
         )
         reference_dataset.save_record(None, {
-            'field1': 1,
-            'field2': 'record1',
+            'reference_dataset': reference_dataset,
+            field1.column_name: 1,
+            field2.column_name: 'record1',
         })
         num_records = len(reference_dataset.get_records())
         response = self._authenticated_post(
             reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
             {
-                'field1': 1,
-                'field2': 'record2',
+                'reference_dataset': reference_dataset.id,
+                field1.column_name: 1,
+                field2.column_name: 'record2',
             }
         )
         self.assertContains(response, 'A record with this identifier already exists')
@@ -413,28 +415,30 @@ class TestReferenceDatasetAdmin(BaseTestCase):
 
     def test_reference_data_record_create_missing_identifier(self):
         reference_dataset = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             name='field1',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             name='field2',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=False
         )
         reference_dataset.save_record(None, {
-            'field1': 1,
-            'field2': 'record1',
+            'reference_dataset': reference_dataset,
+            field1.column_name: 1,
+            field2.column_name: 'record1',
         })
         num_records = len(reference_dataset.get_records())
         response = self._authenticated_post(
             reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
             {
-                'field1': '',
-                'field2': 'record2',
+                'reference_dataset': reference_dataset.id,
+                field1.column_name: '',
+                field2.column_name: 'record2',
             }
         )
         self.assertContains(response, 'This field is required')
@@ -452,85 +456,86 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         num_records = len(reference_dataset.get_records())
 
         # Int
-        response = self._authenticated_post(url, {'field1': 'a string'})
+        response = self._authenticated_post(url, {field.column_name: 'a string'})
         self.assertContains(response, 'Enter a whole number.')
         self.assertEqual(num_records, len(reference_dataset.get_records()))
 
         # Float
         field.data_type = models.ReferenceDatasetField.DATA_TYPE_FLOAT
         field.save()
-        response = self._authenticated_post(url, {'field1': 'a string'})
+        response = self._authenticated_post(url, {field.column_name: 'a string'})
         self.assertContains(response, 'Enter a number.')
         self.assertEqual(num_records, len(reference_dataset.get_records()))
 
         # Date
         field.data_type = models.ReferenceDatasetField.DATA_TYPE_DATE
         field.save()
-        response = self._authenticated_post(url, {'field1': 'a string'})
+        response = self._authenticated_post(url, {field.column_name: 'a string'})
         self.assertContains(response, 'Enter a valid date.')
         self.assertEqual(num_records, len(reference_dataset.get_records()))
 
         # Datetime
         field.data_type = models.ReferenceDatasetField.DATA_TYPE_DATETIME
         field.save()
-        response = self._authenticated_post(url, {'field1': 'a string'})
+        response = self._authenticated_post(url, {field.column_name: 'a string'})
         self.assertContains(response, 'Enter a valid date/time.')
         self.assertEqual(num_records, len(reference_dataset.get_records()))
 
         # Time
         field.data_type = models.ReferenceDatasetField.DATA_TYPE_TIME
         field.save()
-        response = self._authenticated_post(url, {'field1': 'a string'})
+        response = self._authenticated_post(url, {field.column_name: 'a string'})
         self.assertContains(response, 'Enter a valid time.')
         self.assertEqual(num_records, len(reference_dataset.get_records()))
 
     def test_reference_data_record_create(self):
         reference_dataset = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             name='char',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             name='int',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field3 = factories.ReferenceDatasetFieldFactory.create(
             name='float',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_FLOAT,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field4 = factories.ReferenceDatasetFieldFactory.create(
             name='date',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_DATE,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field5 = factories.ReferenceDatasetFieldFactory.create(
             name='time',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_TIME,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field6 = factories.ReferenceDatasetFieldFactory.create(
             name='datetime',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_DATETIME,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field7 = factories.ReferenceDatasetFieldFactory.create(
             name='bool',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_BOOLEAN,
         )
         num_records = len(reference_dataset.get_records())
         fields = {
-            'char': 'test1',
-            'int': 1,
-            'float': 2.0,
-            'date': '2019-01-02',
-            'time': '11:11:00',
-            'datetime': '2018-02-01 12:12:00',
-            'bool': True,
+            'reference_dataset': reference_dataset.id,
+            field1.column_name: 'test1',
+            field2.column_name: 1,
+            field3.column_name: 2.0,
+            field4.column_name: '2019-01-02',
+            field5.column_name: '11:11:00',
+            field6.column_name: '2019-05-25 14:30:59',
+            field7.column_name: True,
         }
         response = self._authenticated_post(
             reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
@@ -539,25 +544,36 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         self.assertContains(response, 'Reference data set record added successfully')
         self.assertEqual(num_records + 1, len(reference_dataset.get_records()))
         record = reference_dataset.get_record_by_custom_id(1)
+        del fields['reference_dataset']
+        fields[field6.column_name] += '+00:00'
         for k, v in fields.items():
-            self.assertEqual(str(record[k]), str(v))
+            self.assertEqual(str(getattr(record, k)), str(v))
 
     def test_reference_data_record_edit_duplicate_identifier(self):
         reference_dataset = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
+        field = factories.ReferenceDatasetFieldFactory.create(
             name='id',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        reference_dataset.save_record(None, {'id': 1})
-        reference_dataset.save_record(None, {'id': 2})
+        reference_dataset.save_record(None, {
+            'reference_dataset': reference_dataset,
+            field.column_name: 1
+        })
+        reference_dataset.save_record(None, {
+            'reference_dataset': reference_dataset,
+            field.column_name: 2
+        })
         num_records = len(reference_dataset.get_records())
         record = reference_dataset.get_records()[0]
         response = self._authenticated_post(
-            reverse('dw-admin:reference-dataset-record-edit', args=(reference_dataset.id, record['id'])),
+            reverse(
+                'dw-admin:reference-dataset-record-edit', args=(reference_dataset.id, record.id)
+            ),
             {
-                'id': 2,
+                'reference_dataset': reference_dataset.id,
+                field.column_name: 2,
             }
         )
         self.assertContains(response, 'A record with this identifier already exists')
@@ -565,85 +581,98 @@ class TestReferenceDatasetAdmin(BaseTestCase):
 
     def test_reference_data_record_edit_valid(self):
         reference_dataset = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             name='char',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             name='int',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field3 = factories.ReferenceDatasetFieldFactory.create(
             name='float',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_FLOAT,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field4 = factories.ReferenceDatasetFieldFactory.create(
             name='date',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_DATE,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field5 = factories.ReferenceDatasetFieldFactory.create(
             name='time',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_TIME,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field6 = factories.ReferenceDatasetFieldFactory.create(
             name='datetime',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_DATETIME,
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field7 = factories.ReferenceDatasetFieldFactory.create(
             name='bool',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_BOOLEAN,
         )
         reference_dataset.save_record(None, {
-            'char': 'test1',
-            'int': 1,
-            'float': 2.0,
-            'date': '2019-01-02',
-            'time': '11:11:00',
-            'datetime': '2018-02-01 12:12:00',
-            'bool': True,
+            'reference_dataset': reference_dataset,
+            field1.column_name: 'test1',
+            field2.column_name: 1,
+            field3.column_name: 2.0,
+            field4.column_name: '2019-01-02',
+            field5.column_name: '11:11:00',
+            field6.column_name: '2019-01-01 01:00:01',
+            field7.column_name: True,
         })
         num_records = len(reference_dataset.get_records())
-        record = reference_dataset.get_records()[0]
+        record = reference_dataset.get_records().first()
         update_fields = {
-            'char': 'updated-char',
-            'int': 99,
-            'float': 1.0,
-            'date': '2017-03-22',
-            'time': '23:23:00',
-            'datetime': '2001-12-02 01:10:00',
-            'bool': True,
+            'reference_dataset': reference_dataset.id,
+            field1.column_name: 'updated-char',
+            field2.column_name: 99,
+            field3.column_name: 1.0,
+            field4.column_name: '2017-03-22',
+            field5.column_name: '23:23:00',
+            field6.column_name: '2019-05-25 14:30:59',
+            field7.column_name: True,
         }
         response = self._authenticated_post(
-            reverse('dw-admin:reference-dataset-record-edit', args=(reference_dataset.id, record['id'])),
+            reverse(
+                'dw-admin:reference-dataset-record-edit',
+                args=(reference_dataset.id, record.id)
+            ),
             update_fields
         )
         self.assertContains(response, 'Reference data set record updated successfully')
         self.assertEqual(num_records, len(reference_dataset.get_records()))
         record = reference_dataset.get_record_by_custom_id(99)
+        del update_fields['reference_dataset']
+        update_fields[field6.column_name] += '+00:00'
         for k, v in update_fields.items():
-            self.assertEqual(str(record[k]), str(v))
+            self.assertEqual(str(getattr(record, k)), str(v))
 
     def test_reference_data_record_delete_confirm(self):
         reference_dataset = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
+        field = factories.ReferenceDatasetFieldFactory.create(
             name='field1',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        reference_dataset.save_record(None, {'field1': 1})
+        reference_dataset.save_record(None, {
+            'reference_dataset': reference_dataset,
+            field.column_name: 1
+        })
         num_records = len(reference_dataset.get_records())
-        record = reference_dataset.get_records()[0]
+        record = reference_dataset.get_records().first()
         response = self._authenticated_post(
-            reverse('dw-admin:reference-dataset-record-delete', args=(reference_dataset.id, record['id'])),
+            reverse(
+                'dw-admin:reference-dataset-record-delete',
+                args=(reference_dataset.id, record.id)
+            ),
         )
         self.assertContains(
             response,
@@ -653,18 +682,24 @@ class TestReferenceDatasetAdmin(BaseTestCase):
 
     def test_reference_data_record_delete(self):
         reference_dataset = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
+        field = factories.ReferenceDatasetFieldFactory.create(
             name='field1',
             reference_dataset=reference_dataset,
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        reference_dataset.save_record(None, {'field1': 1})
+        reference_dataset.save_record(None, {
+            'reference_dataset': reference_dataset,
+            field.column_name: 1
+        })
         num_records = len(reference_dataset.get_records())
         record = reference_dataset.get_records()[0]
         response = self._authenticated_post(
-            reverse('dw-admin:reference-dataset-record-delete', args=(reference_dataset.id, record['id'])), {
-                'id': record['id']
+            reverse(
+                'dw-admin:reference-dataset-record-delete',
+                args=(reference_dataset.id, record.id)
+            ), {
+                'id': record.id
             }
         )
         self.assertContains(
