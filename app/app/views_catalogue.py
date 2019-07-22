@@ -173,6 +173,7 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
         )
         return get_object_or_404(
             ReferenceDataset,
+            published=True,
             deleted=False,
             group=group,
             slug=self.kwargs.get('reference_slug')
