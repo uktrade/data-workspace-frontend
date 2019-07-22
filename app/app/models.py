@@ -359,6 +359,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         blank=True
     )
     published = models.BooleanField(default=False)
+    schema_version = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Reference Data Set'
@@ -370,6 +371,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         )
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.schema_version += 1
         create = self.pk is None
         super().save(force_insert, force_update, using, update_fields)
         if create:
@@ -422,6 +424,14 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return: dynamic model class
         """
         try:
+            model = apps.all_models['app'][self.table_name]
+        except KeyError:
+            pass
+        else:
+            if model.__schema_version__ == self.schema_version:
+                return model
+
+        try:
             del apps.all_models['app'][self.table_name]
         except KeyError:
             pass
@@ -431,16 +441,27 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             db_table = self.table_name
             ordering = ('updated_date',)
 
-        attrs = {f.column_name: f.get_model_field() for f in self.fields.all()}
-        attrs.update({
+        attrs = {
+            **{f.column_name: f.get_model_field() for f in self.fields.all()},
             '__module__': 'app',
+            '__schema_version__': self.schema_version,
             'Meta': Meta,
             'reference_dataset': models.ForeignKey(
                 'app.ReferenceDataset',
                 on_delete=models.CASCADE
             ),
             'updated_date': models.DateTimeField(auto_now=True),
-        })
+        }
+
+        # During the above DB queries, another request may have created and
+        # registered the model. Ensure we don't attempt to register another one
+        # since Django will raise an exception
+        try:
+            return apps.all_models['app'][self.table_name]
+        except KeyError:
+            pass
+
+        # Registers the model in apps.all_models['app'][self.table_name]
         return type(self.table_name, (models.Model,), attrs)
 
     def get_records(self) -> List[dict]:
@@ -594,6 +615,8 @@ class ReferenceDatasetField(TimeStampedUserModel):
         """
         created = self.id is None
         super().save(force_insert, force_update, using, update_fields)
+        # Force increment of reference dataset schema version
+        self.reference_dataset.save()
         if created:
             model_class = self.reference_dataset.get_record_model_class()
             with connection.schema_editor() as editor:
