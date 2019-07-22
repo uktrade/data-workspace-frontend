@@ -37,6 +37,7 @@ from app.views_error import (
     public_error_404_html_view,
     public_error_500_html_view,
 )
+from app.views_general import SupportView
 from app.views_healthcheck import (
     healthcheck_view,
 )
@@ -144,6 +145,11 @@ urlpatterns = [
     path('request-access/<str:group_slug>/<str:set_slug>', login_required(request_access_view), name='request_access'),
     path('request_access_success/', login_required(request_access_success_view),
          name='request_access_success'),
+
+    path('support/', login_required(SupportView.as_view()), name='support'),
+    path('support/success/<str:ticket_id>', login_required(SupportView.as_view()),
+         name='support-success'),
+
     path('admin/', include(('app.dw_admin.urls', 'app'), namespace='dw-admin')),
     path('admin/', admin.site.urls),
 ]
