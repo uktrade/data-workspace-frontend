@@ -662,7 +662,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         Falls back to `CharField` if not found.
         :return:
         """
-        field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type, forms.CharField)(
+        field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type)(
             label=self.name,
         )
         if self.data_type == self.DATA_TYPE_DATE:
