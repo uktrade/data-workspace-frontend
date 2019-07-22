@@ -1,4 +1,3 @@
-import random
 import uuid
 import factory
 import factory.fuzzy
@@ -34,6 +33,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
+    published = True
 
     class Meta:
         model = 'app.DataSet'
@@ -55,6 +55,7 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     group = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
+    published = True
 
     class Meta:
         model = 'app.ReferenceDataset'
@@ -67,4 +68,3 @@ class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'app.ReferenceDatasetField'
-
