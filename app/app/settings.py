@@ -130,7 +130,6 @@ LOGGING = {
 # Not all installations have this set
 NOTEBOOKS_BUCKET = env.get('NOTEBOOKS_BUCKET', None)
 APPSTREAM_URL = env['APPSTREAM_URL']
-SUPPORT_URL = env['SUPPORT_URL']
 
 CACHES = {
     'default': {

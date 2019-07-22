@@ -1,10 +1,15 @@
+import io
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+
+import mock
 
 from app.tests import factories
 from app.tests.common import BaseTestCase
 
 
-class TestViews(BaseTestCase):
+class TestDatasetViews(BaseTestCase):
     def test_homepage_unauth(self):
         response = self.client.get(reverse('root'))
         self.assertEqual(response.status_code, 403)
@@ -183,3 +188,67 @@ class TestViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 404)
+
+
+class TestSupportView(BaseTestCase):
+    def test_create_support_request_invalid_email(self):
+        response = self._authenticated_post(reverse('support'), {
+            'email': 'x',
+            'message': 'test message',
+        })
+        self.assertContains(response, 'Enter a valid email address')
+
+    def test_create_support_request_invalid_message(self):
+        response = self._authenticated_post(reverse('support'), {
+            'email': 'noreply@example.com',
+            'message': '',
+        })
+        self.assertContains(response, 'This field is required')
+
+    @mock.patch('app.views_general.create_support_request')
+    def test_create_support_request_no_attachments(self, mock_create_request):
+        mock_create_request.return_value = 999
+        response = self._authenticated_post(
+            reverse('support'),
+            data={
+                'email': 'noreply@example.com',
+                'message': 'A test message',
+            },
+            post_format='multipart'
+        )
+        self.assertContains(
+            response,
+            'Your request has been received. Your reference is: '
+            '<strong>999</strong>.',
+            html=True
+        )
+        mock_create_request.assert_called_once()
+
+    @mock.patch('app.views_general.create_support_request')
+    def test_create_support_request_with_attachments(self, mock_create_request):
+        mock_create_request.return_value = 999
+        fh = io.BytesIO()
+        fh.write(b'This is some text')
+        fh.seek(0)
+        file1 = SimpleUploadedFile('file1.txt', fh.read(), content_type='text/plain')
+        fh.seek(0)
+        fh.write(b'This is some more text')
+        fh.seek(0)
+        file2 = SimpleUploadedFile('file2.txt', fh.read(), content_type='text/plain')
+        response = self._authenticated_post(
+            reverse('support'),
+            data={
+                'email': 'noreply@example.com',
+                'message': 'A test message',
+                'attachment1': file1,
+                'attachment2': file2,
+            },
+            post_format='multipart'
+        )
+        self.assertContains(
+            response,
+            'Your request has been received. Your reference is: '
+            '<strong>999</strong>.',
+            html=True
+        )
+        mock_create_request.assert_called_once()

@@ -107,3 +107,29 @@ def create_zendesk_ticket(contact_email,
     client.tickets.update(ticket_audit.ticket)
 
     return ticket_audit.ticket.id
+
+
+def create_support_request(user, email, message, attachments=()):
+    client = Zenpy(
+        subdomain=settings.ZENDESK_SUBDOMAIN,
+        email=settings.ZENDESK_EMAIL,
+        token=settings.ZENDESK_TOKEN,
+    )
+    ticket_audit = client.tickets.create(
+        Ticket(
+            subject='Data Workspace Support Request',
+            description=message,
+            requester=User(
+                email=email,
+                name=user.get_full_name()
+            )
+        )
+    )
+    if attachments:
+        uploads = [client.attachments.upload(x) for x in attachments]
+        ticket_audit.ticket.comment = Comment(
+            body='Additional attachments',
+            uploads=[x.token for x in uploads]
+        )
+        client.tickets.update(ticket_audit.ticket)
+    return ticket_audit.ticket.id
