@@ -10,6 +10,21 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         )
     )
 
+    def clean_data_type(self):
+        # Do not allow users to change the data type of a column
+        # if that column has existing data.
+        orig_data_type = self.instance.data_type
+        new_data_type = self.cleaned_data['data_type']
+        if self.instance.id is not None and new_data_type != orig_data_type:
+            matching_records = self.instance.reference_dataset.get_records().exclude(**{
+                self.instance.column_name: None
+            })
+            if matching_records.exists():
+                raise forms.ValidationError(
+                    'Unable to change data type when data exists in column'
+                )
+        return new_data_type
+
 
 class ReferenceDataRowDeleteForm(forms.Form):
     id = forms.CharField(

@@ -602,7 +602,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
                     model_class._meta.get_field(self.column_name),
                 )
         elif self._original_data_type != self.data_type:
-
             with connection.cursor() as cursor:
                 cursor.execute(
                     sql.SQL(

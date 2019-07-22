@@ -49,7 +49,7 @@ class TestViews(BaseTestCase):
     def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
-        ds = factories.DataSetFactory.create(grouping=group)
+        ds = factories.DataSetFactory.create(grouping=group, published=False)
         factories.SourceLinkFactory(dataset=ds)
         factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(
