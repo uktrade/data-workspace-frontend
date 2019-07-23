@@ -102,8 +102,12 @@ def create_zendesk_ticket(contact_email,
     )
 
     ticket_audit.ticket.comment = Comment(body=private_comment, public=False)
-    ticket_audit.ticket.custom_fields.append(CustomField(id=zendesk_service_field_id, value='data_catalogue'))
-
+    ticket_audit.ticket.custom_fields.append(
+        CustomField(
+            id=zendesk_service_field_id,
+            value=zendesk_service_field_value
+        )
+    )
     client.tickets.update(ticket_audit.ticket)
 
     return ticket_audit.ticket.id
@@ -123,6 +127,12 @@ def create_support_request(user, email, message, attachments=()):
                 email=email,
                 name=user.get_full_name()
             )
+        )
+    )
+    ticket_audit.ticket.custom_fields.append(
+        CustomField(
+            id=zendesk_service_field_id,
+            value=zendesk_service_field_value
         )
     )
     if attachments:
