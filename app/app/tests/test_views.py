@@ -30,12 +30,12 @@ class TestDatasetViews(BaseTestCase):
         group = factories.DataGroupingFactory.create()
 
         ds1 = factories.DataSetFactory.create(grouping=group, published=True)
-        ds2 = factories.DataSetFactory.create(grouping=group, published=False)
+        ds2 = factories.DataSetFactory.create(grouping=group)
         ds3 = factories.DataSetFactory.create()
 
-        factories.ReferenceDatasetFactory(group=group)
-        factories.ReferenceDatasetFactory(group=group)
-        factories.ReferenceDatasetFactory()
+        rds1 = factories.ReferenceDatasetFactory(group=group, published=True)
+        rds2 = factories.ReferenceDatasetFactory(group=group)
+        rds3 = factories.ReferenceDatasetFactory()
 
         response = self._authenticated_get(
             reverse('datagroup_item', kwargs={'slug': group.slug})
@@ -44,12 +44,15 @@ class TestDatasetViews(BaseTestCase):
 
         # Ensure datasets in group are displayed
         self.assertContains(response, ds1.name, 1)
+        self.assertContains(response, rds1.name, 1)
 
         # Ensure unpublished datasets are not displayed
         self.assertContains(response, ds2.name, 0)
+        self.assertContains(response, rds2.name, 0)
 
         # Ensure datasets not in group are not displayed
         self.assertNotContains(response, ds3.name)
+        self.assertNotContains(response, rds3.name)
 
     def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()

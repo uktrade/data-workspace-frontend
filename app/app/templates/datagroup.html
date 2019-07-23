@@ -53,9 +53,9 @@
                        href="{% url 'admin:app_dataset_add' %}">[New]</a>
                 </p>
             {% endif %}
-            {% if model.referencedataset_set.live.exists %}
+            {% if reference_datasets %}
               <h2 class="govuk-heading-l govuk-!-margin-top-8">Available reference data sets</h2>
-              {% for set in model.referencedataset_set.live %}
+              {% for set in reference_datasets %}
                   <h2 class="govuk-heading-m">
                       <a class="govuk-link" href="{% url 'reference_dataset' model.slug set.slug %}">
                         {{ set.name }}
