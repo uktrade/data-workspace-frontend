@@ -28,8 +28,8 @@ SSO Login:  {user.email}
 Team:       {team_name}
 
 
-Justification Text
-------------------
+Justification Text:
+
 {justification_text}
 """
 
