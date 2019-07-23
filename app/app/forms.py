@@ -56,3 +56,9 @@ class SupportForm(forms.Form):
         widget=forms.FileInput(attrs={'class': 'govuk-file-upload'}),
         required=False
     )
+
+
+class RequestAccessForm(forms.Form):
+    email = forms.CharField(widget=forms.TextInput, required=True)
+    justification = forms.CharField(widget=forms.Textarea, required=True)
+    team = forms.CharField(widget=forms.TextInput, required=True)
