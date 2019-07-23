@@ -30,11 +30,11 @@ class TestDatasetViews(BaseTestCase):
         group = factories.DataGroupingFactory.create()
 
         ds1 = factories.DataSetFactory.create(grouping=group, published=True)
-        ds2 = factories.DataSetFactory.create(grouping=group)
+        ds2 = factories.DataSetFactory.create(grouping=group, published=False)
         ds3 = factories.DataSetFactory.create()
 
         rds1 = factories.ReferenceDatasetFactory(group=group, published=True)
-        rds2 = factories.ReferenceDatasetFactory(group=group)
+        rds2 = factories.ReferenceDatasetFactory(group=group, published=False)
         rds3 = factories.ReferenceDatasetFactory()
 
         response = self._authenticated_get(
