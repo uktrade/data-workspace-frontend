@@ -4,6 +4,11 @@ register = template.Library()
 
 
 @register.filter
+def get_attr(model, field):
+    return getattr(model, field)
+
+
+@register.filter
 def add_class(field, class_attr):
     if 'class' in field.field.widget.attrs:
         field.field.widget.attrs['class'] = '{} {}'.format(

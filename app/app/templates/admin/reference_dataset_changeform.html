@@ -1,5 +1,5 @@
 {% extends 'admin/change_form.html' %}
-{% load static %}
+{% load static common_tags %}
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static "admin.css" %}">
@@ -24,20 +24,20 @@
               </thead>
               <tbody>
                 {% for record in instance.get_records %}
-                  {% with forloop.counter0 as row_index %}
-                    <tr class="form-row row{{ row_index|add:1 }}" id="referencedata_dataset-{{ row_index }}">
-                      {% for field in record.data %}
-                        <td class="field-{{ field }}">
-                          {{ field|default_if_none:"" }}
+                  <tr class="form-row">
+                    {% for field in record.reference_dataset.column_names %}
+                      {% with record|get_attr:field as value %}
+                        <td{% if value is None %} style="color: #bfc1c3"{% endif %}>
+                          {{ value|default_if_none:"Not set" }}
                         </td>
-                      {% endfor %}
-                      <td class="edit">
-                        <a href="{% url 'dw-admin:reference-dataset-record-edit' reference_dataset_id=instance.id record_id=record.id %}" class="button">
-                          Edit Record
-                        </a>
-                      </td>
-                    </tr>
-                  {% endwith %}
+                      {% endwith %}
+                    {% endfor %}
+                    <td class="edit">
+                      <a href="{% url 'dw-admin:reference-dataset-record-edit' reference_dataset_id=instance.id record_id=record.id %}" class="button">
+                        Edit Record
+                      </a>
+                    </td>
+                  </tr>
                 {% endfor %}
                 <tr class="add-row">
                   <td colspan="{{ instance.fields.count|add:1 }}">

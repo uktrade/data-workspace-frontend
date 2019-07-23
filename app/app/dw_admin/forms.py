@@ -10,35 +10,47 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         )
     )
 
-
-class ReferenceDataRecordEditForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        self.reference_dataset = kwargs.pop('reference_dataset')
-        self.record_id = kwargs.pop('record_id')
-        super().__init__(*args, **kwargs)
-        # Build the form fields using associated ReferenceDataField objects
-        for field in self.reference_dataset.fields.all():
-            self.fields[field.name.lower()] = field.get_form_field()
-
-    def clean(self):
-        # Ensure duplicate identifiers are not added within a reference dataset
-        id_field = self.reference_dataset.identifier_field.name.lower()
-        if id_field in self.cleaned_data:
-            id_value = self.cleaned_data[id_field]
-            existing = self.reference_dataset.get_record_by_custom_id(id_value)
-            if self.record_id is None:
-                if existing is not None:
-                    raise forms.ValidationError({
-                        id_field: 'A record with this identifier already exists'
-                    })
-            else:
-                if existing is not None and existing['dw_int_id'] != self.record_id:
-                    raise forms.ValidationError({
-                        id_field: 'A record with this identifier already exists'
-                    })
+    def clean_data_type(self):
+        # Do not allow users to change the data type of a column
+        # if that column has existing data.
+        orig_data_type = self.instance.data_type
+        new_data_type = self.cleaned_data['data_type']
+        if self.instance.id is not None and new_data_type != orig_data_type:
+            matching_records = self.instance.reference_dataset.get_records().exclude(**{
+                self.instance.column_name: None
+            })
+            if matching_records.exists():
+                raise forms.ValidationError(
+                    'Unable to change data type when data exists in column'
+                )
+        return new_data_type
 
 
 class ReferenceDataRowDeleteForm(forms.Form):
     id = forms.CharField(
         widget=forms.HiddenInput()
     )
+
+
+def clean_identifier(form):
+    """
+    Helper function for validating dynamically created reference dataset identifier field.
+    Checks that supplied identifier value is unique for this reference data set
+    :param form:
+    :return:
+    """
+    field = form.instance
+    reference_dataset = form.cleaned_data['reference_dataset']
+    id_field = reference_dataset.identifier_field.column_name
+    cleaned_data = form.cleaned_data
+    if id_field in cleaned_data:
+        exists = reference_dataset.get_records().filter(**{
+            id_field: cleaned_data[id_field]
+        }).exclude(
+            id=field.id
+        )
+        if exists:
+            raise forms.ValidationError(
+                'A record with this identifier already exists'
+            )
+    return cleaned_data[id_field]

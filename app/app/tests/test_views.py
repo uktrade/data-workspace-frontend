@@ -54,7 +54,7 @@ class TestDatasetViews(BaseTestCase):
     def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
-        ds = factories.DataSetFactory.create(grouping=group)
+        ds = factories.DataSetFactory.create(grouping=group, published=False)
         factories.SourceLinkFactory(dataset=ds)
         factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(
@@ -101,19 +101,27 @@ class TestDatasetViews(BaseTestCase):
     def test_reference_dataset_json_download(self):
         group = factories.DataGroupingFactory.create()
         rds = factories.ReferenceDatasetFactory.create(group=group)
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
             data_type=2,
             is_identifier=True
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='name',
             data_type=1,
         )
-        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
-        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 1,
+            field2.column_name: 'Test recórd'
+        })
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 2,
+            field2.column_name: 'Ánd again'
+        })
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -131,19 +139,27 @@ class TestDatasetViews(BaseTestCase):
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
         rds = factories.ReferenceDatasetFactory.create(group=group)
-        factories.ReferenceDatasetFieldFactory.create(
+        field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
             data_type=2,
             is_identifier=True
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='name',
             data_type=1,
         )
-        rds.save_record(None, {'id': 1, 'name': 'Test recórd'})
-        rds.save_record(None, {'id': 2, 'name': 'Ánd again'})
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 1,
+            field2.column_name: 'Test recórd'
+        })
+        rds.save_record(None, {
+            'reference_dataset': rds,
+            field1.column_name: 2,
+            field2.column_name: 'Ánd again'
+        })
         response = self._authenticated_get(
             reverse('reference_dataset_download', kwargs={
                 'group_slug': group.slug,

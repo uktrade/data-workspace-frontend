@@ -1,6 +1,5 @@
 {% extends '_base.html' %}
-{% load humanize %}
-{% load static %}
+{% load static humanize common_tags %}
 
 {% block page_title %}{{ object.name }} - {{ object.grouping.name }} - {{ block.super }}{% endblock %}
 
@@ -126,16 +125,15 @@
           </tr>
         </thead>
         <tbody>
+
           {% for record in object.get_records|slice:":5" %}
             <tr class="govuk-table__row">
-              {% for field in record.data %}
-                <td class="govuk-table__cell">
-                  {% if field is None %}
-                    <span class="unknown">No data</span>
-                  {% else %}
-                    {{ field }}
-                  {% endif %}
-                </td>
+              {% for field in record.reference_dataset.column_names %}
+                {% with record|get_attr:field as value %}
+                  <td class="govuk-table__cell{% if value is None %} unknown{% endif %}">
+                    {{ value|default_if_none:"Not set" }}
+                  </td>
+                {% endwith %}
               {% endfor %}
               {% if perms.app_referencedataset.change %}
                 <td class="govuk-table__cell">

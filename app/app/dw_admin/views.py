@@ -1,22 +1,21 @@
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django import forms
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView
 
 from app import models
-from app.dw_admin.forms import ReferenceDataRecordEditForm, ReferenceDataRowDeleteForm
+from app.dw_admin.forms import ReferenceDataRowDeleteForm, clean_identifier
 
 
 class ReferenceDataRecordMixin(UserPassesTestMixin):
-    form_class = ReferenceDataRecordEditForm
-
     def test_func(self):
         return self.request.user.is_superuser
 
-    def _get_instance(self):
+    def _get_reference_dataset(self):
         return get_object_or_404(
             models.ReferenceDataset,
             pk=self.kwargs['reference_dataset_id']
@@ -24,10 +23,10 @@ class ReferenceDataRecordMixin(UserPassesTestMixin):
 
     def get_context_data(self, *args, **kwargs):
         ctx = super().get_context_data(*args, **kwargs)
-        instance = self._get_instance()
+        reference_dataset = self._get_reference_dataset()
         ctx.update({
-            'ref_model': instance,
-            'opts': instance._meta,
+            'ref_model': reference_dataset,
+            'opts': reference_dataset.get_record_model_class()._meta,
             'record_id': self.kwargs.get('record_id'),
         })
         return ctx
@@ -35,6 +34,7 @@ class ReferenceDataRecordMixin(UserPassesTestMixin):
 
 class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
     template_name = 'admin/reference_dataset_edit_record.html'
+    object = None
 
     def get_context_data(self, *args, **kwargs):
         ctx = super().get_context_data(*args, **kwargs)
@@ -43,41 +43,72 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
         )
         return ctx
 
+    def get_queryset(self):
+        return self._get_reference_dataset().get_records()
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        reference_dataset = self._get_instance()
-        record = {}
+        reference_dataset = self._get_reference_dataset()
         record_id = self.kwargs.get('record_id')
-        if record_id is not None:
-            record = reference_dataset.get_record_by_internal_id(record_id)
-            if record is None:
-                raise Http404
-        kwargs.update({
-            'record_id': record_id,
+        kwargs['initial'] = {
             'reference_dataset': reference_dataset,
-            'initial': record,
-        })
+            'id': record_id
+        }
+        if record_id is not None:
+            kwargs['instance'] = get_object_or_404(
+                reference_dataset.get_record_model_class(),
+                reference_dataset=reference_dataset,
+                id=self.kwargs.get('record_id')
+            )
         return kwargs
 
-    def get_form(self):
-        # Standard Django forms need to be wrapped in `AdminForm`
-        form = super().get_form()
+    def get_form(self, form_class=None):
+        """
+        Dynamically create a model form based on the current state
+        of the dynamically built record model class
+        :param form_class:
+        :return:
+        """
+        reference_dataset = self._get_reference_dataset()
+        record_model = reference_dataset.get_record_model_class()
+        field_names = ['reference_dataset'] + reference_dataset.column_names
+
+        class DynamicReferenceDatasetRecordForm(forms.ModelForm):
+            class Meta:
+                model = record_model
+                fields = field_names
+                include = field_names
+                widgets = {
+                    'reference_dataset': forms.HiddenInput()
+                }
+
+            # Add the form fields/widgets
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                for field in reference_dataset.fields.all():
+                    self.fields[field.column_name] = field.get_form_field()
+
+        # Add validation for the custom identifier field
+        setattr(
+            DynamicReferenceDatasetRecordForm,
+            'clean_{}'.format(reference_dataset.identifier_field.column_name),
+            clean_identifier
+        )
+
         return helpers.AdminForm(
-            form,
-            list([(None, {'fields': form.fields})]),
+            DynamicReferenceDatasetRecordForm(**self.get_form_kwargs()),
+            list([(None, {'fields': field_names})]),
             {}
         )
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
-        # Retrieve the actual from from the AdminForm object
         if form.form.is_valid():
             return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+        return self.form_invalid(form)
 
     def form_valid(self, form):
-        reference_dataset = self._get_instance()
+        reference_dataset = self._get_reference_dataset()
         try:
             reference_dataset.save_record(self.kwargs.get('record_id'), form.form.cleaned_data)
         except Exception as e:
@@ -92,7 +123,7 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
                 'updated' if 'record_id' in self.kwargs else 'added'
             )
         )
-        instance = self._get_instance()
+        instance = self._get_reference_dataset()
         return reverse('admin:app_referencedataset_change', args=(instance.id,))
 
 
@@ -103,12 +134,14 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
     def get_context_data(self, *args, **kwargs):
         ctx = super().get_context_data(*args, **kwargs)
         ctx['title'] = 'Delete Reference Data Record'
-        ctx['record'] = self._get_instance().get_record_by_internal_id(self.kwargs.get('record_id'))
+        ctx['record'] = self._get_reference_dataset().get_record_by_internal_id(
+            self.kwargs.get('record_id')
+        )
         return ctx
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        reference_dataset = self._get_instance()
+        reference_dataset = self._get_reference_dataset()
         record_id = self.kwargs.get('record_id')
         record = reference_dataset.get_record_by_internal_id(record_id)
         if record is None:
@@ -121,7 +154,7 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        instance = self._get_instance()
+        instance = self._get_reference_dataset()
         try:
             instance.delete_record(form.cleaned_data['id'])
         except Exception as e:
@@ -136,5 +169,5 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         )
         return reverse(
             'admin:app_referencedataset_change',
-            args=(self._get_instance().id,)
+            args=(self._get_reference_dataset().id,)
         )

@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
 from app import models
@@ -29,8 +30,8 @@ class TestModels(BaseTestCase):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT * 
-                FROM information_schema.columns 
+                SELECT *
+                FROM information_schema.columns
                 WHERE table_name=%s
                 AND column_name=%s
                 ''', [
@@ -65,16 +66,15 @@ class TestModels(BaseTestCase):
         self.assertTrue(self._table_exists(ref_dataset.table_name))
 
     def _create_and_validate_field(self, ref_dataset: models.ReferenceDatasetField,
-                                   field_name: str, field_type: str, postgres_type: str):
+                                   field_name: str, field_type: str):
         rdf = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name=field_name,
             data_type=field_type
         )
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertIsNotNone(column)
-        self.assertEqual(column['column_name'], rdf.name)
-        self.assertEqual(column['udt_name'], postgres_type)
+        self.assertEqual(column['column_name'], rdf.column_name)
         return rdf
 
     def test_create_reference_dataset_field(self):
@@ -84,73 +84,65 @@ class TestModels(BaseTestCase):
         self._create_and_validate_field(
             ref_dataset,
             'char_field',
-            models.ReferenceDatasetField.DATA_TYPE_CHAR,
-            'varchar'
+            models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
 
         # Integer field
         self._create_and_validate_field(
             ref_dataset,
             'int_field',
-            models.ReferenceDatasetField.DATA_TYPE_INT,
-            'int4'
+            models.ReferenceDatasetField.DATA_TYPE_INT
         )
 
         # Float field
         self._create_and_validate_field(
             ref_dataset,
             'float_field',
-            models.ReferenceDatasetField.DATA_TYPE_FLOAT,
-            'float8'
+            models.ReferenceDatasetField.DATA_TYPE_FLOAT
         )
 
         # Date field
         self._create_and_validate_field(
             ref_dataset,
             'date_field',
-            models.ReferenceDatasetField.DATA_TYPE_DATE,
-            'date'
+            models.ReferenceDatasetField.DATA_TYPE_DATE
         )
 
         # Time field
         self._create_and_validate_field(
             ref_dataset,
             'time_field',
-            models.ReferenceDatasetField.DATA_TYPE_TIME,
-            'time'
+            models.ReferenceDatasetField.DATA_TYPE_TIME
         )
 
         # Datetime field
         self._create_and_validate_field(
             ref_dataset,
             'datetime_field',
-            models.ReferenceDatasetField.DATA_TYPE_DATETIME,
-            'timestamp'
+            models.ReferenceDatasetField.DATA_TYPE_DATETIME
         )
 
         # Boolean field
         self._create_and_validate_field(
             ref_dataset,
             'boolean_field',
-            models.ReferenceDatasetField.DATA_TYPE_BOOLEAN,
-            'bool'
+            models.ReferenceDatasetField.DATA_TYPE_BOOLEAN
         )
 
     def test_edit_reference_dataset_field(self):
         ref_dataset = self._create_reference_dataset()
 
-        # Change column name
+        # Change column name - should not affect the db column
         rdf = self._create_and_validate_field(
             ref_dataset,
             'char_field',
-            models.ReferenceDatasetField.DATA_TYPE_CHAR,
-            'varchar'
+            models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
         rdf.name = 'updated_field'
         rdf.save()
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertIsNotNone(column)
-        self.assertEqual(column['column_name'], rdf.name)
+        self.assertEqual(column['column_name'], rdf.column_name)
 
         # Change data type
 
@@ -158,42 +150,41 @@ class TestModels(BaseTestCase):
         rdf = self._create_and_validate_field(
             ref_dataset,
             'test_field',
-            models.ReferenceDatasetField.DATA_TYPE_CHAR,
-            'varchar'
+            models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
         rdf.data_type = models.ReferenceDatasetField.DATA_TYPE_INT
         rdf.save()
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertEqual(column['udt_name'], 'int4')
 
         # Int -> Float
         rdf.data_type = models.ReferenceDatasetField.DATA_TYPE_FLOAT
         rdf.save()
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertEqual(column['udt_name'], 'float8')
 
         # Float -> Date
         rdf.data_type = models.ReferenceDatasetField.DATA_TYPE_DATE
         rdf.save()
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertEqual(column['udt_name'], 'date')
 
         # Date -> Time
         rdf.data_type = models.ReferenceDatasetField.DATA_TYPE_TIME
         rdf.save()
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertEqual(column['udt_name'], 'time')
 
         # Time -> Datetime
         rdf.data_type = models.ReferenceDatasetField.DATA_TYPE_DATETIME
         rdf.save()
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertEqual(column['udt_name'], 'timestamp')
 
         # Datetime -> Bool
         rdf.data_type = models.ReferenceDatasetField.DATA_TYPE_BOOLEAN
         rdf.save()
-        column = self._get_column_data(ref_dataset.table_name, rdf.name)
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertEqual(column['udt_name'], 'bool')
 
     def test_delete_reference_dataset_field(self):
@@ -201,8 +192,7 @@ class TestModels(BaseTestCase):
         field = self._create_and_validate_field(
             ref_dataset,
             'test_field',
-            models.ReferenceDatasetField.DATA_TYPE_CHAR,
-            'varchar'
+            models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
         field.delete()
         column = self._get_column_data(ref_dataset.table_name, 'test_field')
@@ -210,68 +200,80 @@ class TestModels(BaseTestCase):
 
     def test_add_record(self):
         ref_dataset = self._create_reference_dataset()
-        models.ReferenceDatasetField.objects.create(
+        field1 = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name='field1',
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True
         )
-        models.ReferenceDatasetField.objects.create(
+        field2 = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name='field2',
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
         ref_dataset.save_record(None, {
-            'field1': 1,
-            'field2': 'testing...'
+            'reference_dataset': ref_dataset,
+            field1.column_name: 1,
+            field2.column_name: 'testing...'
         })
         record = ref_dataset.get_record_by_custom_id(1)
         self.assertIsNotNone(record)
-        record = ref_dataset.get_record_by_internal_id(record['dw_int_id'])
+        record = ref_dataset.get_record_by_internal_id(record.id)
         self.assertIsNotNone(record)
 
     def test_edit_record(self):
         ref_dataset = self._create_reference_dataset()
-        models.ReferenceDatasetField.objects.create(
+        field1 = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name='field1',
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True
         )
-        models.ReferenceDatasetField.objects.create(
+        field2 = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name='field2',
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
         ref_dataset.save_record(None, {
-            'field1': 1,
-            'field2': 'testing...'
+            'reference_dataset': ref_dataset,
+            field1.column_name: 1,
+            field2.column_name: 'testing...'
         })
         record = ref_dataset.get_record_by_custom_id(1)
-        ref_dataset.save_record(record['dw_int_id'], {
-            'field1': 999,
-            'field2': 'changed'
+        ref_dataset.save_record(record.id, {
+            'reference_dataset': ref_dataset,
+            field1.column_name: 999,
+            field2.column_name: 'changed'
         })
-        self.assertIsNone(ref_dataset.get_record_by_custom_id(1))
+        self.assertRaises(
+            ObjectDoesNotExist,
+            ref_dataset.get_record_by_custom_id,
+            1
+        )
         self.assertIsNotNone(ref_dataset.get_record_by_custom_id(999))
 
     def test_delete_record(self):
         ref_dataset = self._create_reference_dataset()
-        models.ReferenceDatasetField.objects.create(
+        field1 = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name='field1',
             data_type=models.ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True
         )
-        models.ReferenceDatasetField.objects.create(
+        field2 = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name='field2',
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
         ref_dataset.save_record(None, {
-            'field1': 1,
-            'field2': 'testing...'
+            'reference_dataset': ref_dataset,
+            field1.column_name: 1,
+            field2.column_name: 'testing...'
         })
         record = ref_dataset.get_record_by_custom_id(1)
-        ref_dataset.delete_record(record['dw_int_id'])
-        self.assertIsNone(ref_dataset.get_record_by_custom_id(1))
+        ref_dataset.delete_record(record.id)
+        self.assertRaises(
+            ObjectDoesNotExist,
+            ref_dataset.get_record_by_custom_id,
+            1
+        )

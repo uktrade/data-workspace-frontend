@@ -163,7 +163,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
     return render(request, 'dataset.html', context)
 
 
-class ReferenceDatasetDetailView(DetailView):
+class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancestors
     model = ReferenceDataset
 
     def get_object(self, queryset=None):
@@ -173,26 +173,27 @@ class ReferenceDatasetDetailView(DetailView):
         )
         return get_object_or_404(
             ReferenceDataset,
+            published=True,
             deleted=False,
             group=group,
             slug=self.kwargs.get('reference_slug')
         )
 
 
-class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
-
+class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disable=too-many-ancestors
     def get(self, request, *args, **kwargs):
         dl_format = self.kwargs.get('format')
         if dl_format not in ['json', 'csv']:
             raise Http404
         ref_dataset = self.get_object()
-        field_names = ref_dataset.field_names
         records = [
             {
-                field: row['data'][idx]
-                for idx, field in enumerate(field_names)
+                field.name: record[field.column_name]
+                for field in ref_dataset.fields.all()
             }
-            for row in ref_dataset.get_records()
+            for record in ref_dataset.get_records().values(
+                *ref_dataset.column_names
+            )
         ]
         response = HttpResponse()
         response['Content-Disposition'] = 'attachment; filename={}.{}'.format(
@@ -201,7 +202,7 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
         )
         if dl_format == 'json':
             response['Content-Type'] = 'application/json'
-            response.write(json.dumps(records, cls=DjangoJSONEncoder))
+            response.write(json.dumps(list(records), cls=DjangoJSONEncoder))
         else:
             response['Content-Type'] = 'text/csv'
             with closing(io.StringIO()) as outfile:
@@ -211,5 +212,5 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 )
                 writer.writeheader()
                 writer.writerows(records)
-                response.write(outfile.getvalue())
+                response.write(outfile.getvalue())  # pylint: disable=no-member
         return response
