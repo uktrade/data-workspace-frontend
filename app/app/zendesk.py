@@ -141,5 +141,5 @@ def create_support_request(user, email, message, attachments=()):
             body='Additional attachments',
             uploads=[x.token for x in uploads]
         )
-        client.tickets.update(ticket_audit.ticket)
+    client.tickets.update(ticket_audit.ticket)
     return ticket_audit.ticket.id
