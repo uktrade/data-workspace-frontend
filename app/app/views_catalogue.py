@@ -4,7 +4,6 @@ import logging
 import io
 from contextlib import closing
 
-from django import forms
 from django.core.serializers.json import DjangoJSONEncoder
 
 from django.urls import reverse
@@ -20,6 +19,7 @@ from django.views.decorators.http import (
 )
 from django.views.generic import DetailView
 
+from app.forms import RequestAccessForm
 from app.models import (
     DataGrouping,
     DataSet,
@@ -62,12 +62,6 @@ def datagroup_item_view(request, slug):
     return render(request, 'datagroup.html', context)
 
 
-class RequestAccessForm(forms.Form):
-    email = forms.CharField(widget=forms.TextInput, required=True)
-    justification = forms.CharField(widget=forms.Textarea, required=True)
-    team = forms.CharField(widget=forms.TextInput, required=True)
-
-
 @require_http_methods(['GET', 'POST'])
 def request_access_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
@@ -98,7 +92,8 @@ def request_access_view(request, group_slug, set_slug):
 
             url = reverse('request_access_success')
             return HttpResponseRedirect(
-                f'{url}?ticket={ticket_reference}&group={group_slug}&set={set_slug}&email={contact_email}')
+                f'{url}?ticket={ticket_reference}&group={group_slug}&set={set_slug}'
+            )
 
     return render(request, 'request_access.html', {
         'dataset': dataset,
@@ -126,14 +121,12 @@ def request_access_success_view(request):
     ticket = request.GET['ticket']
     group_slug = request.GET['group']
     set_slug = request.GET['set']
-    email = request.GET['email']
 
     dataset = find_dataset(group_slug, set_slug)
 
     return render(request, 'request_access_success.html', {
         'ticket': ticket,
         'dataset': dataset,
-        'confirmation_email': email,
     })
 
 

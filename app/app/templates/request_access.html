@@ -31,7 +31,7 @@
                         <span class="govuk-hint">
                              You are logged in as {{ authenticated_user.email }}
                         </span>
-                        <input class="govuk-input" type="email" name="email" name="email" id="email" required>
+                        <input class="govuk-input" type="email" name="email" value="{{ authenticated_user.email }}" id="email" required>
                     </div>
                     <div class="govuk-form-group">
                         <label class="govuk-label" for="team">Team name</label>
