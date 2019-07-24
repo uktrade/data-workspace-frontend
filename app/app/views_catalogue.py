@@ -53,7 +53,10 @@ def datagroup_item_view(request, slug):
 
     context = {
         'model': item,
-        'datasets': item.dataset_set.filter(published=True).order_by('name')
+        'datasets': item.dataset_set.filter(published=True).order_by('name'),
+        'reference_datasets': item.referencedataset_set.live().filter(
+            published=True
+        ).order_by('name'),
     }
 
     return render(request, 'datagroup.html', context)
