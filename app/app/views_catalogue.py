@@ -233,7 +233,7 @@ class SourceLinkDownloadView(View):
                 return HttpResponseServerError()
 
         response = StreamingHttpResponse(
-            file_object['Body'].iter_lines(),
+            file_object['Body'].iter_chunks(),
             content_type=file_object['ContentType']
         )
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
