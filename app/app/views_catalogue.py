@@ -4,10 +4,14 @@ import logging
 import io
 from contextlib import closing
 
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 
 from django.urls import reverse
-from django.http import Http404, HttpResponseRedirect, HttpResponse
+from django.http import Http404, HttpResponseRedirect, HttpResponse, HttpResponseForbidden, \
+    StreamingHttpResponse, HttpResponseServerError
 from django.shortcuts import (
     render,
     get_object_or_404,
@@ -18,6 +22,7 @@ from django.views.decorators.http import (
     require_http_methods,
 )
 from django.views.generic import DetailView
+from django.views.generic.base import View
 
 from app.forms import RequestAccessForm
 from app.models import (
@@ -102,17 +107,12 @@ def request_access_view(request, group_slug, set_slug):
 
 
 def find_dataset(group_slug, set_slug):
-    found = DataSet.objects.filter(
+    return get_object_or_404(
+        DataSet,
         grouping__slug=group_slug,
         slug=set_slug,
         published=True
     )
-
-    if not found:
-        raise Http404
-
-    dataset = found[0]
-    return dataset
 
 
 @require_GET
@@ -145,13 +145,9 @@ def dataset_full_path_view(request, group_slug, set_slug):
         for table in tables
     ]
 
-    has_download_access = \
-        dataset.user_access_type == 'REQUIRES_AUTHENTICATION' or \
-        dataset.datasetuserpermission_set.filter(user=request.user).exists()
-
     context = {
         'model': dataset,
-        'has_download_access': has_download_access,
+        'has_download_access': dataset.user_has_access(request.user),
         'links': dataset.sourcelink_set.all().order_by('name'),
         'database_schema_table_name': database_schema_table_name,
     }
@@ -209,4 +205,38 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disab
                 writer.writeheader()
                 writer.writerows(records)
                 response.write(outfile.getvalue())  # pylint: disable=no-member
+        return response
+
+
+class SourceLinkDownloadView(View):
+    def get(self, request, *args, **kwargs):
+        filename = request.GET.get('f')
+        if filename is None:
+            raise Http404
+
+        dataset = find_dataset(kwargs['group_slug'], kwargs['set_slug'])
+        if not dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+
+        client = boto3.client('s3')
+        try:
+            file_object = client.get_object(
+                Bucket=settings.AWS_UPLOADS_BUCKET,
+                Key=filename
+            )
+        except ClientError as ex:
+            try:
+                return HttpResponse(
+                    status=ex.response['ResponseMetadata']['HTTPStatusCode']
+                )
+            except KeyError:
+                return HttpResponseServerError()
+
+        response = StreamingHttpResponse(
+            file_object['Body'].iter_chunks(),
+            content_type=file_object['ContentType']
+        )
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
+            filename
+        )
         return response

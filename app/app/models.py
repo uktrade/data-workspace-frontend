@@ -247,6 +247,10 @@ class DataSet(TimeStampedModel):
     def __str__(self):
         return f'{self.grouping.name} - {self.name}'
 
+    def user_has_access(self, user):
+        return self.user_access_type == 'REQUIRES_AUTHENTICATION' or \
+            self.datasetuserpermission_set.filter(user=user).exists()
+
 
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(

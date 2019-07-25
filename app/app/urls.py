@@ -51,8 +51,8 @@ from app.views_catalogue import (
     request_access_view,
     request_access_success_view,
     ReferenceDatasetDetailView,
-    ReferenceDatasetDownloadView
-)
+    ReferenceDatasetDownloadView,
+    SourceLinkDownloadView)
 
 from app.views_appstream import (
     appstream_view,
@@ -135,6 +135,9 @@ urlpatterns = [
 
     path('catalogue/<str:group_slug>/<str:set_slug>', login_required(dataset_full_path_view),
          name='dataset_fullpath'),
+    path('catalogue/<str:group_slug>/<str:set_slug>/download',
+         login_required(SourceLinkDownloadView.as_view()),
+         name='dataset_source_link_download'),
     path('catalogue/<str:group_slug>/reference/<str:reference_slug>',
          login_required(ReferenceDatasetDetailView.as_view()), name='reference_dataset'),
     path('catalogue/<str:group_slug>/reference/<str:reference_slug>/<str:format>',
