@@ -218,7 +218,7 @@ class SourceLinkDownloadView(View):
         if not dataset.user_has_access(request.user):
             return HttpResponseForbidden()
 
-        client = boto3.client('s3', region_name=settings.AWS_DEFAULT_REGION)
+        client = boto3.client('s3')
         try:
             file_object = client.get_object(
                 Bucket=settings.AWS_UPLOADS_BUCKET,
