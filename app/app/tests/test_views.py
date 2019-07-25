@@ -1,5 +1,7 @@
 import io
 
+from botocore.exceptions import ClientError
+from botocore.response import StreamingBody
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -252,3 +254,113 @@ class TestSupportView(BaseTestCase):
             html=True
         )
         mock_create_request.assert_called_once()
+
+
+class TestSourceLinkDownloadView(BaseTestCase):
+    def test_download_invalid_file_name(self):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True
+        )
+        response = self._authenticated_get(
+            reverse(
+                'dataset_source_link_download',
+                kwargs={
+                    'group_slug': group.slug,
+                    'set_slug': dataset.slug
+                }
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_unauthorised_dataset(self):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHORIZATION',
+        )
+        dataset.datasetuserpermission_set.filter(user=self.user).delete()
+        response = self._authenticated_get(
+            '{}?f=a.file'.format(
+                reverse(
+                    'dataset_source_link_download',
+                    kwargs={
+                        'group_slug': group.slug,
+                        'set_slug': dataset.slug
+                    }
+                )
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+
+    @mock.patch('app.views_catalogue.boto3.client')
+    def test_download_file_does_not_exist(self, mock_client):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+
+        class BotoClientMock:
+            @staticmethod
+            def get_object(*args, **kwargs):
+                raise ClientError(
+                    error_response={'Error': {'code': '404'}},
+                    operation_name='get_object'
+                )
+        mock_client.return_value = BotoClientMock()
+
+        response = self._authenticated_get(
+            '{}?f=doesnt.exist'.format(
+                reverse(
+                    'dataset_source_link_download',
+                    kwargs={
+                        'group_slug': group.slug,
+                        'set_slug': dataset.slug
+                    }
+                )
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    @mock.patch('app.views_catalogue.boto3.client')
+    def test_download_file(self, mock_client):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+
+        class BotoClientMock:
+            @staticmethod
+            def get_object(*_args, **__kwargs):
+                return {
+                    'ContentType': 'text/plain',
+                    'Body': StreamingBody(
+                        io.BytesIO(b'This is a test file'),
+                        len(b'This is a test file')
+                    )
+                }
+
+        mock_client.return_value = BotoClientMock()
+
+        response = self._authenticated_get(
+            '{}?f=afile.txt'.format(
+                reverse(
+                    'dataset_source_link_download',
+                    kwargs={
+                        'group_slug': group.slug,
+                        'set_slug': dataset.slug
+                    }
+                )
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            list(response.streaming_content)[0],
+            b'This is a test file'
+        )
