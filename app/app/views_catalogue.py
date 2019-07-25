@@ -37,7 +37,7 @@ logger = logging.getLogger('app')
 
 
 def get_all_datagroups_viewmodel():
-    groupings = DataGrouping.objects.all().order_by('name')
+    groupings = DataGrouping.objects.live().order_by('name')
 
     vm = []
 
