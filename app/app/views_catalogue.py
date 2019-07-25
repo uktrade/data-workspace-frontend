@@ -11,7 +11,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from django.urls import reverse
 from django.http import Http404, HttpResponseRedirect, HttpResponse, HttpResponseForbidden, \
-    StreamingHttpResponse
+    StreamingHttpResponse, HttpResponseServerError
 from django.shortcuts import (
     render,
     get_object_or_404,
@@ -224,8 +224,13 @@ class SourceLinkDownloadView(View):
                 Bucket=settings.AWS_UPLOADS_BUCKET,
                 Key=filename
             )
-        except ClientError:
-            raise Http404
+        except ClientError as ex:
+            try:
+                return HttpResponse(
+                    status=ex.response['ResponseMetadata']['HTTPStatusCode']
+                )
+            except KeyError:
+                return HttpResponseServerError()
 
         response = StreamingHttpResponse(
             file_object['Body'].iter_lines(),

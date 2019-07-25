@@ -311,7 +311,12 @@ class TestSourceLinkDownloadView(BaseTestCase):
             @staticmethod
             def get_object(*args, **kwargs):
                 raise ClientError(
-                    error_response={'Error': {'code': '404'}},
+                    error_response={
+                        'Error': {'code': '404'},
+                        'ResponseMetadata': {
+                            'HTTPStatusCode': 404
+                        }
+                    },
                     operation_name='get_object'
                 )
         mock_client.return_value = BotoClientMock()
