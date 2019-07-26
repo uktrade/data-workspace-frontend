@@ -9,6 +9,7 @@ from django.core.validators import RegexValidator
 from django.db import models, connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.urls import reverse
 from psycopg2 import sql
 
 from app.common.models import TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel
@@ -329,8 +330,26 @@ class SourceLink(TimeStampedModel):
     format = models.CharField(blank=False, null=False, max_length=10)
     frequency = models.CharField(blank=False, null=False, max_length=50)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Stash the current link type so it can be compared on save
+        self._original_url = self.url
+
     def __str__(self):
         return self.name
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        # Allow users to change a url from local to external
+        if self.id is not None and self._original_url != self.url:
+            self.link_type = self.TYPE_LOCAL \
+                if self.url.startswith('s3://') else self.TYPE_EXTERNAL
+        super().save(force_insert, force_update, using, update_fields)
+
+    def get_absolute_url(self):
+        return reverse(
+            'dataset_source_link_download',
+            args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
+        )
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):

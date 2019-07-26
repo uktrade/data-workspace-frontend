@@ -5,10 +5,10 @@ from django import forms
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.generic import FormView
+from django.views.generic import FormView, CreateView
 
 from app import models
-from app.dw_admin.forms import ReferenceDataRowDeleteForm, clean_identifier
+from app.dw_admin.forms import ReferenceDataRowDeleteForm, clean_identifier, SourceLinkUploadForm
 
 
 class ReferenceDataRecordMixin(UserPassesTestMixin):
@@ -171,3 +171,55 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
             'admin:app_referencedataset_change',
             args=(self._get_reference_dataset().id,)
         )
+
+
+class SourceLinkUploadView(CreateView):  # pylint: disable=too-many-ancestors
+    model = models.SourceLink
+    form_class = SourceLinkUploadForm
+    template_name = 'admin/dataset_source_link_upload.html'
+    object = None
+
+    def _get_dataset(self):
+        return get_object_or_404(
+            models.DataSet,
+            pk=self.kwargs['dataset_id']
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = self._get_dataset()
+        ctx.update({
+            'dataset': dataset,
+            'opts': dataset._meta
+        })
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['initial'] = {
+            'dataset': self._get_dataset()
+        }
+        return kwargs
+
+    def get_form(self, form_class=None):
+        form = self.get_form_class()(**self.get_form_kwargs())
+        return helpers.AdminForm(
+            form,
+            list([(None, {
+                'fields': [x for x in form.fields.keys()]
+            })]),
+            {}
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.form.is_valid():
+            return self.form_valid(form.form)
+        return self.form_invalid(form)
+
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            'Source link uploaded successfully'
+        )
+        return reverse('admin:app_dataset_change', args=(self._get_dataset().id,))

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.urls import reverse
 
 
 class BaseTestCase(TestCase):
@@ -32,3 +33,10 @@ class BaseTestCase(TestCase):
             format=post_format,
             **self.user_data,
         )
+
+
+class BaseAdminTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        # Authenticate the user on the admin site
+        self._authenticated_post(reverse('admin:index'))

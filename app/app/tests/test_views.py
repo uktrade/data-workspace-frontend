@@ -1,12 +1,12 @@
 import io
 
-from botocore.exceptions import ClientError
 from botocore.response import StreamingBody
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 import mock
 
+from app import models
 from app.tests import factories
 from app.tests.common import BaseTestCase
 
@@ -274,87 +274,44 @@ class TestSupportView(BaseTestCase):
 
 
 class TestSourceLinkDownloadView(BaseTestCase):
-    def test_download_invalid_file_name(self):
+    def test_download_external_file(self):
         group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
             grouping=group,
-            published=True
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            link_type=models.SourceLink.TYPE_EXTERNAL,
+            url='http://example.com'
         )
         response = self._authenticated_get(
             reverse(
                 'dataset_source_link_download',
                 kwargs={
                     'group_slug': group.slug,
-                    'set_slug': dataset.slug
+                    'set_slug': dataset.slug,
+                    'source_link_id': link.id
                 }
             )
         )
-        self.assertEqual(response.status_code, 404)
-
-    def test_download_unauthorised_dataset(self):
-        group = factories.DataGroupingFactory.create()
-        dataset = factories.DataSetFactory.create(
-            grouping=group,
-            published=True,
-            user_access_type='REQUIRES_AUTHORIZATION',
-        )
-        dataset.datasetuserpermission_set.filter(user=self.user).delete()
-        response = self._authenticated_get(
-            '{}?f=a.file'.format(
-                reverse(
-                    'dataset_source_link_download',
-                    kwargs={
-                        'group_slug': group.slug,
-                        'set_slug': dataset.slug
-                    }
-                )
-            )
-        )
-        self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, 'http://example.com', fetch_redirect_response=False)
 
     @mock.patch('app.views_catalogue.boto3.client')
-    def test_download_file_does_not_exist(self, mock_client):
+    def test_download_local_file(self, mock_client):
         group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
             grouping=group,
             published=True,
             user_access_type='REQUIRES_AUTHENTICATION',
         )
-
-        class BotoClientMock:
-            @staticmethod
-            def get_object(*args, **kwargs):
-                raise ClientError(
-                    error_response={
-                        'Error': {'code': '404'},
-                        'ResponseMetadata': {
-                            'HTTPStatusCode': 404
-                        }
-                    },
-                    operation_name='get_object'
-                )
-        mock_client.return_value = BotoClientMock()
-
-        response = self._authenticated_get(
-            '{}?f=doesnt.exist'.format(
-                reverse(
-                    'dataset_source_link_download',
-                    kwargs={
-                        'group_slug': group.slug,
-                        'set_slug': dataset.slug
-                    }
-                )
-            )
-        )
-        self.assertEqual(response.status_code, 404)
-
-    @mock.patch('app.views_catalogue.boto3.client')
-    def test_download_file(self, mock_client):
-        group = factories.DataGroupingFactory.create()
-        dataset = factories.DataSetFactory.create(
-            grouping=group,
-            published=True,
-            user_access_type='REQUIRES_AUTHENTICATION',
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            link_type=models.SourceLink.TYPE_LOCAL,
+            url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt'
         )
 
         class BotoClientMock:
@@ -371,14 +328,13 @@ class TestSourceLinkDownloadView(BaseTestCase):
         mock_client.return_value = BotoClientMock()
 
         response = self._authenticated_get(
-            '{}?f=afile.txt'.format(
-                reverse(
-                    'dataset_source_link_download',
-                    kwargs={
-                        'group_slug': group.slug,
-                        'set_slug': dataset.slug
-                    }
-                )
+            reverse(
+                'dataset_source_link_download',
+                kwargs={
+                    'group_slug': group.slug,
+                    'set_slug': dataset.slug,
+                    'source_link_id': link.id
+                }
             )
         )
         self.assertEqual(response.status_code, 200)

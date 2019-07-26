@@ -1,16 +1,15 @@
+import io
+
+import mock
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from app import models
 from app.tests import factories
-from app.tests.common import BaseTestCase
+from app.tests.common import BaseAdminTestCase
 
 
-class TestReferenceDatasetAdmin(BaseTestCase):
-    def setUp(self):
-        super().setUp()
-        # Authenticate the user on the admin site
-        self._authenticated_post(reverse('admin:index'))
-
+class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_no_fields(self):
         num_datasets = models.ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create()
@@ -707,3 +706,40 @@ class TestReferenceDatasetAdmin(BaseTestCase):
             'Reference data set record deleted successfully'
         )
         self.assertEqual(num_records - 1, len(reference_dataset.get_records()))
+
+
+class TestSourceLinkAdmin(BaseAdminTestCase):
+    def test_source_link_upload_get(self):
+        dataset = factories.DataSetFactory.create()
+        response = self._authenticated_get(
+            reverse('dw-admin:source-link-upload', args=(dataset.id,))
+        )
+        self.assertContains(response, 'Upload source link')
+
+    @mock.patch('app.dw_admin.forms.boto3.client')
+    def test_source_link_upload(self, mock_client):
+        dataset = factories.DataSetFactory.create()
+        link_count = dataset.sourcelink_set.count()
+
+        fh = io.BytesIO()
+        fh.write(b'This is a test')
+        fh.seek(0)
+        file1 = SimpleUploadedFile('file1.txt', fh.read(), content_type='text/plain')
+
+        response = self._authenticated_post(
+            reverse('dw-admin:source-link-upload', args=(dataset.id,)),
+            {
+                'dataset': dataset.id,
+                'name': 'Test source link',
+                'format': 'CSV',
+                'frequency': 'Never',
+                'file': file1,
+            }
+        )
+        self.assertContains(response, 'Source link uploaded successfully')
+        self.assertEqual(link_count + 1, dataset.sourcelink_set.count())
+        link = dataset.sourcelink_set.latest('created_date')
+        self.assertEqual(link.name, 'Test source link')
+        self.assertEqual(link.format, 'CSV')
+        self.assertEqual(link.frequency, 'Never')
+        mock_client.assert_called_once()

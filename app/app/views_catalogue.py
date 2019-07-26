@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 import io
+import os
 from contextlib import closing
 
 import boto3
@@ -22,14 +23,13 @@ from django.views.decorators.http import (
     require_http_methods,
 )
 from django.views.generic import DetailView
-from django.views.generic.base import View
 
 from app.forms import RequestAccessForm
 from app.models import (
     DataGrouping,
     DataSet,
-    ReferenceDataset
-)
+    ReferenceDataset,
+    SourceLink)
 
 from app.zendesk import create_zendesk_ticket
 
@@ -208,21 +208,33 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disab
         return response
 
 
-class SourceLinkDownloadView(View):
-    def get(self, request, *args, **kwargs):
-        filename = request.GET.get('f')
-        if filename is None:
-            raise Http404
+class SourceLinkDownloadView(DetailView):  # pylint: disable=too-many-ancestors
+    model = SourceLink
 
-        dataset = find_dataset(kwargs['group_slug'], kwargs['set_slug'])
-        if not dataset.user_has_access(request.user):
+    def get_object(self, queryset=None):
+        dataset = find_dataset(
+            self.kwargs.get('group_slug'),
+            self.kwargs.get('set_slug')
+        )
+        if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
+
+        return get_object_or_404(
+            SourceLink,
+            id=self.kwargs.get('source_link_id'),
+            dataset=dataset
+        )
+
+    def get(self, request, *args, **kwargs):
+        source_link = self.get_object()
+        if source_link.link_type == source_link.TYPE_EXTERNAL:
+            return HttpResponseRedirect(source_link.url)
 
         client = boto3.client('s3')
         try:
             file_object = client.get_object(
                 Bucket=settings.AWS_UPLOADS_BUCKET,
-                Key=filename
+                Key=source_link.url
             )
         except ClientError as ex:
             try:
@@ -237,6 +249,6 @@ class SourceLinkDownloadView(View):
             content_type=file_object['ContentType']
         )
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
-            filename
+            os.path.split(source_link.url)[-1]
         )
         return response

@@ -1,6 +1,11 @@
-from django import forms
+import os
 
-from app.models import SourceLink
+import boto3
+from botocore.exceptions import ClientError
+from django import forms
+from django.conf import settings
+
+from app.models import SourceLink, DataSet
 
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):
@@ -58,7 +63,56 @@ def clean_identifier(form):
     return cleaned_data[id_field]
 
 
+class DataSetForm(forms.ModelForm):
+    requires_authorization = forms.BooleanField(
+        label='Each user must be individually authorized to access the data',
+        required=False,
+    )
+
+    class Meta:
+        model = DataSet
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        is_instance = 'instance' in kwargs and kwargs['instance']
+        self.fields['requires_authorization'].initial = \
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION' if is_instance else \
+            True
+
+
 class SourceLinkForm(forms.ModelForm):
     class Meta:
         fields = ('name', 'url', 'format', 'frequency')
         model = SourceLink
+
+
+class SourceLinkUploadForm(forms.ModelForm):
+    file = forms.FileField(required=True)
+
+    class Meta:
+        model = SourceLink
+        fields = ('dataset', 'name', 'format', 'frequency', 'file')
+        widgets = {
+            'dataset': forms.HiddenInput()
+        }
+
+    def save(self, commit=True):
+        super().save(commit=False)
+        self.instance.link_type = self.instance.TYPE_LOCAL
+        self.instance.url = os.path.join(
+            's3://', 'sourcelink', str(self.instance.id), self.cleaned_data['file'].name
+        )
+        client = boto3.client('s3')
+        try:
+            client.put_object(
+                Body=self.cleaned_data['file'],
+                Bucket=settings.AWS_UPLOADS_BUCKET,
+                Key=self.instance.url
+            )
+        except ClientError as ex:
+            raise Exception(
+                'Error saving file: {}'.format(ex.response['Error']['Message'])
+            )
+        super().save(commit=True)
