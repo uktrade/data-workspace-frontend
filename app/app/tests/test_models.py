@@ -1,7 +1,9 @@
+import mock
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
 from app import models
+from app.tests import factories
 from app.tests.common import BaseTestCase
 
 
@@ -277,3 +279,45 @@ class TestModels(BaseTestCase):
             ref_dataset.get_record_by_custom_id,
             1
         )
+
+
+class TestSourceLinkModel(BaseTestCase):
+    @mock.patch('app.models.boto3.client')
+    def test_delete_local_source_link(self, mock_client):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            link_type=models.SourceLink.TYPE_LOCAL,
+            url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt'
+        )
+        link.delete()
+        self.assertFalse(
+            models.SourceLink.objects.filter(id='158776ec-5c40-4c58-ba7c-a3425905ec45').exists()
+        )
+        mock_client.assert_called_once()
+
+    @mock.patch('app.models.boto3.client')
+    def test_delete_external_source_link(self, mock_client):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            link_type=models.SourceLink.TYPE_EXTERNAL,
+            url='http://example.com'
+        )
+        link.delete()
+        self.assertFalse(
+            models.SourceLink.objects.filter(id='158776ec-5c40-4c58-ba7c-a3425905ec45').exists()
+        )
+        mock_client.assert_not_called()
