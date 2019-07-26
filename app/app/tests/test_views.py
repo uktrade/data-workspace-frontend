@@ -23,10 +23,16 @@ class TestDatasetViews(BaseTestCase):
     def test_homepage_group_list(self):
         g1 = factories.DataGroupingFactory.create()
         g2 = factories.DataGroupingFactory.create()
+        g3 = factories.DataGroupingFactory.create()
+        g3.delete()
+
         response = self._authenticated_get(reverse('root'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, g1.name, 1)
         self.assertContains(response, g2.name, 1)
+
+        # Do not show deleted groups
+        self.assertNotContains(response, g3.name)
 
     def test_group_detail_view(self):
         group = factories.DataGroupingFactory.create()
@@ -34,10 +40,14 @@ class TestDatasetViews(BaseTestCase):
         ds1 = factories.DataSetFactory.create(grouping=group, published=True)
         ds2 = factories.DataSetFactory.create(grouping=group, published=False)
         ds3 = factories.DataSetFactory.create()
+        ds4 = factories.DataSetFactory.create(grouping=group, published=False)
+        ds4.delete()
 
         rds1 = factories.ReferenceDatasetFactory(group=group, published=True)
         rds2 = factories.ReferenceDatasetFactory(group=group, published=False)
         rds3 = factories.ReferenceDatasetFactory()
+        rds4 = factories.ReferenceDatasetFactory(group=group, published=False)
+        rds4.delete()
 
         response = self._authenticated_get(
             reverse('datagroup_item', kwargs={'slug': group.slug})
@@ -55,6 +65,10 @@ class TestDatasetViews(BaseTestCase):
         # Ensure datasets not in group are not displayed
         self.assertNotContains(response, ds3.name)
         self.assertNotContains(response, rds3.name)
+
+        # Ensure deleted datasets are not displayed
+        self.assertNotContains(response, ds4.name)
+        self.assertNotContains(response, rds4.name)
 
     def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()

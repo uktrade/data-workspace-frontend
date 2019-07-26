@@ -162,7 +162,7 @@ class ApplicationInstance(TimeStampedModel):
         return f'{self.owner} / {self.public_host} / {self.state}'
 
 
-class DataGrouping(TimeStampedModel):
+class DataGrouping(DeletableTimestampedUserModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,

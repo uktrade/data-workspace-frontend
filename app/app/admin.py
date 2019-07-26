@@ -46,9 +46,14 @@ admin.site.unregister(Group)
 admin.site.unregister(User)
 
 
-class DataGroupingAdmin(admin.ModelAdmin):
+class DataGroupingAdmin(TimeStampedUserAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'slug', 'short_description')
+    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
+
+    def get_queryset(self, request):
+        # Only show non-deleted groups in admin
+        return self.model.objects.live()
 
 
 class DataLinkAdmin(admin.ModelAdmin):
