@@ -300,6 +300,12 @@ class SourceTable(models.Model):
 
 
 class SourceLink(TimeStampedModel):
+    TYPE_EXTERNAL = 1
+    TYPE_LOCAL = 2
+    _LINK_TYPES = (
+        (TYPE_EXTERNAL, 'External Link'),
+        (TYPE_LOCAL, 'Local Link'),
+    )
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -309,18 +315,22 @@ class SourceLink(TimeStampedModel):
         DataSet,
         on_delete=models.CASCADE,
     )
+    link_type = models.IntegerField(
+        choices=_LINK_TYPES,
+        default=TYPE_EXTERNAL
+    )
     name = models.CharField(
         blank=False,
         null=False,
         max_length=128,
         help_text='Used as the displayed text in the download link',
     )
-    url = models.CharField(
-        max_length=256,
-    )
-
+    url = models.CharField(max_length=256)
     format = models.CharField(blank=False, null=False, max_length=10)
     frequency = models.CharField(blank=False, null=False, max_length=50)
+
+    def __str__(self):
+        return self.name
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):

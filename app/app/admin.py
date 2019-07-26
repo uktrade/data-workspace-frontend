@@ -36,7 +36,7 @@ from app.shared import (
     application_instance_max_cpu,
 )
 from app.common.admin import TimeStampedUserAdmin
-from app.dw_admin.forms import ReferenceDataFieldInlineForm
+from app.dw_admin.forms import ReferenceDataFieldInlineForm, SourceLinkForm
 
 logger = logging.getLogger('app')
 
@@ -197,12 +197,13 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
-class SourceLinkInline(admin.StackedInline):
+class SourceLinkInline(admin.TabularInline):
+    form = SourceLinkForm
     model = SourceLink
     extra = 1
 
 
-class SourceTableInline(admin.StackedInline):
+class SourceTableInline(admin.TabularInline):
     model = SourceTable
     extra = 1
 

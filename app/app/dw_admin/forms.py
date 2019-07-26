@@ -1,5 +1,7 @@
 from django import forms
 
+from app.models import SourceLink
+
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):
     description = forms.CharField(
@@ -54,3 +56,9 @@ def clean_identifier(form):
                 'A record with this identifier already exists'
             )
     return cleaned_data[id_field]
+
+
+class SourceLinkForm(forms.ModelForm):
+    class Meta:
+        fields = ('name', 'url', 'format', 'frequency')
+        model = SourceLink
