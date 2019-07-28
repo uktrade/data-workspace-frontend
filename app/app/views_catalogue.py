@@ -196,8 +196,9 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disab
             )
         ]
         response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename={}.{}'.format(
+        response['Content-Disposition'] = 'attachment; filename={}-{}.{}'.format(
             ref_dataset.slug,
+            ref_dataset.version,
             dl_format
         )
         if dl_format == 'json':

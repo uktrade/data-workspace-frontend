@@ -358,7 +358,7 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
-    list_display = ('name', 'slug', 'short_description', 'group', 'published')
+    list_display = ('name', 'slug', 'short_description', 'group', 'published', 'version')
     inlines = [ReferenceDataFieldInline]
     fieldsets = [
         (None, {
