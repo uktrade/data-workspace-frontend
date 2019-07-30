@@ -21,7 +21,7 @@ async def async_main(logger, port, url):
                 app_container_metrics = [
                     container_metrics
                     for _, container_metrics in task_metrics.items()
-                    if '-metrics-' not in container_metrics['name'] and '-internalecspause-' not in container_metrics['name']
+                    if '-metrics-' not in container_metrics['name'] and '-internalecspause-' not in container_metrics['name'] and '-s3sync-' not in container_metrics['name']
                 ][0]
 
                 prometheus_format_metrics = textwrap.dedent(f'''\
