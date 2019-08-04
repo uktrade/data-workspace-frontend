@@ -2,13 +2,8 @@
 {% load static admin_urls %}
 {% block extrahead %}
   {{ block.super }}
-  <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
-  {{ media }}
   <link rel="stylesheet" href="{% get_static_prefix %}data-workspace.css">
-{% endblock %}{% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static "admin.css" %}">
-{% endblock extrastyle %}
+{% endblock %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">Home</a>
