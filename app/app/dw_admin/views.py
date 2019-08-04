@@ -178,11 +178,14 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         )
 
 
-class SourceLinkUploadView(CreateView):  # pylint: disable=too-many-ancestors
+class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=too-many-ancestors
     model = models.SourceLink
     form_class = SourceLinkUploadForm
     template_name = 'admin/dataset_source_link_upload.html'
     object = None
+
+    def test_func(self):
+        return self.request.user.is_superuser
 
     def _get_dataset(self):
         return get_object_or_404(
