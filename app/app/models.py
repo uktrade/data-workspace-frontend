@@ -2,7 +2,6 @@ import uuid
 from typing import Optional, List
 
 import boto3
-from botocore.exceptions import ClientError
 from django import forms
 from django.apps import apps
 from django.conf import settings
@@ -342,15 +341,10 @@ class SourceLink(TimeStampedModel):
 
     def _delete_s3_file(self):
         client = boto3.client('s3')
-        try:
-            client.delete_object(
-                Bucket=settings.AWS_UPLOADS_BUCKET,
-                Key=self.url
-            )
-        except ClientError as ex:
-            raise Exception(
-                'Error deleting file: {}'.format(ex.response['Error']['Message'])
-            )
+        client.delete_object(
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=self.url
+        )
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # Allow users to change a url from local to external and vice versa
