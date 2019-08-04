@@ -245,7 +245,7 @@ class DataSetAdmin(admin.ModelAdmin):
 
     class Media:
         css = {
-            'all': ('data-workspace.css',)
+            'all': ('data-workspace-admin.css',)
         }
 
     def save_model(self, request, obj, form, change):
