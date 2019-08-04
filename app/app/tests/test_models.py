@@ -57,18 +57,22 @@ class TestModels(BaseTestCase):
         # Ensure the table was created in the db
         self.assertTrue(self._table_exists(ref_dataset.table_name))
         self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.schema_version, 0)
 
     def test_delete_reference_dataset(self):
         # Ensure the table is _not_ removed when the reference dataset is (soft) deleted
         ref_dataset = self._create_reference_dataset()
+        schema_version = ref_dataset.schema_version
         ref_dataset.delete()
         ref_dataset = models.ReferenceDataset.objects.get(id=ref_dataset.id)
         self.assertTrue(ref_dataset.deleted)
         self.assertTrue(self._table_exists(ref_dataset.table_name))
+        self.assertEqual(ref_dataset.schema_version, schema_version)
 
     def _create_and_validate_field(self, ref_dataset: models.ReferenceDatasetField,
                                    field_name: str, field_type: str):
         major_version = ref_dataset.major_version
+        schema_version = ref_dataset.schema_version
         rdf = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name=field_name,
@@ -78,6 +82,7 @@ class TestModels(BaseTestCase):
         self.assertIsNotNone(column)
         self.assertEqual(column['column_name'], rdf.column_name)
         self.assertEqual(ref_dataset.major_version, major_version)
+        self.assertEqual(ref_dataset.schema_version, schema_version + 1)
         return rdf
 
     def test_create_reference_dataset_field(self):
@@ -198,10 +203,12 @@ class TestModels(BaseTestCase):
             models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
         self.assertEqual(ref_dataset.major_version, 1)
+        schema_version = ref_dataset.schema_version
         field.delete()
         column = self._get_column_data(ref_dataset.table_name, 'test_field')
         self.assertIsNone(column)
         self.assertEqual(ref_dataset.major_version, 2)
+        self.assertEqual(ref_dataset.schema_version, schema_version + 1)
 
     def test_add_record(self):
         ref_dataset = self._create_reference_dataset()
