@@ -1,8 +1,13 @@
+import os
+
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django import forms
-from django.http import Http404
+from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView, CreateView
@@ -216,6 +221,26 @@ class SourceLinkUploadView(CreateView):  # pylint: disable=too-many-ancestors
         if form.form.is_valid():
             return self.form_valid(form.form)
         return self.form_invalid(form)
+
+    def form_valid(self, form):
+        source_link = form.save(commit=False)
+        source_link.link_type = models.SourceLink.TYPE_LOCAL
+        source_link.url = os.path.join(
+            's3://', 'sourcelink', str(source_link.id), form.cleaned_data['file'].name
+        )
+        client = boto3.client('s3')
+        try:
+            client.put_object(
+                Body=form.cleaned_data['file'],
+                Bucket=settings.AWS_UPLOADS_BUCKET,
+                Key=source_link.url
+            )
+        except ClientError as ex:
+            return HttpResponseServerError(
+                'Error saving file: {}'.format(ex.response['Error']['Message'])
+            )
+        source_link.save()
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         messages.success(

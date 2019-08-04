@@ -1,9 +1,4 @@
-import os
-
-import boto3
-from botocore.exceptions import ClientError
 from django import forms
-from django.conf import settings
 
 from app.models import SourceLink, DataSet
 
@@ -97,22 +92,3 @@ class SourceLinkUploadForm(forms.ModelForm):
         widgets = {
             'dataset': forms.HiddenInput()
         }
-
-    def save(self, commit=True):
-        super().save(commit=False)
-        self.instance.link_type = self.instance.TYPE_LOCAL
-        self.instance.url = os.path.join(
-            's3://', 'sourcelink', str(self.instance.id), self.cleaned_data['file'].name
-        )
-        client = boto3.client('s3')
-        try:
-            client.put_object(
-                Body=self.cleaned_data['file'],
-                Bucket=settings.AWS_UPLOADS_BUCKET,
-                Key=self.instance.url
-            )
-        except ClientError as ex:
-            raise Exception(
-                'Error saving file: {}'.format(ex.response['Error']['Message'])
-            )
-        super().save(commit=True)

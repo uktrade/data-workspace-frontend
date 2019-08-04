@@ -1,6 +1,6 @@
-import io
-
 import mock
+from botocore.exceptions import ClientError
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -716,16 +716,33 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
         )
         self.assertContains(response, 'Upload source link')
 
-    @mock.patch('app.dw_admin.forms.boto3.client')
+    @mock.patch('app.dw_admin.views.boto3.client')
+    def test_source_link_upload_failure(self, mock_client):
+        mock_client().put_object.side_effect = ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='put_object'
+        )
+        dataset = factories.DataSetFactory.create()
+        link_count = dataset.sourcelink_set.count()
+        file1 = SimpleUploadedFile('file1.txt', b'This is a test', content_type='text/plain')
+        response = self._authenticated_post(
+            reverse('dw-admin:source-link-upload', args=(dataset.id,)),
+            {
+                'dataset': dataset.id,
+                'name': 'Test source link',
+                'format': 'CSV',
+                'frequency': 'Never',
+                'file': file1,
+            }
+        )
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(link_count, dataset.sourcelink_set.count())
+
+    @mock.patch('app.dw_admin.views.boto3.client')
     def test_source_link_upload(self, mock_client):
         dataset = factories.DataSetFactory.create()
         link_count = dataset.sourcelink_set.count()
-
-        fh = io.BytesIO()
-        fh.write(b'This is a test')
-        fh.seek(0)
-        file1 = SimpleUploadedFile('file1.txt', fh.read(), content_type='text/plain')
-
+        file1 = SimpleUploadedFile('file1.txt', b'This is a test', content_type='text/plain')
         response = self._authenticated_post(
             reverse('dw-admin:source-link-upload', args=(dataset.id,)),
             {
@@ -742,4 +759,8 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
         self.assertEqual(link.name, 'Test source link')
         self.assertEqual(link.format, 'CSV')
         self.assertEqual(link.frequency, 'Never')
-        mock_client.assert_called_once()
+        mock_client().put_object.assert_called_once_with(
+            Body=mock.ANY,
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=link.url
+        )
