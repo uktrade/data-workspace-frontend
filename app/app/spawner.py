@@ -343,6 +343,14 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
                     } for name, value in env.items()
                 ],
                 'name': container_name,
+            }, {
+                'name': 's3sync',
+                'environment': [
+                    {
+                        'name': name,
+                        'value': value,
+                    } for name, value in env.items()
+                ]
             }],
         },
         launchType='FARGATE',

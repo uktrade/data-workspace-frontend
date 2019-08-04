@@ -72,6 +72,17 @@ docker push quay.io/uktrade/data-workspace-healthcheck:latest
 ```
 
 
+## S3 Sync
+
+The home directory for each container is persisted to S3 using a sidecar container
+
+```bash
+docker build -t data-workspace-s3sync s3sync && \
+docker tag data-workspace-s3sync:latest quay.io/uktrade/data-workspace-s3sync:latest && \
+docker push quay.io/uktrade/data-workspace-s3sync:latest
+```
+
+
 ## Metrics
 
 Metrics are exposed for each user-launched application in a sidecar-container.
