@@ -1,6 +1,7 @@
 import io
 
 from botocore.response import StreamingBody
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -314,19 +315,13 @@ class TestSourceLinkDownloadView(BaseTestCase):
             url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt'
         )
 
-        class BotoClientMock:
-            @staticmethod
-            def get_object(*_args, **__kwargs):
-                return {
-                    'ContentType': 'text/plain',
-                    'Body': StreamingBody(
-                        io.BytesIO(b'This is a test file'),
-                        len(b'This is a test file')
-                    )
-                }
-
-        mock_client.return_value = BotoClientMock()
-
+        mock_client().get_object.return_value = {
+            'ContentType': 'text/plain',
+            'Body': StreamingBody(
+                io.BytesIO(b'This is a test file'),
+                len(b'This is a test file')
+            )
+        }
         response = self._authenticated_get(
             reverse(
                 'dataset_source_link_download',
@@ -341,4 +336,8 @@ class TestSourceLinkDownloadView(BaseTestCase):
         self.assertEqual(
             list(response.streaming_content)[0],
             b'This is a test file'
+        )
+        mock_client().get_object.assert_called_with(
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=link.url
         )
