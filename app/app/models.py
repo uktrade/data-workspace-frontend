@@ -2,6 +2,7 @@ import uuid
 from typing import Optional, List
 
 import boto3
+from botocore.exceptions import ClientError
 from django import forms
 from django.apps import apps
 from django.conf import settings
@@ -338,6 +339,21 @@ class SourceLink(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def local_file_is_accessible(self):
+        """
+        Check whether we can access the file on s3
+        :return:
+        """
+        client = boto3.client('s3')
+        try:
+            client.head_object(
+                Bucket=settings.AWS_UPLOADS_BUCKET,
+                Key=self.url
+            )
+        except ClientError:
+            return False
+        return True
 
     def _delete_s3_file(self):
         client = boto3.client('s3')

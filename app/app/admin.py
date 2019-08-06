@@ -36,7 +36,10 @@ from app.shared import (
     application_instance_max_cpu,
 )
 from app.common.admin import TimeStampedUserAdmin
-from app.dw_admin.forms import ReferenceDataFieldInlineForm, SourceLinkForm, DataSetForm
+from app.dw_admin.forms import (
+    ReferenceDataFieldInlineForm, SourceLinkForm, DataSetForm,
+    SourceLinkFormSet
+)
 
 logger = logging.getLogger('app')
 
@@ -200,6 +203,7 @@ class AppUserAdmin(UserAdmin):
 class SourceLinkInline(admin.TabularInline):
     template = 'admin/source_link_inline.html'
     form = SourceLinkForm
+    formset = SourceLinkFormSet
     model = SourceLink
     extra = 1
 

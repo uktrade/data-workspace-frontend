@@ -1,4 +1,6 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.forms import BaseInlineFormSet
 
 from app.models import SourceLink, DataSet
 
@@ -81,6 +83,23 @@ class SourceLinkForm(forms.ModelForm):
     class Meta:
         fields = ('name', 'url', 'format', 'frequency')
         model = SourceLink
+
+
+class SourceLinkFormSet(BaseInlineFormSet):
+    def clean(self):
+        """
+        Check if local files can be accessed before we try deleting
+        them as part of model delete
+        :return:
+        """
+        to_delete = [x for x in getattr(self, 'cleaned_data', []) if x.get('DELETE')]
+        for form in to_delete:
+            link = form['id']
+            if link.link_type == link.TYPE_LOCAL:
+                if not link.local_file_is_accessible():
+                    raise ValidationError(
+                        'Unable to access local file for deletion'
+                    )
 
 
 class SourceLinkUploadForm(forms.ModelForm):

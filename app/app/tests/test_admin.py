@@ -764,3 +764,147 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
             Bucket=settings.AWS_UPLOADS_BUCKET,
             Key=link.url
         )
+
+
+class TestDatasetAdmin(BaseAdminTestCase):
+    def test_delete_external_source_link(self):
+        dataset = factories.DataSetFactory.create()
+        source_link = factories.SourceLinkFactory(
+            link_type=models.SourceLink.TYPE_EXTERNAL,
+            dataset=dataset
+        )
+        link_count = dataset.sourcelink_set.count()
+        response = self._authenticated_post(
+            reverse('admin:app_dataset_change', args=(dataset.id,)),
+            {
+                'published': dataset.published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'grouping': dataset.grouping.id,
+                'description': 'test description',
+                'volume': dataset.volume,
+                'sourcelink_set-TOTAL_FORMS': '1',
+                'sourcelink_set-INITIAL_FORMS': '1',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourcelink_set-0-id': source_link.id,
+                'sourcelink_set-0-dataset': dataset.id,
+                'sourcelink_set-0-name': 'test',
+                'sourcelink_set-0-url': 'http://test.com',
+                'sourcelink_set-0-format': 'test',
+                'sourcelink_set-0-frequency': 'test',
+                'sourcelink_set-0-DELETE': 'on',
+                'sourcelink_set-__prefix__-id': '',
+                'sourcelink_set-__prefix__-dataset': '571b8aac-7dc2-4e8b-bfae-73d5c25afd04',
+                'sourcelink_set-__prefix__-name': '',
+                'sourcelink_set-__prefix__-url': '',
+                'sourcelink_set-__prefix__-format': '',
+                'sourcelink_set-__prefix__-frequency': '',
+                'sourcetable_set-TOTAL_FORMS': '0',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            }
+        )
+        self.assertContains(response, 'was changed successfully')
+        self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
+
+    @mock.patch('app.models.boto3.client')
+    def test_delete_local_source_link_aws_failure(self, mock_client):
+        dataset = factories.DataSetFactory.create()
+        source_link = factories.SourceLinkFactory(
+            link_type=models.SourceLink.TYPE_LOCAL,
+            dataset=dataset
+        )
+        link_count = dataset.sourcelink_set.count()
+        mock_client.return_value.head_object.side_effect = ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='head_object'
+        )
+        response = self._authenticated_post(
+            reverse('admin:app_dataset_change', args=(dataset.id,)),
+            {
+                'published': dataset.published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'grouping': dataset.grouping.id,
+                'description': 'test description',
+                'volume': dataset.volume,
+                'sourcelink_set-TOTAL_FORMS': '1',
+                'sourcelink_set-INITIAL_FORMS': '1',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourcelink_set-0-id': source_link.id,
+                'sourcelink_set-0-dataset': dataset.id,
+                'sourcelink_set-0-name': 'test',
+                'sourcelink_set-0-url': 'http://test.com',
+                'sourcelink_set-0-format': 'test',
+                'sourcelink_set-0-frequency': 'test',
+                'sourcelink_set-0-DELETE': 'on',
+                'sourcelink_set-__prefix__-id': '',
+                'sourcelink_set-__prefix__-dataset': '571b8aac-7dc2-4e8b-bfae-73d5c25afd04',
+                'sourcelink_set-__prefix__-name': '',
+                'sourcelink_set-__prefix__-url': '',
+                'sourcelink_set-__prefix__-format': '',
+                'sourcelink_set-__prefix__-frequency': '',
+                'sourcetable_set-TOTAL_FORMS': '0',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            }
+        )
+        self.assertContains(response, 'Unable to access local file for deletion')
+        self.assertEqual(dataset.sourcelink_set.count(), link_count)
+
+    @mock.patch('app.models.boto3.client')
+    def test_delete_local_source_link(self, mock_client):
+        dataset = factories.DataSetFactory.create()
+        source_link = factories.SourceLinkFactory(
+            link_type=models.SourceLink.TYPE_LOCAL,
+            dataset=dataset
+        )
+        link_count = dataset.sourcelink_set.count()
+        response = self._authenticated_post(
+            reverse('admin:app_dataset_change', args=(dataset.id,)),
+            {
+                'published': dataset.published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'grouping': dataset.grouping.id,
+                'description': 'test description',
+                'volume': dataset.volume,
+                'sourcelink_set-TOTAL_FORMS': '1',
+                'sourcelink_set-INITIAL_FORMS': '1',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourcelink_set-0-id': source_link.id,
+                'sourcelink_set-0-dataset': dataset.id,
+                'sourcelink_set-0-name': 'test',
+                'sourcelink_set-0-url': 'http://test.com',
+                'sourcelink_set-0-format': 'test',
+                'sourcelink_set-0-frequency': 'test',
+                'sourcelink_set-0-DELETE': 'on',
+                'sourcelink_set-__prefix__-id': '',
+                'sourcelink_set-__prefix__-dataset': '571b8aac-7dc2-4e8b-bfae-73d5c25afd04',
+                'sourcelink_set-__prefix__-name': '',
+                'sourcelink_set-__prefix__-url': '',
+                'sourcelink_set-__prefix__-format': '',
+                'sourcelink_set-__prefix__-frequency': '',
+                'sourcetable_set-TOTAL_FORMS': '0',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            }
+        )
+        self.assertContains(response, 'was changed successfully')
+        self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
+        mock_client().delete_object.assert_called_once_with(
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key='http://test.com'
+        )
