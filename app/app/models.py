@@ -410,6 +410,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     )
     published = models.BooleanField(default=False)
     schema_version = models.IntegerField(default=0)
+    major_version = models.IntegerField(default=1)
+    minor_version = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Reference Data Set'
@@ -421,7 +423,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         )
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.schema_version += 1
         create = self.pk is None
         super().save(force_insert, force_update, using, update_fields)
         if create:
@@ -466,6 +467,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         if records.exists():
             return records.latest('updated_date').updated_date
         return None
+
+    @property
+    def version(self):
+        return '{}.{}'.format(self.major_version, self.minor_version)
 
     def get_record_model_class(self) -> object:
         """
@@ -553,6 +558,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param form_data: a dictionary containing values to be saved to the row
         :return:
         """
+        self.increment_minor_version()
         if internal_id is None:
             return self.get_record_model_class().objects.create(**form_data)
         records = self.get_records().filter(id=internal_id)
@@ -565,7 +571,21 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param internal_id: the django id for the record
         :return:
         """
+        self.increment_minor_version()
         self.get_record_by_internal_id(internal_id).delete()
+
+    def increment_schema_version(self):
+        self.schema_version += 1
+        self.save()
+
+    def increment_major_version(self):
+        self.major_version += 1
+        self.minor_version = 0
+        self.save()
+
+    def increment_minor_version(self):
+        self.minor_version += 1
+        self.save()
 
 
 class ReferenceDatasetField(TimeStampedUserModel):
@@ -665,8 +685,9 @@ class ReferenceDatasetField(TimeStampedUserModel):
         """
         created = self.id is None
         super().save(force_insert, force_update, using, update_fields)
+        ref_dataset = self.reference_dataset
         # Force increment of reference dataset schema version
-        self.reference_dataset.save()
+        ref_dataset.increment_schema_version()
         if created:
             model_class = self.reference_dataset.get_record_model_class()
             with connection.schema_editor() as editor:
@@ -689,6 +710,10 @@ class ReferenceDatasetField(TimeStampedUserModel):
                         data_type=sql.SQL(self.get_postgres_datatype()),
                     )
                 )
+        # Increment reference dataset major version if this is not the first save
+        if (ref_dataset.major_version > 1 or ref_dataset.minor_version > 0) or \
+                ref_dataset.get_records().exists():
+            self.reference_dataset.increment_major_version()
 
     def delete(self, using=None, keep_parents=False):
         model_class = self.reference_dataset.get_record_model_class()
@@ -697,6 +722,8 @@ class ReferenceDatasetField(TimeStampedUserModel):
                 model_class,
                 model_class._meta.get_field(self.column_name),
             )
+        self.reference_dataset.increment_schema_version()
+        self.reference_dataset.increment_major_version()
         super().delete(using, keep_parents)
 
     def get_postgres_datatype(self) -> str:

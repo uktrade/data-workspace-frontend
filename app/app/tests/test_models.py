@@ -59,17 +59,23 @@ class TestModels(BaseTestCase):
 
         # Ensure the table was created in the db
         self.assertTrue(self._table_exists(ref_dataset.table_name))
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.schema_version, 0)
 
     def test_delete_reference_dataset(self):
         # Ensure the table is _not_ removed when the reference dataset is (soft) deleted
         ref_dataset = self._create_reference_dataset()
+        schema_version = ref_dataset.schema_version
         ref_dataset.delete()
         ref_dataset = models.ReferenceDataset.objects.get(id=ref_dataset.id)
         self.assertTrue(ref_dataset.deleted)
         self.assertTrue(self._table_exists(ref_dataset.table_name))
+        self.assertEqual(ref_dataset.schema_version, schema_version)
 
     def _create_and_validate_field(self, ref_dataset: models.ReferenceDatasetField,
                                    field_name: str, field_type: str):
+        major_version = ref_dataset.major_version
+        schema_version = ref_dataset.schema_version
         rdf = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name=field_name,
@@ -78,6 +84,8 @@ class TestModels(BaseTestCase):
         column = self._get_column_data(ref_dataset.table_name, rdf.column_name)
         self.assertIsNotNone(column)
         self.assertEqual(column['column_name'], rdf.column_name)
+        self.assertEqual(ref_dataset.major_version, major_version)
+        self.assertEqual(ref_dataset.schema_version, schema_version + 1)
         return rdf
 
     def test_create_reference_dataset_field(self):
@@ -197,12 +205,17 @@ class TestModels(BaseTestCase):
             'test_field',
             models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
+        self.assertEqual(ref_dataset.major_version, 1)
+        schema_version = ref_dataset.schema_version
         field.delete()
         column = self._get_column_data(ref_dataset.table_name, 'test_field')
         self.assertIsNone(column)
+        self.assertEqual(ref_dataset.major_version, 2)
+        self.assertEqual(ref_dataset.schema_version, schema_version + 1)
 
     def test_add_record(self):
         ref_dataset = self._create_reference_dataset()
+        minor_version = ref_dataset.minor_version
         field1 = models.ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
             name='field1',
@@ -223,6 +236,7 @@ class TestModels(BaseTestCase):
         self.assertIsNotNone(record)
         record = ref_dataset.get_record_by_internal_id(record.id)
         self.assertIsNotNone(record)
+        self.assertEqual(ref_dataset.minor_version, minor_version + 1)
 
     def test_edit_record(self):
         ref_dataset = self._create_reference_dataset()
@@ -237,11 +251,14 @@ class TestModels(BaseTestCase):
             name='field2',
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
+        self.assertEqual(ref_dataset.major_version, 1)
         ref_dataset.save_record(None, {
             'reference_dataset': ref_dataset,
             field1.column_name: 1,
             field2.column_name: 'testing...'
         })
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 1)
         record = ref_dataset.get_record_by_custom_id(1)
         ref_dataset.save_record(record.id, {
             'reference_dataset': ref_dataset,
@@ -253,6 +270,8 @@ class TestModels(BaseTestCase):
             ref_dataset.get_record_by_custom_id,
             1
         )
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 2)
         self.assertIsNotNone(ref_dataset.get_record_by_custom_id(999))
 
     def test_delete_record(self):
@@ -268,11 +287,15 @@ class TestModels(BaseTestCase):
             name='field2',
             data_type=models.ReferenceDatasetField.DATA_TYPE_CHAR
         )
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 0)
         ref_dataset.save_record(None, {
             'reference_dataset': ref_dataset,
             field1.column_name: 1,
             field2.column_name: 'testing...'
         })
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 1)
         record = ref_dataset.get_record_by_custom_id(1)
         ref_dataset.delete_record(record.id)
         self.assertRaises(
@@ -280,6 +303,8 @@ class TestModels(BaseTestCase):
             ref_dataset.get_record_by_custom_id,
             1
         )
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 2)
 
 
 class TestSourceLinkModel(BaseTestCase):
