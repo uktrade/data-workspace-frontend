@@ -50,6 +50,7 @@
           <tr class="govuk-table__row">
             <th class="govuk-table__header">Link to the data</th>
             <th class="govuk-table__header">Format</th>
+            <th class="govuk-table__header">Version</th>
             <th class="govuk-table__header">Last updated</th>
           </tr>
         </thead>
@@ -57,21 +58,23 @@
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
               <a class="govuk-link" href="{% url 'reference_dataset_download' object.group.slug object.slug 'json'%}">
-                {{ object.slug }}.json
+                {{ object.slug }}-{{ object.version }}.json
               </a>
             </td>
             <td class="govuk-table__cell">JSON</td>
+            <td class="govuk-table__cell">{{ object.version }}</td>
             <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
           </tr>
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
               <a class="govuk-link" href="{% url 'reference_dataset_download' object.group.slug object.slug 'csv' %}">
-                {{ object.slug }}.csv
+                {{ object.slug }}-{{ object.version }}.csv
               </a>
             </td>
             <td class="govuk-table__cell">
               CSV
             </td>
+            <td class="govuk-table__cell">{{ object.version }}</td>
             <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
           </tr>
         </tbody>
