@@ -1,14 +1,19 @@
+import os
+
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django import forms
-from django.http import Http404
+from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.generic import FormView
+from django.views.generic import FormView, CreateView
 
 from app import models
-from app.dw_admin.forms import ReferenceDataRowDeleteForm, clean_identifier
+from app.dw_admin.forms import ReferenceDataRowDeleteForm, clean_identifier, SourceLinkUploadForm
 
 
 class ReferenceDataRecordMixin(UserPassesTestMixin):
@@ -171,3 +176,78 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
             'admin:app_referencedataset_change',
             args=(self._get_reference_dataset().id,)
         )
+
+
+class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=too-many-ancestors
+    model = models.SourceLink
+    form_class = SourceLinkUploadForm
+    template_name = 'admin/dataset_source_link_upload.html'
+    object = None
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def _get_dataset(self):
+        return get_object_or_404(
+            models.DataSet,
+            pk=self.kwargs['dataset_id']
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = self._get_dataset()
+        ctx.update({
+            'dataset': dataset,
+            'opts': dataset._meta
+        })
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['initial'] = {
+            'dataset': self._get_dataset()
+        }
+        return kwargs
+
+    def get_form(self, form_class=None):
+        form = self.get_form_class()(**self.get_form_kwargs())
+        return helpers.AdminForm(
+            form,
+            list([(None, {
+                'fields': [x for x in form.fields.keys()]
+            })]),
+            {}
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.form.is_valid():
+            return self.form_valid(form.form)
+        return self.form_invalid(form)
+
+    def form_valid(self, form):
+        source_link = form.save(commit=False)
+        source_link.link_type = models.SourceLink.TYPE_LOCAL
+        source_link.url = os.path.join(
+            's3://', 'sourcelink', str(source_link.id), form.cleaned_data['file'].name
+        )
+        client = boto3.client('s3')
+        try:
+            client.put_object(
+                Body=form.cleaned_data['file'],
+                Bucket=settings.AWS_UPLOADS_BUCKET,
+                Key=source_link.url
+            )
+        except ClientError as ex:
+            return HttpResponseServerError(
+                'Error saving file: {}'.format(ex.response['Error']['Message'])
+            )
+        source_link.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            'Source link uploaded successfully'
+        )
+        return reverse('admin:app_dataset_change', args=(self._get_dataset().id,))

@@ -1,6 +1,8 @@
 import uuid
 from typing import Optional, List
 
+import boto3
+from botocore.exceptions import ClientError
 from django import forms
 from django.apps import apps
 from django.conf import settings
@@ -9,6 +11,7 @@ from django.core.validators import RegexValidator
 from django.db import models, connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.urls import reverse
 from psycopg2 import sql
 
 from app.common.models import TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel
@@ -300,6 +303,12 @@ class SourceTable(models.Model):
 
 
 class SourceLink(TimeStampedModel):
+    TYPE_EXTERNAL = 1
+    TYPE_LOCAL = 2
+    _LINK_TYPES = (
+        (TYPE_EXTERNAL, 'External Link'),
+        (TYPE_LOCAL, 'Local Link'),
+    )
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -309,18 +318,71 @@ class SourceLink(TimeStampedModel):
         DataSet,
         on_delete=models.CASCADE,
     )
+    link_type = models.IntegerField(
+        choices=_LINK_TYPES,
+        default=TYPE_EXTERNAL
+    )
     name = models.CharField(
         blank=False,
         null=False,
         max_length=128,
         help_text='Used as the displayed text in the download link',
     )
-    url = models.CharField(
-        max_length=256,
-    )
-
+    url = models.CharField(max_length=256)
     format = models.CharField(blank=False, null=False, max_length=10)
     frequency = models.CharField(blank=False, null=False, max_length=50)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Stash the current link type so it can be compared on save
+        self._original_url = self.url
+
+    def __str__(self):
+        return self.name
+
+    def local_file_is_accessible(self):
+        """
+        Check whether we can access the file on s3
+        :return:
+        """
+        client = boto3.client('s3')
+        try:
+            client.head_object(
+                Bucket=settings.AWS_UPLOADS_BUCKET,
+                Key=self.url
+            )
+        except ClientError:
+            return False
+        return True
+
+    def _delete_s3_file(self):
+        client = boto3.client('s3')
+        client.delete_object(
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=self.url
+        )
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        # Allow users to change a url from local to external and vice versa
+        is_s3_link = self.url.startswith('s3://')
+        was_s3_link = self._original_url.startswith('s3://')
+        if self.id is not None and self._original_url != self.url:
+            self.link_type = self.TYPE_LOCAL if is_s3_link else self.TYPE_EXTERNAL
+        super().save(force_insert, force_update, using, update_fields)
+        # If the link is no longer an s3 link delete the file
+        if was_s3_link and not is_s3_link:
+            self._delete_s3_file()
+
+    def delete(self, using=None, keep_parents=False):
+        if self.link_type == self.TYPE_LOCAL:
+            self._delete_s3_file()
+        super().delete(using, keep_parents)
+
+    def get_absolute_url(self):
+        return reverse(
+            'dataset_source_link_download',
+            args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
+        )
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):

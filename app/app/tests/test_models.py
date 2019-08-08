@@ -1,7 +1,10 @@
+import mock
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
 from app import models
+from app.tests import factories
 from app.tests.common import BaseTestCase
 
 
@@ -302,3 +305,49 @@ class TestModels(BaseTestCase):
         )
         self.assertEqual(ref_dataset.major_version, 1)
         self.assertEqual(ref_dataset.minor_version, 2)
+
+
+class TestSourceLinkModel(BaseTestCase):
+    @mock.patch('app.models.boto3.client')
+    def test_delete_local_source_link(self, mock_client):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            link_type=models.SourceLink.TYPE_LOCAL,
+            url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt'
+        )
+        link.delete()
+        self.assertFalse(
+            models.SourceLink.objects.filter(id='158776ec-5c40-4c58-ba7c-a3425905ec45').exists()
+        )
+        mock_client.assert_called_once()
+        mock_client().delete_object.assert_called_once_with(
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=link.url
+        )
+
+    @mock.patch('app.models.boto3.client')
+    def test_delete_external_source_link(self, mock_client):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            link_type=models.SourceLink.TYPE_EXTERNAL,
+            url='http://example.com'
+        )
+        link.delete()
+        self.assertFalse(
+            models.SourceLink.objects.filter(id='158776ec-5c40-4c58-ba7c-a3425905ec45').exists()
+        )
+        mock_client.assert_not_called()

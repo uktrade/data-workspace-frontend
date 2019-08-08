@@ -1,6 +1,9 @@
 from django.urls import path
 
-from app.dw_admin.views import ReferenceDatasetAdminEditView, ReferenceDatasetAdminDeleteView
+from app.dw_admin.views import (
+    ReferenceDatasetAdminEditView, ReferenceDatasetAdminDeleteView,
+    SourceLinkUploadView
+)
 
 urlpatterns = [
     path(
@@ -17,5 +20,10 @@ urlpatterns = [
         'app/referencedata/<int:reference_dataset_id>/data/<str:record_id>/delete/',
         view=ReferenceDatasetAdminDeleteView.as_view(),
         name='reference-dataset-record-delete'
+    ),
+    path(
+        'app/dataset/<str:dataset_id>/sourcelink/upload/',
+        view=SourceLinkUploadView.as_view(),
+        name='source-link-upload'
     ),
 ]

@@ -135,7 +135,7 @@ urlpatterns = [
 
     path('catalogue/<str:group_slug>/<str:set_slug>', login_required(dataset_full_path_view),
          name='dataset_fullpath'),
-    path('catalogue/<str:group_slug>/<str:set_slug>/download',
+    path('catalogue/<str:group_slug>/<str:set_slug>/<str:source_link_id>/download',
          login_required(SourceLinkDownloadView.as_view()),
          name='dataset_source_link_download'),
     path('catalogue/<str:group_slug>/reference/<str:reference_slug>',

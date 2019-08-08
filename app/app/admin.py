@@ -36,7 +36,10 @@ from app.shared import (
     application_instance_max_cpu,
 )
 from app.common.admin import TimeStampedUserAdmin
-from app.dw_admin.forms import ReferenceDataFieldInlineForm
+from app.dw_admin.forms import (
+    ReferenceDataFieldInlineForm, SourceLinkForm, DataSetForm,
+    SourceLinkFormSet
+)
 
 logger = logging.getLogger('app')
 
@@ -197,38 +200,21 @@ class AppUserAdmin(UserAdmin):
         return instance.profile.sso_id
 
 
-class SourceLinkInline(admin.StackedInline):
+class SourceLinkInline(admin.TabularInline):
+    template = 'admin/source_link_inline.html'
+    form = SourceLinkForm
+    formset = SourceLinkFormSet
     model = SourceLink
     extra = 1
 
 
-class SourceTableInline(admin.StackedInline):
+class SourceTableInline(admin.TabularInline):
     model = SourceTable
     extra = 1
 
 
-class DataSetForm(forms.ModelForm):
-    requires_authorization = forms.BooleanField(
-        label='Each user must be individually authorized to access the data',
-        required=False,
-    )
-
-    class Meta:
-        model = DataSet
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        is_instance = 'instance' in kwargs and kwargs['instance']
-        self.fields['requires_authorization'].initial = \
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION' if is_instance else \
-            True
-
-
 class DataSetAdmin(admin.ModelAdmin):
     form = DataSetForm
-
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'slug', 'short_description', 'grouping', 'published')
     list_filter = ('grouping', )
@@ -260,6 +246,11 @@ class DataSetAdmin(admin.ModelAdmin):
             ]
         })
     ]
+
+    class Media:
+        css = {
+            'all': ('data-workspace-admin.css',)
+        }
 
     def save_model(self, request, obj, form, change):
         obj.user_access_type = \

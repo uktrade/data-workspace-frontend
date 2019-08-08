@@ -1,0 +1,22 @@
+{% include 'admin/edit_inline/tabular.html' %}
+{% with inline_admin_formset.forms.0.fields.dataset.parent_instance.id as dataset_id %}
+  <fieldset>
+    <table class="source-link-inline-upload">
+      <tbody>
+        <tr class="form-row row2">
+          <td>
+            {% if dataset_id %}
+              <a href="{% url 'dw-admin:source-link-upload' dataset_id %}" class="upload-link">
+                Upload a Source File
+              </a>
+            {% else %}
+              <span class="alert">
+                Note: File upload will become available once dataset has been saved
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </fieldset>
+{% endwith %}

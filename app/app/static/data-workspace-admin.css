@@ -1,0 +1,31 @@
+.source-link-inline-upload {
+  margin-top: -30px;
+  margin-bottom: 30px;
+  width: 100%;
+}
+.source-link-inline-upload .upload-link {
+  background: url('/__django_static/admin/img/icon-addlink.svg') 0 1px no-repeat;
+  padding-left: 16px;
+  font-size: 12px;
+}
+.source-link-inline-upload .alert {
+  font-size: 12px;
+  color: gray;
+}
+.back-link {
+  display: inline-block;
+  vertical-align: middle;
+  height: 15px;
+  line-height: 15px;
+  background: #ddd;
+  border-radius: 4px;
+  padding: 10px 15px;
+  margin: 0 0 0 10px;
+  float:left;
+  border: none;
+  color: #333 !important;
+  cursor: pointer;
+}
+.back-link:hover {
+  background: #ccc;
+}

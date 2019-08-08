@@ -1,16 +1,15 @@
+import mock
+from botocore.exceptions import ClientError
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from app import models
 from app.tests import factories
-from app.tests.common import BaseTestCase
+from app.tests.common import BaseAdminTestCase
 
 
-class TestReferenceDatasetAdmin(BaseTestCase):
-    def setUp(self):
-        super().setUp()
-        # Authenticate the user on the admin site
-        self._authenticated_post(reverse('admin:index'))
-
+class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_no_fields(self):
         num_datasets = models.ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create()
@@ -707,3 +706,205 @@ class TestReferenceDatasetAdmin(BaseTestCase):
             'Reference data set record deleted successfully'
         )
         self.assertEqual(num_records - 1, len(reference_dataset.get_records()))
+
+
+class TestSourceLinkAdmin(BaseAdminTestCase):
+    def test_source_link_upload_get(self):
+        dataset = factories.DataSetFactory.create()
+        response = self._authenticated_get(
+            reverse('dw-admin:source-link-upload', args=(dataset.id,))
+        )
+        self.assertContains(response, 'Upload source link')
+
+    @mock.patch('app.dw_admin.views.boto3.client')
+    def test_source_link_upload_failure(self, mock_client):
+        mock_client().put_object.side_effect = ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='put_object'
+        )
+        dataset = factories.DataSetFactory.create()
+        link_count = dataset.sourcelink_set.count()
+        file1 = SimpleUploadedFile('file1.txt', b'This is a test', content_type='text/plain')
+        response = self._authenticated_post(
+            reverse('dw-admin:source-link-upload', args=(dataset.id,)),
+            {
+                'dataset': dataset.id,
+                'name': 'Test source link',
+                'format': 'CSV',
+                'frequency': 'Never',
+                'file': file1,
+            }
+        )
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(link_count, dataset.sourcelink_set.count())
+
+    @mock.patch('app.dw_admin.views.boto3.client')
+    def test_source_link_upload(self, mock_client):
+        dataset = factories.DataSetFactory.create()
+        link_count = dataset.sourcelink_set.count()
+        file1 = SimpleUploadedFile('file1.txt', b'This is a test', content_type='text/plain')
+        response = self._authenticated_post(
+            reverse('dw-admin:source-link-upload', args=(dataset.id,)),
+            {
+                'dataset': dataset.id,
+                'name': 'Test source link',
+                'format': 'CSV',
+                'frequency': 'Never',
+                'file': file1,
+            }
+        )
+        self.assertContains(response, 'Source link uploaded successfully')
+        self.assertEqual(link_count + 1, dataset.sourcelink_set.count())
+        link = dataset.sourcelink_set.latest('created_date')
+        self.assertEqual(link.name, 'Test source link')
+        self.assertEqual(link.format, 'CSV')
+        self.assertEqual(link.frequency, 'Never')
+        mock_client().put_object.assert_called_once_with(
+            Body=mock.ANY,
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=link.url
+        )
+
+
+class TestDatasetAdmin(BaseAdminTestCase):
+    def test_delete_external_source_link(self):
+        dataset = factories.DataSetFactory.create()
+        source_link = factories.SourceLinkFactory(
+            link_type=models.SourceLink.TYPE_EXTERNAL,
+            dataset=dataset
+        )
+        link_count = dataset.sourcelink_set.count()
+        response = self._authenticated_post(
+            reverse('admin:app_dataset_change', args=(dataset.id,)),
+            {
+                'published': dataset.published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'grouping': dataset.grouping.id,
+                'description': 'test description',
+                'volume': dataset.volume,
+                'sourcelink_set-TOTAL_FORMS': '1',
+                'sourcelink_set-INITIAL_FORMS': '1',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourcelink_set-0-id': source_link.id,
+                'sourcelink_set-0-dataset': dataset.id,
+                'sourcelink_set-0-name': 'test',
+                'sourcelink_set-0-url': 'http://test.com',
+                'sourcelink_set-0-format': 'test',
+                'sourcelink_set-0-frequency': 'test',
+                'sourcelink_set-0-DELETE': 'on',
+                'sourcelink_set-__prefix__-id': '',
+                'sourcelink_set-__prefix__-dataset': '571b8aac-7dc2-4e8b-bfae-73d5c25afd04',
+                'sourcelink_set-__prefix__-name': '',
+                'sourcelink_set-__prefix__-url': '',
+                'sourcelink_set-__prefix__-format': '',
+                'sourcelink_set-__prefix__-frequency': '',
+                'sourcetable_set-TOTAL_FORMS': '0',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            }
+        )
+        self.assertContains(response, 'was changed successfully')
+        self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
+
+    @mock.patch('app.models.boto3.client')
+    def test_delete_local_source_link_aws_failure(self, mock_client):
+        dataset = factories.DataSetFactory.create()
+        source_link = factories.SourceLinkFactory(
+            link_type=models.SourceLink.TYPE_LOCAL,
+            dataset=dataset
+        )
+        link_count = dataset.sourcelink_set.count()
+        mock_client.return_value.head_object.side_effect = ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='head_object'
+        )
+        response = self._authenticated_post(
+            reverse('admin:app_dataset_change', args=(dataset.id,)),
+            {
+                'published': dataset.published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'grouping': dataset.grouping.id,
+                'description': 'test description',
+                'volume': dataset.volume,
+                'sourcelink_set-TOTAL_FORMS': '1',
+                'sourcelink_set-INITIAL_FORMS': '1',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourcelink_set-0-id': source_link.id,
+                'sourcelink_set-0-dataset': dataset.id,
+                'sourcelink_set-0-name': 'test',
+                'sourcelink_set-0-url': 'http://test.com',
+                'sourcelink_set-0-format': 'test',
+                'sourcelink_set-0-frequency': 'test',
+                'sourcelink_set-0-DELETE': 'on',
+                'sourcelink_set-__prefix__-id': '',
+                'sourcelink_set-__prefix__-dataset': '571b8aac-7dc2-4e8b-bfae-73d5c25afd04',
+                'sourcelink_set-__prefix__-name': '',
+                'sourcelink_set-__prefix__-url': '',
+                'sourcelink_set-__prefix__-format': '',
+                'sourcelink_set-__prefix__-frequency': '',
+                'sourcetable_set-TOTAL_FORMS': '0',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            }
+        )
+        self.assertContains(response, 'Unable to access local file for deletion')
+        self.assertEqual(dataset.sourcelink_set.count(), link_count)
+
+    @mock.patch('app.models.boto3.client')
+    def test_delete_local_source_link(self, mock_client):
+        dataset = factories.DataSetFactory.create()
+        source_link = factories.SourceLinkFactory(
+            link_type=models.SourceLink.TYPE_LOCAL,
+            dataset=dataset
+        )
+        link_count = dataset.sourcelink_set.count()
+        response = self._authenticated_post(
+            reverse('admin:app_dataset_change', args=(dataset.id,)),
+            {
+                'published': dataset.published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'grouping': dataset.grouping.id,
+                'description': 'test description',
+                'volume': dataset.volume,
+                'sourcelink_set-TOTAL_FORMS': '1',
+                'sourcelink_set-INITIAL_FORMS': '1',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourcelink_set-0-id': source_link.id,
+                'sourcelink_set-0-dataset': dataset.id,
+                'sourcelink_set-0-name': 'test',
+                'sourcelink_set-0-url': 'http://test.com',
+                'sourcelink_set-0-format': 'test',
+                'sourcelink_set-0-frequency': 'test',
+                'sourcelink_set-0-DELETE': 'on',
+                'sourcelink_set-__prefix__-id': '',
+                'sourcelink_set-__prefix__-dataset': '571b8aac-7dc2-4e8b-bfae-73d5c25afd04',
+                'sourcelink_set-__prefix__-name': '',
+                'sourcelink_set-__prefix__-url': '',
+                'sourcelink_set-__prefix__-format': '',
+                'sourcelink_set-__prefix__-frequency': '',
+                'sourcetable_set-TOTAL_FORMS': '0',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            }
+        )
+        self.assertContains(response, 'was changed successfully')
+        self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
+        mock_client().delete_object.assert_called_once_with(
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key='http://test.com'
+        )
