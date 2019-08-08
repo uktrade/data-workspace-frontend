@@ -94,6 +94,23 @@ async def async_main():
     def is_app_requested(request):
         return request.url.host.endswith(f'.{root_domain_no_port}')
 
+    def get_peer_ip(request):
+        try:
+            # We can only trust the last IP in X-Forwarded-For
+            peer_ip = request.headers['x-forwarded-for'].split(',')[-1].strip()
+        except KeyError:
+            # This will only be run locally
+            logger.debug('Remote IP found from transport')
+            peer_ip, _ = request.transport.get_extra_info('peername')
+
+        is_private = True
+        try:
+            is_private = ipaddress.ip_address(peer_ip).is_private
+        except ValueError:
+            is_private = False
+
+        return peer_ip, is_private
+
     async def handle(downstream_request):
         method = downstream_request.method
         path = downstream_request.url.path
@@ -358,20 +375,7 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-
-            try:
-                # We can only trust the last IP in X-Forwarded-For
-                peer_ip = request.headers['x-forwarded-for'].split(',')[-1].strip()
-            except KeyError:
-                # This will only be run locally
-                logger.debug('Remote IP found from transport')
-                peer_ip, _ = request.transport.get_extra_info('peername')
-
-            is_private = True
-            try:
-                is_private = ipaddress.ip_address(peer_ip).is_private
-            except ValueError:
-                is_private = False
+            peer_ip, is_private = get_peer_ip(request)
 
             logger.debug('Peer IP %s', peer_ip)
 
