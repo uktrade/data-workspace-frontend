@@ -32,7 +32,9 @@
             <p class="govuk-body">
                 {{ model.description | linebreaksbr }}
             </p>
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Available Data Sets</h2>
+            {% if datasets or not reference_datasets %}
+              <h2 class="govuk-heading-l govuk-!-margin-top-8">Available data sets</h2>
+            {% endif %}
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
@@ -43,18 +45,21 @@
                 </h2>
                 <p class="govuk-body">{{ set.short_description }}</p>
                 {% empty %}
-                <h2 class="govuk-heading-s">
-                    No data sets available
-                </h2>
+                  {% if not reference_datasets %}
+                    <h2 class="govuk-heading-s">
+                        No data sets available
+                    </h2>
+                  {% endif %}
             {% endfor %}
-            {% if perms.app_dataset_add %}
+            {% if datasets and perms.app_dataset_add %}
                 <p>
                     <a class="govuk-link"
                        href="{% url 'admin:app_dataset_add' %}">[New]</a>
                 </p>
             {% endif %}
-            {% if reference_datasets %}
+            {% if reference_datasets or not datasets %}
               <h2 class="govuk-heading-l govuk-!-margin-top-8">Available reference data sets</h2>
+            {% endif %}
               {% for set in reference_datasets %}
                   <h2 class="govuk-heading-m">
                       <a class="govuk-link" href="{% url 'reference_dataset' model.slug set.slug %}">
@@ -65,14 +70,19 @@
                       {% endif %}
                   </h2>
                   <p class="govuk-body">{{ set.short_description }}</p>
+              {% empty %}
+                {% if not datasets %}
+                  <h2 class="govuk-heading-s">
+                      No reference data sets available
+                  </h2>
+                {% endif %}
               {% endfor %}
-              {% if perms.app_referencedataset_add %}
+              {% if reference_datasets and perms.app_referencedataset_add %}
                   <p>
                       <a class="govuk-link"
                          href="{% url 'admin:app_referencedataset_add' %}">[New]</a>
                   </p>
               {% endif %}
-            {% endif %}
 
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
 
