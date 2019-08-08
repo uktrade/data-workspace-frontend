@@ -91,11 +91,14 @@ async def async_main():
     def is_service_discovery(request):
         return request.url.path == '/api/v1/application' and request.url.host == root_domain_no_port and request.method == 'GET'
 
+    def is_app_requested(request):
+        return request.url.host.endswith(f'.{root_domain_no_port}')
+
     async def handle(downstream_request):
         method = downstream_request.method
         path = downstream_request.url.path
         query = downstream_request.url.query
-        app_requested = downstream_request.url.host.endswith(f'.{root_domain_no_port}')
+        app_requested = is_app_requested(downstream_request)
 
         # Websocket connections
         # - tend to close unexpectedly, both from the client and app
