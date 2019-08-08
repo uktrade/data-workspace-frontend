@@ -20,6 +20,9 @@ from yarl import (
     URL,
 )
 
+from app.utils import (
+    normalise_environment,
+)
 from proxy_session import (
     SESSION_KEY,
     redis_session_middleware,
@@ -40,15 +43,16 @@ async def async_main():
         logger.setLevel(logging.DEBUG)
         logger.addHandler(stdout_handler)
 
-    port = int(os.environ['PROXY_PORT'])
-    admin_root = os.environ['UPSTREAM_ROOT']
-    sso_base_url = os.environ['AUTHBROKER_URL']
-    sso_client_id = os.environ['AUTHBROKER_CLIENT_ID']
-    sso_client_secret = os.environ['AUTHBROKER_CLIENT_SECRET']
-    redis_url = os.environ['REDIS_URL']
-    root_domain = os.environ['APPLICATION_ROOT_DOMAIN']
-    basic_auth_user = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
-    basic_auth_password = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
+    env = normalise_environment(os.environ)
+    port = int(env['PROXY_PORT'])
+    admin_root = env['UPSTREAM_ROOT']
+    sso_base_url = env['AUTHBROKER_URL']
+    sso_client_id = env['AUTHBROKER_CLIENT_ID']
+    sso_client_secret = env['AUTHBROKER_CLIENT_SECRET']
+    redis_url = env['REDIS_URL']
+    root_domain = env['APPLICATION_ROOT_DOMAIN']
+    basic_auth_user = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
+    basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
