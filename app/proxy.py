@@ -54,6 +54,8 @@ async def async_main():
     basic_auth_user = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
     basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
     x_forwarded_for_trusted_hops = int(env['X_FORWARDED_FOR_TRUSTED_HOPS'])
+    application_ip_whitelist = env['APPLICATION_IP_WHITELIST']
+
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
@@ -482,11 +484,29 @@ async def async_main():
 
         return _authenticate_by_basic_auth
 
+    def authenticate_by_ip_whitelist():
+        @web.middleware
+        async def _authenticate_by_ip_whitelist(request, handler):
+            ip_whitelist_required = is_app_requested(request)
+            peer_ip, _ = get_peer_ip(request)
+            peer_ip_in_whitelist = any(
+                ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
+                for address_or_subnet in application_ip_whitelist
+            )
+
+            if ip_whitelist_required and not peer_ip_in_whitelist:
+                return await handle_admin(request, 'GET', '/error_403', {})
+
+            return await handler(request)
+
+        return _authenticate_by_ip_whitelist
+
     async with aiohttp.ClientSession(auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),
             authenticate_by_basic_auth(),
+            authenticate_by_ip_whitelist(),
         ])
         app.add_routes([
             getattr(web, method)(r'/{path:.*}', handle)
