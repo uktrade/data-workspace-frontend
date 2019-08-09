@@ -53,6 +53,7 @@ async def async_main():
     root_domain = env['APPLICATION_ROOT_DOMAIN']
     basic_auth_user = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
     basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
+    x_forwarded_for_trusted_hops = int(env['X_FORWARDED_FOR_TRUSTED_HOPS'])
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
@@ -95,13 +96,7 @@ async def async_main():
         return request.url.host.endswith(f'.{root_domain_no_port}')
 
     def get_peer_ip(request):
-        try:
-            # We can only trust the last IP in X-Forwarded-For
-            peer_ip = request.headers['x-forwarded-for'].split(',')[-1].strip()
-        except KeyError:
-            # This will only be run locally
-            logger.debug('Remote IP found from transport')
-            peer_ip, _ = request.transport.get_extra_info('peername')
+        peer_ip = request.headers['x-forwarded-for'].split(',')[-x_forwarded_for_trusted_hops].strip()
 
         is_private = True
         try:
