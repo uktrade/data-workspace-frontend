@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sourcelink',
             name='link_type',
-            field=models.IntegerField(choices=[(1, 'External Link'), (2, 'Local Link')], default=1),
+            field=models.IntegerField(choices=[(1, 'External Link'), (2, 'Local Link')], default=1, null=True),
         ),
     ]
