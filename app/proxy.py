@@ -20,6 +20,9 @@ from yarl import (
     URL,
 )
 
+from app.utils import (
+    normalise_environment,
+)
 from proxy_session import (
     SESSION_KEY,
     redis_session_middleware,
@@ -40,15 +43,19 @@ async def async_main():
         logger.setLevel(logging.DEBUG)
         logger.addHandler(stdout_handler)
 
-    port = int(os.environ['PROXY_PORT'])
-    admin_root = os.environ['UPSTREAM_ROOT']
-    sso_base_url = os.environ['AUTHBROKER_URL']
-    sso_client_id = os.environ['AUTHBROKER_CLIENT_ID']
-    sso_client_secret = os.environ['AUTHBROKER_CLIENT_SECRET']
-    redis_url = os.environ['REDIS_URL']
-    root_domain = os.environ['APPLICATION_ROOT_DOMAIN']
-    basic_auth_user = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
-    basic_auth_password = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
+    env = normalise_environment(os.environ)
+    port = int(env['PROXY_PORT'])
+    admin_root = env['UPSTREAM_ROOT']
+    sso_base_url = env['AUTHBROKER_URL']
+    sso_client_id = env['AUTHBROKER_CLIENT_ID']
+    sso_client_secret = env['AUTHBROKER_CLIENT_SECRET']
+    redis_url = env['REDIS_URL']
+    root_domain = env['APPLICATION_ROOT_DOMAIN']
+    basic_auth_user = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
+    basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
+    x_forwarded_for_trusted_hops = int(env['X_FORWARDED_FOR_TRUSTED_HOPS'])
+    application_ip_whitelist = env['APPLICATION_IP_WHITELIST']
+
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
@@ -87,11 +94,25 @@ async def async_main():
     def is_service_discovery(request):
         return request.url.path == '/api/v1/application' and request.url.host == root_domain_no_port and request.method == 'GET'
 
+    def is_app_requested(request):
+        return request.url.host.endswith(f'.{root_domain_no_port}')
+
+    def get_peer_ip(request):
+        peer_ip = request.headers['x-forwarded-for'].split(',')[-x_forwarded_for_trusted_hops].strip()
+
+        is_private = True
+        try:
+            is_private = ipaddress.ip_address(peer_ip).is_private
+        except ValueError:
+            is_private = False
+
+        return peer_ip, is_private
+
     async def handle(downstream_request):
         method = downstream_request.method
         path = downstream_request.url.path
         query = downstream_request.url.query
-        app_requested = downstream_request.url.host.endswith(f'.{root_domain_no_port}')
+        app_requested = is_app_requested(downstream_request)
 
         # Websocket connections
         # - tend to close unexpectedly, both from the client and app
@@ -351,20 +372,7 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-
-            try:
-                # We can only trust the last IP in X-Forwarded-For
-                peer_ip = request.headers['x-forwarded-for'].split(',')[-1].strip()
-            except KeyError:
-                # This will only be run locally
-                logger.debug('Remote IP found from transport')
-                peer_ip, _ = request.transport.get_extra_info('peername')
-
-            is_private = True
-            try:
-                is_private = ipaddress.ip_address(peer_ip).is_private
-            except ValueError:
-                is_private = False
+            peer_ip, is_private = get_peer_ip(request)
 
             logger.debug('Peer IP %s', peer_ip)
 
@@ -476,11 +484,29 @@ async def async_main():
 
         return _authenticate_by_basic_auth
 
+    def authenticate_by_ip_whitelist():
+        @web.middleware
+        async def _authenticate_by_ip_whitelist(request, handler):
+            ip_whitelist_required = is_app_requested(request)
+            peer_ip, _ = get_peer_ip(request)
+            peer_ip_in_whitelist = any(
+                ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
+                for address_or_subnet in application_ip_whitelist
+            )
+
+            if ip_whitelist_required and not peer_ip_in_whitelist:
+                return await handle_admin(request, 'GET', '/error_403', {})
+
+            return await handler(request)
+
+        return _authenticate_by_ip_whitelist
+
     async with aiohttp.ClientSession(auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),
             authenticate_by_basic_auth(),
+            authenticate_by_ip_whitelist(),
         ])
         app.add_routes([
             getattr(web, method)(r'/{path:.*}', handle)

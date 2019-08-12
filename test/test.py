@@ -236,6 +236,115 @@ class TestApplication(unittest.TestCase):
         self.assertIn('This is the login page', content)
 
     @async_test
+    async def test_application_shows_forbidden_if_not_auth_ip(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        # Create application with a non-open whitelist
+        cleanup_application = await create_application(env=lambda: {
+            'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
+        })
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            },
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(6)
+
+        # Make a request to the home page, which creates the user...
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            await response.text()
+
+        # ... with application permissions...
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # ... and can make requests to the home page...
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            content = await response.text()
+        self.assertNotIn('Forbidden', content)
+        self.assertEqual(response.status, 200)
+
+        # ... but not the application...
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/http') as response:
+            content = await response.text()
+        self.assertIn('Forbidden', content)
+        self.assertEqual(response.status, 403)
+
+        # ... and it can't be spoofed...
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/http', headers={
+                'x-forwarded-for': '1.2.3.4',
+        }) as response:
+            content = await response.text()
+        self.assertIn('Forbidden', content)
+        self.assertEqual(response.status, 403)
+
+        await cleanup_application()
+
+        # ... but that X_FORWARDED_FOR_TRUSTED_HOPS and subnets are respected
+        cleanup_application = await create_application(env=lambda: {
+            'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
+            'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
+            'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
+        })
+        self.add_async_cleanup(cleanup_application)
+
+        await asyncio.sleep(6)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/http', headers={
+                'x-forwarded-for': '1.2.3.4',
+        }) as response:
+            content = await response.text()
+        self.assertIn('Starting Test Application', content)
+        self.assertEqual(response.status, 202)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/http', headers={
+                'x-forwarded-for': '6.5.4.3, 1.2.3.4',
+        }) as response:
+            content = await response.text()
+        self.assertIn('Starting Test Application', content)
+        self.assertEqual(response.status, 202)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/http', headers={
+                'x-forwarded-for': '5.1.1.1',
+        }) as response:
+            content = await response.text()
+        self.assertIn('Starting Test Application', content)
+        self.assertEqual(response.status, 202)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/http', headers={
+                'x-forwarded-for': '6.5.4.3',
+        }) as response:
+            content = await response.text()
+
+        self.assertIn('Forbidden', content)
+        self.assertEqual(response.status, 403)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/http', headers={
+                'x-forwarded-for': '1.2.3.4, 6.5.4.3',
+        }) as response:
+            content = await response.text()
+
+        self.assertIn('Forbidden', content)
+        self.assertEqual(response.status, 403)
+
+    @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
         await flush_database()
         await flush_redis()
@@ -415,10 +524,10 @@ async def create_sso(is_logged_in, codes, tokens, auth_to_me):
 
 # Run the application proper in a way that is as possible to production
 # The environment must be the same as in the Dockerfile
-async def create_application():
+async def create_application(env=lambda: {}):
     proc = await asyncio.create_subprocess_exec(
         '/app/start.sh',
-        env=os.environ,
+        env={**os.environ, **env()},
         preexec_fn=os.setsid,
     )
 
