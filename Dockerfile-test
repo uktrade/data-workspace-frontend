@@ -3,8 +3,11 @@ FROM data-workspace
 USER root
 RUN pip3 install \
     factory_boy==2.12.0 \
-    mock==3.0.5 \
-    ipdb==0.12.2
+    mock==3.0.5
+
+CMD ["/dataworkspace/start-circleci.sh"]
+
 USER django
 
 COPY test /test
+

@@ -1,9 +1,9 @@
+import datetime
 import hashlib
 import logging
 import requests
 import urllib.parse
 
-from datetime import datetime
 
 from django.conf import settings
 
