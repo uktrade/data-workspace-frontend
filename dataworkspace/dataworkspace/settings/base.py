@@ -147,8 +147,6 @@ CSRF_COOKIE_NAME = 'data_workspace_csrf'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-STATIC_URL = '/static/'
-
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # The application template models are populated by environment variables,

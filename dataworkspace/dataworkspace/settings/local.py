@@ -3,8 +3,6 @@ import sys
 from dataworkspace.settings.base import *
 
 
-TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -13,5 +11,21 @@ DATABASES = {
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '5432',
+        'OPTIONS': {'MAX_CONNS': 20},
+    }
+    **{
+        database_name: {
+            'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
+            'CONN_MAX_AGE': 0,
+            database['NAME'],
+            'HOST': 'localhost',
+            'USER': 'postgres',
+            'PASSSWORD': '',
+            'PORT': '5432',
+            'OPTIONS': {'MAX_CONNS': 20},
+        }
+        for database_name, database in env['DATA_DB'].items()
     }
 }
+
+STATIC_URL = '/static/'
