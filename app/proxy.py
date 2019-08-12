@@ -372,15 +372,9 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-            peer_ip, is_private = get_peer_ip(request)
-
-            logger.debug('Peer IP %s', peer_ip)
-
-            is_healthcheck_alb = request.url.path == '/healthcheck' and is_private and request.method == 'GET'
-            is_healthcheck_application = request.url.path == '/healthcheck' and request.url.host == root_domain_no_port and request.method == 'GET'
+            is_healthcheck = request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(request)
             sso_auth_required = (
-                not is_healthcheck_alb and
-                not is_healthcheck_application and
+                not is_healthcheck and
                 not is_service_discovery(request)
             )
 
@@ -488,13 +482,17 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_ip_whitelist(request, handler):
             ip_whitelist_required = is_app_requested(request)
+
+            if not ip_whitelist_required:
+                return await handler(request)
+
             peer_ip, _ = get_peer_ip(request)
             peer_ip_in_whitelist = any(
                 ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
                 for address_or_subnet in application_ip_whitelist
             )
 
-            if ip_whitelist_required and not peer_ip_in_whitelist:
+            if not peer_ip_in_whitelist:
                 return await handle_admin(request, 'GET', '/error_403', {})
 
             return await handler(request)

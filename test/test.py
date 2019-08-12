@@ -344,6 +344,39 @@ class TestApplication(unittest.TestCase):
         self.assertIn('Forbidden', content)
         self.assertEqual(response.status, 403)
 
+        # The healthcheck is allowed from a private IP: simulates ALB
+        async with session.request('GET', 'http://localapps.com:8000/healthcheck') as response:
+            content = await response.text()
+
+        self.assertEqual('OK', content)
+        self.assertEqual(response.status, 200)
+
+        # ... and from a publically routable one: simulates Pingdom
+        async with session.request('GET', 'http://localapps.com:8000/healthcheck', headers={
+                'x-forwarded-for': '8.8.8.8',
+        }) as response:
+            content = await response.text()
+
+        self.assertEqual('OK', content)
+        self.assertEqual(response.status, 200)
+
+        # ... but not allowed to get to the application
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/healthcheck', headers={
+        }) as response:
+            content = await response.text()
+
+        # In production, hitting this URL without X-Forwarded-For should not
+        # be possible, so a 500 is most appropriate
+        self.assertEqual(response.status, 500)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/healthcheck', headers={
+                'x-forwarded-for': '8.8.8.8',
+        }) as response:
+            content = await response.text()
+
+        self.assertIn('Forbidden', content)
+        self.assertEqual(response.status, 403)
+
     @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
         await flush_database()
