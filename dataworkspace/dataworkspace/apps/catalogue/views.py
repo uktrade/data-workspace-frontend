@@ -20,7 +20,7 @@ from django.views.generic import DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.spawner import get_spawner
-from dataworkspace.apps.core.utils import stop_spawner_and_application
+from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink
 from dataworkspace.apps.datasets.utils import find_dataset
 

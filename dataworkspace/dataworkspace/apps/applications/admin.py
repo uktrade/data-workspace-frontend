@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from django.contrib import admin
 
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.utils import application_instance_max_cpu
 
 
 @admin.register(ApplicationInstance)
@@ -45,7 +48,9 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         kwargs.update({
             'help_texts': {
-                'max_cpu': 'The highest CPU usage in the past two hours. The application will be stopped automatically if the usage is less than 1% for two hours.',
+                'max_cpu': ('The highest CPU usage in the past two hours.'
+                            'The application will be stopped automatically '
+                            'if the usage is less than 1% for two hours.'),
             },
         })
         return super().get_form(request, obj, change, **kwargs)

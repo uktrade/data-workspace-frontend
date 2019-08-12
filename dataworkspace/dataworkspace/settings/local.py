@@ -11,18 +11,16 @@ DATABASES = {
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '5432',
-        'OPTIONS': {'MAX_CONNS': 20},
-    }
+    },
     **{
         database_name: {
             'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
             'CONN_MAX_AGE': 0,
-            database['NAME'],
+            'NAME': 'dataworkspace',
             'HOST': 'localhost',
             'USER': 'postgres',
             'PASSSWORD': '',
             'PORT': '5432',
-            'OPTIONS': {'MAX_CONNS': 20},
         }
         for database_name, database in env['DATA_DB'].items()
     }

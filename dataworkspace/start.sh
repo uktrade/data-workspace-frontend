@@ -8,7 +8,7 @@ set -e
 
     # Not suitable on a cluster of size > 1, but for our purposes,
     # no need for more
-    django-admin migrate
+    django-admin migrate --fake
 
     django-admin ensure_databases_configured
     django-admin ensure_application_template_models

@@ -49,6 +49,9 @@ class DataGrouping(DeletableTimestampedUserModel):
 
     slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
 
+    class Meta:
+        db_table = "app_datagrouping"
+
     def __str__(self):
         return f'{self.name}'
 
@@ -99,6 +102,9 @@ class DataSet(TimeStampedModel):
     )
     published = models.BooleanField(default=False)
 
+    class Meta:
+        db_table = "app_dataset"
+
     def __str__(self):
         return f'{self.grouping.name} - {self.name}'
 
@@ -118,6 +124,7 @@ class DataSetUserPermission(models.Model):
     )
 
     class Meta:
+        db_table = "app_datasetuserpermission"
         unique_together = ('user', 'dataset')
 
 
@@ -153,6 +160,9 @@ class SourceTable(models.Model):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
 
+    class Meta:
+        db_table = "app_sourcetable"
+
 
 class SourceLink(TimeStampedModel):
     TYPE_EXTERNAL = 1
@@ -183,6 +193,9 @@ class SourceLink(TimeStampedModel):
     url = models.CharField(max_length=256)
     format = models.CharField(blank=False, null=False, max_length=10)
     frequency = models.CharField(blank=False, null=False, max_length=50)
+
+    class Meta:
+        db_table = "app_sourcelink"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -282,6 +295,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     minor_version = models.IntegerField(default=0)
 
     class Meta:
+        db_table = "app_referencedataset"
         verbose_name = 'Reference Data Set'
 
     def __str__(self):
@@ -523,6 +537,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
     required = models.BooleanField(default=False)
 
     class Meta:
+        db_table = "app_referencedatasetfield"
         unique_together = ('reference_dataset', 'name')
         verbose_name = 'Reference Data Set Field'
         ordering = ('id',)

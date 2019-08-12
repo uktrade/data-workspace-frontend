@@ -28,6 +28,7 @@ def get_spawner(name):
 def spawn(name, user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
     get_spawner(name).spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials)
 
+
 class ProcessSpawner():
     ''' A slightly overcomplicated and slow local-process spawner, but it is
     designed to simulate multi-stage spawners that call remote APIs. Only

@@ -10,6 +10,9 @@ class Profile(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
     sso_id = models.UUIDField(unique=True, default=uuid.uuid4)
 
+    class Meta:
+        db_table = "app_profile"
+
 
 @receiver(post_save, sender=get_user_model())
 def save_user_profile(instance, **_):

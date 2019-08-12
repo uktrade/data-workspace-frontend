@@ -99,5 +99,8 @@ class Database(TimeStampedModel):
                    'and temporary credentials will be created for each.')
     )
 
+    class Meta:
+        db_table = "app_database"
+
     def __str__(self):
         return f'{self.memorable_name}'
