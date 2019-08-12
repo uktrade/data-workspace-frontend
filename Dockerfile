@@ -29,7 +29,7 @@ RUN \
 		celery-redbeat==0.13.0 \
 		gunicorn[gevent]==19.9.0 \
 		psycogreen==1.0.1 \
-		django==2.2.3 \
+		django==2.2.4 \
 		django-db-geventpool==3.1.0 \
 		django-redis==4.10.0 \
 		zenpy==2.0.12 \
