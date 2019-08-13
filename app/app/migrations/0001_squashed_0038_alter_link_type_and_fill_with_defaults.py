@@ -8,11 +8,6 @@ import django.db.models.deletion
 import uuid
 
 
-# Functions from the following migrations need manual copying.
-# Move them and any dependencies into this file, then update the
-# RunPython operations to refer to the local versions:
-# app.migrations.0038_alter_link_type_and_fill_with_defaults
-
 def fill_default_to_existing_records(apps, schema_editor):
     SourceLink = apps.get_model('app', 'SourceLink')
     db_alias = schema_editor.connection.alias
@@ -23,8 +18,6 @@ def fill_default_to_existing_records(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
-    replaces = [('app', '0001_initial'), ('app', '0002_auto_20181009_0835'), ('app', '0003_auto_20181009_1028'), ('app', '0004_auto_20181010_0826'), ('app', '0005_auto_20181010_0833'), ('app', '0006_auto_20190307_1600'), ('app', '0007_profile'), ('app', '0008_auto_20190604_1336'), ('app', '0009_auto_20190613_1452'), ('app', '0010_auto_20190617_1603'), ('app', '0011_datagrouping_dataset_responsibleperson_sourcelink_sourceschema_sourcetables'), ('app', '0012_remove_datagrouping_audience'), ('app', '0012_auto_20190621_0805'), ('app', '0013_merge_20190621_0847'), ('app', '0014_delete_responsibleperson'), ('app', '0015_auto_20190624_1527'), ('app', '0016_delete_sourcetables'), ('app', '0017_remove_privilage_tables'), ('app', '0018_auto_20190626_1057'), ('app', '0019_auto_20190705_1257'), ('app', '0020_delete_privilage'), ('app', '0021_sourcetable'), ('app', '0022_auto_20190709_1203'), ('app', '0023_delete_sourceschema'), ('app', '0024_referencedataset_referencedatasetfield'), ('app', '0025_auto_20190712_1213'), ('app', '0026_auto_20190712_1333'), ('app', '0027_auto_20190717_1035'), ('app', '0028_auto_20190717_1320'), ('app', '0027_auto_20190717_1122'), ('app', '0029_merge_20190717_1328'), ('app', '0030_auto_20190717_1450'), ('app', '0031_auto_20190718_0906'), ('app', '0032_auto_20190719_1643'), ('app', '0033_referencedataset_schema_version'), ('app', '0034_auto_20190727_1710'), ('app', '0035_auto_20190728_0641'), ('app', '0034_auto_20190725_1510'), ('app', '0036_merge_20190806_0827'), ('app', '0035_sourcelink_link_type'), ('app', '0037_merge_20190807_1109'), ('app', '0038_alter_link_type_and_fill_with_defaults')]
 
     initial = True
 
