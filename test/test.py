@@ -559,7 +559,7 @@ async def create_sso(is_logged_in, codes, tokens, auth_to_me):
 # The environment must be the same as in the Dockerfile
 async def create_application(env=lambda: {}):
     proc = await asyncio.create_subprocess_exec(
-        '/dataworkspace/start-circleci.sh',
+        '/dataworkspace/start.sh',
         env={**os.environ, **env()},
         preexec_fn=os.setsid,
     )
