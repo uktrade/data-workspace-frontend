@@ -4,8 +4,8 @@ ENV \
 	LC_ALL=en_US.UTF-8 \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8 \
-	PYTHONPATH=/app \
-	DJANGO_SETTINGS_MODULE=app.settings
+	PYTHONPATH=/dataworkspace \
+	DJANGO_SETTINGS_MODULE=dataworkspace.settings.prod
 
 RUN \
 	apk add --no-cache --virtual .build-deps \
@@ -38,10 +38,10 @@ RUN \
 	rm /etc/nginx/nginx.conf && \
 	apk del .build-deps
 
-COPY app /app
+COPY dataworkspace /dataworkspace
 COPY etc /etc
 
-CMD ["/app/start.sh"]
+CMD ["/dataworkspace/start.sh"]
 
 RUN adduser -S django
 USER django
