@@ -559,7 +559,7 @@ async def create_sso(is_logged_in, codes, tokens, auth_to_me):
 # The environment must be the same as in the Dockerfile
 async def create_application(env=lambda: {}):
     proc = await asyncio.create_subprocess_exec(
-        '/app/start.sh',
+        '/dataworkspace/start-circleci.sh',
         env={**os.environ, **env()},
         preexec_fn=os.setsid,
     )
@@ -597,7 +597,7 @@ async def give_user_app_perms():
         from django.contrib.contenttypes.models import (
             ContentType,
         )
-        from app.models import (
+        from dataworkspace.apps.applications.models import (
             ApplicationInstance,
         )
         permission = Permission.objects.get(
@@ -622,8 +622,8 @@ async def give_user_app_perms():
 
 async def create_private_dataset():
     python_code = textwrap.dedent("""\
-        from app.models import (
-            Database,
+        from dataworkspace.apps.core.models import Database
+        from dataworkspace.apps.datasets.models import (
             DataGrouping,
             DataSet,
             SourceTable,
@@ -668,7 +668,7 @@ async def give_user_dataset_perms():
         from django.contrib.auth.models import (
             User,
         )
-        from app.models import (
+        from dataworkspace.apps.datasets.models import (
             DataSet,
             DataSetUserPermission,
         )

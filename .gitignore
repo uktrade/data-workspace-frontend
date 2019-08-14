@@ -34,6 +34,10 @@ pip-delete-this-directory.txt
 # Django stuff:
 *.log
 
+
+# SQLite
+*.sqlite3
+
 # PyBuilder
 target/
 
@@ -72,3 +76,6 @@ Temporary Items
 # Project specific
 ssl.key
 ssl.crt
+
+#VI
+*.swp
