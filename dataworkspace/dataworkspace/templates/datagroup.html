@@ -33,7 +33,7 @@
                 {{ model.description | linebreaksbr }}
             </p>
             {% if datasets or not reference_datasets %}
-              <h2 class="govuk-heading-l govuk-!-margin-top-8">Available data sets</h2>
+              <h2 class="govuk-heading-l govuk-!-margin-top-8">Available datasets</h2>
             {% endif %}
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
@@ -47,7 +47,7 @@
                 {% empty %}
                   {% if not reference_datasets %}
                     <h2 class="govuk-heading-s">
-                        No data sets available
+                        No datasets available
                     </h2>
                   {% endif %}
             {% endfor %}
@@ -58,7 +58,7 @@
                 </p>
             {% endif %}
             {% if reference_datasets or not datasets %}
-              <h2 class="govuk-heading-l govuk-!-margin-top-8">Available reference data sets</h2>
+              <h2 class="govuk-heading-l govuk-!-margin-top-8">Available reference datasets</h2>
             {% endif %}
               {% for set in reference_datasets %}
                   <h2 class="govuk-heading-m">
@@ -73,7 +73,7 @@
               {% empty %}
                 {% if not datasets %}
                   <h2 class="govuk-heading-s">
-                      No reference data sets available
+                      No reference datasets available
                   </h2>
                 {% endif %}
               {% endfor %}

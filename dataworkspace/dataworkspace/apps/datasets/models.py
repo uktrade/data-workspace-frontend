@@ -296,7 +296,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     class Meta:
         db_table = 'app_referencedataset'
-        verbose_name = 'Reference Data Set'
+        verbose_name = 'Reference dataset'
 
     def __str__(self):
         return '{}: {}'.format(
@@ -539,7 +539,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
     class Meta:
         db_table = 'app_referencedatasetfield'
         unique_together = ('reference_dataset', 'name')
-        verbose_name = 'Reference Data Set Field'
+        verbose_name = 'Reference dataset field'
         ordering = ('id',)
 
     def __init__(self, *args, **kwargs):
