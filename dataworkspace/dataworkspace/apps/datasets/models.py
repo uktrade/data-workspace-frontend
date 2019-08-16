@@ -7,7 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 from django import forms
 from django.apps import apps
-from django.db import models, connection
+from django.db import models, connection, connections
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
@@ -15,6 +15,7 @@ from django.urls import reverse
 
 from dataworkspace.apps.core.models import (TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel,
                                             Database)
+from dataworkspace.apps.datasets.model_utils import external_model_class
 
 
 class DataGrouping(DeletableTimestampedUserModel):
@@ -258,6 +259,20 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     name = models.CharField(
         max_length=255,
     )
+    table_name = models.CharField(
+        verbose_name='Table name',
+        max_length=255,
+        unique=True,
+        help_text='Descriptive table name for the field - '
+                  'Note: Must start with "ref_" and contain only letters, numbers and underscores',
+        validators=[
+            RegexValidator(
+                regex=r'^ref_[a-zA-Z0-9_]*$',
+                message='Table names must be prefixed with "ref_" and can contain only '
+                        'letters, numbers and underscores'
+            ),
+        ],
+    )
     slug = models.SlugField()
     short_description = models.CharField(
         max_length=255
@@ -304,16 +319,36 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self.name
         )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Stash the current table name so it can be compared on save
+        self._original_table_name = self.table_name
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
+        table_changed = self.table_name != self._original_table_name
+        if not create and table_changed:
+            self.schema_version += 1
         super().save(force_insert, force_update, using, update_fields)
+        model_class = self.get_record_model_class()
         if create:
             with connection.schema_editor() as editor:
-                editor.create_model(self.get_record_model_class())
+                editor.create_model(model_class)
+        elif table_changed:
+            for database in self.get_database_names():
+                with connections[database].schema_editor() as editor:
+                    editor.alter_db_table(
+                        model_class,
+                        self._original_table_name,
+                        self.table_name
+                    )
+        self._original_table_name = self.table_name
 
-    @property
-    def table_name(self):
-        return 'refdata__{}'.format(self.id)
+    def delete(self, **kwargs):
+        # Delete external tables when ref dataset is deleted
+        for ext in self.external_databases.all():
+            ext.delete()
+        super().delete(**kwargs)
 
     @property
     def field_names(self) -> List[str]:
@@ -435,16 +470,29 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def save_record(self, internal_id: Optional[int], form_data: dict):
         """
-        Save a record to the database and associate it with this reference dataset
+        Save a record to the local database and associate it with this reference dataset.
+        Replicate the record in any linked external databases.
         :param internal_id: the django id for the model (None if doesn't exist)
         :param form_data: a dictionary containing values to be saved to the row
         :return:
         """
         self.increment_minor_version()
         if internal_id is None:
-            return self.get_record_model_class().objects.create(**form_data)
+            record = self.get_record_model_class().objects.create(**form_data)
+            del form_data['reference_dataset']
+            for db in self.external_databases.all():
+                with external_model_class(self.get_record_model_class()) as model_class:
+                    model_class.objects.using(db.database.memorable_name).create(**form_data)
+            return record
+
         records = self.get_records().filter(id=internal_id)
         records.update(**form_data)
+        del form_data['reference_dataset']
+        for db in self.external_databases.all():
+            with external_model_class(self.get_record_model_class()) as model_class:
+                model_class.objects.using(db.database.memorable_name).filter(
+                    id=internal_id
+                ).update(**form_data)
         return records.first()
 
     def delete_record(self, internal_id: int):
@@ -455,6 +503,25 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         self.increment_minor_version()
         self.get_record_by_internal_id(internal_id).delete()
+        for db in self.external_databases.all():
+            with external_model_class(self.get_record_model_class()) as model_class:
+                model_class.objects.using(db.database.memorable_name).filter(
+                    id=internal_id
+                ).delete()
+
+    def add_records_to_external_database(self, database_name):
+        """
+        Ensure each record in this dataset is mirrored to external db `database_name`
+        :param database_name:
+        :return:
+        """
+        records = self.get_records()
+        columns = ['id'] + self.column_names
+        with external_model_class(self.get_record_model_class()) as model_class:
+            for record in records:
+                model_class.objects.using(database_name).create(
+                    **{x: getattr(record, x) for x in columns}
+                )
 
     def increment_schema_version(self):
         self.schema_version += 1
@@ -468,6 +535,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def increment_minor_version(self):
         self.minor_version += 1
         self.save()
+
+    def get_database_names(self):
+        return ['default'] + [
+            db.database.memorable_name
+            for db in self.external_databases.all()
+        ]
 
 
 class ReferenceDatasetField(TimeStampedUserModel):
@@ -530,6 +603,19 @@ class ReferenceDatasetField(TimeStampedUserModel):
         max_length=255,
         help_text='The display name for the field',
     )
+    column_name = models.CharField(
+        max_length=255,
+        blank=False,
+        help_text='Descriptive column name for the field - '
+                  'Column name will be used in external databases',
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$',
+                message='Column names must start with a letter and contain only '
+                        'letters, numbers, underscores and full stops.'
+            ),
+        ],
+    )
     description = models.TextField(
         blank=True,
         null=True
@@ -538,14 +624,18 @@ class ReferenceDatasetField(TimeStampedUserModel):
 
     class Meta:
         db_table = 'app_referencedatasetfield'
-        unique_together = ('reference_dataset', 'name')
+        unique_together = (
+            ('reference_dataset', 'name'),
+            ('reference_dataset', 'column_name'),
+        )
         verbose_name = 'Reference Data Set Field'
         ordering = ('id',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Stash the current data type so it can be compared on save
+        # Stash the current data type and name so they can be compared on save
         self._original_data_type = self.data_type
+        self._original_column_name = self.column_name
 
     def __str__(self):
         return '{} field: {}'.format(
@@ -553,33 +643,52 @@ class ReferenceDatasetField(TimeStampedUserModel):
             self.name
         )
 
-    @property
-    def column_name(self):
-        return 'field_{}'.format(self.id)
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def _add_column_to_db(self):
         """
-        On ReferenceDatasetField save update the associated table.
-        :param force_insert:
-        :param force_update:
-        :param using:
-        :param update_fields:
+        Add a column to the refdata table in the db
         :return:
         """
-        created = self.id is None
-        super().save(force_insert, force_update, using, update_fields)
-        ref_dataset = self.reference_dataset
-        # Force increment of reference dataset schema version
-        ref_dataset.increment_schema_version()
-        if created:
-            model_class = self.reference_dataset.get_record_model_class()
-            with connection.schema_editor() as editor:
+        super().save()
+        self.reference_dataset.increment_schema_version()
+        model_class = self.reference_dataset.get_record_model_class()
+        for database in self.reference_dataset.get_database_names():
+            with connections[database].schema_editor() as editor:
                 editor.add_field(
                     model_class,
                     model_class._meta.get_field(self.column_name),
                 )
-        elif self._original_data_type != self.data_type:
-            with connection.cursor() as cursor:
+
+    def _update_db_column_name(self):
+        """
+        Alter the db column name in the associated table
+        :return:
+        """
+        # Get a copy of the existing model class (pre-save)
+        model_class = self.reference_dataset.get_record_model_class()
+        # Get a copy of the current field
+        from_field = model_class._meta.get_field(self._original_column_name)
+        # Save the changes to the field
+        super().save()
+        # Increment the schema version
+        self.reference_dataset.increment_schema_version()
+        # Get a copy of the updated model class (post-save)
+        model_class = self.reference_dataset.get_record_model_class()
+        # Get a copy of the new field
+        to_field = model_class._meta.get_field(self.column_name)
+        # Migrate from old field to new field
+        for database in self.reference_dataset.get_database_names():
+            with connections[database].schema_editor() as editor:
+                editor.alter_field(
+                    model_class,
+                    from_field,
+                    to_field
+                )
+
+    def _update_db_column_data_type(self):
+        super().save()
+        self.reference_dataset.increment_schema_version()
+        for database in self.reference_dataset.get_database_names():
+            with connections[database].cursor() as cursor:
                 cursor.execute(
                     sql.SQL(
                         '''
@@ -593,21 +702,44 @@ class ReferenceDatasetField(TimeStampedUserModel):
                         data_type=sql.SQL(self.get_postgres_datatype()),
                     )
                 )
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        """
+        On ReferenceDatasetField save update the associated table.
+        :param force_insert:
+        :param force_update:
+        :param using:
+        :param update_fields:
+        :return:
+        """
+        ref_dataset = self.reference_dataset
+        # If this is a newly created field add it to the db
+        if self.id is None:
+            self._add_column_to_db()
+        else:
+            # Otherwise update where necessary
+            if self._original_column_name != self.column_name:
+                self._update_db_column_name()
+            if self._original_data_type != self.data_type:
+                self._update_db_column_data_type()
+
         # Increment reference dataset major version if this is not the first save
         if (ref_dataset.major_version > 1 or ref_dataset.minor_version > 0) or \
                 ref_dataset.get_records().exists():
             self.reference_dataset.increment_major_version()
+        super().save()
 
     def delete(self, using=None, keep_parents=False):
         model_class = self.reference_dataset.get_record_model_class()
-        with connection.schema_editor() as editor:
-            editor.remove_field(
-                model_class,
-                model_class._meta.get_field(self.column_name),
-            )
+        for database in self.reference_dataset.get_database_names():
+            with connections[database].schema_editor() as editor:
+                editor.remove_field(
+                    model_class,
+                    model_class._meta.get_field(self._original_column_name),
+                )
+        super().delete(using, keep_parents)
         self.reference_dataset.increment_schema_version()
         self.reference_dataset.increment_major_version()
-        super().delete(using, keep_parents)
 
     def get_postgres_datatype(self) -> str:
         """
@@ -646,3 +778,57 @@ class ReferenceDatasetField(TimeStampedUserModel):
             max_length=255
         )
         return field
+
+
+class ReferenceDatasetExternalDatabase(TimeStampedUserModel):
+    reference_dataset = models.ForeignKey(
+        ReferenceDataset,
+        on_delete=models.CASCADE,
+        related_name='external_databases',
+    )
+    database = models.ForeignKey(
+        Database,
+        default=None,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        unique_together = ('reference_dataset', 'database')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Stash the current database so it can be compared on save
+        try:
+            self._original_database_name = self.database.memorable_name
+        except Database.DoesNotExist:
+            self._original_database = None
+
+    def __str__(self):
+        return '{} external database: {}'.format(
+            self.reference_dataset.name,
+            self.database,
+        )
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        create = self.id is None
+        super().save(force_insert, force_update, using, update_fields)
+        model_class = self.reference_dataset.get_record_model_class()
+        # If this record has been newly created or the related database has changed
+        # create the table on the new database
+        if create or self.database.memorable_name != self._original_database_name:
+            with connections[self.database.memorable_name].schema_editor() as editor:
+                with external_model_class(model_class) as mc:
+                    editor.create_model(mc)
+            self.reference_dataset.add_records_to_external_database(self.database.memorable_name)
+
+        # If the linked database has changed delete the old table
+        if not create and self.database.memorable_name != self._original_database_name:
+            with connections[self._original_database_name].schema_editor() as editor:
+                editor.delete_model(model_class)
+
+    def delete(self, using=None, keep_parents=False):
+        # On delete remove the table from the external db
+        model_class = self.reference_dataset.get_record_model_class()
+        with connections[self.database.memorable_name].schema_editor() as editor:
+            editor.delete_model(model_class)
+        super().delete(using, keep_parents)
