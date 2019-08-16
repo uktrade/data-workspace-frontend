@@ -22,6 +22,16 @@ resource "aws_ecs_service" "registry" {
   ]
 }
 
+data "external" "registry_current_tag" {
+  program = ["${path.module}/container-tag.sh"]
+
+  query = {
+    cluster_name = "${aws_ecs_cluster.main_cluster.name}"
+    service_name = "${var.prefix}-registry"
+    container_name = "${local.registry_container_name}"
+  }
+}
+
 resource "aws_ecs_task_definition" "registry" {
   family                = "${var.prefix}-registry"
   container_definitions = "${data.template_file.registry_container_definitions.rendered}"
@@ -37,7 +47,7 @@ data "template_file" "registry_container_definitions" {
   template = "${file("${path.module}/ecs_main_registry_container_definitions.json")}"
 
   vars {
-    container_image  = "${var.registry_container_image}"
+    container_image  = "${var.registry_container_image}:${data.external.registry_current_tag.result.tag}"
     container_name   = "${local.registry_container_name}"
     container_port   = "${local.registry_container_port}"
     container_cpu    = "${local.registry_container_cpu}"
