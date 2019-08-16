@@ -19,6 +19,14 @@ class UserFactory(factory.django.DjangoModelFactory):
         model = get_user_model()
 
 
+class DatabaseFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    memorable_name = 'test_external_db'
+
+    class Meta:
+        model = 'core.Database'
+
+
 class DataGroupingFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     name = factory.fuzzy.FuzzyText()
@@ -56,6 +64,8 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
     published = True
+    schema_version = factory.Sequence(lambda n: n)
+    table_name = factory.fuzzy.FuzzyText(length=20)
 
     class Meta:
         model = 'datasets.ReferenceDataset'
@@ -64,7 +74,16 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
 class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
     reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
     name = factory.fuzzy.FuzzyText()
+    column_name = factory.fuzzy.FuzzyText(length=65)
     data_type = 1
 
     class Meta:
         model = 'datasets.ReferenceDatasetField'
+
+
+class ReferenceDatasetExternalDatabaseFactory(factory.django.DjangoModelFactory):
+    reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
+    database = factory.SubFactory(DatabaseFactory)
+
+    class Meta:
+        model = 'datasets.ReferenceDatasetExternalDatabase'

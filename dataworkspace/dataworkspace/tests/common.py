@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from dataworkspace.apps.datasets.models import ReferenceDataset, DataGrouping
+
 
 class BaseTestCase(TestCase):
     def setUp(self):
@@ -33,6 +35,24 @@ class BaseTestCase(TestCase):
             format=post_format,
             **self.user_data,
         )
+
+    @staticmethod
+    def _create_reference_dataset(**kwargs):
+        group = DataGrouping.objects.create(
+            name='Test Group 1',
+            slug='test-group-1',
+            short_description='Testing...',
+        )
+        ref_data_fields = dict(
+            group=group,
+            name='Test Reference Dataset 1',
+            table_name='ref_test_dataset',
+            short_description='Testing...',
+            slug='test-reference-dataset-1',
+            published=True,
+        )
+        ref_data_fields.update(kwargs)
+        return ReferenceDataset.objects.create(**ref_data_fields)
 
 
 class BaseAdminTestCase(BaseTestCase):
