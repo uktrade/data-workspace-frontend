@@ -44,7 +44,7 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
 
     def get_context_data(self, *args, **kwargs):
         ctx = super().get_context_data(*args, **kwargs)
-        ctx['title'] = '{} Reference Data Set Record'.format(
+        ctx['title'] = '{} reference dataset record'.format(
             'Add' if self.kwargs.get('record_id') is None else 'Edit'
         )
         return ctx
@@ -125,7 +125,7 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
     def get_success_url(self):
         messages.success(
             self.request,
-            'Reference data set record {} successfully'.format(
+            'Reference dataset record {} successfully'.format(
                 'updated' if 'record_id' in self.kwargs else 'added'
             )
         )
@@ -171,7 +171,7 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
     def get_success_url(self):
         messages.success(
             self.request,
-            'Reference data set record deleted successfully'
+            'Reference dataset record deleted successfully'
         )
         return reverse(
             'admin:datasets_referencedataset_change',
