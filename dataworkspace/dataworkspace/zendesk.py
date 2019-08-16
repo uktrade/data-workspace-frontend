@@ -97,17 +97,18 @@ def create_zendesk_ticket(contact_email,
             description=ticket_description,
             requester=User(
                 email=contact_email,
-                name=username)
+                name=username
+            ),
+            custom_fields=[
+                CustomField(
+                    id=zendesk_service_field_id,
+                    value=zendesk_service_field_value
+                )
+            ]
         )
     )
 
     ticket_audit.ticket.comment = Comment(body=private_comment, public=False)
-    ticket_audit.ticket.custom_fields.append(
-        CustomField(
-            id=zendesk_service_field_id,
-            value=zendesk_service_field_value
-        )
-    )
     client.tickets.update(ticket_audit.ticket)
 
     return ticket_audit.ticket.id
@@ -126,13 +127,13 @@ def create_support_request(user, email, message, attachments=()):
             requester=User(
                 email=email,
                 name=user.get_full_name()
-            )
-        )
-    )
-    ticket_audit.ticket.custom_fields.append(
-        CustomField(
-            id=zendesk_service_field_id,
-            value=zendesk_service_field_value
+            ),
+            custom_fields=[
+                CustomField(
+                    id=zendesk_service_field_id,
+                    value=zendesk_service_field_value
+                )
+            ]
         )
     )
     if attachments:
@@ -141,5 +142,5 @@ def create_support_request(user, email, message, attachments=()):
             body='Additional attachments',
             uploads=[x.token for x in uploads]
         )
-    client.tickets.update(ticket_audit.ticket)
+        client.tickets.update(ticket_audit.ticket)
     return ticket_audit.ticket.id
