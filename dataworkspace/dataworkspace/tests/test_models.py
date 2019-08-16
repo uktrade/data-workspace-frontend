@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, connections
 
+from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, \
     ReferenceDatasetField, SourceLink, ReferenceDatasetExternalDatabase
 from dataworkspace.tests import factories
@@ -733,12 +734,11 @@ class TestExternalModels(BaseModelsTests):
         })
         external_db = ReferenceDatasetExternalDatabase.objects.create(
             reference_dataset=ref_dataset,
-            database=factories.DatabaseFactory.create()
+            database=Database.objects.get_or_create(memorable_name='test_external_db')[0]
         )
-        external_db.database = factories.DatabaseFactory.create(
-            memorable_name='my_database'
-        )
+        external_db.database = Database.objects.get_or_create(memorable_name='my_database')[0]
         external_db.save()
+
         self.assertFalse(
             self._table_exists(ref_dataset.table_name, database='test_external_db')
         )
