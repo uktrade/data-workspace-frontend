@@ -32,6 +32,7 @@ repos:
         - --disable=no-self-use
         - --disable=protected-access
         - --disable=too-few-public-methods
+        - --disable=too-many-arguments
         - --disable=too-many-branches
         - --disable=too-many-lines
         - --disable=too-many-locals
