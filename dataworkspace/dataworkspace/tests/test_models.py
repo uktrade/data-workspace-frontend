@@ -367,7 +367,7 @@ class TestSourceLinkModel(BaseTestCase):
 
 
 class TestExternalModels(BaseModelsTests):
-    databases = ['default', 'my_database', 'test_external_db']
+    databases = ['default', 'test_external_db', 'test_external_db2']
 
     def _create_reference_dataset(self, **kwargs):
         ref_dataset = super()._create_reference_dataset(**kwargs)
@@ -736,17 +736,17 @@ class TestExternalModels(BaseModelsTests):
             reference_dataset=ref_dataset,
             database=Database.objects.get_or_create(memorable_name='test_external_db')[0]
         )
-        external_db.database = Database.objects.get_or_create(memorable_name='my_database')[0]
+        external_db.database = Database.objects.get_or_create(memorable_name='test_external_db2')[0]
         external_db.save()
 
         self.assertFalse(
             self._table_exists(ref_dataset.table_name, database='test_external_db')
         )
         self.assertTrue(
-            self._table_exists(ref_dataset.table_name, database='my_database')
+            self._table_exists(ref_dataset.table_name, database='test_external_db2')
         )
         self.assertTrue(
-            self._record_exists('ext_db_edit_test', 'field1', 1, database='my_database')
+            self._record_exists('ext_db_edit_test', 'field1', 1, database='test_external_db2')
         )
 
     def test_delete_external_database(self):
