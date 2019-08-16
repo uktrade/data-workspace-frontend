@@ -1,0 +1,401 @@
+[
+  {
+    "command": ${container_command},
+    "cpu": ${container_cpu},
+    "environment": [
+    {
+      "name": "ADMIN_DB__HOST",
+      "value": "${admin_db__host}"
+    },
+    {
+      "name": "ADMIN_DB__NAME",
+      "value": "${admin_db__name}"
+    },
+    {
+      "name": "ADMIN_DB__PASSWORD",
+      "value": "${admin_db__password}"
+    },
+    {
+      "name": "ADMIN_DB__PORT",
+      "value": "${admin_db__port}"
+    },
+    {
+      "name": "ADMIN_DB__USER",
+      "value": "${admin_db__user}"
+    },
+    {
+      "name": "ALLOWED_HOSTS__1",
+      "value": "${root_domain}"
+    },
+    {
+      "name": "ALLOWED_HOSTS__2",
+      "value": ".${root_domain}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__NAME",
+      "value": "jupyterlab"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__NICE_NAME",
+      "value": "JupyterLab"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER",
+      "value": "FARGATE"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1",
+      "value": "jupyter"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__2",
+      "value": "lab"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__3",
+      "value": "--config=/etc/jupyter/jupyter_notebook_config.py"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__4",
+      "value": "--NotebookApp.token=''"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__5",
+      "value": "--NotebookApp.ip='0.0.0.0'"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__6",
+      "value": "--NotebookApp.allow_remote_access=True"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__7",
+      "value": "--NotebookApp.port=8888"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CLUSTER_NAME",
+      "value": "${fargate_spawner__task_custer_name}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__DEFINITION_ARN",
+      "value": "${fargate_spawner__task_definition_arn}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CONTAINER_NAME",
+      "value": "jupyterhub-notebook"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__SECURITY_GROUPS__1",
+      "value": "${fargate_spawner__task_security_group}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__SUBNETS__1",
+      "value": "${fargate_spawner__task_subnet}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ENV__DUMMY",
+      "value": "value"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__PORT",
+      "value": "8888"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__PORT",
+      "value": "8888"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX",
+      "value": "${notebook_task_role__role_prefix}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__POLICY_NAME",
+      "value": "${notebook_task_role__policy_name}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__PERMISSIONS_BOUNDARY_ARN",
+      "value": "${notebook_task_role__permissions_boundary_arn}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__POLICY_DOCUMENT_TEMPLATE_BASE64",
+      "value": "${notebook_task_role__policy_document_template_base64}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ASSUME_ROLE_POLICY_DOCUMENT_BASE64",
+      "value": "${notebook_task_role__assume_role_policy_document_base64}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__S3_REGION",
+      "value": "eu-west-2"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__S3_HOST",
+      "value": "s3-eu-west-2.amazonaws.com"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__S3_BUCKET",
+      "value": "${notebooks_bucket}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__NAME",
+      "value": "rstudio"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__NICE_NAME",
+      "value": "RStudio"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER",
+      "value": "FARGATE"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__CMD__1",
+      "value": "/rstudio-start.sh"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__CLUSTER_NAME",
+      "value": "${fargate_spawner__task_custer_name}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__DEFINITION_ARN",
+      "value": "${fargate_spawner__rstudio_task_definition_arn}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__CONTAINER_NAME",
+      "value": "jupyterhub-notebook"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__SECURITY_GROUPS__1",
+      "value": "${fargate_spawner__task_security_group}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__SUBNETS__1",
+      "value": "${fargate_spawner__task_subnet}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__ENV__DISABLE_AUTH",
+      "value": "true"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__ENV__USERID",
+      "value": "4357"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__ENV__GROUPID",
+      "value": "4357"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__PORT",
+      "value": "8888"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__ROLE_PREFIX",
+      "value": "${notebook_task_role__role_prefix}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__POLICY_NAME",
+      "value": "${notebook_task_role__policy_name}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__PERMISSIONS_BOUNDARY_ARN",
+      "value": "${notebook_task_role__permissions_boundary_arn}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__POLICY_DOCUMENT_TEMPLATE_BASE64",
+      "value": "${notebook_task_role__policy_document_template_base64}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__ASSUME_ROLE_POLICY_DOCUMENT_BASE64",
+      "value": "${notebook_task_role__assume_role_policy_document_base64}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__S3_REGION",
+      "value": "eu-west-2"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__S3_HOST",
+      "value": "s3-eu-west-2.amazonaws.com"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__S3_BUCKET",
+      "value": "${notebooks_bucket}"
+    },
+
+    {
+      "name": "APPLICATION_TEMPLATES__3__NAME",
+      "value": "pgadmin"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__NICE_NAME",
+      "value": "pgAdmin"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER",
+      "value": "FARGATE"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__CLUSTER_NAME",
+      "value": "${fargate_spawner__task_custer_name}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__DEFINITION_ARN",
+      "value": "${fargate_spawner__pgadmin_task_definition_arn}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__CONTAINER_NAME",
+      "value": "jupyterhub-notebook"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__SECURITY_GROUPS__1",
+      "value": "${fargate_spawner__task_security_group}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__SUBNETS__1",
+      "value": "${fargate_spawner__task_subnet}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__ENV__DISABLE_AUTH",
+      "value": "true"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__PORT",
+      "value": "8888"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__ROLE_PREFIX",
+      "value": "${notebook_task_role__role_prefix}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__POLICY_NAME",
+      "value": "${notebook_task_role__policy_name}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__PERMISSIONS_BOUNDARY_ARN",
+      "value": "${notebook_task_role__permissions_boundary_arn}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__POLICY_DOCUMENT_TEMPLATE_BASE64",
+      "value": "${notebook_task_role__policy_document_template_base64}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__ASSUME_ROLE_POLICY_DOCUMENT_BASE64",
+      "value": "${notebook_task_role__assume_role_policy_document_base64}"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__S3_REGION",
+      "value": "eu-west-2"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__S3_HOST",
+      "value": "s3-eu-west-2.amazonaws.com"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__S3_BUCKET",
+      "value": "${notebooks_bucket}"
+    },
+    {
+      "name": "APPLICATION_ROOT_DOMAIN",
+      "value": "${root_domain}"
+    },
+    {
+      "name": "APPSTREAM_URL",
+      "value": "${appstream_url}"
+    },
+    {
+      "name": "AUTHBROKER_CLIENT_ID",
+      "value": "${authbroker_client_id}"
+    },
+    {
+      "name": "AUTHBROKER_CLIENT_SECRET",
+      "value": "${authbroker_client_secret}"
+    },
+    {
+      "name": "AUTHBROKER_URL",
+      "value": "${authbroker_url}"
+    },
+    ${environment}
+    {
+      "name": "NOTEBOOKS_BUCKET",
+      "value": "${notebooks_bucket}"
+    },
+    {
+      "name": "REDIS_URL",
+      "value": "${redis_url}"
+    },
+    {
+      "name": "SECRET_KEY",
+      "value": "${secret_key}"
+    },
+    {
+      "name": "SUPPORT_URL",
+      "value": "${support_url}"
+    },
+    {
+      "name": "UPLOADS_BUCKET",
+      "value": "${uploads_bucket}"
+    },
+    {
+      "name": "ZENDESK_EMAIL",
+      "value": "${zendesk_email}"
+    },
+    {
+      "name": "ZENDESK_SUBDOMAIN",
+      "value": "${zendesk_subdomain}"
+    },
+    {
+      "name": "ZENDESK_TOKEN",
+      "value": "${zendesk_token}"
+    },
+    {
+      "name": "ZENDESK_SERVICE_FIELD_ID",
+      "value": "${zendesk_service_field_id}"
+    },
+    {
+      "name": "ZENDESK_SERVICE_FIELD_VALUE",
+      "value": "${zendesk_service_field_value}"
+    },
+    {
+      "name": "PROMETHEUS_DOMAIN",
+      "value": "${prometheus_domain}"
+    },
+    {
+      "name": "METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER",
+      "value": "${metrics_service_discovery_basic_auth_user}"
+    }, {
+      "name": "METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD",
+      "value": "${metrics_service_discovery_basic_auth_password}"
+    }, {
+      "name": "GOOGLE_ANALYTICS_SITE_ID",
+      "value": "${google_analytics_site_id}"
+    }, {
+      "name": "GOOGLE_ANALYTICS_SITE_ID",
+      "value": "${google_analytics_site_id}"
+    }, {
+      "name": "X_FORWARDED_FOR_TRUSTED_HOPS",
+      "value": "2"      
+    }],
+    "essential": true,
+    "image": "${container_image}",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${log_region}",
+        "awslogs-stream-prefix": "${container_name}"
+      }
+    },
+    "memoryReservation": ${container_memory},
+    "mountPoints": [],
+    "name": "${container_name}",
+    "portMappings": [{
+        "containerPort": ${container_port},
+        "hostPort": ${container_port},
+        "protocol": "tcp"
+    }],
+    "ulimits": [{
+        "softLimit": 4096,
+        "hardLimit": 4096,
+        "name": "nofile"
+    }],
+    "volumesFrom": []
+  }
+]
