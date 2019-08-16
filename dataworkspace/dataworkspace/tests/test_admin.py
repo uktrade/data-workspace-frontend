@@ -268,7 +268,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'external_databases-0-schema': 'public',
             }
         )
-        self.assertContains(response, 'Reference Data Set with this Table name already exists.')
+        self.assertContains(response, 'Reference dataset with this Table name already exists.')
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
     def test_create_reference_dataset_invalid_table_name(self):
