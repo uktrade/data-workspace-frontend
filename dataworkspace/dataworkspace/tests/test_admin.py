@@ -548,7 +548,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
             reverse('dw-admin:reference-dataset-record-add', args=(reference_dataset.id,)),
             fields
         )
-        self.assertContains(response, 'Reference data set record added successfully')
+        self.assertContains(response, 'Reference dataset record added successfully')
         self.assertEqual(num_records + 1, len(reference_dataset.get_records()))
         record = reference_dataset.get_record_by_custom_id(1)
         del fields['reference_dataset']
@@ -653,7 +653,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
             ),
             update_fields
         )
-        self.assertContains(response, 'Reference data set record updated successfully')
+        self.assertContains(response, 'Reference dataset record updated successfully')
         self.assertEqual(num_records, len(reference_dataset.get_records()))
         record = reference_dataset.get_record_by_custom_id(99)
         del update_fields['reference_dataset']
@@ -711,7 +711,7 @@ class TestReferenceDatasetAdmin(BaseTestCase):
         )
         self.assertContains(
             response,
-            'Reference data set record deleted successfully'
+            'Reference dataset record deleted successfully'
         )
         self.assertEqual(num_records - 1, len(reference_dataset.get_records()))
 
