@@ -104,12 +104,12 @@ data "template_file" "admin_container_definitions" {
     fargate_spawner__notebook_port         = "${local.notebook_container_port}"
     fargate_spawner__task_custer_name      = "${aws_ecs_cluster.notebooks.name}"
     fargate_spawner__task_container_name   = "${local.notebook_container_name}"
-    fargate_spawner__task_definition_arn   = "${aws_ecs_task_definition.notebook.family}:${aws_ecs_task_definition.notebook.revision}"
+    fargate_spawner__task_definition_arn   = "${aws_ecs_task_definition.notebook.family}"
     fargate_spawner__task_security_group   = "${aws_security_group.notebooks.id}"
     fargate_spawner__task_subnet           = "${aws_subnet.private_without_egress.*.id[0]}"
 
-    fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}:${aws_ecs_task_definition.rstudio.revision}"
-    fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}:${aws_ecs_task_definition.pgadmin.revision}"
+    fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}"
+    fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}"
 
     zendesk_email = "${var.zendesk_email}"
     zendesk_subdomain = "${var.zendesk_subdomain}"
@@ -342,9 +342,9 @@ data "aws_iam_policy_document" "admin_run_tasks" {
     }
 
     resources = [
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.notebook.family}:*",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.rstudio.family}:*",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgadmin.family}:*",
+      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.notebook.family}",
+      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.rstudio.family}",
+      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgadmin.family}",
     ]
   }
 
