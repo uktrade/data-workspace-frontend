@@ -263,13 +263,13 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         verbose_name='Table name',
         max_length=255,
         unique=True,
-        help_text='Descriptive table name for the field - '
-                  'Note: Must start with "ref_" and contain only letters, numbers and underscores',
+        help_text='Descriptive table name for the field - Note: Must start with '
+                  '"ref_" and contain only lowercase letters, numbers and underscores',
         validators=[
             RegexValidator(
-                regex=r'^ref_[a-zA-Z0-9_]*$',
+                regex=r'^ref_[a-z0-9_]*$',
                 message='Table names must be prefixed with "ref_" and can contain only '
-                        'letters, numbers and underscores'
+                        'lowercase letters, numbers and underscores'
             ),
         ],
     )

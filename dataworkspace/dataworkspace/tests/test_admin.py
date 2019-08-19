@@ -315,7 +315,55 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(
             response,
             'Table names must be prefixed with &quot;ref_&quot; '
-            'and can contain only letters, numbers and underscores',
+            'and can contain only lowercase letters, numbers and underscores',
+        )
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+    def test_create_reference_dataset_uppercase_table_name(self):
+        num_datasets = ReferenceDataset.objects.count()
+        group = factories.DataGroupingFactory.create(name='test group')
+        db = factories.DatabaseFactory.create()
+        response = self._authenticated_post(
+            reverse('admin:datasets_referencedataset_add'),
+            {
+                'name': 'test ref 1',
+                'table_name': 'ref_UPPERCASE',
+                'slug': 'test-ref-1',
+                'group': group.id,
+                'short_description': 'test description that is short',
+                'description': '',
+                'valid_from': '',
+                'valid_to': '',
+                'enquiries_contact': '',
+                'licence': '',
+                'restrictions_on_usage': '',
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 0,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-name': 'field1',
+                'fields-0-column_name': 'field1',
+                'fields-0-data_type': 2,
+                'fields-0-description': 'A field',
+                'fields-0-is_identifier': 'on',
+                'fields-1-name': 'field2',
+                'fields-1-column_name': 'field2',
+                'fields-1-data_type': 1,
+                'fields-1-description': 'Another field',
+                'external_databases-TOTAL_FORMS': 1,
+                'external_databases-INITIAL_FORMS': 0,
+                'external_databases-MIN_NUM_FORMS': 0,
+                'external_databases-0-id': '',
+                'external_databases-0-reference_dataset': '',
+                'external_databases-MAX_NUM_FORMS': 1000,
+                'external_databases-0-database': db.id,
+                'external_databases-0-schema': 'public',
+            }
+        )
+        self.assertContains(
+            response,
+            'Table names must be prefixed with &quot;ref_&quot; '
+            'and can contain only lowercase letters, numbers and underscores',
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
