@@ -26,6 +26,16 @@ resource "aws_ecs_service" "prometheus" {
   ]
 }
 
+data "external" "prometheus_current_tag" {
+  program = ["${path.module}/container-tag.sh"]
+
+  query = {
+    cluster_name = "${aws_ecs_cluster.main_cluster.name}"
+    service_name = "${var.prefix}-prometheus"  # Manually specified to avoid a cycle
+    container_name = "${local.prometheus_container_name}"
+  }
+}
+
 resource "aws_service_discovery_service" "prometheus" {
   name = "${var.prefix}-prometheus"
   dns_config {
@@ -59,7 +69,7 @@ data "template_file" "prometheus_container_definitions" {
   template = "${file("${path.module}/ecs_main_prometheus_container_definitions.json")}"
 
   vars {
-    container_image   = "${var.prometheus_container_image}"
+    container_image   = "${var.prometheus_container_image}:${data.external.prometheus_current_tag.result.tag}"
     container_name    = "${local.prometheus_container_name}"
     container_port    = "${local.prometheus_container_port}"
     container_cpu     = "${local.prometheus_container_cpu}"
