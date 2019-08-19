@@ -18,7 +18,9 @@ RUN \
 RUN \
 	adduser -S registry && \
 	mkdir -p /var/lib/docker-registry && \
-	chown registry /var/lib/docker-registry
+	chown registry /var/lib/docker-registry && \
+	mkdir /etc/registry && \
+	chown registry /etc/registry
 
 COPY registry-entrypoint.sh /entrypoint.sh
 
