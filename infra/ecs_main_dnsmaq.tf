@@ -30,6 +30,12 @@ resource "aws_ecs_task_definition" "dnsmasq" {
   cpu                   = "${local.dnsmasq_container_cpu}"
   memory                = "${local.dnsmasq_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "dnsmasq_container_definitions" {

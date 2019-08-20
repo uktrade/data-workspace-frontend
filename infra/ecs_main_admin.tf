@@ -54,6 +54,12 @@ resource "aws_ecs_task_definition" "admin" {
   cpu                      = "${local.admin_container_cpu}"
   memory                   = "${local.admin_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "admin_container_definitions" {
@@ -144,6 +150,12 @@ resource "aws_ecs_task_definition" "admin_store_db_creds_in_s3" {
   cpu                      = "${local.admin_container_cpu}"
   memory                   = "${local.admin_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "admin_store_db_creds_in_s3_container_definitions" {

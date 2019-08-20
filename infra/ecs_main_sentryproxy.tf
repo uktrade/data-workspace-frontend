@@ -53,6 +53,12 @@ resource "aws_ecs_task_definition" "sentryproxy" {
   cpu                      = "${local.sentryproxy_container_cpu}"
   memory                   = "${local.sentryproxy_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "sentryproxy_container_definitions" {

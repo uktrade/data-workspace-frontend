@@ -41,6 +41,12 @@ resource "aws_ecs_task_definition" "registry" {
   cpu                   = "${local.registry_container_cpu}"
   memory                = "${local.registry_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "registry_container_definitions" {

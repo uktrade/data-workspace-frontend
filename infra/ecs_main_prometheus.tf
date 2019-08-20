@@ -63,6 +63,12 @@ resource "aws_ecs_task_definition" "prometheus" {
   cpu                      = "${local.prometheus_container_cpu}"
   memory                   = "${local.prometheus_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "prometheus_container_definitions" {
