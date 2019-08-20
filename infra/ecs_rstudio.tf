@@ -11,13 +11,46 @@ resource "aws_ecs_task_definition" "rstudio" {
   volume {
     name = "home_directory"
   }
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
+}
+
+data "external" "rstudio_current_tag" {
+  program = ["${path.module}/task_definition_tag.sh"]
+
+  query = {
+    task_family = "${var.prefix}-rstudio"
+    container_name = "${local.notebook_container_name}"
+  }
+}
+
+data "external" "rstudio_metrics_current_tag" {
+  program = ["${path.module}/task_definition_tag.sh"]
+
+  query = {
+    task_family = "${var.prefix}-rstudio"
+    container_name = "metrics"
+  }
+}
+
+data "external" "rstudio_s3sync_current_tag" {
+  program = ["${path.module}/task_definition_tag.sh"]
+
+  query = {
+    task_family = "${var.prefix}-rstudio"
+    container_name = "s3sync"
+  }
 }
 
 data "template_file" "rstudio_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
   vars {
-    container_image  = "${var.rstudio_container_image}"
+    container_image  = "${var.rstudio_container_image}:${data.external.rstudio_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
     container_cpu    = "${local.notebook_container_cpu}"
     container_memory = "${local.notebook_container_memory}"
@@ -27,8 +60,8 @@ data "template_file" "rstudio_container_definitions" {
 
     sentry_dsn = "${var.sentry_dsn}"
 
-    metrics_container_image = "${var.metrics_container_image}"
-    s3sync_container_image = "${var.s3sync_container_image}"
+    metrics_container_image = "${var.metrics_container_image}:${data.external.rstudio_metrics_current_tag.result.tag}"
+    s3sync_container_image = "${var.s3sync_container_image}:${data.external.rstudio_s3sync_current_tag.result.tag}"
 
     home_directory = "/home/rstudio"
   }
