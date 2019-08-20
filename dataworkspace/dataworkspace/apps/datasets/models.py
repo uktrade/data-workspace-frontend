@@ -507,6 +507,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         return self.get_records().get(**{field_name: identifier})
 
+    @transaction.atomic
     def save_record(self, internal_id: Optional[int], form_data: dict):
         """
         Save a record to the local database and associate it with this reference dataset.
@@ -537,6 +538,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self.increment_minor_version()
         return record
 
+    @transaction.atomic
     def delete_record(self, internal_id: int):
         """
         Delete a record from the reference dataset table
