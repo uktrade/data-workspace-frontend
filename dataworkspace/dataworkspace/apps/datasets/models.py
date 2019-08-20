@@ -163,6 +163,12 @@ class SourceTable(models.Model):
     class Meta:
         db_table = 'app_sourcetable'
 
+    def get_absolute_url(self):
+        return reverse(
+            'catalogue:dataset_source_table_download',
+            args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
+        )
+
 
 class SourceLink(TimeStampedModel):
     TYPE_EXTERNAL = 1

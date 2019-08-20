@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'dataworkspace.apps.datasets',
     'dataworkspace.apps.dw_admin',
     'dataworkspace.apps.api_v1',
+    'dataworkspace.apps.eventlog',
 ]
 
 MIDDLEWARE = [
