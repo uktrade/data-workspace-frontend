@@ -15,6 +15,16 @@ resource "aws_ecs_service" "sentryproxy" {
   }
 }
 
+data "external" "sentryproxy_current_tag" {
+  program = ["${path.module}/container-tag.sh"]
+
+  query = {
+    cluster_name = "${aws_ecs_cluster.main_cluster.name}"
+    service_name = "${var.prefix}-sentryproxy"
+    container_name = "${local.sentryproxy_container_name}"
+  }
+}
+
 resource "aws_service_discovery_service" "sentryproxy" {
   name = "${var.prefix}-sentryproxy"
 
@@ -43,13 +53,19 @@ resource "aws_ecs_task_definition" "sentryproxy" {
   cpu                      = "${local.sentryproxy_container_cpu}"
   memory                   = "${local.sentryproxy_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "sentryproxy_container_definitions" {
   template = "${file("${path.module}/ecs_main_sentryproxy_container_definitions.json")}"
 
   vars {
-    container_image  = "${var.sentryproxy_container_image}"
+    container_image  = "${var.sentryproxy_container_image}:${data.external.sentryproxy_current_tag.result.tag}"
     container_name   = "${local.sentryproxy_container_name}"
     container_cpu    = "${local.sentryproxy_container_cpu}"
     container_memory = "${local.sentryproxy_container_memory}"
