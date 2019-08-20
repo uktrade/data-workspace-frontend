@@ -7,7 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 from django import forms
 from django.apps import apps
-from django.db import models, connection, connections
+from django.db import models, connection, connections, transaction
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
@@ -334,6 +334,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self._original_ext_db = self.external_database \
             if self.external_database is not None else None
 
+    @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
         table_changed = self.table_name != self._original_table_name
@@ -372,6 +373,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self._original_ext_db = self.external_database \
             if self.external_database is not None else None
 
+    @transaction.atomic
     def delete(self, **kwargs):
         # Delete external table when ref dataset is deleted
         if self.external_database is not None:
@@ -728,13 +730,14 @@ class ReferenceDatasetField(TimeStampedUserModel):
         # Get a copy of the new field
         to_field = model_class._meta.get_field(self.column_name)
         # Migrate from old field to new field
-        for database in self.reference_dataset.get_database_names():
-            with connections[database].schema_editor() as editor:
-                editor.alter_field(
-                    model_class,
-                    from_field,
-                    to_field
-                )
+        with transaction.atomic():
+            for database in self.reference_dataset.get_database_names():
+                with connections[database].schema_editor() as editor:
+                    editor.alter_field(
+                        model_class,
+                        from_field,
+                        to_field
+                    )
 
     def _update_db_column_data_type(self):
         super().save()
@@ -755,6 +758,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
                     )
                 )
 
+    @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """
         On ReferenceDatasetField save update the associated table.
@@ -781,6 +785,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
             self.reference_dataset.increment_major_version()
         super().save()
 
+    @transaction.atomic
     def delete(self, using=None, keep_parents=False):
         model_class = self.reference_dataset.get_record_model_class()
         for database in self.reference_dataset.get_database_names():

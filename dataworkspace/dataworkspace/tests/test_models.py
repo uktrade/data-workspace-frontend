@@ -875,3 +875,17 @@ class TestExternalModels(BaseModelsTests):
         self.assertTrue(self._record_exists('test_full_sync', 'field1', 1))
         self.assertTrue(self._record_exists('test_full_sync', 'field1', 2))
         self.assertFalse(self._record_exists('test_full_sync', 'field1', 3))
+
+    @mock.patch('dataworkspace.apps.datasets.models.connections')
+    def test_create_reference_dataset_external_error(self, mock_conn):
+        # Test that an error thrown while creating an external table
+        # rolls back local table change
+        mock_conn.__getitem__.return_value.schema_editor.side_effect = Exception('Fail')
+        try:
+            self._create_reference_dataset(table_name='test_create_external_error')
+        except Exception:
+            pass
+        self.assertFalse(self._table_exists('test_create_external_error'))
+        self.assertFalse(
+            self._table_exists('test_create_external_error', database='test_external_db')
+        )
