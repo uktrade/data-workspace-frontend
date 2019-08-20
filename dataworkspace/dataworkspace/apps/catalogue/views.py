@@ -98,7 +98,7 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
         )
 
 
-class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disable=too-many-ancestors
+class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
     def get(self, request, *args, **kwargs):
         dl_format = self.kwargs.get('format')
         if dl_format not in ['json', 'csv']:
@@ -147,26 +147,23 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disab
         return response
 
 
-class SourceLinkDownloadView(DetailView):  # pylint: disable=too-many-ancestors
+class SourceLinkDownloadView(DetailView):
     model = SourceLink
 
-    def get_object(self, queryset=None):
+    def get(self, request, *args, **kwargs):
         dataset = find_dataset(
             self.kwargs.get('group_slug'),
             self.kwargs.get('set_slug')
         )
 
-        return get_object_or_404(
+        if not dataset.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+
+        source_link = get_object_or_404(
             SourceLink,
             id=self.kwargs.get('source_link_id'),
             dataset=dataset
         )
-
-    def get(self, request, *args, **kwargs):
-        source_link = self.get_object()
-
-        if not source_link.dataset.user_has_access(self.request.user):
-            return HttpResponseForbidden()
 
         log_event(
             request.user,
@@ -206,25 +203,23 @@ class SourceLinkDownloadView(DetailView):  # pylint: disable=too-many-ancestors
         return response
 
 
-class SourceTableDownloadView(DetailView):  # pylint: disable=too-many-ancestors
+class SourceTableDownloadView(DetailView):
     model = SourceTable
 
-    def get_object(self, queryset=None):
+    def get(self, request, *args, **kwargs):
         dataset = find_dataset(
             self.kwargs.get('group_slug'),
             self.kwargs.get('set_slug')
         )
 
-        return get_object_or_404(
+        if not dataset.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+
+        table = get_object_or_404(
             SourceTable,
             id=self.kwargs.get('source_table_id'),
             dataset=dataset
         )
-
-    def get(self, request, *args, **kwargs):
-        table = self.get_object()
-        if not table.dataset.user_has_access(self.request.user):
-            return HttpResponseForbidden()
 
         if not table_exists(table.database.memorable_name, table.schema, table.table):
             return HttpResponseNotFound()
