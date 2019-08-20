@@ -5,7 +5,7 @@ from django.db import connection, connections
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, \
-    ReferenceDatasetField, SourceLink, ReferenceDatasetExternalDatabase
+    ReferenceDatasetField, SourceLink
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseTestCase
 
@@ -370,12 +370,9 @@ class TestExternalModels(BaseModelsTests):
     databases = ['default', 'test_external_db', 'test_external_db2']
 
     def _create_reference_dataset(self, **kwargs):
-        ref_dataset = super()._create_reference_dataset(**kwargs)
-        ReferenceDatasetExternalDatabase.objects.create(
-            reference_dataset=ref_dataset,
-            database=factories.DatabaseFactory.create()
-        )
-        return ref_dataset
+        return super()._create_reference_dataset(
+            external_database=factories.DatabaseFactory.create(),
+            **kwargs)
 
     @staticmethod
     def _record_exists(table_name, identifier_field, record_id, database='test_external_db'):
@@ -684,6 +681,7 @@ class TestExternalModels(BaseModelsTests):
             short_description='Testing...',
             slug='test-reference-dataset-1',
             published=True,
+            external_database=factories.DatabaseFactory.create(),
         )
         field1 = ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
@@ -700,14 +698,10 @@ class TestExternalModels(BaseModelsTests):
             'reference_dataset': ref_dataset,
             field1.column_name: 2,
         })
-        ReferenceDatasetExternalDatabase.objects.create(
-            reference_dataset=ref_dataset,
-            database=factories.DatabaseFactory.create()
-        )
         self.assertTrue(self._record_exists('ext_db_test', 'field1', 1))
         self.assertTrue(self._record_exists('ext_db_test', 'field1', 2))
 
-    def test_edit_external_database(self):
+    def test_edit_add_external_database(self):
         group = DataGrouping.objects.create(
             name='Test Group 1',
             slug='test-group-1',
@@ -732,12 +726,10 @@ class TestExternalModels(BaseModelsTests):
             'reference_dataset': ref_dataset,
             field1.column_name: 1,
         })
-        external_db = ReferenceDatasetExternalDatabase.objects.create(
-            reference_dataset=ref_dataset,
-            database=Database.objects.get_or_create(memorable_name='test_external_db')[0]
-        )
-        external_db.database = Database.objects.get_or_create(memorable_name='test_external_db2')[0]
-        external_db.save()
+        ref_dataset.external_database = Database.objects.get_or_create(
+            memorable_name='test_external_db2'
+        )[0]
+        ref_dataset.save()
 
         self.assertFalse(
             self._table_exists(ref_dataset.table_name, database='test_external_db')
@@ -749,7 +741,7 @@ class TestExternalModels(BaseModelsTests):
             self._record_exists('ext_db_edit_test', 'field1', 1, database='test_external_db2')
         )
 
-    def test_delete_external_database(self):
+    def test_edit_change_external_database(self):
         group = DataGrouping.objects.create(
             name='Test Group 1',
             slug='test-group-1',
@@ -758,10 +750,11 @@ class TestExternalModels(BaseModelsTests):
         ref_dataset = ReferenceDataset.objects.create(
             group=group,
             name='Test Reference Dataset 1',
-            table_name='ext_db_delete_test',
+            table_name='ext_db_change_test',
             short_description='Testing...',
             slug='test-reference-dataset-1',
             published=True,
+            external_database=factories.DatabaseFactory.create()
         )
         field1 = ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
@@ -778,14 +771,107 @@ class TestExternalModels(BaseModelsTests):
             'reference_dataset': ref_dataset,
             field1.column_name: 2,
         })
-        ext_db = ReferenceDatasetExternalDatabase.objects.create(
-            reference_dataset=ref_dataset,
-            database=factories.DatabaseFactory.create()
-        )
         self.assertTrue(
             self._table_exists(ref_dataset.table_name, database='test_external_db')
         )
-        ext_db.delete()
+        ref_dataset.external_database = factories.DatabaseFactory.create(
+            memorable_name='test_external_db2'
+        )
+        # raise Exception(ref_dataset.external_database)
+        ref_dataset.save()
         self.assertFalse(
             self._table_exists(ref_dataset.table_name, database='test_external_db')
         )
+        self.assertTrue(
+            self._table_exists(ref_dataset.table_name, database='test_external_db2')
+        )
+        self.assertTrue(
+            self._record_exists('ext_db_change_test', 'field1', 1, database='test_external_db2')
+        )
+        self.assertTrue(
+            self._record_exists('ext_db_change_test', 'field1', 2, database='test_external_db2')
+        )
+
+    def test_edit_remove_external_database(self):
+        group = DataGrouping.objects.create(
+            name='Test Group 1',
+            slug='test-group-1',
+            short_description='Testing...',
+        )
+        ref_dataset = ReferenceDataset.objects.create(
+            group=group,
+            name='Test Reference Dataset 1',
+            table_name='ext_db_delete_test',
+            short_description='Testing...',
+            slug='test-reference-dataset-1',
+            published=True,
+            external_database=factories.DatabaseFactory.create()
+        )
+        field1 = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True
+        )
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset,
+            field1.column_name: 1,
+        })
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset,
+            field1.column_name: 2,
+        })
+        self.assertTrue(
+            self._table_exists(ref_dataset.table_name, database='test_external_db')
+        )
+        ref_dataset.external_database = None
+        ref_dataset.save()
+        self.assertFalse(
+            self._table_exists(ref_dataset.table_name, database='test_external_db')
+        )
+
+    def test_external_database_full_sync(self):
+        ref_dataset = self._create_reference_dataset(table_name='test_full_sync')
+        field1 = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True
+        )
+        field2 = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field2',
+            column_name='field2',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR
+        )
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset,
+            field1.column_name: 1,
+            field2.column_name: 'record 1'
+        })
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset,
+            field1.column_name: 2,
+            field2.column_name: 'record 2'
+        })
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset,
+            field1.column_name: 3,
+            field2.column_name: 'record 3'
+        })
+        # Sync with ext db
+        ref_dataset.sync_to_external_database('test_external_db')
+        # Check that the records exist in ext db
+        self.assertTrue(self._record_exists('test_full_sync', 'field1', 1))
+        self.assertTrue(self._record_exists('test_full_sync', 'field1', 2))
+        self.assertTrue(self._record_exists('test_full_sync', 'field1', 3))
+        # Delete a record
+        ref_dataset.get_records().last().delete()
+        # Sync with ext db
+        ref_dataset.sync_to_external_database('test_external_db')
+        # Ensure record was deleted externally
+        self.assertTrue(self._record_exists('test_full_sync', 'field1', 1))
+        self.assertTrue(self._record_exists('test_full_sync', 'field1', 2))
+        self.assertFalse(self._record_exists('test_full_sync', 'field1', 3))

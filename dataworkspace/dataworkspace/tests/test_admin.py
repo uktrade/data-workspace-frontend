@@ -6,8 +6,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-from dataworkspace.apps.datasets.models import ReferenceDataset, ReferenceDatasetField, SourceLink, \
-    ReferenceDatasetExternalDatabase
+from dataworkspace.apps.datasets.models import ReferenceDataset, ReferenceDatasetField, SourceLink
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase
 
@@ -18,7 +17,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_no_fields(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create()
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -31,14 +29,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-INITIAL_FORMS': 1,
                 'fields-MIN_NUM_FORMS': 1,
                 'fields-MAX_NUM_FORMS': 1000,
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please ensure one field is set as the unique identifier')
@@ -47,7 +37,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_no_identifiers(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create()
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -65,14 +54,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-name': 'field1',
                 'fields-0-data_type': 2,
                 'fields-0-description': 'A field',
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please ensure one field is set as the unique identifier')
@@ -101,9 +82,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
                 'fields-1-is_identifier': 'on',
-                'external_databases-TOTAL_FORMS': 0,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
             }
         )
         self.assertContains(response, 'Please select only one unique identifier field')
@@ -112,7 +90,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_duplicate_column_names(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create()
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -134,14 +111,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': 'field',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please ensure column names are unique')
@@ -150,7 +119,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_duplicate_names(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create()
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -172,14 +140,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': 'field2',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please ensure field names are unique')
@@ -188,7 +148,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_invalid_column_name(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create()
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -209,14 +168,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': 'field2',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(
@@ -230,7 +181,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self._create_reference_dataset()
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create(name='test group')
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -258,14 +208,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': 'field2',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Reference dataset with this Table name already exists.')
@@ -274,7 +216,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_invalid_table_name(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create(name='test group')
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -302,14 +243,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': 'field2',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(
@@ -322,7 +255,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_uppercase_table_name(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create(name='test group')
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -350,14 +282,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': 'field2',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(
@@ -370,7 +294,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_valid(self):
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create(name='test group')
-        db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
@@ -378,6 +301,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
                 'group': group.id,
+                'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -398,14 +322,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': 'field2',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
-                'external_databases-TOTAL_FORMS': 0,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-0-id': '',
-                'external_databases-0-reference_dataset': '',
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-database': db.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'was added successfully')
@@ -422,9 +338,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             reference_dataset=reference_dataset,
             data_type=2,
         )
-        db = factories.ReferenceDatasetExternalDatabaseFactory.create(
-            reference_dataset=reference_dataset
-        )
         num_datasets = ReferenceDataset.objects.count()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_change', args=(reference_dataset.id,)),
@@ -434,6 +347,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
                 'group': reference_dataset.group.id,
+                'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -467,15 +381,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-2-column_name': 'Added field 1',
                 'fields-2-data_type': 3,
                 'fields-2-description': 'Added field',
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': db.id,
-                'external_databases-0-reference_dataset': reference_dataset.id,
-                'external_databases-0-database': db.database.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please select only one unique identifier field')
@@ -492,9 +397,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             reference_dataset=reference_dataset,
             data_type=2,
         )
-        db = factories.ReferenceDatasetExternalDatabaseFactory.create(
-            reference_dataset=reference_dataset
-        )
         num_datasets = ReferenceDataset.objects.count()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_change', args=(reference_dataset.id,)),
@@ -504,6 +406,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
                 'group': reference_dataset.group.id,
+                'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -536,15 +439,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-2-column_name': 'added_field_1',
                 'fields-2-data_type': 3,
                 'fields-2-description': 'Added field',
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': db.id,
-                'external_databases-0-reference_dataset': reference_dataset.id,
-                'external_databases-0-database': db.database.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(
@@ -605,15 +499,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-2-column_name': 'added_field_1',
                 'fields-2-data_type': 3,
                 'fields-2-description': 'Added field',
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': 2,
-                'external_databases-0-reference_dataset': 3,
-                'external_databases-0-database': 'a8f06ce0-a949-4fc7-83a2-18222ceb351a',
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(
@@ -675,15 +560,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-2-column_name': 'added_field_1',
                 'fields-2-data_type': 3,
                 'fields-2-description': 'Added field',
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': 2,
-                'external_databases-0-reference_dataset': 3,
-                'external_databases-0-database': 'a8f06ce0-a949-4fc7-83a2-18222ceb351a',
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please ensure field names are unique')
@@ -704,9 +580,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             is_identifier=False,
             description='test',
         )
-        db = factories.ReferenceDatasetExternalDatabaseFactory.create(
-            reference_dataset=reference_dataset
-        )
         num_datasets = ReferenceDataset.objects.count()
         num_fields = reference_dataset.fields.count()
         original_table_name = reference_dataset.table_name
@@ -718,6 +591,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'table_name': 'ref_test_updated',
                 'slug': 'test-ref-1',
                 'group': reference_dataset.group.id,
+                'external_database': '',
                 'short_description': reference_dataset.short_description,
                 'description': '',
                 'valid_from': '',
@@ -742,15 +616,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-column_name': field2.column_name,
                 'fields-1-data_type': field2.data_type,
                 'fields-1-description': field2.description,
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': db.id,
-                'external_databases-0-reference_dataset': reference_dataset.id,
-                'external_databases-0-database': db.database.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'was changed successfully')
@@ -773,10 +638,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             data_type=2,
             is_identifier=False
         )
-        db = factories.ReferenceDatasetExternalDatabaseFactory.create(
-            reference_dataset=reference_dataset,
-            database=factories.DatabaseFactory.create()
-        )
         num_datasets = ReferenceDataset.objects.count()
         num_fields = reference_dataset.fields.count()
         response = self._authenticated_post(
@@ -787,6 +648,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'table_name': 'ref_test_updated',
                 'slug': 'test-ref-1',
                 'group': reference_dataset.group.id,
+                'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -821,15 +683,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-2-description': 'Added field 1',
                 'fields-__prefix__-reference_dataset': reference_dataset.id,
 
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': db.id,
-                'external_databases-0-reference_dataset': reference_dataset.id,
-                'external_databases-0-database': db.database.id,
-                'external_databases-0-schema': 'public',
-
                 '_continue': 'Save and continue editing',
             }
         )
@@ -849,9 +702,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             data_type=2,
             is_identifier=False
         )
-        db = factories.ReferenceDatasetExternalDatabaseFactory.create(
-            reference_dataset=reference_dataset
-        )
         num_datasets = ReferenceDataset.objects.count()
         num_fields = reference_dataset.fields.count()
         response = self._authenticated_post(
@@ -888,15 +738,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-description': 'Updated field 2',
                 'fields-1-is_identifier': 'on',
                 'fields-1-DELETE': 'on',
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': db.id,
-                'external_databases-0-reference_dataset': reference_dataset.id,
-                'external_databases-0-database': db.database.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please ensure one field is set as the unique identifier')
@@ -915,10 +756,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             data_type=2,
             is_identifier=False
         )
-        ext_db = ReferenceDatasetExternalDatabase.objects.create(
-            database=factories.DatabaseFactory.create(),
-            reference_dataset=reference_dataset
-        )
         num_datasets = ReferenceDataset.objects.count()
         num_fields = reference_dataset.fields.count()
         response = self._authenticated_post(
@@ -956,15 +793,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-description': 'Updated field 2',
                 'fields-1-is_identifier': 'on',
                 'fields-1-DELETE': 'on',
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 0,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': ext_db.id,
-                'external_databases-0-reference_dataset': reference_dataset.id,
-                'external_databases-0-database': ext_db.database.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'Please ensure one field is set as the unique identifier')
@@ -983,9 +811,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             data_type=2,
             is_identifier=False
         )
-        db = factories.ReferenceDatasetExternalDatabaseFactory.create(
-            reference_dataset=reference_dataset
-        )
         num_datasets = ReferenceDataset.objects.count()
         num_fields = reference_dataset.fields.count()
         response = self._authenticated_post(
@@ -996,6 +821,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'table_name': reference_dataset.table_name,
                 'slug': 'test-ref-1',
                 'group': reference_dataset.group.id,
+                'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -1023,15 +849,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-data_type': 2,
                 'fields-1-description': 'Updated field 2',
                 'fields-1-is_identifier': 'on',
-
-                'external_databases-TOTAL_FORMS': 1,
-                'external_databases-INITIAL_FORMS': 1,
-                'external_databases-MIN_NUM_FORMS': 0,
-                'external_databases-MAX_NUM_FORMS': 1000,
-                'external_databases-0-id': db.id,
-                'external_databases-0-reference_dataset': reference_dataset.id,
-                'external_databases-0-database': db.database.id,
-                'external_databases-0-schema': 'public',
             }
         )
         self.assertContains(response, 'was changed successfully')

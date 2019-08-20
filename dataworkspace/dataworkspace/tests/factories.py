@@ -79,11 +79,3 @@ class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'datasets.ReferenceDatasetField'
-
-
-class ReferenceDatasetExternalDatabaseFactory(factory.django.DjangoModelFactory):
-    reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
-    database = factory.SubFactory(DatabaseFactory)
-
-    class Meta:
-        model = 'datasets.ReferenceDatasetExternalDatabase'

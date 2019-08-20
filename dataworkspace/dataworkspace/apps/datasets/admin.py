@@ -10,7 +10,6 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     ReferenceDataset,
     ReferenceDatasetField,
-    ReferenceDatasetExternalDatabase
 )
 from dataworkspace.apps.core.admin import TimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (ReferenceDataFieldInlineForm, SourceLinkForm, DataSetForm,
@@ -154,26 +153,13 @@ class ReferenceDataFieldInline(admin.TabularInline):
     ]
 
 
-class ReferenceDatasetExternalDBAdmin(admin.TabularInline):
-    model = ReferenceDatasetExternalDatabase
-    extra = 1
-    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by']
-    fieldsets = [
-        (None, {
-            'fields': [
-                'database',
-            ]
-        })
-    ]
-
-
 @admin.register(ReferenceDataset)
 class ReferenceDatasetAdmin(TimeStampedUserAdmin):
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
     list_display = ('name', 'slug', 'short_description', 'group', 'published', 'version')
-    inlines = [ReferenceDataFieldInline, ReferenceDatasetExternalDBAdmin]
+    inlines = [ReferenceDataFieldInline]
     fieldsets = [
         (None, {
             'fields': [
@@ -182,6 +168,7 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                 'table_name',
                 'slug',
                 'group',
+                'external_database',
                 'short_description',
                 'description',
                 'valid_from',

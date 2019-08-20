@@ -308,6 +308,14 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     schema_version = models.IntegerField(default=0)
     major_version = models.IntegerField(default=1)
     minor_version = models.IntegerField(default=0)
+    external_database = models.ForeignKey(
+        Database,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        help_text='Name of the analysts database to keep in '
+                  'sync with this reference dataset'
+    )
 
     class Meta:
         db_table = 'app_referencedataset'
@@ -321,8 +329,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Stash the current table name so it can be compared on save
+        # Stash the current table name & db so they can be compared on save
         self._original_table_name = self.table_name
+        self._original_ext_db = self.external_database \
+            if self.external_database is not None else None
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
@@ -332,23 +342,50 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         super().save(force_insert, force_update, using, update_fields)
         model_class = self.get_record_model_class()
         if create:
+            # Create the internal database table
             with connection.schema_editor() as editor:
                 editor.create_model(model_class)
-        elif table_changed:
-            for database in self.get_database_names():
-                with connections[database].schema_editor() as editor:
-                    editor.alter_db_table(
-                        model_class,
-                        self._original_table_name,
-                        self.table_name
-                    )
+            # Create the external database table
+            if self.external_database is not None:
+                self._create_external_database(self.external_database.memorable_name)
+        else:
+            if self.external_database != self._original_ext_db:
+                # If external db has been changed delete the original table
+                if self._original_ext_db is not None:
+                    self._drop_external_database(self._original_ext_db.memorable_name)
+                # if external db is now set create the table and sync existing records
+                if self.external_database is not None:
+                    self._create_external_database(self.external_database.memorable_name)
+                    self.sync_to_external_database(self.external_database.memorable_name)
+
+            # If the db has been changed update it
+            if table_changed:
+                for database in self.get_database_names():
+                    with connections[database].schema_editor() as editor:
+                        editor.alter_db_table(
+                            model_class,
+                            self._original_table_name,
+                            self.table_name
+                        )
+
         self._original_table_name = self.table_name
+        self._original_ext_db = self.external_database \
+            if self.external_database is not None else None
 
     def delete(self, **kwargs):
-        # Delete external tables when ref dataset is deleted
-        for ext in self.external_databases.all():
-            ext.delete()
+        # Delete external table when ref dataset is deleted
+        if self.external_database is not None:
+            self._drop_external_database(self.external_database.memorable_name)
         super().delete(**kwargs)
+
+    def _create_external_database(self, db_name):
+        with connections[db_name].schema_editor() as editor:
+            with external_model_class(self.get_record_model_class()) as mc:
+                editor.create_model(mc)
+
+    def _drop_external_database(self, db_name):
+        with connections[db_name].schema_editor() as editor:
+            editor.delete_model(self.get_record_model_class())
 
     @property
     def field_names(self) -> List[str]:
@@ -476,24 +513,27 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param form_data: a dictionary containing values to be saved to the row
         :return:
         """
-        self.increment_minor_version()
+        cleaned_form_data = {k: v for k, v in form_data.items() if k != 'reference_data'}
         if internal_id is None:
             record = self.get_record_model_class().objects.create(**form_data)
-            del form_data['reference_dataset']
-            for db in self.external_databases.all():
+            if self.external_database is not None:
                 with external_model_class(self.get_record_model_class()) as model_class:
-                    model_class.objects.using(db.database.memorable_name).create(**form_data)
-            return record
-
-        records = self.get_records().filter(id=internal_id)
-        records.update(**form_data)
-        del form_data['reference_dataset']
-        for db in self.external_databases.all():
-            with external_model_class(self.get_record_model_class()) as model_class:
-                model_class.objects.using(db.database.memorable_name).filter(
-                    id=internal_id
-                ).update(**form_data)
-        return records.first()
+                    model_class.objects.using(self.external_database.memorable_name).create(
+                        **cleaned_form_data
+                    )
+        else:
+            records = self.get_records().filter(id=internal_id)
+            records.update(**form_data)
+            if self.external_database is not None:
+                with external_model_class(self.get_record_model_class()) as model_class:
+                    model_class.objects.using(self.external_database.memorable_name).filter(
+                        id=internal_id
+                    ).update(
+                        **cleaned_form_data
+                    )
+            record = records.first()
+        self.increment_minor_version()
+        return record
 
     def delete_record(self, internal_id: int):
         """
@@ -503,25 +543,38 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         self.increment_minor_version()
         self.get_record_by_internal_id(internal_id).delete()
-        for db in self.external_databases.all():
+        if self.external_database is not None:
             with external_model_class(self.get_record_model_class()) as model_class:
-                model_class.objects.using(db.database.memorable_name).filter(
+                model_class.objects.using(self.external_database.memorable_name).filter(
                     id=internal_id
                 ).delete()
 
-    def add_records_to_external_database(self, database_name):
+    def sync_to_external_database(self, external_database):
         """
-        Ensure each record in this dataset is mirrored to external db `database_name`
-        :param database_name:
+        Run a full sync of records from the local django db to `external_database`
+        :param external_database:
         :return:
         """
-        records = self.get_records()
-        columns = ['id'] + self.column_names
-        with external_model_class(self.get_record_model_class()) as model_class:
-            for record in records:
-                model_class.objects.using(database_name).create(
-                    **{x: getattr(record, x) for x in columns}
-                )
+        model_class = self.get_record_model_class()
+        saved_ids = []
+
+        for record in self.get_records():
+            record_data = {col: getattr(record, col) for col in self.column_names}
+            if model_class.objects.using(external_database).filter(pk=record.id).exists():
+                with external_model_class(model_class) as mc:
+                    mc.objects.using(external_database).filter(pk=record.id).update(
+                        **record_data
+                    )
+            else:
+                with external_model_class(model_class) as mc:
+                    mc.objects.using(external_database).create(
+                        id=record.id,
+                        **record_data
+                    )
+            saved_ids.append(record.id)
+
+        # Delete any records that are in the external db but not local
+        model_class.objects.using(external_database).exclude(pk__in=saved_ids).delete()
 
     def increment_schema_version(self):
         self.schema_version += 1
@@ -537,10 +590,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self.save()
 
     def get_database_names(self):
-        return ['default'] + [
-            db.database.memorable_name
-            for db in self.external_databases.all()
-        ]
+        if self.external_database is not None:
+            return ['default', self.external_database.memorable_name]
+        return ['default']
 
 
 class ReferenceDatasetField(TimeStampedUserModel):
@@ -778,57 +830,3 @@ class ReferenceDatasetField(TimeStampedUserModel):
             max_length=255
         )
         return field
-
-
-class ReferenceDatasetExternalDatabase(TimeStampedUserModel):
-    reference_dataset = models.ForeignKey(
-        ReferenceDataset,
-        on_delete=models.CASCADE,
-        related_name='external_databases',
-    )
-    database = models.ForeignKey(
-        Database,
-        default=None,
-        on_delete=models.CASCADE,
-    )
-
-    class Meta:
-        unique_together = ('reference_dataset', 'database')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Stash the current database so it can be compared on save
-        try:
-            self._original_database_name = self.database.memorable_name
-        except Database.DoesNotExist:
-            self._original_database = None
-
-    def __str__(self):
-        return '{} external database: {}'.format(
-            self.reference_dataset.name,
-            self.database,
-        )
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        create = self.id is None
-        super().save(force_insert, force_update, using, update_fields)
-        model_class = self.reference_dataset.get_record_model_class()
-        # If this record has been newly created or the related database has changed
-        # create the table on the new database
-        if create or self.database.memorable_name != self._original_database_name:
-            with connections[self.database.memorable_name].schema_editor() as editor:
-                with external_model_class(model_class) as mc:
-                    editor.create_model(mc)
-            self.reference_dataset.add_records_to_external_database(self.database.memorable_name)
-
-        # If the linked database has changed delete the old table
-        if not create and self.database.memorable_name != self._original_database_name:
-            with connections[self._original_database_name].schema_editor() as editor:
-                editor.delete_model(model_class)
-
-    def delete(self, using=None, keep_parents=False):
-        # On delete remove the table from the external db
-        model_class = self.reference_dataset.get_record_model_class()
-        with connections[self.database.memorable_name].schema_editor() as editor:
-            editor.delete_model(model_class)
-        super().delete(using, keep_parents)
