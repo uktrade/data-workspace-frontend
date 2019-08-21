@@ -2,6 +2,9 @@ import logging
 
 from django import forms
 from django.contrib import admin
+from django.db import (
+    transaction,
+)
 
 from dataworkspace.apps.datasets.models import (
     DataGrouping,
@@ -86,6 +89,7 @@ class DataSetAdmin(admin.ModelAdmin):
             'all': ('data-workspace-admin.css',)
         }
 
+    @transaction.atomic
     def save_model(self, request, obj, form, change):
         obj.user_access_type = \
             'REQUIRES_AUTHORIZATION' if form.cleaned_data['requires_authorization'] else \
