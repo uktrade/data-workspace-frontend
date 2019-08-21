@@ -514,50 +514,38 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return self.get_records().get(**{field_name: identifier})
 
     @transaction.atomic
-    def save_record(self, internal_id: Optional[int], form_data: dict):
+    def save_record(self, internal_id: Optional[int], form_data: dict, sync_externally=True):
         """
         Save a record to the local database and associate it with this reference dataset.
         Replicate the record in any linked external databases.
         :param internal_id: the django id for the model (None if doesn't exist)
         :param form_data: a dictionary containing values to be saved to the row
+        :param sync_externally: Whether to run a full sync on the external db
         :return:
         """
-        cleaned_form_data = {k: v for k, v in form_data.items() if k != 'reference_data'}
         if internal_id is None:
             record = self.get_record_model_class().objects.create(**form_data)
-            if self.external_database is not None:
-                with external_model_class(self.get_record_model_class()) as model_class:
-                    model_class.objects.using(self.external_database.memorable_name).create(
-                        **cleaned_form_data
-                    )
         else:
             records = self.get_records().filter(id=internal_id)
             records.update(**form_data)
-            if self.external_database is not None:
-                with external_model_class(self.get_record_model_class()) as model_class:
-                    model_class.objects.using(self.external_database.memorable_name).filter(
-                        id=internal_id
-                    ).update(
-                        **cleaned_form_data
-                    )
             record = records.first()
         self.increment_minor_version()
+        if sync_externally and self.external_database is not None:
+            self.sync_to_external_database(self.external_database.memorable_name)
         return record
 
     @transaction.atomic
-    def delete_record(self, internal_id: int):
+    def delete_record(self, internal_id: int, sync_externally=True):
         """
         Delete a record from the reference dataset table
         :param internal_id: the django id for the record
+        :param sync_externally: Whether to run a full sync on the external db
         :return:
         """
         self.increment_minor_version()
         self.get_record_by_internal_id(internal_id).delete()
-        if self.external_database is not None:
-            with external_model_class(self.get_record_model_class()) as model_class:
-                model_class.objects.using(self.external_database.memorable_name).filter(
-                    id=internal_id
-                ).delete()
+        if sync_externally and self.external_database is not None:
+            self.sync_to_external_database(self.external_database.memorable_name)
 
     def sync_to_external_database(self, external_database):
         """
