@@ -10,6 +10,9 @@ from django.contrib.auth.models import (
 from django.contrib.contenttypes.models import (
     ContentType,
 )
+from django.db import (
+    transaction,
+)
 from django.forms.widgets import (
     CheckboxSelectMultiple,
 )
@@ -111,6 +114,7 @@ class AppUserAdmin(UserAdmin):
             return self.readonly_fields + ['email']
         return self.readonly_fields
 
+    @transaction.atomic
     def save_model(self, request, obj, form, change):
         start_all_applications_permission = Permission.objects.get(
             codename='start_all_applications',
