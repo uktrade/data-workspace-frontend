@@ -1,8 +1,8 @@
-FROM alpine:3.8
+FROM alpine:3.10
 
 RUN apk --no-cache add \
-	nginx==1.14.2-r0 \
-	openssl=1.0.2r-r0 \
+	nginx==1.16.1-r0 \
+	openssl=1.1.1c-r0 \
 	tini=0.18.0-r0
 
 COPY sentryproxy-entrypoint.sh /entrypoint.sh

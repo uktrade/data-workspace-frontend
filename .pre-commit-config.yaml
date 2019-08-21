@@ -38,8 +38,10 @@ repos:
         - --disable=too-many-locals
         - --disable=too-many-public-methods
         - --disable=too-many-statements
+        - --disable=too-many-ancestors
         - --include-naming-hint=yes
         - --max-args=10
         - --max-line-length=250
         - --max-locals=25
+        - --max-returns=10
         - --max-returns=10

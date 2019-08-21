@@ -11,6 +11,16 @@ resource "aws_ecs_service" "dnsmasq" {
   }
 }
 
+data "external" "dnsmasq_current_tag" {
+  program = ["${path.module}/container-tag.sh"]
+
+  query = {
+    cluster_name = "${aws_ecs_cluster.main_cluster.name}"
+    service_name = "${var.prefix}-dnsmasq"  # Manually specified to avoid a cycle
+    container_name = "${local.dnsmasq_container_name}"
+  }
+}
+
 resource "aws_ecs_task_definition" "dnsmasq" {
   family                = "${var.prefix}-dnsmasq"
   container_definitions = "${data.template_file.dnsmasq_container_definitions.rendered}"
@@ -20,13 +30,19 @@ resource "aws_ecs_task_definition" "dnsmasq" {
   cpu                   = "${local.dnsmasq_container_cpu}"
   memory                = "${local.dnsmasq_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "dnsmasq_container_definitions" {
   template = "${file("${path.module}/ecs_main_dnsmasq_container_definitions.json")}"
 
   vars {
-    container_image    = "${var.dnsmasq_container_image}"
+    container_image    = "${var.dnsmasq_container_image}:${data.external.dnsmasq_current_tag.result.tag}"
     container_name     = "${local.dnsmasq_container_name}"
     container_cpu      = "${local.dnsmasq_container_cpu}"
     container_memory   = "${local.dnsmasq_container_memory}"

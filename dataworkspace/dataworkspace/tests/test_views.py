@@ -4,10 +4,13 @@ from botocore.response import StreamingBody
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from psycopg2 import connect
 
 import mock
 
+from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.models import SourceLink
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseTestCase
 
@@ -142,6 +145,7 @@ class TestDatasetViews(BaseTestCase):
             field1.column_name: 2,
             field2.column_name: 'Ánd again'
         })
+        log_count = EventLog.objects.count()
         response = self._authenticated_get(
             reverse('catalogue:reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -155,6 +159,11 @@ class TestDatasetViews(BaseTestCase):
         }, {
             'id': 2, 'name': 'Ánd again'
         }])
+        self.assertEqual(EventLog.objects.count(), log_count + 1)
+        self.assertEqual(
+            EventLog.objects.latest().event_type,
+            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
+        )
 
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
@@ -180,6 +189,7 @@ class TestDatasetViews(BaseTestCase):
             field1.column_name: 2,
             field2.column_name: 'Ánd again'
         })
+        log_count = EventLog.objects.count()
         response = self._authenticated_get(
             reverse('catalogue:reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -192,6 +202,11 @@ class TestDatasetViews(BaseTestCase):
             response.content,
             b'id,name\r\n1,Test rec\xc3\xb3rd\r\n2,\xc3\x81nd again\r\n'
         )
+        self.assertEqual(EventLog.objects.count(), log_count + 1)
+        self.assertEqual(
+            EventLog.objects.latest().event_type,
+            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
+        )
 
     def test_reference_dataset_unknown_download(self):
         group = factories.DataGroupingFactory.create()
@@ -200,6 +215,7 @@ class TestDatasetViews(BaseTestCase):
             reference_dataset=rds,
             is_identifier=True
         )
+        log_count = EventLog.objects.count()
         response = self._authenticated_get(
             reverse('catalogue:reference_dataset_download', kwargs={
                 'group_slug': group.slug,
@@ -208,6 +224,7 @@ class TestDatasetViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(EventLog.objects.count(), log_count)
 
 
 class TestSupportView(BaseTestCase):
@@ -275,6 +292,33 @@ class TestSupportView(BaseTestCase):
 
 
 class TestSourceLinkDownloadView(BaseTestCase):
+    def test_forbidden_dataset(self):
+        group = factories.DataGroupingFactory.create()
+        dataset = factories.DataSetFactory.create(
+            grouping=group,
+            published=True,
+            user_access_type='REQUIRES_AUTHORIZATION',
+        )
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            link_type=SourceLink.TYPE_EXTERNAL,
+            url='http://example.com'
+        )
+        log_count = EventLog.objects.count()
+        response = self._authenticated_get(
+            reverse(
+                'catalogue:dataset_source_link_download',
+                kwargs={
+                    'group_slug': group.slug,
+                    'set_slug': dataset.slug,
+                    'source_link_id': link.id
+                }
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(EventLog.objects.count(), log_count)
+
     def test_download_external_file(self):
         group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
@@ -288,6 +332,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             link_type=SourceLink.TYPE_EXTERNAL,
             url='http://example.com'
         )
+        log_count = EventLog.objects.count()
         response = self._authenticated_get(
             reverse(
                 'catalogue:dataset_source_link_download',
@@ -299,6 +344,11 @@ class TestSourceLinkDownloadView(BaseTestCase):
             )
         )
         self.assertRedirects(response, 'http://example.com', fetch_redirect_response=False)
+        self.assertEqual(EventLog.objects.count(), log_count + 1)
+        self.assertEqual(
+            EventLog.objects.latest().event_type,
+            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
+        )
 
     @mock.patch('dataworkspace.apps.catalogue.views.boto3.client')
     def test_download_local_file(self, mock_client):
@@ -314,6 +364,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             link_type=SourceLink.TYPE_LOCAL,
             url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt'
         )
+        log_count = EventLog.objects.count()
         mock_client().get_object.return_value = {
             'ContentType': 'text/plain',
             'Body': StreamingBody(
@@ -339,4 +390,78 @@ class TestSourceLinkDownloadView(BaseTestCase):
         mock_client().get_object.assert_called_with(
             Bucket=settings.AWS_UPLOADS_BUCKET,
             Key=link.url
+        )
+        self.assertEqual(EventLog.objects.count(), log_count + 1)
+        self.assertEqual(
+            EventLog.objects.latest().event_type,
+            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
+        )
+
+
+class TestSourceTableDownloadView(BaseTestCase):
+    databases = ['default', 'my_database']
+
+    def test_forbidden_dataset(self):
+        dataset = factories.DataSetFactory(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        source_table = factories.SourceTableFactory(
+            dataset=dataset,
+        )
+        log_count = EventLog.objects.count()
+        response = self._authenticated_get(
+            source_table.get_absolute_url()
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(EventLog.objects.count(), log_count)
+
+    def test_missing_table(self):
+        dataset = factories.DataSetFactory(
+            user_access_type='REQUIRES_AUTHENTICATION'
+        )
+        source_table = factories.SourceTableFactory(
+            dataset=dataset,
+            database=factories.DatabaseFactory(
+                memorable_name='my_database',
+            )
+        )
+        response = self._authenticated_get(
+            source_table.get_absolute_url()
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_table_download(self):
+        dsn = database_dsn(settings.DATABASES_DATA['my_database'])
+        with connect(dsn) as conn, conn.cursor() as cursor:
+            cursor.execute(
+                '''
+                CREATE TABLE if not exists download_test (field2 int,field1 varchar(255));
+                TRUNCATE TABLE download_test;
+                INSERT INTO download_test VALUES(1, 'record1');
+                INSERT INTO download_test VALUES(2, 'record2');
+                '''
+            )
+
+        dataset = factories.DataSetFactory(
+            user_access_type='REQUIRES_AUTHENTICATION'
+        )
+        source_table = factories.SourceTableFactory(
+            dataset=dataset,
+            database=factories.DatabaseFactory(
+                memorable_name='my_database',
+            ),
+            schema='public',
+            table='download_test',
+        )
+        log_count = EventLog.objects.count()
+        response = self._authenticated_get(source_table.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            b''.join(response.streaming_content),
+            b'field2,field1\r\n1,record1\r\n2,record2\r\nNumber of rows: 2\r\n'
+        )
+        self.assertEqual(EventLog.objects.count(), log_count + 1)
+        self.assertEqual(
+            EventLog.objects.latest().event_type,
+            EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD
         )

@@ -59,6 +59,15 @@ class SourceLinkFactory(factory.django.DjangoModelFactory):
         model = 'datasets.SourceLink'
 
 
+class SourceTableFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    dataset = factory.SubFactory(DataSetFactory)
+    database = factory.SubFactory(DatabaseFactory)
+
+    class Meta:
+        model = 'datasets.SourceTable'
+
+
 class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     group = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
@@ -79,3 +88,11 @@ class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'datasets.ReferenceDatasetField'
+
+
+class EventLogFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    event_type = 1
+
+    class Meta:
+        model = 'eventlog.EventLog'

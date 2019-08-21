@@ -13,8 +13,10 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
+from django.forms import model_to_dict
 from django.http import (Http404, HttpResponse, HttpResponseForbidden,
-                         StreamingHttpResponse, HttpResponseServerError, HttpResponseRedirect)
+                         StreamingHttpResponse, HttpResponseServerError, HttpResponseRedirect,
+                         HttpResponseNotFound)
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
@@ -22,8 +24,12 @@ from django.views.generic import DetailView
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
-from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink
+from dataworkspace.apps.core.utils import table_exists, table_data
+from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
+    SourceTable
 from dataworkspace.apps.datasets.utils import find_dataset
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 logger = logging.getLogger('app')
 
@@ -63,22 +69,13 @@ def datagroup_item_view(request, slug):
 def dataset_full_path_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
 
-    tables = dataset.sourcetable_set.all().order_by('schema', 'table', 'database__memorable_name', 'database__id')
-    database_schema_table_name = [
-        (
-            table.database.memorable_name,
-            table.schema,
-            table.table,
-            table.name
-        )
-        for table in tables
-    ]
-
     context = {
         'model': dataset,
         'has_download_access': dataset.user_has_access(request.user),
         'links': dataset.sourcelink_set.all().order_by('name'),
-        'database_schema_table_name': database_schema_table_name,
+        'tables': dataset.sourcetable_set.all().order_by(
+            'schema', 'table', 'database__memorable_name', 'database__id'
+        )
     }
 
     return render(request, 'dataset.html', context)
@@ -101,7 +98,7 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
         )
 
 
-class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disable=too-many-ancestors
+class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
     def get(self, request, *args, **kwargs):
         dl_format = self.kwargs.get('format')
         if dl_format not in ['json', 'csv']:
@@ -122,6 +119,18 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disab
             ref_dataset.version,
             dl_format
         )
+
+        log_event(
+            request.user,
+            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+            ref_dataset,
+            extra={
+                'path': request.get_full_path(),
+                'reference_dataset_version': ref_dataset.version,
+                'download_format': dl_format,
+            }
+        )
+
         if dl_format == 'json':
             response['Content-Type'] = 'application/json'
             response.write(json.dumps(list(records), cls=DjangoJSONEncoder))
@@ -138,25 +147,34 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):  # pylint: disab
         return response
 
 
-class SourceLinkDownloadView(DetailView):  # pylint: disable=too-many-ancestors
+class SourceLinkDownloadView(DetailView):
     model = SourceLink
 
-    def get_object(self, queryset=None):
+    def get(self, request, *args, **kwargs):
         dataset = find_dataset(
             self.kwargs.get('group_slug'),
             self.kwargs.get('set_slug')
         )
+
         if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
 
-        return get_object_or_404(
+        source_link = get_object_or_404(
             SourceLink,
             id=self.kwargs.get('source_link_id'),
             dataset=dataset
         )
 
-    def get(self, request, *args, **kwargs):
-        source_link = self.get_object()
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
+            source_link.dataset,
+            extra={
+                'path': request.get_full_path(),
+                **model_to_dict(source_link)
+            }
+        )
+
         if source_link.link_type == source_link.TYPE_EXTERNAL:
             return HttpResponseRedirect(source_link.url)
 
@@ -181,7 +199,42 @@ class SourceLinkDownloadView(DetailView):  # pylint: disable=too-many-ancestors
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             os.path.split(source_link.url)[-1]
         )
+
         return response
+
+
+class SourceTableDownloadView(DetailView):
+    model = SourceTable
+
+    def get(self, request, *args, **kwargs):
+        dataset = find_dataset(
+            self.kwargs.get('group_slug'),
+            self.kwargs.get('set_slug')
+        )
+
+        if not dataset.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+
+        table = get_object_or_404(
+            SourceTable,
+            id=self.kwargs.get('source_table_id'),
+            dataset=dataset
+        )
+
+        if not table_exists(table.database.memorable_name, table.schema, table.table):
+            return HttpResponseNotFound()
+
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD,
+            table.dataset,
+            extra={
+                'path': request.get_full_path(),
+                **model_to_dict(table)
+            }
+        )
+
+        return table_data(request.user.email, table.database.memorable_name, table.schema, table.table)
 
 
 def root_view(request):

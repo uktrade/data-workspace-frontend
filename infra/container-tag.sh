@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Follows the Terraform External Program Protocol to extract the current
+# Docker tag in the Task Defintion of a Service. Used so `terraform apply`
+# does not conflict with deployments from Jenkins that change the Docker tag
+
 set -e
 
 QUERY=$(</dev/stdin)

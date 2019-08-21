@@ -64,6 +64,12 @@ resource "aws_ecs_task_definition" "healthcheck" {
   cpu                      = "${local.healthcheck_container_cpu}"
   memory                   = "${local.healthcheck_container_memory}"
   requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
 }
 
 data "template_file" "healthcheck_container_definitions" {

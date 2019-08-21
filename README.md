@@ -54,52 +54,68 @@ docker-compose -f docker-compose-test.yml run data-workspace-test django-admin t
 ```
 
 
-# Building & pushing docker image to Quay.io
+# Infrastructure
 
-```bash
-docker build -t data-workspace . && \
-docker tag data-workspace:latest quay.io/uktrade/jupyterhub-data-auth-admin:latest && \
-docker push quay.io/uktrade/jupyterhub-data-auth-admin:latest
-```
+The infrastructure is heavily Docker/Fargate based. Production Docker images are built by [quay.io](https://quay.io/organization/uktrade).
 
 
-## Healthcheck
+## User-facing components
 
-```bash
-docker build -t data-workspace-healthcheck healthcheck && \
-docker tag data-workspace-healthcheck:latest quay.io/uktrade/data-workspace-healthcheck:latest && \
-docker push quay.io/uktrade/data-workspace-healthcheck:latest
-```
+- [Main application](https://quay.io/repository/uktrade/data-workspace)
+  A Django application to manage datasets and permissions, launch containers, a proxy to route requests to those containers, and an NGINX instance to route to the proxy and serve static files.
 
+- [JupyterLab](https://quay.io/repository/uktrade/data-workspace-jupyterlab)
+  Launched by users of the main application, and populated with credentials in the environment to access certain datasets.
 
-## S3 Sync
+- [rStudio](https://quay.io/repository/uktrade/data-workspace-rstudio)
+  Launched by users of the main application, and populated with credentials in the environment to access certain datasets.
 
-The home directory for each container is persisted to S3 using a sidecar container
-
-```bash
-docker build -t data-workspace-s3sync s3sync && \
-docker tag data-workspace-s3sync:latest quay.io/uktrade/data-workspace-s3sync:latest && \
-docker push quay.io/uktrade/data-workspace-s3sync:latest
-```
+- [pgAdmin](https://quay.io/repository/uktrade/data-workspace-pgadmin)
+  Launched by users of the main application, and populated with credentials in the environment to access certain datasets.
 
 
-## Metrics
+## Infrastructure components
 
-Metrics are exposed for each user-launched application in a sidecar-container.
+- [metrics](https://quay.io/repository/uktrade/data-workspace-metrics)
+  A sidecar-container for the user-launched containers that exposes metrics from the [ECS task metadata endpoint](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v3.html) in Prometheus format.
 
-```bash
-docker build -t data-workspace-metrics metrics && \
-docker tag data-workspace-metrics:latest quay.io/uktrade/data-workspace-metrics:latest && \
-docker push quay.io/uktrade/data-workspace-metrics:latest
-```
+- [s3sync](https://quay.io/repository/uktrade/data-workspace-s3sync)
+  A sidecar-container for the user-launched containers that syncs to and from S3 using [mobius3](https://github.com/uktrade/mobius3). This is to allow file-persistance on S3 without using FUSE, which at the time of writing is not possible on Fargate.
 
-These are collected via Prometheus.
+- [dnsmasq](https://quay.io/repository/uktrade/data-workspace-dnsmasq)
+  The DNS server of the VPC that launched containers run in. It selectivly allows only certain DNS requests through to migitate chance of data exfiltration through DNS. When this container is deployed, it changes DHCP settings in the VPC, and will most likely break aspects of user-launched containers.
 
-```bash
-docker build -t data-workspace-prometheus prometheus && \
-docker tag data-workspace-prometheus:latest quay.io/uktrade/data-workspace-prometheus:latest && \
-docker push quay.io/uktrade/data-workspace-prometheus:latest
-```
+- [healthcheck](https://quay.io/repository/uktrade/data-workspace-healthcheck)
+  Proxies through to the healthcheck endpoint of the main application, so the main application can be in a security group locked-down to certain IP addresses, but still be monitored by Pingdom.
+
+- [mirrors-sync](https://quay.io/repository/uktrade/data-workspace-mirrors-sync)
+  Mirrors pypi, CRAN and (ana)conda repositories to S3, so user-launched JupyterLab and rStudio containers can install packages without having to contact the public internet.
+
+- [prometheus](https://quay.io/repository/uktrade/data-workspace-prometheus)
+  Collects metrics from user-launched containers and re-exposes them through federation.
+
+- [registry](https://quay.io/repository/uktrade/data-workspace-registry)
+  A Docker pull-through-cache to repositories in [quay.io](https://quay.io/organization/uktrade). This allows the VPC to not have public internet access but still launch containers from quai.io in Fargate.
+
+- [sentryproxy](https://quay.io/repository/uktrade/data-workspace-sentryproxy)
+  Proxies errors to a Sentry instance: only used by JupyterLab.
 
 
-Quay.io does not build the images: they are built locally and pushed.
+## Why the custom proxy?
+
+A common question is why not just NGINX instead of the custom proxy? The reason is the dynamic routing for the applications, e.g. URLs like https://jupyterlab-abcde1234.mydomain.com/: each one has a lot of fairly complex requirements.
+
+- It must redirect to SSO if not authenticated, and redirect back to the URL once authenticated.
+- It must perform ip-filtering that is not applicable to the main application.
+- It must check that the current user is allowed to access the application, and show a forbidden page if not.
+- It must start the application if it's not started.
+- It must show a starting page with countdown if it's starting.
+- It must detect if an application has started, and route requests to it if it is.
+- It must route cookies from _all_ responses back to the user. For JupyterLab, the _first_ response contains cookies used in XSRF protection that are never resent in later requests.
+- It must show an error page if there is an error starting or connecting to the application.
+- It must allow a refresh of the error page to attempt to start the application again.
+- It must support WebSockets, without knowledge ahead of time which paths are used by WebSockets.
+- It must support streaming uploads and downloads.
+- Ideally, there would not be duplicate reponsibilities between the proxy and other parts of the system, e.g. the Django application.
+
+While not impossible to leverage NGINX to move some code from the proxy, there would still need to be custom code, and NGINX would have to communicate via some mechanism to this custom code to acheive all of the above: extra HTTP or Redis requests, or maybe through a custom NGINX module. It is suspected that this will make things more complex rather than less, and increase the burden on the developer.
