@@ -47,7 +47,7 @@
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
 
-            {% if links or database_schema_table_name %}
+            {% if links or tables %}
                 {% if not has_download_access %}
                     <div class="govuk-warning-text">
                         <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -97,17 +97,15 @@
                     </tr>
                 {% endfor %}
 
-                {% for database, schema, table, name in database_schema_table_name %}
+                {% for table in tables %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
                             {% if has_download_access %}
-                                <a
-                                        class="govuk-link"
-                                        href="{% url 'table_data' database schema table %}">
-                                    {{ name }}
+                                <a class="govuk-link" href="{{ table.get_absolute_url }}">
+                                    {{ table.name }}
                                 </a>
                             {% else %}
-                                {{ name }}
+                                {{ table.name }}
                             {% endif %}
 
                         </td>
@@ -121,7 +119,7 @@
                     </tr>
                 {% endfor %}
 
-                {% if not links and not database_schema_table_name %}
+                {% if not links and not tables %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available

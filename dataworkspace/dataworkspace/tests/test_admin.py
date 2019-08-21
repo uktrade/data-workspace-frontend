@@ -8,15 +8,10 @@ from django.urls import reverse
 
 from dataworkspace.apps.datasets.models import ReferenceDataset, ReferenceDatasetField, SourceLink
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import BaseTestCase, BaseAdminTestCase
+from dataworkspace.tests.common import BaseAdminTestCase
 
 
-class TestReferenceDatasetAdmin(BaseTestCase):
-
-    def setUp(self):
-        super().setUp()
-        # Authenticate the user on the admin site
-        self._authenticated_post(reverse('admin:index'))
+class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_no_fields(self):
         num_datasets = ReferenceDataset.objects.count()
