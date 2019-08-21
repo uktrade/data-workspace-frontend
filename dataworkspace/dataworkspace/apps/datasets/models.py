@@ -353,15 +353,15 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 editor.create_model(model_class)
             # Create the external database table
             if self.external_database is not None:
-                self._create_external_database(self.external_database.memorable_name)
+                self._create_external_database_table(self.external_database.memorable_name)
         else:
             if self.external_database != self._original_ext_db:
                 # If external db has been changed delete the original table
                 if self._original_ext_db is not None:
-                    self._drop_external_database(self._original_ext_db.memorable_name)
+                    self._drop_external_database_table(self._original_ext_db.memorable_name)
                 # if external db is now set create the table and sync existing records
                 if self.external_database is not None:
-                    self._create_external_database(self.external_database.memorable_name)
+                    self._create_external_database_table(self.external_database.memorable_name)
                     self.sync_to_external_database(self.external_database.memorable_name)
 
             # If the db has been changed update it
@@ -382,15 +382,15 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def delete(self, **kwargs):
         # Delete external table when ref dataset is deleted
         if self.external_database is not None:
-            self._drop_external_database(self.external_database.memorable_name)
+            self._drop_external_database_table(self.external_database.memorable_name)
         super().delete(**kwargs)
 
-    def _create_external_database(self, db_name):
+    def _create_external_database_table(self, db_name):
         with connections[db_name].schema_editor() as editor:
             with external_model_class(self.get_record_model_class()) as mc:
                 editor.create_model(mc)
 
-    def _drop_external_database(self, db_name):
+    def _drop_external_database_table(self, db_name):
         with connections[db_name].schema_editor() as editor:
             editor.delete_model(self.get_record_model_class())
 
