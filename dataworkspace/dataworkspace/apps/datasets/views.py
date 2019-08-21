@@ -56,7 +56,7 @@ def request_access_success_view(request):
 
     dataset = find_dataset(group_slug, set_slug)
 
-    return render(request, 'datasets:request_access_success.html', {
+    return render(request, 'request_access_success.html', {
         'ticket': ticket,
         'dataset': dataset,
     })
