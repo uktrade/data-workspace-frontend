@@ -1,7 +1,7 @@
 import mock
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection, connections
+from django.db import connection, connections, ProgrammingError
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, \
@@ -889,3 +889,31 @@ class TestExternalModels(BaseModelsTests):
         self.assertFalse(
             self._table_exists('test_create_external_error', database='test_external_db')
         )
+
+    def test_edit_reference_dataset_external_error(self):
+        # Test that when an exception occurs during external database save
+        # the local database is rolled back
+        ref_dataset = self._create_reference_dataset(table_name='edit_table_ext_error')
+        ref_dataset.table_name = 'updated_edit_table_ext_error'
+        with mock.patch('dataworkspace.apps.datasets.models.connections') as mock_conn:
+            mock_ext_conn = mock.Mock()
+            mock_ext_conn.schema_editor.side_effect = ProgrammingError('fail!')
+
+            # Ensure the local db is updated and the external db throws an error
+            def mock_getitem(_, alias):
+                if alias == 'default':
+                    return connection
+                return mock_ext_conn
+
+            mock_conn.__getitem__ = mock_getitem
+            try:
+                ref_dataset.save()
+            except ProgrammingError:
+                pass
+
+        # We should still have two tables with the original table name and no
+        # tables with the updated table name
+        self.assertTrue(self._table_exists('edit_table_ext_error'))
+        self.assertTrue(self._table_exists('edit_table_ext_error', database='test_external_db'))
+        self.assertFalse(self._table_exists('updated_edit_table_ext_error'))
+        self.assertFalse(self._table_exists('updated_edit_table_ext_error', database='test_external_db'))

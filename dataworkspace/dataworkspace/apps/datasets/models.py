@@ -375,8 +375,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                         )
 
         self._original_table_name = self.table_name
-        self._original_ext_db = self.external_database \
-            if self.external_database is not None else None
+        self._original_ext_db = self.external_database
 
     @transaction.atomic
     def delete(self, **kwargs):
