@@ -337,8 +337,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         super().__init__(*args, **kwargs)
         # Stash the current table name & db so they can be compared on save
         self._original_table_name = self.table_name
-        self._original_ext_db = self.external_database \
-            if self.external_database is not None else None
+        self._original_ext_db = self.external_database
 
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
