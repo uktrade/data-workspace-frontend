@@ -126,15 +126,21 @@ class AppUserAdmin(UserAdmin):
         )
 
         if 'can_start_all_applications' in form.cleaned_data:
-            if form.cleaned_data['can_start_all_applications']:
+            if (
+                    form.cleaned_data['can_start_all_applications'] and
+                    start_all_applications_permission not in obj.user_permissions.all()
+            ):
                 obj.user_permissions.add(start_all_applications_permission)
-            else:
+            elif start_all_applications_permission in obj.user_permissions.all():
                 obj.user_permissions.remove(start_all_applications_permission)
 
         if 'can_access_appstream' in form.cleaned_data:
-            if form.cleaned_data['can_access_appstream']:
+            if (
+                    form.cleaned_data['can_access_appstream'] and
+                    access_appstream_permission not in obj.user_permissions.all()
+            ):
                 obj.user_permissions.add(access_appstream_permission)
-            else:
+            elif access_appstream_permission in obj.user_permissions.all():
                 obj.user_permissions.remove(access_appstream_permission)
 
         if 'authorized_datasets' in form.cleaned_data:
