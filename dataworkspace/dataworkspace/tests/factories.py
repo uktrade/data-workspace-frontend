@@ -25,6 +25,7 @@ class DatabaseFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'core.Database'
+        django_get_or_create = ('memorable_name',)
 
 
 class DataGroupingFactory(factory.django.DjangoModelFactory):

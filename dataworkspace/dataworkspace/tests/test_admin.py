@@ -298,7 +298,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
-                'table_name': 'ref_test1',
+                'table_name': 'ref_test_create_ref_dataset_valid',
                 'slug': 'test-ref-1',
                 'group': group.id,
                 'external_database': '',
