@@ -12,6 +12,14 @@ def generate_table_name(apps, _):
             print('Changing table "{}" to "{}"'.format(original_table_name, r.table_name))
             r.schema_version += 1
             r.save()
+
+            # Check the original table exists before renaming
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT to_regclass(%s)', [original_table_name])
+                if cursor.fetchone()[0] is None:
+                    continue
+
+            # Rename the table
             with connection.schema_editor() as editor:
                 try:
                     editor.alter_db_table(model, original_table_name, r.table_name)

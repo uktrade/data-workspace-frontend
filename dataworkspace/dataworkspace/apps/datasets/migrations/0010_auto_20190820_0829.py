@@ -17,7 +17,4 @@ class Migration(migrations.Migration):
             name='external_database',
             field=models.ForeignKey(blank=True, help_text='Name of the analysts database to keep in sync with this reference dataset', null=True, on_delete=django.db.models.deletion.CASCADE, to='core.Database'),
         ),
-        migrations.DeleteModel(
-            name='ReferenceDatasetExternalDatabase',
-        ),
     ]
