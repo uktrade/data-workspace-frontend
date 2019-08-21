@@ -7,7 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 from django import forms
 from django.apps import apps
-from django.db import models, connection, connections, transaction
+from django.db import models, connection, connections, transaction, ProgrammingError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
@@ -392,7 +392,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def _drop_external_database_table(self, db_name):
         with connections[db_name].schema_editor() as editor:
-            editor.delete_model(self.get_record_model_class())
+            try:
+                editor.delete_model(self.get_record_model_class())
+            except ProgrammingError:
+                pass
 
     @property
     def field_names(self) -> List[str]:
