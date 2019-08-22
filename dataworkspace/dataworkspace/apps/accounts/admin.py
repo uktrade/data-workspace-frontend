@@ -1,5 +1,9 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.models import (
+    LogEntry,
+    CHANGE,
+)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import (
     UserAdmin,
@@ -10,8 +14,14 @@ from django.contrib.auth.models import (
 from django.contrib.contenttypes.models import (
     ContentType,
 )
+from django.db import (
+    transaction,
+)
 from django.forms.widgets import (
     CheckboxSelectMultiple,
+)
+from django.utils.encoding import (
+    force_text,
 )
 
 from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission
@@ -111,7 +121,19 @@ class AppUserAdmin(UserAdmin):
             return self.readonly_fields + ['email']
         return self.readonly_fields
 
+    @transaction.atomic
     def save_model(self, request, obj, form, change):
+        content_type = ContentType.objects.get_for_model(obj).pk
+        object_repr = force_text(obj)
+        user_id = request.user.pk
+        object_id = obj.pk
+
+        def log_change(message):
+            LogEntry.objects.log_action(
+                user_id=user_id, content_type_id=content_type, object_id=object_id,
+                object_repr=object_repr, action_flag=CHANGE, change_message=message,
+            )
+
         start_all_applications_permission = Permission.objects.get(
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -122,16 +144,26 @@ class AppUserAdmin(UserAdmin):
         )
 
         if 'can_start_all_applications' in form.cleaned_data:
-            if form.cleaned_data['can_start_all_applications']:
+            if (
+                    form.cleaned_data['can_start_all_applications'] and
+                    start_all_applications_permission not in obj.user_permissions.all()
+            ):
                 obj.user_permissions.add(start_all_applications_permission)
-            else:
+                log_change('Added can_start_all_applications permission')
+            elif start_all_applications_permission in obj.user_permissions.all():
                 obj.user_permissions.remove(start_all_applications_permission)
+                log_change('Removed can_start_all_applications permission')
 
         if 'can_access_appstream' in form.cleaned_data:
-            if form.cleaned_data['can_access_appstream']:
+            if (
+                    form.cleaned_data['can_access_appstream'] and
+                    access_appstream_permission not in obj.user_permissions.all()
+            ):
                 obj.user_permissions.add(access_appstream_permission)
-            else:
+                log_change('Added can_access_appstream permission')
+            elif access_appstream_permission in obj.user_permissions.all():
                 obj.user_permissions.remove(access_appstream_permission)
+                log_change('Removed can_access_appstream permission')
 
         if 'authorized_datasets' in form.cleaned_data:
             current_datasets = DataSet.objects.filter(
@@ -143,12 +175,14 @@ class AppUserAdmin(UserAdmin):
                         dataset=dataset,
                         user=obj,
                     )
+                    log_change('Added dataset {} permission'.format(dataset))
             for dataset in current_datasets:
                 if dataset not in form.cleaned_data['authorized_datasets']:
                     DataSetUserPermission.objects.filter(
                         dataset=dataset,
                         user=obj,
                     ).delete()
+                    log_change('Removed dataset {} permission'.format(dataset))
 
         super().save_model(request, obj, form, change)
 

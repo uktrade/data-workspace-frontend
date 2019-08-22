@@ -2,6 +2,19 @@ import logging
 
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.models import (
+    LogEntry,
+    CHANGE,
+)
+from django.contrib.contenttypes.models import (
+    ContentType,
+)
+from django.db import (
+    transaction,
+)
+from django.utils.encoding import (
+    force_text,
+)
 
 from dataworkspace.apps.datasets.models import (
     DataGrouping,
@@ -86,12 +99,20 @@ class DataSetAdmin(admin.ModelAdmin):
             'all': ('data-workspace-admin.css',)
         }
 
+    @transaction.atomic
     def save_model(self, request, obj, form, change):
+        original_user_access_type = obj.user_access_type
         obj.user_access_type = \
             'REQUIRES_AUTHORIZATION' if form.cleaned_data['requires_authorization'] else \
             'REQUIRES_AUTHENTICATION'
-
         super().save_model(request, obj, form, change)
+
+        if original_user_access_type != obj.user_access_type:
+            LogEntry.objects.log_action(
+                user_id=request.user.pk, content_type_id=ContentType.objects.get_for_model(obj).pk,
+                object_id=obj.id, object_repr=force_text(obj), action_flag=CHANGE,
+                change_message='user_access_type set to {}'.format(obj.user_access_type),
+            )
 
 
 class ReferenceDataInlineFormset(forms.BaseInlineFormSet):
