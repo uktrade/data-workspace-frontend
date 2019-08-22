@@ -33,7 +33,7 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(state='RUNNING')
+        return qs.filter(state__in=['SPAWNING', 'RUNNING'])
 
     def max_cpu(self, obj):
         try:
