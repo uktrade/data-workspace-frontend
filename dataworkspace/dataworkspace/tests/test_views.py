@@ -1,13 +1,12 @@
 import io
-import mock
 
 from botocore.response import StreamingBody
-
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from psycopg2 import connect
 
+import mock
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.models import SourceLink
@@ -48,10 +47,10 @@ class TestDatasetViews(BaseTestCase):
         ds4 = factories.DataSetFactory.create(grouping=group, published=False)
         ds4.delete()
 
-        rds1 = factories.ReferenceDatasetFactory(group=group, published=True)
-        rds2 = factories.ReferenceDatasetFactory(group=group, published=False)
+        rds1 = factories.ReferenceDatasetFactory(group=group, published=True, table_name='rds1')
+        rds2 = factories.ReferenceDatasetFactory(group=group, published=False, table_name='rds2')
         rds3 = factories.ReferenceDatasetFactory()
-        rds4 = factories.ReferenceDatasetFactory(group=group, published=False)
+        rds4 = factories.ReferenceDatasetFactory(group=group, published=False, table_name='rds3')
         rds4.delete()
 
         response = self._authenticated_get(
@@ -109,7 +108,7 @@ class TestDatasetViews(BaseTestCase):
     def test_reference_dataset_detail_view(self):
         group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group)
+        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_detail_view')
         factories.ReferenceDatasetFieldFactory(
             reference_dataset=rds
         )
@@ -124,7 +123,7 @@ class TestDatasetViews(BaseTestCase):
 
     def test_reference_dataset_json_download(self):
         group = factories.DataGroupingFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group)
+        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_json')
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
@@ -168,7 +167,7 @@ class TestDatasetViews(BaseTestCase):
 
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group)
+        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv')
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
@@ -211,7 +210,7 @@ class TestDatasetViews(BaseTestCase):
 
     def test_reference_dataset_unknown_download(self):
         group = factories.DataGroupingFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group)
+        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv')
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             is_identifier=True

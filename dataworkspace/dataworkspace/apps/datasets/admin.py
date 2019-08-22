@@ -22,7 +22,7 @@ from dataworkspace.apps.datasets.models import (
     SourceLink,
     SourceTable,
     ReferenceDataset,
-    ReferenceDatasetField
+    ReferenceDatasetField,
 )
 from dataworkspace.apps.core.admin import TimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (ReferenceDataFieldInlineForm, SourceLinkForm, DataSetForm,
@@ -54,7 +54,7 @@ class SourceLinkInline(admin.TabularInline):
     extra = 1
 
 
-class SourceTableInline(admin.StackedInline):
+class SourceTableInline(admin.TabularInline):
     model = SourceTable
     extra = 1
 
@@ -133,6 +133,26 @@ class ReferenceDataInlineFormset(forms.BaseInlineFormSet):
                 'Please select only one unique identifier field'
             )
 
+        # Ensure column names don't clash
+        column_names = [
+            x.cleaned_data['column_name'] for x in self.forms
+            if x.cleaned_data.get('column_name') and not x.cleaned_data['DELETE']
+        ]
+        if len(column_names) != len(set(column_names)):
+            raise forms.ValidationError(
+                'Please ensure column names are unique'
+            )
+
+        # Ensure field names are not duplicated
+        names = [
+            x.cleaned_data['name'] for x in self.forms
+            if x.cleaned_data.get('name') is not None
+        ]
+        if len(names) != len(set(names)):
+            raise forms.ValidationError(
+                'Please ensure field names are unique'
+            )
+
 
 class ReferenceDataFieldInline(admin.TabularInline):
     form = ReferenceDataFieldInlineForm
@@ -140,11 +160,12 @@ class ReferenceDataFieldInline(admin.TabularInline):
     model = ReferenceDatasetField
     min_num = 1
     extra = 1
-    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
+    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by']
     fieldsets = [
         (None, {
             'fields': [
                 'name',
+                'column_name',
                 'data_type',
                 'description',
                 'is_identifier'
@@ -165,8 +186,10 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
             'fields': [
                 'published',
                 'name',
+                'table_name',
                 'slug',
                 'group',
+                'external_database',
                 'short_description',
                 'description',
                 'valid_from',
@@ -192,6 +215,12 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
+
+    def get_readonly_fields(self, request, obj=None):
+        # Do not allow editing of table names via the admin
+        if obj is not None:
+            return self.readonly_fields + ('table_name',)
+        return self.readonly_fields
 
     def save_formset(self, request, form, formset, change):
         for f in formset.forms:

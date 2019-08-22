@@ -25,6 +25,7 @@ class DatabaseFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'core.Database'
+        django_get_or_create = ('memorable_name',)
 
 
 class DataGroupingFactory(factory.django.DjangoModelFactory):
@@ -73,6 +74,8 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
     published = True
+    schema_version = factory.Sequence(lambda n: n)
+    table_name = factory.fuzzy.FuzzyText(length=20)
 
     class Meta:
         model = 'datasets.ReferenceDataset'
@@ -81,6 +84,7 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
 class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
     reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
     name = factory.fuzzy.FuzzyText()
+    column_name = factory.fuzzy.FuzzyText(length=65)
     data_type = 1
 
     class Meta:
