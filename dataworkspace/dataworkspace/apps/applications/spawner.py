@@ -30,6 +30,7 @@ def spawn(name, user_email_address, user_sso_id, application_instance_id, spawne
     get_spawner(name).spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials)
 
 
+@celery_app.task()
 def stop(name, spawner_application_template_options, spawner_application_instance_id):
     get_spawner(name).stop(spawner_application_template_options, spawner_application_instance_id)
 
