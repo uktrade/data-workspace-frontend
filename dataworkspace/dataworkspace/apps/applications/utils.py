@@ -129,7 +129,7 @@ def kill_idle_fargate():
 
     for instance in instances:
         if instance.state == 'SPAWNING':
-            set_application_stopped(instance)
+            stop_spawner_and_application(instance)
             continue
 
         logger.info('kill_idle_fargate: Attempting to find CPU usage of %s', instance)
