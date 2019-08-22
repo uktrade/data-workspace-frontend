@@ -7,7 +7,10 @@ import requests
 
 from django.conf import settings
 
-from dataworkspace.apps.applications.spawner import get_spawner
+from dataworkspace.apps.applications.spawner import (
+    get_spawner,
+    stop,
+)
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.cel import celery_app
 
@@ -62,7 +65,8 @@ def application_api_is_allowed(request, public_host):
 
 
 def stop_spawner_and_application(application_instance):
-    get_spawner(application_instance.spawner).stop(
+    stop.delay(
+        application_instance.spawner,
         application_instance.spawner_application_template_options,
         application_instance.spawner_application_instance_id,
     )
@@ -125,7 +129,7 @@ def kill_idle_fargate():
 
     for instance in instances:
         if instance.state == 'SPAWNING':
-            set_application_stopped(instance)
+            stop_spawner_and_application(instance)
             continue
 
         logger.info('kill_idle_fargate: Attempting to find CPU usage of %s', instance)
