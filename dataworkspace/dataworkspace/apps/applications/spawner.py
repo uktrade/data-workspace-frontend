@@ -26,8 +26,10 @@ def get_spawner(name):
 
 
 @celery_app.task()
-def spawn(name, user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
-    get_spawner(name).spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials)
+def spawn(name, user_email_address, user_sso_id, public_host_data,
+          application_instance_id, spawner_options, db_credentials):
+    get_spawner(name).spawn(user_email_address, user_sso_id, public_host_data,
+                            application_instance_id, spawner_options, db_credentials)
 
 
 @celery_app.task()
@@ -43,7 +45,7 @@ class ProcessSpawner():
     '''
 
     @staticmethod
-    def spawn(_, __, application_instance_id, spawner_options, ___):
+    def spawn(_, __, ___, application_instance_id, spawner_options, ____):
 
         try:
             gevent.sleep(1)
@@ -119,7 +121,8 @@ class FargateSpawner():
     '''
 
     @staticmethod
-    def spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
+    def spawn(user_email_address, user_sso_id, public_host_data,
+              application_instance_id, spawner_options, db_credentials):
 
         try:
             task_arn = None
@@ -132,8 +135,10 @@ class FargateSpawner():
             security_groups = options['SECURITY_GROUPS']
             subnets = options['SUBNETS']
             cmd = options['CMD'] if 'CMD' in options else []
-            env = options['ENV']
+            env = options.get('ENV', {})
             port = options['PORT']
+            s3_sync = options['S3_SYNC'] == 'true'
+
             assume_role_policy_document = base64.b64decode(
                 options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
             policy_name = options['POLICY_NAME']
@@ -193,17 +198,29 @@ class FargateSpawner():
                 'S3_BUCKET': s3_bucket,
             }
 
+            application_instance = ApplicationInstance.objects.get(
+                id=application_instance_id,
+            )
+            # If CONTAINER_TAG_PATTERN is given, the data from the public_host is used to fill
+            # CONTAINER_TAG_PATTERN to work out what Docker tag should be launched
+            try:
+                tag = options['CONTAINER_TAG_PATTERN']
+            except KeyError:
+                definition_arn_with_image = definition_arn
+            else:
+                # Not robust, but the pattern is specified by config rather than user-provided
+                for key, value in public_host_data.items():
+                    tag = tag.replace(f'<{key}>', value)
+                definition_arn_with_image = _fargate_task_definition_with_tag(definition_arn, container_name, tag)
+
             start_task_response = _fargate_task_run(
-                role_arn, cluster_name, container_name, definition_arn, security_groups, subnets,
-                cmd, {**s3_env, **database_env, **env},
+                role_arn, cluster_name, container_name, definition_arn_with_image,
+                security_groups, subnets, cmd, {**s3_env, **database_env, **env}, s3_sync,
             )
 
             task_arn = \
                 start_task_response['tasks'][0]['taskArn'] if 'tasks' in start_task_response else \
                 start_task_response['task']['taskArn']
-            application_instance = ApplicationInstance.objects.get(
-                id=application_instance_id,
-            )
             application_instance.spawner_application_instance_id = json.dumps({
                 'task_arn': task_arn,
             })
@@ -268,6 +285,32 @@ class FargateSpawner():
         _fargate_task_stop(cluster_name, task_arn)
 
 
+def _fargate_task_definition_with_tag(task_family, container_name, tag):
+    client = boto3.client('ecs')
+    describe_task_response = client.describe_task_definition(
+        taskDefinition=task_family,
+    )
+    container = [
+        container
+        for container in describe_task_response['taskDefinition']['containerDefinitions']
+        if container['name'] == container_name
+    ][0]
+    container['image'] += ':' + tag
+    describe_task_response['taskDefinition']['family'] = task_family + '-' + tag
+
+    register_tag_response = client.register_task_definition(
+        **{
+            key: value
+            for key, value in describe_task_response['taskDefinition'].items()
+            if key in [
+                'family', 'taskRoleArn', 'executionRoleArn', 'networkMode', 'containerDefinitions',
+                'volumes', 'placementConstraints', 'requiresCompatibilities', 'cpu', 'memory',
+            ]
+        }
+    )
+    return register_tag_response['taskDefinition']['taskDefinitionArn']
+
+
 def _fargate_task_ip(cluster_name, arn):
     described_task = _fargate_task_describe(cluster_name, arn)
 
@@ -328,7 +371,7 @@ def _fargate_task_stop(cluster_name, task_arn):
 
 
 def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
-                      security_groups, subnets, command_and_args, env):
+                      security_groups, subnets, command_and_args, env, s3_sync):
     client = boto3.client('ecs')
 
     return client.run_task(
@@ -349,7 +392,7 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
                     } for name, value in env.items()
                 ],
                 'name': container_name,
-            }, {
+            }] + [{
                 'name': 's3sync',
                 'environment': [
                     {
@@ -357,7 +400,7 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
                         'value': value,
                     } for name, value in env.items()
                 ]
-            }],
+            }] if s3_sync else [],
         },
         launchType='FARGATE',
         networkConfiguration={

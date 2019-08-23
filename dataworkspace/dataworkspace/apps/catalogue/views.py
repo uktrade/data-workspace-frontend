@@ -254,7 +254,12 @@ def root_view_GET(request):
 
     def link(application_template):
         public_host = application_template.host_pattern.replace('<user>', sso_id_hex_short)
-        return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
+        # If there are some un-interpolated values, then we can't show a link to this: the app
+        # will be started by the user knowing the link ahead of time. Potentially in a future
+        # version there could be some UI to manage this.
+        return \
+            None if '<' in public_host or '>' in public_host else \
+            f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     context = {
         'applications': [
@@ -265,6 +270,8 @@ def root_view_GET(request):
                 'instance': application_instances.get(application_template, None),
             }
             for application_template in ApplicationTemplate.objects.all().order_by('name')
+            for application_link in [link(application_template)]
+            if application_link
         ],
         'appstream_url': settings.APPSTREAM_URL,
         'groupings': get_all_datagroups_viewmodel()

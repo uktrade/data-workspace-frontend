@@ -25,10 +25,15 @@ def application_template_and_data_from_host(public_host):
     # Not efficient, but we don't expect many templates. At the time of writing,
     # no more than 4 are planned
     matching = [
-        (application_template, host_data)
+        (application_template, host_data.groupdict())
         for application_template in ApplicationTemplate.objects.all()
         for host_data in [
-            re.match('^' + application_template.host_pattern.replace('<user>', '(?P<user>.*?)') + '$', public_host)
+            # Extract the data from public_host using application_template.host_pattern.
+            # For example, if
+            #   application_template.host_pattern = '<customfield>-<user>'
+            #   public_host = 'myapp-12345acd'
+            # then host_data will be {'customfield': 'myapp', 'user': '12345acd'}
+            re.match('^' + re.sub('<(.+?)>', '(?P<\\1>.*?)', application_template.host_pattern) + '$', public_host)
         ]
         if host_data
     ]

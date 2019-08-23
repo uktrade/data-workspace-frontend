@@ -45,6 +45,7 @@ variable "notebooks_bucket" {}
 variable "notebook_container_image" {}
 variable "rstudio_container_image" {}
 variable "pgadmin_container_image" {}
+variable "user_provided_container_image" {}
 
 variable "alb_access_logs_bucket" {}
 variable "alb_logs_account" {}
@@ -105,6 +106,11 @@ locals {
   notebook_container_port   = "8888"
   notebook_container_memory = 8192
   notebook_container_cpu    = 1024
+
+  user_provided_container_name   = "user-provided"
+  user_provided_container_port   = "8888"
+  user_provided_container_memory = 512
+  user_provided_container_cpu    = 256
 
   logstash_container_name       = "jupyterhub-logstash"
   logstash_alb_port             = "443"
