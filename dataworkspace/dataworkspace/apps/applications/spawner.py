@@ -319,10 +319,19 @@ def _fargate_task_describe(cluster_name, arn):
 
 def _fargate_task_stop(cluster_name, task_arn):
     client = boto3.client('ecs')
-    client.stop_task(
-        cluster=cluster_name,
-        task=task_arn,
-    )
+    sleep_time = 1
+    for i in range(0, 6):
+        try:
+            client.stop_task(
+                cluster=cluster_name,
+                task=task_arn,
+            )
+        except Exception:
+            gevent.sleep(sleep_time)
+            sleep_time = sleep_time * 2
+        else:
+            return
+    raise Exception('Unable to stop Fargate task {}'.format(task_arn))
 
 
 def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
