@@ -164,9 +164,12 @@ async def async_main():
             raise UserException('Application ' + application['state'], 500)
 
         if not host_exists:
-            async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
-                host_exists = response.status == 200
-                application = await response.json()
+            if 'x-data-workspace-no-modify-application-instance' not in downstream_request.headers:
+                async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
+                    host_exists = response.status == 200
+                    application = await response.json()
+            else:
+                raise UserException('Application stopped while starting', 500)
 
         if response.status != 200:
             raise UserException('Unable to start the application', response.status)
