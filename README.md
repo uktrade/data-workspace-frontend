@@ -103,7 +103,7 @@ The infrastructure is heavily Docker/Fargate based. Production Docker images are
 
 ## Why the custom proxy?
 
-A common question is why not just NGINX instead of the custom proxy? The reason is the dynamic routing for the applications, e.g. URLs like https://jupyterlab-abcde1234.mydomain.com/: each one has a lot of fairly complex requirements.
+A common question is why not just NGINX instead of the custom proxy? The reason is the dynamic routing for the applications, e.g. URLs like https://jupyterlab-abcde1234.mydomain.com/some/path: each one has a lot of fairly complex requirements.
 
 - It must redirect to SSO if not authenticated, and redirect back to the URL once authenticated.
 - It must perform ip-filtering that is not applicable to the main application.
