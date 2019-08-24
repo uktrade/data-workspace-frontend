@@ -212,6 +212,10 @@ class FargateSpawner():
             })
             application_instance.save(update_fields=['spawner_application_instance_id'])
 
+            application_instance.refresh_from_db()
+            if application_instance.state == 'STOPPED':
+                raise Exception('Application set to stopped before spawning complete')
+
             for _ in range(0, 60):
                 ip_address = _fargate_task_ip(options['CLUSTER_NAME'], task_arn)
                 if ip_address:
@@ -260,8 +264,8 @@ class FargateSpawner():
             return 'STOPPED'
 
     @staticmethod
-    def can_stop(_, spawner_application_id):
-        return 'task_arn' in json.loads(spawner_application_id)
+    def can_stop(_, __):
+        return True
 
     @staticmethod
     def stop(spawner_options, spawner_application_id):
