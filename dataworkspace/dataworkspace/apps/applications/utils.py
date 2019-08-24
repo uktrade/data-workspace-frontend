@@ -76,7 +76,7 @@ def stop_spawner_and_application(application_instance):
 def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
     application_instance.single_running_or_spawning_integrity = str(application_instance.id)
-    application_instance.save()
+    application_instance.save(update_fields=['state', 'single_running_or_spawning_integrity'])
 
 
 def application_instance_max_cpu(application_instance):
