@@ -286,8 +286,7 @@ def root_view_POST(request):
         state__in=['RUNNING', 'SPAWNING'],
     )
 
-    if application_instance.state != 'STOPPED':
-        stop_spawner_and_application(application_instance)
+    stop_spawner_and_application(application_instance)
 
     messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
     return redirect('root')
