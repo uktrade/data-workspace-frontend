@@ -41,7 +41,7 @@
                     // from the XMLHttpRequest. We _could_ show error dynamically via JavaScript,
                     // but we also want the errors to be shown on a full page load anyway, so we
                     // choose to only show error using the one mechanism
-                    request.setRequestHeader('x-data-workspace-no-delete-application-instance', 'true')
+                    request.setRequestHeader('x-data-workspace-no-modify-application-instance', 'true')
                     request.send(); 
                 });
             }
