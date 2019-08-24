@@ -22,7 +22,6 @@ from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
-from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import table_exists, table_data
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
@@ -253,14 +252,6 @@ def root_view_GET(request):
         for application_instance in filter_api_visible_application_instances_by_owner(request.user)
     }
 
-    def can_stop(application_template):
-        application_instance = application_instances.get(application_template, None)
-        return \
-            application_instance is not None and get_spawner(application_instance.spawner).can_stop(
-                application_instance.spawner_application_template_options,
-                application_instance.spawner_application_instance_id,
-            )
-
     context = {
         'applications': [
             {
@@ -268,7 +259,6 @@ def root_view_GET(request):
                 'nice_name': application_template.nice_name,
                 'link': f'{request.scheme}://{application_template.name}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/',
                 'instance': application_instances.get(application_template, None),
-                'can_stop': can_stop(application_template),
             }
             for application_template in ApplicationTemplate.objects.all().order_by('name')
         ],

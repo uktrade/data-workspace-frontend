@@ -95,10 +95,6 @@ class ProcessSpawner():
             return 'STOPPED'
 
     @staticmethod
-    def can_stop(_, __):
-        return True
-
-    @staticmethod
     def stop(_, spawner_application_id):
         spawner_application_id_parsed = json.loads(spawner_application_id)
         try:
@@ -262,10 +258,6 @@ class FargateSpawner():
         except Exception:
             logger.exception('FARGATE %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
-
-    @staticmethod
-    def can_stop(_, __):
-        return True
 
     @staticmethod
     def stop(spawner_options, spawner_application_id):
