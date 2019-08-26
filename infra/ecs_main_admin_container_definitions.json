@@ -219,7 +219,6 @@
       "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__S3_BUCKET",
       "value": "${notebooks_bucket}"
     },
-
     {
       "name": "APPLICATION_TEMPLATES__3__NAME",
       "value": "pgadmin"
