@@ -57,11 +57,11 @@ class ProcessSpawner():
             application_instance.spawner_application_instance_id = json.dumps({
                 'process_id': proc.pid,
             })
-            application_instance.save()
+            application_instance.save(update_fields=['spawner_application_instance_id'])
 
             gevent.sleep(1)
             application_instance.proxy_url = 'http://localhost:8888/'
-            application_instance.save()
+            application_instance.save(update_fields=['proxy_url'])
         except Exception:
             logger.exception('PROCESS %s %s', application_instance_id, spawner_options)
             if proc:
@@ -93,10 +93,6 @@ class ProcessSpawner():
         except Exception:
             logger.exception('PROCESS %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
-
-    @staticmethod
-    def can_stop(_, __):
-        return True
 
     @staticmethod
     def stop(_, spawner_application_id):
@@ -210,13 +206,17 @@ class FargateSpawner():
             application_instance.spawner_application_instance_id = json.dumps({
                 'task_arn': task_arn,
             })
-            application_instance.save()
+            application_instance.save(update_fields=['spawner_application_instance_id'])
+
+            application_instance.refresh_from_db()
+            if application_instance.state == 'STOPPED':
+                raise Exception('Application set to stopped before spawning complete')
 
             for _ in range(0, 60):
                 ip_address = _fargate_task_ip(options['CLUSTER_NAME'], task_arn)
                 if ip_address:
                     application_instance.proxy_url = f'http://{ip_address}:{port}'
-                    application_instance.save()
+                    application_instance.save(update_fields=['proxy_url'])
                     return
                 gevent.sleep(3)
 
@@ -258,10 +258,6 @@ class FargateSpawner():
         except Exception:
             logger.exception('FARGATE %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
-
-    @staticmethod
-    def can_stop(_, spawner_application_id):
-        return 'task_arn' in json.loads(spawner_application_id)
 
     @staticmethod
     def stop(spawner_options, spawner_application_id):
@@ -315,10 +311,19 @@ def _fargate_task_describe(cluster_name, arn):
 
 def _fargate_task_stop(cluster_name, task_arn):
     client = boto3.client('ecs')
-    client.stop_task(
-        cluster=cluster_name,
-        task=task_arn,
-    )
+    sleep_time = 1
+    for i in range(0, 6):
+        try:
+            client.stop_task(
+                cluster=cluster_name,
+                task=task_arn,
+            )
+        except Exception:
+            gevent.sleep(sleep_time)
+            sleep_time = sleep_time * 2
+        else:
+            return
+    raise Exception('Unable to stop Fargate task {}'.format(task_arn))
 
 
 def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,

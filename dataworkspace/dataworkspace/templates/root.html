@@ -57,7 +57,7 @@
                                        style="font-weight: normal;">{{ application.nice_name }}</a>
                                 </dt>
                                 <dd class="govuk-summary-list__actions">
-                                    {% if application.instance and application.can_stop %}
+                                    {% if application.instance %}
                                         <form method="POST" style="display: inline">
                                             {% csrf_token %}
                                             <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 btn-stop"

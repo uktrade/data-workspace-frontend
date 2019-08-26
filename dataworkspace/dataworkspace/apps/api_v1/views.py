@@ -98,7 +98,7 @@ def application_api_PATCH(request, public_host):
         return JsonResponse({}, status=400)
 
     application_instance.state = state
-    application_instance.save()
+    application_instance.save(update_fields=['state'])
 
     return JsonResponse({}, status=200)
 
