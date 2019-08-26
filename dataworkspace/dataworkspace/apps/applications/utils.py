@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import logging
 import urllib.parse
+import re
 
 import requests
 
@@ -21,10 +22,19 @@ logger = logging.getLogger('app')
 
 
 def application_template_from_host(public_host):
-    application_template_name, _, _ = public_host.partition('-')
-    return ApplicationTemplate.objects.get(
-        name=application_template_name,
-    )
+    # Not efficient, but we don't expect many templates. At the time of writing,
+    # no more than 4 are planned
+    matching = [
+        application_template
+        for application_template in ApplicationTemplate.objects.all()
+        if re.match('^' + application_template.host_pattern.replace('<user>', '.*?') + '$', public_host)
+    ]
+    if not matching:
+        raise ApplicationTemplate.DoesNotExist()
+    if len(matching) > 1:
+        raise Exception('Too many ApplicatinTemplate matching host')
+
+    return matching[0]
 
 
 def api_application_dict(application_instance):
