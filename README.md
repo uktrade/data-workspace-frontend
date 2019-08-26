@@ -33,7 +33,7 @@ And the application will be visible at http://localapps.com. This is to be able 
 docker-compose build && \
 docker-compose run \
     --user root \
-    --volume=$PWD/app/app/migrations:/app/app/migrations \
+    --volume=$PWD/dataworkspace:/dataworkspace/ \
     data-workspace django-admin makemigrations
 ```
 
