@@ -7,6 +7,7 @@ from dataworkspace.apps.applications.spawner import spawn
 from dataworkspace.apps.applications.utils import (
     api_application_dict,
     application_api_is_allowed,
+    application_template_from_host,
     get_api_visible_application_instance_by_public_host,
     set_application_stopped,
 )
@@ -60,12 +61,8 @@ def application_api_PUT(request, public_host):
     else:
         return JsonResponse({'message': 'Application instance already exists'}, status=409)
 
-    application_template_name, _, _ = public_host.partition('-')
-
     try:
-        application_template = ApplicationTemplate.objects.get(
-            name=application_template_name,
-        )
+        application_template = application_template_from_host(public_host)
     except ApplicationTemplate.DoesNotExist:
         return JsonResponse({'message': 'Application template does not exist'}, status=400)
 

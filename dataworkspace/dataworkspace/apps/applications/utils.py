@@ -11,10 +11,20 @@ from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,
 )
-from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.models import (
+    ApplicationInstance,
+    ApplicationTemplate,
+)
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
+
+
+def application_template_from_host(public_host):
+    application_template_name, _, _ = public_host.partition('-')
+    return ApplicationTemplate.objects.get(
+        name=application_template_name,
+    )
 
 
 def api_application_dict(application_instance):
