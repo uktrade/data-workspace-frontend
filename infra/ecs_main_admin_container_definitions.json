@@ -36,6 +36,10 @@
       "value": "jupyterlab"
     },
     {
+      "name": "APPLICATION_TEMPLATES__1__HOST_PATTERN",
+      "value": "jupyterlab-<user>"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__1__NICE_NAME",
       "value": "JupyterLab"
     },
@@ -140,6 +144,10 @@
       "value": "rstudio"
     },
     {
+      "name": "APPLICATION_TEMPLATES__2__HOST_PATTERN",
+      "value": "rstudio-<user>"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__2__NICE_NAME",
       "value": "RStudio"
     },
@@ -222,6 +230,10 @@
     {
       "name": "APPLICATION_TEMPLATES__3__NAME",
       "value": "pgadmin"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__HOST_PATTERN",
+      "value": "pgadmin-<user>"
     },
     {
       "name": "APPLICATION_TEMPLATES__3__NICE_NAME",

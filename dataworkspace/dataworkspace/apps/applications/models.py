@@ -21,6 +21,11 @@ class ApplicationTemplate(TimeStampedModel):
         help_text='Used in URLs: only lowercase letters allowed',
         unique=True,
     )
+    host_pattern = models.CharField(
+        max_length=128,
+        blank=False,
+        unique=True,
+    )
     nice_name = models.CharField(
         validators=[RegexValidator(regex=r'^[a-zA-Z0-9\- ]+$')],
         max_length=128,
