@@ -253,7 +253,8 @@ def root_view_GET(request):
     }
 
     def link(application_template):
-        return f'{request.scheme}://{application_template.name}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
+        public_host = f'{application_template.name}-{sso_id_hex_short}'
+        return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     context = {
         'applications': [
