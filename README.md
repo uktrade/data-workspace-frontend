@@ -103,7 +103,7 @@ The infrastructure is heavily Docker/Fargate based. Production Docker images are
 
 ## Why the custom proxy?
 
-A common question is why not just NGINX instead of the custom proxy? The reason is the dynamic routing for the applications, e.g. URLs like https://jupyterlab-abcde1234.mydomain.com/: each one has a lot of fairly complex requirements.
+A common question is why not just NGINX instead of the custom proxy? The reason is the dynamic routing for the applications, e.g. URLs like https://jupyterlab-abcde1234.mydomain.com/some/path: each one has a lot of fairly complex requirements.
 
 - It must redirect to SSO if not authenticated, and redirect back to the URL once authenticated.
 - It must perform ip-filtering that is not applicable to the main application.
@@ -119,3 +119,20 @@ A common question is why not just NGINX instead of the custom proxy? The reason 
 - Ideally, there would not be duplicate reponsibilities between the proxy and other parts of the system, e.g. the Django application.
 
 While not impossible to leverage NGINX to move some code from the proxy, there would still need to be custom code, and NGINX would have to communicate via some mechanism to this custom code to acheive all of the above: extra HTTP or Redis requests, or maybe through a custom NGINX module. It is suspected that this will make things more complex rather than less, and increase the burden on the developer.
+
+
+## Comparison with JupyterHub
+
+In addition to being able to run any Docker container, not just JupyterLab, Data Workspace has some deliberate architectural features that are different to JupyterHub.
+
+- All state is in the database, accessed by the main Django application.
+
+- Specifically, no state is kept in the memory of the main Django application. This means it can be horizontally scaled without issue.
+
+- The proxy is also stateless: if fetches how to route requests from the main application, which itself fetches the data from the database. This means it can also be horizontally scaled without issue, and potentially independently from the main application. This means sticky sessions are not needed, and multiple users could access the same application, which is a planned feature for user-supplied visualisation applications.
+
+- Authentication is completely handled by the proxy. Apart from specific exceptions like the healthcheck, non-authenticated requests do not reach the main application.
+
+- The launched containers do not make requests to the main application, and the main application does not make requests to the launched containers. This means there are fewer cyclic dependencies in terms of data flow, and that applications don't need to be customised for this environment. They just need to open a port for HTTP requests, which makes them extremely standard web-based Docker applications.
+
+There is a notable exception to the statelessness of the main application: the launch of an application is made of a sequence of calls to AWS, and is done in a Celery task. If this sequence is interrupted, the launch of the application will fail. This is a solvable problem: the state could be saving into the database and sequence resumed later. However, since this sequence of calls lasts only a few seconds, and the user will be told of the error and can refresh to try to launch the application again, at this stage of the project this has been deemed unnecessary.
