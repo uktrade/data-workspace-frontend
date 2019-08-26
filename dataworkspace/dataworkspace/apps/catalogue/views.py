@@ -269,10 +269,10 @@ def root_view_GET(request):
 
 
 def root_view_POST(request):
-    application_instance_id = request.POST['application_instance_id']
+    public_host = request.POST['public_host']
     application_instance = ApplicationInstance.objects.get(
-        id=application_instance_id,
         owner=request.user,
+        public_host=public_host,
         state__in=['RUNNING', 'SPAWNING'],
     )
 
