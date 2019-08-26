@@ -27,7 +27,7 @@ def application_template_from_host(public_host):
     matching = [
         application_template
         for application_template in ApplicationTemplate.objects.all()
-        if re.match('^' + application_template.host_pattern.replace('<user>', '.*?') + '$', public_host)
+        if re.match('^' + application_template.host_pattern.replace('<user>', '(?P<user>.*?)') + '$', public_host)
     ]
     if not matching:
         raise ApplicationTemplate.DoesNotExist()
