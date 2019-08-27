@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import logging
 import urllib.parse
+import re
 
 import requests
 
@@ -11,10 +12,32 @@ from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,
 )
-from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.models import (
+    ApplicationInstance,
+    ApplicationTemplate,
+)
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
+
+
+def application_template_and_data_from_host(public_host):
+    # Not efficient, but we don't expect many templates. At the time of writing,
+    # no more than 4 are planned
+    matching = [
+        (application_template, host_data)
+        for application_template in ApplicationTemplate.objects.all()
+        for host_data in [
+            re.match('^' + application_template.host_pattern.replace('<user>', '(?P<user>.*?)') + '$', public_host)
+        ]
+        if host_data
+    ]
+    if not matching:
+        raise ApplicationTemplate.DoesNotExist()
+    if len(matching) > 1:
+        raise Exception('Too many ApplicatinTemplate matching host')
+
+    return matching[0]
 
 
 def api_application_dict(application_instance):
@@ -55,7 +78,8 @@ def get_api_visible_application_instance_by_public_host(public_host):
 
 
 def application_api_is_allowed(request, public_host):
-    _, _, owner_sso_id_hex = public_host.partition('-')
+    _, host_data = application_template_and_data_from_host(public_host)
+    owner_sso_id_hex = host_data['user']
 
     request_sso_id_hex = hashlib.sha256(
         str(request.user.profile.sso_id).encode('utf-8')).hexdigest()

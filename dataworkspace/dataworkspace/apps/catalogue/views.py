@@ -252,12 +252,16 @@ def root_view_GET(request):
         for application_instance in filter_api_visible_application_instances_by_owner(request.user)
     }
 
+    def link(application_template):
+        public_host = application_template.host_pattern.replace('<user>', sso_id_hex_short)
+        return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
+
     context = {
         'applications': [
             {
                 'name': application_template.name,
                 'nice_name': application_template.nice_name,
-                'link': f'{request.scheme}://{application_template.name}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/',
+                'link': link(application_template),
                 'instance': application_instances.get(application_template, None),
             }
             for application_template in ApplicationTemplate.objects.all().order_by('name')

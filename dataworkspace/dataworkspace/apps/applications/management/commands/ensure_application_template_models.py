@@ -34,6 +34,7 @@ class Command(BaseCommand):
             try:
                 ApplicationTemplate.objects.create(
                     name=desired_application_template['NAME'],
+                    host_pattern=desired_application_template['HOST_PATTERN'],
                     nice_name=desired_application_template['NICE_NAME'],
                     spawner=desired_application_template['SPAWNER'],
                     spawner_options=json.dumps(
@@ -43,6 +44,7 @@ class Command(BaseCommand):
                 template = ApplicationTemplate.objects.get(
                     name=desired_application_template['NAME'],
                 )
+                template.host_pattern = desired_application_template['HOST_PATTERN']
                 template.nice_name = desired_application_template['NICE_NAME']
                 template.spawner = desired_application_template['SPAWNER']
                 template.spawner_options = json.dumps(
