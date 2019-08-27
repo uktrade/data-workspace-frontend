@@ -25,7 +25,7 @@ def application_spawning_html_GET(request, public_host):
         # There is some duplication between this and the front end, but
         # we avoid the occasional flash if missing content before the
         # front end renders the time remaining
-        expected_total = 120
+        expected_total = application_instance.application_template.spawner_time
         now = datetime.datetime.now().timestamp()
         created = application_instance.created_date.timestamp()
         seconds_remaining_float = max(0, created + expected_total - now)

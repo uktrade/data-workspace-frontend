@@ -48,6 +48,10 @@
       "value": "FARGATE"
     },
     {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_TIME",
+      "value": "120"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__CMD__1",
       "value": "jupyter"
     },
@@ -156,6 +160,10 @@
       "value": "FARGATE"
     },
     {
+      "name": "APPLICATION_TEMPLATES__2__SPAWNER_TIME",
+      "value": "120"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__CMD__1",
       "value": "/rstudio-start.sh"
     },
@@ -242,6 +250,10 @@
     {
       "name": "APPLICATION_TEMPLATES__3__SPAWNER",
       "value": "FARGATE"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__3__SPAWNER_TIME",
+      "value": "120"
     },
     {
       "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__CLUSTER_NAME",
