@@ -39,6 +39,9 @@ class ApplicationTemplate(TimeStampedModel):
         ),
         default='PROCESS',
     )
+    spawner_time = models.IntegerField(
+        null=False,
+    )
     spawner_options = models.CharField(
         max_length=10240,
         help_text='Options that the spawner understands to start the application',
