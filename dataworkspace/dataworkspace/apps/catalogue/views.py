@@ -284,7 +284,7 @@ def root_view_POST(request):
         # The user could force a POST for any public_host, and will be able to
         # get the server to show this message, but this is acceptable since it
         # won't cause any harm
-        messages.success(request, application_instance.application_template.nice_name + ' was already stopped')
+        messages.success(request, 'Stopped')
     else:
         stop_spawner_and_application(application_instance)
         messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
