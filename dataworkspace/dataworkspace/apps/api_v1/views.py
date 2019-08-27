@@ -4,8 +4,12 @@ from django.http import JsonResponse
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.spawner import spawn
-from dataworkspace.apps.applications.utils import (api_application_dict, application_api_is_allowed,
-                                                   get_api_visible_application_instance_by_public_host, set_application_stopped)
+from dataworkspace.apps.applications.utils import (
+    api_application_dict,
+    application_api_is_allowed,
+    get_api_visible_application_instance_by_public_host,
+    set_application_stopped,
+)
 from dataworkspace.apps.core.utils import new_private_database_credentials
 
 
