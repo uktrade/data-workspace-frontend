@@ -269,16 +269,21 @@ def root_view_GET(request):
 
 
 def root_view_POST(request):
-    application_instance_id = request.POST['application_instance_id']
-    application_instance = ApplicationInstance.objects.get(
-        id=application_instance_id,
-        owner=request.user,
-        state__in=['RUNNING', 'SPAWNING'],
-    )
-
-    stop_spawner_and_application(application_instance)
-
-    messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
+    public_host = request.POST['public_host']
+    try:
+        application_instance = ApplicationInstance.objects.get(
+            owner=request.user,
+            public_host=public_host,
+            state__in=['RUNNING', 'SPAWNING'],
+        )
+    except ApplicationInstance.DoesNotExist:
+        # The user could force a POST for any public_host, and will be able to
+        # get the server to show this message, but this is acceptable since it
+        # won't cause any harm
+        messages.success(request, application_instance.application_template.nice_name + ' was already stopped')
+    else:
+        stop_spawner_and_application(application_instance)
+        messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
     return redirect('root')
 
 
