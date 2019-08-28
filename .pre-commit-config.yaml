@@ -26,6 +26,7 @@ repos:
         - --load-plugins
         - pylint_django
         - --disable=broad-except
+        - --disable=consider-using-ternary
         - --disable=duplicate-code
         - --disable=invalid-name
         - --disable=missing-docstring

@@ -117,6 +117,9 @@ data "template_file" "admin_container_definitions" {
     fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}"
     fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}"
 
+    fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
+    fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
+
     zendesk_email = "${var.zendesk_email}"
     zendesk_subdomain = "${var.zendesk_subdomain}"
     zendesk_token = "${var.zendesk_token}"
@@ -212,6 +215,9 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
 
     fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}:${aws_ecs_task_definition.rstudio.revision}"
     fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}:${aws_ecs_task_definition.pgadmin.revision}"
+
+    fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
+    fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
 
     zendesk_email = "${var.zendesk_email}"
     zendesk_subdomain = "${var.zendesk_subdomain}"
@@ -357,6 +363,29 @@ data "aws_iam_policy_document" "admin_run_tasks" {
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.notebook.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.rstudio.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgadmin.family}",
+      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.user_provided.family}-*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecs:DescribeTaskDefinition",
+    ]
+
+    resources = [
+      # ECS doesn't provide more-specific permission for DescribeTaskDefinition
+      "*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecs:RegisterTaskDefinition",
+    ]
+
+    resources = [
+      # ECS doesn't provide more-specific permission for RegisterTaskDefinition
+      "*",
     ]
   }
 

@@ -20,6 +20,13 @@ resource "aws_db_instance" "admin" {
 
   vpc_security_group_ids = ["${aws_security_group.admin_db.id}"]
   db_subnet_group_name = "${aws_db_subnet_group.admin.name}"
+
+  lifecycle {
+    ignore_changes = [
+      "snapshot_identifier",
+      "final_snapshot_identifier",
+    ]
+  }
 }
 
 resource "aws_db_subnet_group" "admin" {
