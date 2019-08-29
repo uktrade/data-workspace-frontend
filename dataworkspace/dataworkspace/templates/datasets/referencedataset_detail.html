@@ -89,14 +89,21 @@
       </h2>
       <dl class="govuk-summary-list">
         {% for field in object.fields.all %}
-          <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">
-              {{ field.name }}
-            </dt>
-            <dd class="govuk-summary-list__value">
-              {{ field.description }}
-            </dd>
-          </div>
+            {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
+            <div class="govuk-summary-list__row">
+              <dt class="govuk-summary-list__key">{{ field.name }}: ID</dt>
+              <dd class="govuk-summary-list__value">{{ field.description }} (Identifier field)</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+              <dt class="govuk-summary-list__key">{{ field.name }}: Name</dt>
+              <dd class="govuk-summary-list__value">{{ field.description }} (Display name field)</dd>
+            </div>
+            {% else %}
+              <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">{{ field.name }}</dt>
+                <dd class="govuk-summary-list__value">{{ field.description }}</dd>
+              </div>
+            {% endif %}
         {% empty %}
           <div class="govuk-summary-list__row">
             <p>No fields have been defined for this reference dataset yet.</p>
@@ -119,7 +126,7 @@
       <table class="govuk-table govuk-!-font-size-16">
         <thead>
           <tr class="govuk-table__row">
-            {% for field_name in object.field_names %}
+            {% for field_name in object.export_field_names %}
               <th class="govuk-table__header">{{ field_name }}</th>
             {% endfor %}
             {% if perms.datasets_referencedataset.change %}
@@ -131,11 +138,20 @@
 
           {% for record in object.get_records|slice:":5" %}
             <tr class="govuk-table__row">
-              {% for field in record.reference_dataset.column_names %}
-                {% with record|get_attr:field as value %}
-                  <td class="govuk-table__cell{% if value is None %} unknown{% endif %}">
-                    {{ value|default_if_none:"Not set" }}
-                  </td>
+              {% for field in record.reference_dataset.fields.all %}
+                {% with record|get_attr:field.column_name as value %}
+                  {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
+                    <td class="govuk-table__cell">
+                      {{ value.get_identifier }}
+                    </td>
+                    <td class="govuk-table__cell">
+                      {{ value.get_display_name }}
+                    </td>
+                  {% else %}
+                    <td class="govuk-table__cell">
+                      {{ value|default_if_none:"Not set" }}
+                    </td>
+                  {% endif %}
                 {% endwith %}
               {% endfor %}
               {% if perms.datasets_referencedataset.change %}

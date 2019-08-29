@@ -26,7 +26,7 @@ from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import table_exists, table_data
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
-    SourceTable
+    SourceTable, ReferenceDatasetField
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -104,15 +104,22 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
         if dl_format not in ['json', 'csv']:
             raise Http404
         ref_dataset = self.get_object()
-        records = [
-            {
-                field.name: record[field.column_name]
-                for field in ref_dataset.fields.all()
-            }
-            for record in ref_dataset.get_records().values(
-                *ref_dataset.column_names
-            )
-        ]
+        records = []
+        for record in ref_dataset.get_records():
+            record_data = {}
+            for field in ref_dataset.fields.all():
+                field_name = field.name
+                value = getattr(record, field.column_name)
+                # If this is a linked field display the display name and id of that linked record
+                if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                    record_data['{}: ID'.format(field_name)] = value.get_identifier() \
+                        if value is not None else None
+                    record_data['{}: Name'.format(field_name)] = value.get_display_name() \
+                        if value is not None else None
+                else:
+                    record_data[field_name] = value
+            records.append(record_data)
+
         response = HttpResponse()
         response['Content-Disposition'] = 'attachment; filename={}-{}.{}'.format(
             ref_dataset.slug,
@@ -139,7 +146,7 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
             with closing(io.StringIO()) as outfile:
                 writer = csv.DictWriter(
                     outfile,
-                    fieldnames=ref_dataset.field_names
+                    fieldnames=ref_dataset.export_field_names
                 )
                 writer.writeheader()
                 writer.writerows(records)

@@ -153,6 +153,7 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         if record is None:
             raise Http404
         kwargs.update({
+            'reference_dataset': reference_dataset,
             'initial': {
                 'id': record_id
             }

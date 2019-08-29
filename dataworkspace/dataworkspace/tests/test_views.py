@@ -123,7 +123,20 @@ class TestDatasetViews(BaseTestCase):
 
     def test_reference_dataset_json_download(self):
         group = factories.DataGroupingFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_json')
+        linked_rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_json')
+        linked_field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_rds,
+            name='id',
+            data_type=2,
+            is_identifier=True
+        )
+        linked_field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_rds,
+            name='name',
+            data_type=1,
+            is_display_name=True
+        )
+        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_jso2')
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
@@ -135,15 +148,29 @@ class TestDatasetViews(BaseTestCase):
             name='name',
             data_type=1,
         )
+        field3 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='linked',
+            data_type=8,
+            linked_reference_dataset=linked_rds
+        )
+        link_record = linked_rds.save_record(None, {
+            'reference_dataset': linked_rds,
+            linked_field1.column_name: 1,
+            linked_field2.column_name: 'Linked Display Name'
+        })
+
         rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 1,
-            field2.column_name: 'Test recórd'
+            field2.column_name: 'Test record',
+            field3.column_name: link_record
         })
         rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 2,
-            field2.column_name: 'Ánd again'
+            field2.column_name: 'Ánd again',
+            field3.column_name: None,
         })
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
@@ -155,9 +182,15 @@ class TestDatasetViews(BaseTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [{
-            'id': 1, 'name': 'Test recórd'
+            'id': 1,
+            'linked: ID': 1,
+            'linked: Name': 'Linked Display Name',
+            'name': 'Test record'
         }, {
-            'id': 2, 'name': 'Ánd again'
+            'id': 2,
+            'linked: ID': None,
+            'linked: Name': None,
+            'name': 'Ánd again'
         }])
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
@@ -167,7 +200,20 @@ class TestDatasetViews(BaseTestCase):
 
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv')
+        linked_rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv')
+        linked_field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_rds,
+            name='id',
+            data_type=2,
+            is_identifier=True
+        )
+        linked_field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_rds,
+            name='name',
+            data_type=1,
+            is_display_name=True
+        )
+        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv2')
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
@@ -179,15 +225,29 @@ class TestDatasetViews(BaseTestCase):
             name='name',
             data_type=1,
         )
+        field3 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='linked',
+            data_type=8,
+            linked_reference_dataset=linked_rds
+        )
+        link_record = linked_rds.save_record(None, {
+            'reference_dataset': linked_rds,
+            linked_field1.column_name: 1,
+            linked_field2.column_name: 'Linked Display Name'
+        })
+
         rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 1,
-            field2.column_name: 'Test recórd'
+            field2.column_name: 'Test record',
+            field3.column_name: link_record
         })
         rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 2,
-            field2.column_name: 'Ánd again'
+            field2.column_name: 'Ánd again',
+            field3.column_name: None,
         })
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
@@ -200,7 +260,8 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content,
-            b'id,name\r\n1,Test rec\xc3\xb3rd\r\n2,\xc3\x81nd again\r\n'
+            b'id,name,linked: ID,linked: Name\r\n1,Test record,1,Linked Display Name\r\n2,'
+            b'\xc3\x81nd again,,\r\n'
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(

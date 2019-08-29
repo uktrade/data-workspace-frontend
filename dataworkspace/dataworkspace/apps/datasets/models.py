@@ -1,6 +1,7 @@
 import uuid
 
 from typing import Optional, List
+
 from psycopg2 import sql
 
 import boto3
@@ -12,6 +13,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.urls import reverse
+from django.core.exceptions import ValidationError
+from django.db.models import ProtectedError
 
 from dataworkspace.apps.core.models import (TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel,
                                             Database)
@@ -379,6 +382,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     @transaction.atomic
     def delete(self, **kwargs):
+        # Do not allow deletion if this dataset is referenced by other datasets
+        linking_fields = ReferenceDatasetField.objects.filter(
+            linked_reference_dataset=self
+        )
+        if linking_fields.count() > 0:
+            raise ProtectedError(
+                'Cannot delete reference dataset as it is linked to by other datasets',
+                set(x.reference_dataset for x in linking_fields)
+            )
+
         # Delete external table when ref dataset is deleted
         if self.external_database is not None:
             self._drop_external_database_table(self.external_database.memorable_name)
@@ -419,6 +432,33 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return:
         """
         return self.fields.get(is_identifier=True)
+
+    @property
+    def display_name_field(self) -> 'ReferenceDatasetField':
+        """
+        Returns the associated `ReferenceDataField` with `is_display_name`=True.
+        Falls back to the identifier field if no display name is set.
+        :return:
+        """
+        try:
+            return self.fields.get(is_display_name=True)
+        except ReferenceDatasetField.DoesNotExist:
+            return self.fields.get(is_identifier=True)
+
+    @property
+    def export_field_names(self) -> List[str]:
+        """
+        Returns the field names for download files (including id/name from linked datasets)
+        :return: list of display field names
+        """
+        field_names = []
+        for field in self.fields.all():
+            if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                field_names.append('{}: ID'.format(field.name))
+                field_names.append('{}: Name'.format(field.name))
+            else:
+                field_names.append(field.name)
+        return field_names
 
     @property
     def data_last_updated(self):
@@ -464,11 +504,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             '__module__': 'datasets',
             '__schema_version__': self.schema_version,
             'Meta': Meta,
-            'reference_dataset': models.ForeignKey(
-                'datasets.ReferenceDataset',
-                on_delete=models.CASCADE
-            ),
-            'updated_date': models.DateTimeField(auto_now=True),
         }
 
         # During the above DB queries, another request may have created and
@@ -480,7 +515,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             pass
 
         # Registers the model in apps.all_models['datasets'][self.table_name]
-        return type(self.table_name, (models.Model,), attrs)
+        return type(self.table_name, (ReferenceDatasetRecordBase,), attrs)
 
     def get_records(self) -> List[dict]:
         """
@@ -594,6 +629,35 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return ['default']
 
 
+class ReferenceDatasetRecordBase(models.Model):
+    reference_dataset = models.ForeignKey(
+        ReferenceDataset,
+        on_delete=models.CASCADE,
+        related_name='records'
+    )
+    updated_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.get_display_name()
+
+    def get_display_name(self):
+        return getattr(
+            self,
+            self.reference_dataset.display_name_field.column_name,
+            'Unknown record'
+        )
+
+    def get_identifier(self):
+        return getattr(
+            self,
+            self.reference_dataset.identifier_field.column_name,
+            None
+        )
+
+
 class ReferenceDatasetField(TimeStampedUserModel):
     DATA_TYPE_CHAR = 1
     DATA_TYPE_INT = 2
@@ -602,6 +666,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
     DATA_TYPE_TIME = 5
     DATA_TYPE_DATETIME = 6
     DATA_TYPE_BOOLEAN = 7
+    DATA_TYPE_FOREIGN_KEY = 8
     _DATA_TYPES = (
         (DATA_TYPE_CHAR, 'Character field'),
         (DATA_TYPE_INT, 'Integer field'),
@@ -610,6 +675,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         (DATA_TYPE_TIME, 'Time field'),
         (DATA_TYPE_DATETIME, 'Datetime field'),
         (DATA_TYPE_BOOLEAN, 'Boolean field'),
+        (DATA_TYPE_FOREIGN_KEY, 'Linked Reference Dataset'),
     )
     DATA_TYPE_MAP = {
         DATA_TYPE_CHAR: 'varchar(255)',
@@ -619,6 +685,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_TIME: 'time',
         DATA_TYPE_DATETIME: 'timestamp',
         DATA_TYPE_BOOLEAN: 'boolean',
+        DATA_TYPE_FOREIGN_KEY: 'integer',
     }
     _DATA_TYPE_FORM_FIELD_MAP = {
         DATA_TYPE_CHAR: forms.CharField,
@@ -628,6 +695,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_TIME: forms.TimeField,
         DATA_TYPE_DATETIME: forms.DateTimeField,
         DATA_TYPE_BOOLEAN: forms.BooleanField,
+        DATA_TYPE_FOREIGN_KEY: forms.ModelChoiceField,
     }
     _DATA_TYPE_MODEL_FIELD_MAP = {
         DATA_TYPE_CHAR: models.CharField,
@@ -637,6 +705,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_TIME: models.TimeField,
         DATA_TYPE_DATETIME: models.DateTimeField,
         DATA_TYPE_BOOLEAN: models.BooleanField,
+        DATA_TYPE_FOREIGN_KEY: models.ForeignKey,
     }
     reference_dataset = models.ForeignKey(
         ReferenceDataset,
@@ -649,6 +718,11 @@ class ReferenceDatasetField(TimeStampedUserModel):
     is_identifier = models.BooleanField(
         default=False,
         help_text='This field is the unique identifier for the record'
+    )
+    is_display_name = models.BooleanField(
+        default=False,
+        help_text='This field is the name that will be displayed when '
+                  'referenced by other datasets'
     )
     name = models.CharField(
         max_length=255,
@@ -672,6 +746,13 @@ class ReferenceDatasetField(TimeStampedUserModel):
         null=True
     )
     required = models.BooleanField(default=False)
+    linked_reference_dataset = models.ForeignKey(
+        ReferenceDataset,
+        on_delete=models.PROTECT,
+        related_name='linked_fields',
+        null=True,
+        blank=True
+    )
 
     class Meta:
         db_table = 'app_referencedatasetfield'
@@ -766,6 +847,14 @@ class ReferenceDatasetField(TimeStampedUserModel):
         :return:
         """
         ref_dataset = self.reference_dataset
+
+        # Disallow linking of two reference datasets to one another
+        if self.data_type == self.DATA_TYPE_FOREIGN_KEY and \
+                self.linked_reference_dataset.fields.filter(linked_reference_dataset=self.reference_dataset).exists():
+            raise ValidationError(
+                'Unable to link two reference datasets to each other'
+            )
+
         # If this is a newly created field add it to the db
         if self.id is None:
             self._add_column_to_db()
@@ -808,27 +897,36 @@ class ReferenceDatasetField(TimeStampedUserModel):
         Falls back to `CharField` if not found.
         :return:
         """
-        field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type)(
-            label=self.name,
-        )
+        field_data = {
+            'label': self.name,
+        }
         if self.data_type == self.DATA_TYPE_DATE:
-            field.widget = forms.DateInput(attrs={'type': 'date'})
+            field_data['widget'] = forms.DateInput(attrs={'type': 'date'})
         elif self.data_type == self.DATA_TYPE_TIME:
-            field.widget = forms.DateInput(attrs={'type': 'time'})
-        field.required = self.is_identifier or self.required
+            field_data['widget'] = forms.DateInput(attrs={'type': 'time'})
+        elif self.data_type == self.DATA_TYPE_FOREIGN_KEY:
+            field_data['queryset'] = self.linked_reference_dataset.get_records()
+        field_data['required'] = self.is_identifier or self.required
+        field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type)(**field_data)
         field.widget.attrs['required'] = field.required
         return field
 
     def get_model_field(self):
         """
         Instantiates a django model field based on this models selected `data_type`.
-        Falls back to `CharField` if not found.
         :return:
         """
-        field = self._DATA_TYPE_MODEL_FIELD_MAP.get(self.data_type)(
-            verbose_name=self.name,
-            blank=not self.is_identifier and not self.required,
-            null=not self.is_identifier and not self.required,
-            max_length=255
-        )
-        return field
+        model_field = self._DATA_TYPE_MODEL_FIELD_MAP.get(self.data_type)
+        model_config = {
+            'verbose_name': self.name,
+            'blank': not self.is_identifier and not self.required,
+            'null': not self.is_identifier and not self.required,
+            'max_length': 255,
+        }
+        if self.data_type == self.DATA_TYPE_FOREIGN_KEY:
+            model_config.update({
+                'verbose_name': 'Linked Reference Dataset',
+                'to': self.linked_reference_dataset.get_record_model_class(),
+                'on_delete': models.PROTECT,
+            })
+        return model_field(**model_config)
