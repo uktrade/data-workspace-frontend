@@ -264,19 +264,23 @@ def create_s3_role(user_email_address, user_sso_id):
     except iam_client.exceptions.EntityAlreadyExistsException:
         pass
     else:
-        gevent.sleep(10)
+        gevent.sleep(1)
+
+    for _ in range(0, 10):
+        try:
+            role_arn = iam_client.get_role(
+                RoleName=role_name
+            )['Role']['Arn']
+            logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
+        except iam_client.exceptions.NoSuchEntityException:
+            gevent.sleep(1)
+        else:
+            break
 
     iam_client.put_role_policy(
         RoleName=role_name,
         PolicyName=policy_name,
         PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
     )
-
-    gevent.sleep(3)
-
-    role_arn = iam_client.get_role(
-        RoleName=role_name
-    )['Role']['Arn']
-    logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
 
     return role_arn, s3_prefix
