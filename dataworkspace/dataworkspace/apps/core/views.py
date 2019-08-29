@@ -2,6 +2,7 @@ import logging
 
 import boto3
 
+from django.conf import settings
 from django.http import (HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed,
                          HttpResponseNotFound)
 from django.shortcuts import render
@@ -112,4 +113,5 @@ def file_browser_html_GET(request):
     return render(request, 'files.html', {
         'credentials': response['Credentials'],
         'prefix': prefix,
+        'bucket': settings.NOTEBOOKS_BUCKET,
     }, status=200)
