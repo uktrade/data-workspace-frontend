@@ -240,3 +240,43 @@ def table_data(user_email, database, schema, table):
     response = StreamingHttpResponse(yield_bytes_from_queue(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
     return response
+
+
+def create_s3_role(user_email_address, user_sso_id):
+    iam_client = boto3.client('iam')
+
+    assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
+    policy_name = settings.S3_POLICY_NAME
+    policy_document_template = settings.S3_POLICY_DOCUMENT_TEMPLATE
+    permissions_boundary_arn = settings.S3_PERMISSIONS_BOUNDARY_ARN
+    role_prefix = settings.S3_ROLE_PREFIX
+
+    role_name = role_prefix + user_email_address
+    s3_prefix = 'user/federated/' + hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
+
+    try:
+        iam_client.create_role(
+            RoleName=role_name,
+            Path='/',
+            AssumeRolePolicyDocument=assume_role_policy_document,
+            PermissionsBoundary=permissions_boundary_arn,
+        )
+    except iam_client.exceptions.EntityAlreadyExistsException:
+        pass
+    else:
+        gevent.sleep(10)
+
+    iam_client.put_role_policy(
+        RoleName=role_name,
+        PolicyName=policy_name,
+        PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
+    )
+
+    gevent.sleep(3)
+
+    role_arn = iam_client.get_role(
+        RoleName=role_name
+    )['Role']['Arn']
+    logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
+
+    return role_arn, s3_prefix

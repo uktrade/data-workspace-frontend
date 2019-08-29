@@ -32,6 +32,30 @@
       "value": ".${root_domain}"
     },
     {
+      "name": "S3_POLICY_DOCUMENT_TEMPLATE_BASE64",
+      "value": "${notebook_task_role__policy_document_template_base64}"
+    },
+    {
+      "name": "S3_ASSUME_ROLE_POLICY_DOCUMENT_BASE64",
+      "value": "${notebook_task_role__assume_role_policy_document_base64}"
+    },
+    {
+      "name": "S3_PERMISSIONS_BOUNDARY",
+      "value": "${notebook_task_role__permissions_boundary_arn}"
+    },
+    {
+      "name": "S3_ROLE_PREFIX",
+      "value": "${notebook_task_role__role_prefix}"
+    },
+    {
+      "name": "S3_POLICY_NAME",
+      "value": "${notebook_task_role__policy_name}"
+    },
+    {
+      "name": "S3_PERMISSIONS_BOUNDARY_ARN",
+      "value": "${notebook_task_role__permissions_boundary_arn}"
+    }, 
+    {
       "name": "APPLICATION_TEMPLATES__1__NAME",
       "value": "jupyterlab"
     },

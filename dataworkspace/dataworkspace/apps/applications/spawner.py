@@ -1,9 +1,7 @@
 ''' Spawners control and report on application instances
 '''
 
-import base64
 import datetime
-import hashlib
 import json
 import logging
 import os
@@ -14,6 +12,7 @@ import gevent
 
 from dataworkspace.cel import celery_app
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.utils import create_s3_role
 
 logger = logging.getLogger('app')
 
@@ -128,7 +127,6 @@ class FargateSpawner():
             task_arn = None
             options = json.loads(spawner_options)
 
-            role_prefix = options['ROLE_PREFIX']
             cluster_name = options['CLUSTER_NAME']
             container_name = options['CONTAINER_NAME']
             definition_arn = options['DEFINITION_ARN']
@@ -138,13 +136,6 @@ class FargateSpawner():
             env = options.get('ENV', {})
             port = options['PORT']
             s3_sync = options['S3_SYNC'] == 'true'
-
-            assume_role_policy_document = base64.b64decode(
-                options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
-            policy_name = options['POLICY_NAME']
-            policy_document_template = base64.b64decode(
-                options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
-            permissions_boundary_arn = options['PERMISSIONS_BOUNDARY_ARN']
 
             s3_region = options['S3_REGION']
             s3_host = options['S3_HOST']
@@ -159,37 +150,7 @@ class FargateSpawner():
 
             logger.info('Starting %s', cmd)
 
-            # Create a role
-            iam_client = boto3.client('iam')
-
-            role_name = role_prefix + user_email_address
-            s3_prefix = 'user/federated/' + \
-                hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
-
-            try:
-                iam_client.create_role(
-                    RoleName=role_name,
-                    Path='/',
-                    AssumeRolePolicyDocument=assume_role_policy_document,
-                    PermissionsBoundary=permissions_boundary_arn,
-                )
-            except iam_client.exceptions.EntityAlreadyExistsException:
-                pass
-            else:
-                gevent.sleep(10)
-
-            iam_client.put_role_policy(
-                RoleName=role_name,
-                PolicyName=policy_name,
-                PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
-            )
-
-            gevent.sleep(3)
-
-            role_arn = iam_client.get_role(
-                RoleName=role_name
-            )['Role']['Arn']
-            logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
+            role_arn, s3_prefix = create_s3_role(user_email_address, user_sso_id)
 
             s3_env = {
                 'S3_PREFIX': s3_prefix,

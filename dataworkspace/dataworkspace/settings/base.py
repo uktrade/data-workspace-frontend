@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import urllib.request
@@ -186,3 +187,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 DATABASES_DATA = env['DATA_DB']
+
+S3_ASSUME_ROLE_POLICY_DOCUMENT = base64.b64decode(env['S3_ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
+S3_POLICY_NAME = env['S3_POLICY_NAME']
+S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(env['S3_POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
+S3_PERMISSIONS_BOUNDARY_ARN = env['S3_PERMISSIONS_BOUNDARY_ARN']
+S3_ROLE_PREFIX = env['S3_ROLE_PREFIX']
