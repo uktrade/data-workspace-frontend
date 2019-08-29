@@ -38,11 +38,11 @@ class BaseTestCase(TestCase):
 
     @staticmethod
     def _create_reference_dataset(**kwargs):
-        group = DataGrouping.objects.create(
+        group = DataGrouping.objects.get_or_create(
             name='Test Group 1',
             slug='test-group-1',
             short_description='Testing...',
-        )
+        )[0]
         ref_data_fields = dict(
             group=group,
             name='Test Reference Dataset 1',
