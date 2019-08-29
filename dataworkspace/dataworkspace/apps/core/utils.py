@@ -262,7 +262,18 @@ def create_s3_role(user_email_address, user_sso_id):
             PermissionsBoundary=permissions_boundary_arn,
         )
     except iam_client.exceptions.EntityAlreadyExistsException:
-        pass
+        # If the role already exists, we might need to update its assume role
+        # policy document
+        for _ in range(0, 10):
+            try:
+                iam_client.update_assume_role_policy(
+                    RoleName=role_name,
+                    PolicyDocument=assume_role_policy_document
+                )
+            except iam_client.exceptions.NoSuchEntityException:
+                gevent.sleep(1)
+            else:
+                break
     else:
         gevent.sleep(1)
 
