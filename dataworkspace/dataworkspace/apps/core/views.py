@@ -102,11 +102,14 @@ def file_browser_html_view(request):
 
 def file_browser_html_GET(request):
     client = boto3.client('sts')
-    role_arn, _ = create_s3_role(request.user.email, str(request.user.profile.sso_id))
+    role_arn, prefix = create_s3_role(request.user.email, str(request.user.profile.sso_id))
     response = client.assume_role(
         RoleArn=role_arn,
         RoleSessionName='s3_access_' + str(request.user.profile.sso_id),
         DurationSeconds=60 * 60,
     )
 
-    return render(request, 'files.html', {'credentials': response['Credentials']}, status=200)
+    return render(request, 'files.html', {
+        'credentials': response['Credentials'],
+        'prefix': prefix,
+    }, status=200)
