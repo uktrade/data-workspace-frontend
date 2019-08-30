@@ -1,6 +1,12 @@
 import json
+import logging
 
 from django.http import JsonResponse
+
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.spawner import spawn
@@ -12,6 +18,10 @@ from dataworkspace.apps.applications.utils import (
     set_application_stopped,
 )
 from dataworkspace.apps.core.utils import new_private_database_credentials
+from dataworkspace.apps.ext_datasets.models import OMISDataset
+from dataworkspace.apps.ext_datasets.serializers import OMISDatasetSerializer
+
+logger = logging.getLogger('app')
 
 
 def applications_api_view(request):
@@ -113,3 +123,41 @@ def application_api_DELETE(request, public_host):
     set_application_stopped(application_instance)
 
     return JsonResponse({}, status=200)
+
+
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
+
+class OMISDatasetViewSet(viewsets.GenericViewSet):
+    """A viewset that provides `create-many` (which expects list of records),
+    and `destroy-all` actions for OMISDataset.
+    """
+    serializer_class = OMISDatasetSerializer
+
+    @action(detail=False, methods=['post'], url_path='create-many')
+    def create_many(self, request, *args, **kwargs):
+        """Creates multiple OMIS Dataset records.
+        Expects list of dicts in the request data.
+        """
+        serializer = self.get_serializer(data=request.data['results'], many=True)
+        if not serializer.is_valid():
+            logger.debug('%s', serializer.errors)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        logger.info('Created OMISDataset record/s \n %s', serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['delete'], url_path='destroy-all')
+    def destroy_all(self, request):
+        """Delete all records in OMISDataset table"""
+        OMISDataset.objects.all().delete()
+        logger.info('Deleted all records in OMISDataset model')
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1,0 +1,11 @@
+{% extends '_base.html' %}
+
+{% block page_title %}Bad Request - {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+    <div class="govuk-form-group--error">
+        <h1 class="govuk-heading-l">Invalid Request</h1>
+
+        <p class="govuk-body">{{ message }}</p>
+    </div>
+{% endblock %}

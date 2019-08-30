@@ -18,6 +18,7 @@ RUN \
 		parallel=20190522-r0 \
 		py3-gevent==1.3.4-r2 \
 		py3-psycopg2=2.7.7-r1 \
+                postgresql-client \
 		python3=3.7.3-r0 && \
 	python3 -m ensurepip && \
 	pip3 install \
@@ -31,8 +32,10 @@ RUN \
 		psycogreen==1.0.1 \
 		django==2.2.4 \
 		django-db-geventpool==3.1.0 \
+		djangorestframework==3.10.2 \
 		django-redis==4.10.0 \
 		zenpy==2.0.12 \
+		hawk-server-asyncio \
 		requests==2.21.0 && \
 	rm /etc/nginx/conf.d/default.conf && \
 	rm /etc/nginx/nginx.conf && \

@@ -29,6 +29,10 @@ def public_error_500_html_view(request):
     return render(request, 'error_500.html', {'message': message}, status=500)
 
 
+def public_error_400_html_view(request, exception=None):
+    return render(request, 'error_400.html', {'message': str(exception)}, status=400)
+
+
 def healthcheck_view(_):
     return HttpResponse('OK')
 

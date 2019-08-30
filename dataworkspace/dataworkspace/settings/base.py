@@ -23,7 +23,7 @@ ALLOWED_HOSTS = \
 
 INTERNAL_IPS = ['127.0.0.1'] if DEBUG else []
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -31,6 +31,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+]
+
+THIRD_PARTY_APPS = [
+    'rest_framework',
+]
+
+LOCAL_APPS = [
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
     'dataworkspace.apps.catalogue',
@@ -40,7 +47,10 @@ INSTALLED_APPS = [
     'dataworkspace.apps.dw_admin',
     'dataworkspace.apps.api_v1',
     'dataworkspace.apps.eventlog',
+    'dataworkspace.apps.ext_datasets',
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -186,3 +196,5 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 DATABASES_DATA = env['DATA_DB']
+DATASETS_DB_NAME = env['DATASETS_DB_NAME']
+DATABASE_ROUTERS = ['dataworkspace.apps.ext_datasets.db_router.ExtDatasetsRouter']

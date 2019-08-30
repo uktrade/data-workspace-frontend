@@ -15,7 +15,6 @@ DATABASES = {
     **{
         database_name: {
             'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
-            'CONN_MAX_AGE': 0,
             'NAME': 'dataworkspace',
             'HOST': 'localhost',
             'USER': 'postgres',

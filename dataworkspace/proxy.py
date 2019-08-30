@@ -19,6 +19,7 @@ from multidict import (
 from yarl import (
     URL,
 )
+from hawkserver import authenticate_hawk_header
 
 from dataworkspace.utils import (
     normalise_environment,
@@ -53,6 +54,7 @@ async def async_main():
     root_domain = env['APPLICATION_ROOT_DOMAIN']
     basic_auth_user = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
     basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
+    hawk_senders = env['HAWK_SENDERS']
     x_forwarded_for_trusted_hops = int(env['X_FORWARDED_FOR_TRUSTED_HOPS'])
     application_ip_whitelist = env['APPLICATION_IP_WHITELIST']
 
@@ -90,6 +92,9 @@ async def async_main():
                 ()
             )
         )
+
+    def is_machine_to_machine(request):
+        return '/api/v1/' in request.url.path and request.url.host == root_domain_no_port
 
     def is_service_discovery(request):
         return request.url.path == '/api/v1/application' and request.url.host == root_domain_no_port and request.method == 'GET'
@@ -209,6 +214,7 @@ async def async_main():
             async def set_application_running():
                 async with client_session.request(
                         'PATCH', host_api_url, json={'state': 'RUNNING'}, headers=admin_headers(downstream_request), timeout=default_http_timeout,
+
                 ) as patch_response:
                     await patch_response.read()
             asyncio.ensure_future(set_application_running())
@@ -295,10 +301,13 @@ async def async_main():
         # GET responses half way through if the request specified a chunked
         # encoding. AFAIK RStudio uses a custom webserver, so this behaviour
         # is not documented anywhere.
-        data = \
-            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else \
-            downstream_request.content
-
+        # This checks _read_bytes property of request and if it exists, uses _read_bytes to get data otherwise waits
+        # for the request.content. The reason for this check is that we read the whole streamed response content to
+        # authenticate request by hawk authentication. Refer to _authenticate_by_hawk function below line
+        # 'content = await request.read()'
+        data = (b'' if 'content-length' not in upstream_headers and
+                downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else
+                downstream_request._read_bytes if downstream_request._read_bytes is not None else downstream_request.content)
         async with client_session.request(
                 upstream_method, str(upstream_url),
                 params=upstream_query,
@@ -375,10 +384,12 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-            is_healthcheck = request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(request)
+            is_healthcheck = request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(
+                request)
             sso_auth_required = (
                 not is_healthcheck and
-                not is_service_discovery(request)
+                not is_service_discovery(request) and
+                not is_machine_to_machine(request)
             )
 
             if not sso_auth_required:
@@ -481,6 +492,55 @@ async def async_main():
 
         return _authenticate_by_basic_auth
 
+    def authenticate_by_hawk_auth():
+
+        async def lookup_credentials(sender_id):
+            for hawk_sender in hawk_senders:
+                if hawk_sender['id'] == sender_id:
+                    return hawk_sender
+
+        async def seen_nonce(nonce, sender_id):
+            nonce_key = f'nonce-{sender_id}-{nonce}'
+            with await redis_pool as conn:
+                nonce_stored = await conn.execute('GET', nonce_key)
+                if nonce_stored:
+                    return True
+                else:
+                    await conn.execute('SET', nonce_key, '1', 'EX', 5)
+                    return False
+
+        @web.middleware
+        async def _authenticate_by_hawk_auth(request, handler):
+            hawk_auth_required = is_machine_to_machine(request)
+
+            if not hawk_auth_required:
+                return await handler(request)
+
+            # Read request content and store it in _read_bytes property to pass data to regarding endpoint after hawk
+            # authentication.
+            content = await request.read()
+
+            is_authenticated, error_message, _ = await authenticate_hawk_header(
+                lookup_credentials,
+                seen_nonce,
+                1000,
+                request.headers['Authorization'],
+                request.method,
+                request.url.host,
+                request.url.port,
+                request.url.path,
+                request.headers['Content-Type'],
+                content,
+            )
+            if not is_authenticated:
+                logger.debug('Hawk authentication failed.\nError message: %s', str(error_message))
+                return web.Response(status=401)
+
+            logger.debug('Hawk authentication succeeded')
+            return await handler(request)
+
+        return _authenticate_by_hawk_auth
+
     def authenticate_by_ip_whitelist():
         @web.middleware
         async def _authenticate_by_ip_whitelist(request, handler):
@@ -489,6 +549,7 @@ async def async_main():
             if not ip_whitelist_required:
                 return await handler(request)
 
+            logger.debug('Authenticating by ip whitelisting')
             peer_ip, _ = get_peer_ip(request)
             peer_ip_in_whitelist = any(
                 ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
@@ -496,6 +557,7 @@ async def async_main():
             )
 
             if not peer_ip_in_whitelist:
+                logger.debug('Authentication by ip whitelisting failed')
                 return await handle_admin(request, 'GET', '/error_403', {})
 
             return await handler(request)
@@ -507,6 +569,7 @@ async def async_main():
             redis_session_middleware(redis_pool, root_domain_no_port),
             authenticate_by_staff_sso(),
             authenticate_by_basic_auth(),
+            authenticate_by_hawk_auth(),
             authenticate_by_ip_whitelist(),
         ])
         app.add_routes([
