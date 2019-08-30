@@ -18,7 +18,7 @@ from django.db.models import ProtectedError
 
 from dataworkspace.apps.core.models import (TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel,
                                             Database)
-from dataworkspace.apps.datasets.model_utils import external_model_class
+from dataworkspace.apps.datasets.model_utils import external_model_class, has_circular_link
 
 
 class DataGrouping(DeletableTimestampedUserModel):
@@ -848,11 +848,11 @@ class ReferenceDatasetField(TimeStampedUserModel):
         """
         ref_dataset = self.reference_dataset
 
-        # Disallow linking of two reference datasets to one another
+        # Disallow circular linking of reference datasets
         if self.data_type == self.DATA_TYPE_FOREIGN_KEY and \
-                self.linked_reference_dataset.fields.filter(linked_reference_dataset=self.reference_dataset).exists():
+                has_circular_link(self.reference_dataset, self.linked_reference_dataset):
             raise ValidationError(
-                'Unable to link two reference datasets to each other'
+                'Unable to link reference datasets back to each other'
             )
 
         # If this is a newly created field add it to the db

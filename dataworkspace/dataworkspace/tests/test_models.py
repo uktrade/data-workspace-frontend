@@ -402,7 +402,7 @@ class TestReferenceDatasets(BaseModelsTests):
         # Deleting the linked to record should fail
         self.assertRaises(ProtectedError, lambda _: linked_to_dataset.delete_record(linked_to_record.id), 1)
 
-    def test_circular_linked_datasets(self):
+    def test_two_circular_linked_datasets(self):
         # Ensure two datasets cannot be linked to each other
         ref_dataset1 = self._create_reference_dataset(table_name='circular_link_1')
         ref_dataset2 = self._create_reference_dataset(table_name='circular_link_2')
@@ -429,10 +429,62 @@ class TestReferenceDatasets(BaseModelsTests):
             is_identifier=True,
             is_display_name=True,
         )
-        with self.assertRaisesMessage(ValidationError, 'Unable to link two reference datasets to each other'):
+        with self.assertRaisesMessage(ValidationError, 'Unable to link reference datasets back to each other'):
             ReferenceDatasetField.objects.create(
                 reference_dataset=ref_dataset2,
                 name='link',
+                column_name='link',
+                data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+                linked_reference_dataset=ref_dataset1,
+            )
+
+    def test_three_circular_linked_datasets(self):
+        # Ensure datasets cannot be linked to each other through any number of steps
+        ref_dataset1 = self._create_reference_dataset(table_name='multi_circular_link_1')
+        ref_dataset2 = self._create_reference_dataset(table_name='multi_circular_link_2')
+        ref_dataset3 = self._create_reference_dataset(table_name='multi_circular_link_3')
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset1,
+            name='identifier',
+            column_name='identifier',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+            is_display_name=True,
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset1,
+            name='ref ds2 link',
+            column_name='link',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset=ref_dataset2,
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset2,
+            name='identifier',
+            column_name='identifier',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+            is_display_name=True,
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset2,
+            name='ref ds3 link',
+            column_name='link',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset=ref_dataset3,
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset3,
+            name='identifier',
+            column_name='identifier',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+            is_display_name=True,
+        )
+        with self.assertRaisesMessage(ValidationError, 'Unable to link reference datasets back to each other'):
+            ReferenceDatasetField.objects.create(
+                reference_dataset=ref_dataset3,
+                name='ref ds 1 link',
                 column_name='link',
                 data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
                 linked_reference_dataset=ref_dataset1,

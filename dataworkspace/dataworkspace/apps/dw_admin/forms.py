@@ -4,6 +4,7 @@ from django.forms import BaseInlineFormSet
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
+from dataworkspace.apps.datasets.model_utils import has_circular_link
 from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDataset, \
     ReferenceDatasetField
 
@@ -148,9 +149,7 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                 )
 
             # Ensure a linked to reference dataset doesn't link back to this dataset
-            if cleaned['linked_reference_dataset'].fields.filter(
-                    data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-                    linked_reference_dataset=self.reference_dataset).exists():
+            if has_circular_link(self.reference_dataset, cleaned['linked_reference_dataset']):
                 raise ValidationError(
                     'Unable to link to a dataset that links to this dataset'
                 )
