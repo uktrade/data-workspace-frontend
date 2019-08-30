@@ -511,6 +511,7 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_hawk_auth(request, handler):
             hawk_auth_required = is_machine_to_machine(request)
+            hawk_auth_required = False
 
             if not hawk_auth_required:
                 return await handler(request)
