@@ -506,8 +506,7 @@ async def async_main():
                 if nonce_stored:
                     return True
                 else:
-                    await conn.execute('SET', nonce_key, '1', 'EX', 5)
-                    return False
+                    return await conn.execute('SET', nonce_key, '1', 'EX', 5, 'NX')
 
         @web.middleware
         async def _authenticate_by_hawk_auth(request, handler):
