@@ -8,6 +8,7 @@ set -e
 
     # Not suitable on a cluster of size > 1, but for our purposes,
     # no need for more
+    django-admin migrate datasets 0011_merge_20190821_0558
     django-admin migrate
     django-admin migrate --database=$DATASETS_DB_NAME
 
