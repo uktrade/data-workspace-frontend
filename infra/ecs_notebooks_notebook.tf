@@ -121,6 +121,11 @@ data "aws_iam_policy_document" "notebook_s3_access_ecs_tasks_assume_role" {
       type        = "Service"
       identifiers = ["ecs-tasks.amazonaws.com"]
     }
+
+    principals {
+      type        = "AWS"
+      identifiers = ["${aws_iam_role.admin_task.arn}"]
+    }
   }
 }
 

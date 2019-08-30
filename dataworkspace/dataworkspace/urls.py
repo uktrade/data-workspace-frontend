@@ -7,7 +7,8 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.catalogue.views import root_view
 from dataworkspace.apps.core.views import (
     public_error_403_html_view, public_error_404_html_view,
-    public_error_500_html_view, healthcheck_view, SupportView, table_data_view
+    public_error_500_html_view, healthcheck_view, SupportView, table_data_view,
+    file_browser_html_view,
 )
 from dataworkspace.apps.appstream.views import (
     appstream_view,
@@ -34,6 +35,7 @@ urlpatterns = [
     path('application/', include(('dataworkspace.apps.applications.urls', 'applications'), namespace='applications')),
     path('catalogue/', include(('dataworkspace.apps.catalogue.urls', 'catalogue'), namespace='catalogue')),
     path('datasets/', include(('dataworkspace.apps.datasets.urls', 'datasets'), namespace='datasets')),
+    path('files', login_required(file_browser_html_view), name='files'),
     path('healthcheck', healthcheck_view),  # No authentication
     path('support/', login_required(SupportView.as_view()), name='support'),
     path('support/success/<str:ticket_id>', login_required(SupportView.as_view()),

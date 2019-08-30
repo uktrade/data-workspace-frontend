@@ -438,6 +438,12 @@ data "aws_iam_policy_document" "admin_run_tasks" {
     actions = [
       "iam:GetRole",
       "iam:PassRole",
+      "iam:UpdateAssumeRolePolicy",
+
+      # The admin application creates temporary credentials, via AssumeRole, for a
+      # user to manage their files in S3. The role, and therfore permissions are
+      # exactly the ones that a user's containers can assume
+      "sts:AssumeRole",
     ]
 
     resources = [
