@@ -532,10 +532,10 @@ async def async_main():
                 content,
             )
             if not is_authenticated:
-                logger.debug('Hawk authentication failed.\nError message: %s', str(error_message))
+                logger.info('Hawk authentication failed.\nError message: %s', str(error_message))
                 return web.Response(status=401)
 
-            logger.debug('Hawk authentication succeeded')
+            logger.info('Hawk authentication succeeded')
             return await handler(request)
 
         return _authenticate_by_hawk_auth
