@@ -156,7 +156,7 @@ async def async_main():
             raise UserException('Unable to start the application', response.status)
 
         if host_exists and application['state'] not in ['SPAWNING', 'RUNNING']:
-            if 'x-data-workspace-no-delete-application-instance' not in downstream_request.headers:
+            if 'x-data-workspace-no-modify-application-instance' not in downstream_request.headers:
                 async with client_session.request(
                         'DELETE', host_api_url, headers=admin_headers(downstream_request),
                 ) as delete_response:
@@ -164,9 +164,12 @@ async def async_main():
             raise UserException('Application ' + application['state'], 500)
 
         if not host_exists:
-            async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
-                host_exists = response.status == 200
-                application = await response.json()
+            if 'x-data-workspace-no-modify-application-instance' not in downstream_request.headers:
+                async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
+                    host_exists = response.status == 200
+                    application = await response.json()
+            else:
+                raise UserException('Application stopped while starting', 500)
 
         if response.status != 200:
             raise UserException('Unable to start the application', response.status)

@@ -36,12 +36,15 @@ def has_circular_link(target_dataset, linked_dataset):
     :return:
     """
     links = [linked_dataset]
+    checked = []
     while links:
-        linked_dataset = links.pop()
-        if linked_dataset == target_dataset:
+        linked = links.pop()
+        if linked == target_dataset:
             return True
-        links += set(
+        checked.append(linked)
+        links = set(
             x.linked_reference_dataset for x in
-            linked_dataset.fields.exclude(linked_reference_dataset=None)
+            linked.fields.exclude(linked_reference_dataset=None)
+            if x.linked_reference_dataset not in checked
         )
     return False

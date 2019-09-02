@@ -5,10 +5,10 @@ repos:
     - id: autopep8-wrapper
       args:
         - --in-place
-        - --max-line-length=250
+        - --max-line-length=120
     - id: flake8
       args:
-        - --max-line-length=250
+        - --max-line-length=120
     - id: check-ast
     - id: check-case-conflict
     - id: debug-statements
@@ -26,6 +26,7 @@ repos:
         - --load-plugins
         - pylint_django
         - --disable=broad-except
+        - --disable=consider-using-ternary
         - --disable=duplicate-code
         - --disable=invalid-name
         - --disable=missing-docstring
@@ -41,7 +42,7 @@ repos:
         - --disable=too-many-ancestors
         - --include-naming-hint=yes
         - --max-args=10
-        - --max-line-length=250
+        - --max-line-length=120
         - --max-locals=25
         - --max-returns=10
         - --max-returns=10

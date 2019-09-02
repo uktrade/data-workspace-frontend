@@ -22,7 +22,6 @@ from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
-from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import table_exists, table_data
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
@@ -260,24 +259,26 @@ def root_view_GET(request):
         for application_instance in filter_api_visible_application_instances_by_owner(request.user)
     }
 
-    def can_stop(application_template):
-        application_instance = application_instances.get(application_template, None)
+    def link(application_template):
+        public_host = application_template.host_pattern.replace('<user>', sso_id_hex_short)
+        # If there are some un-interpolated values, then we can't show a link to this: the app
+        # will be started by the user knowing the link ahead of time. Potentially in a future
+        # version there could be some UI to manage this.
         return \
-            application_instance is not None and get_spawner(application_instance.spawner).can_stop(
-                application_instance.spawner_application_template_options,
-                application_instance.spawner_application_instance_id,
-            )
+            None if '<' in public_host or '>' in public_host else \
+            f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     context = {
         'applications': [
             {
                 'name': application_template.name,
                 'nice_name': application_template.nice_name,
-                'link': f'{request.scheme}://{application_template.name}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/',
+                'link': link(application_template),
                 'instance': application_instances.get(application_template, None),
-                'can_stop': can_stop(application_template),
             }
             for application_template in ApplicationTemplate.objects.all().order_by('name')
+            for application_link in [link(application_template)]
+            if application_link
         ],
         'appstream_url': settings.APPSTREAM_URL,
         'groupings': get_all_datagroups_viewmodel()
@@ -286,17 +287,21 @@ def root_view_GET(request):
 
 
 def root_view_POST(request):
-    application_instance_id = request.POST['application_instance_id']
-    application_instance = ApplicationInstance.objects.get(
-        id=application_instance_id,
-        owner=request.user,
-        state__in=['RUNNING', 'SPAWNING'],
-    )
-
-    if application_instance.state != 'STOPPED':
+    public_host = request.POST['public_host']
+    try:
+        application_instance = ApplicationInstance.objects.get(
+            owner=request.user,
+            public_host=public_host,
+            state__in=['RUNNING', 'SPAWNING'],
+        )
+    except ApplicationInstance.DoesNotExist:
+        # The user could force a POST for any public_host, and will be able to
+        # get the server to show this message, but this is acceptable since it
+        # won't cause any harm
+        messages.success(request, 'Stopped')
+    else:
         stop_spawner_and_application(application_instance)
-
-    messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
+        messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
     return redirect('root')
 
 

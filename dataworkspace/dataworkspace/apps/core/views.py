@@ -1,5 +1,8 @@
 import logging
 
+import boto3
+
+from django.conf import settings
 from django.http import (HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed,
                          HttpResponseNotFound)
 from django.shortcuts import render
@@ -7,8 +10,12 @@ from django.urls import reverse
 from django.views.generic import FormView
 
 from dataworkspace.apps.core.forms import SupportForm
-from dataworkspace.apps.core.utils import can_access_schema_table, table_exists, \
-    table_data
+from dataworkspace.apps.core.utils import (
+    can_access_schema_table,
+    create_s3_role,
+    table_data,
+    table_exists,
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.zendesk import create_support_request
@@ -86,3 +93,25 @@ def table_data_view(request, database, schema, table):
         table_data(request.user.email, database, schema, table)
 
     return response
+
+
+def file_browser_html_view(request):
+    return \
+        file_browser_html_GET(request) if request.method == 'GET' else \
+        HttpResponse(status=405)
+
+
+def file_browser_html_GET(request):
+    client = boto3.client('sts')
+    role_arn, prefix = create_s3_role(request.user.email, str(request.user.profile.sso_id))
+    response = client.assume_role(
+        RoleArn=role_arn,
+        RoleSessionName='s3_access_' + str(request.user.profile.sso_id),
+        DurationSeconds=60 * 60,
+    )
+
+    return render(request, 'files.html', {
+        'credentials': response['Credentials'],
+        'prefix': prefix,
+        'bucket': settings.NOTEBOOKS_BUCKET,
+    }, status=200)

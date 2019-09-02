@@ -1,0 +1,58 @@
+{% extends '_base.html' %}
+
+{% block page_title %}AppStream - {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+  <h1 class="govuk-heading-l">S3 credentials</h1>
+
+  <dl class="govuk-summary-list govuk-summary-list--no-border">
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">
+        AccessKeyId
+      </dt>
+      <dd class="govuk-summary-list__value">
+        {{ credentials.AccessKeyId }}
+      </dd>
+    </div>
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">
+        SecretAccessKey
+      </dt>
+      <dd class="govuk-summary-list__value">
+        {{ credentials.SecretAccessKey }}
+      </dd>
+    </div>
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">
+        SessionToken
+      </dt>
+      <dd class="govuk-summary-list__value">
+        {{ credentials.SessionToken }}
+      </dd>
+    </div>
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">
+        Expiration
+      </dt>
+      <dd class="govuk-summary-list__value">
+        {{ credentials.Expiration }}
+      </dd>
+    </div>
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">
+        Bucket
+      </dt>
+      <dd class="govuk-summary-list__value">
+        {{ bucket }}
+      </dd>
+    </div>
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">
+        Prefix
+      </dt>
+      <dd class="govuk-summary-list__value">
+        {{ prefix }}
+      </dd>
+    </div>
+  </dl>
+{% endblock %}

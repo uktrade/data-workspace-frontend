@@ -57,11 +57,11 @@
                                        style="font-weight: normal;">{{ application.nice_name }}</a>
                                 </dt>
                                 <dd class="govuk-summary-list__actions">
-                                    {% if application.instance and application.can_stop %}
+                                    {% if application.instance %}
                                         <form method="POST" style="display: inline">
                                             {% csrf_token %}
                                             <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 btn-stop"
-                                                    name="application_instance_id" value="{{ application.instance.id }}"
+                                                    name="public_host" value="{{ application.instance.public_host }}"
                                                     type="submit">Stop
                                             </button>
                                         </form>

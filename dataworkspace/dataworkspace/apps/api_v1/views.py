@@ -4,8 +4,13 @@ from django.http import JsonResponse
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.spawner import spawn
-from dataworkspace.apps.applications.utils import (api_application_dict, application_api_is_allowed,
-                                                   get_api_visible_application_instance_by_public_host, set_application_stopped)
+from dataworkspace.apps.applications.utils import (
+    api_application_dict,
+    application_api_is_allowed,
+    application_template_and_data_from_host,
+    get_api_visible_application_instance_by_public_host,
+    set_application_stopped,
+)
 from dataworkspace.apps.core.utils import new_private_database_credentials
 
 
@@ -56,12 +61,8 @@ def application_api_PUT(request, public_host):
     else:
         return JsonResponse({'message': 'Application instance already exists'}, status=409)
 
-    application_template_name, _, _ = public_host.partition('-')
-
     try:
-        application_template = ApplicationTemplate.objects.get(
-            name=application_template_name,
-        )
+        application_template, public_host_data = application_template_and_data_from_host(public_host)
     except ApplicationTemplate.DoesNotExist:
         return JsonResponse({'message': 'Application template does not exist'}, status=400)
 
@@ -80,8 +81,8 @@ def application_api_PUT(request, public_host):
 
     spawn.delay(
         application_template.spawner,
-        request.user.email, str(request.user.profile.sso_id), application_instance.id,
-        application_template.spawner_options, credentials)
+        request.user.email, str(request.user.profile.sso_id), public_host_data,
+        application_instance.id, application_template.spawner_options, credentials)
 
     return JsonResponse(api_application_dict(application_instance), status=200)
 
@@ -98,7 +99,7 @@ def application_api_PATCH(request, public_host):
         return JsonResponse({}, status=400)
 
     application_instance.state = state
-    application_instance.save()
+    application_instance.save(update_fields=['state'])
 
     return JsonResponse({}, status=200)
 

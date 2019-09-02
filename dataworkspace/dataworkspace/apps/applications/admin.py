@@ -16,21 +16,23 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
                 'owner',
                 'public_host',
                 'created_date',
+                'state',
+                'spawner_application_instance_id',
                 'max_cpu',
             ]
         }),
     ]
-    readonly_fields = ('owner', 'public_host', 'created_date', 'max_cpu')
+    readonly_fields = (
+        'owner', 'public_host', 'created_date', 'spawner_application_instance_id', 'state',
+        'max_cpu',
+    )
 
     def has_add_permission(self, request):
         return False
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(state='RUNNING')
+        return qs.filter(state__in=['SPAWNING', 'RUNNING'])
 
     def max_cpu(self, obj):
         try:

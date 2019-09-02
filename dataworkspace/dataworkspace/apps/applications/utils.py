@@ -2,16 +2,47 @@ import datetime
 import hashlib
 import logging
 import urllib.parse
+import re
 
 import requests
 
 from django.conf import settings
 
-from dataworkspace.apps.applications.spawner import get_spawner
-from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.spawner import (
+    get_spawner,
+    stop,
+)
+from dataworkspace.apps.applications.models import (
+    ApplicationInstance,
+    ApplicationTemplate,
+)
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
+
+
+def application_template_and_data_from_host(public_host):
+    # Not efficient, but we don't expect many templates. At the time of writing,
+    # no more than 4 are planned
+    matching = [
+        (application_template, host_data.groupdict())
+        for application_template in ApplicationTemplate.objects.all()
+        for host_data in [
+            # Extract the data from public_host using application_template.host_pattern.
+            # For example, if
+            #   application_template.host_pattern = '<customfield>-<user>'
+            #   public_host = 'myapp-12345acd'
+            # then host_data will be {'customfield': 'myapp', 'user': '12345acd'}
+            re.match('^' + re.sub('<(.+?)>', '(?P<\\1>.*?)', application_template.host_pattern) + '$', public_host)
+        ]
+        if host_data
+    ]
+    if not matching:
+        raise ApplicationTemplate.DoesNotExist()
+    if len(matching) > 1:
+        raise Exception('Too many ApplicatinTemplate matching host')
+
+    return matching[0]
 
 
 def api_application_dict(application_instance):
@@ -52,7 +83,8 @@ def get_api_visible_application_instance_by_public_host(public_host):
 
 
 def application_api_is_allowed(request, public_host):
-    _, _, owner_sso_id_hex = public_host.partition('-')
+    _, host_data = application_template_and_data_from_host(public_host)
+    owner_sso_id_hex = host_data['user']
 
     request_sso_id_hex = hashlib.sha256(
         str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
@@ -62,7 +94,8 @@ def application_api_is_allowed(request, public_host):
 
 
 def stop_spawner_and_application(application_instance):
-    get_spawner(application_instance.spawner).stop(
+    stop.delay(
+        application_instance.spawner,
         application_instance.spawner_application_template_options,
         application_instance.spawner_application_instance_id,
     )
@@ -72,7 +105,7 @@ def stop_spawner_and_application(application_instance):
 def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
     application_instance.single_running_or_spawning_integrity = str(application_instance.id)
-    application_instance.save()
+    application_instance.save(update_fields=['state', 'single_running_or_spawning_integrity'])
 
 
 def application_instance_max_cpu(application_instance):
@@ -125,7 +158,7 @@ def kill_idle_fargate():
 
     for instance in instances:
         if instance.state == 'SPAWNING':
-            set_application_stopped(instance)
+            stop_spawner_and_application(instance)
             continue
 
         logger.info('kill_idle_fargate: Attempting to find CPU usage of %s', instance)

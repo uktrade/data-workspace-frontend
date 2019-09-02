@@ -1,9 +1,7 @@
 ''' Spawners control and report on application instances
 '''
 
-import base64
 import datetime
-import hashlib
 import json
 import logging
 import os
@@ -14,6 +12,7 @@ import gevent
 
 from dataworkspace.cel import celery_app
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.utils import create_s3_role
 
 logger = logging.getLogger('app')
 
@@ -26,8 +25,15 @@ def get_spawner(name):
 
 
 @celery_app.task()
-def spawn(name, user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
-    get_spawner(name).spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials)
+def spawn(name, user_email_address, user_sso_id, public_host_data,
+          application_instance_id, spawner_options, db_credentials):
+    get_spawner(name).spawn(user_email_address, user_sso_id, public_host_data,
+                            application_instance_id, spawner_options, db_credentials)
+
+
+@celery_app.task()
+def stop(name, spawner_application_template_options, spawner_application_instance_id):
+    get_spawner(name).stop(spawner_application_template_options, spawner_application_instance_id)
 
 
 class ProcessSpawner():
@@ -38,7 +44,7 @@ class ProcessSpawner():
     '''
 
     @staticmethod
-    def spawn(_, __, application_instance_id, spawner_options, ___):
+    def spawn(_, __, ___, application_instance_id, spawner_options, ____):
 
         try:
             gevent.sleep(1)
@@ -52,11 +58,11 @@ class ProcessSpawner():
             application_instance.spawner_application_instance_id = json.dumps({
                 'process_id': proc.pid,
             })
-            application_instance.save()
+            application_instance.save(update_fields=['spawner_application_instance_id'])
 
             gevent.sleep(1)
             application_instance.proxy_url = 'http://localhost:8888/'
-            application_instance.save()
+            application_instance.save(update_fields=['proxy_url'])
         except Exception:
             logger.exception('PROCESS %s %s', application_instance_id, spawner_options)
             if proc:
@@ -90,10 +96,6 @@ class ProcessSpawner():
             return 'STOPPED'
 
     @staticmethod
-    def can_stop(_, __):
-        return True
-
-    @staticmethod
     def stop(_, spawner_application_id):
         spawner_application_id_parsed = json.loads(spawner_application_id)
         try:
@@ -118,27 +120,22 @@ class FargateSpawner():
     '''
 
     @staticmethod
-    def spawn(user_email_address, user_sso_id, application_instance_id, spawner_options, db_credentials):
+    def spawn(user_email_address, user_sso_id, public_host_data,
+              application_instance_id, spawner_options, db_credentials):
 
         try:
             task_arn = None
             options = json.loads(spawner_options)
 
-            role_prefix = options['ROLE_PREFIX']
             cluster_name = options['CLUSTER_NAME']
             container_name = options['CONTAINER_NAME']
             definition_arn = options['DEFINITION_ARN']
             security_groups = options['SECURITY_GROUPS']
             subnets = options['SUBNETS']
             cmd = options['CMD'] if 'CMD' in options else []
-            env = options['ENV']
+            env = options.get('ENV', {})
             port = options['PORT']
-            assume_role_policy_document = base64.b64decode(
-                options['ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
-            policy_name = options['POLICY_NAME']
-            policy_document_template = base64.b64decode(
-                options['POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
-            permissions_boundary_arn = options['PERMISSIONS_BOUNDARY_ARN']
+            s3_sync = options['S3_SYNC'] == 'true'
 
             s3_region = options['S3_REGION']
             s3_host = options['S3_HOST']
@@ -146,43 +143,14 @@ class FargateSpawner():
 
             database_env = {
                 f'DATABASE_DSN__{database["memorable_name"]}':
-                f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} user={database["db_user"]} password={database["db_password"]}'
+                f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                f'user={database["db_user"]} password={database["db_password"]}'
                 for database in db_credentials
             }
 
             logger.info('Starting %s', cmd)
 
-            # Create a role
-            iam_client = boto3.client('iam')
-
-            role_name = role_prefix + user_email_address
-            s3_prefix = 'user/federated/' + \
-                hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
-
-            try:
-                iam_client.create_role(
-                    RoleName=role_name,
-                    Path='/',
-                    AssumeRolePolicyDocument=assume_role_policy_document,
-                    PermissionsBoundary=permissions_boundary_arn,
-                )
-            except iam_client.exceptions.EntityAlreadyExistsException:
-                pass
-            else:
-                gevent.sleep(10)
-
-            iam_client.put_role_policy(
-                RoleName=role_name,
-                PolicyName=policy_name,
-                PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
-            )
-
-            gevent.sleep(3)
-
-            role_arn = iam_client.get_role(
-                RoleName=role_name
-            )['Role']['Arn']
-            logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
+            role_arn, s3_prefix = create_s3_role(user_email_address, user_sso_id)
 
             s3_env = {
                 'S3_PREFIX': s3_prefix,
@@ -191,27 +159,43 @@ class FargateSpawner():
                 'S3_BUCKET': s3_bucket,
             }
 
+            application_instance = ApplicationInstance.objects.get(
+                id=application_instance_id,
+            )
+            # If CONTAINER_TAG_PATTERN is given, the data from the public_host is used to fill
+            # CONTAINER_TAG_PATTERN to work out what Docker tag should be launched
+            try:
+                tag = options['CONTAINER_TAG_PATTERN']
+            except KeyError:
+                definition_arn_with_image = definition_arn
+            else:
+                # Not robust, but the pattern is specified by config rather than user-provided
+                for key, value in public_host_data.items():
+                    tag = tag.replace(f'<{key}>', value)
+                definition_arn_with_image = _fargate_task_definition_with_tag(definition_arn, container_name, tag)
+
             start_task_response = _fargate_task_run(
-                role_arn, cluster_name, container_name, definition_arn, security_groups, subnets,
-                cmd, {**s3_env, **database_env, **env},
+                role_arn, cluster_name, container_name, definition_arn_with_image,
+                security_groups, subnets, cmd, {**s3_env, **database_env, **env}, s3_sync,
             )
 
             task_arn = \
                 start_task_response['tasks'][0]['taskArn'] if 'tasks' in start_task_response else \
                 start_task_response['task']['taskArn']
-            application_instance = ApplicationInstance.objects.get(
-                id=application_instance_id,
-            )
             application_instance.spawner_application_instance_id = json.dumps({
                 'task_arn': task_arn,
             })
-            application_instance.save()
+            application_instance.save(update_fields=['spawner_application_instance_id'])
+
+            application_instance.refresh_from_db()
+            if application_instance.state == 'STOPPED':
+                raise Exception('Application set to stopped before spawning complete')
 
             for _ in range(0, 60):
                 ip_address = _fargate_task_ip(options['CLUSTER_NAME'], task_arn)
                 if ip_address:
                     application_instance.proxy_url = f'http://{ip_address}:{port}'
-                    application_instance.save()
+                    application_instance.save(update_fields=['proxy_url'])
                     return
                 gevent.sleep(3)
 
@@ -255,15 +239,37 @@ class FargateSpawner():
             return 'STOPPED'
 
     @staticmethod
-    def can_stop(_, spawner_application_id):
-        return 'task_arn' in json.loads(spawner_application_id)
-
-    @staticmethod
     def stop(spawner_options, spawner_application_id):
         options = json.loads(spawner_options)
         cluster_name = options['CLUSTER_NAME']
         task_arn = json.loads(spawner_application_id)['task_arn']
         _fargate_task_stop(cluster_name, task_arn)
+
+
+def _fargate_task_definition_with_tag(task_family, container_name, tag):
+    client = boto3.client('ecs')
+    describe_task_response = client.describe_task_definition(
+        taskDefinition=task_family,
+    )
+    container = [
+        container
+        for container in describe_task_response['taskDefinition']['containerDefinitions']
+        if container['name'] == container_name
+    ][0]
+    container['image'] += ':' + tag
+    describe_task_response['taskDefinition']['family'] = task_family + '-' + tag
+
+    register_tag_response = client.register_task_definition(
+        **{
+            key: value
+            for key, value in describe_task_response['taskDefinition'].items()
+            if key in [
+                'family', 'taskRoleArn', 'executionRoleArn', 'networkMode', 'containerDefinitions',
+                'volumes', 'placementConstraints', 'requiresCompatibilities', 'cpu', 'memory',
+            ]
+        }
+    )
+    return register_tag_response['taskDefinition']['taskDefinitionArn']
 
 
 def _fargate_task_ip(cluster_name, arn):
@@ -310,14 +316,23 @@ def _fargate_task_describe(cluster_name, arn):
 
 def _fargate_task_stop(cluster_name, task_arn):
     client = boto3.client('ecs')
-    client.stop_task(
-        cluster=cluster_name,
-        task=task_arn,
-    )
+    sleep_time = 1
+    for i in range(0, 6):
+        try:
+            client.stop_task(
+                cluster=cluster_name,
+                task=task_arn,
+            )
+        except Exception:
+            gevent.sleep(sleep_time)
+            sleep_time = sleep_time * 2
+        else:
+            return
+    raise Exception('Unable to stop Fargate task {}'.format(task_arn))
 
 
 def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
-                      security_groups, subnets, command_and_args, env):
+                      security_groups, subnets, command_and_args, env, s3_sync):
     client = boto3.client('ecs')
 
     return client.run_task(
@@ -338,7 +353,7 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
                     } for name, value in env.items()
                 ],
                 'name': container_name,
-            }, {
+            }] + [{
                 'name': 's3sync',
                 'environment': [
                     {
@@ -346,7 +361,7 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
                         'value': value,
                     } for name, value in env.items()
                 ]
-            }],
+            }] if s3_sync else [],
         },
         launchType='FARGATE',
         networkConfiguration={
