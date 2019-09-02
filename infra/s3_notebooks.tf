@@ -20,6 +20,14 @@ resource "aws_s3_bucket" "notebooks" {
       }
     }
   }
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "POST", "PUT", "HEAD", "DELETE"]
+    allowed_origins = ["https://${var.admin_domain}"]
+    expose_headers  = ["ETag", "x-amz-meta-mtime"]
+    max_age_seconds = 3000
+  }
 }
 
 resource "aws_s3_bucket_policy" "notebooks" {
