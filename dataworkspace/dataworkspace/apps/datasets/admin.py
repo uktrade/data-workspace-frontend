@@ -1,6 +1,5 @@
 import logging
 
-from django import forms
 from django.contrib import admin
 from django.contrib.admin.models import (
     LogEntry,
@@ -25,8 +24,14 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetField,
 )
 from dataworkspace.apps.core.admin import TimeStampedUserAdmin
-from dataworkspace.apps.dw_admin.forms import (ReferenceDataFieldInlineForm, SourceLinkForm, DataSetForm,
-                                               SourceLinkFormSet)
+from dataworkspace.apps.dw_admin.forms import (
+    ReferenceDataFieldInlineForm,
+    SourceLinkForm,
+    DataSetForm,
+    SourceLinkFormSet,
+    ReferenceDataInlineFormset,
+    ReferenceDatasetForm
+)
 
 logger = logging.getLogger('app')
 
@@ -115,49 +120,11 @@ class DataSetAdmin(admin.ModelAdmin):
             )
 
 
-class ReferenceDataInlineFormset(forms.BaseInlineFormSet):
-    model = ReferenceDatasetField
-
-    def clean(self):
-        # Ensure one and only one field is set as identifier
-        identifiers = [
-            x for x in self.forms
-            if x.cleaned_data.get('is_identifier') and not x.cleaned_data['DELETE']
-        ]
-        if not identifiers:
-            raise forms.ValidationError(
-                'Please ensure one field is set as the unique identifier'
-            )
-        if len(identifiers) > 1:
-            raise forms.ValidationError(
-                'Please select only one unique identifier field'
-            )
-
-        # Ensure column names don't clash
-        column_names = [
-            x.cleaned_data['column_name'] for x in self.forms
-            if x.cleaned_data.get('column_name') and not x.cleaned_data['DELETE']
-        ]
-        if len(column_names) != len(set(column_names)):
-            raise forms.ValidationError(
-                'Please ensure column names are unique'
-            )
-
-        # Ensure field names are not duplicated
-        names = [
-            x.cleaned_data['name'] for x in self.forms
-            if x.cleaned_data.get('name') is not None
-        ]
-        if len(names) != len(set(names)):
-            raise forms.ValidationError(
-                'Please ensure field names are unique'
-            )
-
-
 class ReferenceDataFieldInline(admin.TabularInline):
     form = ReferenceDataFieldInlineForm
     formset = ReferenceDataInlineFormset
     model = ReferenceDatasetField
+    fk_name = 'reference_dataset'
     min_num = 1
     extra = 1
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by']
@@ -167,15 +134,28 @@ class ReferenceDataFieldInline(admin.TabularInline):
                 'name',
                 'column_name',
                 'data_type',
+                'linked_reference_dataset',
                 'description',
-                'is_identifier'
+                'is_identifier',
+                'is_display_name',
             ]
         })
     ]
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Do not allow a link between a reference dataset field and it's parent reference dataset
+        if db_field.name == 'linked_reference_dataset':
+            parent_id = request.resolver_match.kwargs.get('object_id')
+            if parent_id is not None:
+                kwargs['queryset'] = ReferenceDataset.objects.exclude(
+                    id=parent_id
+                )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(ReferenceDataset)
 class ReferenceDatasetAdmin(TimeStampedUserAdmin):
+    form = ReferenceDatasetForm
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
@@ -200,6 +180,9 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
             ]
         })
     ]
+
+    class Media:
+        js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js',)
 
     def get_queryset(self, request):
         # Only show non-deleted reference datasets in admin
