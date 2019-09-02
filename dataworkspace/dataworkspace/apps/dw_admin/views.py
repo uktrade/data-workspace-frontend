@@ -1,3 +1,4 @@
+import csv
 import os
 import boto3
 
@@ -8,13 +9,25 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView, CreateView
 
-from dataworkspace.apps.datasets.models import ReferenceDataset, SourceLink, DataSet
-from dataworkspace.apps.dw_admin.forms import ReferenceDataRowDeleteForm, clean_identifier, SourceLinkUploadForm
+from dataworkspace.apps.datasets.models import (
+    ReferenceDataset,
+    SourceLink,
+    DataSet,
+    ReferenceDatasetUploadLog,
+    ReferenceDatasetUploadLogRecord
+)
+from dataworkspace.apps.dw_admin.forms import (
+    ReferenceDataRowDeleteForm,
+    SourceLinkUploadForm,
+    ReferenceDataRecordUploadForm,
+    clean_identifier
+)
 
 
 class ReferenceDataRecordMixin(UserPassesTestMixin):
@@ -177,6 +190,108 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         return reverse(
             'admin:datasets_referencedataset_change',
             args=(self._get_reference_dataset().id,)
+        )
+
+
+class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
+    template_name = 'admin/reference_dataset_upload_records.html'
+    form_class = ReferenceDataRecordUploadForm
+    object = None
+    upload_log = None
+
+    def get_template_names(self):
+        if self.kwargs.get('log_id') is not None:
+            return 'admin/reference_dataset_upload_log.html'
+        return self.template_name
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super().get_context_data(*args, **kwargs)
+        if self.kwargs.get('log_id'):
+            ctx['log'] = ReferenceDatasetUploadLog.objects.get(pk=self.kwargs['log_id'])
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        reference_dataset = self._get_reference_dataset()
+        kwargs.update({
+            'reference_dataset': reference_dataset,
+        })
+        return kwargs
+
+    def form_valid(self, form):
+        reader = csv.DictReader(chunk.decode() for chunk in form.cleaned_data['file'])
+        reader.fieldnames = [x.lower() for x in reader.fieldnames]
+        reference_dataset = self._get_reference_dataset()
+        record_model_class = reference_dataset.get_record_model_class()
+        field_map = {f.name.lower(): f for f in reference_dataset.fields.all()}
+        self.upload_log = ReferenceDatasetUploadLog.objects.create(
+            reference_dataset=reference_dataset,
+            created_by=self.request.user,
+            updated_by=self.request.user
+        )
+        for row in reader:
+            log_row = ReferenceDatasetUploadLogRecord(upload_log=self.upload_log, row_data=row)
+            errors = {}
+            form_data = {'reference_dataset': reference_dataset}
+            for field in reference_dataset.fields.all():
+                header_name = field.name.lower()
+                value = row[header_name]
+                form_field = field.get_form_field()
+                if field.data_type == field_map[header_name].DATA_TYPE_FOREIGN_KEY:
+                    # If the column is a "foreign key ensure the linked dataset exists
+                    link_id = None
+                    if value != '':
+                        linked_dataset = field_map[header_name].linked_reference_dataset
+                        try:
+                            link_id = linked_dataset.get_record_by_custom_id(value).id
+                        except linked_dataset.get_record_model_class().DoesNotExist:
+                            errors[header_name] = 'Identifier {} does not exist in linked dataset'.format(
+                                value
+                            )
+                    form_data[field.column_name + '_id'] = link_id
+                else:
+                    # Otherwise validate using the associated form field
+                    try:
+                        form_data[field.column_name] = form_field.clean(value)
+                    except ValidationError as e:
+                        errors[header_name] = str(e)
+
+            # Fetch the existing record if it exists
+            try:
+                record_id = reference_dataset.get_record_by_custom_id(
+                    form_data.get(reference_dataset.identifier_field.column_name)
+                ).id
+            except record_model_class.DoesNotExist:
+                record_id = None
+
+            if not errors:
+                try:
+                    reference_dataset.save_record(record_id, form_data, sync_externally=False)
+                except Exception as e:
+                    log_row.status = ReferenceDatasetUploadLogRecord.STATUS_FAILURE
+                    log_row.errors = [{'Error': str(e)}]
+                else:
+                    if record_id is not None:
+                        log_row.status = ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED
+                    else:
+                        log_row.status = ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED
+            else:
+                log_row.status = ReferenceDatasetUploadLogRecord.STATUS_FAILURE
+                log_row.errors = errors
+            log_row.save()
+
+        if reference_dataset.external_database is not None:
+            reference_dataset.sync_to_external_database(reference_dataset.external_database)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            'Reference dataset upload completed successfully'
+        )
+        return reverse(
+            'dw-admin:reference-dataset-record-upload-log',
+            args=(self._get_reference_dataset().id, self.upload_log.id)
         )
 
 
