@@ -37,3 +37,10 @@ def pretty_json(field):
         '<pre>{0}</pre>',
         json.dumps(field, indent=2)
     )
+
+
+@register.filter
+def not_set_if_none(value):
+    if value in ['', None]:
+        return format_html('<span class="unknown">Not set</span>')
+    return value
