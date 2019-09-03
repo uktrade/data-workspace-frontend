@@ -1971,7 +1971,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(
             response,
-            'Please ensure all reference dataset columns are included in the uploaded file'
+            'Please ensure the uploaded csv file headers match the target reference dataset columns'
         )
 
     def test_reference_dataset_upload_invalid_file_type(self):

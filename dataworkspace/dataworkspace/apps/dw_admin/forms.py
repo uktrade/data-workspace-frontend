@@ -247,7 +247,7 @@ class ReferenceDataRecordUploadForm(forms.Form):
         dataset_fields = [x.lower() for x in self.reference_dataset.field_names]
         if sorted(csv_fields) != sorted(dataset_fields):
             raise ValidationError(
-                'Please ensure all reference dataset columns are included in the uploaded file'
+                'Please ensure the uploaded csv file headers match the target reference dataset columns'
             )
         return self.cleaned_data['file']
 
