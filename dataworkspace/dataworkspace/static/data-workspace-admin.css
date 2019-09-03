@@ -29,3 +29,22 @@
 .back-link:hover {
   background: #ccc;
 }
+.ref-data-upload .description p {
+  padding-left: 0;
+}
+.ref-data-upload .description p:last-child {
+  padding-bottom: 10px;
+}
+.ref-data-upload ul.errorlist {
+  margin-left: 0 !important;
+}
+table.full-width {
+  width: 100%;
+}
+.error-row, .error-row pre {
+  background: #ffefef;
+  color: #ba2121;
+}
+.success-row {
+  background: #dfd;
+}

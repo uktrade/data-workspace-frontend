@@ -1,0 +1,76 @@
+{% extends "admin/change_form.html" %}
+{% load static admin_urls %}
+{% block extrahead %}
+  {{ block.super }}
+  <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+  {{ media }}
+{% endblock %}{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "data-workspace-admin.css" %}">
+{% endblock extrastyle %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='datasets' %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}">{{ ref_model }}</a>
+    &rsaquo; Reference Datast Record Upload
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div id="content-main" class="ref-data-upload">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors or form.file.errors %}
+        <p class="errornote">
+          {% if form.errors|length == 1 %}Please correct the error below.{% else %}Please correct the errors below.{% endif %}
+        </p>
+        {{ form.non_field_errors }}
+      {% endif %}
+      <fieldset class="module aligned">
+        <h2>CSV record upload instructions</h2>
+        <div class="description">
+          <p>
+            Use this form to upload records to the reference dataset
+            <strong><a href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}">{{ ref_model }}</a></strong>.
+          </p>
+          <p>
+            The uploaded csv file must contain headers matching columns listed below.
+          </p>
+        <br />
+          <table>
+            <thead>
+              <tr>
+                <th>Column name</th>
+                <th>Column description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in ref_model.fields.all %}
+                <tr>
+                  <td><strong>{{ field.name }}</strong></td>
+                  <td>{{ field.description }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        <br />
+        </div>
+      <hr />
+      </fieldset>
+      <fieldset class="module aligned">
+        <h2>Select file for upload</h2>
+        <div class="form-row{% if form.errors %} errors{% endif %}">
+          {{ form.file.errors }}
+          {{ form.file.label }}
+          {{ form.file }}
+        </div>
+      </fieldset>
+      <div class="submit-row">
+        <a class="back-link" href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}">
+          Cancel
+        </a>
+        <input type="submit" value="Upload Records" class="default" name="_save">
+      </div>
+    </form>
+  </div>
+{% endblock content %}
