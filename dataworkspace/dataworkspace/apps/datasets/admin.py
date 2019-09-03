@@ -1,5 +1,6 @@
 import logging
 
+from adminsortable2.admin import SortableInlineAdminMixin
 from django.contrib import admin
 from django.contrib.admin.models import (
     LogEntry,
@@ -120,7 +121,7 @@ class DataSetAdmin(admin.ModelAdmin):
             )
 
 
-class ReferenceDataFieldInline(admin.TabularInline):
+class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):
     form = ReferenceDataFieldInlineForm
     formset = ReferenceDataInlineFormset
     model = ReferenceDatasetField
@@ -138,6 +139,7 @@ class ReferenceDataFieldInline(admin.TabularInline):
                 'description',
                 'is_identifier',
                 'is_display_name',
+                'sort_order',
             ]
         })
     ]

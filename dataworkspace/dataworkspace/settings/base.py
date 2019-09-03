@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'adminsortable2',
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
     'dataworkspace.apps.catalogue',

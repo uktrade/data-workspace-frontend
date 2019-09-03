@@ -33,7 +33,8 @@ RUN \
 		django-db-geventpool==3.1.0 \
 		django-redis==4.10.0 \
 		zenpy==2.0.12 \
-		requests==2.21.0 && \
+		requests==2.21.0 \
+		django-admin-sortable2==0.7.3 && \
 	rm /etc/nginx/conf.d/default.conf && \
 	rm /etc/nginx/nginx.conf && \
 	apk del .build-deps

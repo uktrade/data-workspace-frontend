@@ -1,5 +1,5 @@
 import csv
-
+from adminsortable2.admin import CustomInlineFormSet
 from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
@@ -16,7 +16,7 @@ class ReferenceDatasetForm(forms.ModelForm):
     model = ReferenceDataset
 
 
-class ReferenceDataInlineFormset(forms.BaseInlineFormSet):
+class ReferenceDataInlineFormset(CustomInlineFormSet):
     model = ReferenceDatasetField
 
     def get_form_kwargs(self, index):
@@ -89,7 +89,7 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         model = ReferenceDatasetField
         fields = (
             'name', 'column_name', 'data_type', 'linked_reference_dataset',
-            'description', 'is_identifier', 'is_display_name'
+            'description', 'is_identifier', 'is_display_name', 'sort_order',
         )
 
     def __init__(self, *args, **kwargs):
