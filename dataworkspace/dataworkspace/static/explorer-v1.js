@@ -223,10 +223,19 @@ angular.module('aws-js-s3-explorer').controller('UploadController', ($scope, $ro
             currentPrefix: args.currentPrefix,
             files: args.files,
             remaining: args.files.length,
-            uploading: false
+            uploading: false,
+            aborted: false,
+            uploads: []
         };
     });
+    $scope.$on('modal::close::upload', () => {
+        $scope.model.aborted = true;
+        $scope.model.uploads.forEach((upload) => {
+            upload.abort();
+        });
+    });
     $scope.$on('modal::close-end::upload', (e, args) => {
+        $scope.model.uploads = [];
         $scope.model.files = [];
     });
 
@@ -235,9 +244,14 @@ angular.module('aws-js-s3-explorer').controller('UploadController', ($scope, $ro
         const s3 = new AWS.S3(AWS.config);
 
         $scope.model.files.forEach(async (file) => {
+            // If things are horribly slow and the user is quick, we could have opened a "new"
+            // model from the point of view of the user, but still in the process of the abort
+            // of the old, and so we ensure to only modify the original model
+            var model = $scope.model;
+
             const params = {
-                Bucket: $scope.model.bucket,
-                Key: $scope.model.currentPrefix + file.relativePath,
+                Bucket: model.bucket,
+                Key: model.currentPrefix + file.relativePath,
                 ContentType: file.type,
                 Body: file
             };
@@ -253,20 +267,26 @@ angular.module('aws-js-s3-explorer').controller('UploadController', ($scope, $ro
             await new Promise((resolve) => window.setTimeout(resolve));
 
             try {
-                await s3.upload(params)
-                    .on('httpUploadProgress', onProgress)
-                    .promise();
+                if (!model.aborted) {
+                    let upload = s3.upload(params);
+                    model.uploads.push(upload);
+                    await upload
+                        .on('httpUploadProgress', onProgress)
+                        .promise();
+                }
             } catch(err) {
-                console.error(err);
-                $scope.$apply(() => {
-                    file.error = err.code || err.message || err;
-                });
-            } finally  {
-                $scope.$apply(() => {
-                    --$scope.model.remaining;
-                });
+                if (!model.aborted) {
+                    console.error(err);
+                    $scope.$apply(() => {
+                        file.error = err.code || err.message || err;
+                    });
+                }
+            } finally {
+                --model.remaining;
             }
-            if ($scope.model.remaining == 0) {
+
+            if (model.remaining == 0) {
+                $scope.$apply();
                 $rootScope.$broadcast('reload-object-list');
             }
         });
