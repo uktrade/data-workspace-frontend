@@ -6,7 +6,13 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-from dataworkspace.apps.datasets.models import ReferenceDataset, ReferenceDatasetField, SourceLink
+from dataworkspace.apps.datasets.models import (
+    ReferenceDataset,
+    ReferenceDatasetField,
+    SourceLink,
+    ReferenceDatasetUploadLogRecord,
+    ReferenceDatasetUploadLog
+)
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase
 
@@ -1928,6 +1934,188 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertTrue(ref_ds2.fields.count(), 2)
         self.assertContains(response, 'Unable to link to a dataset that links to this dataset')
+
+    def test_reference_dataset_upload_invalid_columns(self):
+        # Create ref dataset
+        ref_ds1 = factories.ReferenceDatasetFactory.create(
+            name='ref_invalid_upload',
+            table_name='ref_invalid_upload',
+        )
+        # Create 2 ref dataset fields
+        factories.ReferenceDatasetFieldFactory.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='name',
+            column_name='name',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_display_name=True,
+        )
+
+        # Create in memory file with 1 incorrect field name
+        file1 = SimpleUploadedFile(
+            'file1.csv',
+            b'refid,invalid\r\nA1,test1\r\nA2,test2\r\n',
+            content_type='text/csv'
+        )
+
+        # Assert upload fails with error message
+        response = self._authenticated_post(
+            reverse('dw-admin:reference-dataset-record-upload', args=(ref_ds1.id,)),
+            {'file': file1}
+        )
+        self.assertContains(
+            response,
+            'Please ensure the uploaded csv file headers match the target reference dataset columns'
+        )
+
+    def test_reference_dataset_upload_invalid_file_type(self):
+        ref_ds1 = factories.ReferenceDatasetFactory.create(
+            name='ref_invalid_upload',
+            table_name='ref_invalid_upload',
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='name',
+            column_name='name',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_display_name=True,
+        )
+        file1 = SimpleUploadedFile('file1.txt', b'some text\r\n', content_type='text/plain')
+        response = self._authenticated_post(
+            reverse('dw-admin:reference-dataset-record-upload', args=(ref_ds1.id,)),
+            {'file': file1}
+        )
+        self.assertContains(
+            response,
+            'File extension &#39;txt&#39; is not allowed.',
+        )
+
+    def test_reference_data_upload(self):
+        ref_ds1 = factories.ReferenceDatasetFactory.create(
+            name='ref_invalid_upload',
+            table_name='ref_invalid_upload',
+        )
+        ref_ds2 = factories.ReferenceDatasetFactory.create(
+            name='ref_invalid_upload2',
+            table_name='ref_invalid_upload2',
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='name',
+            column_name='name',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_display_name=True,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='link',
+            column_name='link',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset=ref_ds2,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds2,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='name',
+            column_name='name',
+            reference_dataset=ref_ds2,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_display_name=True,
+        )
+        ref_ds1.increment_schema_version()
+        ref_ds2.increment_schema_version()
+
+        # Add records to the "linked to" table
+        ref_ds2.save_record(None, {
+            'reference_dataset': ref_ds2, 'refid': 'A1', 'name': 'Linked to 1'
+        })
+        linked_to = ref_ds2.save_record(None, {
+            'reference_dataset': ref_ds2, 'refid': 'A2', 'name': 'Linked to 2'
+        })
+
+        # Add some records to the "linked from" table
+        existing_record = ref_ds1.save_record(None, {
+            'reference_dataset': ref_ds1,
+            'refid': 'B1',
+            'name': 'Linked from 1',
+            'link_id': linked_to.id
+        })
+        record_count = ref_ds1.get_records().count()
+
+        upload_content = [
+            b'refid,name,link',  # Header
+            b'B1,Updated name,',  # Update existing record
+            b'B2,New record 1,A2',  # Update existing record
+            b'B3,New record 2,',  # Add record without link
+            b'B4,Another record,Z1',  # Invalid link
+        ]
+        file1 = SimpleUploadedFile('file1.csv', b'\r\n'.join(upload_content), content_type='text/csv')
+        response = self._authenticated_post(
+            reverse('dw-admin:reference-dataset-record-upload', args=(ref_ds1.id,)),
+            {'file': file1}
+        )
+        self.assertContains(
+            response,
+            'Reference dataset upload completed successfully',
+        )
+        self.assertContains(
+            response,
+            'Reference dataset upload completed successfully',
+        )
+        log_records = ReferenceDatasetUploadLog.objects.last().records.all()
+        self.assertEqual(log_records.count(), 4)
+        self.assertEqual(log_records[0].status, ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED)
+        self.assertEqual(log_records[1].status, ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED)
+        self.assertEqual(log_records[2].status, ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED)
+        self.assertEqual(log_records[3].status, ReferenceDatasetUploadLogRecord.STATUS_FAILURE)
+        self.assertEqual(ref_ds1.get_records().count(), record_count + 2)
+
+        # Check that the existing record was updated
+        existing_record = ref_ds1.get_records().get(pk=existing_record.id)
+        self.assertEqual(existing_record.name, 'Updated name')
+        self.assertIsNone(existing_record.link)
+
+        # Check new record with link was created
+        new_record = ref_ds1.get_record_by_custom_id('B2')
+        self.assertEqual(new_record.name, 'New record 1')
+        self.assertIsNotNone(new_record.link)
+
+        # Check new record without link was created
+        new_record = ref_ds1.get_record_by_custom_id('B3')
+        self.assertEqual(new_record.name, 'New record 2')
+        self.assertIsNone(new_record.link)
+
+        # Check record with invalid link was not created
+        self.assertFalse(
+            ref_ds1.get_records().filter(**{
+                ref_ds1.identifier_field.column_name: 'B4'
+            }).exists()
+        )
 
 
 class TestSourceLinkAdmin(BaseAdminTestCase):
