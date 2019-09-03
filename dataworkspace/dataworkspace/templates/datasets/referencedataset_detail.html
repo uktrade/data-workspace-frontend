@@ -113,64 +113,72 @@
     </div>
   </div>
 
-  <div class="govuk-grid-row" style="overflow-x: auto;">
+  <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-m govuk-!-margin-top-8">
         Data preview
       </h2>
       {% with object.get_records|length as num_records %}
         <p class="govuk-body">
-          Showing <strong>{% if num_records < 5 %}{{ num_records }}{% else %}5{% endif %}</strong> of <strong>{{ num_records }}</strong> record{{ num_records|pluralize }}
+          Showing <strong>{{ num_records }}</strong> record{{ num_records|pluralize }}
         </p>
       {% endwith %}
-      <table class="govuk-table govuk-!-font-size-16">
-        <thead>
-          <tr class="govuk-table__row">
-            {% for field_name in object.export_field_names %}
-              <th class="govuk-table__header">{{ field_name }}</th>
-            {% endfor %}
-            {% if perms.datasets_referencedataset.change %}
-              <th class="govuk-table__header">&nbsp;</th>
-            {% endif %}
-          </tr>
-        </thead>
-        <tbody>
-
-          {% for record in object.get_records|slice:":5" %}
+      <div class="scrollable-table">
+        <table class="govuk-table govuk-!-font-size-16">
+          <thead>
             <tr class="govuk-table__row">
-              {% for field in record.reference_dataset.fields.all %}
-                {% with record|get_attr:field.column_name as value %}
-                  {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
-                    <td class="govuk-table__cell">
-                      {{ value.get_identifier }}
-                    </td>
-                    <td class="govuk-table__cell">
-                      {{ value.get_display_name }}
-                    </td>
-                  {% else %}
-                    <td class="govuk-table__cell">
-                      {{ value|default_if_none:"Not set" }}
-                    </td>
-                  {% endif %}
-                {% endwith %}
+              {% for field in object.fields.all %}
+                {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
+                  <th class="govuk-table__header ref-data-col-id">{{ field.name }}: ID</th>
+                  <th class="govuk-table__header ref-data-col-character-field">{{ field.name }}: Name</th>
+                {% else %}
+                  <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
+                    {{ field.name }}
+                  </th>
+                {% endif %}
               {% endfor %}
               {% if perms.datasets_referencedataset.change %}
-                <td class="govuk-table__cell">
-                  <a href="{% url 'dw-admin:reference-dataset-record-edit' object.id record.id %}">
-                    Edit
-                  </a>
-                </td>
+                <th class="govuk-table__header">Admin</th>
               {% endif %}
             </tr>
-          {% empty %}
-            <tr class="govuk-table__row">
-              <td colspan="{{ object.field_names|length }}">
-                This reference dataset doesn't have any data yet.
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {% for record in object.get_records %}
+              <tr class="govuk-table__row">
+                {% for field in record.reference_dataset.fields.all %}
+                  {% with record|get_attr:field.column_name as value %}
+                    {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
+                      <td class="govuk-table__cell">
+                        {{ value.get_identifier|not_set_if_none }}
+                      </td>
+                      <td class="govuk-table__cell">
+                        {{ value.get_display_name|not_set_if_none }}
+                      </td>
+                    {% else %}
+                      <td class="govuk-table__cell">
+                        {{ value|not_set_if_none }}
+                      </td>
+                    {% endif %}
+                  {% endwith %}
+                {% endfor %}
+                {% if perms.datasets_referencedataset.change %}
+                  <td class="govuk-table__cell">
+                    <a href="{% url 'dw-admin:reference-dataset-record-edit' object.id record.id %}">
+                      Edit
+                    </a>
+                  </td>
+                {% endif %}
+              </tr>
+            {% empty %}
+              <tr class="govuk-table__row">
+                <td colspan="{{ object.field_names|length }}">
+                  This reference dataset doesn't have any data yet.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

@@ -1,4 +1,5 @@
 from django import template
+from django.utils.html import format_html
 
 register = template.Library()
 
@@ -27,3 +28,10 @@ def add_field_error(field):
     return add_class(field, '{}--error'.format(
         field.field.widget.attrs.get('class')
     ))
+
+
+@register.filter
+def not_set_if_none(value):
+    if value in ['', None]:
+        return format_html('<span class="unknown">Not set</span>')
+    return value
