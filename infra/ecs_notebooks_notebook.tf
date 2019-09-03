@@ -146,14 +146,6 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
         "__S3_PREFIX__*"
       ]
     }
-
-    condition {
-      test = "StringEquals"
-      variable = "aws:sourceVpce"
-      values = [
-        "${aws_vpc_endpoint.s3.id}"
-      ]
-    }
   }
 
   statement {
@@ -166,14 +158,6 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
     resources = [
       "${aws_s3_bucket.notebooks.arn}/__S3_PREFIX__*",
     ]
-
-    condition {
-      test = "StringEquals"
-      variable = "aws:sourceVpce"
-      values = [
-        "${aws_vpc_endpoint.s3.id}"
-      ]
-    }
   }
 }
 
@@ -248,14 +232,6 @@ data "aws_iam_policy_document" "jupyterhub_notebook_task_boundary" {
     resources = [
       "${aws_s3_bucket.notebooks.arn}",
     ]
-
-    condition {
-      test = "StringEquals"
-      variable = "aws:sourceVpce"
-      values = [
-        "${aws_vpc_endpoint.s3.id}"
-      ]
-    }
   }
 
   statement {
@@ -268,14 +244,6 @@ data "aws_iam_policy_document" "jupyterhub_notebook_task_boundary" {
     resources = [
       "${aws_s3_bucket.notebooks.arn}/*",
     ]
-
-    condition {
-      test = "StringEquals"
-      variable = "aws:sourceVpce"
-      values = [
-        "${aws_vpc_endpoint.s3.id}"
-      ]
-    }
   }
 }
 
