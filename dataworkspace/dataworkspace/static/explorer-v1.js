@@ -249,6 +249,9 @@ angular.module('aws-js-s3-explorer').controller('UploadController', ($scope, $ro
                 });
             };
 
+            // Slight hack to yield the event loop to not start a long list of uploads all at once
+            await new Promise((resolve) => window.setTimeout(resolve));
+
             try {
                 await s3.upload(params)
                     .on('httpUploadProgress', onProgress)
