@@ -53,7 +53,6 @@ class ReferenceDataRecordMixin(UserPassesTestMixin):
 
 class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
     template_name = 'admin/reference_dataset_edit_record.html'
-    object = None
 
     def get_context_data(self, *args, **kwargs):
         ctx = super().get_context_data(*args, **kwargs)
@@ -196,7 +195,6 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
 class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
     template_name = 'admin/reference_dataset_upload_records.html'
     form_class = ReferenceDataRecordUploadForm
-    object = None
     upload_log = None
 
     def get_template_names(self):
@@ -299,7 +297,6 @@ class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=
     model = SourceLink
     form_class = SourceLinkUploadForm
     template_name = 'admin/dataset_source_link_upload.html'
-    object = None
 
     def test_func(self):
         return self.request.user.is_superuser
