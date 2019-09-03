@@ -6,6 +6,7 @@ from psycopg2 import sql
 
 import boto3
 from botocore.exceptions import ClientError
+
 from django import forms
 from django.apps import apps
 from django.db import models, connection, connections, transaction, ProgrammingError
@@ -15,6 +16,7 @@ from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
+from django.contrib.postgres.fields import JSONField
 
 from dataworkspace.apps.core.models import (TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel,
                                             Database)
@@ -931,3 +933,56 @@ class ReferenceDatasetField(TimeStampedUserModel):
                 'on_delete': models.PROTECT,
             })
         return model_field(**model_config)
+
+
+class ReferenceDatasetUploadLog(TimeStampedUserModel):
+    reference_dataset = models.ForeignKey(
+        ReferenceDataset,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        ordering = ('created_date',)
+
+    def additions(self):
+        return self.records.filter(
+            status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED
+        )
+
+    def updates(self):
+        return self.records.filter(
+            status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED
+        )
+
+    def errors(self):
+        return self.records.filter(
+            status=ReferenceDatasetUploadLogRecord.STATUS_FAILURE
+        )
+
+
+class ReferenceDatasetUploadLogRecord(TimeStampedModel):
+    STATUS_SUCCESS_ADDED = 1
+    STATUS_SUCCESS_UPDATED = 2
+    STATUS_FAILURE = 3
+    _STATUS_CHOICES = (
+        (STATUS_SUCCESS_ADDED, 'Record added successfully'),
+        (STATUS_SUCCESS_UPDATED, 'Record updated successfully'),
+        (STATUS_FAILURE, 'Record upload failed'),
+    )
+    upload_log = models.ForeignKey(
+        ReferenceDatasetUploadLog,
+        on_delete=models.CASCADE,
+        related_name='records'
+    )
+    status = models.IntegerField(choices=_STATUS_CHOICES)
+    row_data = JSONField()
+    errors = JSONField(null=True)
+
+    class Meta:
+        ordering = ('created_date',)
+
+    def __str__(self):
+        return '{}: {}'.format(
+            self.created_date,
+            self.get_status_display()
+        )

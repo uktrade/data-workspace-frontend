@@ -1,9 +1,13 @@
-from adminsortable2.admin import CustomInlineFormSet
+import csv
+
 from django import forms
+from django.core import validators
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
+
+from adminsortable2.admin import CustomInlineFormSet
 
 from dataworkspace.apps.datasets.model_utils import has_circular_link
 from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDataset, \
@@ -226,6 +230,28 @@ class ReferenceDataRowDeleteForm(forms.Form):
                     })
                 )
             )
+
+
+class ReferenceDataRecordUploadForm(forms.Form):
+    file = forms.FileField(
+        label='CSV file',
+        required=True,
+        validators=[validators.FileExtensionValidator(allowed_extensions=['csv'])]
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.reference_dataset = kwargs.pop('reference_dataset')
+        super().__init__(*args, **kwargs)
+
+    def clean_file(self):
+        reader = csv.DictReader(chunk.decode() for chunk in self.cleaned_data['file'])
+        csv_fields = [x.lower() for x in reader.fieldnames]
+        dataset_fields = [x.lower() for x in self.reference_dataset.field_names]
+        if sorted(csv_fields) != sorted(dataset_fields):
+            raise ValidationError(
+                'Please ensure the uploaded csv file headers match the target reference dataset columns'
+            )
+        return self.cleaned_data['file']
 
 
 def clean_identifier(form):

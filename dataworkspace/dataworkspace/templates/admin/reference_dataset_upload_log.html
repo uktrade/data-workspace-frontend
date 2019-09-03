@@ -1,0 +1,62 @@
+{% extends "admin/change_form.html" %}
+{% load static admin_urls core_tags %}
+{% block extrahead %}
+  {{ block.super }}
+  <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+  {{ media }}
+{% endblock %}{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "data-workspace-admin.css" %}">
+{% endblock extrastyle %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='datasets' %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}">{{ ref_model }}</a>
+    &rsaquo; <a href="{% url 'dw-admin:reference-dataset-record-upload' ref_model.id %}">Reference Dataset Upload</a>
+    &rsaquo; Reference Dataset Upload Log
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div id="content-main" class="ref-data-upload">
+    <fieldset class="module aligned">
+      <h2>CSV upload complete</h2>
+      <div class="description">
+        <p>
+          Upload to <a href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}">{{ ref_model }}</a>
+          completed successfully at {{ log.records.last.created_date }} with {{ log.additions.count }}
+          additions, {{ log.updates.count }} updates and {{ log.errors.count }} errors.
+        </p>
+        <p>Full details can be found below.</p>
+      </div>
+    </fieldset>
+    <fieldset class="module aligned">
+      <h2>CSV upload log</h2>
+      <div class="description">
+        <table class="full-width">
+          <thead>
+            <th>Timestamp</th>
+            <th>Status</th>
+            <th>Uploaded data</th>
+            <th>Errors</th>
+          </thead>
+          <tbody>
+            {% for record in log.records.all %}
+              <tr class="{% if record.errors %}error{% else %}success{% endif %}-row">
+                <td>{{ record.created_date }}</td>
+                <td>{{ record.get_status_display }}</td>
+                <td>{{ record.row_data|pretty_json }}</td>
+                <td>{% if record.errors %}{{ record.errors|pretty_json }}{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </fieldset>
+    <div class="submit-row">
+      <a class="back-link" href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}">
+        Back to reference dataset
+      </a>
+    </div>
+  </div>
+{% endblock content %}
