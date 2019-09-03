@@ -753,6 +753,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         null=True,
         blank=True
     )
+    sort_order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
     class Meta:
         db_table = 'app_referencedatasetfield'
@@ -761,7 +762,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
             ('reference_dataset', 'column_name'),
         )
         verbose_name = 'Reference dataset field'
-        ordering = ('id',)
+        ordering = ('sort_order',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

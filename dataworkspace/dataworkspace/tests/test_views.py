@@ -218,25 +218,27 @@ class TestDatasetViews(BaseTestCase):
             reference_dataset=rds,
             name='id',
             data_type=2,
-            is_identifier=True
+            is_identifier=True,
+            sort_order=1,
         )
         field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='name',
             data_type=1,
+            sort_order=2,
         )
         field3 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='linked',
             data_type=8,
-            linked_reference_dataset=linked_rds
+            linked_reference_dataset=linked_rds,
+            sort_order=3,
         )
         link_record = linked_rds.save_record(None, {
             'reference_dataset': linked_rds,
             linked_field1.column_name: 1,
             linked_field2.column_name: 'Linked Display Name'
         })
-
         rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 1,
@@ -258,6 +260,7 @@ class TestDatasetViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 200)
+        # raise Exception(response.content)
         self.assertEqual(
             response.content,
             b'id,name,linked: ID,linked: Name\r\n1,Test record,1,Linked Display Name\r\n2,'
