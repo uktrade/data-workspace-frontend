@@ -179,6 +179,8 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                 'enquiries_contact',
                 'licence',
                 'restrictions_on_usage',
+                'sort_field',
+                'sort_direction',
             ]
         })
     ]
