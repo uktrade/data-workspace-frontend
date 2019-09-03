@@ -17,6 +17,10 @@ from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDat
 class ReferenceDatasetForm(forms.ModelForm):
     model = ReferenceDataset
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sort_field'].queryset = self.instance.fields.all()
+
 
 class ReferenceDataInlineFormset(CustomInlineFormSet):
     model = ReferenceDatasetField
