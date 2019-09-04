@@ -17,8 +17,16 @@
 angular.module('aws-js-s3-explorer', []);
 
 angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
-    AWS.config.update(Config.credentials);
-    AWS.config.update({region: Config.region});
+    class Credentials extends AWS.Credentials {
+        constructor() {
+            super(Config.credentials.accessKeyId, Config.credentials.secretAccessKey, Config.credentials.sessionToken);
+        }
+    }
+
+    AWS.config.update({
+        credentials: new Credentials(),
+        region: Config.region
+    });
     return new AWS.S3();
 });
 
