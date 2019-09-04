@@ -338,8 +338,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        help_text='The order records will be output in. '
-                  'If not set records will be sorted by creation date.'
+        help_text='The field to order records by in any outputs. '
+                  'If not set records will be sorted by last updated date.'
     )
     sort_direction = models.IntegerField(
         default=SORT_DIR_ASC,
@@ -502,10 +502,18 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     @property
     def record_sort_order(self):
+        """
+        Return ordering tuple for reference dataset records.
+        If column type is foreign key sort on display name for the related model.
+        :return:
+        """
         prefix = '-' if self.sort_direction == self.SORT_DIR_DESC else ''
         order = 'updated_date'
         if self.sort_field is not None:
-            order = self.sort_field.column_name
+            field = self.sort_field
+            order = field.column_name
+            if field.data_type == field.DATA_TYPE_FOREIGN_KEY and field.linked_reference_dataset is not None:
+                order = '{}__{}'.format(field.column_name, field.reference_dataset.display_name_field.column_name)
         return [''.join([prefix, order])]
 
     def get_record_model_class(self) -> object:
