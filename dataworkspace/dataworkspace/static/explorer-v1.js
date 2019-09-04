@@ -19,7 +19,26 @@ angular.module('aws-js-s3-explorer', []);
 angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
     class Credentials extends AWS.Credentials {
         constructor() {
-            super(Config.credentials.accessKeyId, Config.credentials.secretAccessKey, Config.credentials.sessionToken);
+            super();
+            this.expiration = 0;
+        }
+
+        async refresh(callback) {
+            try {
+                var response = await (await fetch(Config.credentialsUrl)).json();
+            } catch(err) {
+                callback(err);
+                return
+            }
+            this.accessKeyId = response.AccessKeyId;
+            this.secretAccessKey = response.SecretAccessKey;
+            this.sessionToken = response.SessionToken;
+            this.expiration = Date.parse(response.Expiration);
+            callback();
+        }
+
+        needsRefresh() {
+            return this.expiration - 60 < Date.now();
         }
     }
 

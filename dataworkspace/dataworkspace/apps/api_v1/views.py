@@ -1,5 +1,7 @@
 import json
 
+import boto3
+
 from django.http import JsonResponse
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
@@ -11,7 +13,10 @@ from dataworkspace.apps.applications.utils import (
     get_api_visible_application_instance_by_public_host,
     set_application_stopped,
 )
-from dataworkspace.apps.core.utils import new_private_database_credentials
+from dataworkspace.apps.core.utils import (
+    create_s3_role,
+    new_private_database_credentials,
+)
 
 
 def applications_api_view(request):
@@ -113,3 +118,36 @@ def application_api_DELETE(request, public_host):
     set_application_stopped(application_instance)
 
     return JsonResponse({}, status=200)
+
+
+def aws_credentials_api_view(request):
+    return \
+        aws_credentials_api_GET(request) if request.method == 'GET' else \
+        JsonResponse({}, status=405)
+
+
+def aws_credentials_api_GET(request):
+    client = boto3.client('sts')
+    role_arn, _ = create_s3_role(request.user.email, str(request.user.profile.sso_id))
+
+    # Creating new credentials unfortunately sometimes fails
+    max_attempts = 3
+    for i in range(0, 3):
+        try:
+            credentials = client.assume_role(
+                RoleArn=role_arn,
+                RoleSessionName='s3_access_' + str(request.user.profile.sso_id),
+                DurationSeconds=60 * 60,
+            )['Credentials']
+        except Exception:
+            if i == max_attempts - 1:
+                raise
+        else:
+            break
+
+    return JsonResponse({
+        'AccessKeyId': credentials['AccessKeyId'],
+        'SecretAccessKey': credentials['SecretAccessKey'],
+        'SessionToken': credentials['SessionToken'],
+        'Expiration': credentials['Expiration']
+    }, status=200)

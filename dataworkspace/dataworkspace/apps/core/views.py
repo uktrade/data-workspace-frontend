@@ -1,7 +1,5 @@
 import logging
 
-import boto3
-
 from django.conf import settings
 from django.http import (HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed,
                          HttpResponseNotFound)
@@ -12,7 +10,7 @@ from django.views.generic import FormView
 from dataworkspace.apps.core.forms import SupportForm
 from dataworkspace.apps.core.utils import (
     can_access_schema_table,
-    create_s3_role,
+    get_s3_prefix,
     table_data,
     table_exists,
 )
@@ -102,16 +100,9 @@ def file_browser_html_view(request):
 
 
 def file_browser_html_GET(request):
-    client = boto3.client('sts')
-    role_arn, prefix = create_s3_role(request.user.email, str(request.user.profile.sso_id))
-    response = client.assume_role(
-        RoleArn=role_arn,
-        RoleSessionName='s3_access_' + str(request.user.profile.sso_id),
-        DurationSeconds=60 * 60,
-    )
+    prefix = get_s3_prefix(str(request.user.profile.sso_id))
 
     return render(request, 'files.html', {
-        'credentials': response['Credentials'],
         'prefix': prefix,
         'bucket': settings.NOTEBOOKS_BUCKET,
     }, status=200)

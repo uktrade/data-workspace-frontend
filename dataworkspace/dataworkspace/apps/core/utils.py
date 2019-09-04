@@ -242,6 +242,10 @@ def table_data(user_email, database, schema, table):
     return response
 
 
+def get_s3_prefix(user_sso_id):
+    return 'user/federated/' + hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
+
+
 def create_s3_role(user_email_address, user_sso_id):
     iam_client = boto3.client('iam')
 
@@ -252,7 +256,7 @@ def create_s3_role(user_email_address, user_sso_id):
     role_prefix = settings.S3_ROLE_PREFIX
 
     role_name = role_prefix + user_email_address
-    s3_prefix = 'user/federated/' + hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
+    s3_prefix = get_s3_prefix(user_sso_id)
 
     try:
         iam_client.create_role(
