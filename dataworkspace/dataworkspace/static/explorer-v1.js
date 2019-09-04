@@ -16,10 +16,13 @@
 
 angular.module('aws-js-s3-explorer', []);
 
-angular.module('aws-js-s3-explorer').run((Config, $rootScope) => {
+angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
     AWS.config.update(Config.credentials);
     AWS.config.update({region: Config.region});
+    return new AWS.S3();
+});
 
+angular.module('aws-js-s3-explorer').run(($rootScope) => {
     const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
 
     $rootScope.bytesToSize = (bytes) => {
@@ -40,7 +43,7 @@ angular.module('aws-js-s3-explorer').run((Config, $rootScope) => {
     }
 });
 
-angular.module('aws-js-s3-explorer').controller('ViewController', ($scope, Config, $rootScope) => {
+angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $rootScope, $scope) => {
     var originalPrefix = Config.prefix;
     var currentPrefix = Config.prefix;
 
@@ -79,7 +82,6 @@ angular.module('aws-js-s3-explorer').controller('ViewController', ($scope, Confi
 
     $scope.download = async (key, $event) => {
         $event.stopPropagation();
-        const s3 = new AWS.S3();
         const params = {
            Bucket: Config.bucket,
            Key: key,
@@ -127,7 +129,6 @@ angular.module('aws-js-s3-explorer').controller('ViewController', ($scope, Confi
         // future gotchas
         var prefix = currentPrefix;
         var bucket = Config.bucket;
-        const s3 = new AWS.S3(AWS.config);
         const params = {
             Bucket: bucket, Prefix: prefix, Delimiter: '/'
         };
@@ -178,7 +179,7 @@ angular.module('aws-js-s3-explorer').controller('ViewController', ($scope, Confi
     setBreadcrumbs();
 });
 
-angular.module('aws-js-s3-explorer').controller('AddFolderController', ($scope, $rootScope) => {
+angular.module('aws-js-s3-explorer').controller('AddFolderController', (s3, $scope, $rootScope) => {
     $scope.$on('modal::open::add-folder', (e, args) => {
         $scope.model = {
             bucket: args.bucket,
@@ -188,7 +189,6 @@ angular.module('aws-js-s3-explorer').controller('AddFolderController', ($scope, 
     });
 
     $scope.addFolder = async () => {
-        const s3 = new AWS.S3(AWS.config);
         const withoutLeadTrailSlash = $scope.model.newFolder.replace(/^\/+/g, '').replace(/\/+$/g, '');
         const folder = $scope.model.currentPrefix + withoutLeadTrailSlash + '/';
         const params = { Bucket: $scope.model.bucket, Key: folder };
@@ -220,7 +220,7 @@ angular.module('aws-js-s3-explorer').controller('AddFolderController', ($scope, 
     };
 });
 
-angular.module('aws-js-s3-explorer').controller('UploadController', ($scope, $rootScope) => {
+angular.module('aws-js-s3-explorer').controller('UploadController', (s3, $scope, $rootScope) => {
     $scope.$on('modal::open::upload', (e, args) => {
         var folder = args.currentPrefix.substring(args.originalPrefix.length);
         $scope.model = {
@@ -247,7 +247,6 @@ angular.module('aws-js-s3-explorer').controller('UploadController', ($scope, $ro
 
     $scope.uploadFiles = () => {
         $scope.model.uploading = true;
-        const s3 = new AWS.S3(AWS.config);
 
         $scope.model.files.forEach(async (file) => {
             // If things are horribly slow and the user is quick, we could have opened a "new"
@@ -316,7 +315,7 @@ angular.module('aws-js-s3-explorer').controller('ErrorController', ($scope) => {
     };
 });
 
-angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $rootScope) => {
+angular.module('aws-js-s3-explorer').controller('TrashController', (s3, $scope, $rootScope) => {
     $scope.$on('modal::open::trash', (e, args) => {
         $scope.model = {
             bucket: args.bucket,
@@ -339,8 +338,6 @@ angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $roo
     $scope.deleteFiles = async () => {
         var model = $scope.model;
         model.trashing = true;
-
-        const s3 = new AWS.S3(AWS.config);
 
         // Slight hack to ensure that we are no longer in a digest, to make
         // each iteration of the below loop able to assume it's not in a digest
