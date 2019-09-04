@@ -312,21 +312,23 @@ angular.module('aws-js-s3-explorer').controller('ErrorController', ($scope) => {
 
 angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $rootScope) => {
     $scope.$on('modal::open::trash', (e, args) => {
-        $scope.bucket = args.bucket;
-        $scope.prefixes = args.prefixes;
-        $scope.objects = args.objects;
-        $scope.count = $scope.prefixes.length + $scope.objects.length;
-        $scope.trashing = false;
-        $scope.finished = false;
+        $scope.model = {
+            bucket: args.bucket,
+            prefixes: args.prefixes,
+            objects: args.objects,
+            count: args.prefixes.length + args.objects.length,
+            trashing: false,
+            finished: false           
+        };
     });
     $scope.$on('modal::close-end::upload', (e, args) => {
-        $scope.prefixes = [];
-        $scope.objects = [];
+        $scope.model.prefixes = [];
+        $scope.model.objects = [];
     });
 
     $scope.deleteFiles = async () => {
-        $scope.trashing = true;
-        var bucket = $scope.bucket;
+        $scope.model.trashing = true;
+        var bucket = $scope.model.bucket;
 
         const s3 = new AWS.S3(AWS.config);
 
@@ -335,8 +337,8 @@ angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $roo
         await new Promise((resolve) => window.setTimeout(resolve));
 
         // Delete prefixes: fetch all keys under them, deleting as we go to avoid storing in memory
-        for (let i = 0; i < $scope.prefixes.length; ++i) {
-            let prefix = $scope.prefixes[i];
+        for (let i = 0; i < $scope.model.prefixes.length; ++i) {
+            let prefix = $scope.model.prefixes[i];
             try {
                 $scope.$apply(() => {
                     prefix.deleteStarted = true;
@@ -367,8 +369,8 @@ angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $roo
         }
 
         // Delete objects
-        for (let i = 0; i < $scope.objects.length; ++i) {
-            let object = $scope.objects[i];
+        for (let i = 0; i < $scope.model.objects.length; ++i) {
+            let object = $scope.model.objects[i];
             try {
                 await s3.deleteObject({ Bucket: bucket, Key: object.Key }).promise();
                 $scope.$apply(() => {
@@ -383,7 +385,7 @@ angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $roo
         }
 
         $scope.$apply(() => {
-            $scope.finished = true;
+            $scope.model.finished = true;
         });
         $rootScope.$broadcast('reload-object-list');
     };
