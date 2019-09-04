@@ -16,5 +16,5 @@ mobius3 \
     --prefix ${S3_PREFIX} \
     --log-level INFO \
     --credentials-source ecs-container-endpoint \
-    --exclude-remote '(.*(/|^)\.checkpoints/)|(.*(/|^)_bigdata/.*)' \
-    --exclude-local '(.*/\..*)|(.*(/|^)_bigdata/.*)'
+    --exclude-remote '(.*(/|^)\.checkpoints/)|(.*(/|^)bigdata/.*)' \
+    --exclude-local '(.*/\..*)|(.*(/|^)bigdata/.*)'
