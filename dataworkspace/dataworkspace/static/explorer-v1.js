@@ -45,6 +45,7 @@ angular.module('aws-js-s3-explorer').controller('ViewController', ($scope, Confi
     var currentPrefix = Config.prefix;
 
     $scope.breadcrumbs = [];
+    $scope.bigdata = null;
     $scope.prefixes = [];
     $scope.objects = [];
     $scope.initialising = true;
@@ -133,7 +134,12 @@ angular.module('aws-js-s3-explorer').controller('ViewController', ($scope, Confi
         try {
             response = await s3.listObjectsV2(params).promise();
             $scope.$apply(function () {
-                $scope.prefixes = response.CommonPrefixes;
+                $scope.bigdata = prefix == originalPrefix ? {
+                    Prefix: originalPrefix + Config.bigdataPrefix
+                } : null;
+                $scope.prefixes = response.CommonPrefixes.filter((prefix) => {
+                    return prefix.Prefix != originalPrefix + Config.bigdataPrefix;
+                });
                 $scope.objects = response.Contents.filter((object) => {
                     return object.Key != prefix;
                 });
