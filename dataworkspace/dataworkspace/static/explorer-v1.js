@@ -312,21 +312,27 @@ angular.module('aws-js-s3-explorer').controller('ErrorController', ($scope) => {
 
 angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $rootScope) => {
     $scope.$on('modal::open::trash', (e, args) => {
-        $scope.bucket = args.bucket;
-        $scope.prefixes = args.prefixes;
-        $scope.objects = args.objects;
-        $scope.count = $scope.prefixes.length + $scope.objects.length;
-        $scope.trashing = false;
-        $scope.finished = false;
+        $scope.model = {
+            bucket: args.bucket,
+            prefixes: args.prefixes,
+            objects: args.objects,
+            count: args.prefixes.length + args.objects.length,
+            trashing: false,
+            aborted: false,
+            finished: false           
+        };
     });
-    $scope.$on('modal::close-end::upload', (e, args) => {
-        $scope.prefixes = [];
-        $scope.objects = [];
+    $scope.$on('modal::close::trash', (e, args) => {
+        $scope.model.aborted = true;
+    });
+    $scope.$on('modal::close-end::trash', (e, args) => {
+        $scope.model.prefixes = [];
+        $scope.model.objects = [];
     });
 
     $scope.deleteFiles = async () => {
-        $scope.trashing = true;
-        var bucket = $scope.bucket;
+        var model = $scope.model;
+        model.trashing = true;
 
         const s3 = new AWS.S3(AWS.config);
 
@@ -335,8 +341,8 @@ angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $roo
         await new Promise((resolve) => window.setTimeout(resolve));
 
         // Delete prefixes: fetch all keys under them, deleting as we go to avoid storing in memory
-        for (let i = 0; i < $scope.prefixes.length; ++i) {
-            let prefix = $scope.prefixes[i];
+        for (let i = 0; i < model.prefixes.length && !model.aborted; ++i) {
+            let prefix = model.prefixes[i];
             try {
                 $scope.$apply(() => {
                     prefix.deleteStarted = true;
@@ -345,46 +351,56 @@ angular.module('aws-js-s3-explorer').controller('TrashController', ($scope, $roo
                 let continuationToken = null;
                 while (isTruncated) {
                     response = await s3.listObjectsV2({
-                        Bucket: bucket,
+                        Bucket: model.bucket,
                         Prefix: prefix.Prefix,
                         ContinuationToken: continuationToken
                     }).promise()
                     isTruncated = response.IsTruncated;
                     continuationToken = response.NextContinuationToken;
-                    for (let j = 0; j < response.Contents.length; ++j) {
-                        await s3.deleteObject({ Bucket: bucket, Key: response.Contents[j].Key }).promise();
+                    for (let j = 0; j < response.Contents.length && !model.aborted; ++j) {
+                        await s3.deleteObject({ Bucket: model.bucket, Key: response.Contents[j].Key }).promise();
                     }
                 }
-                $scope.$apply(() => {
-                    prefix.deleteFinished = true;
-                });
+                if (!model.aborted) {
+                    $scope.$apply(() => {
+                        prefix.deleteFinished = true;
+                    });
+                }
             } catch(err) {
                 console.error(err);
-                $scope.$apply(() => {
-                    prefix.deleteError = err.code || err.message || err;
-                });
+                if (!model.aborted) {
+                    $scope.$apply(() => {
+                        prefix.deleteError = err.code || err.message || err;
+                    });
+                }
             }
         }
 
         // Delete objects
-        for (let i = 0; i < $scope.objects.length; ++i) {
-            let object = $scope.objects[i];
+        for (let i = 0; i < model.objects.length && !model.aborted; ++i) {
+            let object = model.objects[i];
             try {
-                await s3.deleteObject({ Bucket: bucket, Key: object.Key }).promise();
-                $scope.$apply(() => {
-                    object.deleteFinished = true;
-                });
+                await s3.deleteObject({ Bucket: model.bucket, Key: object.Key }).promise();
+                if (!model.aborted) {
+                    $scope.$apply(() => {
+                        object.deleteFinished = true;
+                    });
+                }
             } catch(err) {
                 console.error(err);
-                $scope.$apply(() => {
-                    object.deleteError = err.code || err.message || err;
-                });
+                if (!model.aborted) {
+                    $scope.$apply(() => {
+                        object.deleteError = err.code || err.message || err;
+                    });
+                }
             }
         }
 
-        $scope.$apply(() => {
-            $scope.finished = true;
-        });
+        if (!model.aborted) {
+            $scope.$apply(() => {
+                $scope.model.finished = true;
+            });
+        }
         $rootScope.$broadcast('reload-object-list');
     };
 });
