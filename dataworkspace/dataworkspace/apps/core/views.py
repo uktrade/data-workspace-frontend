@@ -15,6 +15,7 @@ from dataworkspace.apps.core.utils import (
     create_s3_role,
     table_data,
     table_exists,
+    view_exists,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -86,13 +87,14 @@ def table_data_view(request, database, schema, table):
         }
     )
 
-    response = \
-        HttpResponseNotAllowed(['GET']) if request.method != 'GET' else \
-        HttpResponseForbidden() if not can_access_schema_table(request.user, database, schema, table) else \
-        HttpResponseNotFound() if not table_exists(database, schema, table) else \
-        table_data(request.user.email, database, schema, table)
-
-    return response
+    if request.method != 'GET':
+        return HttpResponseNotAllowed(['GET'])
+    elif not can_access_schema_table(request.user, database, schema, table):
+        return HttpResponseForbidden()
+    elif not (view_exists(database, schema, table) or table_exists(database, schema, table)):
+        return HttpResponseNotFound()
+    else:
+        return table_data(request.user.email, database, schema, table)
 
 
 def file_browser_html_view(request):
