@@ -75,7 +75,9 @@ angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $
     var currentPrefix = Config.prefix;
 
     $scope.breadcrumbs = [];
+    $scope.bigdataPrefix = Config.bigdataPrefix;
     $scope.bigdata = null;
+    $scope.inBigdata = false;
     $scope.prefixes = [];
     $scope.objects = [];
     $scope.initialising = true;
@@ -172,6 +174,7 @@ angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $
                     return object.Key != prefix;
                 });
                 $scope.initialising = false;
+                $scope.inBigdata = currentPrefix.startsWith(originalPrefix + Config.bigdataPrefix);
             });
         } catch (err) {
             $scope.$apply(() => {

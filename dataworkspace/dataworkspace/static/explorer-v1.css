@@ -187,11 +187,11 @@
 
 .dropzone {
     background: white;
+    border: 2px solid white;
+    margin: -2px;
 }
 .dropzone.dragover {
     box-shadow: 0 0 0 5px #ffbf47;
-    border: 2px solid white;
-    margin: -2px;
 }
 
 .govuk-table__cell-progress {
