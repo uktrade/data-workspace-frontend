@@ -1065,7 +1065,6 @@ class TestExternalModels(BaseModelsTests):
         ref_dataset.external_database = factories.DatabaseFactory.create(
             memorable_name='test_external_db2'
         )
-        # raise Exception(ref_dataset.external_database)
         ref_dataset.save()
         self.assertFalse(
             self._table_exists(ref_dataset.table_name, database='test_external_db')

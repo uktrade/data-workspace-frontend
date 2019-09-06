@@ -260,7 +260,6 @@ class TestDatasetViews(BaseTestCase):
             })
         )
         self.assertEqual(response.status_code, 200)
-        # raise Exception(response.content)
         self.assertEqual(
             response.content,
             b'id,name,linked: ID,linked: Name\r\n1,Test record,1,Linked Display Name\r\n2,'
