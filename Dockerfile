@@ -34,7 +34,8 @@ RUN \
 		django-redis==4.10.0 \
 		zenpy==2.0.12 \
 		requests==2.21.0 \
-		django-admin-sortable2==0.7.3 && \
+		django-admin-sortable2==0.7.3 \
+		sentry-sdk==0.11.2 && \
 	rm /etc/nginx/conf.d/default.conf && \
 	rm /etc/nginx/nginx.conf && \
 	apk del .build-deps

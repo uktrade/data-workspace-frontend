@@ -3,6 +3,9 @@ import json
 import os
 import urllib.request
 
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
 from dataworkspace.utils import normalise_environment
 
 env = normalise_environment(os.environ)
@@ -194,3 +197,9 @@ S3_POLICY_NAME = env['S3_POLICY_NAME']
 S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(env['S3_POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
 S3_PERMISSIONS_BOUNDARY_ARN = env['S3_PERMISSIONS_BOUNDARY_ARN']
 S3_ROLE_PREFIX = env['S3_ROLE_PREFIX']
+
+if env.get('SENTRY_DSN') is not None:
+    sentry_sdk.init(
+        env['SENTRY_DSN'],
+        integrations=[DjangoIntegration()]
+    )
