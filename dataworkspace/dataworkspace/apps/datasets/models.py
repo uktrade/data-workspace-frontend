@@ -477,6 +477,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return [x.name for x in self.fields.all()]
 
     @property
+    def editable_fields(self):
+        """
+        Returns related ReferenceDatasetFields that are user editable
+        :return:
+        """
+        return self.fields.filter(
+            data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES
+        )
+
+    @property
     def column_names(self) -> List[str]:
         """
         Returns the column name for all associated fields.
@@ -742,6 +752,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
     DATA_TYPE_DATETIME = 6
     DATA_TYPE_BOOLEAN = 7
     DATA_TYPE_FOREIGN_KEY = 8
+    DATA_TYPE_UUID = 9
     _DATA_TYPES = (
         (DATA_TYPE_CHAR, 'Character field'),
         (DATA_TYPE_INT, 'Integer field'),
@@ -751,6 +762,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         (DATA_TYPE_DATETIME, 'Datetime field'),
         (DATA_TYPE_BOOLEAN, 'Boolean field'),
         (DATA_TYPE_FOREIGN_KEY, 'Linked Reference Dataset'),
+        (DATA_TYPE_UUID, 'Universal unique identifier field'),
     )
     DATA_TYPE_MAP = {
         DATA_TYPE_CHAR: 'varchar(255)',
@@ -761,6 +773,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_DATETIME: 'timestamp',
         DATA_TYPE_BOOLEAN: 'boolean',
         DATA_TYPE_FOREIGN_KEY: 'integer',
+        DATA_TYPE_UUID: 'uuid',
     }
     _DATA_TYPE_FORM_FIELD_MAP = {
         DATA_TYPE_CHAR: forms.CharField,
@@ -771,6 +784,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_DATETIME: forms.DateTimeField,
         DATA_TYPE_BOOLEAN: forms.BooleanField,
         DATA_TYPE_FOREIGN_KEY: forms.ModelChoiceField,
+        DATA_TYPE_UUID: forms.UUIDField,
     }
     _DATA_TYPE_MODEL_FIELD_MAP = {
         DATA_TYPE_CHAR: models.CharField,
@@ -781,7 +795,18 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_DATETIME: models.DateTimeField,
         DATA_TYPE_BOOLEAN: models.BooleanField,
         DATA_TYPE_FOREIGN_KEY: models.ForeignKey,
+        DATA_TYPE_UUID: models.UUIDField,
     }
+    EDITABLE_DATA_TYPES = (
+        DATA_TYPE_CHAR,
+        DATA_TYPE_INT,
+        DATA_TYPE_FLOAT,
+        DATA_TYPE_DATE,
+        DATA_TYPE_TIME,
+        DATA_TYPE_DATETIME,
+        DATA_TYPE_BOOLEAN,
+        DATA_TYPE_FOREIGN_KEY,
+    )
     reference_dataset = models.ForeignKey(
         ReferenceDataset,
         on_delete=models.CASCADE,
@@ -1004,6 +1029,11 @@ class ReferenceDatasetField(TimeStampedUserModel):
                 'verbose_name': 'Linked Reference Dataset',
                 'to': self.linked_reference_dataset.get_record_model_class(),
                 'on_delete': models.PROTECT,
+            })
+        elif self.data_type == self.DATA_TYPE_UUID:
+            model_config.update({
+                'default': uuid.uuid4,
+                'editable': False,
             })
         return model_field(**model_config)
 
