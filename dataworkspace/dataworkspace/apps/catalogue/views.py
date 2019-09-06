@@ -23,7 +23,7 @@ from django.views.generic import DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
-from dataworkspace.apps.core.utils import table_exists, table_data
+from dataworkspace.apps.core.utils import table_exists, table_data, view_exists
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
     SourceTable, ReferenceDatasetField
 from dataworkspace.apps.datasets.utils import find_dataset
@@ -227,7 +227,8 @@ class SourceTableDownloadView(DetailView):
             dataset=dataset
         )
 
-        if not table_exists(table.database.memorable_name, table.schema, table.table):
+        if not (table_exists(table.database.memorable_name, table.schema, table.table) or
+                view_exists(table.database.memorable_name, table.schema, table.table)):
             return HttpResponseNotFound()
 
         log_event(

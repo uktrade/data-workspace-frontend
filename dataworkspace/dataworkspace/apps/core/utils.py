@@ -150,6 +150,22 @@ def source_tables_for_user(user):
     ).order_by('database__memorable_name', 'schema', 'table', 'id')
 
 
+def view_exists(database, schema, view):
+    with \
+            connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
+            conn.cursor() as cur:
+        cur.execute("""
+            SELECT 1
+            FROM
+                pg_catalog.pg_views
+            WHERE
+                schemaname = %s
+            AND
+                viewname = %s
+        """, (schema, view))
+        return bool(cur.fetchone())
+
+
 def table_exists(database, schema, table):
     with \
             connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
