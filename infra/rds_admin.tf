@@ -5,7 +5,7 @@ resource "aws_db_instance" "admin" {
   storage_type = "gp2"
   engine = "postgres"
   engine_version = "10.6"
-  instance_class = "db.t2.medium"
+  instance_class = "${var.admin_db_instance_class}"
 
   apply_immediately = true
 
