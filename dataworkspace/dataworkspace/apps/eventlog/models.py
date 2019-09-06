@@ -11,11 +11,13 @@ class EventLog(models.Model):
     TYPE_DATASET_SOURCE_TABLE_DOWNLOAD = 2
     TYPE_REFERENCE_DATASET_DOWNLOAD = 3
     TYPE_DATASET_TABLE_DATA_DOWNLOAD = 4
+    TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD = 5
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, 'Dataset source link download'),
         (TYPE_DATASET_SOURCE_TABLE_DOWNLOAD, 'Dataset source table download'),
         (TYPE_REFERENCE_DATASET_DOWNLOAD, 'Reference dataset download'),
         (TYPE_DATASET_TABLE_DATA_DOWNLOAD, 'Table data download'),
+        (TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD, 'SQL query download'),
     )
     user = models.ForeignKey(
         get_user_model(),
