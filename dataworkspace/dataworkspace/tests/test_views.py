@@ -528,3 +528,118 @@ class TestSourceTableDownloadView(BaseTestCase):
             EventLog.objects.latest().event_type,
             EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD
         )
+
+
+class TestCustomQueryDownloadView(BaseTestCase):
+    databases = ['default', 'my_database']
+
+    def setUp(self):
+        super().setUp()
+        self.database = factories.DatabaseFactory(memorable_name='my_database')
+        self.dsn = database_dsn(settings.DATABASES_DATA['my_database'])
+        with connect(self.dsn) as conn, conn.cursor() as cursor:
+            cursor.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS custom_query_test (
+                    id INT,
+                    name VARCHAR(255),
+                    date DATE
+                );
+                TRUNCATE TABLE custom_query_test;
+                INSERT INTO custom_query_test VALUES(1, 'the first record', NULL);
+                INSERT INTO custom_query_test VALUES(2, 'the second record', '2019-01-01');
+                INSERT INTO custom_query_test VALUES(3, 'the last record', NULL);
+                '''
+            )
+
+    def _create_query(self, sql):
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
+        return factories.CustomDatasetQueryFactory(
+            dataset=dataset,
+            database=self.database,
+            query=sql
+        )
+
+    def test_forbidden_dataset(self):
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
+        source_table = factories.SourceTableFactory(
+            dataset=dataset,
+        )
+        log_count = EventLog.objects.count()
+        response = self._authenticated_get(
+            source_table.get_absolute_url()
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(EventLog.objects.count(), log_count)
+
+    @mock.patch('dataworkspace.apps.core.utils.logger')
+    def test_invalid_sql(self, mock_logger):
+        # Hide exception messages for this test only as its a bit confusing to see in the output
+        import gevent.hub
+        gevent.hub.Hub.NOT_ERROR = (Exception,)
+        query = self._create_query('SELECT * FROM table_that_does_not_exist;')
+        response = self._authenticated_get(query.get_absolute_url())
+        # Should return an empty csv
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(b''.join(response.streaming_content), b'')
+        # Do not print exception details as part of tests - but confirm the exception was logged
+        mock_logger.exception.assert_called_once()
+
+    @mock.patch('dataworkspace.apps.core.utils.logger')
+    def test_dangerous_sql(self, mock_logger):
+        import gevent.hub
+        gevent.hub.Hub.NOT_ERROR = (Exception,)
+
+        # Test drop table
+        query = self._create_query('DROP TABLE custom_query_test;')
+        response = self._authenticated_get(query.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(b''.join(response.streaming_content), b'')
+        with connect(self.dsn) as conn, conn.cursor() as cursor:
+            cursor.execute('SELECT to_regclass(\'custom_query_test\')')
+            self.assertEqual(cursor.fetchone()[0], 'custom_query_test')
+
+        # Test delete records
+        query = self._create_query('DELETE FROM custom_query_test;')
+        response = self._authenticated_get(query.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(b''.join(response.streaming_content), b'')
+        with connect(self.dsn) as conn, conn.cursor() as cursor:
+            cursor.execute('SELECT COUNT(*) FROM custom_query_test')
+            self.assertEqual(cursor.fetchone()[0], 3)
+
+        # Test update records
+        query = self._create_query('UPDATE custom_query_test SET name=\'updated\';')
+        response = self._authenticated_get(query.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(b''.join(response.streaming_content), b'')
+        with connect(self.dsn) as conn, conn.cursor() as cursor:
+            cursor.execute('SELECT COUNT(*) FROM custom_query_test WHERE name=\'updated\'')
+            self.assertEqual(cursor.fetchone()[0], 0)
+
+        # Test insert record
+        query = self._create_query('INSERT INTO custom_query_test (id, name) VALUES(4, \'added\')')
+        response = self._authenticated_get(query.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(b''.join(response.streaming_content), b'')
+        with connect(self.dsn) as conn, conn.cursor() as cursor:
+            cursor.execute('SELECT COUNT(*) FROM custom_query_test')
+            self.assertEqual(cursor.fetchone()[0], 3)
+
+        # 4 exceptions should have been caught
+        self.assertEqual(mock_logger.exception.call_count, 4)
+
+    def test_valid_sql(self):
+        query = self._create_query('SELECT * FROM custom_query_test WHERE id IN (1, 3)')
+        log_count = EventLog.objects.count()
+        response = self._authenticated_get(query.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            b''.join(response.streaming_content),
+            b'id,name,date\r\n1,the first record,\r\n3,the last record,\r\nNumber of rows: 2\r\n'
+        )
+        self.assertEqual(EventLog.objects.count(), log_count + 1)
+        self.assertEqual(
+            EventLog.objects.latest().event_type,
+            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
+        )

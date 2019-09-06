@@ -6,6 +6,7 @@ import logging
 import os
 
 from contextlib import closing
+from itertools import chain
 
 import boto3
 from botocore.exceptions import ClientError
@@ -20,12 +21,13 @@ from django.http import (Http404, HttpResponse, HttpResponseForbidden,
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
+from psycopg2 import sql
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
-from dataworkspace.apps.core.utils import table_exists, table_data, view_exists
+from dataworkspace.apps.core.utils import table_exists, table_data, view_exists, streaming_query_response
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
-    SourceTable, ReferenceDatasetField
+    SourceTable, ReferenceDatasetField, CustomDatasetQuery
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -71,12 +73,15 @@ def dataset_full_path_view(request, group_slug, set_slug):
     context = {
         'model': dataset,
         'has_download_access': dataset.user_has_access(request.user),
-        'links': dataset.sourcelink_set.all().order_by('name'),
-        'tables': dataset.sourcetable_set.all().order_by(
-            'schema', 'table', 'database__memorable_name', 'database__id'
+        'data_links': sorted(
+            chain(
+                dataset.sourcelink_set.all(),
+                dataset.sourcetable_set.all(),
+                dataset.customdatasetquery_set.all()
+            ),
+            key=lambda x: x.name
         )
     }
-
     return render(request, 'dataset.html', context)
 
 
@@ -242,6 +247,44 @@ class SourceTableDownloadView(DetailView):
         )
 
         return table_data(request.user.email, table.database.memorable_name, table.schema, table.table)
+
+
+class CustomDatasetQueryDownloadView(DetailView):
+    model = CustomDatasetQuery
+
+    def get(self, request, *args, **kwargs):
+        dataset = find_dataset(
+            self.kwargs.get('group_slug'),
+            self.kwargs.get('set_slug')
+        )
+
+        if not dataset.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+
+        query = get_object_or_404(
+            self.model,
+            id=self.kwargs.get('query_id'),
+            dataset=dataset
+        )
+
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+            query.dataset,
+            extra={
+                'path': request.get_full_path(),
+                **model_to_dict(query)
+            }
+        )
+
+        response = streaming_query_response(
+            request.user.email,
+            query.database.memorable_name,
+            sql.SQL(query.query),
+            query.get_filename()
+        )
+
+        return response
 
 
 def root_view(request):
