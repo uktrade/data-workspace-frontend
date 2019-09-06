@@ -183,8 +183,8 @@ def table_exists(database, schema, table):
         return bool(cur.fetchone())
 
 
-def table_data(user_email, database, schema, table):
-    logger.info('table_data_view start: %s %s %s %s', user_email, database, schema, table)
+def streaming_query_response(user_email, database, query, filename):
+    logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
     cursor_itersize = 1000
     queue_size = 3
     bytes_queue = gevent.queue.Queue(maxsize=queue_size)
@@ -201,18 +201,11 @@ def table_data(user_email, database, schema, table):
                 connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
                 conn.cursor(name='all_table_data') as cur:  # Named cursor => server-side cursor
 
+            conn.set_session(readonly=True)
             cur.itersize = cursor_itersize
             cur.arraysize = cursor_itersize
 
-            # There is no ordering here. We just want a full dump.
-            # Also, there are not likely to be updates, so a long-running
-            # query shouldn't cause problems with concurrency/locking
-            cur.execute(sql.SQL("""
-                SELECT
-                    *
-                FROM
-                    {}.{}
-            """).format(sql.Identifier(schema), sql.Identifier(table)))
+            cur.execute(query)
 
             i = 0
             while True:
@@ -228,7 +221,6 @@ def table_data(user_email, database, schema, table):
                 i += len(rows)
                 if not rows:
                     break
-
             bytes_queue.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
     def yield_bytes_from_queue():
@@ -241,21 +233,32 @@ def table_data(user_email, database, schema, table):
             except gevent.queue.Empty:
                 pass
 
-        logger.info('table_data_view end: %s %s %s %s', user_email, database, schema, table)
+        logger.info('streaming_query_response end: %s %s %s', user_email, database, query)
 
     def handle_exception(job):
         try:
             raise job.exception
         except Exception:
-            logger.exception('table_data_view exception: %s %s %s %s',
-                             user_email, database, schema, table)
+            logger.exception(
+                'streaming_query_response exception: %s %s %s', user_email, database, query
+            )
 
     put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
     put_db_rows_to_queue_job.link_exception(handle_exception)
 
     response = StreamingHttpResponse(yield_bytes_from_queue(), content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="{schema}_{table}.csv"'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+
+def table_data(user_email, database, schema, table):
+    # There is no ordering here. We just want a full dump.
+    # Also, there are not likely to be updates, so a long-running
+    # query shouldn't cause problems with concurrency/locking
+    query = sql.SQL('SELECT * FROM {}.{}').format(sql.Identifier(schema), sql.Identifier(table))
+    return streaming_query_response(
+        user_email, database, query, F'{schema}_{table}.csv'
+    )
 
 
 def get_s3_prefix(user_sso_id):
