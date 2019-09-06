@@ -69,6 +69,14 @@
                                 </dd>
                             </div>
                         {% endfor %}
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                <a class="govuk-link" href="{% url 'files' %}"
+                                   style="font-weight: normal;">Your files</a>
+                            </dt>
+                            <dd class="govuk-summary-list__actions">
+                            </dd>
+                        </div>
                     {% endif %}
                     {% if appstream_url != "https:///" and perms.applications.access_appstream %}
                         <div class="govuk-summary-list__row">
