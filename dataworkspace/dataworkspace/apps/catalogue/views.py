@@ -277,14 +277,12 @@ class CustomDatasetQueryDownloadView(DetailView):
             }
         )
 
-        response = streaming_query_response(
+        return streaming_query_response(
             request.user.email,
             query.database.memorable_name,
             sql.SQL(query.query),
             query.get_filename()
         )
-
-        return response
 
 
 def root_view(request):
