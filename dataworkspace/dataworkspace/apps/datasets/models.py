@@ -263,6 +263,12 @@ class SourceLink(TimeStampedModel):
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
+    SORT_DIR_ASC = 1
+    SORT_DIR_DESC = 2
+    _SORT_DIR_CHOICES = (
+        (SORT_DIR_ASC, 'Ascending'),
+        (SORT_DIR_DESC, 'Descending'),
+    )
     group = models.ForeignKey(
         DataGrouping,
         on_delete=models.CASCADE
@@ -327,6 +333,18 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         help_text='Name of the analysts database to keep in '
                   'sync with this reference dataset'
     )
+    sort_field = models.ForeignKey(
+        'ReferenceDatasetField',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text='The field to order records by in any outputs. '
+                  'If not set records will be sorted by last updated date.'
+    )
+    sort_direction = models.IntegerField(
+        default=SORT_DIR_ASC,
+        choices=_SORT_DIR_CHOICES,
+    )
 
     class Meta:
         db_table = 'app_referencedataset'
@@ -343,12 +361,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         # Stash the current table name & db so they can be compared on save
         self._original_table_name = self.table_name
         self._original_ext_db = self.external_database
+        self._original_sort_order = self.record_sort_order
+
+    def _schema_has_changed(self):
+        return self.table_name != self._original_table_name or \
+            self.record_sort_order != self._original_sort_order
 
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
-        table_changed = self.table_name != self._original_table_name
-        if not create and table_changed:
+        if not create and self._schema_has_changed():
             self.schema_version += 1
         super().save(force_insert, force_update, using, update_fields)
         model_class = self.get_record_model_class()
@@ -370,7 +392,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     self.sync_to_external_database(self.external_database.memorable_name)
 
             # If the db has been changed update it
-            if table_changed:
+            if self._schema_has_changed():
                 for database in self.get_database_names():
                     with connections[database].schema_editor() as editor:
                         editor.alter_db_table(
@@ -381,6 +403,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
         self._original_table_name = self.table_name
         self._original_ext_db = self.external_database
+        self._original_sort_order = self.record_sort_order
 
     @transaction.atomic
     def delete(self, **kwargs):
@@ -477,6 +500,22 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def version(self):
         return '{}.{}'.format(self.major_version, self.minor_version)
 
+    @property
+    def record_sort_order(self):
+        """
+        Return ordering tuple for reference dataset records.
+        If column type is foreign key sort on display name for the related model.
+        :return:
+        """
+        prefix = '-' if self.sort_direction == self.SORT_DIR_DESC else ''
+        order = 'updated_date'
+        if self.sort_field is not None:
+            field = self.sort_field
+            order = field.column_name
+            if field.data_type == field.DATA_TYPE_FOREIGN_KEY and field.linked_reference_dataset is not None:
+                order = '{}__{}'.format(field.column_name, field.reference_dataset.display_name_field.column_name)
+        return [''.join([prefix, order])]
+
     def get_record_model_class(self) -> object:
         """
         Dynamically build a model class to represent a record in a dataset.
@@ -499,7 +538,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         class Meta:
             app_label = 'datasets'
             db_table = self.table_name
-            ordering = ('updated_date',)
+            ordering = self.record_sort_order
 
         attrs = {
             **{f.column_name: f.get_model_field() for f in self.fields.all()},
@@ -755,6 +794,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         null=True,
         blank=True
     )
+    sort_order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
     class Meta:
         db_table = 'app_referencedatasetfield'
@@ -763,7 +803,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
             ('reference_dataset', 'column_name'),
         )
         verbose_name = 'Reference dataset field'
-        ordering = ('id',)
+        ordering = ('sort_order',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

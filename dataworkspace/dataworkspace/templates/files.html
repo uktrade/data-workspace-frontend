@@ -71,7 +71,7 @@ Modified by the Department for International Trade
         <div modal="trash" class="modal" ng-controller="TrashController" tabindex="-1" role="dialog" aria-labelledby="trash-title" aria-hidden="true" ng-cloak>
             <div class="modal-dialog modal-xl">
                 <div class="modal-header">
-                    <h2 class="modal-title govuk-heading-m" id="trash-title">Confirm delete of {{ count }} file{{ ((count > 1) ? 's' : '') }} </h2>
+                    <h2 class="modal-title govuk-heading-m" id="trash-title">Confirm delete of {{ model.count }} file{{ ((model.count > 1) ? 's' : '') }} </h2>
                 </div>
                 <div class="modal-body">
                     <div class="col-md-18">
@@ -86,7 +86,7 @@ Modified by the Department for International Trade
                                     </tr>
                                 </thead>
                                 <tbody id="s3objects-tbody">
-                                    <tr class="govuk-table__row" ng-repeat="prefix in prefixes">
+                                    <tr class="govuk-table__row" ng-repeat="prefix in model.prefixes">
                                         <td class="govuk-table__cell">{{ :: prefix2folder(prefix.Prefix) }}</td>
                                         <td class="govuk-table__cell"></td>
                                         <td class="govuk-table__cell"></td>
@@ -97,7 +97,7 @@ Modified by the Department for International Trade
                                             <strong ng-if="prefix.deleteFinished" class="govuk-tag progress-percentage-complete">Deleted</strong>
                                         </td>
                                     </tr>
-                                    <tr class="govuk-table__row" ng-repeat="object in objects">
+                                    <tr class="govuk-table__row" ng-repeat="object in model.objects">
                                         <td class="govuk-table__cell">{{ :: fullpath2filename(object.Key) }}</td>
                                         <td class="govuk-table__cell govuk-table__cell--numeric">{{ :: object.LastModified.toLocaleString() }}</td>
                                         <td class="govuk-table__cell govuk-table__cell--numeric">{{ :: bytesToSize(object.Size) }}</td>
@@ -114,10 +114,10 @@ Modified by the Department for International Trade
                 </div>
                 <div class="modal-footer" style="text-align: right">
                     <button id="trash-btn-cancel" type="button" class="govuk-button govuk-button--secondary modal-button" ng-click="$emit('modal::close::trash')">
-                      {{ finished ? 'Close' : 'Cancel' }}
+                      {{ model.finished ? 'Close' : 'Cancel' }}
                     </button>
-                    <button id="trash-btn-delete" type="button" class="govuk-button govuk-button--warning modal-button" ng-click="deleteFiles()" ng-disabled="trashing" ng-if="!finished" focus-on="modal::open-end::trash">
-                        <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash-alt" class="button-icon svg-inline--fa fa-trash-alt fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"></path></svg>&nbsp;Delete ({{ count }})
+                    <button id="trash-btn-delete" type="button" class="govuk-button govuk-button--warning modal-button" ng-click="deleteFiles()" ng-disabled="model.trashing" ng-if="!model.finished" focus-on="modal::open-end::trash">
+                        <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash-alt" class="button-icon svg-inline--fa fa-trash-alt fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"></path></svg>&nbsp;Delete ({{ model.count }})
                     </button>
                 </div>
             </div>
@@ -230,6 +230,14 @@ Modified by the Department for International Trade
                         </tr>
                     </thead>
                     <tbody id="s3objects-tbody">
+                        <tr class="govuk-table__row" ng-if="bigdata">
+                            <td class="govuk-table__cell govuk-table__cell--checkbox" title="This folder cannot be deleted">
+                                 <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="database" class="svg-inline--fa fa-database fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" style="margin-top: 10px; height: 24px; margin-left: 2px"><path fill="currentColor" d="M448 73.143v45.714C448 159.143 347.667 192 224 192S0 159.143 0 118.857V73.143C0 32.857 100.333 0 224 0s224 32.857 224 73.143zM448 176v102.857C448 319.143 347.667 352 224 352S0 319.143 0 278.857V176c48.125 33.143 136.208 48.572 224 48.572S399.874 209.143 448 176zm0 160v102.857C448 479.143 347.667 512 224 512S0 479.143 0 438.857V336c48.125 33.143 136.208 48.572 224 48.572S399.874 369.143 448 336z"></path></svg>
+                            </td>
+                            <td class="govuk-table__cell"><a href draggable="false" class="govuk-link govuk-link--no-visited" ng-click="setCurrentPrefix(bigdata.Prefix, $event)">{{ :: prefix2folder(bigdata.Prefix) }}</a></td>
+                            <td class="govuk-table__cell"></td>
+                            <td class="govuk-table__cell"></td>
+                        </tr>
                         <tr class="govuk-table__row" ng-repeat="prefix in prefixes" ng-click="toggleSelected(prefix)">
                             <td class="govuk-table__cell govuk-table__cell--checkbox">
                                 <div class="govuk-form-group" style="margin-bottom: 0">
@@ -275,20 +283,12 @@ Modified by the Department for International Trade
 {% verbatim %}
     <script>
     angular.module('aws-js-s3-explorer').factory('Config', () => {
-        var bucket = '{% endverbatim %}{{ bucket }}{% verbatim %}';
-        var accessKeyId = '{% endverbatim %}{{ credentials.AccessKeyId }}{% verbatim %}';
-        var secretAccessKey = '{% endverbatim %}{{ credentials.SecretAccessKey }}{% verbatim %}';
-        var sessionToken = '{% endverbatim %}{{ credentials.SessionToken }}{% verbatim %}';
-
         return {
             region: 'eu-west-2',
-            bucket: bucket,
+            bucket: '{% endverbatim %}{{ bucket }}{% verbatim %}',
             prefix: '{% endverbatim %}{{ prefix }}{% verbatim %}',
-            credentials: {
-                accessKeyId: accessKeyId,
-                secretAccessKey: secretAccessKey,
-                sessionToken: sessionToken
-            }
+            bigdataPrefix: 'bigdata/',
+            credentialsUrl: '{% endverbatim %}{% url 'api_v1:aws-credentials' %}{% verbatim %}'
         };
     });
     </script>

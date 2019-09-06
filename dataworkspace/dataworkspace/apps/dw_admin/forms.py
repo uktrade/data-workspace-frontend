@@ -1,11 +1,13 @@
 import csv
-
+from adminsortable2.admin import CustomInlineFormSet
 from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
+
+from adminsortable2.admin import CustomInlineFormSet
 
 from dataworkspace.apps.datasets.model_utils import has_circular_link
 from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDataset, \
@@ -15,8 +17,12 @@ from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDat
 class ReferenceDatasetForm(forms.ModelForm):
     model = ReferenceDataset
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sort_field'].queryset = self.instance.fields.all()
 
-class ReferenceDataInlineFormset(forms.BaseInlineFormSet):
+
+class ReferenceDataInlineFormset(CustomInlineFormSet):
     model = ReferenceDatasetField
 
     def get_form_kwargs(self, index):
@@ -89,7 +95,7 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         model = ReferenceDatasetField
         fields = (
             'name', 'column_name', 'data_type', 'linked_reference_dataset',
-            'description', 'is_identifier', 'is_display_name'
+            'description', 'is_identifier', 'is_display_name', 'sort_order',
         )
 
     def __init__(self, *args, **kwargs):

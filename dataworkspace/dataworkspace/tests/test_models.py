@@ -490,6 +490,123 @@ class TestReferenceDatasets(BaseModelsTests):
                 linked_reference_dataset=ref_dataset1,
             )
 
+    def test_reference_dataset_ordering(self):
+        # Create a reference dataset
+        # Create some fields (including a linked field)
+        # Add some records
+        # Test sorting on different fields and directions
+
+        # Add a reference dataset and a dataset it can link to
+        ref_dataset = self._create_reference_dataset(table_name='ordering_test_1')
+        linked_to_dataset = self._create_reference_dataset(table_name='ordering_test_2')
+
+        # Add id, name and link fields to the main reference dataset
+        id_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='refid',
+            column_name='refid',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+        )
+        name_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='name',
+            column_name='name',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_display_name=True,
+        )
+        link_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='link',
+            column_name='link',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset=linked_to_dataset,
+        )
+
+        # Add id and name fields to the linked to dataset
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_to_dataset,
+            name='refid',
+            column_name='refid',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_to_dataset,
+            name='name',
+            column_name='name',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_display_name=True,
+        )
+
+        # Create some records in the linked_to dataset
+        linked_to_record1 = linked_to_dataset.save_record(None, {
+            'reference_dataset': linked_to_dataset, 'refid': 1, 'name': 'Axolotl'
+        })
+        linked_to_record2 = linked_to_dataset.save_record(None, {
+            'reference_dataset': linked_to_dataset, 'refid': 2, 'name': 'Aarvark'
+        })
+
+        # Create some records in the main dataset
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset, 'refid': 1, 'name': 'Zanzibar',
+            'link_id': linked_to_record1.id,
+        })
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset, 'refid': 2, 'name': 'Xebec',
+        })
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset, 'refid': 3, 'name': 'Vugg',
+            'link_id': linked_to_record2.id,
+        })
+        ref_dataset.save_record(None, {
+            'reference_dataset': ref_dataset, 'refid': 4, 'name': 'Logjam',
+            'link_id': linked_to_record1.id,
+        })
+        ref_dataset.save()
+
+        # Default sort order should be updated date
+        updated_dates = [x.updated_date for x in ref_dataset.get_records()]
+        self.assertEqual(updated_dates, list(sorted(updated_dates)))
+
+        # Test setting the sort direction to desc
+        ref_dataset.sort_direction = ref_dataset.SORT_DIR_DESC
+        ref_dataset.save()
+        updated_dates = [x.updated_date for x in ref_dataset.get_records()]
+        self.assertEqual(updated_dates, list(reversed(sorted(updated_dates))))
+
+        # Test ordering by name
+        ref_dataset.sort_field = name_field
+        ref_dataset.sort_direction = ref_dataset.SORT_DIR_ASC
+        ref_dataset.save()
+        names = [x.name for x in ref_dataset.get_records()]
+        self.assertEqual(names, sorted(names))
+
+        # Test name reversed
+        ref_dataset.sort_direction = ref_dataset.SORT_DIR_DESC
+        ref_dataset.save()
+        names = [x.name for x in ref_dataset.get_records()]
+        self.assertEqual(names, list(reversed(sorted(names))))
+
+        # Test sort by id
+        ref_dataset.sort_field = id_field
+        ref_dataset.sort_direction = ref_dataset.SORT_DIR_ASC
+        ref_dataset.save()
+        ids = [x.refid for x in ref_dataset.get_records()]
+        self.assertEqual(ids, sorted(ids))
+
+        # Test sort by linked field display name
+        ref_dataset.sort_field = link_field
+        ref_dataset.save()
+        linked_names = [x.link.get_display_name() for x in ref_dataset.get_records() if x.link is not None]
+        self.assertEqual(linked_names, sorted(linked_names))
+
+        # Test sorting by linked display name descending
+        ref_dataset.sort_direction = ref_dataset.SORT_DIR_DESC
+        ref_dataset.save()
+        linked_names = [x.link.get_display_name() for x in ref_dataset.get_records() if x.link is not None]
+        self.assertEqual(linked_names, list(reversed(sorted(linked_names))))
+
 
 class TestSourceLinkModel(BaseTestCase):
     @mock.patch('dataworkspace.apps.datasets.models.boto3.client')
@@ -948,7 +1065,6 @@ class TestExternalModels(BaseModelsTests):
         ref_dataset.external_database = factories.DatabaseFactory.create(
             memorable_name='test_external_db2'
         )
-        # raise Exception(ref_dataset.external_database)
         ref_dataset.save()
         self.assertFalse(
             self._table_exists(ref_dataset.table_name, database='test_external_db')
