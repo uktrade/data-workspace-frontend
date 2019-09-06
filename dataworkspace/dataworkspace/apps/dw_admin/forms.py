@@ -7,6 +7,8 @@ from django.forms import BaseInlineFormSet
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
+from adminsortable2.admin import CustomInlineFormSet
+
 from dataworkspace.apps.datasets.model_utils import has_circular_link
 from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDataset, \
     ReferenceDatasetField
