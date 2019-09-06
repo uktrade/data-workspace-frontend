@@ -283,21 +283,12 @@ Modified by the Department for International Trade
 {% verbatim %}
     <script>
     angular.module('aws-js-s3-explorer').factory('Config', () => {
-        var bucket = '{% endverbatim %}{{ bucket }}{% verbatim %}';
-        var accessKeyId = '{% endverbatim %}{{ credentials.AccessKeyId }}{% verbatim %}';
-        var secretAccessKey = '{% endverbatim %}{{ credentials.SecretAccessKey }}{% verbatim %}';
-        var sessionToken = '{% endverbatim %}{{ credentials.SessionToken }}{% verbatim %}';
-
         return {
             region: 'eu-west-2',
-            bucket: bucket,
+            bucket: '{% endverbatim %}{{ bucket }}{% verbatim %}',
             prefix: '{% endverbatim %}{{ prefix }}{% verbatim %}',
             bigdataPrefix: 'bigdata/',
-            credentials: {
-                accessKeyId: accessKeyId,
-                secretAccessKey: secretAccessKey,
-                sessionToken: sessionToken
-            }
+            credentialsUrl: '{% endverbatim %}{% url 'api_v1:aws-credentials' %}{% verbatim %}'
         };
     });
     </script>

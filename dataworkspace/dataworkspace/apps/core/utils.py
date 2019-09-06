@@ -242,6 +242,10 @@ def table_data(user_email, database, schema, table):
     return response
 
 
+def get_s3_prefix(user_sso_id):
+    return 'user/federated/' + hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
+
+
 def create_s3_role(user_email_address, user_sso_id):
     iam_client = boto3.client('iam')
 
@@ -252,7 +256,8 @@ def create_s3_role(user_email_address, user_sso_id):
     role_prefix = settings.S3_ROLE_PREFIX
 
     role_name = role_prefix + user_email_address
-    s3_prefix = 'user/federated/' + hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest() + '/'
+    s3_prefix = get_s3_prefix(user_sso_id)
+    max_attempts = 10
 
     try:
         iam_client.create_role(
@@ -264,34 +269,44 @@ def create_s3_role(user_email_address, user_sso_id):
     except iam_client.exceptions.EntityAlreadyExistsException:
         # If the role already exists, we might need to update its assume role
         # policy document
-        for _ in range(0, 10):
+        for i in range(0, max_attempts):
             try:
                 iam_client.update_assume_role_policy(
                     RoleName=role_name,
                     PolicyDocument=assume_role_policy_document
                 )
             except iam_client.exceptions.NoSuchEntityException:
+                if i == max_attempts - 1:
+                    raise
                 gevent.sleep(1)
             else:
                 break
-    else:
-        gevent.sleep(1)
 
-    for _ in range(0, 10):
+    for i in range(0, max_attempts):
         try:
             role_arn = iam_client.get_role(
                 RoleName=role_name
             )['Role']['Arn']
             logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
         except iam_client.exceptions.NoSuchEntityException:
+            if i == max_attempts - 1:
+                raise
             gevent.sleep(1)
         else:
             break
 
-    iam_client.put_role_policy(
-        RoleName=role_name,
-        PolicyName=policy_name,
-        PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
-    )
+    for i in range(0, max_attempts):
+        try:
+            iam_client.put_role_policy(
+                RoleName=role_name,
+                PolicyName=policy_name,
+                PolicyDocument=policy_document_template.replace('__S3_PREFIX__', s3_prefix)
+            )
+        except iam_client.exceptions.NoSuchEntityException:
+            if i == max_attempts - 1:
+                raise
+            gevent.sleep(1)
+        else:
+            break
 
     return role_arn, s3_prefix
