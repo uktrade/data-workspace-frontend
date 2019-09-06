@@ -17,6 +17,7 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError
 from django.contrib.postgres.fields import JSONField
+from django.utils.text import slugify
 
 from dataworkspace.apps.core.models import (TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel,
                                             Database)
@@ -134,7 +135,7 @@ class DataSetUserPermission(models.Model):
         unique_together = ('user', 'dataset')
 
 
-class SourceTable(models.Model):
+class SourceTable(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -260,6 +261,39 @@ class SourceLink(TimeStampedModel):
             'catalogue:dataset_source_link_download',
             args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
         )
+
+
+class CustomDatasetQuery(TimeStampedModel):
+    FREQ_DAILY = 1
+    FREQ_WEEKLY = 2
+    FREQ_MONTHLY = 3
+    FREQ_QUARTERLY = 4
+    FREQ_ANNUALLY = 5
+    _FREQ_CHOICES = (
+        (FREQ_DAILY, 'Daily'),
+        (FREQ_WEEKLY, 'Weekly'),
+        (FREQ_MONTHLY, 'Monthly'),
+        (FREQ_QUARTERLY, 'Quarterly'),
+        (FREQ_ANNUALLY, 'Annually'),
+    )
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    database = models.ForeignKey(Database, on_delete=models.CASCADE)
+    query = models.TextField()
+    frequency = models.IntegerField(choices=_FREQ_CHOICES)
+
+    class Meta:
+        verbose_name = 'SQL Query'
+        verbose_name_plural = 'SQL Queries'
+
+    def get_absolute_url(self):
+        return reverse(
+            'catalogue:dataset_query_download',
+            args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
+        )
+
+    def get_filename(self):
+        return '{}.csv'.format(slugify(self.name))
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):

@@ -69,6 +69,16 @@ class SourceTableFactory(factory.django.DjangoModelFactory):
         model = 'datasets.SourceTable'
 
 
+class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText()
+    dataset = factory.SubFactory(DataSetFactory)
+    database = factory.SubFactory(DatabaseFactory)
+    frequency = 1
+
+    class Meta:
+        model = 'datasets.CustomDatasetQuery'
+
+
 class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     group = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
