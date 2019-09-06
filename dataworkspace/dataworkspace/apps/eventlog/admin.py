@@ -15,7 +15,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 class EventLogAdmin(admin.ModelAdmin):
     list_display = ('timestamp', 'user_link', 'event_type', 'related_object_link')
     list_filter = ('event_type', )
-    list_display_links = ['timestamp', 'related_object_link']
+    list_display_links = ['timestamp']
     fields = (
         'timestamp',
         'user_link',
@@ -37,6 +37,9 @@ class EventLogAdmin(admin.ModelAdmin):
     user_link.short_description = 'User'
 
     def related_object_link(self, obj):
+        if obj.related_object is None:
+            return None
+
         try:
             url = reverse(
                 admin_urlname(obj.related_object._meta, 'change'),
