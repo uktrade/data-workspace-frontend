@@ -11,6 +11,7 @@ resource "aws_s3_bucket" "notebooks" {
     noncurrent_version_expiration {
       days = 365
     }
+    abort_incomplete_multipart_upload_days = 7
   }
 
   server_side_encryption_configuration {
