@@ -198,6 +198,8 @@ S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(env['S3_POLICY_DOCUMENT_TEMPLATE_
 S3_PERMISSIONS_BOUNDARY_ARN = env['S3_PERMISSIONS_BOUNDARY_ARN']
 S3_ROLE_PREFIX = env['S3_ROLE_PREFIX']
 
+YOUR_FILES_ENABLED = env.get('YOUR_FILES_ENABLED', 'False') == 'True'
+
 if env.get('SENTRY_DSN') is not None:
     sentry_sdk.init(
         env['SENTRY_DSN'],
