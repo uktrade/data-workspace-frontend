@@ -268,7 +268,7 @@ Modified by the Department for International Trade
                             <td class="govuk-table__cell govuk-table__cell--numeric">{{ :: object.LastModified.toLocaleString() }}</td>
                             <td class="govuk-table__cell govuk-table__cell--numeric">{{ :: bytesToSize(object.Size) }}</td>
                         </tr>
-                        <tr class="govuk-table__row" ng-if="!prefixes.length && !objects.length && !initialising">
+                        <tr class="govuk-table__row" ng-if="!prefixes.length && !objects.length && !initialising && !bigdata">
                             <td class="govuk-table__cell" colspan="4">Folder is empty</td>
                         <tr>
                     </tbody>
