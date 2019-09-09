@@ -2231,6 +2231,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
                 'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '0',
+                'customdatasetquery_set-INITIAL_FORMS': '0',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
                 '_continue': 'Save and continue editing',
             }
         )
@@ -2280,6 +2284,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
                 'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '0',
+                'customdatasetquery_set-INITIAL_FORMS': '0',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
                 '_continue': 'Save and continue editing',
             }
         )
@@ -2325,6 +2333,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
                 'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '0',
+                'customdatasetquery_set-INITIAL_FORMS': '0',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
                 '_continue': 'Save and continue editing',
             }
         )

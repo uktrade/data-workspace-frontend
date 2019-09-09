@@ -4,7 +4,8 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.catalogue.views import (
     dataset_full_path_view, SourceLinkDownloadView, datagroup_item_view,
     ReferenceDatasetDetailView, ReferenceDatasetDownloadView,
-    SourceTableDownloadView)
+    SourceTableDownloadView, CustomDatasetQueryDownloadView
+)
 
 
 urlpatterns = [
@@ -19,6 +20,11 @@ urlpatterns = [
         '<str:group_slug>/<str:set_slug>/<str:source_table_id>/table/download',
         login_required(SourceTableDownloadView.as_view()),
         name='dataset_source_table_download'
+    ),
+    path(
+        '<str:group_slug>/<str:set_slug>/<int:query_id>/query/download',
+        login_required(CustomDatasetQueryDownloadView.as_view()),
+        name='dataset_query_download'
     ),
     path('<str:group_slug>/reference/<str:reference_slug>', login_required(ReferenceDatasetDetailView.as_view()),
          name='reference_dataset'),

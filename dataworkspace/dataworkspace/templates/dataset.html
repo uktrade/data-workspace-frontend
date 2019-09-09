@@ -47,7 +47,7 @@
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
 
-            {% if links or tables %}
+            {% if data_links %}
                 {% if not has_download_access %}
                     <div class="govuk-warning-text">
                         <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -74,7 +74,7 @@
                 </thead>
                 <tbody>
 
-                {% for link in links %}
+                {% for link in data_links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
                             {% if not has_download_access %}
@@ -86,40 +86,22 @@
                             {% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                            {{ link.format }}
+                          {% if link.format %}{{ link.format }}{% else %}CSV{% endif %}
                         </td>
                         <td class="govuk-table__cell">
                             {{ link.created_date| date:"d/m/Y"   }}
                         </td>
                         <td class="govuk-table__cell">
+                          {% if link.get_frequency_display %}
+                            {{ link.get_frequency_display }}
+                          {% else %}
                             {{ link.frequency }}
+                          {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
 
-                {% for table in tables %}
-                    <tr class="govuk-table__row">
-                        <td class="govuk-table__cell">
-                            {% if has_download_access %}
-                                <a class="govuk-link" href="{{ table.get_absolute_url }}">
-                                    {{ table.name }}
-                                </a>
-                            {% else %}
-                                {{ table.name }}
-                            {% endif %}
-
-                        </td>
-                        <td class="govuk-table__cell">
-                            CSV
-                        </td>
-                        <td class="govuk-table__cell">
-                        </td>
-                        <td class="govuk-table__cell">
-                        </td>
-                    </tr>
-                {% endfor %}
-
-                {% if not links and not tables %}
+                {% if not data_links %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available
