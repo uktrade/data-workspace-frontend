@@ -274,6 +274,21 @@ Modified by the Department for International Trade
                     </tbody>
                 </table>
             </div>
+            <div ng-if="inBigdata" class="govuk-inset-text" ng-cloak>
+                <p class="govuk-body">Files in the <code>{{ :: bigdataPrefix }}</code> folder are not automatically accessible from your tools in the same way other files are. However, they can be manually accessed. For example, after uploading a file <code>bigdata/file.csv</code>, you can create a Pandas DataFrame in a JupyterLab Python notebook by running the following code.</p>
+                    <code><pre>import os
+import pandas as pd
+from io import BytesIO
+import boto3
+
+client = boto3.client('s3', region_name='eu-west-2')
+response = client.get_object(
+  Bucket='{% endverbatim %}{{ bucket }}{% verbatim %}',
+  Key=os.environ['S3_PREFIX'] + '{{ :: bigdataPrefix }}file.csv'
+)
+contents = BytesIO(response['Body'].read())
+df = pd.read_csv(contents)
+</pre></code>
         </div>
     </div>
     
