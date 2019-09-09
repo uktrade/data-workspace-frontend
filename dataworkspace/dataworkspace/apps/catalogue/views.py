@@ -323,6 +323,7 @@ def root_view_GET(request):
             if application_link
         ],
         'appstream_url': settings.APPSTREAM_URL,
+        'your_files_enabled': settings.YOUR_FILES_ENABLED,
         'groupings': get_all_datagroups_viewmodel()
     }
     return render(request, 'root.html', context)
