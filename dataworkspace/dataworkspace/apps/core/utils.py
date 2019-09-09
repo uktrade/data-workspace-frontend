@@ -205,7 +205,10 @@ def streaming_query_response(user_email, database, query, filename):
             cur.itersize = cursor_itersize
             cur.arraysize = cursor_itersize
 
-            cur.execute(query)
+            try:
+                cur.execute(query)
+            except Exception as ex:
+                gevent.get_hub().parent.throw(ex)
 
             i = 0
             while True:
