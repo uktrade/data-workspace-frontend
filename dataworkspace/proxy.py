@@ -100,6 +100,9 @@ async def async_main():
     def is_requesting_credentials(request):
         return request.url.host == root_domain_no_port and request.url.path == '/api/v1/aws_credentials'
 
+    def is_requesting_files(request):
+        return request.url.host == root_domain_no_port and request.url.path == '/files'
+
     def get_peer_ip(request):
         peer_ip = request.headers['x-forwarded-for'].split(',')[-x_forwarded_for_trusted_hops].strip()
 
@@ -487,7 +490,11 @@ async def async_main():
     def authenticate_by_ip_whitelist():
         @web.middleware
         async def _authenticate_by_ip_whitelist(request, handler):
-            ip_whitelist_required = is_app_requested(request) or is_requesting_credentials(request)
+            ip_whitelist_required = (
+                is_app_requested(request) or
+                is_requesting_credentials(request) or
+                is_requesting_files(request)
+            )
 
             if not ip_whitelist_required:
                 return await handler(request)
