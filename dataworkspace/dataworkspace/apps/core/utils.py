@@ -51,25 +51,25 @@ def new_private_database_credentials(user):
         return ''.join(secrets.choice(password_alphabet) for i in range(64))
 
     def get_new_credentials(database_obj, tables):
-        user = postgres_user()
-        password = postgres_password()
+        db_user = postgres_user()
+        db_password = postgres_password()
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
         with connections[database_obj.memorable_name].cursor() as cur:
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
-                sql.Identifier(user)), [password, valid_until])
+                sql.Identifier(db_user)), [db_password, valid_until])
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
-                sql.Identifier(database_data['NAME']), sql.Identifier(user)))
+                sql.Identifier(database_data['NAME']), sql.Identifier(db_user)))
 
             for schema, table in tables:
                 logger.info(
                     'Granting permissions to %s %s.%s to %s',
-                    database_obj.memorable_name, schema, table, user)
+                    database_obj.memorable_name, schema, table, db_user)
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                    sql.Identifier(schema), sql.Identifier(user)))
+                    sql.Identifier(schema), sql.Identifier(db_user)))
                 tables_sql = sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
-                    sql.Identifier(schema), sql.Identifier(table), sql.Identifier(user),
+                    sql.Identifier(schema), sql.Identifier(table), sql.Identifier(db_user),
                 )
                 cur.execute(tables_sql)
 
@@ -78,8 +78,8 @@ def new_private_database_credentials(user):
             'db_name': database_data['NAME'],
             'db_host': database_data['HOST'],
             'db_port': database_data['PORT'],
-            'db_user': user,
-            'db_password': password,
+            'db_user': db_user,
+            'db_password': db_password,
         }
 
     database_to_tables = {
