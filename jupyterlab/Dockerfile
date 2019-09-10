@@ -19,8 +19,10 @@ RUN \
 RUN \
     apk add --no-cache \
         bash=4.4.19-r1 \
+        autoconf=2.69-r2 \
         build-base=0.5-r1 \
         gfortran=6.4.0-r9 \
+        linux-headers=4.4.6-r2 \
         texlive-xetex=20170524-r5 \
         texmf-dist-latexextra=2017.46770-r0 && \
     apk add --no-cache --virtual .build-deps \
@@ -119,6 +121,35 @@ ENTRYPOINT ["tini", "-g", "--"]
 RUN \
     python -m spacy download en && \
     python -m nltk.downloader -d /usr/local/share/nltk_data wordnet stopwords gutenberg
+
+# The R package tidyverse depends on fs, which needs automake 1.14, which is not supplied by apk
+# https://github.com/r-lib/fs/issues/210, and automake 1.14 needs a version of Perl earlier than
+# 5.22 https://github.com/easybuilders/easybuild-easyconfigs/issues/1822#issuecomment-311507178
+# and odd numbers of Perl are development versions, so choosing the latest 5.20
+RUN \
+    apk add --no-cache --virtual .build-deps \
+        wget=1.20.3-r0 && \
+    wget https://www.cpan.org/src/5.0/perl-5.20.3.tar.gz && \
+    echo "3524e3a76b71650ab2f794fd68e45c366ec375786d2ad2dca767da424bbb9b4a  perl-5.20.3.tar.gz" | sha256sum -c && \
+    tar -zxvf perl-5.20.3.tar.gz && \
+    cd perl-5.20.3 && \
+    ./Configure -des && \
+    make && \
+    # make test && \
+    make install && \
+    cd .. && \
+    rm -r -f perl-5.20.3 && \
+    wget https://ftp.gnu.org/gnu/automake/automake-1.14.1.tar.gz && \
+    echo "814c2333f350ce00034a1fe718e0e4239998ceea7b0aff67e9fd273ed6dfc23b  automake-1.14.1.tar.gz" | sha256sum -c && \
+    tar -zxvf automake-1.14.1.tar.gz && \
+    rm -r -f automake-1.14.1.tar.gz && \
+    cd automake-1.14.1 && \
+    ./configure && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -r -f automake-1.14.1 && \
+    apk del .build-deps
 
 USER jovyan
 
