@@ -182,6 +182,8 @@ async def async_main():
                 ) as response:
                     host_exists = response.status == 200
                     application = await response.json()
+                if params:
+                    return web.Response(status=302, headers={'location': '/'})
             else:
                 raise UserException('Application stopped while starting', 500)
 
