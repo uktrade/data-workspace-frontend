@@ -51,25 +51,92 @@ def new_private_database_credentials(user):
         return ''.join(secrets.choice(password_alphabet) for i in range(64))
 
     def get_new_credentials(database_obj, tables):
-        user = postgres_user()
-        password = postgres_password()
+        # Each real-world user is given
+        # - a private and permanent schema where they can manage tables and rows as needed
+        # - a permanent database role that is the owner of the schema
+        # - temporary database users, each of which are GRANTed the role
+
+        db_user = postgres_user()
+        db_password = postgres_password()
+        short_sso_id = hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest()[:8]
+        stem = '_user_'
+        # These must be the same so the below trigger can use a table's schema_name to set its role
+        db_role = f'{stem}{short_sso_id}'
+        db_schema = f'{stem}{short_sso_id}'
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
         with connections[database_obj.memorable_name].cursor() as cur:
+            # Create a user...
             cur.execute(sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
-                sql.Identifier(user)), [password, valid_until])
+                sql.Identifier(db_user)), [db_password, valid_until])
             cur.execute(sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
-                sql.Identifier(database_data['NAME']), sql.Identifier(user)))
+                sql.Identifier(database_data['NAME']), sql.Identifier(db_user)))
+
+            # ... create a role (if it doesn't exist)
+            cur.execute(sql.SQL('''
+                DO $$
+                BEGIN
+                  CREATE ROLE {};
+                EXCEPTION WHEN OTHERS THEN
+                  RAISE DEBUG 'Role {} already exists';
+                END
+                $$;
+            ''').format(sql.Identifier(db_role), sql.Identifier(db_role)))
+
+            # ... add the user to the role
+            cur.execute(sql.SQL('GRANT {} TO {};').format(
+                sql.Identifier(db_role), sql.Identifier(db_user),
+            ))
+
+            # ... create a schema
+            cur.execute(sql.SQL('CREATE SCHEMA IF NOT EXISTS {};').format(
+                sql.Identifier(db_schema),
+            ))
+
+            # ... set the role to be the owner of the schema
+            cur.execute(sql.SQL('ALTER SCHEMA {} OWNER TO {}').format(
+                sql.Identifier(db_schema), sql.Identifier(db_role),
+            ))
+
+            # ... and ensure new tables are owned by the role so all users of the role can access
+            cur.execute(sql.SQL('''
+                CREATE OR REPLACE FUNCTION set_table_owner()
+                  RETURNS event_trigger
+                  LANGUAGE plpgsql
+                AS $$
+                DECLARE
+                  obj record;
+                BEGIN
+                  FOR obj IN
+                    SELECT * FROM pg_event_trigger_ddl_commands()
+                    WHERE command_tag='CREATE TABLE' AND left(schema_name, {}) = '{}'
+                  LOOP
+                    EXECUTE format('ALTER TABLE %s OWNER TO %s', obj.object_identity, quote_ident(obj.schema_name));
+                  END LOOP;
+                END;
+                $$;
+            '''.format(str(len(stem)), stem)))
+            cur.execute('''
+                DO $$
+                BEGIN
+                  CREATE EVENT TRIGGER set_table_owner
+                  ON ddl_command_end
+                  WHEN tag IN ('CREATE TABLE')
+                  EXECUTE PROCEDURE set_table_owner();
+                EXCEPTION WHEN OTHERS THEN
+                  NULL;
+                END $$;
+            ''')
 
             for schema, table in tables:
                 logger.info(
                     'Granting permissions to %s %s.%s to %s',
-                    database_obj.memorable_name, schema, table, user)
+                    database_obj.memorable_name, schema, table, db_user)
                 cur.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                    sql.Identifier(schema), sql.Identifier(user)))
+                    sql.Identifier(schema), sql.Identifier(db_user)))
                 tables_sql = sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
-                    sql.Identifier(schema), sql.Identifier(table), sql.Identifier(user),
+                    sql.Identifier(schema), sql.Identifier(table), sql.Identifier(db_user),
                 )
                 cur.execute(tables_sql)
 
@@ -78,8 +145,8 @@ def new_private_database_credentials(user):
             'db_name': database_data['NAME'],
             'db_host': database_data['HOST'],
             'db_port': database_data['PORT'],
-            'db_user': user,
-            'db_password': password,
+            'db_user': db_user,
+            'db_password': db_password,
         }
 
     database_to_tables = {
