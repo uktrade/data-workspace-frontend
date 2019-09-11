@@ -26,9 +26,11 @@ def get_spawner(name):
 
 @celery_app.task()
 def spawn(name, user_email_address, user_sso_id, public_host_data,
-          application_instance_id, spawner_options, db_credentials):
+          application_instance_id, spawner_options, db_credentials,
+          cpu, memory):
     get_spawner(name).spawn(user_email_address, user_sso_id, public_host_data,
-                            application_instance_id, spawner_options, db_credentials)
+                            application_instance_id, spawner_options, db_credentials,
+                            cpu, memory)
 
 
 @celery_app.task()
@@ -44,7 +46,7 @@ class ProcessSpawner():
     '''
 
     @staticmethod
-    def spawn(_, __, ___, application_instance_id, spawner_options, ____):
+    def spawn(_, __, ___, application_instance_id, spawner_options, ____, _____, ______):
 
         try:
             gevent.sleep(1)
@@ -121,7 +123,8 @@ class FargateSpawner():
 
     @staticmethod
     def spawn(user_email_address, user_sso_id, public_host_data,
-              application_instance_id, spawner_options, db_credentials):
+              application_instance_id, spawner_options, db_credentials,
+              cpu, memory):
 
         try:
             task_arn = None
@@ -174,8 +177,15 @@ class FargateSpawner():
                     tag = tag.replace(f'<{key}>', value)
                 definition_arn_with_image = _fargate_task_definition_with_tag(definition_arn, container_name, tag)
 
+            # If memory or cpu are given, create a new task definition. This could be merged with
+            # the above task definition creation, but this can be treated as a later optimisation
+            cpu_or_mem = cpu is not None or memory is not None
+            definition_arn_with_cpu_memory_image = \
+                _fargate_task_definition_with_cpu_memory(definition_arn_with_image, cpu, memory) if cpu_or_mem else \
+                definition_arn_with_image
+
             start_task_response = _fargate_task_run(
-                role_arn, cluster_name, container_name, definition_arn_with_image,
+                role_arn, cluster_name, container_name, definition_arn_with_cpu_memory_image,
                 security_groups, subnets, cmd, {**s3_env, **database_env, **env}, s3_sync,
             )
 
@@ -258,6 +268,31 @@ def _fargate_task_definition_with_tag(task_family, container_name, tag):
     ][0]
     container['image'] += ':' + tag
     describe_task_response['taskDefinition']['family'] = task_family + '-' + tag
+
+    register_tag_response = client.register_task_definition(
+        **{
+            key: value
+            for key, value in describe_task_response['taskDefinition'].items()
+            if key in [
+                'family', 'taskRoleArn', 'executionRoleArn', 'networkMode', 'containerDefinitions',
+                'volumes', 'placementConstraints', 'requiresCompatibilities', 'cpu', 'memory',
+            ]
+        }
+    )
+    return register_tag_response['taskDefinition']['taskDefinitionArn']
+
+
+def _fargate_task_definition_with_cpu_memory(task_family, cpu, memory):
+    client = boto3.client('ecs')
+    describe_task_response = client.describe_task_definition(
+        taskDefinition=task_family,
+    )
+    if cpu is not None:
+        describe_task_response['taskDefinition']['cpu'] = cpu
+    if memory is not None:
+        describe_task_response['taskDefinition']['memory'] = memory
+    describe_task_response['taskDefinition']['family'] = \
+        task_family + (f'-{cpu}' if cpu is not None else '') + (f'-{memory}' if memory is not None else '')
 
     register_tag_response = client.register_task_definition(
         **{

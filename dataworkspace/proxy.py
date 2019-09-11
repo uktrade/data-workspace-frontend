@@ -171,7 +171,15 @@ async def async_main():
 
         if not host_exists:
             if 'x-data-workspace-no-modify-application-instance' not in downstream_request.headers:
-                async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
+                params = {
+                    key: value
+                    for key, value in downstream_request.query.items()
+                    if key in ('__memory', '__cpu')
+                }
+                async with client_session.request(
+                        'PUT', host_api_url, params=params,
+                        headers=admin_headers(downstream_request)
+                ) as response:
                     host_exists = response.status == 200
                     application = await response.json()
             else:
