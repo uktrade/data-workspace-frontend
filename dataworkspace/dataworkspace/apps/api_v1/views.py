@@ -82,14 +82,14 @@ def application_api_PUT(request, public_host):
         public_host=public_host,
         state='SPAWNING',
         single_running_or_spawning_integrity=public_host,
+        cpu=request.GET.get('__cpu', None),
+        memory=request.GET.get('__memory', None),
     )
 
     spawn.delay(
         application_template.spawner,
         request.user.email, str(request.user.profile.sso_id), public_host_data,
-        application_instance.id, application_template.spawner_options, credentials,
-        request.GET.get('__cpu', None), request.GET.get('__memory', None),
-    )
+        application_instance.id, application_template.spawner_options, credentials)
 
     return JsonResponse(api_application_dict(application_instance), status=200)
 

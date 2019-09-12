@@ -102,6 +102,21 @@ class ApplicationInstance(TimeStampedModel):
         help_text='The URL that the proxy can proxy HTTP and WebSockets requests to',
     )
 
+    # Fargate expects numerical values for CPU and memory, but boto3 expects
+    # them passed as strings. Since these ultimately come as strings from the
+    # user, we keep type transformations to a minimum while maintaining
+    # flexibility. Fargate will error at runtime if passed something it
+    # doesn't understand, so we still get runtime errors even through this is
+    # stringly-typed.
+    cpu = models.CharField(
+        max_length=16,
+        null=True,  # if not specified by the user
+    )
+    memory = models.CharField(
+        max_length=16,
+        null=True,  # if not specified by the user
+    )
+
     # The purpose of this field is to raise an IntegrityError if multiple running or spawning
     # instances for the same public host name are created, but to allow multiple stopped or
     # errored

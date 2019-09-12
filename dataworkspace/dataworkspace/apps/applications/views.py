@@ -32,9 +32,17 @@ def application_spawning_html_GET(request, public_host):
         seconds_remaining = math.ceil(seconds_remaining_float)
         seconds = seconds_remaining % 60
         minutes = int((seconds_remaining - seconds) / 60)
+        memory = application_instance.memory
+        cpu = application_instance.cpu
+        cpu_memory_components = \
+            ([str(int(cpu)/1024).rstrip('0').rstrip('.') + ' CPU'] if cpu is not None else []) + \
+            ([str(int(memory)/1024).rstrip('0').rstrip('.') + ' GB of memory'] if memory is not None else [])
+        cpu_memory = ' and '.join(cpu_memory_components)
+        cpu_memory_string = ('with ' + cpu_memory) if cpu_memory else ''
         context = {
             'seconds_remaining_float': seconds_remaining_float,
             'time_remaining': f'{minutes}:{seconds:02}',
             'application_nice_name': application_instance.application_template.nice_name,
+            'cpu_memory_string': cpu_memory_string,
         }
         return render(request, 'spawning.html', context, status=202)

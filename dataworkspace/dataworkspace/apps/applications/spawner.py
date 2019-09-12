@@ -26,11 +26,9 @@ def get_spawner(name):
 
 @celery_app.task()
 def spawn(name, user_email_address, user_sso_id, public_host_data,
-          application_instance_id, spawner_options, db_credentials,
-          cpu, memory):
+          application_instance_id, spawner_options, db_credentials):
     get_spawner(name).spawn(user_email_address, user_sso_id, public_host_data,
-                            application_instance_id, spawner_options, db_credentials,
-                            cpu, memory)
+                            application_instance_id, spawner_options, db_credentials)
 
 
 @celery_app.task()
@@ -46,7 +44,7 @@ class ProcessSpawner():
     '''
 
     @staticmethod
-    def spawn(_, __, ___, application_instance_id, spawner_options, ____, _____, ______):
+    def spawn(_, __, ___, application_instance_id, spawner_options, ____):
 
         try:
             gevent.sleep(1)
@@ -123,8 +121,7 @@ class FargateSpawner():
 
     @staticmethod
     def spawn(user_email_address, user_sso_id, public_host_data,
-              application_instance_id, spawner_options, db_credentials,
-              cpu, memory):
+              application_instance_id, spawner_options, db_credentials):
 
         try:
             task_arn = None
@@ -177,8 +174,9 @@ class FargateSpawner():
                     tag = tag.replace(f'<{key}>', value)
                 definition_arn_with_image = _fargate_task_definition_with_tag(definition_arn, container_name, tag)
 
-            # If memory or cpu are given, create a new task definition. This could be merged with
-            # the above task definition creation, but this can be treated as a later optimisation
+            # If memory or cpu are given, create a new task definition.
+            cpu = application_instance.cpu
+            memory = application_instance.memory
             cpu_or_mem = cpu is not None or memory is not None
             definition_arn_with_cpu_memory_image = \
                 _fargate_task_definition_with_cpu_memory(definition_arn_with_image, cpu, memory) if cpu_or_mem else \
