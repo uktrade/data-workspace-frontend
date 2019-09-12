@@ -381,7 +381,8 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-            is_healthcheck = request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(request)
+            is_healthcheck = \
+                request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(request)
             sso_auth_required = (
                 not is_healthcheck and
                 not is_service_discovery(request)
