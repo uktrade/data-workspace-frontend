@@ -6,8 +6,32 @@
 {% block head %}
     {{ block.super }}
     <style>
-        .btn-stop {
+        .tool-launch-button {
             vertical-align: middle;
+            display: inline-block;
+            min-width: 11em;
+        }
+        .tool-stop-button {
+            vertical-align: middle;
+            display: inline-block;
+        }
+        @media (min-width: 40.0625em) {
+            .inline-form-group {
+                display: inline-block;
+                margin-bottom: 0;
+            }
+        }
+        @media (min-width: 40.0625em) {
+            .tool-launch-button,
+            .tool-stop-button {
+                margin-bottom: 0;
+            }
+            .govuk-summary-list__key {
+                width: 20%;
+            }
+            .govuk-summary-list__actions {
+                width: 80%;
+            }
         }
     </style>
 {% endblock %}
@@ -34,29 +58,41 @@
             {% for application in applications %}
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">
-                        <a class="govuk-link" href="{{ application.link }}"
-                           style="font-weight: normal;">{{ application.nice_name }}</a>
+                        {{ application.nice_name }}
                     </dt>
                     <dd class="govuk-summary-list__actions">
                         {% if application.instance %}
                             <form action="{% url 'applications:tools' %}" method="POST" style="display: inline">
                                 {% csrf_token %}
-                                <button class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 btn-stop"
+                                <button class="govuk-button govuk-button--secondary tool-stop-button"
                                         name="public_host" value="{{ application.instance.public_host }}"
-                                        type="submit">Stop
+                                        type="submit">Stop {{ application.nice_name }}
                                 </button>
                             </form>
                         {% endif %}
+                        <form action="{{ application.link }}" method="GET" style="display: inline-block">
+                            {% if not application.instance %}
+                                <div class="govuk-form-group inline-form-group">
+                                  <select class="govuk-select" id="sort" name="__memory_cpu">
+                                    <option value="512_256">Small: 0.25 CPU, 0.5GB of memory, £0.01/hour</option>
+                                    <option value="8192_1024" selected>Default: 1 CPU, 8GB of memory, £0.07/hour</option>
+                                    <option value="16384_2048">Large: 2 CPU, 16GB of memory, £0.14/hour</option>
+                                    <option value="30720_4096">Extra large: 4 CPU, 30GB of memory, £0.27/hour</option>
+                                  </select>
+                                </div>
+                            {% endif %}
+                            <button class="govuk-button tool-launch-button">Launch {{ application.nice_name }}</button>
+                        </form>
                     </dd>
                 </div>
             {% endfor %}
             {% if settings.your_files_enabled %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    <a class="govuk-link" href="{% url 'files' %}"
-                       style="font-weight: normal;">Your files</a>
+                    Your files
                 </dt>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-button tool-launch-button" href="{% url 'files' %}">Launch your files</a>
                 </dd>
             </div>
             {% endif %}
@@ -64,10 +100,10 @@
         {% if appstream_url != "https:///" and perms.applications.access_appstream %}
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">
-                    <a class="govuk-link" href="{{ appstream_url }}" style="font-weight: normal;">SPSS /
-                        STATA</a>
+                    SPSS / STATA
                 </dt>
                 <dd class="govuk-summary-list__actions">
+                    <a class="govuk-button tool-launch-button" href="{{ appstream_url }}">Launch SPSS / STATA</a>
                 </dd>
             </div>
         {% endif %}

@@ -174,7 +174,7 @@ async def async_main():
                 params = {
                     key: value
                     for key, value in downstream_request.query.items()
-                    if key in ('__memory', '__cpu')
+                    if key == '__memory_cpu'
                 }
                 async with client_session.request(
                         'PUT', host_api_url, params=params,
