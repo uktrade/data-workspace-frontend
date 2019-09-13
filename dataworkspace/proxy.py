@@ -171,9 +171,19 @@ async def async_main():
 
         if not host_exists:
             if 'x-data-workspace-no-modify-application-instance' not in downstream_request.headers:
-                async with client_session.request('PUT', host_api_url, headers=admin_headers(downstream_request)) as response:
+                params = {
+                    key: value
+                    for key, value in downstream_request.query.items()
+                    if key in ('__memory', '__cpu')
+                }
+                async with client_session.request(
+                        'PUT', host_api_url, params=params,
+                        headers=admin_headers(downstream_request)
+                ) as response:
                     host_exists = response.status == 200
                     application = await response.json()
+                if params:
+                    return web.Response(status=302, headers={'location': '/'})
             else:
                 raise UserException('Application stopped while starting', 500)
 
@@ -381,7 +391,8 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-            is_healthcheck = request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(request)
+            is_healthcheck = \
+                request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(request)
             sso_auth_required = (
                 not is_healthcheck and
                 not is_service_discovery(request)

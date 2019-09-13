@@ -2,8 +2,6 @@
   {
     "name": "${container_name}",
     "image": "${container_image}",
-    "memoryReservation": ${container_memory - 100},
-    "cpu": ${container_cpu - 10},
     "essential": true,
     "ulimits": [{
           "softLimit": 4096,
@@ -27,8 +25,6 @@
   {
     "name": "metrics",
     "image": "${metrics_container_image}",
-    "memoryReservation": 50,
-    "cpu": 5,
     "essential": true,
     "logConfiguration": {
       "logDriver": "awslogs",
@@ -46,8 +42,6 @@
   {
     "name": "s3sync",
     "image": "${s3sync_container_image}",
-    "memoryReservation": 50,
-    "cpu": 5,
     "essential": true,
     "logConfiguration": {
       "logDriver": "awslogs",

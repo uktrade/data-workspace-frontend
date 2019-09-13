@@ -52,8 +52,6 @@ data "template_file" "notebook_container_definitions" {
   vars {
     container_image  = "${var.notebook_container_image}:${data.external.notebook_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
-    container_cpu    = "${local.notebook_container_cpu}"
-    container_memory = "${local.notebook_container_memory}"
 
     log_group  = "${aws_cloudwatch_log_group.notebook.name}"
     log_region = "${data.aws_region.aws_region.name}"

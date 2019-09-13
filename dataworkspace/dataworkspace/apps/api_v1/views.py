@@ -82,6 +82,8 @@ def application_api_PUT(request, public_host):
         public_host=public_host,
         state='SPAWNING',
         single_running_or_spawning_integrity=public_host,
+        cpu=request.GET.get('__cpu', None),
+        memory=request.GET.get('__memory', None),
     )
 
     spawn.delay(

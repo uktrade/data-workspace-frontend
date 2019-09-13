@@ -202,6 +202,120 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
     @async_test
+    async def test_application_custom_cpu_memory(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application_1 = await create_application()
+        self.add_async_cleanup(cleanup_application_1)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            },
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(10)
+
+        # Make a request to the home page, which ensures the user is in the DB
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            await response.text()
+
+        await asyncio.sleep(1)
+
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/', params={
+                '__memory': '1024',
+                '__cpu': '2048',
+        }) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn('Starting Test Application with 2 CPU and 1 GB of memory', application_content_1)
+
+        async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
+            application_content_2 = await response.text()
+
+        self.assertIn('Starting Test Application with 2 CPU and 1 GB of memory', application_content_2)
+
+        # There are forced sleeps in starting a process
+        await asyncio.sleep(6)
+
+        # The initial connection has to be a GET, since these are redirected
+        # to SSO. Unsure initial connection being a non-GET is a feature that
+        # needs to be supported / what should happen in this case
+        sent_headers = {
+            'from-downstream': 'downstream-header-value',
+        }
+
+        async with session.request(
+                'GET', 'http://testapplication-23b40dd9.localapps.com:8000/http', headers=sent_headers) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content['method'], 'GET')
+        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
+        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+
+        # We are authorized by SSO, and can do non-GETs
+        async def sent_content():
+            for _ in range(10000):
+                yield b'Some content'
+
+        sent_headers = {
+            'from-downstream': 'downstream-header-value',
+        }
+        async with session.request(
+                'PATCH', 'http://testapplication-23b40dd9.localapps.com:8000/http',
+                data=sent_content(), headers=sent_headers) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content['method'], 'PATCH')
+        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
+        self.assertEqual(received_content['content'], 'Some content' * 10000)
+        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+
+        # Make a websockets connection to the proxy
+        sent_headers = {
+            'from-downstream-websockets': 'websockets-header-value',
+        }
+        async with session.ws_connect(
+                'http://testapplication-23b40dd9.localapps.com:8000/websockets', headers=sent_headers) as wsock:
+            msg = await wsock.receive()
+            headers = json.loads(msg.data)
+
+            await wsock.send_bytes(b'some-\0binary-data')
+            msg = await wsock.receive()
+            received_binary_content = msg.data
+
+            await wsock.send_str('some-text-data')
+            msg = await wsock.receive()
+            received_text_content = msg.data
+
+            await wsock.close()
+
+        self.assertEqual(headers['from-downstream-websockets'], 'websockets-header-value')
+        self.assertEqual(received_binary_content, b'some-\0binary-data')
+        self.assertEqual(received_text_content, 'some-text-data')
+
+    @async_test
     async def test_application_redirects_to_sso_if_initially_not_authorized(self):
         await flush_database()
         await flush_redis()
