@@ -152,7 +152,7 @@ async def async_main():
     async def handle_application(is_websocket, downstream_request, method, path, query):
         public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
         host_api_url = admin_root + '/api/v1/application/' + public_host
-        host_html_path = '/application/' + public_host
+        host_html_path = '/tools/' + public_host
 
         async with client_session.request('GET', host_api_url, headers=admin_headers(downstream_request)) as response:
             host_exists = response.status == 200
