@@ -81,6 +81,20 @@ class TestApplication(unittest.TestCase):
             'href="http://testapplication-23b40dd9.localapps.com:8000/"',
             content)
 
+        # Make a request to the tools page
+        async with session.request('GET', 'http://localapps.com:8000/tools/') as response:
+            content = await response.text()
+
+        # Ensure the user sees the link to the application
+        self.assertEqual(200, response.status)
+        self.assertIn(
+            'Test Application</a>',
+            content)
+
+        self.assertIn(
+            'href="http://testapplication-23b40dd9.localapps.com:8000/"',
+            content)
+
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             application_content_1 = await response.text()
 
