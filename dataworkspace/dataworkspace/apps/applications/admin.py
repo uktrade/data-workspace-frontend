@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.contrib import admin
+from django.db.models import Count
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -85,6 +86,9 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         except (AttributeError, KeyError):
             return response
 
-        response.context_data['summary'] = list(qs)
+        response.context_data['summary'] = list(
+            qs.values('owner__username', 'application_template__nice_name').annotate(
+                num_launched=Count('id')).order_by('-num_launched', 'owner__username')
+        )
 
         return response

@@ -10,14 +10,22 @@
     <thead>
     <tr>
         <th>
+            <div class="text"><a href="#">User</a></div>
+        </th>
+        <th>
             <div class="text"><a href="#">Application</a></div>
+        </th>
+        <th>
+            <div class="text"><a href="#"># Launched</a></div>
         </th>
     </tr>
     </thead>
     <tbody>
     {% for row in summary %}
         <tr class="{% cycle 'row1' 'row2' %}">
-            <td> {{ row }} </td>
+            <td> {{ row.owner__username }} </td>
+            <td> {{ row.application_template__nice_name }} </td>
+            <td> {{ row.num_launched }} </td>
         </tr>
     {% endfor %}
     </tbody>
