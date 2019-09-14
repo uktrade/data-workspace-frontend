@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Count, Max, Min, Sum, F, Func, Value
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -90,13 +90,35 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         except (AttributeError, KeyError):
             return response
 
+        # We want to display times to second precision, so we truncate the
+        # timestamps to second precision _before_ summing, to avoid issues
+        # where the totals of the rows each don't add up to the bottom total
+        metrics = {
+            'num_launched': Count('id'),
+            'num_with_runtime': Count(F('spawner_stopped_at') - F('spawner_created_at')),
+            'min_runtime': Min(
+                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc') -
+                Func(Value('second'), F('spawner_created_at'), function='date_trunc')
+            ),
+            'max_runtime': Max(
+                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc') -
+                Func(Value('second'), F('spawner_created_at'), function='date_trunc')
+            ),
+            'total_runtime': Sum(
+                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc') -
+                Func(Value('second'), F('spawner_created_at'), function='date_trunc')
+            ),
+        }
+
         response.context_data['summary'] = list(
-            qs.values('owner__username', 'application_template__nice_name').annotate(
-                num_launched=Count('id')).order_by('-num_launched', 'owner__username')
+            qs
+            .values('owner__username', 'application_template__nice_name')
+            .annotate(**metrics)
+            .order_by('-total_runtime', '-num_launched', '-max_runtime', 'owner__username')
         )
 
         response.context_data['summary_total'] = dict(
-            qs.aggregate(num_launched=Count('id'))
+            qs.aggregate(**metrics)
         )
 
         return response

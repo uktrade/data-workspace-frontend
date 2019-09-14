@@ -1,16 +1,20 @@
 import datetime
 import hashlib
+import json
 import logging
 import urllib.parse
 import re
 
+import gevent
 import requests
 
 from django.conf import settings
+from django.db.models import Q
 
 from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,
+    _fargate_task_describe,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -177,3 +181,85 @@ def kill_idle_fargate():
         logger.info('kill_idle_fargate: Stopped application %s', instance)
 
     logger.info('kill_idle_fargate: End')
+
+
+@celery_app.task()
+def populate_created_stopped_fargate():
+    logger.info('populate_created_stopped_fargate: Start')
+
+    # This is used to populate spawner_created_at and spawner_stopped_at for
+    # Fargate containers in two case:
+    #
+    # - For any that failed to populate spawner_created_at and
+    #   spawner_stopped_at. This is possible since they are populated
+    #   asynchronously, and although they retry on failure, it's not perfect
+    #   if the Django instance went down at that moment
+    #
+    # - For those that existed before spawner_created_at, spawner_stopped_at
+    #   were added. Unfortunately it appears that tasks are only stored for
+    #   about 15 hours after they stop
+    #   https://github.com/aws/amazon-ecs-agent/issues/368 so this is only
+    #   of limited use
+    #
+    # We go back ~2 days of applications out of a bit of hope that more tasks
+    # are stored. We also do an hour at a time to leverage the index on
+    # created_date and just in case this is ever used for high numbers of
+    # applications. We deliberately don't add an indexes for this case since
+    # it's deemed not worth slowing inserts or using more disk space for this
+    # non performance critical background task
+
+    # Ensure we don't have a moving target of "now" during processing
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    for hours in range(0, 48):
+        start_of_range = now + datetime.timedelta(hours=-hours-1)
+        end_of_range = now + datetime.timedelta(hours=-hours)
+        instances = ApplicationInstance.objects.filter(
+            Q(
+                spawner='FARGATE',
+                created_date__gte=start_of_range,
+                created_date__lt=end_of_range,
+            ) &
+            (
+                Q(spawner_created_at__isnull=True) |
+                Q(spawner_stopped_at__isnull=True)
+            )
+        ).order_by('-created_date')
+
+        for instance in instances:
+            logger.info('populate_created_stopped_fargate checking: %s', instance)
+
+            try:
+                options = json.loads(instance.spawner_application_template_options)
+                cluster_name = options['CLUSTER_NAME']
+                task_arn = json.loads(instance.spawner_application_instance_id)['task_arn']
+            except (ValueError, KeyError):
+                continue
+
+            # To not bombard the ECS API
+            gevent.sleep(0.1)
+            try:
+                task = _fargate_task_describe(cluster_name, task_arn)
+            except Exception:
+                logger.exception('populate_created_stopped_fargate %s', instance)
+                gevent.sleep(10)
+                continue
+
+            if not task:
+                logger.info('populate_created_stopped_fargate no task found %s %s', instance, task_arn)
+                continue
+
+            update_fields = []
+            if 'createdAt' in task and instance.spawner_created_at is None:
+                instance.spawner_created_at = task['createdAt']
+                update_fields.append('spawner_created_at')
+
+            if 'stoppedAt' in task and instance.spawner_stopped_at is None:
+                instance.spawner_stopped_at = task['stoppedAt']
+                update_fields.append('spawner_stopped_at')
+
+            if update_fields:
+                logger.info('populate_created_stopped_fargate saving: %s %s', instance, update_fields)
+                instance.save(update_fields=update_fields)
+
+    logger.info('populate_created_stopped_fargate: End')
