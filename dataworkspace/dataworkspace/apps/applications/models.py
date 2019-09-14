@@ -134,6 +134,7 @@ class ApplicationInstance(TimeStampedModel):
     class Meta:
         db_table = 'app_applicationinstance'
         indexes = [
+            models.Index(fields=['created_date']),
             models.Index(fields=['owner', 'created_date']),
             models.Index(fields=['public_host', 'state']),
         ]
