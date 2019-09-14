@@ -16,7 +16,7 @@
             <div class="text"><a href="#">Application</a></div>
         </th>
         <th>
-            <div class="text"><a href="#"># Launched</a></div>
+            <div class="text" style="text-align: right;"><a href="#"># Launched</a></div>
         </th>
     </tr>
     </thead>
@@ -25,14 +25,14 @@
         <tr class="{% cycle 'row1' 'row2' %}">
             <td> {{ row.owner__username }} </td>
             <td> {{ row.application_template__nice_name }} </td>
-            <td> {{ row.num_launched }} </td>
+            <td style="text-align: right;"> {{ row.num_launched }} </td>
         </tr>
     {% endfor %}
 
     <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
         <td> Total </td>
         <td></td>
-        <td> {{ summary_total.num_launched }} </td>
+        <td style="text-align: right;"> {{ summary_total.num_launched }} </td>
     </tr>
     </tbody>
 
