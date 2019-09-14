@@ -94,11 +94,7 @@ def application_api_is_allowed(request, public_host):
 
 
 def stop_spawner_and_application(application_instance):
-    stop.delay(
-        application_instance.spawner,
-        application_instance.spawner_application_template_options,
-        application_instance.spawner_application_instance_id,
-    )
+    stop.delay(application_instance.spawner, application_instance.id)
     set_application_stopped(application_instance)
 
 
