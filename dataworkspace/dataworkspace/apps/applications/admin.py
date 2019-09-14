@@ -67,6 +67,10 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
     change_list_template = 'admin/application_instance_report_change_list.html'
     date_hierarchy = 'created_date'
 
+    list_filter = (
+        'application_template__nice_name',
+    )
+
     def has_add_permission(self, request):
         return False
 
