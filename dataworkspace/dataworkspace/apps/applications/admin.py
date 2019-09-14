@@ -91,4 +91,8 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                 num_launched=Count('id')).order_by('-num_launched', 'owner__username')
         )
 
+        response.context_data['summary_total'] = dict(
+            qs.aggregate(num_launched=Count('id'))
+        )
+
         return response
