@@ -286,10 +286,11 @@ class CustomDatasetQueryDownloadView(DetailView):
 
 
 def root_view(request):
-    return \
-        root_view_GET(request) if request.method == 'GET' else \
-        root_view_POST(request) if request.method == 'POST' else \
+    return (
+        root_view_GET(request) if request.method == 'GET' else
+        root_view_POST(request) if request.method == 'POST' else
         HttpResponse(status=405)
+    )
 
 
 def root_view_GET(request):
