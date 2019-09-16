@@ -119,7 +119,9 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             qs
             .values('owner__username', 'application_template__nice_name')
             .annotate(**metrics)
-            .order_by('-has_runtime', '-total_runtime', '-num_launched', '-max_runtime', 'owner__username')
+            .order_by(
+                '-has_runtime', '-total_runtime', '-num_launched', '-max_runtime', 'owner__username',
+                'application_template__nice_name')
         )
 
         response.context_data['summary_total'] = dict(
