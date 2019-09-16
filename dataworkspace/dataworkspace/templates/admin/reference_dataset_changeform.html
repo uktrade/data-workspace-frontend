@@ -25,8 +25,8 @@
               <tbody>
                 {% for record in instance.get_records %}
                   <tr class="form-row">
-                    {% for field in record.reference_dataset.column_names %}
-                      {% with record|get_attr:field as value %}
+                    {% for field in record.reference_dataset.fields.all %}
+                      {% with record|get_attr:field.column_name as value %}
                         <td{% if value is None %} style="color: #bfc1c3"{% endif %}>
                           {{ value|default_if_none:"Not set" }}
                         </td>

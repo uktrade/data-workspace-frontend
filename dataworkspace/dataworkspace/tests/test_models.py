@@ -699,6 +699,12 @@ class TestExternalModels(BaseModelsTests):
             column_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR
         )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field3',
+            column_name='field3',
+            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID
+        )
         ref_dataset.save_record(None, {
             'reference_dataset': ref_dataset,
             field1.column_name: 1,
@@ -764,6 +770,14 @@ class TestExternalModels(BaseModelsTests):
             ref_dataset,
             'boolean_field',
             ReferenceDatasetField.DATA_TYPE_BOOLEAN,
+            database='test_external_db'
+        )
+
+        # UUID field
+        self._create_and_validate_field(
+            ref_dataset,
+            'uuid_field',
+            ReferenceDatasetField.DATA_TYPE_UUID,
             database='test_external_db'
         )
 
@@ -901,6 +915,18 @@ class TestExternalModels(BaseModelsTests):
             column_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR
         )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field3',
+            column_name='field3',
+            data_type=ReferenceDatasetField.DATA_TYPE_UUID
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field4',
+            column_name='field4',
+            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID
+        )
         ref_dataset.save_record(None, {
             'reference_dataset': ref_dataset,
             field1.column_name: 1,
@@ -922,6 +948,18 @@ class TestExternalModels(BaseModelsTests):
             name='field2',
             column_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field3',
+            column_name='field3',
+            data_type=ReferenceDatasetField.DATA_TYPE_UUID
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field4',
+            column_name='field4',
+            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID
         )
         self.assertEqual(ref_dataset.major_version, 1)
         ref_dataset.save_record(None, {
@@ -945,6 +983,18 @@ class TestExternalModels(BaseModelsTests):
             name='field2',
             column_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field3',
+            column_name='field3',
+            data_type=ReferenceDatasetField.DATA_TYPE_UUID
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field4',
+            column_name='field4',
+            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID
         )
         ref_dataset.save_record(None, {
             'reference_dataset': ref_dataset,
@@ -1133,6 +1183,18 @@ class TestExternalModels(BaseModelsTests):
             name='field2',
             column_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field3',
+            column_name='field3',
+            data_type=ReferenceDatasetField.DATA_TYPE_UUID
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field4',
+            column_name='field4',
+            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID
         )
         ref_dataset.save_record(None, {
             'reference_dataset': ref_dataset,

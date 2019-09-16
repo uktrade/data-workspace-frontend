@@ -154,19 +154,33 @@ class TestDatasetViews(BaseTestCase):
             data_type=8,
             linked_reference_dataset=linked_rds
         )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='auto uuid',
+            column_name='auto_uuid',
+            data_type=9,
+            sort_order=4,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='auto id',
+            column_name='auto_id',
+            data_type=10,
+            sort_order=5,
+        )
         link_record = linked_rds.save_record(None, {
             'reference_dataset': linked_rds,
             linked_field1.column_name: 1,
             linked_field2.column_name: 'Linked Display Name'
         })
 
-        rds.save_record(None, {
+        rec1 = rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 1,
             field2.column_name: 'Test record',
             field3.column_name: link_record
         })
-        rds.save_record(None, {
+        rec2 = rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 2,
             field2.column_name: 'Ánd again',
@@ -185,12 +199,16 @@ class TestDatasetViews(BaseTestCase):
             'id': 1,
             'linked: ID': 1,
             'linked: Name': 'Linked Display Name',
-            'name': 'Test record'
+            'name': 'Test record',
+            'auto uuid': str(rec1.auto_uuid),
+            'auto id': 1,
         }, {
             'id': 2,
             'linked: ID': None,
             'linked: Name': None,
-            'name': 'Ánd again'
+            'name': 'Ánd again',
+            'auto uuid': str(rec2.auto_uuid),
+            'auto id': 2,
         }])
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
@@ -234,18 +252,32 @@ class TestDatasetViews(BaseTestCase):
             linked_reference_dataset=linked_rds,
             sort_order=3,
         )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='auto uuid',
+            column_name='auto_uuid',
+            data_type=9,
+            sort_order=4,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='auto id',
+            column_name='auto_id',
+            data_type=10,
+            sort_order=5,
+        )
         link_record = linked_rds.save_record(None, {
             'reference_dataset': linked_rds,
             linked_field1.column_name: 1,
             linked_field2.column_name: 'Linked Display Name'
         })
-        rds.save_record(None, {
+        rec1 = rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 1,
             field2.column_name: 'Test record',
             field3.column_name: link_record
         })
-        rds.save_record(None, {
+        rec2 = rds.save_record(None, {
             'reference_dataset': rds,
             field1.column_name: 2,
             field2.column_name: 'Ánd again',
@@ -262,8 +294,12 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content,
-            b'id,name,linked: ID,linked: Name\r\n1,Test record,1,Linked Display Name\r\n2,'
-            b'\xc3\x81nd again,,\r\n'
+            b'id,name,linked: ID,linked: Name,auto uuid,auto id\r\n'
+            b'1,Test record,1,Linked Display Name,%s,1\r\n'
+            b'2,\xc3\x81nd again,,,%s,2\r\n' % (
+                str(rec1.auto_uuid).encode(),
+                str(rec2.auto_uuid).encode()
+            )
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
