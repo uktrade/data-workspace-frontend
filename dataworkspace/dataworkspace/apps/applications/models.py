@@ -27,6 +27,7 @@ class ApplicationTemplate(TimeStampedModel):
         unique=True,
     )
     nice_name = models.CharField(
+        verbose_name='application',
         validators=[RegexValidator(regex=r'^[a-zA-Z0-9\- ]+$')],
         max_length=128,
         blank=False,
@@ -139,3 +140,10 @@ class ApplicationInstance(TimeStampedModel):
 
     def __str__(self):
         return f'{self.owner} / {self.public_host} / {self.state}'
+
+
+class ApplicationInstanceReport(ApplicationInstance):
+    class Meta:
+        proxy = True
+        verbose_name = 'Application report'
+        verbose_name_plural = 'Application report'

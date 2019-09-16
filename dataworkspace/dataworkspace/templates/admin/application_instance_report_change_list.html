@@ -1,0 +1,43 @@
+{% extends "admin/change_list.html" %}
+
+{% block content_title %}
+    <h1>Application report</h1>
+{% endblock %}
+
+{% block result_list %}
+<div class="results">
+    <table>
+    <thead>
+    <tr>
+        <th>
+            <div class="text"><a href="#">User</a></div>
+        </th>
+        <th>
+            <div class="text"><a href="#">Application</a></div>
+        </th>
+        <th>
+            <div class="text" style="text-align: right;"><a href="#"># Launched</a></div>
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in summary %}
+        <tr class="{% cycle 'row1' 'row2' %}">
+            <td> {{ row.owner__username }} </td>
+            <td> {{ row.application_template__nice_name }} </td>
+            <td style="text-align: right;"> {{ row.num_launched }} </td>
+        </tr>
+    {% endfor %}
+
+    <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
+        <td> Total </td>
+        <td></td>
+        <td style="text-align: right;"> {{ summary_total.num_launched }} </td>
+    </tr>
+    </tbody>
+
+  </table>
+</div>
+{% endblock %}
+
+{% block pagination %}{% endblock %}

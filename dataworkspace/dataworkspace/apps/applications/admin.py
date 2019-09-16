@@ -1,8 +1,12 @@
 from datetime import datetime
 
 from django.contrib import admin
+from django.db.models import Count
 
-from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.models import (
+    ApplicationInstance,
+    ApplicationInstanceReport,
+)
 from dataworkspace.apps.applications.utils import application_instance_max_cpu
 
 
@@ -56,3 +60,43 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
             },
         })
         return super().get_form(request, obj, change, **kwargs)
+
+
+@admin.register(ApplicationInstanceReport)
+class ApplicationInstanceReportAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/application_instance_report_change_list.html'
+    date_hierarchy = 'created_date'
+
+    list_filter = (
+        'application_template__nice_name',
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(
+            request,
+            extra_context=extra_context,
+        )
+        try:
+            qs = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+
+        response.context_data['summary'] = list(
+            qs.values('owner__username', 'application_template__nice_name').annotate(
+                num_launched=Count('id')).order_by('-num_launched', 'owner__username')
+        )
+
+        response.context_data['summary_total'] = dict(
+            qs.aggregate(num_launched=Count('id'))
+        )
+
+        return response
