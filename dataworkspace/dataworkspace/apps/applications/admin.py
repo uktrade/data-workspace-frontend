@@ -1,12 +1,18 @@
 from datetime import datetime
+from itertools import product
 
 from django.contrib import admin
-from django.db.models import Count, Max, Min, Sum, F, Func, Value
+from django.contrib.auth.models import (
+    User,
+    Permission,
+)
+from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
 from django.db.models.functions import Least
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceReport,
+    ApplicationTemplate,
 )
 from dataworkspace.apps.applications.utils import application_instance_max_cpu
 
@@ -115,7 +121,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             ),
         }
 
-        response.context_data['summary'] = list(
+        summary_with_applications = list(
             qs
             .values('owner__username', 'application_template__nice_name')
             .annotate(**metrics)
@@ -123,6 +129,36 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                 '-has_runtime', '-total_runtime', '-num_launched', '-max_runtime', 'owner__username',
                 'application_template__nice_name')
         )
+
+        users_with_applications = set(
+            (item['owner__username'], item['application_template__nice_name'])
+            for item in summary_with_applications)
+        perm = Permission.objects.get(codename='start_all_applications')
+        users = User.objects.filter(
+            Q(groups__permissions=perm) | Q(user_permissions=perm) | Q(is_superuser=True)
+        ).distinct().order_by('username')
+
+        try:
+            app_filter = {
+                'nice_name__in': [request.GET['application_template__nice_name']]
+            }
+        except KeyError:
+            app_filter = {}
+
+        application_templates = list(ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name'))
+        summary_without_applications = [
+            {
+                'owner__username': user.username,
+                'application_template__nice_name': application_template.nice_name,
+                'num_launched': 0,
+                'has_runtime': 0,
+                'num_with_runtime': 0,
+            }
+            for user, application_template in product(users, application_templates)
+            if (user.username, application_template.nice_name) not in users_with_applications
+        ]
+
+        response.context_data['summary'] = summary_with_applications + summary_without_applications
 
         response.context_data['summary_total'] = dict(
             qs.aggregate(**metrics)
