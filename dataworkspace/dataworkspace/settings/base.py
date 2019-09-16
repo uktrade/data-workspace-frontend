@@ -180,6 +180,11 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': 60 * 10,
         'args': (),
     },
+    'populate-created-stopped-fargate-containers': {
+        'task': 'dataworkspace.apps.applications.utils.populate_created_stopped_fargate',
+        'schedule': 60 * 10,
+        'args': (),
+    },
 }
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
 

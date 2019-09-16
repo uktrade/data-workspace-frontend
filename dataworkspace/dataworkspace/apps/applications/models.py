@@ -89,6 +89,10 @@ class ApplicationInstance(TimeStampedModel):
         help_text='An ID that the spawner understands to control and report on the application',
     )
 
+    # As reported by the spawner
+    spawner_created_at = models.DateTimeField(null=True)
+    spawner_stopped_at = models.DateTimeField(null=True)
+
     state = models.CharField(
         max_length=16,
         choices=(
@@ -130,6 +134,7 @@ class ApplicationInstance(TimeStampedModel):
     class Meta:
         db_table = 'app_applicationinstance'
         indexes = [
+            models.Index(fields=['created_date']),
             models.Index(fields=['owner', 'created_date']),
             models.Index(fields=['public_host', 'state']),
         ]

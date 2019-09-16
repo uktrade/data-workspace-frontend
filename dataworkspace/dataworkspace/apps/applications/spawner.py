@@ -32,8 +32,8 @@ def spawn(name, user_email_address, user_sso_id, public_host_data,
 
 
 @celery_app.task()
-def stop(name, spawner_application_template_options, spawner_application_instance_id):
-    get_spawner(name).stop(spawner_application_template_options, spawner_application_instance_id)
+def stop(name, application_instance_id):
+    get_spawner(name).stop(application_instance_id)
 
 
 class ProcessSpawner():
@@ -96,7 +96,11 @@ class ProcessSpawner():
             return 'STOPPED'
 
     @staticmethod
-    def stop(_, spawner_application_id):
+    def stop(application_instance_id):
+        application_instance = ApplicationInstance.objects.get(
+            id=application_instance_id,
+        )
+        spawner_application_id = application_instance.spawner_application_instance_id
         spawner_application_id_parsed = json.loads(spawner_application_id)
         try:
             os.kill(int(spawner_application_id_parsed['process_id']), 9)
@@ -193,7 +197,10 @@ class FargateSpawner():
             application_instance.spawner_application_instance_id = json.dumps({
                 'task_arn': task_arn,
             })
-            application_instance.save(update_fields=['spawner_application_instance_id'])
+            application_instance.spawner_created_at = \
+                start_task_response['tasks'][0]['createdAt'] if 'tasks' in start_task_response else \
+                start_task_response['task']['createdAt']
+            application_instance.save(update_fields=['spawner_application_instance_id', 'spawner_created_at'])
 
             application_instance.refresh_from_db()
             if application_instance.state == 'STOPPED':
@@ -247,11 +254,27 @@ class FargateSpawner():
             return 'STOPPED'
 
     @staticmethod
-    def stop(spawner_options, spawner_application_id):
-        options = json.loads(spawner_options)
+    def stop(application_instance_id):
+        application_instance = ApplicationInstance.objects.get(
+            id=application_instance_id,
+        )
+        options = json.loads(application_instance.spawner_application_template_options)
         cluster_name = options['CLUSTER_NAME']
-        task_arn = json.loads(spawner_application_id)['task_arn']
+        task_arn = json.loads(application_instance.spawner_application_instance_id)['task_arn']
         _fargate_task_stop(cluster_name, task_arn)
+
+        sleep_time = 1
+        for _ in range(0, 8):
+            try:
+                task = _fargate_task_describe(cluster_name, task_arn)
+                if 'stoppedAt' in task:
+                    application_instance.spawner_stopped_at = task['stoppedAt']
+                    application_instance.save(update_fields=['spawner_stopped_at'])
+                    break
+            except Exception:
+                pass
+            gevent.sleep(sleep_time)
+            sleep_time = sleep_time * 2
 
 
 def _fargate_task_definition_with_tag(task_family, container_name, tag):

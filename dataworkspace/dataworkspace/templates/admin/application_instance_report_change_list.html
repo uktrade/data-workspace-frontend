@@ -16,6 +16,18 @@
             <div class="text"><a href="#">Application</a></div>
         </th>
         <th>
+            <div class="text" style="text-align: right;"><a href="#">Min runtime</a></div>
+        </th>
+        <th>
+            <div class="text" style="text-align: right;"><a href="#">Max runtime</a></div>
+        </th>
+        <th>
+            <div class="text" style="text-align: right;"><a href="#">Total runtime</a></div>
+        </th>
+        <th>
+            <div class="text" style="text-align: right;"><a href="#"># With runtime</a></div>
+        </th>
+        <th>
             <div class="text" style="text-align: right;"><a href="#"># Launched</a></div>
         </th>
     </tr>
@@ -25,18 +37,27 @@
         <tr class="{% cycle 'row1' 'row2' %}">
             <td> {{ row.owner__username }} </td>
             <td> {{ row.application_template__nice_name }} </td>
+            <td style="text-align: right;"> {{ row.min_runtime | default:'0:00:00' }} </td>
+            <td style="text-align: right;"> {{ row.max_runtime | default:'0:00:00' }} </td>
+            <td style="text-align: right;"> {{ row.total_runtime | default:'0:00:00' }} </td>
+            <td style="text-align: right;"> {{ row.num_with_runtime }} </td>
             <td style="text-align: right;"> {{ row.num_launched }} </td>
         </tr>
     {% endfor %}
 
     <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
-        <td> Total </td>
+        <td> Overall </td>
         <td></td>
+        <td style="text-align: right;"> {{ summary_total.min_runtime | default:'0:00:00' }} </td>
+        <td style="text-align: right;"> {{ summary_total.max_runtime | default:'0:00:00' }} </td>
+        <td style="text-align: right;"> {{ summary_total.total_runtime | default:'0:00:00' }} </td>
+        <td style="text-align: right;"> {{ summary_total.num_with_runtime }} </td>
         <td style="text-align: right;"> {{ summary_total.num_launched }} </td>
     </tr>
     </tbody>
+    </table>
 
-  </table>
+    <p style="margin-top: 20px">Applications launched before mid September 2019 will not have their runtime included in this report. Applications launched after mid September 2019 will have their runtime included in this report a few minutes after they have stopped.</p>
 </div>
 {% endblock %}
 
