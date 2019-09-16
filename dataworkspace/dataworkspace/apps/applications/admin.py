@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.contrib import admin
 from django.db.models import Count, Max, Min, Sum, F, Func, Value
+from django.db.models.functions import Least
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -95,6 +96,10 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         # where the totals of the rows each don't add up to the bottom total
         metrics = {
             'num_launched': Count('id'),
+            # NULL values are ordered as greater than non-NULL values, so to order rows without
+            # runtime as lower in the list as those that have runtime, but still order rows with
+            # runtime in decreasing order, we need an extra field
+            'has_runtime': Least(Count(F('spawner_stopped_at') - F('spawner_created_at')), 1),
             'num_with_runtime': Count(F('spawner_stopped_at') - F('spawner_created_at')),
             'min_runtime': Min(
                 Func(Value('second'), F('spawner_stopped_at'), function='date_trunc') -
@@ -114,7 +119,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             qs
             .values('owner__username', 'application_template__nice_name')
             .annotate(**metrics)
-            .order_by('-total_runtime', '-num_launched', '-max_runtime', 'owner__username')
+            .order_by('-has_runtime', '-total_runtime', '-num_launched', '-max_runtime', 'owner__username')
         )
 
         response.context_data['summary_total'] = dict(

@@ -37,9 +37,9 @@
         <tr class="{% cycle 'row1' 'row2' %}">
             <td> {{ row.owner__username }} </td>
             <td> {{ row.application_template__nice_name }} </td>
-            <td style="text-align: right;"> {{ row.min_runtime | default:'0:00:00' }} </td>
-            <td style="text-align: right;"> {{ row.max_runtime | default:'0:00:00' }} </td>
-            <td style="text-align: right;"> {{ row.total_runtime | default:'0:00:00' }} </td>
+            <td style="text-align: right;"> {{ row.min_runtime | default:'-' }} </td>
+            <td style="text-align: right;"> {{ row.max_runtime | default:'-' }} </td>
+            <td style="text-align: right;"> {{ row.total_runtime | default:'-' }} </td>
             <td style="text-align: right;"> {{ row.num_with_runtime }} </td>
             <td style="text-align: right;"> {{ row.num_launched }} </td>
         </tr>
@@ -48,9 +48,9 @@
     <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
         <td> Overall </td>
         <td></td>
-        <td style="text-align: right;"> {{ summary_total.min_runtime | default:'0:00:00' }} </td>
-        <td style="text-align: right;"> {{ summary_total.max_runtime | default:'0:00:00' }} </td>
-        <td style="text-align: right;"> {{ summary_total.total_runtime | default:'0:00:00' }} </td>
+        <td style="text-align: right;"> {{ summary_total.min_runtime | default:'-' }} </td>
+        <td style="text-align: right;"> {{ summary_total.max_runtime | default:'-' }} </td>
+        <td style="text-align: right;"> {{ summary_total.total_runtime | default:'-' }} </td>
         <td style="text-align: right;"> {{ summary_total.num_with_runtime }} </td>
         <td style="text-align: right;"> {{ summary_total.num_launched }} </td>
     </tr>
