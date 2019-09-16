@@ -104,6 +104,10 @@ def tools_html_GET(request):
 
 def tools_html_POST(request):
     public_host = request.POST['public_host']
+    redirect_target = {
+        'root': 'root',
+        'applications:tools': 'applications:tools',
+    }[request.POST['redirect_target']]
     try:
         application_instance = ApplicationInstance.objects.get(
             owner=request.user,
@@ -118,4 +122,4 @@ def tools_html_POST(request):
     else:
         stop_spawner_and_application(application_instance)
         messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
-    return redirect('root')
+    return redirect(redirect_target)

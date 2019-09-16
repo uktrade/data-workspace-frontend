@@ -64,6 +64,7 @@
                         {% if application.instance %}
                             <form action="{% url 'applications:tools' %}" method="POST" style="display: inline">
                                 {% csrf_token %}
+                                <input type="hidden" name="redirect_target" value="applications:tools">
                                 <button class="govuk-button govuk-button--secondary tool-stop-button"
                                         name="public_host" value="{{ application.instance.public_host }}"
                                         type="submit">Stop {{ application.nice_name }}
