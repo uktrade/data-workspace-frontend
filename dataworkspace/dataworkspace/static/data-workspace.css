@@ -37,3 +37,6 @@
 .scrollable-table table thead th.ref-data-boolean-field {
   min-width: 80px;
 }
+.scrollable-table table thead th.ref-data-col-universal-unique-identifier-field {
+  min-width: 300px;
+}
