@@ -92,6 +92,8 @@ class ApplicationInstance(TimeStampedModel):
     # As reported by the spawner
     spawner_created_at = models.DateTimeField(null=True)
     spawner_stopped_at = models.DateTimeField(null=True)
+    spawner_cpu = models.CharField(max_length=16, null=True)
+    spawner_memory = models.CharField(max_length=16, null=True)
 
     state = models.CharField(
         max_length=16,

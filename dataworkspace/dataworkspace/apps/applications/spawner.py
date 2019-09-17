@@ -200,7 +200,14 @@ class FargateSpawner():
                 'task_arn': task_arn,
             })
             application_instance.spawner_created_at = task['createdAt']
-            application_instance.save(update_fields=['spawner_application_instance_id', 'spawner_created_at'])
+            application_instance.spawner_cpu = task['cpu']
+            application_instance.spawner_memory = task['memory']
+            application_instance.save(update_fields=[
+                'spawner_application_instance_id',
+                'spawner_created_at',
+                'spawner_cpu',
+                'spawner_memory',
+            ])
 
             application_instance.refresh_from_db()
             if application_instance.state == 'STOPPED':

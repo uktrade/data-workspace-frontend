@@ -1,5 +1,6 @@
 {% extends "admin/change_list.html" %}
 {% load admin_list %}
+{% load core_tags %}
 
 {% block content_title %}
     <h1>Application report</h1>
@@ -15,6 +16,12 @@
         </th>
         <th>
             <div class="text"><a href="#">Application</a></div>
+        </th>
+        <th>
+            <div class="text"><a href="#">CPU</a></div>
+        </th>
+        <th>
+            <div class="text"><a href="#">Memory</a></div>
         </th>
         <th>
             <div class="text" style="text-align: right;"><a href="#">Min runtime</a></div>
@@ -38,6 +45,8 @@
         <tr class="{% cycle 'row1' 'row2' %}">
             <td> {{ row.owner__username | default:'-' }} </td>
             <td> {{ row.application_template__nice_name | default:'-' }} </td>
+            <td> {{ row.spawner_cpu | spawner_cpu }} </td>
+            <td> {{ row.spawner_memory | spawner_memory }} </td>
             <td style="text-align: right;"> {{ row.min_runtime | default:'-' }} </td>
             <td style="text-align: right;"> {{ row.max_runtime | default:'-' }} </td>
             <td style="text-align: right;"> {{ row.total_runtime | default:'-' }} </td>
@@ -49,6 +58,8 @@
     <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
         <td> Overall </td>
         <td></td>
+        <td></td>
+        <td></td>
         <td style="text-align: right;"> {{ summary_total.min_runtime | default:'-' }} </td>
         <td style="text-align: right;"> {{ summary_total.max_runtime | default:'-' }} </td>
         <td style="text-align: right;"> {{ summary_total.total_runtime | default:'-' }} </td>
@@ -58,7 +69,7 @@
     </tbody>
     </table>
 
-    <p style="margin-top: 20px">Applications launched before mid September 2019 will not have their runtime included in this report. Applications launched after mid September 2019 will have their runtime included in this report a few minutes after they have stopped.</p>
+    <p style="margin-top: 20px">Applications launched before mid September 2019 will not have their runtime, CPU or memory included in this report. Applications launched after mid September 2019 will have their CPU and memory included just after launch, and their runtime included a few minutes after they have stopped.</p>
 </div>
 {% endblock %}
 
