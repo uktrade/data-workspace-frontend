@@ -87,6 +87,50 @@ class AppUserEditForm(forms.ModelForm):
 admin.site.unregister(get_user_model())
 
 
+class LocalToolsFilter(admin.SimpleListFilter):
+    title = 'Local tool access'
+    parameter_name = 'can_start_tools'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Can start local tools'),
+            ('no', 'Cannot start local tools'),
+        )
+
+    def queryset(self, request, queryset):
+        perm = Permission.objects.get(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        if self.value() == 'yes':
+            return queryset.filter(user_permissions=perm)
+        if self.value() == 'no':
+            return queryset.exclude(user_permissions=perm)
+        return queryset
+
+
+class AppStreamFilter(admin.SimpleListFilter):
+    title = 'AppStream access'
+    parameter_name = 'can_access_appstream'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Can access AppStream'),
+            ('no', 'Cannot access AppStream'),
+        )
+
+    def queryset(self, request, queryset):
+        perm = Permission.objects.get(
+            codename='access_appstream',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        if self.value() == 'yes':
+            return queryset.filter(user_permissions=perm)
+        if self.value() == 'no':
+            return queryset.exclude(user_permissions=perm)
+        return queryset
+
+
 @admin.register(get_user_model())
 class AppUserAdmin(UserAdmin):
     add_form_template = 'admin/change_form.html'
@@ -97,9 +141,15 @@ class AppUserAdmin(UserAdmin):
             'fields': ('email', 'first_name', 'last_name',),
         }),
     )
-
+    list_filter = (
+        'is_staff',
+        'is_superuser',
+        'is_active',
+        'groups',
+        LocalToolsFilter,
+        AppStreamFilter
+    )
     form = AppUserEditForm
-
     fieldsets = [
         (None, {
             'fields': ['email', 'sso_id', 'first_name', 'last_name']
@@ -113,7 +163,6 @@ class AppUserAdmin(UserAdmin):
                 'authorized_datasets',
             ]}),
     ]
-
     readonly_fields = ['sso_id']
 
     def get_readonly_fields(self, request, obj=None):
