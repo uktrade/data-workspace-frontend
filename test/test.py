@@ -81,6 +81,20 @@ class TestApplication(unittest.TestCase):
             'href="http://testapplication-23b40dd9.localapps.com:8000/"',
             content)
 
+        # Make a request to the tools page
+        async with session.request('GET', 'http://localapps.com:8000/tools/') as response:
+            content = await response.text()
+
+        # Ensure the user sees the link to the application
+        self.assertEqual(200, response.status)
+        self.assertIn(
+            'Test Application</button>',
+            content)
+
+        self.assertIn(
+            'action="http://testapplication-23b40dd9.localapps.com:8000/"',
+            content)
+
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/') as response:
             application_content_1 = await response.text()
 
@@ -240,8 +254,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request('GET', 'http://testapplication-23b40dd9.localapps.com:8000/', params={
-                '__memory': '1024',
-                '__cpu': '2048',
+                '__memory_cpu': '1024_2048',
         }) as response:
             application_content_1 = await response.text()
 

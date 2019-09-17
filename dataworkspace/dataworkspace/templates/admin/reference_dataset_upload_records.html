@@ -45,7 +45,7 @@
               </tr>
             </thead>
             <tbody>
-              {% for field in ref_model.fields.all %}
+              {% for field in ref_model.editable_fields %}
                 <tr>
                   <td><strong>{{ field.name }}</strong></td>
                   <td>{{ field.description }}</td>

@@ -262,11 +262,12 @@ class ReferenceDataRecordUploadForm(forms.Form):
     def clean_file(self):
         reader = csv.DictReader(chunk.decode() for chunk in self.cleaned_data['file'])
         csv_fields = [x.lower() for x in reader.fieldnames]
-        dataset_fields = [x.lower() for x in self.reference_dataset.field_names]
-        if sorted(csv_fields) != sorted(dataset_fields):
-            raise ValidationError(
-                'Please ensure the uploaded csv file headers match the target reference dataset columns'
-            )
+        for field in [x.name.lower() for x in self.reference_dataset.editable_fields]:
+            if field not in csv_fields:
+                raise ValidationError(
+                    'Please ensure the uploaded csv file headers include '
+                    'all the target reference dataset columns'
+                )
         return self.cleaned_data['file']
 
 

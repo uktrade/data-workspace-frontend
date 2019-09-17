@@ -89,7 +89,7 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
         """
         reference_dataset = self._get_reference_dataset()
         record_model = reference_dataset.get_record_model_class()
-        field_names = ['reference_dataset'] + reference_dataset.column_names
+        field_names = ['reference_dataset'] + [field.column_name for field in reference_dataset.editable_fields]
 
         class DynamicReferenceDatasetRecordForm(forms.ModelForm):
             class Meta:
@@ -103,7 +103,7 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
             # Add the form fields/widgets
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
-                for field in reference_dataset.fields.all():
+                for field in reference_dataset.editable_fields:
                     self.fields[field.column_name] = field.get_form_field()
 
         # Add validation for the custom identifier field
@@ -231,7 +231,7 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
             log_row = ReferenceDatasetUploadLogRecord(upload_log=self.upload_log, row_data=row)
             errors = {}
             form_data = {'reference_dataset': reference_dataset}
-            for field in reference_dataset.fields.all():
+            for field in reference_dataset.editable_fields:
                 header_name = field.name.lower()
                 value = row[header_name]
                 form_field = field.get_form_field()
@@ -279,7 +279,9 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
             log_row.save()
 
         if reference_dataset.external_database is not None:
-            reference_dataset.sync_to_external_database(reference_dataset.external_database)
+            reference_dataset.sync_to_external_database(
+                reference_dataset.external_database.memorable_name
+            )
         return super().form_valid(form)
 
     def get_success_url(self):
