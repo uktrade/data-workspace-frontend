@@ -73,6 +73,12 @@ def application_api_PUT(request, public_host):
 
     credentials = new_private_database_credentials(request.user)
 
+    try:
+        memory, cpu = request.GET['__memory_cpu'].split('_')
+    except KeyError:
+        memory = None
+        cpu = None
+
     application_instance = ApplicationInstance.objects.create(
         owner=request.user,
         application_template=application_template,
@@ -82,8 +88,8 @@ def application_api_PUT(request, public_host):
         public_host=public_host,
         state='SPAWNING',
         single_running_or_spawning_integrity=public_host,
-        cpu=request.GET.get('__cpu', None),
-        memory=request.GET.get('__memory', None),
+        cpu=cpu,
+        memory=memory,
     )
 
     spawn.delay(

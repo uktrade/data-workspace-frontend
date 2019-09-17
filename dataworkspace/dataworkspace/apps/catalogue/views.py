@@ -12,19 +12,17 @@ import boto3
 from botocore.exceptions import ClientError
 
 from django.conf import settings
-from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms import model_to_dict
 from django.http import (Http404, HttpResponse, HttpResponseForbidden,
                          StreamingHttpResponse, HttpResponseServerError, HttpResponseRedirect,
                          HttpResponseNotFound)
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 from psycopg2 import sql
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
-from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import table_exists, table_data, view_exists, streaming_query_response
 from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
     SourceTable, ReferenceDatasetField, CustomDatasetQuery
@@ -286,10 +284,10 @@ class CustomDatasetQueryDownloadView(DetailView):
 
 
 def root_view(request):
-    return \
-        root_view_GET(request) if request.method == 'GET' else \
-        root_view_POST(request) if request.method == 'POST' else \
+    return (
+        root_view_GET(request) if request.method == 'GET' else
         HttpResponse(status=405)
+    )
 
 
 def root_view_GET(request):
@@ -327,25 +325,6 @@ def root_view_GET(request):
         'groupings': get_all_datagroups_viewmodel()
     }
     return render(request, 'root.html', context)
-
-
-def root_view_POST(request):
-    public_host = request.POST['public_host']
-    try:
-        application_instance = ApplicationInstance.objects.get(
-            owner=request.user,
-            public_host=public_host,
-            state__in=['RUNNING', 'SPAWNING'],
-        )
-    except ApplicationInstance.DoesNotExist:
-        # The user could force a POST for any public_host, and will be able to
-        # get the server to show this message, but this is acceptable since it
-        # won't cause any harm
-        messages.success(request, 'Stopped')
-    else:
-        stop_spawner_and_application(application_instance)
-        messages.success(request, 'Stopped ' + application_instance.application_template.nice_name)
-    return redirect('root')
 
 
 def filter_api_visible_application_instances_by_owner(owner):
