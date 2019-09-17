@@ -1,5 +1,5 @@
 import csv
-from adminsortable2.admin import CustomInlineFormSet
+
 from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
@@ -83,6 +83,7 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
 
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):
+    _reserved_column_names = ('id', 'reference_dataset', 'reference_dataset_id', 'updated_date')
     description = forms.CharField(
         widget=forms.Textarea(
             attrs={
@@ -202,6 +203,17 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                 'Identifier field cannot be linked reference data type'
             )
         return cleaned.get('is_identifier')
+
+    def clean_column_name(self):
+        column_name = self.cleaned_data['column_name']
+        if column_name in self._reserved_column_names:
+            raise forms.ValidationError(
+                '"{}" is a reserved column name (along with: "{}")'.format(
+                    column_name,
+                    '", "'.join([x for x in self._reserved_column_names if x != column_name])
+                )
+            )
+        return column_name
 
 
 class ReferenceDataRowDeleteForm(forms.Form):
