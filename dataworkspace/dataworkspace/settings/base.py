@@ -28,7 +28,7 @@ ALLOWED_HOSTS = \
 INTERNAL_IPS = ['127.0.0.1'] if DEBUG else []
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'dataworkspace.admin.DataWorkspaceAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

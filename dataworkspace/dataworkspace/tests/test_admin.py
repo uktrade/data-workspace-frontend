@@ -17,6 +17,21 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase
 
 
+class TestCustomAdminSite(BaseAdminTestCase):
+    def test_non_admin_access(self):
+        # Ensure non-admins get a 404 page
+        self.user.is_staff = False
+        self.user.is_superuser = False
+        self.user.save()
+        response = self._authenticated_get(reverse('admin:login'))
+        self.assertEqual(response.status_code, 404)
+
+    def test_admin_access(self):
+        # Ensure admins are able to view the admin site
+        response = self._authenticated_get(reverse('admin:login'))
+        self.assertEqual(response.status_code, 302)
+
+
 class TestReferenceDatasetAdmin(BaseAdminTestCase):
     databases = ['default', 'test_external_db']
 
