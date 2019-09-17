@@ -53,6 +53,8 @@
 {% block inner_content %}
     <h1 class="govuk-heading-l">Tools</h1>
 
+    <p class="govuk-body">The department is charged for the CPU and memory allocated to each tool. Please choose only the CPU and memory you need.</p>
+
     <dl class="govuk-summary-list govuk-summary-list">
         {% if perms.applications.start_all_applications %}
             {% for application in applications %}
@@ -75,10 +77,10 @@
                             {% if not application.instance %}
                                 <div class="govuk-form-group inline-form-group">
                                   <select class="govuk-select" id="sort" name="__memory_cpu">
-                                    <option value="512_256">Small: 0.25 CPU, 0.5GB of memory, £0.01/hour</option>
-                                    <option value="8192_1024" selected>Default: 1 CPU, 8GB of memory, £0.07/hour</option>
-                                    <option value="16384_2048">Large: 2 CPU, 16GB of memory, £0.14/hour</option>
-                                    <option value="30720_4096">Extra large: 4 CPU, 30GB of memory, £0.27/hour</option>
+                                    <option value="512_256">Small: 0.25 CPU, 0.5GB of memory</option>
+                                    <option value="8192_1024" selected>Default: 1 CPU, 8GB of memory</option>
+                                    <option value="16384_2048">Large: 2 CPU, 16GB of memory</option>
+                                    <option value="30720_4096">Extra large: 4 CPU, 30GB of memory</option>
                                   </select>
                                 </div>
                             {% endif %}
