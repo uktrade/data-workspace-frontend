@@ -2,6 +2,7 @@ from datetime import datetime
 from itertools import product
 
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.models import (
     User,
     Permission,
@@ -69,13 +70,62 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
         return super().get_form(request, obj, change, **kwargs)
 
 
+class ApplicationFilter(SimpleListFilter):
+    title = 'Filter by application'
+    parameter_name = 'application_template__name'
+    template = 'admin/application_instance_report_filter.html'
+
+    def lookups(self, request, model_admin):
+        return tuple(
+            (app.name, app.nice_name)
+            for app in ApplicationTemplate.objects.all().order_by('nice_name')
+        )
+
+    def queryset(self, request, queryset):
+        try:
+            queryset_filter = {
+                'application_template__name': request.GET['application_template__name'],
+            }
+        except KeyError:
+            queryset_filter = {}
+        return queryset.filter(**queryset_filter)
+
+
+class ApplicationGroup(SimpleListFilter):
+    # Slight mis-use of a filter to allow a dynamic group by in the
+    # surrounding report
+    title = 'Group by'
+    parameter_name = 'group_by'
+    template = 'admin/application_instance_report_filter.html'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('user_and_application', 'User and application'),
+            ('user', 'User'),
+            ('application', 'Application'),
+        )
+
+    def choices(self, changelist):
+        for i, (lookup, title) in enumerate(self.lookup_choices):
+            yield {
+                'selected': self.value() == str(lookup) or (i == 0 and self.value() is None),
+                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        # No extra filtering, but this is tightly coupled to behaviour in
+        # ApplicationInstanceReportAdmin that groups
+        return queryset
+
+
 @admin.register(ApplicationInstanceReport)
 class ApplicationInstanceReportAdmin(admin.ModelAdmin):
     change_list_template = 'admin/application_instance_report_change_list.html'
     date_hierarchy = 'created_date'
 
     list_filter = (
-        'application_template__nice_name',
+        (ApplicationFilter, ApplicationGroup,)
     )
 
     def has_add_permission(self, request):
@@ -121,18 +171,21 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             ),
         }
 
+        group_by_fields = {
+            'user_and_application': ['owner__username', 'application_template__nice_name'],
+            'user': ['owner__username'],
+            'application': ['application_template__nice_name'],
+        }[request.GET.get('group_by', 'user_and_application')]
+
         summary_with_applications = list(
             qs
-            .values('owner__username', 'application_template__nice_name')
+            .values(*group_by_fields)
             .annotate(**metrics)
-            .order_by(
-                '-has_runtime', '-total_runtime', '-num_launched', '-max_runtime', 'owner__username',
-                'application_template__nice_name')
+            .order_by(*(
+                ['-has_runtime', '-total_runtime', '-num_launched', '-max_runtime'] + group_by_fields
+            ))
         )
 
-        users_with_applications = set(
-            (item['owner__username'], item['application_template__nice_name'])
-            for item in summary_with_applications)
         perm = list(Permission.objects.filter(codename='start_all_applications'))
         users = User.objects.filter(
             Q(groups__permissions__in=perm) | Q(user_permissions__in=perm) | Q(is_superuser=True)
@@ -140,23 +193,69 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
 
         try:
             app_filter = {
-                'nice_name__in': [request.GET['application_template__nice_name']]
+                'name__in': [request.GET['application_template__name']]
             }
         except KeyError:
             app_filter = {}
 
-        application_templates = list(ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name'))
-        summary_without_applications = [
-            {
-                'owner__username': user.username,
-                'application_template__nice_name': application_template.nice_name,
-                'num_launched': 0,
-                'has_runtime': 0,
-                'num_with_runtime': 0,
-            }
-            for user, application_template in product(users, application_templates)
-            if (user.username, application_template.nice_name) not in users_with_applications
-        ]
+        def group_by_user_missing_rows():
+            users_with_applications = set(
+                item['owner__username']
+                for item in summary_with_applications
+            )
+            return [
+                {
+                    'owner__username': user.username,
+                    'application_template__nice_name': None,
+                    'num_launched': 0,
+                    'has_runtime': 0,
+                    'num_with_runtime': 0,
+                }
+                for user in users
+                if user.username not in users_with_applications
+            ]
+
+        def group_by_application_missing_rows():
+            application_templates = list(ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name'))
+            applications_run = set(
+                item['application_template__nice_name']
+                for item in summary_with_applications
+            )
+            return [
+                {
+                    'owner__username': None,
+                    'application_template__nice_name': application_template.nice_name,
+                    'num_launched': 0,
+                    'has_runtime': 0,
+                    'num_with_runtime': 0,
+                }
+                for application_template in application_templates
+                if application_template.nice_name not in applications_run
+            ]
+
+        def group_by_user_and_application_missing_rows():
+            application_templates = list(ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name'))
+            users_with_applications = set(
+                (item['owner__username'], item['application_template__nice_name'])
+                for item in summary_with_applications
+            )
+            return [
+                {
+                    'owner__username': user.username,
+                    'application_template__nice_name': application_template.nice_name,
+                    'num_launched': 0,
+                    'has_runtime': 0,
+                    'num_with_runtime': 0,
+                }
+                for user, application_template in product(users, application_templates)
+                if (user.username, application_template.nice_name) not in users_with_applications
+            ]
+
+        summary_without_applications = (
+            group_by_user_missing_rows() if request.GET.get('group_by') == 'user' else
+            group_by_application_missing_rows() if request.GET.get('group_by') == 'application' else
+            group_by_user_and_application_missing_rows()
+        )
 
         response.context_data['summary'] = summary_with_applications + summary_without_applications
 

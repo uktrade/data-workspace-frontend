@@ -1,4 +1,5 @@
 {% extends "admin/change_list.html" %}
+{% load admin_list %}
 
 {% block content_title %}
     <h1>Application report</h1>
@@ -35,8 +36,8 @@
     <tbody>
     {% for row in summary %}
         <tr class="{% cycle 'row1' 'row2' %}">
-            <td> {{ row.owner__username }} </td>
-            <td> {{ row.application_template__nice_name }} </td>
+            <td> {{ row.owner__username | default:'-' }} </td>
+            <td> {{ row.application_template__nice_name | default:'-' }} </td>
             <td style="text-align: right;"> {{ row.min_runtime | default:'-' }} </td>
             <td style="text-align: right;"> {{ row.max_runtime | default:'-' }} </td>
             <td style="text-align: right;"> {{ row.total_runtime | default:'-' }} </td>
@@ -59,6 +60,13 @@
 
     <p style="margin-top: 20px">Applications launched before mid September 2019 will not have their runtime included in this report. Applications launched after mid September 2019 will have their runtime included in this report a few minutes after they have stopped.</p>
 </div>
+{% endblock %}
+
+{% block filters %}
+    <div id="changelist-filter">
+        <h2>Options</h2>
+        {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
+    </div>
 {% endblock %}
 
 {% block pagination %}{% endblock %}
