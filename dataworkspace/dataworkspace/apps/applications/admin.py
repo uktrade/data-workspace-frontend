@@ -133,9 +133,9 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         users_with_applications = set(
             (item['owner__username'], item['application_template__nice_name'])
             for item in summary_with_applications)
-        perm = Permission.objects.get(codename='start_all_applications')
+        perm = list(Permission.objects.filter(codename='start_all_applications'))
         users = User.objects.filter(
-            Q(groups__permissions=perm) | Q(user_permissions=perm) | Q(is_superuser=True)
+            Q(groups__permissions__in=perm) | Q(user_permissions__in=perm) | Q(is_superuser=True)
         ).distinct().order_by('username')
 
         try:
