@@ -805,7 +805,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_BOOLEAN: models.BooleanField,
         DATA_TYPE_FOREIGN_KEY: models.ForeignKey,
         DATA_TYPE_UUID: models.UUIDField,
-        DATA_TYPE_AUTO_ID: models.IntegerField,
+        DATA_TYPE_AUTO_ID: models.AutoField,
     }
     EDITABLE_DATA_TYPES = (
         DATA_TYPE_CHAR,
