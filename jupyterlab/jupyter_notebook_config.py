@@ -34,5 +34,4 @@ for logger in loggers:
 c = get_config()  # pylint: disable=undefined-variable # noqa
 
 c.NotebookApp.ip = '0.0.0.0'
-c.NotebookApp.terminals_enabled = False
 c.NotebookApp.log_level = 'DEBUG'
