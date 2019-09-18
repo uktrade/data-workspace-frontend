@@ -90,7 +90,6 @@ RUN \
         pip==18.1 && \
     pip install \
         aiocontextvars==0.2.2 \
-        jupyters3==0.0.35 \
         sentry-sdk==0.9.0 && \
     apk del .build-deps && \
     chown -R jovyan $CONDA_DIR
@@ -131,7 +130,6 @@ RUN \
 COPY jupyterlab_database_access /jupyterlab_database_access
 RUN \
     jupyter labextension install \
-        @jupyterlab/hub-extension@^0.12.0 \
         /jupyterlab_database_access \
         @jupyter-widgets/jupyterlab-manager \
         jupyter-matplotlib && \
