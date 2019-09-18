@@ -95,33 +95,6 @@ RUN \
     apk del .build-deps && \
     chown -R jovyan $CONDA_DIR
 
-COPY jupyterlab_database_access /jupyterlab_database_access
-RUN \
-    jupyter labextension install \
-        @jupyterlab/hub-extension@^0.12.0 \
-        /jupyterlab_database_access \
-        @jupyter-widgets/jupyterlab-manager \
-        jupyter-matplotlib && \
-    npm cache clean --force && \
-    node /opt/conda/lib/python3.6/site-packages/jupyterlab/staging/yarn.js cache clean
-
-COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
-
-RUN \
-    echo '[global]' > /etc/pip.conf && \
-    echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
-    echo 'local({' > /opt/conda/lib/R/etc/Rprofile.site && \
-    echo '  r = getOption("repos")' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    echo '  options(repos = r)' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    echo '})' >> /opt/conda/lib/R/etc/Rprofile.site
-
-ENTRYPOINT ["tini", "-g", "--"]
-
-RUN \
-    python -m spacy download en && \
-    python -m nltk.downloader -d /usr/local/share/nltk_data wordnet stopwords gutenberg
-
 # The R package tidyverse depends on fs, which needs automake 1.14, which is not supplied by apk
 # https://github.com/r-lib/fs/issues/210, and automake 1.14 needs a version of Perl earlier than
 # 5.22 https://github.com/easybuilders/easybuild-easyconfigs/issues/1822#issuecomment-311507178
@@ -150,6 +123,33 @@ RUN \
     cd .. && \
     rm -r -f automake-1.14.1 && \
     apk del .build-deps
+
+RUN \
+    python -m spacy download en && \
+    python -m nltk.downloader -d /usr/local/share/nltk_data wordnet stopwords gutenberg
+
+COPY jupyterlab_database_access /jupyterlab_database_access
+RUN \
+    jupyter labextension install \
+        @jupyterlab/hub-extension@^0.12.0 \
+        /jupyterlab_database_access \
+        @jupyter-widgets/jupyterlab-manager \
+        jupyter-matplotlib && \
+    npm cache clean --force && \
+    node /opt/conda/lib/python3.6/site-packages/jupyterlab/staging/yarn.js cache clean
+
+COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
+
+RUN \
+    echo '[global]' > /etc/pip.conf && \
+    echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
+    echo 'local({' > /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '  r = getOption("repos")' >> /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '  options(repos = r)' >> /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '})' >> /opt/conda/lib/R/etc/Rprofile.site
+
+ENTRYPOINT ["tini", "-g", "--"]
 
 USER jovyan
 
