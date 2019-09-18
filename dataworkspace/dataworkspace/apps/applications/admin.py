@@ -103,6 +103,8 @@ class ApplicationGroup(SimpleListFilter):
             ('user_and_application', 'User and application'),
             ('user', 'User'),
             ('application', 'Application'),
+            ('user_and_cpu_memory', 'User, CPU and memory'),
+            ('cpu_memory', 'CPU and memory'),
         )
 
     def choices(self, changelist):
@@ -175,6 +177,8 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             'user_and_application': ['owner__username', 'application_template__nice_name'],
             'user': ['owner__username'],
             'application': ['application_template__nice_name'],
+            'user_and_cpu_memory': ['owner__username', 'spawner_cpu', 'spawner_memory'],
+            'cpu_memory': ['spawner_cpu', 'spawner_memory'],
         }[request.GET.get('group_by', 'user_and_application')]
 
         summary_with_applications = list(
@@ -197,6 +201,13 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             }
         except KeyError:
             app_filter = {}
+
+        reportable_cpu_memory = (
+            ('256', '512'),
+            ('1024', '8192'),
+            ('2048', '16384'),
+            ('4096', '30720'),
+        )
 
         def group_by_user_missing_rows():
             users_with_applications = set(
@@ -233,6 +244,41 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                 if application_template.nice_name not in applications_run
             ]
 
+        def group_by_cpu_memory_missing_rows():
+            launched_cpu_memory_combos = set(
+                (item['spawner_cpu'], item['spawner_memory'])
+                for item in summary_with_applications
+            )
+            return [
+                {
+                    'spawner_cpu': cpu,
+                    'spawner_memory': memory,
+                    'num_launched': 0,
+                    'has_runtime': 0,
+                    'num_with_runtime': 0
+                }
+                for cpu, memory in reportable_cpu_memory
+                if (cpu, memory) not in launched_cpu_memory_combos
+            ]
+
+        def group_by_user_cpu_memory_missing_rows():
+            users_with_applications = set(
+                (item['owner__username'], item['spawner_cpu'], item['spawner_memory'])
+                for item in summary_with_applications
+            )
+            return [
+                {
+                    'owner__username': user.username,
+                    'spawner_cpu': cpu,
+                    'spawner_memory': memory,
+                    'num_launched': 0,
+                    'has_runtime': 0,
+                    'num_with_runtime': 0,
+                }
+                for user, (cpu, memory) in product(users, reportable_cpu_memory)
+                if (user.username, cpu, memory) not in users_with_applications
+            ]
+
         def group_by_user_and_application_missing_rows():
             application_templates = list(ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name'))
             users_with_applications = set(
@@ -254,6 +300,8 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         summary_without_applications = (
             group_by_user_missing_rows() if request.GET.get('group_by') == 'user' else
             group_by_application_missing_rows() if request.GET.get('group_by') == 'application' else
+            group_by_cpu_memory_missing_rows() if request.GET.get('group_by') == 'cpu_memory' else
+            group_by_user_cpu_memory_missing_rows() if request.GET.get('group_by') == 'user_and_cpu_memory' else
             group_by_user_and_application_missing_rows()
         )
 

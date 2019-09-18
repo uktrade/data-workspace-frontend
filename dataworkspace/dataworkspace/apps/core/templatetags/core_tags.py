@@ -44,3 +44,19 @@ def not_set_if_none(value):
     if value in ['', None]:
         return format_html('<span class="unknown">Not set</span>')
     return value
+
+
+@register.filter
+def spawner_memory(value):
+    return (
+        '-' if not value else
+        str(int(value) / 1024).rstrip('0').rstrip('.') + 'GB'
+    )
+
+
+@register.filter
+def spawner_cpu(value):
+    return (
+        '-' if not value else
+        str(int(value) / 1024).rstrip('0').rstrip('.')
+    )

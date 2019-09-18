@@ -191,16 +191,23 @@ class FargateSpawner():
                 security_groups, subnets, cmd, {**s3_env, **database_env, **env}, s3_sync,
             )
 
-            task_arn = \
-                start_task_response['tasks'][0]['taskArn'] if 'tasks' in start_task_response else \
-                start_task_response['task']['taskArn']
+            task = (
+                start_task_response['tasks'][0] if 'tasks' in start_task_response else
+                start_task_response['task']
+            )
+            task_arn = task['taskArn']
             application_instance.spawner_application_instance_id = json.dumps({
                 'task_arn': task_arn,
             })
-            application_instance.spawner_created_at = \
-                start_task_response['tasks'][0]['createdAt'] if 'tasks' in start_task_response else \
-                start_task_response['task']['createdAt']
-            application_instance.save(update_fields=['spawner_application_instance_id', 'spawner_created_at'])
+            application_instance.spawner_created_at = task['createdAt']
+            application_instance.spawner_cpu = task['cpu']
+            application_instance.spawner_memory = task['memory']
+            application_instance.save(update_fields=[
+                'spawner_application_instance_id',
+                'spawner_created_at',
+                'spawner_cpu',
+                'spawner_memory',
+            ])
 
             application_instance.refresh_from_db()
             if application_instance.state == 'STOPPED':
