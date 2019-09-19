@@ -128,9 +128,14 @@ RUN \
     python -m nltk.downloader -d /usr/local/share/nltk_data wordnet stopwords gutenberg
 
 COPY jupyterlab_database_access /jupyterlab_database_access
+COPY jupyterlab_template_notebooks /jupyterlab_template_notebooks
+
 RUN \
+    pip install jupyterlab_template_notebooks/server/ && \
+    jupyter serverextension enable --system --python jupyterlab_template_notebooks && \
     jupyter labextension install \
         /jupyterlab_database_access \
+        /jupyterlab_template_notebooks/browser \
         @jupyter-widgets/jupyterlab-manager \
         jupyter-matplotlib && \
     npm cache clean --force && \
