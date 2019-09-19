@@ -165,17 +165,14 @@ class AppUserAdmin(UserAdmin):
     ]
     readonly_fields = ['sso_id']
 
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ['email']
-        return self.readonly_fields
-
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         content_type = ContentType.objects.get_for_model(obj).pk
         object_repr = force_text(obj)
         user_id = request.user.pk
         object_id = obj.pk
+
+        obj.username = form.cleaned_data['email']
 
         def log_change(message):
             LogEntry.objects.log_action(
