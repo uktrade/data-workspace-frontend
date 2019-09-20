@@ -19,27 +19,32 @@
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">Request access</h1>
             <p class="govuk-body">
-                <a href="{% url 'catalogue:dataset_fullpath' dataset.grouping.slug dataset.slug %}">
-                    {{ dataset.grouping.name }} &gt; {{ dataset.name }}</a>
+              Access to this dataset will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection" class="govuk-link--no-visited-state">Data Protection Act</a>. Complete the form below if you need to access this dataset in order to do your job.
             </p>
-
+          <br />
+            <p class="govuk-body">
+              <span class="govuk-label govuk-!-font-weight-bold">Dataset</span>
+              <a href="{% url 'catalogue:dataset_fullpath' dataset.grouping.slug dataset.slug %}" class="govuk-link--no-visited-state">
+                  {{ dataset.grouping.name }} &gt; {{ dataset.name }}
+              </a>
+            </p>
             <form method="post">
                 {% csrf_token %}
                 <fieldset class="govuk-fieldset">
                     <div class="govuk-form-group">
-                        <label class="govuk-label" for="email">Contact email</label>
+                        <label class="govuk-label govuk-!-font-weight-bold" for="email">Contact email</label>
                         <span class="govuk-hint">
                              You are logged in as {{ authenticated_user.email }}
                         </span>
                         <input class="govuk-input" type="email" name="email" value="{{ authenticated_user.email }}" id="email" required>
                     </div>
                     <div class="govuk-form-group">
-                        <label class="govuk-label" for="team">Team name</label>
+                        <label class="govuk-label govuk-!-font-weight-bold" for="team">Team name</label>
                         <input type="text" class="govuk-input" name="team" id="team" required>
                     </div>
                     <div class="govuk-form-group">
-                        <label class="govuk-label" for="justification">
-                            Explain why you need access to this data
+                        <label class="govuk-label govuk-!-font-weight-bold" for="justification">
+                            What will you use this dataset for?
                         </label>
                         <textarea class="govuk-textarea" id="justification" name="justification" rows="5"
                                   required></textarea>
