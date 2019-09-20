@@ -8,6 +8,7 @@ import os
 import subprocess
 
 import boto3
+from botocore.exceptions import ClientError
 import gevent
 
 from dataworkspace.cel import celery_app
@@ -186,10 +187,18 @@ class FargateSpawner():
                 _fargate_task_definition_with_cpu_memory(definition_arn_with_image, cpu, memory) if cpu_or_mem else \
                 definition_arn_with_image
 
-            start_task_response = _fargate_task_run(
-                role_arn, cluster_name, container_name, definition_arn_with_cpu_memory_image,
-                security_groups, subnets, cmd, {**s3_env, **database_env, **env}, s3_sync,
-            )
+            for _ in range(0, 10):
+                # Sometimes there is an error assuming the new role: both IAM  and ECS are
+                # eventually consistent
+                try:
+                    start_task_response = _fargate_task_run(
+                        role_arn, cluster_name, container_name, definition_arn_with_cpu_memory_image,
+                        security_groups, subnets, cmd, {**s3_env, **database_env, **env}, s3_sync,
+                    )
+                except ClientError:
+                    gevent.sleep(3)
+                else:
+                    break
 
             task = (
                 start_task_response['tasks'][0] if 'tasks' in start_task_response else
