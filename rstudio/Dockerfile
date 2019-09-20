@@ -20,5 +20,9 @@ RUN \
 	rm -rf /var/lib/apt/lists/ && \
 	Rscript -e "install.packages('DBI'); install.packages('RPostgres'); install.packages('stringr');"
 
+COPY exploretiva /exploretiva
+RUN \
+	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")'
+
 COPY rstudio-start.sh /
 COPY rstudio-db-creds.py /
