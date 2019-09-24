@@ -71,6 +71,7 @@
             // window.performance.now which is monotonically increasing even
             // if the local clock changes
             var element = document.getElementById('time-remaining');
+            var slowMessage = document.getElementById('slow-message');
             var end_time = window.performance.now() + {{ seconds_remaining_float }} * 1000;
 
             function leftPad(str, pad, length) {
@@ -96,6 +97,7 @@
                 element.textContent = minutes.toString() + ':' + leftPad(seconds.toString(), '0', 2);
 
                 if (remaining_total == 0) {
+                    slowMessage.style.display = 'block';
                     return;
                 }
                 window.setTimeout(showRemaining, timeToNextFrame(now));
@@ -114,6 +116,7 @@
 
         <div class="govuk-!-font-size-27 govuk-panel__body">
             Time remaining: <span class="numeric" id="time-remaining">{{ time_remaining }}</span></li>
+            <p style="margin-bottom: 0; display: none;" id="slow-message">{{ application_nice_name }} is taking longer than expected to start. Please wait.</p>
         </div>
     </div>
 
