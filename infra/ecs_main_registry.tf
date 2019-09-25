@@ -2,7 +2,7 @@ resource "aws_ecs_service" "registry" {
   name            = "${var.prefix}-registry"
   cluster         = "${aws_ecs_cluster.main_cluster.id}"
   task_definition = "${aws_ecs_task_definition.registry.arn}"
-  desired_count   = 1
+  desired_count   = 3
   launch_type     = "FARGATE"
 
   network_configuration {
