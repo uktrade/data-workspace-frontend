@@ -61,7 +61,7 @@ RUN \
         'nltk=3.3.0' \
         'nodejs=11.14.0' \
         'notebook=5.7.8' \
-        'numpy=1.15.2' \
+        'numpy=1.17.2' \
         'openssl=1.0.2p' \
         'pandas=0.23.4' \
         'psycopg2=2.7.5' \
@@ -77,10 +77,10 @@ RUN \
         'r-rpostgres=1.1.1' \
         'r-stringr=1.3.1' \
         'r-tidyr' \
-        'scipy=1.1.0' \
-        'scikit-learn' \
+        'scipy=1.3.1' \
+        'scikit-learn=0.21.3' \
         'seaborn=0.9.0' \
-        'spacy=2.0.12' \
+        'spacy=2.1.8' \
         'tini=0.18.0' \
         'tornado=5.1.1' \
         'xorg-libxext=1.3.3' \
@@ -139,7 +139,7 @@ RUN \
         @jupyter-widgets/jupyterlab-manager \
         jupyter-matplotlib && \
     npm cache clean --force && \
-    node /opt/conda/lib/python3.6/site-packages/jupyterlab/staging/yarn.js cache clean
+    node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean
 
 COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
