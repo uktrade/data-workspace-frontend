@@ -87,7 +87,7 @@ RUN \
         'xorg-libxrender=0.9.10' && \
     conda clean -tipsy && \
     pip install \
-        pip==18.1 && \
+        pip==19.2.3 && \
     pip install \
         aiocontextvars==0.2.2 \
         sentry-sdk==0.9.0 && \
