@@ -135,6 +135,55 @@ async def s3_request_full(logger, context, method, path, query, api_pre_auth_hea
         return code, await buffered(body)
 
 
+async def s3_list_keys_relative_to_prefix(logger, context, prefix):
+    async def _list(extra_query_items=()):
+        query = (
+            ('max-keys', '1000'),
+            ('list-type', '2'),
+            ('prefix', prefix),
+        ) + extra_query_items
+        code, body_bytes = await s3_request_full(
+            logger, context, b'GET', '/', query, (),
+            empty_async_iterator, 'UNSIGNED-PAYLOAD')
+        if code != b'200':
+            raise Exception(code, body_bytes)
+
+        namespace = '{http://s3.amazonaws.com/doc/2006-03-01/}'
+        root = ET.fromstring(body_bytes)
+        next_token = ''
+        keys_relative = []
+        for element in root:
+            if element.tag == f'{namespace}Contents':
+                key = first_child_text(element, f'{namespace}Key')
+                key_relative = key[len(prefix):]
+                keys_relative.append(key_relative)
+            if element.tag == f'{namespace}NextContinuationToken':
+                next_token = element.text
+
+        return (next_token, keys_relative)
+
+    async def list_first_page():
+        return await _list()
+
+    async def list_later_page(token):
+        return await _list((('continuation-token', token),))
+
+    def first_child_text(element, tag):
+        for child in element:
+            if child.tag == tag:
+                return child.text
+        return None
+
+    token, keys_page = await list_first_page()
+    for key in keys_page:
+        yield key
+
+    while token:
+        token, keys_page = await list_later_page(token)
+        for key in keys_page:
+            yield key
+
+
 async def _s3_request(logger, context, method, path, query, api_pre_auth_headers,
                       payload, payload_hash):
     bucket = context.bucket
@@ -330,6 +379,11 @@ async def pypi_mirror(logger, request, s3_context):
         links = soup.find_all('a')
         link_data = []
 
+        logger.info('Finding existing files')
+        existing_project_filenames = {
+            key async for key in s3_list_keys_relative_to_prefix(logger, s3_context, f'{pypi_prefix}{project_name}/')
+        }
+
         for link in links:
             absolute = link.get('href')
             absolute_no_frag, frag = absolute.split('#')
@@ -342,6 +396,12 @@ async def pypi_mirror(logger, request, s3_context):
 
             s3_path = f'/{pypi_prefix}{project_name}/{filename}'
             link_data.append((s3_path, filename, frag, python_version_attr))
+
+            exists = filename in existing_project_filenames
+            if exists:
+                logger.debug('Skipping transfer of %s', s3_path)
+                continue
+
             for _ in range(0, 10):
                 try:
                     code, headers, body = await request(b'GET', absolute_no_frag)
