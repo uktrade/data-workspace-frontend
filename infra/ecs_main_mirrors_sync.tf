@@ -26,6 +26,12 @@ data "template_file" "mirrors_sync_container_definitions" {
     mirrors_bucket_region = "${data.aws_region.aws_region.name}"
     mirrors_bucket_host = "s3-${data.aws_region.aws_region.name}.amazonaws.com"
     mirrors_bucket_name = "${var.mirrors_bucket_name}"
+
+    mirror_anaconda_r = "True"
+    mirror_anaconda_conda_forge = "True"
+    mirror_anaconda_conda_anaconda = "True"
+    mirror_cran = "True"
+    mirror_pypi = "True"
   }
 }
 

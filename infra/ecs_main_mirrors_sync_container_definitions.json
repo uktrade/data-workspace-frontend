@@ -28,23 +28,23 @@
     },
     {
         "name": "MIRROR_ANACONDA_R",
-        "value": "True"
+        "value": "${mirror_anaconda_r}"
     },
     {
         "name": "MIRROR_ANACONDA_CONDA_FORGE",
-        "value": "True"
+        "value": "${mirror_anaconda_conda_forge}"
     },
     {
         "name": "MIRROR_ANACONDA_CONDA_ANACONDA",
-        "value": "True"
+        "value": "${mirror_anaconda_conda_anaconda}"
     },
     {
         "name": "MIRROR_CRAN",
-        "value": "True"
+        "value": "${mirror_cran}"
     },
     {
         "name": "MIRROR_PYPI",
-        "value": "True"
+        "value": "${mirror_pypi}"
     }]
   }
 ]
