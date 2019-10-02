@@ -215,11 +215,20 @@ async def async_main(loop, logger):
         bucket=bucket,
     )
 
-    await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/r/', 'r/')
-    await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/conda-forge/', 'conda-forge/')
-    await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/anaconda/', 'anaconda/')
-    await cran_mirror(logger, session, s3_context)
-    await pypi_mirror(logger, session, s3_context)
+    if os.environ['MIRROR_ANACONDA_R'] == 'True':
+        await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/r/', 'r/')
+
+    if os.environ['MIRROR_ANACONDA_CONDA_FORGE'] == 'True':
+        await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/conda-forge/', 'conda-forge/')
+
+    if os.environ['MIRROR_ANACONDA_CONDA_ANACONDA'] == 'True':
+        await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/anaconda/', 'anaconda/')
+
+    if os.environ['MIRROR_CRAN'] == 'True':
+        await cran_mirror(logger, session, s3_context)
+
+    if os.environ['MIRROR_PYPI'] == 'True':
+        await pypi_mirror(logger, session, s3_context)
 
     await session.close()
     await asyncio.sleep(0)

@@ -25,6 +25,26 @@
     {
         "name": "MIRRORS_BUCKET_NAME",
         "value": "${mirrors_bucket_name}"
+    },
+    {
+        "name": "MIRROR_ANACONDA_R",
+        "value": "True"
+    },
+    {
+        "name": "MIRROR_ANACONDA_CONDA_FORGE",
+        "value": "True"
+    },
+    {
+        "name": "MIRROR_ANACONDA_CONDA_ANACONDA",
+        "value": "True"
+    },
+    {
+        "name": "MIRROR_CRAN",
+        "value": "True"
+    },
+    {
+        "name": "MIRROR_PYPI",
+        "value": "True"
     }]
   }
 ]
