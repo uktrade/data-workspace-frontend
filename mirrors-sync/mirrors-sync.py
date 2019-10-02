@@ -144,13 +144,13 @@ def s3_hash(payload):
 @contextlib.contextmanager
 def logged(logger, message, logger_args):
     try:
-        logger.debug(message + '...', *logger_args)
+        logger.info(message + '...', *logger_args)
         status = 'done'
-        logger_func = logger.debug
+        logger_func = logger.info
         yield
     except asyncio.CancelledError:
         status = 'cancelled'
-        logger_func = logger.debug
+        logger_func = logger.info
         raise
     except BaseException:
         status = 'failed'
@@ -306,7 +306,7 @@ async def pypi_mirror(logger, session, s3_context):
     async def transfer_task():
         while True:
             project_name, project_url = await queue.get()
-            logger.debug('Transferring project %s %s', project_name, project_url)
+            logger.info('Transferring project %s %s', project_name, project_url)
 
             try:
                 async with session.get(project_url) as response:
@@ -506,10 +506,10 @@ def main():
     loop = asyncio.get_event_loop()
 
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
+    handler.setLevel(logging.INFO)
     logger.addHandler(handler)
 
     main_task = loop.create_task(async_main(loop, logger))
@@ -518,7 +518,7 @@ def main():
 
     loop.run_until_complete(main_task)
 
-    logger.debug('Exiting.')
+    logger.info('Exiting.')
 
 
 if __name__ == '__main__':
