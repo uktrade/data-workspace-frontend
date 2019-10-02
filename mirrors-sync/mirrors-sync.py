@@ -271,7 +271,7 @@ async def pypi_mirror(logger, request, s3_context):
             b'</value></param>'
             b'</params></methodCall>'
         )
-        _, _, body = await request(source_base + '/pypi',
+        _, _, body = await request(b'POST', source_base + '/pypi',
                                    body=streamed(request_body),
                                    headers=(
                                        (b'content-type', b'text/xml'),
@@ -296,7 +296,8 @@ async def pypi_mirror(logger, request, s3_context):
     # on S3, but at worst we'll be unnecessarily re-fetching updates, rather than missing them.
     # Plus, given the time to run a sync and frequency, this is unlikely anyway
     code, data = await s3_request_full(
-        logger, s3_context, b'GET', '/' + pypi_prefix + sync_changes_after_key, (), (), b'', s3_hash(b''))
+        logger, s3_context, b'GET', '/' + pypi_prefix + sync_changes_after_key, (), (),
+        empty_async_iterator, s3_hash(b''))
     if code not in [b'200', b'404']:
         raise Exception('Failed GET of __sync_changes_after {} {}'.format(code, data))
     sync_changes_after = \
@@ -342,21 +343,22 @@ async def pypi_mirror(logger, request, s3_context):
                         ' data-requires-python="' + html.escape(python_version) + '"' if has_python_version else \
                         ''
 
-                    code, _, body = await request(b'GET', absolute_no_frag)
-                    file_data = await buffered(body)
+                    s3_path = f'/{pypi_prefix}{project_name}/{filename}'
+                    link_data.append((s3_path, filename, frag, python_version_attr))
+
+                    code, headers, body = await request(b'GET', absolute_no_frag)
                     if code != b'200':
+                        await buffered(body)
                         raise Exception('Failed GET {}'.format(code))
 
-                    s3_path = f'/{pypi_prefix}{project_name}/{filename}'
+                    content_length = dict((key.lower(), value) for key, value in headers)[b'content-length']
                     headers = (
-                        (b'content-length', str(len(file_data)).encode('ascii')),
+                        (b'content-length', content_length),
                     )
                     code, _ = await s3_request_full(
-                        logger, s3_context, b'PUT', s3_path, (), headers, file_data, s3_hash(file_data))
+                        logger, s3_context, b'PUT', s3_path, (), headers, lambda: body, 'UNSIGNED-PAYLOAD')
                     if code != b'200':
                         raise Exception('Failed PUT {}'.format(code))
-
-                    link_data.append((s3_path, filename, frag, python_version_attr))
 
                 html_str = \
                     '<!DOCTYPE html>' + \
@@ -376,7 +378,7 @@ async def pypi_mirror(logger, request, s3_context):
                     (b'content-length', str(len(html_bytes)).encode('ascii')),
                 )
                 code, _ = await s3_request_full(
-                    logger, s3_context, b'PUT', s3_path, (), headers, html_bytes, s3_hash(html_bytes))
+                    logger, s3_context, b'PUT', s3_path, (), headers, streamed(html_bytes), s3_hash(html_bytes))
                 if code != b'200':
                     raise Exception('Failed PUT {}'.format(code))
 
@@ -402,7 +404,7 @@ async def pypi_mirror(logger, request, s3_context):
     )
     code, _ = await s3_request_full(
         logger, s3_context, b'PUT', '/' + pypi_prefix + sync_changes_after_key, (), headers,
-        started_bytes, s3_hash(started_bytes))
+        streamed(started_bytes), s3_hash(started_bytes))
     if code != b'200':
         raise Exception()
 
@@ -428,27 +430,34 @@ async def cran_mirror(logger, request, s3_context):
         (b'content-length', str(len(data)).encode('ascii')),
     )
     code, _ = await s3_request_full(
-        logger, s3_context, b'PUT', '/' + cran_prefix + package_index, (), headers, data, s3_hash(data))
+        logger, s3_context, b'PUT', '/' + cran_prefix + package_index, (), headers, streamed(data), s3_hash(data))
 
     async def crawl(url):
         code, headers, body = await request(b'GET', url)
-        data = await buffered(body)
         if code != b'200':
+            await buffered(body)
             raise Exception()
-        content_type = dict((key.lower(), value) for key, value in headers).get(b'content-type', None)
-
+        headers_lower = dict((key.lower(), value) for key, value in headers)
+        content_type = headers_lower.get(b'content-type', None)
+        content_length = headers_lower[b'content-length']
         key_suffix = urllib.parse.urlparse(url).path[1:]  # Without leading /
         target_key = cran_prefix + key_suffix
 
         headers = (
-            (b'content-length', str(len(data)).encode('ascii')),
+            (b'content-length', content_length),
         )
-        code, _ = await s3_request_full(
-            logger, s3_context, b'PUT', '/' + target_key, (), headers, data, s3_hash(data))
-        if code != b'200':
-            raise Exception()
-
-        if content_type == b'text/html':
+        logger.info('content-type %s', content_type)
+        if content_type != b'text/html':
+            code, _ = await s3_request_full(
+                logger, s3_context, b'PUT', '/' + target_key, (), headers, lambda: body, 'UNSIGNED-PAYLOAD')
+            if code != b'200':
+                raise Exception()
+        else:
+            data = await buffered(body)
+            code, _ = await s3_request_full(
+                logger, s3_context, b'PUT', '/' + target_key, (), headers, streamed(data), 'UNSIGNED-PAYLOAD')
+            if code != b'200':
+                raise Exception()
             soup = BeautifulSoup(data, 'html.parser')
             links = soup.find_all('a')
             for link in links:
@@ -514,16 +523,16 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
                 source_package_url = source_base_url + package_suffix
                 target_package_key = s3_prefix + package_suffix
 
-                code, _, body = await request(b'GET', source_package_url)
-                data = await buffered(body)
-
+                code, headers, body = await request(b'GET', source_package_url)
                 if code != b'200':
+                    await buffered(body)
                     raise Exception()
+                headers_lower = dict((key.lower(), value) for key, value in headers)
                 headers = (
-                    (b'content-length', str(len(data)).encode('ascii')),
+                    (b'content-length', headers_lower[b'content-length']),
                 )
                 code, _ = await s3_request_full(
-                    logger, s3_context, b'PUT', '/' + target_package_key, (), headers, data, s3_hash(data))
+                    logger, s3_context, b'PUT', '/' + target_package_key, (), headers, lambda: body, 'UNSIGNED-PAYLOAD')
                 if code != b'200':
                     raise Exception()
             except Exception:
@@ -548,7 +557,7 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
         )
         code, _ = await s3_request_full(
             logger, s3_context, b'PUT', '/' + target_repodata_key, (), headers,
-            data, s3_hash(data))
+            streamed(data), s3_hash(data))
         if code != b'200':
             raise Exception()
 
