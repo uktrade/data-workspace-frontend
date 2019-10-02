@@ -11,8 +11,9 @@ RUN \
 	python3 -m ensurepip && \
 	pip3 install pip==18.01 && \
 	pip3 install \
-		aiohttp==3.5.4 \
-		beautifulsoup4==4.7.1
+		beautifulsoup4==4.7.1 \
+		lowhaio==0.0.86 \
+		lowhaio_redirect==0.0.1
 
 COPY mirrors-sync.py /
 CMD ["python3", "mirrors-sync.py"]

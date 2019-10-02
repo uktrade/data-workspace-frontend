@@ -21,7 +21,14 @@ from time import (
 import urllib
 import xml.etree.ElementTree as ET
 
-import aiohttp
+from lowhaio import (
+    Pool,
+    buffered,
+    streamed,
+)
+from lowhaio_redirect import (
+    redirectable,
+)
 from bs4 import (
     BeautifulSoup,
 )
@@ -35,29 +42,29 @@ S3Bucket = namedtuple('AwsS3Bucket', [
 ])
 
 S3Context = namedtuple('Context', [
-    'session', 'credentials', 'bucket',
+    'request', 'credentials', 'bucket',
 ])
 
 
-async def aws_request(logger, session, service, region, host,
+async def aws_request(logger, request, service, region, host,
                       credentials, method, full_path, query, api_pre_auth_headers,
                       payload, payload_hash):
-    creds = await credentials(logger, session)
-    pre_auth_headers = {
-        **api_pre_auth_headers,
-        **creds.pre_auth_headers,
-    }
+    creds = await credentials(logger, request)
+    pre_auth_headers = api_pre_auth_headers + creds.pre_auth_headers
 
     headers = _aws_sig_v4_headers(
         creds.access_key_id, creds.secret_access_key, pre_auth_headers,
-        service, region, host, method, full_path, query, payload_hash,
+        service, region, host, method.decode('ascii'), full_path, query, payload_hash,
     )
 
-    querystring = urllib.parse.urlencode(query, safe='~', quote_via=urllib.parse.quote)
-    encoded_path = urllib.parse.quote(full_path, safe='/~')
-    url = f'https://{host}{encoded_path}' + (('?' + querystring) if querystring else '')
+    url = f'https://{host}{full_path}'
 
-    return session.request(method, url, headers=headers, data=payload)
+    return await request(method, url, headers=headers, params=query, body=payload)
+
+
+async def empty_async_iterator():
+    while False:
+        yield
 
 
 def _aws_sig_v4_headers(access_key_id, secret_access_key, pre_auth_headers,
@@ -69,28 +76,27 @@ def _aws_sig_v4_headers(access_key_id, secret_access_key, pre_auth_headers,
     datestamp = now.strftime('%Y%m%d')
     credential_scope = f'{datestamp}/{region}/{service}/aws4_request'
 
-    pre_auth_headers_lower = {
-        header_key.lower(): ' '.join(header_value.split())
-        for header_key, header_value in pre_auth_headers.items()
-    }
-    required_headers = {
-        'host': host,
-        'x-amz-content-sha256': payload_hash,
-        'x-amz-date': amzdate,
-    }
-    headers = {**pre_auth_headers_lower, **required_headers}
-    header_keys = sorted(headers.keys())
-    signed_headers = ';'.join(header_keys)
+    pre_auth_headers_lower = tuple(
+        (header_key.decode().lower(), ' '.join(header_value.decode().split()))
+        for header_key, header_value in pre_auth_headers
+    )
+    required_headers = (
+        ('host', host),
+        ('x-amz-content-sha256', payload_hash),
+        ('x-amz-date', amzdate),
+    )
+    headers = sorted(pre_auth_headers_lower + required_headers)
+    signed_headers = ';'.join(key for key, _ in headers)
 
     def signature():
         def canonical_request():
             canonical_uri = urllib.parse.quote(path, safe='/~')
             quoted_query = sorted(
                 (urllib.parse.quote(key, safe='~'), urllib.parse.quote(value, safe='~'))
-                for key, value in query.items()
+                for key, value in query
             )
             canonical_querystring = '&'.join(f'{key}={value}' for key, value in quoted_query)
-            canonical_headers = ''.join(f'{key}:{headers[key]}\n' for key in header_keys)
+            canonical_headers = ''.join(f'{key}:{value}\n' for key, value in headers)
 
             return f'{method}\n{canonical_uri}\n{canonical_querystring}\n' + \
                    f'{canonical_headers}\n{signed_headers}\n{payload_hash}'
@@ -107,13 +113,14 @@ def _aws_sig_v4_headers(access_key_id, secret_access_key, pre_auth_headers,
         request_key = sign(service_key, 'aws4_request')
         return sign(request_key, string_to_sign).hex()
 
-    return {
-        **pre_auth_headers,
-        'x-amz-date': amzdate,
-        'x-amz-content-sha256': payload_hash,
-        'Authorization': f'{algorithm} Credential={access_key_id}/{credential_scope}, '
-                         f'SignedHeaders={signed_headers}, Signature=' + signature(),
-    }
+    return (
+        (b'authorization', (
+            f'{algorithm} Credential={access_key_id}/{credential_scope}, '
+            f'SignedHeaders={signed_headers}, Signature=' + signature()).encode('utf-8')
+         ),
+        (b'x-amz-date', amzdate.encode('utf-8')),
+        (b'x-amz-content-sha256', payload_hash.encode('utf-8')),
+    ) + pre_auth_headers
 
 
 async def s3_request_full(logger, context, method, path, query, api_pre_auth_headers,
@@ -121,16 +128,16 @@ async def s3_request_full(logger, context, method, path, query, api_pre_auth_hea
 
     with logged(logger, 'Request: %s %s %s %s %s',
                 [method, context.bucket.host, path, query, api_pre_auth_headers]):
-        async with await _s3_request(logger, context, method, path, query, api_pre_auth_headers,
-                                     payload, payload_hash) as result:
-            return result, await result.read()
+        code, _, body = await _s3_request(logger, context, method, path, query, api_pre_auth_headers,
+                                          payload, payload_hash)
+        return code, await buffered(body)
 
 
 async def _s3_request(logger, context, method, path, query, api_pre_auth_headers,
                       payload, payload_hash):
     bucket = context.bucket
     return await aws_request(
-        logger, context.session, 's3', bucket.region, bucket.host,
+        logger, context.request, 's3', bucket.region, bucket.host,
         context.credentials, method, f'/{bucket.name}{path}', query, api_pre_auth_headers,
         payload, payload_hash)
 
@@ -165,7 +172,7 @@ def get_ecs_role_credentials(url):
     token = None
     expiration = datetime(1900, 1, 1)
 
-    async def get(logger, session):
+    async def get(logger, request):
         nonlocal aws_access_key_id
         nonlocal aws_secret_access_key
         nonlocal token
@@ -174,11 +181,11 @@ def get_ecs_role_credentials(url):
         now = datetime.now()
 
         if now > expiration:
-            method = 'GET'
             with logged(logger, 'Requesting temporary credentials from %s', [url]):
-                async with session.request(method, url) as response:
-                    response.raise_for_status()
-                    creds = json.loads(await response.read())
+                code, _, body = await request(b'GET', url)
+                if code != b'200':
+                    raise Exception('Unable to fetch credentials')
+                creds = json.loads(await buffered(body))
 
             aws_access_key_id = creds['AccessKeyId']
             aws_secret_access_key = creds['SecretAccessKey']
@@ -188,16 +195,18 @@ def get_ecs_role_credentials(url):
         return AwsCredentials(
             access_key_id=aws_access_key_id,
             secret_access_key=aws_secret_access_key,
-            pre_auth_headers={
-                'x-amz-security-token': token,
-            },
+            pre_auth_headers=(
+                (b'x-amz-security-token', token.encode('ascii')),
+            ),
         )
 
     return get
 
 
-async def async_main(loop, logger):
-    session = aiohttp.ClientSession(loop=loop)
+async def async_main(logger):
+    # Suspect that S3 has a very small keep-alive value
+    request_non_redirectable, close_pool = Pool(keep_alive_timeout=4)
+    request = redirectable(request_non_redirectable)
 
     credentials = get_ecs_role_credentials(
         'http://169.254.170.2' + os.environ['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'])
@@ -207,66 +216,72 @@ async def async_main(loop, logger):
         name=os.environ['MIRRORS_BUCKET_NAME'],
     )
     s3_context = S3Context(
-        session=session,
+        request=request,
         credentials=credentials,
         bucket=bucket,
     )
 
     if os.environ['MIRROR_ANACONDA_R'] == 'True':
-        await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/r/', 'r/')
+        await conda_mirror(logger, request, s3_context, 'https://conda.anaconda.org/r/', 'r/')
 
     if os.environ['MIRROR_ANACONDA_CONDA_FORGE'] == 'True':
-        await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/conda-forge/', 'conda-forge/')
+        await conda_mirror(logger, request, s3_context, 'https://conda.anaconda.org/conda-forge/', 'conda-forge/')
 
     if os.environ['MIRROR_ANACONDA_CONDA_ANACONDA'] == 'True':
-        await conda_mirror(logger, session, s3_context, 'https://conda.anaconda.org/anaconda/', 'anaconda/')
+        await conda_mirror(logger, request, s3_context, 'https://conda.anaconda.org/anaconda/', 'anaconda/')
 
     if os.environ['MIRROR_CRAN'] == 'True':
-        await cran_mirror(logger, session, s3_context)
+        await cran_mirror(logger, request, s3_context)
 
     if os.environ['MIRROR_PYPI'] == 'True':
-        await pypi_mirror(logger, session, s3_context)
+        await pypi_mirror(logger, request, s3_context)
 
-    await session.close()
+    await close_pool()
     await asyncio.sleep(0)
 
 
-async def pypi_mirror(logger, session, s3_context):
+async def pypi_mirror(logger, request, s3_context):
 
     def normalise(name):
         return re.sub(r'[-_.]+', '-', name).lower()
 
     async def list_packages():
-        async with session.post(source_base + '/pypi',
-                                data=(
-                                    b'<?xml version="1.0"?>'
-                                    b'<methodCall><methodName>list_packages</methodName></methodCall>'
-                                ),
-                                headers={'content-type': 'text/xml'}
-                                ) as response:
-            return [
-                package.text
-                for package in ET.fromstring(await response.read()).findall(
-                    './params/param/value/array/data/value/string')
-            ]
+        request_body = (
+            b'<?xml version="1.0"?>'
+            b'<methodCall><methodName>list_packages</methodName></methodCall>'
+        )
+        _, _, body = await request(b'POST', source_base + '/pypi',
+                                   body=streamed(request_body),
+                                   headers=(
+                                       (b'content-type', b'text/xml'),
+                                       (b'content-length', str(len(request_body)).encode()),
+                                   ))
+        return [
+            package.text
+            for package in ET.fromstring(await buffered(body)).findall(
+                './params/param/value/array/data/value/string')
+        ]
 
     async def changelog(sync_changes_after):
-        async with session.post(source_base + '/pypi',
-                                data=(
-                                    b'<?xml version="1.0"?>'
-                                    b'<methodCall><methodName>changelog</methodName><params>'
-                                    b'<param><value>'
-                                    b'<int>' + str(sync_changes_after).encode() + b'</int>'
-                                    b'</value></param>'
-                                    b'</params></methodCall>',
-                                ),
-                                headers={'content-type': 'text/xml'}
-                                ) as response:
-            return [
-                package.text
-                for package in ET.fromstring(await response.read()).findall(
-                    './params/param/value/array/data/value/array/data/value[1]/string')
-            ]
+        request_body = (
+            b'<?xml version="1.0"?>'
+            b'<methodCall><methodName>changelog</methodName><params>'
+            b'<param><value>'
+            b'<int>' + str(sync_changes_after).encode() + b'</int>'
+            b'</value></param>'
+            b'</params></methodCall>'
+        )
+        _, _, body = await request(source_base + '/pypi',
+                                   body=streamed(request_body),
+                                   headers=(
+                                       (b'content-type', b'text/xml'),
+                                       (b'content-length', str(len(request_body)).encode()),
+                                   ))
+        return [
+            package.text
+            for package in ET.fromstring(await buffered(body)).findall(
+                './params/param/value/array/data/value/array/data/value[1]/string')
+        ]
 
     source_base = 'https://pypi.python.org'
 
@@ -280,10 +295,12 @@ async def pypi_mirror(logger, session, s3_context):
     # Determine after when to fetch changes. There is an eventual consistency issue storing this
     # on S3, but at worst we'll be unnecessarily re-fetching updates, rather than missing them.
     # Plus, given the time to run a sync and frequency, this is unlikely anyway
-    response, data = await s3_request_full(
-        logger, s3_context, 'GET', '/' + pypi_prefix + sync_changes_after_key, {}, {}, b'', s3_hash(b''))
+    code, data = await s3_request_full(
+        logger, s3_context, b'GET', '/' + pypi_prefix + sync_changes_after_key, (), (), b'', s3_hash(b''))
+    if code not in [b'200', b'404']:
+        raise Exception('Failed GET of __sync_changes_after {} {}'.format(code, data))
     sync_changes_after = \
-        int(data) if response.status == 200 else \
+        int(data) if code == b'200' else \
         0
 
     # changelog doesn't seem to have changes older than two years, so for all projects on initial
@@ -306,9 +323,10 @@ async def pypi_mirror(logger, session, s3_context):
             logger.info('Transferring project %s %s', project_name, project_url)
 
             try:
-                async with session.get(project_url) as response:
-                    response.raise_for_status()
-                    data = await response.read()
+                code, _, body = await request(b'GET', project_url)
+                data = await buffered(body)
+                if code != b'200':
+                    raise Exception('Failed GET {}'.format(code))
 
                 soup = BeautifulSoup(data, 'html.parser')
                 links = soup.find_all('a')
@@ -324,14 +342,19 @@ async def pypi_mirror(logger, session, s3_context):
                         ' data-requires-python="' + html.escape(python_version) + '"' if has_python_version else \
                         ''
 
-                    async with session.get(absolute_no_frag) as response:
-                        response.raise_for_status()
-                        file_data = await response.read()
+                    code, _, body = await request(b'GET', absolute_no_frag)
+                    file_data = await buffered(body)
+                    if code != b'200':
+                        raise Exception('Failed GET {}'.format(code))
 
                     s3_path = f'/{pypi_prefix}{project_name}/{filename}'
-                    response, _ = await s3_request_full(
-                        logger, s3_context, 'PUT', s3_path, {}, {}, file_data, s3_hash(file_data))
-                    response.raise_for_status()
+                    headers = (
+                        (b'content-length', str(len(file_data)).encode('ascii')),
+                    )
+                    code, _ = await s3_request_full(
+                        logger, s3_context, b'PUT', s3_path, (), headers, file_data, s3_hash(file_data))
+                    if code != b'200':
+                        raise Exception('Failed PUT {}'.format(code))
 
                     link_data.append((s3_path, filename, frag, python_version_attr))
 
@@ -348,10 +371,14 @@ async def pypi_mirror(logger, session, s3_context):
                     '</html>'
                 html_bytes = html_str.encode('ascii')
                 s3_path = f'/{pypi_prefix}{project_name}/'
-                headers = {'Content-Type': 'text/html'}
-                response, _ = await s3_request_full(
-                    logger, s3_context, 'PUT', s3_path, {}, headers, html_bytes, s3_hash(html_bytes))
-                response.raise_for_status()
+                headers = (
+                    (b'content-type', b'text/html'),
+                    (b'content-length', str(len(html_bytes)).encode('ascii')),
+                )
+                code, _ = await s3_request_full(
+                    logger, s3_context, b'PUT', s3_path, (), headers, html_bytes, s3_hash(html_bytes))
+                if code != b'200':
+                    raise Exception('Failed PUT {}'.format(code))
 
             except Exception:
                 logger.exception('Exception crawling %s', project_url)
@@ -369,13 +396,18 @@ async def pypi_mirror(logger, session, s3_context):
         await asyncio.sleep(0)
 
     started_bytes = str(started).encode('ascii')
-    response, _ = await s3_request_full(
-        logger, s3_context, 'PUT', '/' + pypi_prefix + sync_changes_after_key, {}, {},
+
+    headers = (
+        (b'content-length', str(len(started_bytes)).encode('ascii')),
+    )
+    code, _ = await s3_request_full(
+        logger, s3_context, b'PUT', '/' + pypi_prefix + sync_changes_after_key, (), headers,
         started_bytes, s3_hash(started_bytes))
-    response.raise_for_status()
+    if code != b'200':
+        raise Exception()
 
 
-async def cran_mirror(logger, session, s3_context):
+async def cran_mirror(logger, request, s3_context):
     source_base = 'https://cran.ma.imperial.ac.uk/'
     source_base_url = source_base + 'web/packages/available_packages_by_name.html'
     source_base_parsed = urllib.parse.urlparse(source_base_url)
@@ -387,26 +419,36 @@ async def cran_mirror(logger, session, s3_context):
 
     # Main package file. Maybe better parsing this than crawling HTML?
     package_index = 'src/contrib/PACKAGES'
-    async with session.get(source_base + package_index) as response:
-        response.raise_for_status()
-        data = await response.read()
-    response, _ = await s3_request_full(
-        logger, s3_context, 'PUT', '/' + cran_prefix + package_index, {}, {}, data, s3_hash(data))
-    response.raise_for_status()
+    code, _, body = await request(b'GET', source_base + package_index)
+    data = await buffered(body)
+    if code != b'200':
+        raise Exception()
+
+    headers = (
+        (b'content-length', str(len(data)).encode('ascii')),
+    )
+    code, _ = await s3_request_full(
+        logger, s3_context, b'PUT', '/' + cran_prefix + package_index, (), headers, data, s3_hash(data))
 
     async def crawl(url):
-        async with session.get(url) as response:
-            response.raise_for_status()
-            content_type = response.headers.get('Content-Type', None)
-            data = await response.read()
+        code, headers, body = await request(b'GET', url)
+        data = await buffered(body)
+        if code != b'200':
+            raise Exception()
+        content_type = dict((key.lower(), value) for key, value in headers).get(b'content-type', None)
 
         key_suffix = urllib.parse.urlparse(url).path[1:]  # Without leading /
         target_key = cran_prefix + key_suffix
-        response, _ = await s3_request_full(
-            logger, s3_context, 'PUT', '/' + target_key, {}, {}, data, s3_hash(data))
-        response.raise_for_status()
 
-        if content_type == 'text/html':
+        headers = (
+            (b'content-length', str(len(data)).encode('ascii')),
+        )
+        code, _ = await s3_request_full(
+            logger, s3_context, b'PUT', '/' + target_key, (), headers, data, s3_hash(data))
+        if code != b'200':
+            raise Exception()
+
+        if content_type == b'text/html':
             soup = BeautifulSoup(data, 'html.parser')
             links = soup.find_all('a')
             for link in links:
@@ -417,14 +459,14 @@ async def cran_mirror(logger, session, s3_context):
                     absolute_no_frag not in done
                 )
                 if is_done:
-                    await queue.put(absolute_no_frag)
                     done.add(absolute_no_frag)
+                    await queue.put(absolute_no_frag)
 
     async def transfer_task():
         while True:
             url = await queue.get()
             try:
-                crawl(url)
+                await crawl(url)
             except Exception:
                 logger.exception('Exception crawling %s', url)
             finally:
@@ -441,25 +483,28 @@ async def cran_mirror(logger, session, s3_context):
         await asyncio.sleep(0)
 
 
-async def conda_mirror(logger, session, s3_context, source_base_url, s3_prefix):
+async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
     arch_dirs = ['noarch/', 'linux-64/']
     repodatas = []
     queue = asyncio.Queue()
 
     for arch_dir in arch_dirs:
-        async with session.get(source_base_url + arch_dir + 'repodata.json') as response:
-            response.raise_for_status()
-            source_repodata_raw = await response.read()
-            source_repodata = json.loads(source_repodata_raw)
+        code, _, body = await request(b'GET', source_base_url + arch_dir + 'repodata.json')
+        if code != b'200':
+            raise Exception()
 
-            for package_suffix, _ in source_repodata['packages'].items():
-                await queue.put(arch_dir + package_suffix)
+        source_repodata_raw = await buffered(body)
+        source_repodata = json.loads(source_repodata_raw)
 
-            repodatas.append((arch_dir + 'repodata.json', source_repodata_raw))
+        for package_suffix, _ in source_repodata['packages'].items():
+            await queue.put(arch_dir + package_suffix)
 
-        async with session.get(source_base_url + arch_dir + 'repodata.json.bz2') as response:
-            response.raise_for_status()
-            repodatas.append((arch_dir + 'repodata.json.bz2', await response.read()))
+        repodatas.append((arch_dir + 'repodata.json', source_repodata_raw))
+
+        code, _, body = await request(b'GET', source_base_url + arch_dir + 'repodata.json.bz2')
+        if code != b'200':
+            raise Exception()
+        repodatas.append((arch_dir + 'repodata.json.bz2', await buffered(body)))
 
     async def transfer_task():
         while True:
@@ -469,13 +514,18 @@ async def conda_mirror(logger, session, s3_context, source_base_url, s3_prefix):
                 source_package_url = source_base_url + package_suffix
                 target_package_key = s3_prefix + package_suffix
 
-                async with session.get(source_package_url) as response:
-                    response.raise_for_status()
-                    data = await response.read()
+                code, _, body = await request(b'GET', source_package_url)
+                data = await buffered(body)
 
-                response, _ = await s3_request_full(
-                    logger, s3_context, 'PUT', '/' + target_package_key, {}, {}, data, s3_hash(data))
-                response.raise_for_status()
+                if code != b'200':
+                    raise Exception()
+                headers = (
+                    (b'content-length', str(len(data)).encode('ascii')),
+                )
+                code, _ = await s3_request_full(
+                    logger, s3_context, b'PUT', '/' + target_package_key, (), headers, data, s3_hash(data))
+                if code != b'200':
+                    raise Exception()
             except Exception:
                 logger.exception('Exception transferring %s', package_suffix)
             finally:
@@ -493,10 +543,14 @@ async def conda_mirror(logger, session, s3_context, source_base_url, s3_prefix):
 
     for path, data in repodatas:
         target_repodata_key = s3_prefix + path
-        response, _ = await s3_request_full(
-            logger, s3_context, 'PUT', '/' + target_repodata_key, {}, {},
+        headers = (
+            (b'content-length', str(len(data)).encode('ascii')),
+        )
+        code, _ = await s3_request_full(
+            logger, s3_context, b'PUT', '/' + target_repodata_key, (), headers,
             data, s3_hash(data))
-        response.raise_for_status()
+        if code != b'200':
+            raise Exception()
 
 
 def main():
@@ -509,7 +563,7 @@ def main():
     handler.setLevel(logging.INFO)
     logger.addHandler(handler)
 
-    main_task = loop.create_task(async_main(loop, logger))
+    main_task = loop.create_task(async_main(logger))
     loop.add_signal_handler(signal.SIGINT, main_task.cancel)
     loop.add_signal_handler(signal.SIGTERM, main_task.cancel)
 
