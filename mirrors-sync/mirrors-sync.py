@@ -69,6 +69,14 @@ async def empty_async_iterator():
         yield
 
 
+async def blackhole(body):
+    # For some requests we just want to receive the bytes without allocating
+    # to a contiguous buffer, so the connection gets replaced back to the
+    # connection pool
+    async for _ in body:
+        pass
+
+
 def _aws_sig_v4_headers(access_key_id, secret_access_key, pre_auth_headers,
                         service, region, host, method, path, query, payload_hash):
     algorithm = 'AWS4-HMAC-SHA256'
@@ -406,7 +414,7 @@ async def pypi_mirror(logger, request, s3_context):
                 try:
                     code, headers, body = await request(b'GET', absolute_no_frag)
                     if code != b'200':
-                        await buffered(body)
+                        await blackhole(body)
                         raise Exception('Failed GET {}'.format(code))
 
                     content_length = dict((key.lower(), value) for key, value in headers)[b'content-length']
@@ -516,7 +524,7 @@ async def cran_mirror(logger, request, s3_context):
     async def crawl(url):
         code, headers, body = await request(b'GET', url)
         if code != b'200':
-            await buffered(body)
+            await blackhole(body)
             raise Exception()
         headers_lower = dict((key.lower(), value) for key, value in headers)
         content_type = headers_lower.get(b'content-type', None)
