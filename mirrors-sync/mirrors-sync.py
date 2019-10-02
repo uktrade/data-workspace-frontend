@@ -511,17 +511,27 @@ async def cran_mirror(logger, request, s3_context):
     # Main package file. Maybe better parsing this than crawling HTML?
     package_index = 'src/contrib/PACKAGES'
     code, _, body = await request(b'GET', source_base + package_index)
-    data = await buffered(body)
+    package_index_body = await buffered(body)
     if code != b'200':
         raise Exception()
 
-    headers = (
-        (b'content-length', str(len(data)).encode('ascii')),
-    )
-    code, _ = await s3_request_full(
-        logger, s3_context, b'PUT', '/' + cran_prefix + package_index, (), headers, streamed(data), s3_hash(data))
+    logger.info('Finding existing files')
+    existing_files = {
+        key async for key in s3_list_keys_relative_to_prefix(logger, s3_context, cran_prefix)
+    }
 
     async def crawl(url):
+        key_suffix = urllib.parse.urlparse(url).path[1:]  # Without leading /
+
+        if (
+                key_suffix in existing_files and
+                (key_suffix.endswith('.tar.gz') or key_suffix.endswith('.tgz')
+                 or key_suffix.endswith('.zip') or key_suffix.endswith('.pdf'))
+        ):
+            # The package files have a version in the file name. Other files like html and pdf
+            # don't, but don't think they are actually used in when installing packages from R
+            return
+
         code, headers, body = await request(b'GET', url)
         if code != b'200':
             await blackhole(body)
@@ -529,24 +539,10 @@ async def cran_mirror(logger, request, s3_context):
         headers_lower = dict((key.lower(), value) for key, value in headers)
         content_type = headers_lower.get(b'content-type', None)
         content_length = headers_lower[b'content-length']
-        key_suffix = urllib.parse.urlparse(url).path[1:]  # Without leading /
         target_key = cran_prefix + key_suffix
 
-        headers = (
-            (b'content-length', content_length),
-        )
-        logger.info('content-type %s', content_type)
-        if content_type != b'text/html':
-            code, _ = await s3_request_full(
-                logger, s3_context, b'PUT', '/' + target_key, (), headers, lambda: body, 'UNSIGNED-PAYLOAD')
-            if code != b'200':
-                raise Exception()
-        else:
+        if content_type == b'text/html':
             data = await buffered(body)
-            code, _ = await s3_request_full(
-                logger, s3_context, b'PUT', '/' + target_key, (), headers, streamed(data), 'UNSIGNED-PAYLOAD')
-            if code != b'200':
-                raise Exception()
             soup = BeautifulSoup(data, 'html.parser')
             links = soup.find_all('a')
             for link in links:
@@ -559,6 +555,19 @@ async def cran_mirror(logger, request, s3_context):
                 if is_done:
                     done.add(absolute_no_frag)
                     await queue.put(absolute_no_frag)
+            return
+
+        if key_suffix in existing_files:
+            await blackhole(body)
+            return
+
+        headers = (
+            (b'content-length', content_length),
+        )
+        code, _ = await s3_request_full(
+            logger, s3_context, b'PUT', '/' + target_key, (), headers, lambda: body, 'UNSIGNED-PAYLOAD')
+        if code != b'200':
+            raise Exception()
 
     async def transfer_task():
         while True:
@@ -585,6 +594,16 @@ async def cran_mirror(logger, request, s3_context):
         for task in tasks:
             task.cancel()
         await asyncio.sleep(0)
+
+    headers = (
+        (b'content-length', str(len(package_index_body)).encode('ascii')),
+    )
+    code, _ = await s3_request_full(
+        logger, s3_context, b'PUT', '/' + cran_prefix + package_index, (), headers,
+        streamed(package_index_body), s3_hash(package_index_body))
+
+    if code != b'200':
+        raise Exception()
 
 
 async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
