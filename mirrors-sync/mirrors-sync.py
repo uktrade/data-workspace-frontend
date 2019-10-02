@@ -584,6 +584,11 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
     repodatas = []
     queue = asyncio.Queue()
 
+    logger.info('Finding existing files')
+    existing_files = {
+        key async for key in s3_list_keys_relative_to_prefix(logger, s3_context, s3_prefix)
+    }
+
     for arch_dir in arch_dirs:
         code, _, body = await request(b'GET', source_base_url + arch_dir + 'repodata.json')
         if code != b'200':
@@ -605,6 +610,11 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
     async def transfer_package(package_suffix):
         source_package_url = source_base_url + package_suffix
         target_package_key = s3_prefix + package_suffix
+
+        exists = package_suffix in existing_files
+        if exists:
+            logger.debug('Skipping transfer of {}'.format('/' + target_package_key))
+            return
 
         code, headers, body = await request(b'GET', source_package_url)
         if code != b'200':
