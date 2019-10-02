@@ -31,7 +31,7 @@ AwsCredentials = namedtuple('AwsCredentials', [
 ])
 
 S3Bucket = namedtuple('AwsS3Bucket', [
-    'region', 'host', 'verify_certs', 'name',
+    'region', 'host', 'name',
 ])
 
 S3Context = namedtuple('Context', [
@@ -39,7 +39,7 @@ S3Context = namedtuple('Context', [
 ])
 
 
-async def aws_request(logger, session, service, region, host, verify_certs,
+async def aws_request(logger, session, service, region, host,
                       credentials, method, full_path, query, api_pre_auth_headers,
                       payload, payload_hash):
     creds = await credentials(logger, session)
@@ -57,9 +57,7 @@ async def aws_request(logger, session, service, region, host, verify_certs,
     encoded_path = urllib.parse.quote(full_path, safe='/~')
     url = f'https://{host}{encoded_path}' + (('?' + querystring) if querystring else '')
 
-    # aiohttp seems to treat both ssl=False and ssl=True as config to _not_ verify certificates
-    ssl = {} if verify_certs else {'ssl': False}
-    return session.request(method, url, headers=headers, data=payload, **ssl)
+    return session.request(method, url, headers=headers, data=payload)
 
 
 def _aws_sig_v4_headers(access_key_id, secret_access_key, pre_auth_headers,
@@ -132,7 +130,7 @@ async def _s3_request(logger, context, method, path, query, api_pre_auth_headers
                       payload, payload_hash):
     bucket = context.bucket
     return await aws_request(
-        logger, context.session, 's3', bucket.region, bucket.host, bucket.verify_certs,
+        logger, context.session, 's3', bucket.region, bucket.host,
         context.credentials, method, f'/{bucket.name}{path}', query, api_pre_auth_headers,
         payload, payload_hash)
 
@@ -206,7 +204,6 @@ async def async_main(loop, logger):
     bucket = S3Bucket(
         region=os.environ['MIRRORS_BUCKET_REGION'],
         host=os.environ['MIRRORS_BUCKET_HOST'],
-        verify_certs=True,
         name=os.environ['MIRRORS_BUCKET_NAME'],
     )
     s3_context = S3Context(
