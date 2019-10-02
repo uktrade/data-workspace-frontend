@@ -1,7 +1,7 @@
-resource "aws_ecs_task_definition" "mirrors_sync" {
+resource "aws_ecs_task_definition" "mirrors_sync_conda" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  family                = "jupyterhub-mirrors-sync"
-  container_definitions = "${data.template_file.mirrors_sync_container_definitions.rendered}"
+  family                = "jupyterhub-mirrors-sync-conda"
+  container_definitions = "${data.template_file.mirrors_sync_container_definitions_conda.rendered}"
   execution_role_arn    = "${aws_iam_role.mirrors_sync_task_execution.arn}"
   task_role_arn         = "${aws_iam_role.mirrors_sync_task.arn}"
   network_mode          = "awsvpc"
@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "mirrors_sync" {
   requires_compatibilities = ["FARGATE"]
 }
 
-data "template_file" "mirrors_sync_container_definitions" {
+data "template_file" "mirrors_sync_container_definitions_conda" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
@@ -30,7 +30,81 @@ data "template_file" "mirrors_sync_container_definitions" {
     mirror_anaconda_r = "True"
     mirror_anaconda_conda_forge = "True"
     mirror_anaconda_conda_anaconda = "True"
+    mirror_cran = "False"
+    mirror_pypi = "False"
+  }
+}
+
+resource "aws_ecs_task_definition" "mirrors_sync_cran" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  family                = "jupyterhub-mirrors-sync-cran"
+  container_definitions = "${data.template_file.mirrors_sync_container_definitions_cran.rendered}"
+  execution_role_arn    = "${aws_iam_role.mirrors_sync_task_execution.arn}"
+  task_role_arn         = "${aws_iam_role.mirrors_sync_task.arn}"
+  network_mode          = "awsvpc"
+  cpu                   = "${local.mirrors_sync_container_cpu}"
+  memory                = "${local.mirrors_sync_container_memory}"
+  requires_compatibilities = ["FARGATE"]
+}
+
+data "template_file" "mirrors_sync_container_definitions_cran" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
+
+  vars {
+    container_image    = "${var.mirrors_sync_container_image}"
+    container_name     = "${local.mirrors_sync_container_name}"
+    container_cpu      = "${local.mirrors_sync_container_cpu}"
+    container_memory   = "${local.mirrors_sync_container_memory}"
+
+    log_group  = "${aws_cloudwatch_log_group.mirrors_sync.name}"
+    log_region = "${data.aws_region.aws_region.name}"
+
+    mirrors_bucket_region = "${data.aws_region.aws_region.name}"
+    mirrors_bucket_host = "s3-${data.aws_region.aws_region.name}.amazonaws.com"
+    mirrors_bucket_name = "${var.mirrors_bucket_name}"
+
+    mirror_anaconda_r = "False"
+    mirror_anaconda_conda_forge = "False"
+    mirror_anaconda_conda_anaconda = "False"
     mirror_cran = "True"
+    mirror_pypi = "False"
+  }
+}
+
+resource "aws_ecs_task_definition" "mirrors_sync_pypi" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  family                = "jupyterhub-mirrors-sync-pypi"
+  container_definitions = "${data.template_file.mirrors_sync_container_definitions_pypi.rendered}"
+  execution_role_arn    = "${aws_iam_role.mirrors_sync_task_execution.arn}"
+  task_role_arn         = "${aws_iam_role.mirrors_sync_task.arn}"
+  network_mode          = "awsvpc"
+  cpu                   = "${local.mirrors_sync_container_cpu}"
+  memory                = "${local.mirrors_sync_container_memory}"
+  requires_compatibilities = ["FARGATE"]
+}
+
+data "template_file" "mirrors_sync_container_definitions_pypi" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
+
+  vars {
+    container_image    = "${var.mirrors_sync_container_image}"
+    container_name     = "${local.mirrors_sync_container_name}"
+    container_cpu      = "${local.mirrors_sync_container_cpu}"
+    container_memory   = "${local.mirrors_sync_container_memory}"
+
+    log_group  = "${aws_cloudwatch_log_group.mirrors_sync.name}"
+    log_region = "${data.aws_region.aws_region.name}"
+
+    mirrors_bucket_region = "${data.aws_region.aws_region.name}"
+    mirrors_bucket_host = "s3-${data.aws_region.aws_region.name}.amazonaws.com"
+    mirrors_bucket_name = "${var.mirrors_bucket_name}"
+
+    mirror_anaconda_r = "False"
+    mirror_anaconda_conda_forge = "False"
+    mirror_anaconda_conda_anaconda = "False"
+    mirror_cran = "False"
     mirror_pypi = "True"
   }
 }
