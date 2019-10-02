@@ -12,8 +12,7 @@ RUN \
 	pip3 install pip==18.01 && \
 	pip3 install \
 		aiohttp==3.5.4 \
-		beautifulsoup4==4.7.1 \
-		aioxmlrpc==0.5
+		beautifulsoup4==4.7.1
 
 COPY mirrors-sync.py /
 CMD ["python3", "mirrors-sync.py"]

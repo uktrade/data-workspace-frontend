@@ -19,9 +19,9 @@ from time import (
     time,
 )
 import urllib
+import xml.etree.ElementTree as ET
 
 import aiohttp
-import aioxmlrpc.client
 from bs4 import (
     BeautifulSoup,
 )
@@ -239,8 +239,39 @@ async def pypi_mirror(logger, session, s3_context):
     def normalise(name):
         return re.sub(r'[-_.]+', '-', name).lower()
 
+    async def list_packages():
+        async with session.post(source_base + '/pypi',
+                                data=(
+                                    b'<?xml version="1.0"?>'
+                                    b'<methodCall><methodName>list_packages</methodName></methodCall>'
+                                ),
+                                headers={'content-type': 'text/xml'}
+                                ) as response:
+            return [
+                package.text
+                for package in ET.fromstring(await response.read()).findall(
+                    './params/param/value/array/data/value/string')
+            ]
+
+    async def changelog(sync_changes_after):
+        async with session.post(source_base + '/pypi',
+                                data=(
+                                    b'<?xml version="1.0"?>'
+                                    b'<methodCall><methodName>changelog</methodName><params>'
+                                    b'<param><value>'
+                                    b'<int>' + str(sync_changes_after).encode() + b'</int>'
+                                    b'</value></param>'
+                                    b'</params></methodCall>',
+                                ),
+                                headers={'content-type': 'text/xml'}
+                                ) as response:
+            return [
+                package.text
+                for package in ET.fromstring(await response.read()).findall(
+                    './params/param/value/array/data/value/array/data/value[1]/string')
+            ]
+
     source_base = 'https://pypi.python.org'
-    xmlrpc_client = aioxmlrpc.client.ServerProxy(source_base + '/pypi')
 
     pypi_prefix = 'pypi/'
 
@@ -261,8 +292,9 @@ async def pypi_mirror(logger, session, s3_context):
     # changelog doesn't seem to have changes older than two years, so for all projects on initial
     # import, we need to call list_packages
     project_names_with_duplicates = \
-        (await xmlrpc_client.list_packages()) if sync_changes_after == 0 else \
-        [change[0] for change in await xmlrpc_client.changelog(sync_changes_after)]
+        (await list_packages()) if sync_changes_after == 0 else \
+        (await changelog(sync_changes_after))
+
     project_names = sorted(list(set(project_names_with_duplicates)))
 
     queue = asyncio.Queue()
@@ -338,8 +370,6 @@ async def pypi_mirror(logger, session, s3_context):
         for task in tasks:
             task.cancel()
         await asyncio.sleep(0)
-
-    await xmlrpc_client.close()
 
     started_bytes = str(started).encode('ascii')
     response, _ = await s3_request_full(
