@@ -22,6 +22,8 @@ import urllib
 import xml.etree.ElementTree as ET
 
 from lowhaio import (
+    HttpDataError,
+    HttpConnectionError,
     Pool,
     buffered,
     streamed,
@@ -318,34 +320,30 @@ async def pypi_mirror(logger, request, s3_context):
         normalised_project_name = normalise(project_name)
         await queue.put((normalised_project_name, source_base + f'/simple/{normalised_project_name}/'))
 
-    async def transfer_task():
-        while True:
-            project_name, project_url = await queue.get()
-            logger.info('Transferring project %s %s', project_name, project_url)
+    async def transfer_project(project_name, project_url):
+        code, _, body = await request(b'GET', project_url)
+        data = await buffered(body)
+        if code != b'200':
+            raise Exception('Failed GET {}'.format(code))
 
-            try:
-                code, _, body = await request(b'GET', project_url)
-                data = await buffered(body)
-                if code != b'200':
-                    raise Exception('Failed GET {}'.format(code))
+        soup = BeautifulSoup(data, 'html.parser')
+        links = soup.find_all('a')
+        link_data = []
 
-                soup = BeautifulSoup(data, 'html.parser')
-                links = soup.find_all('a')
-                link_data = []
+        for link in links:
+            absolute = link.get('href')
+            absolute_no_frag, frag = absolute.split('#')
+            filename = str(link.string)
+            python_version = link.get('data-requires-python')
+            has_python_version = python_version is not None
+            python_version_attr = \
+                ' data-requires-python="' + html.escape(python_version) + '"' if has_python_version else \
+                ''
 
-                for link in links:
-                    absolute = link.get('href')
-                    absolute_no_frag, frag = absolute.split('#')
-                    filename = str(link.string)
-                    python_version = link.get('data-requires-python')
-                    has_python_version = python_version is not None
-                    python_version_attr = \
-                        ' data-requires-python="' + html.escape(python_version) + '"' if has_python_version else \
-                        ''
-
-                    s3_path = f'/{pypi_prefix}{project_name}/{filename}'
-                    link_data.append((s3_path, filename, frag, python_version_attr))
-
+            s3_path = f'/{pypi_prefix}{project_name}/{filename}'
+            link_data.append((s3_path, filename, frag, python_version_attr))
+            for _ in range(0, 10):
+                try:
                     code, headers, body = await request(b'GET', absolute_no_frag)
                     if code != b'200':
                         await buffered(body)
@@ -357,31 +355,48 @@ async def pypi_mirror(logger, request, s3_context):
                     )
                     code, _ = await s3_request_full(
                         logger, s3_context, b'PUT', s3_path, (), headers, lambda: body, 'UNSIGNED-PAYLOAD')
-                    if code != b'200':
-                        raise Exception('Failed PUT {}'.format(code))
+                except (HttpConnectionError, HttpDataError):
+                    await asyncio.sleep(10)
+                else:
+                    break
+            if code != b'200':
+                raise Exception('Failed PUT {}'.format(code))
 
-                html_str = \
-                    '<!DOCTYPE html>' + \
-                    '<html>' + \
-                    '<body>' + \
-                    ''.join([
-                        f'<a href="https://{s3_context.bucket.host}/{s3_context.bucket.name}{s3_path}'
-                        f'#{frag}"{python_version_attr}>{filename}</a>'
-                        for s3_path, filename, frag, python_version_attr in link_data
-                    ]) + \
-                    '</body>' + \
-                    '</html>'
-                html_bytes = html_str.encode('ascii')
-                s3_path = f'/{pypi_prefix}{project_name}/'
-                headers = (
-                    (b'content-type', b'text/html'),
-                    (b'content-length', str(len(html_bytes)).encode('ascii')),
-                )
+        html_str = \
+            '<!DOCTYPE html>' + \
+            '<html>' + \
+            '<body>' + \
+            ''.join([
+                f'<a href="https://{s3_context.bucket.host}/{s3_context.bucket.name}{s3_path}'
+                f'#{frag}"{python_version_attr}>{filename}</a>'
+                for s3_path, filename, frag, python_version_attr in link_data
+            ]) + \
+            '</body>' + \
+            '</html>'
+        html_bytes = html_str.encode('ascii')
+        s3_path = f'/{pypi_prefix}{project_name}/'
+        headers = (
+            (b'content-type', b'text/html'),
+            (b'content-length', str(len(html_bytes)).encode('ascii')),
+        )
+        for _ in range(0, 5):
+            try:
                 code, _ = await s3_request_full(
                     logger, s3_context, b'PUT', s3_path, (), headers, streamed(html_bytes), s3_hash(html_bytes))
-                if code != b'200':
-                    raise Exception('Failed PUT {}'.format(code))
+            except (HttpConnectionError, HttpDataError):
+                await asyncio.sleep(10)
+            else:
+                break
+        if code != b'200':
+            raise Exception('Failed PUT {}'.format(code))
 
+    async def transfer_task():
+        while True:
+            project_name, project_url = await queue.get()
+            logger.info('Transferring project %s %s', project_name, project_url)
+
+            try:
+                await transfer_project(project_name, project_url)
             except Exception:
                 logger.exception('Exception crawling %s', project_url)
             finally:
@@ -402,9 +417,15 @@ async def pypi_mirror(logger, request, s3_context):
     headers = (
         (b'content-length', str(len(started_bytes)).encode('ascii')),
     )
-    code, _ = await s3_request_full(
-        logger, s3_context, b'PUT', '/' + pypi_prefix + sync_changes_after_key, (), headers,
-        streamed(started_bytes), s3_hash(started_bytes))
+    for _ in range(0, 10):
+        try:
+            code, _ = await s3_request_full(
+                logger, s3_context, b'PUT', '/' + pypi_prefix + sync_changes_after_key, (), headers,
+                streamed(started_bytes), s3_hash(started_bytes))
+        except (HttpConnectionError, HttpDataError):
+            pass
+        else:
+            break
     if code != b'200':
         raise Exception()
 
@@ -475,7 +496,13 @@ async def cran_mirror(logger, request, s3_context):
         while True:
             url = await queue.get()
             try:
-                await crawl(url)
+                for _ in range(0, 10):
+                    try:
+                        await crawl(url)
+                    except (HttpConnectionError, HttpDataError):
+                        await asyncio.sleep(10)
+                    else:
+                        break
             except Exception:
                 logger.exception('Exception crawling %s', url)
             finally:
@@ -515,26 +542,36 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
             raise Exception()
         repodatas.append((arch_dir + 'repodata.json.bz2', await buffered(body)))
 
+    async def transfer_package(package_suffix):
+        source_package_url = source_base_url + package_suffix
+        target_package_key = s3_prefix + package_suffix
+
+        code, headers, body = await request(b'GET', source_package_url)
+        if code != b'200':
+            await buffered(body)
+            raise Exception()
+        headers_lower = dict((key.lower(), value) for key, value in headers)
+        headers = (
+            (b'content-length', headers_lower[b'content-length']),
+        )
+        code, _ = await s3_request_full(
+            logger, s3_context, b'PUT', '/' + target_package_key, (), headers,
+            lambda: body, 'UNSIGNED-PAYLOAD')
+        if code != b'200':
+            raise Exception()
+
     async def transfer_task():
         while True:
             package_suffix = await queue.get()
 
             try:
-                source_package_url = source_base_url + package_suffix
-                target_package_key = s3_prefix + package_suffix
-
-                code, headers, body = await request(b'GET', source_package_url)
-                if code != b'200':
-                    await buffered(body)
-                    raise Exception()
-                headers_lower = dict((key.lower(), value) for key, value in headers)
-                headers = (
-                    (b'content-length', headers_lower[b'content-length']),
-                )
-                code, _ = await s3_request_full(
-                    logger, s3_context, b'PUT', '/' + target_package_key, (), headers, lambda: body, 'UNSIGNED-PAYLOAD')
-                if code != b'200':
-                    raise Exception()
+                for _ in range(0, 10):
+                    try:
+                        await transfer_package(package_suffix)
+                    except (HttpConnectionError, HttpDataError):
+                        await asyncio.sleep(10)
+                    else:
+                        break
             except Exception:
                 logger.exception('Exception transferring %s', package_suffix)
             finally:
