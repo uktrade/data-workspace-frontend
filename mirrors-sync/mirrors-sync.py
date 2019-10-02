@@ -608,17 +608,17 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
 
         code, headers, body = await request(b'GET', source_package_url)
         if code != b'200':
-            await buffered(body)
-            raise Exception()
+            response = await buffered(body)
+            raise Exception('Exception GET {} {} {}'.format(source_package_url, code, response))
         headers_lower = dict((key.lower(), value) for key, value in headers)
         headers = (
             (b'content-length', headers_lower[b'content-length']),
         )
-        code, _ = await s3_request_full(
+        code, body = await s3_request_full(
             logger, s3_context, b'PUT', '/' + target_package_key, (), headers,
             lambda: body, 'UNSIGNED-PAYLOAD')
         if code != b'200':
-            raise Exception()
+            raise Exception('Exception PUT {} {} {}'.format('/' + target_package_key, code, body))
 
     async def transfer_task():
         while True:
