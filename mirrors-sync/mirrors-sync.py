@@ -201,7 +201,8 @@ def get_ecs_role_credentials(url):
 async def async_main(loop, logger):
     session = aiohttp.ClientSession(loop=loop)
 
-    credentials = get_ecs_role_credentials('http://169.254.170.2' + os.environ['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'])
+    credentials = get_ecs_role_credentials(
+        'http://169.254.170.2' + os.environ['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'])
     bucket = S3Bucket(
         region=os.environ['MIRRORS_BUCKET_REGION'],
         host=os.environ['MIRRORS_BUCKET_HOST'],
@@ -280,8 +281,9 @@ async def pypi_mirror(logger, session, s3_context):
                     absolute_no_frag, frag = absolute.split('#')
                     filename = str(link.string)
                     python_version = link.get('data-requires-python')
+                    has_python_version = python_version is not None
                     python_version_attr = \
-                        ' data-requires-python="' + html.escape(python_version) + '"' if python_version is not None else \
+                        ' data-requires-python="' + html.escape(python_version) + '"' if has_python_version else \
                         ''
 
                     async with session.get(absolute_no_frag) as response:
@@ -300,7 +302,8 @@ async def pypi_mirror(logger, session, s3_context):
                     '<html>' + \
                     '<body>' + \
                     ''.join([
-                        f'<a href="https://{s3_context.bucket.host}/{s3_context.bucket.name}{s3_path}#{frag}"{python_version_attr}>{filename}</a>'
+                        f'<a href="https://{s3_context.bucket.host}/{s3_context.bucket.name}{s3_path}'
+                        f'#{frag}"{python_version_attr}>{filename}</a>'
                         for s3_path, filename, frag, python_version_attr in link_data
                     ]) + \
                     '</body>' + \
@@ -373,7 +376,11 @@ async def cran_mirror(logger, session, s3_context):
             for link in links:
                 absolute = urllib.parse.urljoin(url, link.get('href'))
                 absolute_no_frag = absolute.split('#')[0]
-                if urllib.parse.urlparse(absolute_no_frag).netloc == source_base_parsed.netloc and absolute_no_frag not in done:
+                is_done = (
+                    urllib.parse.urlparse(absolute_no_frag).netloc == source_base_parsed.netloc and
+                    absolute_no_frag not in done
+                )
+                if is_done:
                     await queue.put(absolute_no_frag)
                     done.add(absolute_no_frag)
 
