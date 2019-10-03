@@ -25,6 +25,26 @@
     {
         "name": "MIRRORS_BUCKET_NAME",
         "value": "${mirrors_bucket_name}"
+    },
+    {
+        "name": "MIRROR_ANACONDA_R",
+        "value": "${mirror_anaconda_r}"
+    },
+    {
+        "name": "MIRROR_ANACONDA_CONDA_FORGE",
+        "value": "${mirror_anaconda_conda_forge}"
+    },
+    {
+        "name": "MIRROR_ANACONDA_CONDA_ANACONDA",
+        "value": "${mirror_anaconda_conda_anaconda}"
+    },
+    {
+        "name": "MIRROR_CRAN",
+        "value": "${mirror_cran}"
+    },
+    {
+        "name": "MIRROR_PYPI",
+        "value": "${mirror_pypi}"
     }]
   }
 ]
