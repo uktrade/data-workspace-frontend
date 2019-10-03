@@ -214,4 +214,134 @@ data "aws_iam_policy_document" "mirrors_sync_task" {
       "${aws_s3_bucket.mirrors.arn}/*",
     ]
   }
+  statement {
+    actions = [
+        "s3:ListBucket",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.mirrors.arn}",
+    ]
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "daily_at_four_am" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  name                = "daily-four-am"
+  description         = "daily-four-am"
+  schedule_expression = "cron(0 4 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "mirrors_sync_pypi_scheduled_task" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  target_id = "${var.prefix}-mirror-pypi"
+  arn       = "${aws_ecs_cluster.main_cluster.arn}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.name}"
+  role_arn  = "${aws_iam_role.mirrors_sync_events.arn}"
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_pypi.arn}"
+    launch_type = "FARGATE"
+    network_configuration {
+      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
+      subnets =["${aws_subnet.public.*.id}"]
+      security_groups = ["${aws_security_group.mirrors_sync.id}"]
+      assign_public_ip = true
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_target" "mirrors_sync_conda_scheduled_task" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  target_id = "${var.prefix}-mirror-conda"
+  arn       = "${aws_ecs_cluster.main_cluster.arn}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.name}"
+  role_arn  = "${aws_iam_role.mirrors_sync_events.arn}"
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_conda.arn}"
+    launch_type = "FARGATE"
+    network_configuration {
+      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
+      subnets =["${aws_subnet.public.*.id}"]
+      security_groups = ["${aws_security_group.mirrors_sync.id}"]
+      assign_public_ip = true
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_target" "mirrors_sync_cran_scheduled_task" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  target_id = "${var.prefix}-mirror-cran"
+  arn       = "${aws_ecs_cluster.main_cluster.arn}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.name}"
+  role_arn  = "${aws_iam_role.mirrors_sync_events.arn}"
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran.arn}"
+    launch_type = "FARGATE"
+    network_configuration {
+      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
+      subnets =["${aws_subnet.public.*.id}"]
+      security_groups = ["${aws_security_group.mirrors_sync.id}"]
+      assign_public_ip = true
+    }
+  }
+}
+
+resource "aws_iam_role" "mirrors_sync_events" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  name = "${var.prefix_underscore}_mirrors_sync_events"
+  assume_role_policy = "${data.aws_iam_policy_document.mirrors_sync_events_assume_role_policy.json}"
+}
+
+data "aws_iam_policy_document" "mirrors_sync_events_assume_role_policy" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "mirrors_sync_events_run_mirror" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  name = "${var.prefix_underscore}_mirrors_sync_events_run_mirror"
+  role = "${aws_iam_role.mirrors_sync_events.id}"
+  policy = "${data.aws_iam_policy_document.mirrors_sync_events_run_tasks.json}"
+}
+
+data "aws_iam_policy_document" "mirrors_sync_events_run_tasks" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  statement {
+    actions = [
+      "ecs:RunTask",
+    ]
+
+    resources = [
+      "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_cran.family}:*",
+      "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_conda.family}:*",
+      "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_pypi.family}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "iam:PassRole"
+    ]
+    resources = [
+      "${aws_iam_role.mirrors_sync_task.arn}",
+      "${aws_iam_role.mirrors_sync_task_execution.arn}",
+    ]
+    condition {
+      test = "StringLike"
+      variable = "iam:PassedToService"
+      values = ["ecs-tasks.amazonaws.com"]
+    }
+  }
 }
