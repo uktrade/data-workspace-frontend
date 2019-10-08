@@ -557,7 +557,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             field = self.sort_field
             order = field.column_name
             if field.data_type == field.DATA_TYPE_FOREIGN_KEY and field.linked_reference_dataset is not None:
-                order = '{}__{}'.format(field.column_name, field.reference_dataset.display_name_field.column_name)
+                order = '{}__{}'.format(
+                    field.column_name,
+                    field.linked_reference_dataset.display_name_field.column_name
+                )
         return [''.join([prefix, order])]
 
     def get_record_model_class(self) -> object:
