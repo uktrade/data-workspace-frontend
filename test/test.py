@@ -622,6 +622,77 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(rows[1][4], 'test@test.com')
         self.assertEqual(rows[2][0], 'Number of rows: 1')
 
+    @async_test
+    async def test_google_data_studio_download(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code', 'some-other-code'])
+        tokens = iter(['token-1', 'token-2'])
+        auth_to_me = {
+            # No token-1
+            'Bearer token-2': {
+                'email': 'test@test.com',
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            },
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(6)
+
+        # Check that with no token there is no access
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema') as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertIn('Forbidden</h1>', content)
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema', headers={
+                'Authorization': 'Bearer something',
+        }) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertIn('Forbidden</h1>', content)
+
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows') as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertIn('Forbidden</h1>', content)
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows', headers={
+                'Authorization': 'Bearer something',
+        }) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertIn('Forbidden</h1>', content)
+
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema', headers={
+                'Authorization': 'Bearer token-2',
+        }) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(content)['schema'][0]['name'], 'city')
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows', headers={
+                'Authorization': 'Bearer token-2',
+        }) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(content)['schema'][0]['name'], 'city')
+        self.assertEqual(json.loads(content)['rows'][0]['values'][0], 'London')
+
 
 def client_session():
     session = aiohttp.ClientSession()

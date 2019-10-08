@@ -79,3 +79,5 @@ ssl.crt
 
 #VI
 *.swp
+
+node_modules

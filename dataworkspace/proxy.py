@@ -103,6 +103,9 @@ async def async_main():
     def is_requesting_files(request):
         return request.url.host == root_domain_no_port and request.url.path == '/files'
 
+    def is_table_requested(request):
+        return request.url.path.startswith('/api/v1/table/') and request.url.host == root_domain_no_port and request.method == 'GET'
+
     def get_peer_ip(request):
         peer_ip = request.headers['x-forwarded-for'].split(',')[-x_forwarded_for_trusted_hops].strip()
 
@@ -335,6 +338,42 @@ async def async_main():
 
         return downstream_response
 
+    def authenticate_by_staff_sso_token():
+
+        me_path = 'api/v1/user/me/'
+
+        @web.middleware
+        async def _authenticate_by_staff_sso_token(request, handler):
+            staff_sso_token_required = is_table_requested(request)
+            request.setdefault('sso_profile_headers', ())
+
+            if not staff_sso_token_required:
+                return await handler(request)
+
+            if 'Authorization' not in request.headers:
+                return await handle_admin(request, 'GET', '/error_403', {})
+
+            async with client_session.get(f'{sso_base_url}{me_path}', headers={
+                    'Authorization': request.headers['Authorization']
+            }) as me_response:
+                me_profile = \
+                    await me_response.json() if me_response.status == 200 else \
+                    None
+
+            if not me_profile:
+                return await handle_admin(request, 'GET', '/error_403', {})
+
+            request['sso_profile_headers'] = (
+                ('sso-profile-email', me_profile['email']),
+                ('sso-profile-user-id', me_profile['user_id']),
+                ('sso-profile-first-name', me_profile['first_name']),
+                ('sso-profile-last-name', me_profile['last_name']),
+            )
+
+            return await handler(request)
+
+        return _authenticate_by_staff_sso_token
+
     def authenticate_by_staff_sso():
 
         auth_path = 'o/authorize/'
@@ -395,11 +434,12 @@ async def async_main():
                 request.url.path == '/healthcheck' and request.method == 'GET' and not is_app_requested(request)
             sso_auth_required = (
                 not is_healthcheck and
-                not is_service_discovery(request)
+                not is_service_discovery(request) and
+                not is_table_requested(request)
             )
 
             if not sso_auth_required:
-                request['sso_profile_headers'] = ()
+                request.setdefault('sso_profile_headers', ())
                 return await handler(request)
 
             get_session_value, set_session_value, with_new_session_cookie, _ = request[
@@ -526,6 +566,7 @@ async def async_main():
     async with aiohttp.ClientSession(auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()) as client_session:
         app = web.Application(middlewares=[
             redis_session_middleware(redis_pool, root_domain_no_port),
+            authenticate_by_staff_sso_token(),
             authenticate_by_staff_sso(),
             authenticate_by_basic_auth(),
             authenticate_by_ip_whitelist(),

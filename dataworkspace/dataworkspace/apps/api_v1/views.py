@@ -159,3 +159,57 @@ def aws_credentials_api_GET(request):
         'SessionToken': credentials['SessionToken'],
         'Expiration': credentials['Expiration']
     }, status=200)
+
+
+DUMMY_SCHEMA = [
+    {
+        'name': 'city',
+        'label': 'City',
+        'dataType': 'STRING',
+        'semantics': {
+            'conceptType': 'DIMENSION',
+        },
+    },
+    {
+        'name': 'population',
+        'label': 'Population',
+        'dataType': 'NUMBER',
+        'semantics': {
+            'conceptType': 'METRIC',
+            'isReaggregatable': True,
+        },
+    },
+]
+DUMMY_ROWS = [
+    {
+        'values': ['London', 99],
+    },
+    {
+        'values': ['Paris', 101],
+    },
+]
+
+
+def table_api_schema_view(request, table_id):
+    return \
+        table_api_schema_GET(request, table_id) if request.method == 'GET' else \
+        JsonResponse({}, status=405)
+
+
+def table_api_schema_GET(request, _):
+    return JsonResponse({
+        'schema': DUMMY_SCHEMA
+    }, status=200)
+
+
+def table_api_rows_view(request, table_id):
+    return \
+        table_api_rows_GET(request, table_id) if request.method == 'GET' else \
+        JsonResponse({}, status=405)
+
+
+def table_api_rows_GET(request, _):
+    return JsonResponse({
+        'schema': DUMMY_SCHEMA,
+        'rows': DUMMY_ROWS,
+    }, status=200)
