@@ -573,28 +573,28 @@ class TestSourceViewDownloadView(BaseTestCase):
         dataset = factories.DataSetFactory(
             user_access_type='REQUIRES_AUTHORIZATION'
         )
-        source_table = factories.SourceViewFactory(
+        source_view = factories.SourceViewFactory(
             dataset=dataset,
         )
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
-            source_table.get_absolute_url()
+            source_view.get_absolute_url()
         )
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
 
-    def test_missing_table(self):
+    def test_missing_view(self):
         dataset = factories.DataSetFactory(
             user_access_type='REQUIRES_AUTHENTICATION'
         )
-        source_table = factories.SourceViewFactory(
+        source_view = factories.SourceViewFactory(
             dataset=dataset,
             database=factories.DatabaseFactory(
                 memorable_name='my_database',
             )
         )
         response = self._authenticated_get(
-            source_table.get_absolute_url()
+            source_view.get_absolute_url()
         )
         self.assertEqual(response.status_code, 404)
 
@@ -614,7 +614,7 @@ class TestSourceViewDownloadView(BaseTestCase):
         dataset = factories.DataSetFactory(
             user_access_type='REQUIRES_AUTHENTICATION'
         )
-        source_table = factories.SourceViewFactory(
+        source_view = factories.SourceViewFactory(
             dataset=dataset,
             database=factories.DatabaseFactory(
                 memorable_name='my_database',
@@ -623,7 +623,7 @@ class TestSourceViewDownloadView(BaseTestCase):
             view='download_test_view',
         )
         log_count = EventLog.objects.count()
-        response = self._authenticated_get(source_table.get_absolute_url())
+        response = self._authenticated_get(source_view.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             b''.join(response.streaming_content),
