@@ -663,6 +663,13 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 403)
         self.assertIn('Forbidden</h1>', content)
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema', headers={
+                'Authorization': 'Bearer token-2',
+        }) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertEqual('{}', content)
 
         async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows') as response:
             status = response.status
@@ -676,6 +683,18 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 403)
         self.assertIn('Forbidden</h1>', content)
+        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows', headers={
+                'Authorization': 'Bearer token-2',
+        }) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertEqual('{}', content)
+
+        stdout, stderr, code = await give_user_superuser_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
 
         async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema', headers={
                 'Authorization': 'Bearer token-2',
@@ -782,6 +801,28 @@ async def flush_database():
 async def flush_redis():
     redis_client = await aioredis.create_redis('redis://data-workspace-redis:6379')
     await redis_client.execute('FLUSHDB')
+
+
+async def give_user_superuser_perms():
+    python_code = textwrap.dedent("""\
+        from django.contrib.auth.models import (
+            User,
+        )
+        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user.is_superuser = True
+        user.save()
+        """).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
 
 
 async def give_user_app_perms():

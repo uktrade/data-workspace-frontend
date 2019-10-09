@@ -192,6 +192,7 @@ DUMMY_ROWS = [
 
 def table_api_schema_view(request, table_id):
     return \
+        JsonResponse({}, status=403) if not request.user.is_superuser else \
         table_api_schema_GET(request, table_id) if request.method == 'GET' else \
         JsonResponse({}, status=405)
 
@@ -204,6 +205,7 @@ def table_api_schema_GET(request, _):
 
 def table_api_rows_view(request, table_id):
     return \
+        JsonResponse({}, status=403) if not request.user.is_superuser else \
         table_api_rows_GET(request, table_id) if request.method == 'GET' else \
         JsonResponse({}, status=405)
 
