@@ -135,7 +135,7 @@ class DataSetUserPermission(models.Model):
         unique_together = ('user', 'dataset')
 
 
-class SourceTable(TimeStampedModel):
+class BaseSource(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -161,6 +161,15 @@ class SourceTable(TimeStampedModel):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public'
     )
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class SourceTable(BaseSource):
     table = models.CharField(
         max_length=1024,
         blank=False,
@@ -173,6 +182,20 @@ class SourceTable(TimeStampedModel):
     def get_absolute_url(self):
         return reverse(
             'catalogue:dataset_source_table_download',
+            args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
+        )
+
+
+class SourceView(BaseSource):
+    view = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+    )
+
+    def get_absolute_url(self):
+        return reverse(
+            'catalogue:dataset_source_view_download',
             args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
         )
 

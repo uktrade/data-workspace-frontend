@@ -24,8 +24,10 @@ from psycopg2 import sql
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.core.utils import table_exists, table_data, view_exists, streaming_query_response
-from dataworkspace.apps.datasets.models import DataGrouping, ReferenceDataset, SourceLink, \
-    SourceTable, ReferenceDatasetField, CustomDatasetQuery
+from dataworkspace.apps.datasets.models import (
+    DataGrouping, ReferenceDataset, SourceLink,
+    SourceTable, ReferenceDatasetField, CustomDatasetQuery, SourceView,
+)
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -212,39 +214,85 @@ class SourceLinkDownloadView(DetailView):
         return response
 
 
-class SourceTableDownloadView(DetailView):
-    model = SourceTable
+class SourceDownloadMixin:
+    pk_url_kwarg = 'source_id'
+    event_log_type = None
 
-    def get(self, request, *args, **kwargs):
-        dataset = find_dataset(
-            self.kwargs.get('group_slug'),
-            self.kwargs.get('set_slug')
+    @staticmethod
+    def db_object_exists(db_object):
+        raise NotImplementedError()
+
+    def get_table_data(self, db_object):
+        raise NotImplementedError()
+
+    def get(self, request, *_, **__):
+        db_object = get_object_or_404(
+            self.model,
+            id=self.kwargs.get('source_id'),
+            dataset=find_dataset(
+                self.kwargs.get('group_slug'),
+                self.kwargs.get('set_slug')
+            )
         )
 
-        if not dataset.user_has_access(self.request.user):
+        if not db_object.dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
 
-        table = get_object_or_404(
-            SourceTable,
-            id=self.kwargs.get('source_table_id'),
-            dataset=dataset
-        )
-
-        if not (table_exists(table.database.memorable_name, table.schema, table.table) or
-                view_exists(table.database.memorable_name, table.schema, table.table)):
+        if not self.db_object_exists(db_object):
             return HttpResponseNotFound()
 
         log_event(
             request.user,
-            EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD,
-            table.dataset,
+            self.event_log_type,
+            db_object.dataset,
             extra={
                 'path': request.get_full_path(),
-                **model_to_dict(table)
+                **model_to_dict(db_object)
             }
         )
+        return self.get_table_data(db_object)
 
-        return table_data(request.user.email, table.database.memorable_name, table.schema, table.table)
+
+class SourceTableDownloadView(SourceDownloadMixin, DetailView):
+    model = SourceTable
+    event_log_type = EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD
+
+    @staticmethod
+    def db_object_exists(db_object):
+        return table_exists(
+            db_object.database.memorable_name,
+            db_object.schema,
+            db_object.table
+        )
+
+    def get_table_data(self, db_object):
+        return table_data(
+            self.request.user.email,
+            db_object.database.memorable_name,
+            db_object.schema,
+            db_object.table
+        )
+
+
+class SourceViewDownloadView(SourceDownloadMixin, DetailView):
+    model = SourceView
+    event_log_type = EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD
+
+    @staticmethod
+    def db_object_exists(db_object):
+        return view_exists(
+            db_object.database.memorable_name,
+            db_object.schema,
+            db_object.view
+        )
+
+    def get_table_data(self, db_object):
+        return table_data(
+            self.request.user.email,
+            db_object.database.memorable_name,
+            db_object.schema,
+            db_object.view
+        )
 
 
 class CustomDatasetQueryDownloadView(DetailView):
