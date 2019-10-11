@@ -4,6 +4,13 @@
 
 function getConfig() {
   return {
+    configParams: [{
+      type: 'TEXTINPUT',
+      name: 'tableId',
+      displayName: 'Table ID',
+      placeholder: 'the-table-id',
+      helpText: 'The ID of the Data Workspace table',
+    }],
     dateRangeRequired: false,
   };
 }
@@ -19,12 +26,23 @@ function dataWorkspaceRequest(path) {
   return JSON.parse(response_text);
 }
 
-function getSchema() {
-  return dataWorkspaceRequest('api/v1/table/some-id/schema');
+function validateRequest(request) {
+   if (!request.configParams || !request.configParams.tableId) {
+      DataStudioApp.createCommunityConnector()
+        .newUserError()
+        .setText('Please enter the Table ID')
+        .throwException();
+  }
+}
+
+function getSchema(request) {
+  validateRequest(request);
+  return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/schema');
 }
 
 function getData(request) {
-  return dataWorkspaceRequest('api/v1/table/some-id/rows');
+  validateRequest(request);
+  return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/rows');
 }
 
 
