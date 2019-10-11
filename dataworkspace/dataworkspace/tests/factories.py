@@ -69,6 +69,15 @@ class SourceTableFactory(factory.django.DjangoModelFactory):
         model = 'datasets.SourceTable'
 
 
+class SourceViewFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    dataset = factory.SubFactory(DataSetFactory)
+    database = factory.SubFactory(DatabaseFactory)
+
+    class Meta:
+        model = 'datasets.SourceView'
+
+
 class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     dataset = factory.SubFactory(DataSetFactory)
