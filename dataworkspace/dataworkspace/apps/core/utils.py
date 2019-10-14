@@ -8,7 +8,10 @@ import string
 import csv
 import gevent
 import gevent.queue
-from psycopg2 import sql, connect
+from psycopg2 import (
+    connect,
+    sql,
+)
 
 import boto3
 
@@ -200,6 +203,25 @@ def can_access_schema_table(user, database, schema, table):
     has_source_table_perms = DataSet.objects.filter(
         Q(published=True) &
         Q(sourcetable__in=sourcetable) & (
+            Q(user_access_type='REQUIRES_AUTHENTICATION') |
+            Q(datasetuserpermission__user=user)
+        ),
+    ).exists()
+
+    return has_source_table_perms
+
+
+def can_access_table_by_google_data_studio(user, table_id):
+    try:
+        sourcetable = SourceTable.objects.get(
+            id=table_id,
+            accessible_by_google_data_studio=True,
+        )
+    except SourceTable.DoesNotExist:
+        return False
+    has_source_table_perms = DataSet.objects.filter(
+        Q(published=True) &
+        Q(sourcetable=sourcetable) & (
             Q(user_access_type='REQUIRES_AUTHENTICATION') |
             Q(datasetuserpermission__user=user)
         ),

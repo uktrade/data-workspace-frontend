@@ -1,8 +1,13 @@
 import json
+import logging
+import re
 
 import boto3
 
+from django.conf import settings
 from django.http import JsonResponse
+
+from psycopg2 import connect, sql
 
 from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
 from dataworkspace.apps.applications.spawner import spawn
@@ -14,9 +19,74 @@ from dataworkspace.apps.applications.utils import (
     set_application_stopped,
 )
 from dataworkspace.apps.core.utils import (
+    can_access_table_by_google_data_studio,
+    database_dsn,
+)
+from dataworkspace.apps.datasets.models import (
+    SourceTable,
+)
+from dataworkspace.apps.core.utils import (
     create_s3_role,
     new_private_database_credentials,
 )
+
+
+SCHEMA_STRING = {
+    'dataType': 'STRING',
+    'semantics': {
+        'conceptType': 'DIMENSION',
+    },
+}
+
+SCHEMA_STRING_DATE = {
+    'dataType': 'STRING',
+    'semantics': {
+        'conceptType': 'DIMENSION',
+        'semanticType': 'YEAR_MONTH_DAY',
+    },
+}
+
+SCHEMA_STRING_DATE_TIME = {
+    'dataType': 'STRING',
+    'semantics': {
+        'conceptType': 'DIMENSION',
+        'semanticType': 'YEAR_MONTH_DAY_SECOND',
+    },
+}
+
+SCHEMA_BOOLEAN = {
+    'dataType': 'BOOLEAN',
+    'semantics': {
+        'conceptType': 'DIMENSION',
+    },
+}
+
+SCHEMA_NUMBER = {
+    'dataType': 'NUMBER',
+    'semantics': {
+        'conceptType': 'METRIC',
+    },
+}
+
+SCHEMA_DATA_TYPE_PATTERNS = (
+    (
+        r'^(character varying.*)|(text)|(text\[\])$',
+        SCHEMA_STRING, lambda v: v),
+    (
+        r'^date$',
+        SCHEMA_STRING_DATE, lambda v: v.strftime('%Y%m%d') if v is not None else None),
+    (
+        r'^timestamp.*$',
+        SCHEMA_STRING_DATE_TIME, lambda v: v.strftime('%Y%m%d%H%M%S') if v is not None else None),
+    (
+        r'^boolean$',
+        SCHEMA_BOOLEAN, lambda v: v),
+    (
+        r'^(bigint)|(decimal)|(integer)|(numeric)|(real)$',
+        SCHEMA_NUMBER, lambda v: v),
+)
+
+logger = logging.getLogger('app')
 
 
 def applications_api_view(request):
@@ -161,57 +231,130 @@ def aws_credentials_api_GET(request):
     }, status=200)
 
 
-DUMMY_SCHEMA = [
-    {
-        'name': 'city',
-        'label': 'City',
-        'dataType': 'STRING',
-        'semantics': {
-            'conceptType': 'DIMENSION',
-        },
-    },
-    {
-        'name': 'population',
-        'label': 'Population',
-        'dataType': 'NUMBER',
-        'semantics': {
-            'conceptType': 'METRIC',
-            'isReaggregatable': True,
-        },
-    },
-]
-DUMMY_ROWS = [
-    {
-        'values': ['London', 99],
-    },
-    {
-        'values': ['Paris', 101],
-    },
-]
+def get_postgres_column_names_data_types(sourcetable):
+    with \
+            connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
+            conn.cursor() as cur:
+        cur.execute('''
+            SELECT
+                pg_attribute.attname AS column_name,
+                pg_catalog.format_type(pg_attribute.atttypid, pg_attribute.atttypmod) AS data_type
+            FROM
+                pg_catalog.pg_attribute
+            INNER JOIN
+                pg_catalog.pg_class ON pg_class.oid = pg_attribute.attrelid
+            INNER JOIN
+                pg_catalog.pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+            WHERE
+                pg_attribute.attnum > 0
+                AND NOT pg_attribute.attisdropped
+                AND pg_namespace.nspname = %s
+                AND pg_class.relname = %s
+            ORDER BY
+                attnum ASC;
+        ''', (sourcetable.schema, sourcetable.table))
+        return cur.fetchall()
+
+
+def schema_value_func_for_data_type(data_type):
+    return next(
+        (schema, value_func)
+        for data_type_pattern, schema, value_func in SCHEMA_DATA_TYPE_PATTERNS
+        if re.match(data_type_pattern, data_type)
+    )
+
+
+def schema_value_func_for_data_types(sourcetable):
+    return [
+        (
+            {
+                'name': column_name,
+                'label': column_name.replace('_', ' ').capitalize(),
+                **schema,
+            },
+            value_func,
+        )
+        for column_name, data_type in get_postgres_column_names_data_types(sourcetable)
+        for schema, value_func in [schema_value_func_for_data_type(data_type)]
+    ]
+
+
+def get_schema(schema_value_funcs):
+    return [
+        schema
+        for schema, _ in schema_value_funcs
+    ]
+
+
+def get_rows(sourcetable, schema_value_funcs):
+    # This will explode for a table with lots of rows, but KISS for now
+    with \
+            connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
+            conn.cursor() as cur:
+
+        cur.execute(sql.SQL('''
+            SELECT {} FROM {}.{}
+        ''').format(
+            sql.SQL(',').join([sql.Identifier(schema['name']) for schema, _ in schema_value_funcs]),
+            sql.Identifier(sourcetable.schema),
+            sql.Identifier(sourcetable.table)))
+        rows = cur.fetchall()
+
+    return [
+        {
+            'values': [
+                schema_value_funcs[i][1](value)
+                for i, value in enumerate(row)
+            ]
+        }
+        for row in rows
+    ]
 
 
 def table_api_schema_view(request, table_id):
     return \
         JsonResponse({}, status=403) if not request.user.is_superuser else \
-        table_api_schema_GET(request, table_id) if request.method == 'GET' else \
+        JsonResponse({}, status=403) if not can_access_table_by_google_data_studio(request.user, table_id) else \
+        table_api_schema_POST(request, table_id) if request.method == 'POST' else \
         JsonResponse({}, status=405)
 
 
-def table_api_schema_GET(request, _):
+def table_api_schema_POST(request, table_id):
+    # POST request to support HTTP bodies from Google Data Studio: it doesn't
+    # seem to be able to send GETs with bodies
+    sourcetable = SourceTable.objects.get(
+        id=table_id,
+    )
+    schema_value_funcs = schema_value_func_for_data_types(sourcetable)
     return JsonResponse({
-        'schema': DUMMY_SCHEMA
+        'schema': get_schema(schema_value_funcs)
     }, status=200)
 
 
 def table_api_rows_view(request, table_id):
     return \
         JsonResponse({}, status=403) if not request.user.is_superuser else \
-        table_api_rows_GET(request, table_id) if request.method == 'GET' else \
+        JsonResponse({}, status=403) if not can_access_table_by_google_data_studio(request.user, table_id) else \
+        table_api_rows_POST(request, table_id) if request.method == 'POST' else \
         JsonResponse({}, status=405)
 
 
-def table_api_rows_GET(request, _):
+def table_api_rows_POST(request, table_id):
+    # POST request to support HTTP bodies from Google Data Studio: it doesn't
+    # seem to be able to send GETs with bodies
+    sourcetable = SourceTable.objects.get(
+        id=table_id,
+    )
+    column_names = [
+        field['name']
+        for field in json.loads(request.body)['fields']
+    ]
+    schema_value_funcs = [
+        (schema, value_func)
+        for schema, value_func in schema_value_func_for_data_types(sourcetable)
+        if schema['name'] in column_names
+    ]
     return JsonResponse({
-        'schema': DUMMY_SCHEMA,
-        'rows': DUMMY_ROWS,
+        'schema': get_schema(schema_value_funcs),
+        'rows': get_rows(sourcetable, schema_value_funcs),
     }, status=200)

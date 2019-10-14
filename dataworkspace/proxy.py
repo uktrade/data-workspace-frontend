@@ -104,7 +104,7 @@ async def async_main():
         return request.url.host == root_domain_no_port and request.url.path == '/files'
 
     def is_table_requested(request):
-        return request.url.path.startswith('/api/v1/table/') and request.url.host == root_domain_no_port and request.method == 'GET'
+        return request.url.path.startswith('/api/v1/table/') and request.url.host == root_domain_no_port and request.method == 'POST'
 
     def get_peer_ip(request):
         peer_ip = request.headers['x-forwarded-for'].split(',')[-x_forwarded_for_trusted_hops].strip()

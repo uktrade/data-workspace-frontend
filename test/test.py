@@ -651,19 +651,25 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(6)
 
         # Check that with no token there is no access
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema') as response:
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        stdout, stderr, code = await create_private_dataset()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/schema') as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
         self.assertIn('Forbidden</h1>', content)
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema', headers={
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/schema', headers={
                 'Authorization': 'Bearer something',
         }) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
         self.assertIn('Forbidden</h1>', content)
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema', headers={
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/schema', headers={
                 'Authorization': 'Bearer token-2',
         }) as response:
             status = response.status
@@ -671,19 +677,19 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertEqual('{}', content)
 
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows') as response:
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows') as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
         self.assertIn('Forbidden</h1>', content)
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows', headers={
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows', headers={
                 'Authorization': 'Bearer something',
         }) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
         self.assertIn('Forbidden</h1>', content)
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows', headers={
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows', headers={
                 'Authorization': 'Bearer token-2',
         }) as response:
             status = response.status
@@ -696,21 +702,72 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/schema', headers={
+        # Ensure that superuser perms aren't enough...
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows', headers={
                 'Authorization': 'Bearer token-2',
         }) as response:
             status = response.status
             content = await response.text()
-        self.assertEqual(status, 200)
-        self.assertEqual(json.loads(content)['schema'][0]['name'], 'city')
-        async with session.request('GET', 'http://localapps.com:8000/api/v1/table/some-table/rows', headers={
+        self.assertEqual(status, 403)
+        self.assertEqual('{}', content)
+
+        stdout, stderr, code = await give_user_dataset_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Ensure that superuser perms aren't enough...
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows', headers={
                 'Authorization': 'Bearer token-2',
         }) as response:
             status = response.status
             content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertEqual('{}', content)
+
+        # And that the table must be marked as GDS accessible
+        stdout, stderr, code = await make_table_google_data_studio_accessible()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/schema', headers={
+                'Authorization': 'Bearer token-2',
+        }, data=b'{"fields":[{"name":"id"}]}') as response:
+            status = response.status
+            content = await response.text()
         self.assertEqual(status, 200)
-        self.assertEqual(json.loads(content)['schema'][0]['name'], 'city')
-        self.assertEqual(json.loads(content)['rows'][0]['values'][0], 'London')
+        self.assertEqual(json.loads(content)['schema'][0]['name'], 'id')
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows', headers={
+                'Authorization': 'Bearer token-2',
+        }, data=(
+            b'{"fields":[{"name":"id"},{"name":"password"},{"name":"last_login"},'
+            b'{"name":"is_superuser"},{"name":"username"}]}'
+        )) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+        content_json = json.loads(content)
+        self.assertEqual(len(content_json['schema']), len(content_json['rows'][0]['values']))
+        self.assertEqual(content_json['schema'][0]['name'], 'id')
+        self.assertEqual(content_json['schema'][1]['name'], 'password')
+        self.assertEqual(content_json['schema'][2]['name'], 'last_login')
+        self.assertEqual(content_json['schema'][3]['name'], 'is_superuser')
+        self.assertEqual(content_json['schema'][4]['name'], 'username')
+        self.assertEqual(content_json['rows'][0]['values'][2], None)
+        self.assertEqual(content_json['rows'][0]['values'][3], True)
+        self.assertEqual(content_json['rows'][0]['values'][4], 'test@test.com')
+
+        # Check that even with a valid token, if a table doesn't exist, get a 403
+        table_id_not_exists = '5f8117b4-e05d-442f-8622-8abab7141fd8'
+        async with session.request(
+                'POST', f'http://localapps.com:8000/api/v1/table/{table_id_not_exists}/rows', headers={
+                    'Authorization': 'Bearer token-2',
+                }) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 403)
+        self.assertEqual(content, '{}')
 
 
 def client_session():
@@ -882,6 +939,7 @@ async def create_private_dataset():
             published=True
         )
         SourceTable.objects.create(
+            id="5a2ee5dd-f025-4939-b0a1-bb85ab7504d7",
             dataset=dataset,
             database=Database.objects.get(memorable_name="my_database"),
             schema="public",
@@ -921,6 +979,30 @@ async def give_user_dataset_perms():
         )
         """).encode('ascii')
 
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def make_table_google_data_studio_accessible():
+    python_code = textwrap.dedent("""\
+        from dataworkspace.apps.datasets.models import (
+            SourceTable,
+        )
+        dataset = SourceTable.objects.get(
+            id="5a2ee5dd-f025-4939-b0a1-bb85ab7504d7",
+        )
+        dataset.accessible_by_google_data_studio = True
+        dataset.save()
+        """).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
         'django-admin shell',
         env=os.environ,
