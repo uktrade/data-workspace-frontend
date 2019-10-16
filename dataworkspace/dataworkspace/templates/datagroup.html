@@ -51,7 +51,30 @@
                     </h2>
                   {% endif %}
             {% endfor %}
-            {% if datasets and perms.datasets_dataset_add %}
+
+	    {% if joint_datasets or not datasets %}
+	      <h2 class="govuk-heading-l goveuk-!-margin-top-8">Joint datasets</h2>
+	    {% endif %}
+	    {% for set in joint_datasets %}
+                  <h2 class="govuk-heading-m">
+                      <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
+                        {{ set.name }}
+                      </a>
+                      {% if perms.datasets_referencedataset_change %}
+                          &nbsp;<a class="govuk-link" href="{% url 'admin:datasets_referencedataset_change' set.id %}">[Edit]</a>
+                      {% endif %}
+                  </h2>
+                  <p class="govuk-body">{{ set.short_description }}</p>
+              {% empty %}
+                {% if not datasets %}
+                  <h2 class="govuk-heading-s">
+                      No joint datasets available
+                  </h2>
+                {% endif %}
+	      
+	    {% endfor %}
+
+	    {% if datasets and perms.datasets_dataset_add %}
                 <p>
                     <a class="govuk-link"
                        href="{% url 'admin:datasets_dataset_add' %}">[New]</a>

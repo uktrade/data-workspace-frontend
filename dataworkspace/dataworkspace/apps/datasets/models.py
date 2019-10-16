@@ -303,6 +303,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         (SORT_DIR_ASC, 'Ascending'),
         (SORT_DIR_DESC, 'Descending'),
     )
+    is_joint_dataset = models.BooleanField(blank=True, null=True, default=False)
     group = models.ForeignKey(
         DataGrouping,
         on_delete=models.CASCADE

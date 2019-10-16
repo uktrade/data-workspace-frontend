@@ -58,7 +58,11 @@ def datagroup_item_view(request, slug):
         'datasets': item.dataset_set.filter(published=True).order_by('name'),
         'reference_datasets': item.referencedataset_set.live().filter(
             published=True
-        ).order_by('name'),
+        ).exclude(is_joint_dataset=True).order_by('name'),
+        'joint_datasets': item.referencedataset_set.live().filter(
+            is_joint_dataset=True,
+            published=True
+        ).order_by('name')
     }
 
     return render(request, 'datagroup.html', context)

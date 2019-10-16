@@ -174,6 +174,7 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
         (None, {
             'fields': [
                 'published',
+                'is_joint_dataset',
                 'name',
                 'table_name',
                 'slug',
