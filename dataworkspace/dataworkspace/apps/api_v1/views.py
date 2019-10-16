@@ -287,10 +287,15 @@ def get_schema(schema_value_funcs):
 
 
 def get_rows(sourcetable, schema_value_funcs):
+    cursor_itersize = 1000
+
     # This will explode for a table with lots of rows, but KISS for now
     with \
             connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
-            conn.cursor() as cur:
+            conn.cursor(name='google_data_studio_all_table_data') as cur:  # Named cursor => server-side cursor
+
+        cur.itersize = cursor_itersize
+        cur.arraysize = cursor_itersize
 
         cur.execute(sql.SQL('''
             SELECT {} FROM {}.{}
@@ -298,17 +303,24 @@ def get_rows(sourcetable, schema_value_funcs):
             sql.SQL(',').join([sql.Identifier(schema['name']) for schema, _ in schema_value_funcs]),
             sql.Identifier(sourcetable.schema),
             sql.Identifier(sourcetable.table)))
-        rows = cur.fetchall()
 
-    return [
-        {
-            'values': [
-                schema_value_funcs[i][1](value)
-                for i, value in enumerate(row)
-            ]
-        }
-        for row in rows
-    ]
+        def rows_iter():
+            while True:
+                rows = cur.fetchmany(cursor_itersize)
+                for row in rows:
+                    yield row
+                if not rows:
+                    break
+
+        return [
+            {
+                'values': [
+                    schema_value_funcs[i][1](value)
+                    for i, value in enumerate(row)
+                ]
+            }
+            for row in rows_iter()
+        ]
 
 
 def table_api_schema_view(request, table_id):
