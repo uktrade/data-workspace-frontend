@@ -28,6 +28,7 @@ repos:
         - --disable=broad-except
         - --disable=consider-using-ternary
         - --disable=duplicate-code
+        - --disable=http-response-with-content-type-json
         - --disable=invalid-name
         - --disable=missing-docstring
         - --disable=no-self-use

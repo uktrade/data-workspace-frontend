@@ -5,7 +5,10 @@ import re
 import boto3
 
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import (
+    JsonResponse,
+    StreamingHttpResponse,
+)
 
 from psycopg2 import connect, sql
 
@@ -289,7 +292,6 @@ def get_schema(schema_value_funcs):
 def get_rows(sourcetable, schema_value_funcs):
     cursor_itersize = 1000
 
-    # This will explode for a table with lots of rows, but KISS for now
     with \
             connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
             conn.cursor(name='google_data_studio_all_table_data') as cur:  # Named cursor => server-side cursor
@@ -304,23 +306,17 @@ def get_rows(sourcetable, schema_value_funcs):
             sql.Identifier(sourcetable.schema),
             sql.Identifier(sourcetable.table)))
 
-        def rows_iter():
-            while True:
-                rows = cur.fetchmany(cursor_itersize)
-                for row in rows:
-                    yield row
-                if not rows:
-                    break
-
-        return [
-            {
-                'values': [
-                    schema_value_funcs[i][1](value)
-                    for i, value in enumerate(row)
-                ]
-            }
-            for row in rows_iter()
-        ]
+        while True:
+            rows = cur.fetchmany(cursor_itersize)
+            for row in rows:
+                yield json.dumps({
+                    'values': [
+                        schema_value_funcs[i][1](value)
+                        for i, value in enumerate(row)
+                    ]
+                }).encode('utf-8')
+            if not rows:
+                break
 
 
 def table_api_schema_view(request, table_id):
@@ -366,7 +362,26 @@ def table_api_rows_POST(request, table_id):
         for schema, value_func in schema_value_func_for_data_types(sourcetable)
         if schema['name'] in column_names
     ]
-    return JsonResponse({
-        'schema': get_schema(schema_value_funcs),
-        'rows': get_rows(sourcetable, schema_value_funcs),
-    }, status=200)
+
+    def yield_schema_and_rows_bytes():
+        try:
+            # Could be more optimised, e.g. combining yields to reduce socket
+            # operations, but KISS
+            yield b'{"schema":' + json.dumps(get_schema(schema_value_funcs)).encode('utf-8') + b',"rows":['
+
+            later_row = False
+            for row in get_rows(sourcetable, schema_value_funcs):
+                if later_row:
+                    yield b',' + row
+                else:
+                    yield row
+
+                later_row = True
+
+            yield b']}'
+        except Exception:
+            logger.exception('Error streaming to Google Data Studio')
+            raise
+
+    return StreamingHttpResponse(
+        yield_schema_and_rows_bytes(), content_type='application/json', status=200)
