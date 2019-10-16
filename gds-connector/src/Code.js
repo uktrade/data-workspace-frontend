@@ -15,12 +15,15 @@ function getConfig() {
   };
 }
 
-function dataWorkspaceRequest(path) {
+function dataWorkspaceRequest(path, data) {
   var scriptProperties = PropertiesService.getScriptProperties();
   var response = UrlFetchApp.fetch(scriptProperties.getProperty('DATA_WORKSPACE_URL') + path, {
+    method: 'post',
+    contentType: 'application/json',
     headers: {
       Authorization: 'Bearer ' + getDataWorkspaceOAuth2Service().getAccessToken(),
     },
+    payload: JSON.stringify(data),
   })
   var response_text = response.getContentText();
   return JSON.parse(response_text);
@@ -37,12 +40,12 @@ function validateRequest(request) {
 
 function getSchema(request) {
   validateRequest(request);
-  return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/schema');
+  return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/schema', request);
 }
 
 function getData(request) {
   validateRequest(request);
-  return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/rows');
+  return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/rows', request);
 }
 
 

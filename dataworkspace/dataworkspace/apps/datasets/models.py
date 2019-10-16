@@ -175,6 +175,10 @@ class SourceTable(BaseSource):
         blank=False,
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
+    accessible_by_google_data_studio = models.BooleanField(
+        default=False,
+        help_text='Only Superusers can access the data',
+    )
 
     class Meta:
         db_table = 'app_sourcetable'
