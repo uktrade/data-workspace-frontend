@@ -92,11 +92,11 @@
             {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
             <div class="govuk-summary-list__row">
               <dt class="govuk-summary-list__key">{{ field.name }}: ID</dt>
-              <dd class="govuk-summary-list__value">{{ field.description }} (Identifier field)</dd>
+              <dd class="govuk-summary-list__value">{{ field.description }}</dd>
             </div>
             <div class="govuk-summary-list__row">
               <dt class="govuk-summary-list__key">{{ field.name }}: Name</dt>
-              <dd class="govuk-summary-list__value">{{ field.description }} (Display name field)</dd>
+              <dd class="govuk-summary-list__value">{{ field.description }}</dd>
             </div>
             {% else %}
               <div class="govuk-summary-list__row">

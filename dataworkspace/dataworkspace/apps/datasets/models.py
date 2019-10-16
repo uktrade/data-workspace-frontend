@@ -135,7 +135,7 @@ class DataSetUserPermission(models.Model):
         unique_together = ('user', 'dataset')
 
 
-class SourceTable(TimeStampedModel):
+class BaseSource(TimeStampedModel):
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -161,10 +161,23 @@ class SourceTable(TimeStampedModel):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public'
     )
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class SourceTable(BaseSource):
     table = models.CharField(
         max_length=1024,
         blank=False,
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+    )
+    accessible_by_google_data_studio = models.BooleanField(
+        default=False,
+        help_text='Only Superusers can access the data',
     )
 
     class Meta:
@@ -173,6 +186,20 @@ class SourceTable(TimeStampedModel):
     def get_absolute_url(self):
         return reverse(
             'catalogue:dataset_source_table_download',
+            args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
+        )
+
+
+class SourceView(BaseSource):
+    view = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+    )
+
+    def get_absolute_url(self):
+        return reverse(
+            'catalogue:dataset_source_view_download',
             args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
         )
 
@@ -558,7 +585,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             field = self.sort_field
             order = field.column_name
             if field.data_type == field.DATA_TYPE_FOREIGN_KEY and field.linked_reference_dataset is not None:
-                order = '{}__{}'.format(field.column_name, field.reference_dataset.display_name_field.column_name)
+                order = '{}__{}'.format(
+                    field.column_name,
+                    field.linked_reference_dataset.display_name_field.column_name
+                )
         return [''.join([prefix, order])]
 
     def get_record_model_class(self) -> object:
