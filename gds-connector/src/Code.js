@@ -1,8 +1,18 @@
 ///////////////////////
+// Errors appear in logs if this function not present
+///////////////////////
+
+function isAdminUser() {
+  return false;
+}
+
+
+///////////////////////
 // Fetching data
 ///////////////////////
 
 function getConfig() {
+  console.info('getConfig');
   return {
     configParams: [{
       type: 'TEXTINPUT',
@@ -16,21 +26,35 @@ function getConfig() {
 }
 
 function dataWorkspaceRequest(path, data) {
-  var scriptProperties = PropertiesService.getScriptProperties();
-  var response = UrlFetchApp.fetch(scriptProperties.getProperty('DATA_WORKSPACE_URL') + path, {
-    method: 'post',
-    contentType: 'application/json',
-    headers: {
-      Authorization: 'Bearer ' + getDataWorkspaceOAuth2Service().getAccessToken(),
-    },
-    payload: JSON.stringify(data),
-  })
-  var response_text = response.getContentText();
-  return JSON.parse(response_text);
+  console.info('dataWorkspaceRequest', path, data);
+  try {
+    var scriptProperties = PropertiesService.getScriptProperties();
+    var response = UrlFetchApp.fetch(scriptProperties.getProperty('DATA_WORKSPACE_URL') + path, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        Authorization: 'Bearer ' + getDataWorkspaceOAuth2Service().getAccessToken(),
+      },
+      payload: JSON.stringify(data),
+    });
+    console.info('dataWorkspaceRequest: response.getResponseCode()', response.getResponseCode());
+    console.info('dataWorkspaceRequest: response.getHeaders()', response.getHeaders());
+    var response_text = response.getContentText();
+    console.info('dataWorkspaceRequest: response.getContentText().length', response_text.length);
+    return JSON.parse(response_text);
+  } catch (e) {
+    console.error('dataWorkspaceRequest: exception', e);
+    DataStudioApp.createCommunityConnector()
+      .newUserError()
+      .setText('Error fetching from ' + data + '. Exception details: ' + e)
+      .throwException();    
+  }
 }
 
 function validateRequest(request) {
+   console.info('validateRequest', request);
    if (!request.configParams || !request.configParams.tableId) {
+      console.error('validateRequest: invalid', request);
       DataStudioApp.createCommunityConnector()
         .newUserError()
         .setText('Please enter the Table ID')
@@ -39,11 +63,13 @@ function validateRequest(request) {
 }
 
 function getSchema(request) {
+  console.info('getSchema', request);
   validateRequest(request);
   return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/schema', request);
 }
 
 function getData(request) {
+  console.info('getData', request);
   validateRequest(request);
   return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/rows', request);
 }
@@ -54,6 +80,7 @@ function getData(request) {
 ///////////////////////
 
 function getAuthType() {
+  console.info('getAuthType');
   return {
     type: "OAUTH2",
   };
@@ -73,27 +100,59 @@ function getDataWorkspaceOAuth2Service() {
 }
 
 function authCallback(request) {
-  var dataWorkspaceOauth2Service = getDataWorkspaceOAuth2Service();
-  var isAuthorized = dataWorkspaceOauth2Service.handleCallback(request);
-  if (isAuthorized) {
-    return HtmlService.createHtmlOutput('Authorization complete. You should close this window.');
-  } else {
-    return HtmlService.createHtmlOutput('Denied. You should close this window');
+  console.info('authCallback', request);
+  try {
+    var dataWorkspaceOauth2Service = getDataWorkspaceOAuth2Service();
+    var isAuthorized = dataWorkspaceOauth2Service.handleCallback(request);
+    console.info('authCallback: isAuthorized', isAuthorized);
+    if (isAuthorized) {
+      return HtmlService.createHtmlOutput('Authorization complete. You should close this window.');
+    } else {
+      return HtmlService.createHtmlOutput('Denied. You should close this window');
+    }
+  } catch (e) {
+    console.error('authCallback: exception', e);
+    throw (e);
   }
 }
 
 function resetAuth() {
-  getDataWorkspaceOAuth2Service().reset();
+  console.info('resetAuth');
+  try {
+    getDataWorkspaceOAuth2Service().reset();
+  } catch (e) {
+    console.error('resetAuth: exception', e);
+    throw (e);
+  }
+  console.info('resetAuth: end');
 }
 
 function isAuthValid() {
-  return getDataWorkspaceOAuth2Service().hasAccess();
+  try {
+    return getDataWorkspaceOAuth2Service().hasAccess();
+  } catch (e) {
+    console.error('isAuthValid: exception', e);
+    throw (e);
+  }
 }
 
 function get3PAuthorizationUrls() {
-  return getDataWorkspaceOAuth2Service().getAuthorizationUrl();
+  console.info('get3PAuthorizationUrls');
+  try {
+    return getDataWorkspaceOAuth2Service().getAuthorizationUrl();
+  } catch (e) {
+    console.error('get3PAuthorizationUrls: exception', e);
+    throw (e);
+  }
 }
 
 function logout() {
-  getDataWorkspaceOAuth2Service().reset();
+  console.info('logout');
+  try {
+    getDataWorkspaceOAuth2Service().reset();
+  } catch (e) {
+    console.error('logout: exception', e);
+    throw (e);
+  }
+  console.info('logout: end');
 }
