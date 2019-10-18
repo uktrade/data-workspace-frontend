@@ -758,6 +758,33 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(content_json['rows'][0]['values'][3], True)
         self.assertEqual(content_json['rows'][0]['values'][4], 'test@test.com')
 
+        # Test pagination
+        stdout, stderr, code = await create_many_users()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows', headers={
+                'Authorization': 'Bearer token-2',
+        }, data=(
+            b'{"fields":[{"name":"username"}],"pagination":{"startRow":5.0,"rowCount":10.0}}'
+        )) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+        content_json_1 = json.loads(content)
+        self.assertEqual(len(content_json_1['rows']), 10)
+        async with session.request('POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows', headers={
+                'Authorization': 'Bearer token-2',
+        }, data=(
+            b'{"fields":[{"name":"username"}],"pagination":{"startRow":3.0,"rowCount":5.0}}'
+        )) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+        content_json_2 = json.loads(content)
+        self.assertEqual(len(content_json_2['rows']), 5)
+        self.assertEqual(content_json_1['rows'][0:2], content_json_2['rows'][2:4])
+
         # Check that even with a valid token, if a table doesn't exist, get a 403
         table_id_not_exists = '5f8117b4-e05d-442f-8622-8abab7141fd8'
         async with session.request(
@@ -902,6 +929,27 @@ async def give_user_app_perms():
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
+        """).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def create_many_users():
+    python_code = textwrap.dedent("""\
+        from django.contrib.auth.models import (
+            User,
+        )
+        for i in range(0, 200):
+            User.objects.create(username='user_' + str(i))
         """).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
         'django-admin shell',
