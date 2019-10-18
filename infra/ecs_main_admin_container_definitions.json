@@ -514,6 +514,9 @@
       "name": "GOOGLE_ANALYTICS_SITE_ID",
       "value": "${google_analytics_site_id}"
     }, {
+      "name": "GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN",
+      "value": "${google_data_studio_connector_pattern}"
+    }, {
       "name": "X_FORWARDED_FOR_TRUSTED_HOPS",
       "value": "2"      
     }],

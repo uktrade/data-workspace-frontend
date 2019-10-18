@@ -88,6 +88,7 @@ variable metrics_container_image {}
 variable s3sync_container_image {}
 
 variable google_analytics_site_id {}
+variable google_data_studio_connector_pattern {}
 
 locals {
   registry_container_name    = "jupyterhub-registry"
