@@ -105,7 +105,7 @@
                     </h2>
                 {% endif %}
 	    {% endfor %}
-	    {% if reference_datasets and perms.datasets_referencedataset_add %}
+	    {% if joint_datasets and perms.datasets_referencedataset_add %}
                 <p>
                     <a class="govuk-link"
                        href="{% url 'admin:datasets_referencedataset_add' %}">[New]</a>
