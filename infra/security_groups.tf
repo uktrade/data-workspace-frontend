@@ -201,6 +201,18 @@ resource "aws_security_group_rule" "admin_alb_ingress_https_from_whitelist" {
   protocol   = "tcp"
 }
 
+resource "aws_security_group_rule" "admin_alb_ingress_http_from_whitelist" {
+  description = "ingress-http-from-whitelist"
+
+  security_group_id = "${aws_security_group.admin_alb.id}"
+  cidr_blocks       = ["${var.ip_whitelist}"]
+
+  type       = "ingress"
+  from_port  = "80"
+  to_port    = "80"
+  protocol   = "tcp"
+}
+
 resource "aws_security_group_rule" "admin_alb_ingress_icmp_host_unreachable_for_mtu_discovery_from_whitelist" {
   description = "ingress-icmp-host-unreachable-for-mtu-discovery-from-whitelist"
 
