@@ -51,38 +51,61 @@
                     </h2>
                   {% endif %}
             {% endfor %}
-            {% if datasets and perms.datasets_dataset_add %}
+	    {% if datasets and perms.datasets_dataset_add %}
                 <p>
                     <a class="govuk-link"
                        href="{% url 'admin:datasets_dataset_add' %}">[New]</a>
                 </p>
             {% endif %}
+
             {% if reference_datasets or not datasets %}
-              <h2 class="govuk-heading-l govuk-!-margin-top-8">Available reference datasets</h2>
+		<h2 class="govuk-heading-l govuk-!-margin-top-8">Reference datasets</h2>
             {% endif %}
-              {% for set in reference_datasets %}
-                  <h2 class="govuk-heading-m">
-                      <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
+            {% for set in reference_datasets %}
+                <h2 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
                         {{ set.name }}
-                      </a>
-                      {% if perms.datasets_referencedataset_change %}
-                          &nbsp;<a class="govuk-link" href="{% url 'admin:datasets_referencedataset_change' set.id %}">[Edit]</a>
-                      {% endif %}
-                  </h2>
-                  <p class="govuk-body">{{ set.short_description }}</p>
-              {% empty %}
+                    </a>
+                    {% if perms.datasets_referencedataset_change %}
+                        &nbsp;<a class="govuk-link" href="{% url 'admin:datasets_referencedataset_change' set.id %}">[Edit]</a>
+                    {% endif %}
+                </h2>
+                <p class="govuk-body">{{ set.short_description }}</p>
+		{% empty %}
                 {% if not datasets %}
-                  <h2 class="govuk-heading-s">
-                      No reference datasets available
-                  </h2>
+                    <h2 class="govuk-heading-s">
+                        No reference datasets available
+                    </h2>
                 {% endif %}
-              {% endfor %}
-              {% if reference_datasets and perms.datasets_referencedataset_add %}
-                  <p>
-                      <a class="govuk-link"
-                         href="{% url 'admin:datasets_referencedataset_add' %}">[New]</a>
-                  </p>
-              {% endif %}
+	    {% endfor %}
+	    {% if reference_datasets and perms.datasets_referencedataset_add %}
+                <p>
+                    <a class="govuk-link"
+                       href="{% url 'admin:datasets_referencedataset_add' %}">[New]</a>
+                </p>
+	    {% endif %}
+
+	    {% if joint_datasets or not datasets %}
+	        <h2 class="govuk-heading-l govuk-!-margin-top-8">Joint reference datasets</h2>
+	    {% endif %}
+	    {% for set in joint_datasets %}
+                <h2 class="govuk-heading-m">
+                    <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
+                        {{ set.name }}
+                    </a>
+                    {% if perms.datasets_referencedataset_change %}
+                        &nbsp;<a class="govuk-link" href="{% url 'admin:datasets_referencedataset_change' set.id %}">[Edit]</a>
+                    {% endif %}
+                </h2>
+                <p class="govuk-body">{{ set.short_description }}</p>
+		{% empty %}
+	    {% endfor %}
+	    {% if joint_datasets and perms.datasets_referencedataset_add %}
+                <p>
+                    <a class="govuk-link"
+                       href="{% url 'admin:datasets_referencedataset_add' %}">[New]</a>
+                </p>
+	    {% endif %}
 
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
 
