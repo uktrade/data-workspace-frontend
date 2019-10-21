@@ -189,6 +189,9 @@ class SourceTable(BaseSource):
             args=(self.dataset.grouping.slug, self.dataset.slug, self.id)
         )
 
+    def get_google_data_studio_link(self):
+        return settings.GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN.replace('<table-id>', str(self.id))
+
 
 class SourceView(BaseSource):
     view = models.CharField(

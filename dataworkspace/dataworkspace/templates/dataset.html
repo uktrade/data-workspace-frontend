@@ -70,6 +70,9 @@
                     <th class="govuk-table__header">Format</th>
                     <th class="govuk-table__header">File added</th>
                     <th class="govuk-table__header">Frequency</th>
+                    {% if user.is_superuser and data_links %}
+                        <th class="govuk-table__header">Tools*</th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -98,6 +101,14 @@
                             {{ link.frequency }}
                           {% endif %}
                         </td>
+
+                        {% if user.is_superuser %}
+                            <td class="govuk-table__cell">
+                                {% if link.get_google_data_studio_link and link.accessible_by_google_data_studio %}
+                                    <a href="{{ link.get_google_data_studio_link }}">Google Data Studio</a>
+                                {% endif %}
+                            </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
 
@@ -111,6 +122,10 @@
 
                 </tbody>
             </table>
+
+            {% if user.is_superuser and data_links %}
+                <p class="govuk-body">*Only visible to superusers.</p>
+            {% endif %}
         </div>
     </div>
 
