@@ -133,6 +133,14 @@ def new_private_database_credentials(user):
             ''')
 
             for schema, table in tables:
+                # Skip granting permissions if the table does not exist in the db
+                cur.execute(sql.SQL('SELECT to_regclass(%s)'), [table])
+                if cur.fetchone()[0] != table:
+                    logger.info(
+                        'Not granting permissions to %s %s.%s for %s as table does not exist',
+                        database_obj.memorable_name, schema, table, db_user
+                    )
+                    continue
                 logger.info(
                     'Granting permissions to %s %s.%s to %s',
                     database_obj.memorable_name, schema, table, db_user)
