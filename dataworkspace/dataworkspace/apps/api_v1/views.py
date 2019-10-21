@@ -295,8 +295,43 @@ def get_schema(schema_value_funcs):
     ]
 
 
-def get_rows(sourcetable, schema_value_funcs):
+def get_rows(sourcetable, schema_value_funcs, pagination):
     cursor_itersize = 1000
+
+    # Order the rows by primary key so
+    # - multiple requests are consistent with each other;
+    # - and specifically and more importantly, sopaginated results are
+    #   consistent with each other
+    # We make no assumption on the name or number of columns in the primary
+    # key, other than it exists
+    # We _could_ use `oid` to order rows if there is no primary key, but we
+    # would like all tables to have a primary key, so we deliberately don't
+    # implement this
+    with \
+            connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
+            conn.cursor() as cur:
+
+        cur.execute('''
+            SELECT
+                pg_attribute.attname AS column_name
+            FROM
+                pg_catalog.pg_class pg_class_table
+            INNER JOIN
+                pg_catalog.pg_index ON pg_index.indrelid = pg_class_table.oid
+            INNER JOIN
+                pg_catalog.pg_class pg_class_index ON pg_class_index.oid = pg_index.indexrelid
+            INNER JOIN
+                pg_catalog.pg_namespace ON pg_namespace.oid = pg_class_table.relnamespace
+            INNER JOIN
+                pg_catalog.pg_attribute ON pg_attribute.attrelid = pg_class_index.oid
+            WHERE
+                pg_namespace.nspname = %s
+                AND pg_class_table.relname = %s
+                AND pg_index.indisprimary
+            ORDER BY
+                pg_attribute.attnum
+        ''', (sourcetable.schema, sourcetable.table))
+        primary_key_column_names = [row[0] for row in cur.fetchall()]
 
     with \
             connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
@@ -305,12 +340,28 @@ def get_rows(sourcetable, schema_value_funcs):
         cur.itersize = cursor_itersize
         cur.arraysize = cursor_itersize
 
-        cur.execute(sql.SQL('''
-            SELECT {} FROM {}.{}
-        ''').format(
-            sql.SQL(',').join([sql.Identifier(schema['name']) for schema, _ in schema_value_funcs]),
-            sql.Identifier(sourcetable.schema),
-            sql.Identifier(sourcetable.table)))
+        fields_sql = sql.SQL(',').join([sql.Identifier(schema['name']) for schema, _ in schema_value_funcs])
+        primary_key_sql = sql.SQL(',').join([sql.Identifier(column_name) for column_name in primary_key_column_names])
+        schema_sql = sql.Identifier(sourcetable.schema)
+        table_sql = sql.Identifier(sourcetable.table)
+
+        def query_var_non_paginated():
+            return sql.SQL('''
+                SELECT {} FROM {}.{} ORDER BY {}
+            ''').format(fields_sql, schema_sql, table_sql, primary_key_sql), ()
+
+        def query_vars_paginated():
+            limit = int(pagination['rowCount'])
+            offset = int(pagination['startRow']) - 1  # Google Data Studio start is 1-indexed
+            return sql.SQL('''
+                SELECT {} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
+            ''').format(fields_sql, schema_sql, table_sql, primary_key_sql), (limit, offset)
+
+        query_sql, vars_sql = \
+            query_var_non_paginated() if pagination is None else \
+            query_vars_paginated()
+
+        cur.execute(query_sql, vars_sql)
 
         while True:
             rows = cur.fetchmany(cursor_itersize)
@@ -359,10 +410,12 @@ def table_api_rows_POST(request, table_id):
     sourcetable = SourceTable.objects.get(
         id=table_id,
     )
+    request_dict = json.loads(request.body)
     column_names = [
         field['name']
-        for field in json.loads(request.body)['fields']
+        for field in request_dict['fields']
     ]
+    pagination = request_dict.get('pagination', None)
     schema_value_funcs = [
         (schema, value_func)
         for schema, value_func in schema_value_func_for_data_types(sourcetable)
@@ -376,7 +429,7 @@ def table_api_rows_POST(request, table_id):
             yield b'{"schema":' + json.dumps(get_schema(schema_value_funcs)).encode('utf-8') + b',"rows":['
 
             later_row = False
-            for row in get_rows(sourcetable, schema_value_funcs):
+            for row in get_rows(sourcetable, schema_value_funcs, pagination):
                 if later_row:
                     yield b',' + row
                 else:
