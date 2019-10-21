@@ -131,6 +131,7 @@ data "template_file" "admin_container_definitions" {
     metrics_service_discovery_basic_auth_password = "${var.metrics_service_discovery_basic_auth_password}"
   
     google_analytics_site_id = "${var.google_analytics_site_id}"
+    google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
   }
 }
 
