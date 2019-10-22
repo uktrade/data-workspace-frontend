@@ -70,9 +70,6 @@
                     <th class="govuk-table__header">Format</th>
                     <th class="govuk-table__header">File added</th>
                     <th class="govuk-table__header">Frequency</th>
-                    {% if user.is_superuser and data_links %}
-                        <th class="govuk-table__header">Tools*</th>
-                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -101,14 +98,6 @@
                             {{ link.frequency }}
                           {% endif %}
                         </td>
-
-                        {% if user.is_superuser %}
-                            <td class="govuk-table__cell">
-                                {% if link.get_google_data_studio_link and link.accessible_by_google_data_studio %}
-                                    <a href="{{ link.get_google_data_studio_link }}">Google Data Studio</a>
-                                {% endif %}
-                            </td>
-                        {% endif %}
                     </tr>
                 {% endfor %}
 
@@ -122,13 +111,51 @@
 
                 </tbody>
             </table>
-
-            {% if user.is_superuser and data_links %}
-                <p class="govuk-body">*Only visible to superusers.</p>
-            {% endif %}
         </div>
     </div>
 
+    {% if user.is_superuser %}
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h2 class="govuk-heading-l govuk-!-margin-top-8">Open data in a tool*</h2>
+
+                <div class="govuk-tabs" data-module="govuk-tabs">
+                    <h2 class="govuk-tabs__title">
+                        Contents
+                    </h2>
+                    <ul class="govuk-tabs__list">
+                        <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
+                            <a class="govuk-tabs__tab" href="{% url 'catalogue:dataset_fullpath' model.grouping.slug model.slug %}#open-in-google-data-studio">
+                            Google Data Studio
+                          </a>
+                        </li>
+                    </ul>
+
+                    <section class="govuk-tabs__panel govuk-tabs__panel--hidden" id="open-in-google-data-studio">
+                        <h2 class="govuk-heading-l">Google Data Studio</h2>
+
+                        {% if not google_data_links %}
+                            <p class="govuk-body">No tables are accessible from Google Data Studio</p>
+                        {% else %}
+                            <p class="govuk-body">Each of the below links pre-configure a Google Data Studio data source.</p>
+
+                            <ul class="govuk-list">
+                            {% for link in google_data_links %}
+                                <li>
+                                    <a class="govuk-link" href="{{ link.get_google_data_studio_link }}">{{ link.name }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </section>
+                </div>
+
+                {% if user.is_superuser %}
+                    <p class="govuk-body">*Only visible to superusers</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
@@ -187,7 +214,6 @@
                     <dt class="govuk-summary-list__key">Restrictions on usage</dt>
                     <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
                 </div>
-
             </dl>
         </div>
     </div>

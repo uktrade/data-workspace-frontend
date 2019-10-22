@@ -74,17 +74,25 @@ def datagroup_item_view(request, slug):
 def dataset_full_path_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
 
+    data_links = sorted(
+        chain(
+            dataset.sourcelink_set.all(),
+            dataset.sourcetable_set.all(),
+            dataset.customdatasetquery_set.all()
+        ),
+        key=lambda x: x.name
+    )
+    google_data_links = [
+        link
+        for link in dataset.sourcetable_set.all()
+        if link.accessible_by_google_data_studio and link.get_google_data_studio_link()
+    ]
+
     context = {
         'model': dataset,
         'has_download_access': dataset.user_has_access(request.user),
-        'data_links': sorted(
-            chain(
-                dataset.sourcelink_set.all(),
-                dataset.sourcetable_set.all(),
-                dataset.customdatasetquery_set.all()
-            ),
-            key=lambda x: x.name
-        )
+        'data_links': data_links,
+        'google_data_links': google_data_links,
     }
     return render(request, 'dataset.html', context)
 
