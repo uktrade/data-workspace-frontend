@@ -114,10 +114,10 @@
         </div>
     </div>
 
-    {% if user.is_superuser %}
+    {% if perms.applications.start_all_applications %}
         <div class="govuk-grid-row">
-            <div class="govuk-grid-column-two-thirds">
-                <h2 class="govuk-heading-l govuk-!-margin-top-8">Open data in a tool*</h2>
+            <div class="govuk-grid-column-three-quarters">
+                <h2 class="govuk-heading-l govuk-!-margin-top-8">Open data in a tool</h2>
 
                 <div class="govuk-tabs" data-module="govuk-tabs">
                     <h2 class="govuk-tabs__title">
@@ -125,29 +125,91 @@
                     </h2>
                     <ul class="govuk-tabs__list">
                         <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
-                            <a class="govuk-tabs__tab" href="{% url 'catalogue:dataset_fullpath' model.grouping.slug model.slug %}#open-in-google-data-studio">
-                            Google Data Studio
+                            <a class="govuk-tabs__tab" href="{% url 'catalogue:dataset_fullpath' model.grouping.slug model.slug %}#open-in-jupyterlab">
+                            JupyterLab
                           </a>
                         </li>
+                        <li class="govuk-tabs__list-item">
+                            <a class="govuk-tabs__tab" href="{% url 'catalogue:dataset_fullpath' model.grouping.slug model.slug %}#open-in-rstudio">
+                            RStudio
+                          </a>
+                        </li>
+                        <li class="govuk-tabs__list-item">
+                            <a class="govuk-tabs__tab" href="{% url 'catalogue:dataset_fullpath' model.grouping.slug model.slug %}#open-in-pgadmin">
+                            pgAdmin
+                          </a>
+                        </li>
+                        {% if user.is_superuser %}
+                            <li class="govuk-tabs__list-item">
+                                <a class="govuk-tabs__tab" href="{% url 'catalogue:dataset_fullpath' model.grouping.slug model.slug %}#open-in-google-data-studio">
+                                Google Data Studio*
+                              </a>
+                            </li>
+                        {% endif %}
                     </ul>
 
-                    <section class="govuk-tabs__panel govuk-tabs__panel--hidden" id="open-in-google-data-studio">
-                        <h2 class="govuk-heading-l">Google Data Studio</h2>
+                    <section class="govuk-tabs__panel" id="open-in-jupyterlab">
+                        <h2 class="govuk-heading-l">JupyterLab</h2>
 
-                        {% if not google_data_links %}
-                            <p class="govuk-body">No tables are accessible from Google Data Studio</p>
+                        {% if not has_download_access %}
+                            <p class="govuk-body">You do not have permission to access this data</p>
                         {% else %}
-                            <p class="govuk-body">Each of the below links pre-configure a Google Data Studio data source.</p>
-
-                            <ul class="govuk-list">
-                            {% for link in google_data_links %}
-                                <li>
-                                    <a class="govuk-link" href="{{ link.get_google_data_studio_link }}">{{ link.name }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
+                        <p class="govuk-body">In a JupyterLab Python notebook, click the <svg aria-hidden="true" style="height: 16px; position: relative; top: 2px; margin: 0 2px;" title="Connect to databases" focusable="false" data-prefix="fas" data-icon="database" class="svg-inline--fa fa-database fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M448 73.143v45.714C448 159.143 347.667 192 224 192S0 159.143 0 118.857V73.143C0 32.857 100.333 0 224 0s224 32.857 224 73.143zM448 176v102.857C448 319.143 347.667 352 224 352S0 319.143 0 278.857V176c48.125 33.143 136.208 48.572 224 48.572S399.874 209.143 448 176zm0 160v102.857C448 479.143 347.667 512 224 512S0 479.143 0 438.857V336c48.125 33.143 136.208 48.572 224 48.572S399.874 369.143 448 336z"></path></svg> button in the toolbar. Then run the below command.</p>
+                        <pre><code>cur.execute('''
+SELECT
+    *
+FROM
+    "oecd.tiva"."L1"
+LIMIT 10;
+''')
+rows = cur.fetchall()
+rows</code></pre>
+{% endif %}
                     </section>
+
+                    <section class="govuk-tabs__panel govuk-tabs__panel--hidden" id="open-in-rstudio">
+                        <h2 class="govuk-heading-l">RStudio</h2>
+
+                        <p class="govuk-body">Some info here...</p>
+                    </section>
+
+                    <section class="govuk-tabs__panel govuk-tabs__panel--hidden" id="open-in-pgadmin">
+                        <h2 class="govuk-heading-l">pgAdmin</h2>
+
+                        <p class="govuk-body">Some info here...</p>
+                    </section>
+
+                    {% if user.is_superuser %}
+                        <section class="govuk-tabs__panel govuk-tabs__panel--hidden" id="open-in-google-data-studio">
+                            <h2 class="govuk-heading-l">Google Data Studio</h2>
+
+                            <p></p>
+
+                            {% if not google_data_links %}
+                                <p class="govuk-body">No tables are accessible from Google Data Studio</p>
+                            {% else %}
+                                <ol class="govuk-list govuk-list--number">
+                                    <li>
+                                        <p class="govuk-body">To start the process of creating a Google Data Studio data source, click {% if google_data_links|length >= 2 %}one of the following links{% else %} the following link {% endif %}.</p>
+ 
+                                        <ul class="govuk-list">
+                                            {% for link in google_data_links %}
+                                                <li>
+                                                    <a class="govuk-link" href="{{ link.get_google_data_studio_link }}">{{ link.name }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <p class="govuk-body">If prompted, click AUTHORIZE and follow any instructions. This may need to be done multiple times, or not at all.</p>
+                                    </li>
+                                    <li>
+                                        <p class="govuk-body">Click CONNECT and follow any instructions.</p>
+                                    </li>
+                                </ol>
+                            {% endif %}
+                        </section>
+                    {% endif %}
                 </div>
 
                 {% if user.is_superuser %}
