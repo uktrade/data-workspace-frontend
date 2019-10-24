@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig',
     'adminsortable2',
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
