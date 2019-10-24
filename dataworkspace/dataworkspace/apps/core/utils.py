@@ -220,7 +220,8 @@ def can_access_table_by_google_data_studio(user, table_id):
     except SourceTable.DoesNotExist:
         return False
     has_source_table_perms = DataSet.objects.filter(
-        Q(published=True) &
+        # Only acceptable for demo purposes
+        # Q(published=True) &
         Q(sourcetable=sourcetable) & (
             Q(user_access_type='REQUIRES_AUTHENTICATION') |
             Q(datasetuserpermission__user=user)
