@@ -76,6 +76,9 @@ SCHEMA_DATA_TYPE_PATTERNS = (
         r'^(character varying.*)|(text)$',
         SCHEMA_STRING, lambda v: v),
     (
+        r'^(uuid)$',
+        SCHEMA_STRING, str),
+    (
         # Not sure if this is suitable for Google Data Studio analysis, but avoids the error if
         # passing an array as a value:
         # "The data returned from the community connector is malformed"
