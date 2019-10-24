@@ -60,6 +60,10 @@
       "value": "jupyterlab"
     },
     {
+      "name": "APPLICATION_TEMPLATES__1__VISIBLE",
+      "value": "True"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__1__HOST_PATTERN",
       "value": "jupyterlab-<user>"
     },
@@ -176,6 +180,10 @@
       "value": "rstudio"
     },
     {
+      "name": "APPLICATION_TEMPLATES__2__VISIBLE",
+      "value": "True"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__2__HOST_PATTERN",
       "value": "rstudio-<user>"
     },
@@ -272,6 +280,10 @@
       "value": "pgadmin"
     },
     {
+      "name": "APPLICATION_TEMPLATES__3__VISIBLE",
+      "value": "True"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__3__HOST_PATTERN",
       "value": "pgadmin-<user>"
     },
@@ -354,6 +366,10 @@
     {
       "name": "APPLICATION_TEMPLATES__4__NAME",
       "value": "user"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__4__VISIBLE",
+      "value": "False"
     },
     {
       "name": "APPLICATION_TEMPLATES__4__HOST_PATTERN",

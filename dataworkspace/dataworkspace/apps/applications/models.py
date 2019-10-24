@@ -21,6 +21,10 @@ class ApplicationTemplate(TimeStampedModel):
         help_text='Used in URLs: only lowercase letters allowed',
         unique=True,
     )
+    visible = models.BooleanField(
+        default=True,
+        null=False,
+    )
     host_pattern = models.CharField(
         max_length=128,
         blank=False,
