@@ -54,4 +54,4 @@ grep -qxF "export DJANGO_SETTINGS_MODULE=dataworkspace.settings.local" $WORKON_H
 grep -qxF "export PYTHONPATH=$1/dataworkspace" $WORKON_HOME/dataworkspace/bin/postactivate || echo "export PYTHONPATH=$1/dataworkspace" >> $WORKON_HOME/dataworkspace/bin/postactivate
 grep -qxF "export REDIS_URL=redis://localhost:6379/" $WORKON_HOME/dataworkspace/bin/postactivate || echo "export REDIS_URL=redis://localhost:6379/" >> $WORKON_HOME/dataworkspace/bin/postactivate
 source $WORKON_HOME/dataworkspace/bin/activate
-pip install -r $1/requirements/dev.txt
+pip install -r $1/requirements-dev.txt
