@@ -81,7 +81,7 @@ class EventLogAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename=event-log-{}.csv'.format(
             datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         )
-        writer = csv.DictWriter(response, field_names)
+        writer = csv.DictWriter(response, field_names, quoting=csv.QUOTE_NONNUMERIC)
         writer.writeheader()
         for eventlog in queryset:
             writer.writerow({

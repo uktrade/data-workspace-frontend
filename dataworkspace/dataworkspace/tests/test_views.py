@@ -294,9 +294,9 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content,
-            b'id,name,linked: ID,linked: Name,auto uuid,auto id\r\n'
-            b'1,Test record,1,Linked Display Name,%s,1\r\n'
-            b'2,\xc3\x81nd again,,,%s,2\r\n' % (
+            b'"id","name","linked: ID","linked: Name","auto uuid","auto id"\r\n'
+            b'1,"Test record",1,"Linked Display Name",%s,1\r\n'
+            b'2,"\xc3\x81nd again","","",%s,2\r\n' % (
                 str(rec1.auto_uuid).encode(),
                 str(rec2.auto_uuid).encode()
             )
@@ -557,7 +557,7 @@ class TestSourceTableDownloadView(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             b''.join(response.streaming_content),
-            b'field2,field1\r\n1,record1\r\n2,record2\r\nNumber of rows: 2\r\n'
+            b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n'
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
@@ -627,7 +627,7 @@ class TestSourceViewDownloadView(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             b''.join(response.streaming_content),
-            b'field2,field1\r\n1,record1\r\n2,record2\r\nNumber of rows: 2\r\n'
+            b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n'
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
@@ -733,7 +733,8 @@ class TestCustomQueryDownloadView(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             b''.join(response.streaming_content),
-            b'id,name,date\r\n1,the first record,\r\n3,the last record,\r\nNumber of rows: 2\r\n'
+            b'"id","name","date"\r\n1,"the first record",""\r\n'
+            b'3,"the last record",""\r\n"Number of rows: 2"\r\n'
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(

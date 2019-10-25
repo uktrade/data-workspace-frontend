@@ -20,5 +20,5 @@ class TestEventLogAdmin(BaseAdminTestCase):
                 '_selected_action': [event1.id, event2.id]
             }
         )
-        self.assertContains(response, 'timestamp,user,event_type,related_object,extra')
+        self.assertContains(response, '"timestamp","user","event_type","related_object","extra"')
         self.assertEqual(len(response.content.splitlines()), 3)

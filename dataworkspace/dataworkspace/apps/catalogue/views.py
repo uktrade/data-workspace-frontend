@@ -154,7 +154,8 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
             with closing(io.StringIO()) as outfile:
                 writer = csv.DictWriter(
                     outfile,
-                    fieldnames=ref_dataset.export_field_names
+                    fieldnames=ref_dataset.export_field_names,
+                    quoting=csv.QUOTE_NONNUMERIC
                 )
                 writer.writeheader()
                 writer.writerows(records)
