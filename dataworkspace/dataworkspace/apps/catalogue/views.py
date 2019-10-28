@@ -154,7 +154,8 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
             with closing(io.StringIO()) as outfile:
                 writer = csv.DictWriter(
                     outfile,
-                    fieldnames=ref_dataset.export_field_names
+                    fieldnames=ref_dataset.export_field_names,
+                    quoting=csv.QUOTE_NONNUMERIC
                 )
                 writer.writeheader()
                 writer.writerows(records)
@@ -353,12 +354,7 @@ def root_view_GET(request):
 
     def link(application_template):
         public_host = application_template.host_pattern.replace('<user>', sso_id_hex_short)
-        # If there are some un-interpolated values, then we can't show a link to this: the app
-        # will be started by the user knowing the link ahead of time. Potentially in a future
-        # version there could be some UI to manage this.
-        return \
-            None if '<' in public_host or '>' in public_host else \
-            f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
+        return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     context = {
         'applications': [
@@ -370,7 +366,7 @@ def root_view_GET(request):
             }
             for application_template in ApplicationTemplate.objects.all().order_by('name')
             for application_link in [link(application_template)]
-            if application_link
+            if application_template.visible
         ],
         'appstream_url': settings.APPSTREAM_URL,
         'your_files_enabled': settings.YOUR_FILES_ENABLED,
