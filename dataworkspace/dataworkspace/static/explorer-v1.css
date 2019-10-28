@@ -207,7 +207,7 @@
     background: #00703c;
 }
 .progress-percentage {
-    font-family: ntatabularnumbers,nta,Arial,sans-serif;
+    font-variant-numeric: tabular-nums;
 }
 .progress-error {
     background: #d4351c;

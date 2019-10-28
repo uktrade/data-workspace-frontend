@@ -557,6 +557,17 @@ resource "aws_alb_listener" "admin" {
   certificate_arn = "${aws_acm_certificate_validation.admin.certificate_arn}"
 }
 
+resource "aws_alb_listener" "admin_http" {
+  load_balancer_arn = "${aws_alb.admin.arn}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_alb_target_group.admin.arn}"
+    type             = "forward"
+  }
+}
+
 resource "aws_alb_target_group" "admin" {
   name_prefix = "jhadm-"
   port        = "${local.admin_container_port}"

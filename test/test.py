@@ -949,7 +949,10 @@ async def create_many_users():
             User,
         )
         for i in range(0, 200):
-            User.objects.create(username='user_' + str(i))
+            User.objects.create(
+                username='user_' + str(i) + '@example.com',
+                email='user_' + str(i) + '@example.com',
+            )
         """).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
         'django-admin shell',
