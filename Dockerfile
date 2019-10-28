@@ -13,7 +13,7 @@ RUN \
 		git=2.22.0-r0 \
 		python3-dev=3.7.5-r1 && \
 	apk add --no-cache \
-		nginx=1.16.1-r0 \
+		nginx=1.16.1-r1 \
 		openssl=1.1.1d-r0 \
 		parallel=20190522-r0 \
 		py3-gevent==1.3.4-r2 \
