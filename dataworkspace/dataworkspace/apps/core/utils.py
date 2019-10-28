@@ -284,7 +284,7 @@ def streaming_query_response(user_email, database, query, filename):
         class PseudoBuffer:
             def write(self, value):
                 return value
-        csv_writer = csv.writer(PseudoBuffer())
+        csv_writer = csv.writer(PseudoBuffer(), quoting=csv.QUOTE_NONNUMERIC)
 
         with \
                 connect(database_dsn(settings.DATABASES_DATA[database])) as conn, \
