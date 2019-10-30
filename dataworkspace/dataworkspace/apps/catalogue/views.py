@@ -78,6 +78,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
             chain(
                 dataset.sourcelink_set.all(),
                 dataset.sourcetable_set.all(),
+                dataset.sourceview_set.all(),
                 dataset.customdatasetquery_set.all()
             ),
             key=lambda x: x.name
