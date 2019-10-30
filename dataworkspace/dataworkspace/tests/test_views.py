@@ -25,18 +25,25 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_homepage_group_list(self):
-        g1 = factories.DataGroupingFactory.create()
-        g2 = factories.DataGroupingFactory.create()
-        g3 = factories.DataGroupingFactory.create()
-        g3.delete()
+        group_with_published_dataset = factories.DataGroupingFactory.create()
+        factories.DataSetFactory(grouping=group_with_published_dataset, published=True)
+
+        group_with_unpublished_dataset = factories.DataGroupingFactory.create()
+        factories.DataSetFactory(grouping=group_with_unpublished_dataset, published=False)
+
+        empty_group = factories.DataGroupingFactory.create()
+
+        deleted_group = factories.DataGroupingFactory.create()
+        deleted_group.delete()
 
         response = self._authenticated_get(reverse('root'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, g1.name, 1)
-        self.assertContains(response, g2.name, 1)
+        self.assertContains(response, group_with_published_dataset.name, 1)
+        self.assertNotContains(response, group_with_unpublished_dataset.name)
+        self.assertNotContains(response, empty_group.name)
 
         # Do not show deleted groups
-        self.assertNotContains(response, g3.name)
+        self.assertNotContains(response, deleted_group.name)
 
     def test_group_detail_view(self):
         group = factories.DataGroupingFactory.create()
@@ -73,6 +80,21 @@ class TestDatasetViews(BaseTestCase):
         # Ensure deleted datasets are not displayed
         self.assertNotContains(response, ds4.name)
         self.assertNotContains(response, rds4.name)
+
+        # Ensure empty groups are not visible
+        empty = factories.DataGroupingFactory.create()
+        response = self._authenticated_get(
+            reverse('catalogue:datagroup_item', kwargs={'slug': empty.slug})
+        )
+        self.assertEqual(response.status_code, 404)
+
+        # Ensure groups with no published datasets are not visible
+        unpublished = factories.DataGroupingFactory.create()
+        factories.DataSetFactory.create(grouping=unpublished, published=False)
+        response = self._authenticated_get(
+            reverse('catalogue:datagroup_item', kwargs={'slug': unpublished.slug})
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()

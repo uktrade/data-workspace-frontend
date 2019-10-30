@@ -58,9 +58,6 @@
                 </p>
             {% endif %}
 
-            {% if reference_datasets or not datasets %}
-		<h2 class="govuk-heading-l govuk-!-margin-top-8">Reference datasets</h2>
-            {% endif %}
             {% for set in reference_datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
