@@ -23,7 +23,8 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     ReferenceDataset,
     ReferenceDatasetField,
-    CustomDatasetQuery
+    CustomDatasetQuery,
+    SourceView,
 )
 from dataworkspace.apps.core.admin import TimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (
@@ -66,6 +67,11 @@ class SourceTableInline(admin.TabularInline):
     extra = 1
 
 
+class SourceViewInline(admin.TabularInline):
+    model = SourceView
+    extra = 1
+
+
 class CustomDatasetQueryInline(admin.TabularInline):
     model = CustomDatasetQuery
     extra = 0
@@ -80,6 +86,7 @@ class DataSetAdmin(admin.ModelAdmin):
     inlines = [
         SourceLinkInline,
         SourceTableInline,
+        SourceViewInline,
         CustomDatasetQueryInline,
     ]
     fieldsets = [
