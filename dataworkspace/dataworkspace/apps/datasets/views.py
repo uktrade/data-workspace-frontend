@@ -15,9 +15,9 @@ def request_access_view(request, group_slug, set_slug):
     if request.method == 'POST':
         form = RequestAccessForm(request.POST)
         if form.is_valid():
+            goal = form.cleaned_data['goal']
             justification = form.cleaned_data['justification']
             contact_email = form.cleaned_data['email']
-            team_name = form.cleaned_data['team']
 
             user_edit_relative = reverse('admin:auth_user_change', args=[request.user.id])
             user_url = request.build_absolute_uri(user_edit_relative)
@@ -28,7 +28,7 @@ def request_access_view(request, group_slug, set_slug):
 
             ticket_reference = create_zendesk_ticket(contact_email,
                                                      request.user,
-                                                     team_name,
+                                                     goal,
                                                      justification,
                                                      user_url,
                                                      dataset_name,

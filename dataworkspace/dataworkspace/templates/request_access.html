@@ -19,7 +19,10 @@
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">Request access</h1>
             <p class="govuk-body">
-              Access to this dataset will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection" class="govuk-link--no-visited-state">Data Protection Act</a>. Complete the form below if you need to access this dataset in order to do your job.
+              Complete the form below if you need to access this dataset in order to do your job.
+            </p>
+            <p class="govuk-body">
+              Access will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection" class="govuk-link--no-visited-state">Data Protection Act</a>.
             </p>
           <br />
             <p class="govuk-body">
@@ -39,13 +42,23 @@
                         <input class="govuk-input" type="email" name="email" value="{{ authenticated_user.email }}" id="email" required>
                     </div>
                     <div class="govuk-form-group">
-                        <label class="govuk-label govuk-!-font-weight-bold" for="team">Team name</label>
-                        <input type="text" class="govuk-input" name="team" id="team" required>
+                        <label class="govuk-label govuk-!-font-weight-bold" for="goal">
+                            What will you use this dataset for?
+                        </label>
+                        <span class="govuk-hint">
+                          For example, I will compare total investments into the UK with last year.
+
+                        </span>
+                        <textarea class="govuk-textarea" id="goal" name="goal" rows="5"
+                                  required></textarea>
                     </div>
                     <div class="govuk-form-group">
                         <label class="govuk-label govuk-!-font-weight-bold" for="justification">
-                            What will you use this dataset for?
+                            Why is this data necessary for you to perform your role?
                         </label>
+                        <span class="govuk-hint">
+                            For example, I need to create a report to prove that we have met our targets.
+                        </span>
                         <textarea class="govuk-textarea" id="justification" name="justification" rows="5"
                                   required></textarea>
                     </div>
