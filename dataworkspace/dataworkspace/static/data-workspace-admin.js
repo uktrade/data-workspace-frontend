@@ -12,8 +12,6 @@ $(function(){
   });
 });
 
-console.log('test');
-
 $(function(){
     let _changed = false;
     let nameInput = $('#referencedataset_form input[name="name"]');
