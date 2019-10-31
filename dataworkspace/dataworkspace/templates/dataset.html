@@ -56,7 +56,11 @@
                                 <span class="govuk-warning-text__assistive">Warning</span>
                                 You do not have permission to access these links.
                                 <br>
-                                <a class="govuk-link--no-visited-state" href="{% url 'datasets:request_access' model.grouping.slug model.slug %}">Request access</a>
+                                {% if model.eligibility_criteria %}
+                                  <a class="govuk-link--no-visited-state" href="{% url 'datasets:eligibility_criteria' model.grouping.slug model.slug %}">Request access</a>
+                                {% else %}
+                                  <a class="govuk-link--no-visited-state" href="{% url 'datasets:request_access' model.grouping.slug model.slug %}">Request access</a>
+                                {% endif %}
                             </strong>
                         </div>
                     </div>

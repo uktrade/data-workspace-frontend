@@ -3,9 +3,43 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
-from dataworkspace.apps.datasets.forms import RequestAccessForm
+from dataworkspace.apps.datasets.forms import RequestAccessForm, EligibilityCriteriaForm
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.zendesk import create_zendesk_ticket
+
+
+@require_http_methods(['GET', 'POST'])
+def eligibility_criteria_view(request, group_slug, set_slug):
+    dataset = find_dataset(group_slug, set_slug)
+
+    if request.method == 'POST':
+        form = EligibilityCriteriaForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data['meet_criteria']:
+                return HttpResponseRedirect(
+                    reverse('datasets:request_access', args=[
+                        group_slug, set_slug
+                    ])
+                )
+            else:
+                return HttpResponseRedirect(
+                    reverse('datasets:eligibility_criteria_not_met', args=[
+                        group_slug, set_slug
+                    ])
+                )
+
+    return render(request, 'eligibility_criteria.html', {
+        'dataset': dataset,
+    })
+
+
+@require_GET
+def eligibility_criteria_not_met_view(request, group_slug, set_slug):
+    dataset = find_dataset(group_slug, set_slug)
+
+    return render(request, 'eligibility_criteria_not_met.html', {
+        'dataset': dataset,
+    })
 
 
 @require_http_methods(['GET', 'POST'])
