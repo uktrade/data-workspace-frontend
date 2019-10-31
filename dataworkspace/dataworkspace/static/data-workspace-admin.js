@@ -11,3 +11,26 @@ $(function(){
     }
   });
 });
+
+console.log('test');
+
+$(function(){
+    let _changed = false;
+    let nameInput = $('#referencedataset_form input[name="name"]');
+    let tableNameInput = $('#referencedataset_form input[name="table_name"]');
+    nameInput.on('keyup', function(){
+	if(_changed == false){
+	    let tableName;
+	    let urlified = URLify($(this).val());
+	    if(urlified == ''){
+		tableName = '';
+	    } else {
+		tableName = `ref_${urlified.split('-').join('_')}`;
+	    }
+	    tableNameInput.val(tableName);
+	}
+    });
+    tableNameInput.on('keyup', function(){
+	_changed = true;
+    });
+});
