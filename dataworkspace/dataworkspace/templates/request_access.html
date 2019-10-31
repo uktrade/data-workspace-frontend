@@ -8,6 +8,14 @@
             <li class="govuk-breadcrumbs__list-item">
                 <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link"
+                   href="{% url 'catalogue:datagroup_item' dataset.grouping.slug %}">{{ dataset.grouping.name }}</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link"
+                   href="{% url 'catalogue:dataset_fullpath' dataset.grouping.slug dataset.slug %}">{{ dataset.name }}</a>
+            </li>
             <li class="govuk-breadcrumbs__list-item">Request access
             </li>
         </ol>
