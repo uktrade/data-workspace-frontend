@@ -22,6 +22,7 @@ RUN \
         autoconf=2.69-r2 \
         build-base=0.5-r1 \
         gfortran=6.4.0-r9 \
+        libexecinfo-dev=1.1-r0 \
         linux-headers=4.4.6-r2 \
         texlive-xetex=20170524-r5 \
         texmf-dist-latexextra=2017.46770-r0 && \
