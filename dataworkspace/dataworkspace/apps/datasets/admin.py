@@ -110,13 +110,18 @@ class DataSetAdmin(admin.ModelAdmin):
         ('Permissions', {
             'fields': [
                 'requires_authorization',
+                'eligibility_criteria',
             ]
         })
     ]
 
     class Media:
+        js = ("js/min/django_better_admin_arrayfield.min.js",)
         css = {
-            'all': ('data-workspace-admin.css',)
+            'all': (
+                "css/min/django_better_admin_arrayfield.min.css",
+                'data-workspace-admin.css',
+            )
         }
 
     @transaction.atomic

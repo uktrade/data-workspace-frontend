@@ -16,7 +16,7 @@ from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError, Count, Q
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.text import slugify
 
 from dataworkspace.apps.core.models import (
@@ -132,6 +132,11 @@ class DataSet(TimeStampedModel):
         default='REQUIRES_AUTHORIZATION',
     )
     published = models.BooleanField(default=False)
+
+    eligibility_criteria = ArrayField(
+        models.CharField(max_length=256),
+        null=True
+    )
 
     class Meta:
         db_table = 'app_dataset'

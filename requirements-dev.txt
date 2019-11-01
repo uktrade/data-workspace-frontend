@@ -1,0 +1,7 @@
+-r requirements.txt
+factory_boy==2.12.0
+mock==3.0.5
+pytest==5.2.2
+pytest-cov==2.8.1
+pytest-mock==1.11.2
+pytest-django==3.6.0

@@ -15,8 +15,9 @@ def get_username(user):
     return f'{user.first_name} {user.last_name}'
 
 
-def build_ticket_description_text(dataset_name, dataset_url, contact_email, user, justification_text,
-                                  team_name):
+def build_ticket_description_text(
+    dataset_name, dataset_url, contact_email, user, justification_text, goal_text
+):
     username = get_username(user)
     ticket_description = f"""Access request for
 {dataset_name}
@@ -25,10 +26,13 @@ def build_ticket_description_text(dataset_name, dataset_url, contact_email, user
 Username:   {username}
 Contact:    {contact_email}
 SSO Login:  {user.email}
-Team:       {team_name}
 
 
-Justification Text:
+What will you use this data for?
+
+{goal_text}
+
+Why is this data necessary for you to perform your role?
 
 {justification_text}
 """
@@ -63,7 +67,7 @@ You can approve this request here
 
 def create_zendesk_ticket(contact_email,
                           user,
-                          team_name,
+                          goal,
                           justification_text,
                           approval_url,
                           dataset_name,
@@ -82,7 +86,7 @@ def create_zendesk_ticket(contact_email,
                                                        contact_email,
                                                        user,
                                                        justification_text,
-                                                       team_name)
+                                                       goal)
 
     private_comment = build_private_comment_text(information_asset_owner,
                                                  information_asset_manager,
