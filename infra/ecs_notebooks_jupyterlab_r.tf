@@ -50,7 +50,7 @@ data "template_file" "jupyterlabr_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
   vars {
-    container_image  = "${var.jupyterlab_python_container_image}:${data.external.jupyterlabr_current_tag.result.tag}"
+    container_image  = "${var.jupyterlab_r_container_image}:${data.external.jupyterlabr_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
 
     log_group  = "${aws_cloudwatch_log_group.notebook.name}"
