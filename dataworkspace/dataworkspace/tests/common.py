@@ -1,7 +1,11 @@
-from django.contrib.auth.models import User
+import uuid
+
+from django.contrib.auth.models import User, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import reverse
 
+from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.models import ReferenceDataset, DataGrouping
 
 
@@ -10,8 +14,16 @@ class BaseTestCase(TestCase):
         self.user = User.objects.create(
             username='bob.testerson@test.com',
             is_staff=True,
-            is_superuser=True
+            is_superuser=True,
         )
+        self.user.user_permissions.add(
+            Permission.objects.get(
+                codename='start_all_applications',
+                content_type=ContentType.objects.get_for_model(ApplicationInstance),
+            )
+        )
+        self.user.profile.sso_id = uuid.uuid4()
+        self.user.profile.save()
 
         self.user_data = {
             'HTTP_SSO_PROFILE_EMAIL': self.user.email,
@@ -33,6 +45,13 @@ class BaseTestCase(TestCase):
             data=data,
             follow=True,
             format=post_format,
+            **self.user_data,
+        )
+
+    def _authenticated_put(self, url, data=None):
+        return self.client.put(
+            url,
+            data=data,
             **self.user_data,
         )
 
