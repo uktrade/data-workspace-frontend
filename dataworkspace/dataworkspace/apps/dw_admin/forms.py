@@ -8,6 +8,7 @@ from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
 from adminsortable2.admin import CustomInlineFormSet
+from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 
 from dataworkspace.apps.datasets.model_utils import has_circular_link
 from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDataset, \
@@ -300,6 +301,8 @@ class DataSetForm(forms.ModelForm):
         label='Each user must be individually authorized to access the data',
         required=False,
     )
+
+    eligibility_criteria = DynamicArrayField(base_field=forms.CharField(), required=False)
 
     class Meta:
         model = DataSet

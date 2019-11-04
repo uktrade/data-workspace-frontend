@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "jupyterlab_database_access",
+  "version": "0.0.1",
+  "description": "Buttons to inject code into the notebook to connect to databases",
+  "author": "Department for International Trade",
+  "main": "plugin.js",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "jupyterlab": {
+    "extension": true
+  },
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {}
+}

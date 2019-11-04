@@ -44,6 +44,8 @@ variable "uploads_bucket" {}
 variable "appstream_bucket" {}
 variable "notebooks_bucket" {}
 variable "notebook_container_image" {}
+variable "jupyterlab_python_container_image" {}
+variable "jupyterlab_r_container_image" {}
 variable "rstudio_container_image" {}
 variable "pgadmin_container_image" {}
 variable "user_provided_container_image" {}

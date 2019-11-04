@@ -1,9 +1,9 @@
 FROM data-workspace
 
+COPY requirements-dev.txt requirements-dev.txt
+
 USER root
-RUN pip3 install \
-    factory_boy==2.12.0 \
-    mock==3.0.5
+RUN pip3 install -r requirements-dev.txt
 
 USER django
 

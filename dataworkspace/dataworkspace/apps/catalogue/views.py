@@ -36,11 +36,8 @@ logger = logging.getLogger('app')
 
 
 def get_all_datagroups_viewmodel():
-    groupings = DataGrouping.objects.live().order_by('name')
-
     vm = []
-
-    for group in groupings:
+    for group in DataGrouping.objects.with_published_datasets():
         vm.append({
             'name': group.name,
             'short_description': group.short_description,
@@ -53,7 +50,7 @@ def get_all_datagroups_viewmodel():
 
 @require_GET
 def datagroup_item_view(request, slug):
-    item = get_object_or_404(DataGrouping, slug=slug)
+    item = get_object_or_404(DataGrouping.objects.with_published_datasets(), slug=slug)
 
     context = {
         'model': item,
@@ -81,6 +78,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
             chain(
                 dataset.sourcelink_set.all(),
                 dataset.sourcetable_set.all(),
+                dataset.sourceview_set.all(),
                 dataset.customdatasetquery_set.all()
             ),
             key=lambda x: x.name

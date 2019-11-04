@@ -15,13 +15,35 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.db.models import ProtectedError
-from django.contrib.postgres.fields import JSONField
+from django.db.models import ProtectedError, Count, Q
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.text import slugify
 
-from dataworkspace.apps.core.models import (TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel,
-                                            Database)
+from dataworkspace.apps.core.models import (
+    TimeStampedModel, DeletableTimestampedUserModel, TimeStampedUserModel,
+    Database, DeletableQuerySet,
+)
 from dataworkspace.apps.datasets.model_utils import external_model_class, has_circular_link
+
+
+class DataGroupingManager(DeletableQuerySet):
+    def with_published_datasets(self):
+        """
+        Returns only datasets that contain one or more published
+        datasets or reference datasets
+        """
+        return self.live().annotate(
+            num_published_datasets=Count(
+                'dataset',
+                filter=Q(dataset__published=True)
+            ),
+            num_published_reference_datasets=Count(
+                'referencedataset',
+                filter=Q(referencedataset__published=True)
+            )
+        ).filter(
+            Q(num_published_datasets__gt=0) | Q(num_published_reference_datasets__gt=0)
+        )
 
 
 class DataGrouping(DeletableTimestampedUserModel):
@@ -55,6 +77,8 @@ class DataGrouping(DeletableTimestampedUserModel):
     )
 
     slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
+
+    objects = DataGroupingManager()
 
     class Meta:
         db_table = 'app_datagrouping'
@@ -108,6 +132,11 @@ class DataSet(TimeStampedModel):
         default='REQUIRES_AUTHORIZATION',
     )
     published = models.BooleanField(default=False)
+
+    eligibility_criteria = ArrayField(
+        models.CharField(max_length=256),
+        null=True
+    )
 
     class Meta:
         db_table = 'app_dataset'
