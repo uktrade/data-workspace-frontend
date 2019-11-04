@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+
 import factory.fuzzy
 
 from django.contrib.auth import get_user_model
@@ -116,3 +118,14 @@ class EventLogFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'eventlog.EventLog'
+
+
+class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
+    name = 'Test Application'
+    visible = True
+    host_pattern = 'testapplication-<user>'
+    nice_name = 'Test Application'
+    spawner_time = int(datetime.timestamp(datetime.now()))
+
+    class Meta:
+        model = 'applications.ApplicationTemplate'
