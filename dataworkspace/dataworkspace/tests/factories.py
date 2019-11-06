@@ -121,10 +121,10 @@ class EventLogFactory(factory.django.DjangoModelFactory):
 
 
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
-    name = 'Test Application'
+    name = factory.fuzzy.FuzzyText()
     visible = True
     host_pattern = 'testapplication-<user>'
-    nice_name = 'Test Application'
+    nice_name = factory.fuzzy.FuzzyText()
     spawner_time = int(datetime.timestamp(datetime.now()))
 
     class Meta:
