@@ -43,14 +43,12 @@ For other commands, replace `makemigrations` with the name of the command.
 ## Running tests
 
 ```bash
-docker-compose build data-workspace && \
-docker-compose -f docker-compose-test.yml build && \
-docker-compose -f docker-compose-test.yml run data-workspace-test python3 -m unittest test.test
+make docker-test
 ```
 
 Django tests
 ```bash
-docker-compose -f docker-compose-test.yml run data-workspace-test pytest /dataworkspace/dataworkspace
+make docker-test-unit
 ```
 
 
