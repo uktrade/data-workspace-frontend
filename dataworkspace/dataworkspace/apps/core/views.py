@@ -1,8 +1,13 @@
 import logging
 
 from django.conf import settings
-from django.http import (HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotAllowed,
-                         HttpResponseNotFound)
+from django.http import (
+    HttpResponse,
+    HttpResponseRedirect,
+    HttpResponseForbidden,
+    HttpResponseNotAllowed,
+    HttpResponseNotFound,
+)
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import FormView
@@ -50,9 +55,7 @@ class SupportView(FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['initial'] = {
-            'email': self.request.user.email,
-        }
+        kwargs['initial'] = {'email': self.request.user.email}
         return kwargs
 
     def form_valid(self, form):
@@ -61,9 +64,11 @@ class SupportView(FormView):
             self.request.user,
             cleaned['email'],
             cleaned['message'],
-            attachments=[cleaned[x] for x in [
-                'attachment1', 'attachment2', 'attachment3'
-            ] if cleaned[x] is not None]
+            attachments=[
+                cleaned[x]
+                for x in ['attachment1', 'attachment2', 'attachment3']
+                if cleaned[x] is not None
+            ],
         )
         return HttpResponseRedirect(
             reverse('support-success', kwargs={'ticket_id': ticket_id})
@@ -71,8 +76,13 @@ class SupportView(FormView):
 
 
 def table_data_view(request, database, schema, table):
-    logger.info('table_data_view attempt: %s %s %s %s',
-                request.user.email, database, schema, table)
+    logger.info(
+        'table_data_view attempt: %s %s %s %s',
+        request.user.email,
+        database,
+        schema,
+        table,
+    )
 
     log_event(
         request.user,
@@ -82,29 +92,35 @@ def table_data_view(request, database, schema, table):
             'database': database,
             'schema': schema,
             'table': table,
-        }
+        },
     )
 
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
     elif not can_access_schema_table(request.user, database, schema, table):
         return HttpResponseForbidden()
-    elif not (view_exists(database, schema, table) or table_exists(database, schema, table)):
+    elif not (
+        view_exists(database, schema, table) or table_exists(database, schema, table)
+    ):
         return HttpResponseNotFound()
     else:
         return table_data(request.user.email, database, schema, table)
 
 
 def file_browser_html_view(request):
-    return \
-        file_browser_html_GET(request) if request.method == 'GET' else \
-        HttpResponse(status=405)
+    return (
+        file_browser_html_GET(request)
+        if request.method == 'GET'
+        else HttpResponse(status=405)
+    )
 
 
 def file_browser_html_GET(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
 
-    return render(request, 'files.html', {
-        'prefix': prefix,
-        'bucket': settings.NOTEBOOKS_BUCKET,
-    }, status=200)
+    return render(
+        request,
+        'files.html',
+        {'prefix': prefix, 'bucket': settings.NOTEBOOKS_BUCKET},
+        status=200,
+    )

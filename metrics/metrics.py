@@ -6,13 +6,10 @@ import sys
 import textwrap
 
 import aiohttp
-from aiohttp import (
-    web,
-)
+from aiohttp import web
 
 
 async def async_main(logger, port, url):
-
     async def handle_metrics(_):
         async with aiohttp.ClientSession() as client_session:
             async with client_session.get(url) as response:
@@ -21,21 +18,22 @@ async def async_main(logger, port, url):
                 app_container_metrics = [
                     container_metrics
                     for _, container_metrics in task_metrics.items()
-                    if '-metrics-' not in container_metrics['name'] and '-internalecspause-' not in container_metrics['name'] and '-s3sync-' not in container_metrics['name']
+                    if '-metrics-' not in container_metrics['name']
+                    and '-internalecspause-' not in container_metrics['name']
+                    and '-s3sync-' not in container_metrics['name']
                 ][0]
 
-                prometheus_format_metrics = textwrap.dedent(f'''\
+                prometheus_format_metrics = textwrap.dedent(
+                    f'''\
                     memory_stats__usage {app_container_metrics['memory_stats']['usage']}
                     precpu_stats__cpu_usage__total_usage {app_container_metrics['precpu_stats']['cpu_usage']['total_usage']}
                     precpu_stats__precpu_stats__system_cpu_usage {app_container_metrics['precpu_stats']['system_cpu_usage']}
                     precpu_stats__precpu_stats__online_cpus {app_container_metrics['precpu_stats']['online_cpus']}'''
-                                                            )
+                )
                 return web.Response(text=prometheus_format_metrics)
 
     app = web.Application()
-    app.add_routes([
-        web.get('/__metrics', handle_metrics),
-    ])
+    app.add_routes([web.get('/__metrics', handle_metrics)])
 
     runner = web.AppRunner(app)
     await runner.setup()

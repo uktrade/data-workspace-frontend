@@ -1,6 +1,4 @@
-from psycogreen.gevent import (
-    patch_psycopg,
-)
+from psycogreen.gevent import patch_psycopg
 
 bind = '127.0.0.1:8002'
 worker_class = 'gevent'

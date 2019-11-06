@@ -5,9 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0001_initial'),
-    ]
+    dependencies = [('applications', '0001_initial')]
 
     operations = [
         migrations.AddField(
@@ -15,5 +13,5 @@ class Migration(migrations.Migration):
             name='host_pattern',
             field=models.CharField(default='', max_length=128),
             preserve_default=False,
-        ),
+        )
     ]

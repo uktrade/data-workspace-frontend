@@ -6,14 +6,14 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('datasets', '0020_auto_20191019_1923'),
-    ]
+    dependencies = [('datasets', '0020_auto_20191019_1923')]
 
     operations = [
         migrations.AddField(
             model_name='dataset',
             name='eligibility_criteria',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=256), null=True, size=None),
-        ),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=256), null=True, size=None
+            ),
+        )
     ]

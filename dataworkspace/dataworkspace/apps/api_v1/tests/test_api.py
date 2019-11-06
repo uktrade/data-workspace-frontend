@@ -15,23 +15,17 @@ class TestApplicationAPI(BaseTestCase):
         # not break the loading of applications
         factories.ApplicationTemplateFactory.create()
         factories.SourceTableFactory.create(
-            database=factories.DatabaseFactory.create(
-                memorable_name='my_database'
-            ),
+            database=factories.DatabaseFactory.create(memorable_name='my_database'),
             dataset=factories.DataSetFactory.create(
                 user_access_type='REQUIRES_AUTHENTICATION'
             ),
-            table='doesnotexist'
+            table='doesnotexist',
         )
         mock_api_allowed.return_value = True
         response = self._authenticated_put(
             reverse(
                 'api_v1:application-detail',
-                args=(
-                    'testapplication-{}'.format(
-                        str(self.user.profile.sso_id)
-                    ),
-                )
+                args=('testapplication-{}'.format(str(self.user.profile.sso_id)),),
             )
         )
         self.assertEqual(response.status_code, 200)

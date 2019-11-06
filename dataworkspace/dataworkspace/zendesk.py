@@ -41,7 +41,9 @@ Why is this data necessary for you to perform your role?
     return ticket_description
 
 
-def build_private_comment_text(information_asset_owner, information_asset_manager, approval_url):
+def build_private_comment_text(
+    information_asset_owner, information_asset_manager, approval_url
+):
     asset_owner_text = 'None'
     asset_manager_text = 'None'
 
@@ -65,32 +67,30 @@ You can approve this request here
     return private_comment
 
 
-def create_zendesk_ticket(contact_email,
-                          user,
-                          goal,
-                          justification_text,
-                          approval_url,
-                          dataset_name,
-                          dataset_url,
-                          information_asset_owner,  # nb this can be null
-                          information_asset_manager,  # so can this
-                          ):
+def create_zendesk_ticket(
+    contact_email,
+    user,
+    goal,
+    justification_text,
+    approval_url,
+    dataset_name,
+    dataset_url,
+    information_asset_owner,  # nb this can be null
+    information_asset_manager,  # so can this
+):
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,
         email=settings.ZENDESK_EMAIL,
         token=settings.ZENDESK_TOKEN,
     )
 
-    ticket_description = build_ticket_description_text(dataset_name,
-                                                       dataset_url,
-                                                       contact_email,
-                                                       user,
-                                                       justification_text,
-                                                       goal)
+    ticket_description = build_ticket_description_text(
+        dataset_name, dataset_url, contact_email, user, justification_text, goal
+    )
 
-    private_comment = build_private_comment_text(information_asset_owner,
-                                                 information_asset_manager,
-                                                 approval_url)
+    private_comment = build_private_comment_text(
+        information_asset_owner, information_asset_manager, approval_url
+    )
 
     username = get_username(user)
     subject = f'Access Request for {dataset_name}'
@@ -99,16 +99,12 @@ def create_zendesk_ticket(contact_email,
         Ticket(
             subject=subject,
             description=ticket_description,
-            requester=User(
-                email=contact_email,
-                name=username
-            ),
+            requester=User(email=contact_email, name=username),
             custom_fields=[
                 CustomField(
-                    id=zendesk_service_field_id,
-                    value=zendesk_service_field_value
+                    id=zendesk_service_field_id, value=zendesk_service_field_value
                 )
-            ]
+            ],
         )
     )
 
@@ -128,23 +124,18 @@ def create_support_request(user, email, message, attachments=()):
         Ticket(
             subject='Data Workspace Support Request',
             description=message,
-            requester=User(
-                email=email,
-                name=user.get_full_name()
-            ),
+            requester=User(email=email, name=user.get_full_name()),
             custom_fields=[
                 CustomField(
-                    id=zendesk_service_field_id,
-                    value=zendesk_service_field_value
+                    id=zendesk_service_field_id, value=zendesk_service_field_value
                 )
-            ]
+            ],
         )
     )
     if attachments:
         uploads = [client.attachments.upload(x) for x in attachments]
         ticket_audit.ticket.comment = Comment(
-            body='Additional attachments',
-            uploads=[x.token for x in uploads]
+            body='Additional attachments', uploads=[x.token for x in uploads]
         )
         client.tickets.update(ticket_audit.ticket)
     return ticket_audit.ticket.id

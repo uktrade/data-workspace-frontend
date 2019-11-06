@@ -2,19 +2,10 @@ import logging
 
 from adminsortable2.admin import SortableInlineAdminMixin
 from django.contrib import admin
-from django.contrib.admin.models import (
-    LogEntry,
-    CHANGE,
-)
-from django.contrib.contenttypes.models import (
-    ContentType,
-)
-from django.db import (
-    transaction,
-)
-from django.utils.encoding import (
-    force_text,
-)
+from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
+from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import (
     DataGrouping,
@@ -33,7 +24,7 @@ from dataworkspace.apps.dw_admin.forms import (
     DataSetForm,
     SourceLinkFormSet,
     ReferenceDataInlineFormset,
-    ReferenceDatasetForm
+    ReferenceDatasetForm,
 )
 
 logger = logging.getLogger('app')
@@ -82,7 +73,7 @@ class DataSetAdmin(admin.ModelAdmin):
     form = DataSetForm
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'slug', 'short_description', 'grouping', 'published')
-    list_filter = ('grouping', )
+    list_filter = ('grouping',)
     inlines = [
         SourceLinkInline,
         SourceTableInline,
@@ -90,29 +81,27 @@ class DataSetAdmin(admin.ModelAdmin):
         CustomDatasetQueryInline,
     ]
     fieldsets = [
-        (None, {
-            'fields': [
-                'published',
-                'name',
-                'slug',
-                'short_description',
-                'grouping',
-                'description',
-                'enquiries_contact',
-                'redactions',
-                'licence',
-                'volume',
-                'retention_policy',
-                'personal_data',
-                'restrictions_on_usage',
-            ]
-        }),
-        ('Permissions', {
-            'fields': [
-                'requires_authorization',
-                'eligibility_criteria',
-            ]
-        })
+        (
+            None,
+            {
+                'fields': [
+                    'published',
+                    'name',
+                    'slug',
+                    'short_description',
+                    'grouping',
+                    'description',
+                    'enquiries_contact',
+                    'redactions',
+                    'licence',
+                    'volume',
+                    'retention_policy',
+                    'personal_data',
+                    'restrictions_on_usage',
+                ]
+            },
+        ),
+        ('Permissions', {'fields': ['requires_authorization', 'eligibility_criteria']}),
     ]
 
     class Media:
@@ -127,16 +116,23 @@ class DataSetAdmin(admin.ModelAdmin):
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         original_user_access_type = obj.user_access_type
-        obj.user_access_type = \
-            'REQUIRES_AUTHORIZATION' if form.cleaned_data['requires_authorization'] else \
-            'REQUIRES_AUTHENTICATION'
+        obj.user_access_type = (
+            'REQUIRES_AUTHORIZATION'
+            if form.cleaned_data['requires_authorization']
+            else 'REQUIRES_AUTHENTICATION'
+        )
         super().save_model(request, obj, form, change)
 
         if original_user_access_type != obj.user_access_type:
             LogEntry.objects.log_action(
-                user_id=request.user.pk, content_type_id=ContentType.objects.get_for_model(obj).pk,
-                object_id=obj.id, object_repr=force_text(obj), action_flag=CHANGE,
-                change_message='user_access_type set to {}'.format(obj.user_access_type),
+                user_id=request.user.pk,
+                content_type_id=ContentType.objects.get_for_model(obj).pk,
+                object_id=obj.id,
+                object_repr=force_text(obj),
+                action_flag=CHANGE,
+                change_message='user_access_type set to {}'.format(
+                    obj.user_access_type
+                ),
             )
 
 
@@ -149,18 +145,21 @@ class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):
     extra = 1
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by']
     fieldsets = [
-        (None, {
-            'fields': [
-                'name',
-                'column_name',
-                'data_type',
-                'linked_reference_dataset',
-                'description',
-                'is_identifier',
-                'is_display_name',
-                'sort_order',
-            ]
-        })
+        (
+            None,
+            {
+                'fields': [
+                    'name',
+                    'column_name',
+                    'data_type',
+                    'linked_reference_dataset',
+                    'description',
+                    'is_identifier',
+                    'is_display_name',
+                    'sort_order',
+                ]
+            },
+        )
     ]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -168,9 +167,7 @@ class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):
         if db_field.name == 'linked_reference_dataset':
             parent_id = request.resolver_match.kwargs.get('object_id')
             if parent_id is not None:
-                kwargs['queryset'] = ReferenceDataset.objects.exclude(
-                    id=parent_id
-                )
+                kwargs['queryset'] = ReferenceDataset.objects.exclude(id=parent_id)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -180,33 +177,43 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
-    list_display = ('name', 'slug', 'short_description', 'group', 'published', 'version')
+    list_display = (
+        'name',
+        'slug',
+        'short_description',
+        'group',
+        'published',
+        'version',
+    )
     inlines = [ReferenceDataFieldInline]
     fieldsets = [
-        (None, {
-            'fields': [
-                'published',
-                'is_joint_dataset',
-                'name',
-                'table_name',
-                'slug',
-                'group',
-                'external_database',
-                'short_description',
-                'description',
-                'valid_from',
-                'valid_to',
-                'enquiries_contact',
-                'licence',
-                'restrictions_on_usage',
-                'sort_field',
-                'sort_direction',
-            ]
-        })
+        (
+            None,
+            {
+                'fields': [
+                    'published',
+                    'is_joint_dataset',
+                    'name',
+                    'table_name',
+                    'slug',
+                    'group',
+                    'external_database',
+                    'short_description',
+                    'description',
+                    'valid_from',
+                    'valid_to',
+                    'enquiries_contact',
+                    'licence',
+                    'restrictions_on_usage',
+                    'sort_field',
+                    'sort_direction',
+                ]
+            },
+        )
     ]
 
     class Media:
-        js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js',)
+        js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')
 
     def get_queryset(self, request):
         # Only show non-deleted reference datasets in admin

@@ -1,28 +1,13 @@
 from django import forms
 from django.contrib import admin
-from django.contrib.admin.models import (
-    LogEntry,
-    CHANGE,
-)
+from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.auth import get_user_model
-from django.contrib.auth.admin import (
-    UserAdmin,
-)
-from django.contrib.auth.models import (
-    Permission,
-)
-from django.contrib.contenttypes.models import (
-    ContentType,
-)
-from django.db import (
-    transaction,
-)
-from django.forms.widgets import (
-    CheckboxSelectMultiple,
-)
-from django.utils.encoding import (
-    force_text,
-)
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
+from django.forms.widgets import CheckboxSelectMultiple
+from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission
 from dataworkspace.apps.applications.models import ApplicationInstance
@@ -49,9 +34,7 @@ class AppUserEditForm(forms.ModelForm):
         required=False,
     )
     can_access_appstream = forms.BooleanField(
-        label='Can access AppStream',
-        help_text='For SPSS and STATA',
-        required=False,
+        label='Can access AppStream', help_text='For SPSS and STATA', required=False
     )
     authorized_datasets = forms.ModelMultipleChoiceField(
         label='Authorized datasets',
@@ -68,7 +51,9 @@ class AppUserEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         instance = kwargs['instance']
 
-        self.fields['can_start_all_applications'].initial = instance.user_permissions.filter(
+        self.fields[
+            'can_start_all_applications'
+        ].initial = instance.user_permissions.filter(
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
@@ -78,9 +63,11 @@ class AppUserEditForm(forms.ModelForm):
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields['authorized_datasets'].queryset = DataSet.objects.all().order_by('grouping__name', 'name', 'id')
+        self.fields['authorized_datasets'].queryset = DataSet.objects.all().order_by(
+            'grouping__name', 'name', 'id'
+        )
         self.fields['authorized_datasets'].initial = DataSet.objects.filter(
-            datasetuserpermission__user=instance,
+            datasetuserpermission__user=instance
         )
 
 
@@ -92,10 +79,7 @@ class LocalToolsFilter(admin.SimpleListFilter):
     parameter_name = 'can_start_tools'
 
     def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Can start local tools'),
-            ('no', 'Cannot start local tools'),
-        )
+        return (('yes', 'Can start local tools'), ('no', 'Cannot start local tools'))
 
     def queryset(self, request, queryset):
         perm = Permission.objects.get(
@@ -114,10 +98,7 @@ class AppStreamFilter(admin.SimpleListFilter):
     parameter_name = 'can_access_appstream'
 
     def lookups(self, request, model_admin):
-        return (
-            ('yes', 'Can access AppStream'),
-            ('no', 'Cannot access AppStream'),
-        )
+        return (('yes', 'Can access AppStream'), ('no', 'Cannot access AppStream'))
 
     def queryset(self, request, queryset):
         perm = Permission.objects.get(
@@ -136,10 +117,7 @@ class AppUserAdmin(UserAdmin):
     add_form_template = 'admin/change_form.html'
     add_form = AppUserCreationForm
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name',),
-        }),
+        (None, {'classes': ('wide',), 'fields': ('email', 'first_name', 'last_name')}),
     )
     list_filter = (
         'is_staff',
@@ -147,21 +125,23 @@ class AppUserAdmin(UserAdmin):
         'is_active',
         'groups',
         LocalToolsFilter,
-        AppStreamFilter
+        AppStreamFilter,
     )
     form = AppUserEditForm
     fieldsets = [
-        (None, {
-            'fields': ['email', 'sso_id', 'first_name', 'last_name']
-        }),
-        ('Permissions', {
-            'fields': [
-                'can_start_all_applications',
-                'can_access_appstream',
-                'is_staff',
-                'is_superuser',
-                'authorized_datasets',
-            ]}),
+        (None, {'fields': ['email', 'sso_id', 'first_name', 'last_name']}),
+        (
+            'Permissions',
+            {
+                'fields': [
+                    'can_start_all_applications',
+                    'can_access_appstream',
+                    'is_staff',
+                    'is_superuser',
+                    'authorized_datasets',
+                ]
+            },
+        ),
     ]
     readonly_fields = ['sso_id']
 
@@ -176,8 +156,12 @@ class AppUserAdmin(UserAdmin):
 
         def log_change(message):
             LogEntry.objects.log_action(
-                user_id=user_id, content_type_id=content_type, object_id=object_id,
-                object_repr=object_repr, action_flag=CHANGE, change_message=message,
+                user_id=user_id,
+                content_type_id=content_type,
+                object_id=object_id,
+                object_repr=object_repr,
+                action_flag=CHANGE,
+                change_message=message,
             )
 
         start_all_applications_permission = Permission.objects.get(
@@ -191,8 +175,8 @@ class AppUserAdmin(UserAdmin):
 
         if 'can_start_all_applications' in form.cleaned_data:
             if (
-                    form.cleaned_data['can_start_all_applications'] and
-                    start_all_applications_permission not in obj.user_permissions.all()
+                form.cleaned_data['can_start_all_applications']
+                and start_all_applications_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(start_all_applications_permission)
                 log_change('Added can_start_all_applications permission')
@@ -202,8 +186,8 @@ class AppUserAdmin(UserAdmin):
 
         if 'can_access_appstream' in form.cleaned_data:
             if (
-                    form.cleaned_data['can_access_appstream'] and
-                    access_appstream_permission not in obj.user_permissions.all()
+                form.cleaned_data['can_access_appstream']
+                and access_appstream_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(access_appstream_permission)
                 log_change('Added can_access_appstream permission')
@@ -212,21 +196,15 @@ class AppUserAdmin(UserAdmin):
                 log_change('Removed can_access_appstream permission')
 
         if 'authorized_datasets' in form.cleaned_data:
-            current_datasets = DataSet.objects.filter(
-                datasetuserpermission__user=obj,
-            )
+            current_datasets = DataSet.objects.filter(datasetuserpermission__user=obj)
             for dataset in form.cleaned_data['authorized_datasets']:
                 if dataset not in current_datasets.all():
-                    DataSetUserPermission.objects.create(
-                        dataset=dataset,
-                        user=obj,
-                    )
+                    DataSetUserPermission.objects.create(dataset=dataset, user=obj)
                     log_change('Added dataset {} permission'.format(dataset))
             for dataset in current_datasets:
                 if dataset not in form.cleaned_data['authorized_datasets']:
                     DataSetUserPermission.objects.filter(
-                        dataset=dataset,
-                        user=obj,
+                        dataset=dataset, user=obj
                     ).delete()
                     log_change('Removed dataset {} permission'.format(dataset))
 

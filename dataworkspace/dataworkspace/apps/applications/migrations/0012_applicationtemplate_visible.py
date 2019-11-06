@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0011_auto_20190917_1446'),
-    ]
+    dependencies = [('applications', '0011_auto_20190917_1446')]
 
     operations = [
         migrations.AddField(
             model_name='applicationtemplate',
             name='visible',
             field=models.BooleanField(default=True),
-        ),
+        )
     ]

@@ -13,10 +13,10 @@ def fill_host_pattern_with_uuid(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0002_applicationtemplate_host_pattern'),
-    ]
+    dependencies = [('applications', '0002_applicationtemplate_host_pattern')]
 
     operations = [
-        migrations.RunPython(fill_host_pattern_with_uuid, reverse_code=migrations.RunPython.noop),
+        migrations.RunPython(
+            fill_host_pattern_with_uuid, reverse_code=migrations.RunPython.noop
+        )
     ]

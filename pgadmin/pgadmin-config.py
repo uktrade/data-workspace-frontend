@@ -54,15 +54,11 @@ def normalise_environment(key_values):
         return separator.join(key.split(separator)[1:])
 
     without_more_components = {
-        key: value
-        for key, value in key_values.items()
-        if not get_later_components(key)
+        key: value for key, value in key_values.items() if not get_later_components(key)
     }
 
     with_more_components = {
-        key: value
-        for key, value in key_values.items()
-        if get_later_components(key)
+        key: value for key, value in key_values.items() if get_later_components(key)
     }
 
     def grouped_by_first_component(items):
@@ -71,8 +67,7 @@ def normalise_environment(key_values):
 
         # groupby requires the items to be sorted by the grouping key
         return itertools.groupby(
-            sorted(items, key=by_first_component),
-            by_first_component,
+            sorted(items, key=by_first_component), by_first_component
         )
 
     def items_with_first_component(items, first_component):
@@ -83,11 +78,16 @@ def normalise_environment(key_values):
         }
 
     nested_structured_dict = {
-        **without_more_components, **{
+        **without_more_components,
+        **{
             first_component: normalise_environment(
-                items_with_first_component(items, first_component))
-            for first_component, items in grouped_by_first_component(with_more_components.items())
-        }}
+                items_with_first_component(items, first_component)
+            )
+            for first_component, items in grouped_by_first_component(
+                with_more_components.items()
+            )
+        },
+    }
 
     def all_keys_are_ints():
         def is_int(string_to_test):
@@ -103,14 +103,11 @@ def normalise_environment(key_values):
         return [
             value
             for key, value in sorted(
-                nested_structured_dict.items(),
-                key=lambda key_value: int(key_value[0])
+                nested_structured_dict.items(), key=lambda key_value: int(key_value[0])
             )
         ]
 
-    return \
-        list_sorted_by_int_key() if all_keys_are_ints() else \
-        nested_structured_dict
+    return list_sorted_by_int_key() if all_keys_are_ints() else nested_structured_dict
 
 
 env = normalise_environment(os.environ)

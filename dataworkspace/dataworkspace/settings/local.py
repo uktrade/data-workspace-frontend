@@ -23,7 +23,7 @@ DATABASES = {
             'PORT': '5432',
         }
         for database_name, database in env['DATA_DB'].items()
-    }
+    },
 }
 
 STATIC_URL = '/static/'

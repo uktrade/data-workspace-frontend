@@ -5,9 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0004_auto_20190827_1128'),
-    ]
+    dependencies = [('applications', '0004_auto_20190827_1128')]
 
     operations = [
         migrations.AddField(
@@ -15,5 +13,5 @@ class Migration(migrations.Migration):
             name='spawner_time',
             field=models.IntegerField(default=120),
             preserve_default=False,
-        ),
+        )
     ]

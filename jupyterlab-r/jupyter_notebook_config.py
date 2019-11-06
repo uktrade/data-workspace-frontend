@@ -7,10 +7,7 @@ from sentry_sdk.integrations.tornado import TornadoIntegration
 
 def _get_pool_options(_, __):
     # We use self-signed certs in the proxy
-    return {
-        'num_pools': 2,
-        'cert_reqs': 'CERT_NONE'
-    }
+    return {'num_pools': 2, 'cert_reqs': 'CERT_NONE'}
 
 
 sentry_sdk.transport.HttpTransport._get_pool_options = _get_pool_options

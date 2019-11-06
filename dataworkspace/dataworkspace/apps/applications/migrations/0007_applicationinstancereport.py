@@ -5,15 +5,12 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0006_auto_20190912_0841'),
-    ]
+    dependencies = [('applications', '0006_auto_20190912_0841')]
 
     operations = [
         migrations.CreateModel(
             name='ApplicationInstanceReport',
-            fields=[
-            ],
+            fields=[],
             options={
                 'verbose_name': 'Application report',
                 'verbose_name_plural': 'Application report',
@@ -22,5 +19,5 @@ class Migration(migrations.Migration):
                 'constraints': [],
             },
             bases=('applications.applicationinstance',),
-        ),
+        )
     ]

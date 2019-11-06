@@ -10,10 +10,9 @@ def external_model_class(model_class):
     :param model_class:
     :return:
     """
+
     def clean_fields(fields):
-        return [
-            field for field in fields if field.name != 'reference_dataset'
-        ]
+        return [field for field in fields if field.name != 'reference_dataset']
 
     local_fields = model_class._meta.local_fields
     model_class._meta.local_fields = clean_fields(local_fields)
@@ -43,8 +42,8 @@ def has_circular_link(target_dataset, linked_dataset):
             return True
         checked.append(linked)
         links = set(
-            x.linked_reference_dataset for x in
-            linked.fields.exclude(linked_reference_dataset=None)
+            x.linked_reference_dataset
+            for x in linked.fields.exclude(linked_reference_dataset=None)
             if x.linked_reference_dataset not in checked
         )
     return False

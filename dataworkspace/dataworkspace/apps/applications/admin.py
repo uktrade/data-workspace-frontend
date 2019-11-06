@@ -3,10 +3,7 @@ from itertools import product
 
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.contrib.auth.models import (
-    User,
-    Permission,
-)
+from django.contrib.auth.models import User, Permission
 from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
 from django.db.models.functions import Least
 
@@ -21,21 +18,28 @@ from dataworkspace.apps.applications.utils import application_instance_max_cpu
 @admin.register(ApplicationInstance)
 class ApplicationInstanceAdmin(admin.ModelAdmin):
 
-    list_display = ('owner', 'public_host', 'created_date', )
+    list_display = ('owner', 'public_host', 'created_date')
     fieldsets = [
-        (None, {
-            'fields': [
-                'owner',
-                'public_host',
-                'created_date',
-                'state',
-                'spawner_application_instance_id',
-                'max_cpu',
-            ]
-        }),
+        (
+            None,
+            {
+                'fields': [
+                    'owner',
+                    'public_host',
+                    'created_date',
+                    'state',
+                    'spawner_application_instance_id',
+                    'max_cpu',
+                ]
+            },
+        )
     ]
     readonly_fields = (
-        'owner', 'public_host', 'created_date', 'spawner_application_instance_id', 'state',
+        'owner',
+        'public_host',
+        'created_date',
+        'spawner_application_instance_id',
+        'state',
         'max_cpu',
     )
 
@@ -54,19 +58,26 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
 
         return '{0:.2f}% at {1}'.format(
             max_cpu,
-            datetime.datetime.fromtimestamp(ts_at_max).strftime('%-I:%M %p').replace('AM', 'a.m.').replace('PM', 'p.m'),
+            datetime.datetime.fromtimestamp(ts_at_max)
+            .strftime('%-I:%M %p')
+            .replace('AM', 'a.m.')
+            .replace('PM', 'p.m'),
         )
 
     max_cpu.short_description = 'Max recent CPU'
 
     def get_form(self, request, obj=None, change=False, **kwargs):
-        kwargs.update({
-            'help_texts': {
-                'max_cpu': ('The highest CPU usage in the past two hours.'
-                            'The application will be stopped automatically '
-                            'if the usage is less than 1% for two hours.'),
-            },
-        })
+        kwargs.update(
+            {
+                'help_texts': {
+                    'max_cpu': (
+                        'The highest CPU usage in the past two hours.'
+                        'The application will be stopped automatically '
+                        'if the usage is less than 1% for two hours.'
+                    )
+                }
+            }
+        )
         return super().get_form(request, obj, change, **kwargs)
 
 
@@ -84,7 +95,7 @@ class ApplicationFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         try:
             queryset_filter = {
-                'application_template__name': request.GET['application_template__name'],
+                'application_template__name': request.GET['application_template__name']
             }
         except KeyError:
             queryset_filter = {}
@@ -110,8 +121,11 @@ class ApplicationGroup(SimpleListFilter):
     def choices(self, changelist):
         for i, (lookup, title) in enumerate(self.lookup_choices):
             yield {
-                'selected': self.value() == str(lookup) or (i == 0 and self.value() is None),
-                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
+                'selected': self.value() == str(lookup)
+                or (i == 0 and self.value() is None),
+                'query_string': changelist.get_query_string(
+                    {self.parameter_name: lookup}
+                ),
                 'display': title,
             }
 
@@ -126,9 +140,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
     change_list_template = 'admin/application_instance_report_change_list.html'
     date_hierarchy = 'created_date'
 
-    list_filter = (
-        (ApplicationFilter, ApplicationGroup,)
-    )
+    list_filter = (ApplicationFilter, ApplicationGroup)
 
     def has_add_permission(self, request):
         return False
@@ -140,10 +152,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         return False
 
     def changelist_view(self, request, extra_context=None):
-        response = super().changelist_view(
-            request,
-            extra_context=extra_context,
-        )
+        response = super().changelist_view(request, extra_context=extra_context)
         try:
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
@@ -157,24 +166,31 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             # NULL values are ordered as greater than non-NULL values, so to order rows without
             # runtime as lower in the list as those that have runtime, but still order rows with
             # runtime in decreasing order, we need an extra field
-            'has_runtime': Least(Count(F('spawner_stopped_at') - F('spawner_created_at')), 1),
-            'num_with_runtime': Count(F('spawner_stopped_at') - F('spawner_created_at')),
+            'has_runtime': Least(
+                Count(F('spawner_stopped_at') - F('spawner_created_at')), 1
+            ),
+            'num_with_runtime': Count(
+                F('spawner_stopped_at') - F('spawner_created_at')
+            ),
             'min_runtime': Min(
-                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc') -
-                Func(Value('second'), F('spawner_created_at'), function='date_trunc')
+                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc')
+                - Func(Value('second'), F('spawner_created_at'), function='date_trunc')
             ),
             'max_runtime': Max(
-                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc') -
-                Func(Value('second'), F('spawner_created_at'), function='date_trunc')
+                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc')
+                - Func(Value('second'), F('spawner_created_at'), function='date_trunc')
             ),
             'total_runtime': Sum(
-                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc') -
-                Func(Value('second'), F('spawner_created_at'), function='date_trunc')
+                Func(Value('second'), F('spawner_stopped_at'), function='date_trunc')
+                - Func(Value('second'), F('spawner_created_at'), function='date_trunc')
             ),
         }
 
         group_by_fields = {
-            'user_and_application': ['owner__username', 'application_template__nice_name'],
+            'user_and_application': [
+                'owner__username',
+                'application_template__nice_name',
+            ],
             'user': ['owner__username'],
             'application': ['application_template__nice_name'],
             'user_and_cpu_memory': ['owner__username', 'spawner_cpu', 'spawner_memory'],
@@ -182,23 +198,29 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         }[request.GET.get('group_by', 'user_and_application')]
 
         summary_with_applications = list(
-            qs
-            .values(*group_by_fields)
+            qs.values(*group_by_fields)
             .annotate(**metrics)
-            .order_by(*(
-                ['-has_runtime', '-total_runtime', '-num_launched', '-max_runtime'] + group_by_fields
-            ))
+            .order_by(
+                *(
+                    ['-has_runtime', '-total_runtime', '-num_launched', '-max_runtime']
+                    + group_by_fields
+                )
+            )
         )
 
         perm = list(Permission.objects.filter(codename='start_all_applications'))
-        users = User.objects.filter(
-            Q(groups__permissions__in=perm) | Q(user_permissions__in=perm) | Q(is_superuser=True)
-        ).distinct().order_by('username')
+        users = (
+            User.objects.filter(
+                Q(groups__permissions__in=perm)
+                | Q(user_permissions__in=perm)
+                | Q(is_superuser=True)
+            )
+            .distinct()
+            .order_by('username')
+        )
 
         try:
-            app_filter = {
-                'name__in': [request.GET['application_template__name']]
-            }
+            app_filter = {'name__in': [request.GET['application_template__name']]}
         except KeyError:
             app_filter = {}
 
@@ -211,8 +233,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
 
         def group_by_user_missing_rows():
             users_with_applications = set(
-                item['owner__username']
-                for item in summary_with_applications
+                item['owner__username'] for item in summary_with_applications
             )
             return [
                 {
@@ -227,7 +248,9 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             ]
 
         def group_by_application_missing_rows():
-            application_templates = list(ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name'))
+            application_templates = list(
+                ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name')
+            )
             applications_run = set(
                 item['application_template__nice_name']
                 for item in summary_with_applications
@@ -255,7 +278,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                     'spawner_memory': memory,
                     'num_launched': 0,
                     'has_runtime': 0,
-                    'num_with_runtime': 0
+                    'num_with_runtime': 0,
                 }
                 for cpu, memory in reportable_cpu_memory
                 if (cpu, memory) not in launched_cpu_memory_combos
@@ -280,7 +303,9 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             ]
 
         def group_by_user_and_application_missing_rows():
-            application_templates = list(ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name'))
+            application_templates = list(
+                ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name')
+            )
             users_with_applications = set(
                 (item['owner__username'], item['application_template__nice_name'])
                 for item in summary_with_applications
@@ -294,21 +319,26 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                     'num_with_runtime': 0,
                 }
                 for user, application_template in product(users, application_templates)
-                if (user.username, application_template.nice_name) not in users_with_applications
+                if (user.username, application_template.nice_name)
+                not in users_with_applications
             ]
 
         summary_without_applications = (
-            group_by_user_missing_rows() if request.GET.get('group_by') == 'user' else
-            group_by_application_missing_rows() if request.GET.get('group_by') == 'application' else
-            group_by_cpu_memory_missing_rows() if request.GET.get('group_by') == 'cpu_memory' else
-            group_by_user_cpu_memory_missing_rows() if request.GET.get('group_by') == 'user_and_cpu_memory' else
-            group_by_user_and_application_missing_rows()
+            group_by_user_missing_rows()
+            if request.GET.get('group_by') == 'user'
+            else group_by_application_missing_rows()
+            if request.GET.get('group_by') == 'application'
+            else group_by_cpu_memory_missing_rows()
+            if request.GET.get('group_by') == 'cpu_memory'
+            else group_by_user_cpu_memory_missing_rows()
+            if request.GET.get('group_by') == 'user_and_cpu_memory'
+            else group_by_user_and_application_missing_rows()
         )
 
-        response.context_data['summary'] = summary_with_applications + summary_without_applications
-
-        response.context_data['summary_total'] = dict(
-            qs.aggregate(**metrics)
+        response.context_data['summary'] = (
+            summary_with_applications + summary_without_applications
         )
+
+        response.context_data['summary_total'] = dict(qs.aggregate(**metrics))
 
         return response

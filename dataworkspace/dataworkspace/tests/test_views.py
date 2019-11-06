@@ -29,7 +29,9 @@ class TestDatasetViews(BaseTestCase):
         factories.DataSetFactory(grouping=group_with_published_dataset, published=True)
 
         group_with_unpublished_dataset = factories.DataGroupingFactory.create()
-        factories.DataSetFactory(grouping=group_with_unpublished_dataset, published=False)
+        factories.DataSetFactory(
+            grouping=group_with_unpublished_dataset, published=False
+        )
 
         empty_group = factories.DataGroupingFactory.create()
 
@@ -54,10 +56,16 @@ class TestDatasetViews(BaseTestCase):
         ds4 = factories.DataSetFactory.create(grouping=group, published=False)
         ds4.delete()
 
-        rds1 = factories.ReferenceDatasetFactory(group=group, published=True, table_name='rds1')
-        rds2 = factories.ReferenceDatasetFactory(group=group, published=False, table_name='rds2')
+        rds1 = factories.ReferenceDatasetFactory(
+            group=group, published=True, table_name='rds1'
+        )
+        rds2 = factories.ReferenceDatasetFactory(
+            group=group, published=False, table_name='rds2'
+        )
         rds3 = factories.ReferenceDatasetFactory()
-        rds4 = factories.ReferenceDatasetFactory(group=group, published=False, table_name='rds3')
+        rds4 = factories.ReferenceDatasetFactory(
+            group=group, published=False, table_name='rds3'
+        )
         rds4.delete()
 
         response = self._authenticated_get(
@@ -103,10 +111,10 @@ class TestDatasetViews(BaseTestCase):
         factories.SourceLinkFactory(dataset=ds)
         factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(
-            reverse('catalogue:dataset_fullpath', kwargs={
-                'group_slug': group.slug,
-                'set_slug': ds.slug
-            })
+            reverse(
+                'catalogue:dataset_fullpath',
+                kwargs={'group_slug': group.slug, 'set_slug': ds.slug},
+            )
         )
         self.assertEqual(response.status_code, 404)
 
@@ -117,10 +125,10 @@ class TestDatasetViews(BaseTestCase):
         sl1 = factories.SourceLinkFactory(dataset=ds)
         sl2 = factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(
-            reverse('catalogue:dataset_fullpath', kwargs={
-                'group_slug': group.slug,
-                'set_slug': ds.slug
-            })
+            reverse(
+                'catalogue:dataset_fullpath',
+                kwargs={'group_slug': group.slug, 'set_slug': ds.slug},
+            )
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, ds.name)
@@ -130,51 +138,44 @@ class TestDatasetViews(BaseTestCase):
     def test_reference_dataset_detail_view(self):
         group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_detail_view')
-        factories.ReferenceDatasetFieldFactory(
-            reference_dataset=rds
+        rds = factories.ReferenceDatasetFactory.create(
+            group=group, table_name='test_detail_view'
         )
+        factories.ReferenceDatasetFieldFactory(reference_dataset=rds)
         response = self._authenticated_get(
-            reverse('catalogue:reference_dataset', kwargs={
-                'group_slug': group.slug,
-                'reference_slug': rds.slug
-            })
+            reverse(
+                'catalogue:reference_dataset',
+                kwargs={'group_slug': group.slug, 'reference_slug': rds.slug},
+            )
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, rds.name)
 
     def test_reference_dataset_json_download(self):
         group = factories.DataGroupingFactory.create()
-        linked_rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_json')
+        linked_rds = factories.ReferenceDatasetFactory.create(
+            group=group, table_name='test_json'
+        )
         linked_field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds,
-            name='id',
-            data_type=2,
-            is_identifier=True
+            reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds,
-            name='name',
-            data_type=1,
-            is_display_name=True
+            reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
         )
-        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_jso2')
+        rds = factories.ReferenceDatasetFactory.create(
+            group=group, table_name='test_jso2'
+        )
         field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name='id',
-            data_type=2,
-            is_identifier=True
+            reference_dataset=rds, name='id', data_type=2, is_identifier=True
         )
         field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name='name',
-            data_type=1,
+            reference_dataset=rds, name='name', data_type=1
         )
         field3 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='linked',
             data_type=8,
-            linked_reference_dataset=linked_rds
+            linked_reference_dataset=linked_rds,
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
@@ -190,70 +191,86 @@ class TestDatasetViews(BaseTestCase):
             data_type=10,
             sort_order=5,
         )
-        link_record = linked_rds.save_record(None, {
-            'reference_dataset': linked_rds,
-            linked_field1.column_name: 1,
-            linked_field2.column_name: 'Linked Display Name'
-        })
+        link_record = linked_rds.save_record(
+            None,
+            {
+                'reference_dataset': linked_rds,
+                linked_field1.column_name: 1,
+                linked_field2.column_name: 'Linked Display Name',
+            },
+        )
 
-        rec1 = rds.save_record(None, {
-            'reference_dataset': rds,
-            field1.column_name: 1,
-            field2.column_name: 'Test record',
-            field3.column_name: link_record
-        })
-        rec2 = rds.save_record(None, {
-            'reference_dataset': rds,
-            field1.column_name: 2,
-            field2.column_name: 'Ánd again',
-            field3.column_name: None,
-        })
+        rec1 = rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 1,
+                field2.column_name: 'Test record',
+                field3.column_name: link_record,
+            },
+        )
+        rec2 = rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 2,
+                field2.column_name: 'Ánd again',
+                field3.column_name: None,
+            },
+        )
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
-            reverse('catalogue:reference_dataset_download', kwargs={
-                'group_slug': group.slug,
-                'reference_slug': rds.slug,
-                'format': 'json',
-            })
+            reverse(
+                'catalogue:reference_dataset_download',
+                kwargs={
+                    'group_slug': group.slug,
+                    'reference_slug': rds.slug,
+                    'format': 'json',
+                },
+            )
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), [{
-            'id': 1,
-            'linked: ID': 1,
-            'linked: Name': 'Linked Display Name',
-            'name': 'Test record',
-            'auto uuid': str(rec1.auto_uuid),
-            'auto id': 1,
-        }, {
-            'id': 2,
-            'linked: ID': None,
-            'linked: Name': None,
-            'name': 'Ánd again',
-            'auto uuid': str(rec2.auto_uuid),
-            'auto id': 2,
-        }])
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    'id': 1,
+                    'linked: ID': 1,
+                    'linked: Name': 'Linked Display Name',
+                    'name': 'Test record',
+                    'auto uuid': str(rec1.auto_uuid),
+                    'auto id': 1,
+                },
+                {
+                    'id': 2,
+                    'linked: ID': None,
+                    'linked: Name': None,
+                    'name': 'Ánd again',
+                    'auto uuid': str(rec2.auto_uuid),
+                    'auto id': 2,
+                },
+            ],
+        )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
             EventLog.objects.latest().event_type,
-            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
+            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
         )
 
     def test_reference_dataset_csv_download(self):
         group = factories.DataGroupingFactory.create()
-        linked_rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv')
+        linked_rds = factories.ReferenceDatasetFactory.create(
+            group=group, table_name='test_csv'
+        )
         linked_field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds,
-            name='id',
-            data_type=2,
-            is_identifier=True
+            reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds,
-            name='name',
-            data_type=1,
-            is_display_name=True
+            reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
         )
-        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv2')
+        rds = factories.ReferenceDatasetFactory.create(
+            group=group, table_name='test_csv2'
+        )
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
@@ -262,10 +279,7 @@ class TestDatasetViews(BaseTestCase):
             sort_order=1,
         )
         field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name='name',
-            data_type=1,
-            sort_order=2,
+            reference_dataset=rds, name='name', data_type=1, sort_order=2
         )
         field3 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
@@ -288,61 +302,75 @@ class TestDatasetViews(BaseTestCase):
             data_type=10,
             sort_order=5,
         )
-        link_record = linked_rds.save_record(None, {
-            'reference_dataset': linked_rds,
-            linked_field1.column_name: 1,
-            linked_field2.column_name: 'Linked Display Name'
-        })
-        rec1 = rds.save_record(None, {
-            'reference_dataset': rds,
-            field1.column_name: 1,
-            field2.column_name: 'Test record',
-            field3.column_name: link_record
-        })
-        rec2 = rds.save_record(None, {
-            'reference_dataset': rds,
-            field1.column_name: 2,
-            field2.column_name: 'Ánd again',
-            field3.column_name: None,
-        })
+        link_record = linked_rds.save_record(
+            None,
+            {
+                'reference_dataset': linked_rds,
+                linked_field1.column_name: 1,
+                linked_field2.column_name: 'Linked Display Name',
+            },
+        )
+        rec1 = rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 1,
+                field2.column_name: 'Test record',
+                field3.column_name: link_record,
+            },
+        )
+        rec2 = rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 2,
+                field2.column_name: 'Ánd again',
+                field3.column_name: None,
+            },
+        )
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
-            reverse('catalogue:reference_dataset_download', kwargs={
-                'group_slug': group.slug,
-                'reference_slug': rds.slug,
-                'format': 'csv',
-            })
+            reverse(
+                'catalogue:reference_dataset_download',
+                kwargs={
+                    'group_slug': group.slug,
+                    'reference_slug': rds.slug,
+                    'format': 'csv',
+                },
+            )
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content,
             b'"id","name","linked: ID","linked: Name","auto uuid","auto id"\r\n'
             b'1,"Test record",1,"Linked Display Name",%s,1\r\n'
-            b'2,"\xc3\x81nd again","","",%s,2\r\n' % (
-                str(rec1.auto_uuid).encode(),
-                str(rec2.auto_uuid).encode()
-            )
+            b'2,"\xc3\x81nd again","","",%s,2\r\n'
+            % (str(rec1.auto_uuid).encode(), str(rec2.auto_uuid).encode()),
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
             EventLog.objects.latest().event_type,
-            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
+            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
         )
 
     def test_reference_dataset_unknown_download(self):
         group = factories.DataGroupingFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_csv')
+        rds = factories.ReferenceDatasetFactory.create(
+            group=group, table_name='test_csv'
+        )
         factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            is_identifier=True
+            reference_dataset=rds, is_identifier=True
         )
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
-            reverse('catalogue:reference_dataset_download', kwargs={
-                'group_slug': group.slug,
-                'reference_slug': rds.slug,
-                'format': 'madeup',
-            })
+            reverse(
+                'catalogue:reference_dataset_download',
+                kwargs={
+                    'group_slug': group.slug,
+                    'reference_slug': rds.slug,
+                    'format': 'madeup',
+                },
+            )
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(EventLog.objects.count(), log_count)
@@ -350,17 +378,15 @@ class TestDatasetViews(BaseTestCase):
 
 class TestSupportView(BaseTestCase):
     def test_create_support_request_invalid_email(self):
-        response = self._authenticated_post(reverse('support'), {
-            'email': 'x',
-            'message': 'test message',
-        })
+        response = self._authenticated_post(
+            reverse('support'), {'email': 'x', 'message': 'test message'}
+        )
         self.assertContains(response, 'Enter a valid email address')
 
     def test_create_support_request_invalid_message(self):
-        response = self._authenticated_post(reverse('support'), {
-            'email': 'noreply@example.com',
-            'message': '',
-        })
+        response = self._authenticated_post(
+            reverse('support'), {'email': 'noreply@example.com', 'message': ''}
+        )
         self.assertContains(response, 'This field is required')
 
     @mock.patch('dataworkspace.apps.core.views.create_support_request')
@@ -368,17 +394,14 @@ class TestSupportView(BaseTestCase):
         mock_create_request.return_value = 999
         response = self._authenticated_post(
             reverse('support'),
-            data={
-                'email': 'noreply@example.com',
-                'message': 'A test message',
-            },
-            post_format='multipart'
+            data={'email': 'noreply@example.com', 'message': 'A test message'},
+            post_format='multipart',
         )
         self.assertContains(
             response,
             'Your request has been received. Your reference is: '
             '<strong>999</strong>.',
-            html=True
+            html=True,
         )
         mock_create_request.assert_called_once()
 
@@ -401,13 +424,13 @@ class TestSupportView(BaseTestCase):
                 'attachment1': file1,
                 'attachment2': file2,
             },
-            post_format='multipart'
+            post_format='multipart',
         )
         self.assertContains(
             response,
             'Your request has been received. Your reference is: '
             '<strong>999</strong>.',
-            html=True
+            html=True,
         )
         mock_create_request.assert_called_once()
 
@@ -416,15 +439,13 @@ class TestSourceLinkDownloadView(BaseTestCase):
     def test_forbidden_dataset(self):
         group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group,
-            published=True,
-            user_access_type='REQUIRES_AUTHORIZATION',
+            grouping=group, published=True, user_access_type='REQUIRES_AUTHORIZATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
             dataset=dataset,
             link_type=SourceLink.TYPE_EXTERNAL,
-            url='http://example.com'
+            url='http://example.com',
         )
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
@@ -433,8 +454,8 @@ class TestSourceLinkDownloadView(BaseTestCase):
                 kwargs={
                     'group_slug': group.slug,
                     'set_slug': dataset.slug,
-                    'source_link_id': link.id
-                }
+                    'source_link_id': link.id,
+                },
             )
         )
         self.assertEqual(response.status_code, 403)
@@ -443,15 +464,13 @@ class TestSourceLinkDownloadView(BaseTestCase):
     def test_download_external_file(self):
         group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group,
-            published=True,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            grouping=group, published=True, user_access_type='REQUIRES_AUTHENTICATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
             dataset=dataset,
             link_type=SourceLink.TYPE_EXTERNAL,
-            url='http://example.com'
+            url='http://example.com',
         )
         log_count = EventLog.objects.count()
         response = self._authenticated_get(
@@ -460,38 +479,37 @@ class TestSourceLinkDownloadView(BaseTestCase):
                 kwargs={
                     'group_slug': group.slug,
                     'set_slug': dataset.slug,
-                    'source_link_id': link.id
-                }
+                    'source_link_id': link.id,
+                },
             )
         )
-        self.assertRedirects(response, 'http://example.com', fetch_redirect_response=False)
+        self.assertRedirects(
+            response, 'http://example.com', fetch_redirect_response=False
+        )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
             EventLog.objects.latest().event_type,
-            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
+            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
         )
 
     @mock.patch('dataworkspace.apps.catalogue.views.boto3.client')
     def test_download_local_file(self, mock_client):
         group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group,
-            published=True,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            grouping=group, published=True, user_access_type='REQUIRES_AUTHENTICATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
             dataset=dataset,
             link_type=SourceLink.TYPE_LOCAL,
-            url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt'
+            url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt',
         )
         log_count = EventLog.objects.count()
         mock_client().get_object.return_value = {
             'ContentType': 'text/plain',
             'Body': StreamingBody(
-                io.BytesIO(b'This is a test file'),
-                len(b'This is a test file')
-            )
+                io.BytesIO(b'This is a test file'), len(b'This is a test file')
+            ),
         }
         response = self._authenticated_get(
             reverse(
@@ -499,23 +517,19 @@ class TestSourceLinkDownloadView(BaseTestCase):
                 kwargs={
                     'group_slug': group.slug,
                     'set_slug': dataset.slug,
-                    'source_link_id': link.id
-                }
+                    'source_link_id': link.id,
+                },
             )
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            list(response.streaming_content)[0],
-            b'This is a test file'
-        )
+        self.assertEqual(list(response.streaming_content)[0], b'This is a test file')
         mock_client().get_object.assert_called_with(
-            Bucket=settings.AWS_UPLOADS_BUCKET,
-            Key=link.url
+            Bucket=settings.AWS_UPLOADS_BUCKET, Key=link.url
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
             EventLog.objects.latest().event_type,
-            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
+            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
         )
 
 
@@ -523,32 +537,20 @@ class TestSourceTableDownloadView(BaseTestCase):
     databases = ['default', 'my_database']
 
     def test_forbidden_dataset(self):
-        dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )
-        source_table = factories.SourceTableFactory(
-            dataset=dataset,
-        )
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
+        source_table = factories.SourceTableFactory(dataset=dataset)
         log_count = EventLog.objects.count()
-        response = self._authenticated_get(
-            source_table.get_absolute_url()
-        )
+        response = self._authenticated_get(source_table.get_absolute_url())
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
 
     def test_missing_table(self):
-        dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
         source_table = factories.SourceTableFactory(
             dataset=dataset,
-            database=factories.DatabaseFactory(
-                memorable_name='my_database',
-            )
+            database=factories.DatabaseFactory(memorable_name='my_database'),
         )
-        response = self._authenticated_get(
-            source_table.get_absolute_url()
-        )
+        response = self._authenticated_get(source_table.get_absolute_url())
         self.assertEqual(response.status_code, 404)
 
     def test_table_download(self):
@@ -563,14 +565,10 @@ class TestSourceTableDownloadView(BaseTestCase):
                 '''
             )
 
-        dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
         source_table = factories.SourceTableFactory(
             dataset=dataset,
-            database=factories.DatabaseFactory(
-                memorable_name='my_database',
-            ),
+            database=factories.DatabaseFactory(memorable_name='my_database'),
             schema='public',
             table='download_test',
         )
@@ -579,12 +577,12 @@ class TestSourceTableDownloadView(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             b''.join(response.streaming_content),
-            b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n'
+            b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n',
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
             EventLog.objects.latest().event_type,
-            EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD
+            EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD,
         )
 
 
@@ -592,32 +590,20 @@ class TestSourceViewDownloadView(BaseTestCase):
     databases = ['default', 'my_database']
 
     def test_forbidden_dataset(self):
-        dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )
-        source_view = factories.SourceViewFactory(
-            dataset=dataset,
-        )
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
+        source_view = factories.SourceViewFactory(dataset=dataset)
         log_count = EventLog.objects.count()
-        response = self._authenticated_get(
-            source_view.get_absolute_url()
-        )
+        response = self._authenticated_get(source_view.get_absolute_url())
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
 
     def test_missing_view(self):
-        dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
         source_view = factories.SourceViewFactory(
             dataset=dataset,
-            database=factories.DatabaseFactory(
-                memorable_name='my_database',
-            )
+            database=factories.DatabaseFactory(memorable_name='my_database'),
         )
-        response = self._authenticated_get(
-            source_view.get_absolute_url()
-        )
+        response = self._authenticated_get(source_view.get_absolute_url())
         self.assertEqual(response.status_code, 404)
 
     def test_table_download(self):
@@ -633,14 +619,10 @@ class TestSourceViewDownloadView(BaseTestCase):
                 '''
             )
 
-        dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
         source_view = factories.SourceViewFactory(
             dataset=dataset,
-            database=factories.DatabaseFactory(
-                memorable_name='my_database',
-            ),
+            database=factories.DatabaseFactory(memorable_name='my_database'),
             schema='public',
             view='download_test_view',
         )
@@ -649,12 +631,12 @@ class TestSourceViewDownloadView(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             b''.join(response.streaming_content),
-            b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n'
+            b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n',
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
             EventLog.objects.latest().event_type,
-            EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD
+            EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
         )
 
 
@@ -683,36 +665,28 @@ class TestCustomQueryDownloadView(BaseTestCase):
     def _create_query(self, sql):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
         return factories.CustomDatasetQueryFactory(
-            dataset=dataset,
-            database=self.database,
-            query=sql
+            dataset=dataset, database=self.database, query=sql
         )
 
     def test_forbidden_dataset(self):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
-        source_table = factories.SourceTableFactory(
-            dataset=dataset,
-        )
+        source_table = factories.SourceTableFactory(dataset=dataset)
         log_count = EventLog.objects.count()
-        response = self._authenticated_get(
-            source_table.get_absolute_url()
-        )
+        response = self._authenticated_get(source_table.get_absolute_url())
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
 
     def test_invalid_sql(self):
         query = self._create_query('SELECT * FROM table_that_does_not_exist;')
         self.assertRaises(
-            Exception,
-            lambda _: self._authenticated_get(query.get_absolute_url())
+            Exception, lambda _: self._authenticated_get(query.get_absolute_url())
         )
 
     def test_dangerous_sql(self):
         # Test drop table
         query = self._create_query('DROP TABLE custom_query_test;')
         self.assertRaises(
-            Exception,
-            lambda _: self._authenticated_get(query.get_absolute_url())
+            Exception, lambda _: self._authenticated_get(query.get_absolute_url())
         )
         with connect(self.dsn) as conn, conn.cursor() as cursor:
             cursor.execute('SELECT to_regclass(\'custom_query_test\')')
@@ -721,8 +695,7 @@ class TestCustomQueryDownloadView(BaseTestCase):
         # Test delete records
         query = self._create_query('DELETE FROM custom_query_test;')
         self.assertRaises(
-            Exception,
-            lambda _: self._authenticated_get(query.get_absolute_url())
+            Exception, lambda _: self._authenticated_get(query.get_absolute_url())
         )
         with connect(self.dsn) as conn, conn.cursor() as cursor:
             cursor.execute('SELECT COUNT(*) FROM custom_query_test')
@@ -731,18 +704,20 @@ class TestCustomQueryDownloadView(BaseTestCase):
         # Test update records
         query = self._create_query('UPDATE custom_query_test SET name=\'updated\';')
         self.assertRaises(
-            Exception,
-            lambda _: self._authenticated_get(query.get_absolute_url())
+            Exception, lambda _: self._authenticated_get(query.get_absolute_url())
         )
         with connect(self.dsn) as conn, conn.cursor() as cursor:
-            cursor.execute('SELECT COUNT(*) FROM custom_query_test WHERE name=\'updated\'')
+            cursor.execute(
+                'SELECT COUNT(*) FROM custom_query_test WHERE name=\'updated\''
+            )
             self.assertEqual(cursor.fetchone()[0], 0)
 
         # Test insert record
-        query = self._create_query('INSERT INTO custom_query_test (id, name) VALUES(4, \'added\')')
+        query = self._create_query(
+            'INSERT INTO custom_query_test (id, name) VALUES(4, \'added\')'
+        )
         self.assertRaises(
-            Exception,
-            lambda _: self._authenticated_get(query.get_absolute_url())
+            Exception, lambda _: self._authenticated_get(query.get_absolute_url())
         )
         with connect(self.dsn) as conn, conn.cursor() as cursor:
             cursor.execute('SELECT COUNT(*) FROM custom_query_test')
@@ -756,10 +731,10 @@ class TestCustomQueryDownloadView(BaseTestCase):
         self.assertEqual(
             b''.join(response.streaming_content),
             b'"id","name","date"\r\n1,"the first record",""\r\n'
-            b'3,"the last record",""\r\n"Number of rows: 2"\r\n'
+            b'3,"the last record",""\r\n"Number of rows: 2"\r\n',
         )
         self.assertEqual(EventLog.objects.count(), log_count + 1)
         self.assertEqual(
             EventLog.objects.latest().event_type,
-            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
+            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
         )

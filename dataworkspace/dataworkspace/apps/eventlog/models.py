@@ -22,9 +22,7 @@ class EventLog(models.Model):
         (TYPE_DATASET_SOURCE_VIEW_DOWNLOAD, 'Dataset source view download'),
     )
     user = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.DO_NOTHING,
-        related_name='events'
+        get_user_model(), on_delete=models.DO_NOTHING, related_name='events'
     )
     id = models.BigAutoField(primary_key=True)
     timestamp = models.DateTimeField(auto_now=True, db_index=True)
@@ -42,5 +40,5 @@ class EventLog(models.Model):
         return '{} – {} – {}'.format(
             self.timestamp,
             self.user.get_full_name(),  # pylint: disable=no-member
-            self.get_event_type_display()
+            self.get_event_type_display(),
         )

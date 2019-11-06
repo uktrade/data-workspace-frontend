@@ -18,12 +18,16 @@ DEBUG = 'localapps.com' in env['ALLOWED_HOSTS']
 
 def aws_fargate_private_ip():
     with urllib.request.urlopen('http://169.254.170.2/v2/metadata') as response:
-        return json.loads(response.read().decode('utf-8'))['Containers'][0]['Networks'][0]['IPv4Addresses'][0]
+        return json.loads(response.read().decode('utf-8'))['Containers'][0]['Networks'][
+            0
+        ]['IPv4Addresses'][0]
 
 
-ALLOWED_HOSTS = \
-    (env['ALLOWED_HOSTS']) if DEBUG else \
-    (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
+ALLOWED_HOSTS = (
+    (env['ALLOWED_HOSTS'])
+    if DEBUG
+    else (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
+)
 
 INTERNAL_IPS = ['127.0.0.1'] if DEBUG else []
 
@@ -61,7 +65,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'dataworkspace.apps.accounts.backends.AuthbrokerBackendUsernameIsEmail',
+    'dataworkspace.apps.accounts.backends.AuthbrokerBackendUsernameIsEmail'
 ]
 AUTHBROKER_URL = env['AUTHBROKER_URL']
 AUTHBROKER_CLIENT_ID = env['AUTHBROKER_CLIENT_ID']
@@ -78,9 +82,7 @@ ROOT_URLCONF = 'dataworkspace.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),
-        ],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
@@ -96,13 +98,12 @@ TEMPLATES = [
                 'django.template.loaders.app_directories.Loader',
             ],
         },
-    },
+    }
 ]
 
 WSGI_APPLICATION = 'dataworkspace.wsgi.application'
 
-AUTH_PASSWORD_VALIDATORS = [
-]
+AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -113,20 +114,10 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
     'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'app': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
+        'django': {'handlers': ['console'], 'level': 'INFO'},
+        'app': {'handlers': ['console'], 'level': 'INFO'},
     },
 }
 
@@ -138,10 +129,8 @@ CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': env['REDIS_URL'],
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-    },
+        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient'},
+    }
 }
 
 # This deliberately the same as the proxy: it changes the cookie value on
@@ -194,23 +183,22 @@ PROMETHEUS_DOMAIN = env['PROMETHEUS_DOMAIN']
 
 GOOGLE_ANALYTICS_SITE_ID = env['GOOGLE_ANALYTICS_SITE_ID']
 AWS_UPLOADS_BUCKET = env['UPLOADS_BUCKET']
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 DATABASES_DATA = env['DATA_DB']
 
 GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN = env['GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN']
 
-S3_ASSUME_ROLE_POLICY_DOCUMENT = base64.b64decode(env['S3_ASSUME_ROLE_POLICY_DOCUMENT_BASE64']).decode('utf-8')
+S3_ASSUME_ROLE_POLICY_DOCUMENT = base64.b64decode(
+    env['S3_ASSUME_ROLE_POLICY_DOCUMENT_BASE64']
+).decode('utf-8')
 S3_POLICY_NAME = env['S3_POLICY_NAME']
-S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(env['S3_POLICY_DOCUMENT_TEMPLATE_BASE64']).decode('utf-8')
+S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(
+    env['S3_POLICY_DOCUMENT_TEMPLATE_BASE64']
+).decode('utf-8')
 S3_PERMISSIONS_BOUNDARY_ARN = env['S3_PERMISSIONS_BOUNDARY_ARN']
 S3_ROLE_PREFIX = env['S3_ROLE_PREFIX']
 
 YOUR_FILES_ENABLED = env.get('YOUR_FILES_ENABLED', 'False') == 'True'
 
 if env.get('SENTRY_DSN') is not None:
-    sentry_sdk.init(
-        env['SENTRY_DSN'],
-        integrations=[DjangoIntegration()]
-    )
+    sentry_sdk.init(env['SENTRY_DSN'], integrations=[DjangoIntegration()])

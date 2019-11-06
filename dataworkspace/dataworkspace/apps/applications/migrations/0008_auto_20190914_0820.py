@@ -6,18 +6,19 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0007_applicationinstancereport'),
-    ]
+    dependencies = [('applications', '0007_applicationinstancereport')]
 
     operations = [
         migrations.AlterField(
             model_name='applicationtemplate',
             name='nice_name',
             field=models.CharField(
-                max_length=128, unique=True,
-                validators=[django.core.validators.RegexValidator(regex='^[a-zA-Z0-9\\- ]+$')],
+                max_length=128,
+                unique=True,
+                validators=[
+                    django.core.validators.RegexValidator(regex='^[a-zA-Z0-9\\- ]+$')
+                ],
                 verbose_name='application',
             ),
-        ),
+        )
     ]

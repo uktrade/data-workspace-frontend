@@ -5,14 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0003_auto_20190827_1125'),
-    ]
+    dependencies = [('applications', '0003_auto_20190827_1125')]
 
     operations = [
         migrations.AlterField(
             model_name='applicationtemplate',
             name='host_pattern',
             field=models.CharField(max_length=128, unique=True),
-        ),
+        )
     ]

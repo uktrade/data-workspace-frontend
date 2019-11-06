@@ -14,19 +14,38 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms import model_to_dict
-from django.http import (Http404, HttpResponse, HttpResponseForbidden,
-                         StreamingHttpResponse, HttpResponseServerError, HttpResponseRedirect,
-                         HttpResponseNotFound)
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseForbidden,
+    StreamingHttpResponse,
+    HttpResponseServerError,
+    HttpResponseRedirect,
+    HttpResponseNotFound,
+)
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 from psycopg2 import sql
 
-from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
-from dataworkspace.apps.core.utils import table_exists, table_data, view_exists, streaming_query_response
+from dataworkspace.apps.applications.models import (
+    ApplicationInstance,
+    ApplicationTemplate,
+)
+from dataworkspace.apps.core.utils import (
+    table_exists,
+    table_data,
+    view_exists,
+    streaming_query_response,
+)
 from dataworkspace.apps.datasets.models import (
-    DataGrouping, ReferenceDataset, SourceLink,
-    SourceTable, ReferenceDatasetField, CustomDatasetQuery, SourceView,
+    DataGrouping,
+    ReferenceDataset,
+    SourceLink,
+    SourceTable,
+    ReferenceDatasetField,
+    CustomDatasetQuery,
+    SourceView,
 )
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
@@ -38,12 +57,14 @@ logger = logging.getLogger('app')
 def get_all_datagroups_viewmodel():
     vm = []
     for group in DataGrouping.objects.with_published_datasets():
-        vm.append({
-            'name': group.name,
-            'short_description': group.short_description,
-            'id': group.id,
-            'slug': group.slug
-        })
+        vm.append(
+            {
+                'name': group.name,
+                'short_description': group.short_description,
+                'id': group.id,
+                'slug': group.slug,
+            }
+        )
 
     return vm
 
@@ -55,13 +76,13 @@ def datagroup_item_view(request, slug):
     context = {
         'model': item,
         'datasets': item.dataset_set.filter(published=True).order_by('name'),
-        'reference_datasets': item.referencedataset_set.live().filter(
-            published=True
-        ).exclude(is_joint_dataset=True).order_by('name'),
-        'joint_datasets': item.referencedataset_set.live().filter(
-            is_joint_dataset=True,
-            published=True
-        ).order_by('name')
+        'reference_datasets': item.referencedataset_set.live()
+        .filter(published=True)
+        .exclude(is_joint_dataset=True)
+        .order_by('name'),
+        'joint_datasets': item.referencedataset_set.live()
+        .filter(is_joint_dataset=True, published=True)
+        .order_by('name'),
     }
 
     return render(request, 'datagroup.html', context)
@@ -79,10 +100,10 @@ def dataset_full_path_view(request, group_slug, set_slug):
                 dataset.sourcelink_set.all(),
                 dataset.sourcetable_set.all(),
                 dataset.sourceview_set.all(),
-                dataset.customdatasetquery_set.all()
+                dataset.customdatasetquery_set.all(),
             ),
-            key=lambda x: x.name
-        )
+            key=lambda x: x.name,
+        ),
     }
     return render(request, 'dataset.html', context)
 
@@ -91,16 +112,13 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
     model = ReferenceDataset
 
     def get_object(self, queryset=None):
-        group = get_object_or_404(
-            DataGrouping,
-            slug=self.kwargs.get('group_slug')
-        )
+        group = get_object_or_404(DataGrouping, slug=self.kwargs.get('group_slug'))
         return get_object_or_404(
             ReferenceDataset,
             published=True,
             deleted=False,
             group=group,
-            slug=self.kwargs.get('reference_slug')
+            slug=self.kwargs.get('reference_slug'),
         )
 
 
@@ -118,19 +136,19 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 value = getattr(record, field.column_name)
                 # If this is a linked field display the display name and id of that linked record
                 if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                    record_data['{}: ID'.format(field_name)] = value.get_identifier() \
-                        if value is not None else None
-                    record_data['{}: Name'.format(field_name)] = value.get_display_name() \
-                        if value is not None else None
+                    record_data['{}: ID'.format(field_name)] = (
+                        value.get_identifier() if value is not None else None
+                    )
+                    record_data['{}: Name'.format(field_name)] = (
+                        value.get_display_name() if value is not None else None
+                    )
                 else:
                     record_data[field_name] = value
             records.append(record_data)
 
         response = HttpResponse()
         response['Content-Disposition'] = 'attachment; filename={}-{}.{}'.format(
-            ref_dataset.slug,
-            ref_dataset.version,
-            dl_format
+            ref_dataset.slug, ref_dataset.version, dl_format
         )
 
         log_event(
@@ -141,7 +159,7 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 'path': request.get_full_path(),
                 'reference_dataset_version': ref_dataset.version,
                 'download_format': dl_format,
-            }
+            },
         )
 
         if dl_format == 'json':
@@ -153,7 +171,7 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 writer = csv.DictWriter(
                     outfile,
                     fieldnames=ref_dataset.export_field_names,
-                    quoting=csv.QUOTE_NONNUMERIC
+                    quoting=csv.QUOTE_NONNUMERIC,
                 )
                 writer.writeheader()
                 writer.writerows(records)
@@ -166,27 +184,21 @@ class SourceLinkDownloadView(DetailView):
 
     def get(self, request, *args, **kwargs):
         dataset = find_dataset(
-            self.kwargs.get('group_slug'),
-            self.kwargs.get('set_slug')
+            self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
         )
 
         if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
 
         source_link = get_object_or_404(
-            SourceLink,
-            id=self.kwargs.get('source_link_id'),
-            dataset=dataset
+            SourceLink, id=self.kwargs.get('source_link_id'), dataset=dataset
         )
 
         log_event(
             request.user,
             EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
             source_link.dataset,
-            extra={
-                'path': request.get_full_path(),
-                **model_to_dict(source_link)
-            }
+            extra={'path': request.get_full_path(), **model_to_dict(source_link)},
         )
 
         if source_link.link_type == source_link.TYPE_EXTERNAL:
@@ -195,8 +207,7 @@ class SourceLinkDownloadView(DetailView):
         client = boto3.client('s3')
         try:
             file_object = client.get_object(
-                Bucket=settings.AWS_UPLOADS_BUCKET,
-                Key=source_link.url
+                Bucket=settings.AWS_UPLOADS_BUCKET, Key=source_link.url
             )
         except ClientError as ex:
             try:
@@ -207,8 +218,7 @@ class SourceLinkDownloadView(DetailView):
                 return HttpResponseServerError()
 
         response = StreamingHttpResponse(
-            file_object['Body'].iter_chunks(),
-            content_type=file_object['ContentType']
+            file_object['Body'].iter_chunks(), content_type=file_object['ContentType']
         )
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             os.path.split(source_link.url)[-1]
@@ -233,9 +243,8 @@ class SourceDownloadMixin:
             self.model,
             id=self.kwargs.get('source_id'),
             dataset=find_dataset(
-                self.kwargs.get('group_slug'),
-                self.kwargs.get('set_slug')
-            )
+                self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
+            ),
         )
 
         if not db_object.dataset.user_has_access(self.request.user):
@@ -248,10 +257,7 @@ class SourceDownloadMixin:
             request.user,
             self.event_log_type,
             db_object.dataset,
-            extra={
-                'path': request.get_full_path(),
-                **model_to_dict(db_object)
-            }
+            extra={'path': request.get_full_path(), **model_to_dict(db_object)},
         )
         return self.get_table_data(db_object)
 
@@ -263,9 +269,7 @@ class SourceTableDownloadView(SourceDownloadMixin, DetailView):
     @staticmethod
     def db_object_exists(db_object):
         return table_exists(
-            db_object.database.memorable_name,
-            db_object.schema,
-            db_object.table
+            db_object.database.memorable_name, db_object.schema, db_object.table
         )
 
     def get_table_data(self, db_object):
@@ -273,7 +277,7 @@ class SourceTableDownloadView(SourceDownloadMixin, DetailView):
             self.request.user.email,
             db_object.database.memorable_name,
             db_object.schema,
-            db_object.table
+            db_object.table,
         )
 
 
@@ -284,9 +288,7 @@ class SourceViewDownloadView(SourceDownloadMixin, DetailView):
     @staticmethod
     def db_object_exists(db_object):
         return view_exists(
-            db_object.database.memorable_name,
-            db_object.schema,
-            db_object.view
+            db_object.database.memorable_name, db_object.schema, db_object.view
         )
 
     def get_table_data(self, db_object):
@@ -294,7 +296,7 @@ class SourceViewDownloadView(SourceDownloadMixin, DetailView):
             self.request.user.email,
             db_object.database.memorable_name,
             db_object.schema,
-            db_object.view
+            db_object.view,
         )
 
 
@@ -303,55 +305,54 @@ class CustomDatasetQueryDownloadView(DetailView):
 
     def get(self, request, *args, **kwargs):
         dataset = find_dataset(
-            self.kwargs.get('group_slug'),
-            self.kwargs.get('set_slug')
+            self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
         )
 
         if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
 
         query = get_object_or_404(
-            self.model,
-            id=self.kwargs.get('query_id'),
-            dataset=dataset
+            self.model, id=self.kwargs.get('query_id'), dataset=dataset
         )
 
         log_event(
             request.user,
             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
             query.dataset,
-            extra={
-                'path': request.get_full_path(),
-                **model_to_dict(query)
-            }
+            extra={'path': request.get_full_path(), **model_to_dict(query)},
         )
 
         return streaming_query_response(
             request.user.email,
             query.database.memorable_name,
             sql.SQL(query.query),
-            query.get_filename()
+            query.get_filename(),
         )
 
 
 def root_view(request):
     return (
-        root_view_GET(request) if request.method == 'GET' else
-        HttpResponse(status=405)
+        root_view_GET(request) if request.method == 'GET' else HttpResponse(status=405)
     )
 
 
 def root_view_GET(request):
-    sso_id_hex = hashlib.sha256(str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
+    sso_id_hex = hashlib.sha256(
+        str(request.user.profile.sso_id).encode('utf-8')
+    ).hexdigest()
     sso_id_hex_short = sso_id_hex[:8]
 
     application_instances = {
         application_instance.application_template: application_instance
-        for application_instance in filter_api_visible_application_instances_by_owner(request.user)
+        for application_instance in filter_api_visible_application_instances_by_owner(
+            request.user
+        )
     }
 
     def link(application_template):
-        public_host = application_template.host_pattern.replace('<user>', sso_id_hex_short)
+        public_host = application_template.host_pattern.replace(
+            '<user>', sso_id_hex_short
+        )
         return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     context = {
@@ -362,13 +363,15 @@ def root_view_GET(request):
                 'link': link(application_template),
                 'instance': application_instances.get(application_template, None),
             }
-            for application_template in ApplicationTemplate.objects.all().order_by('name')
+            for application_template in ApplicationTemplate.objects.all().order_by(
+                'name'
+            )
             for application_link in [link(application_template)]
             if application_template.visible
         ],
         'appstream_url': settings.APPSTREAM_URL,
         'your_files_enabled': settings.YOUR_FILES_ENABLED,
-        'groupings': get_all_datagroups_viewmodel()
+        'groupings': get_all_datagroups_viewmodel(),
     }
     return render(request, 'root.html', context)
 
@@ -378,12 +381,10 @@ def filter_api_visible_application_instances_by_owner(owner):
     # spawning or running application, and if it's not spawning or running
     # it doesn't exist. 'STOPPING' an application is DELETEing it. This may
     # need to be changed in later versions for richer behaviour.
-    return ApplicationInstance.objects.filter(owner=owner, state__in=['RUNNING', 'SPAWNING'])
+    return ApplicationInstance.objects.filter(
+        owner=owner, state__in=['RUNNING', 'SPAWNING']
+    )
 
 
 def _flatten(to_flatten):
-    return [
-        item
-        for sub_list in to_flatten
-        for item in sub_list
-    ]
+    return [item for sub_list in to_flatten for item in sub_list]

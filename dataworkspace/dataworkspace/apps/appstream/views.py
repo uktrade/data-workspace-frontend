@@ -6,8 +6,14 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
-from dataworkspace.apps.appstream.utils import (get_fleet_status, get_app_sessions, scale_fleet, get_fleet_scale,
-                                                check_fleet_running, restart_fleet)
+from dataworkspace.apps.appstream.utils import (
+    get_fleet_status,
+    get_app_sessions,
+    scale_fleet,
+    get_fleet_scale,
+    check_fleet_running,
+    restart_fleet,
+)
 from dataworkspace.apps.appstream.forms import AppstreamAdminForm
 
 logger = logging.getLogger('app')
@@ -56,10 +62,7 @@ def appstream_admin_view(request):
     else:
         form = AppstreamAdminForm()
 
-    context = {
-        'fleet_status': fleet_status,
-        'form': form,
-    }
+    context = {'fleet_status': fleet_status, 'form': form}
 
     return render(request, 'appstream_admin.html', context)
 
@@ -82,10 +85,7 @@ def appstream_restart(request):
 
     form = AppstreamAdminForm()
 
-    context = {
-        'fleet_status': fleet_status,
-        'form': form,
-    }
+    context = {'fleet_status': fleet_status, 'form': form}
 
     return render(request, 'appstream_admin.html', context)
 
