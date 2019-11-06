@@ -464,7 +464,7 @@ def _fargate_task_describe(cluster_name, arn):
 def _fargate_task_stop(cluster_name, task_arn):
     client = boto3.client('ecs')
     sleep_time = 1
-    for i in range(0, 6):
+    for _ in range(0, 6):
         try:
             client.stop_task(cluster=cluster_name, task=task_arn)
         except Exception:

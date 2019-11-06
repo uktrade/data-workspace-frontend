@@ -1,4 +1,5 @@
-from dataworkspace.settings.base import *
+from dataworkspace.settings.base import *  # noqa: F403, F401
+from dataworkspace.settings.base import env
 
 
 DATABASES = {
