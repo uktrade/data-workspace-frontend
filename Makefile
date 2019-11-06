@@ -16,3 +16,14 @@ docker-test-integration: docker-build
 
 .PHONY: docker-test
 docker-test: docker-test-unit docker-test-integration
+
+
+.PHONY: check
+check:
+	flake8 .
+	black --exclude=venv --skip-string-normalization --check .
+
+
+.PHONY: format
+format:
+	black --exclude=venv --skip-string-normalization .
