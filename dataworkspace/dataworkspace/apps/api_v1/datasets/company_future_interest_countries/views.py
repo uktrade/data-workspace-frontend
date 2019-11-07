@@ -1,18 +1,21 @@
-from django.http import JsonResponse
 from dataworkspace.apps.datasets.models import DataSet
-from dataworkspace.apps.api_v1.datasets.company_future_interest_countries.pagination import \
-    CompanyFutureInterestCountriesDatasetViewCursorPagination
-from dataworkspace.apps.api_v1.datasets.core.views import BaseDatasetView
+from rest_framework.pagination import CursorPagination
+from rest_framework.views import APIView
 
 
-class CompanyFutureInterestCountriesDatasetView(BaseDatasetView):
+class Pagination(CursorPagination):
+    ordering = ('id',)
+    offset_cutoff = None
+
+
+class CompanyFutureInterestCountriesDatasetView(APIView):
     """
     A GET API view to return the data for the company future countries of interest dataset
     """
 
-    pagination_class = CompanyFutureInterestCountriesDatasetViewCursorPagination
-    uuid = '25086e18-aadd-4098-bc82-c80621527328'
-
-    def get_dataset(self):
-        dataset = DataSet.objects.get(id=self.uuid)
-        return dataset.values()
+    def get(self, request):
+        dataset = DataSet.objects.values()  # stubbed dataset
+        # replace with FutureInterestCountries later
+        paginator = Pagination()
+        page = paginator.paginate_queryset(dataset, request, view=self)
+        return paginator.get_paginated_response(page)
