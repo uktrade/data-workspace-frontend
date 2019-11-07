@@ -8,11 +8,7 @@ from dataworkspace.apps.core.models import TimeStampedModel
 
 
 class ApplicationTemplate(TimeStampedModel):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     name = models.CharField(
         validators=[RegexValidator(regex=r'^[a-z]+$')],
@@ -21,15 +17,8 @@ class ApplicationTemplate(TimeStampedModel):
         help_text='Used in URLs: only lowercase letters allowed',
         unique=True,
     )
-    visible = models.BooleanField(
-        default=True,
-        null=False,
-    )
-    host_pattern = models.CharField(
-        max_length=128,
-        blank=False,
-        unique=True,
-    )
+    visible = models.BooleanField(default=True, null=False)
+    host_pattern = models.CharField(max_length=128, blank=False, unique=True)
     nice_name = models.CharField(
         verbose_name='application',
         validators=[RegexValidator(regex=r'^[a-zA-Z0-9\- ]+$')],
@@ -38,15 +27,9 @@ class ApplicationTemplate(TimeStampedModel):
         unique=True,
     )
     spawner = models.CharField(
-        max_length=10,
-        choices=(
-            ('PROCESS', 'Process'),
-        ),
-        default='PROCESS',
+        max_length=10, choices=(('PROCESS', 'Process'),), default='PROCESS'
     )
-    spawner_time = models.IntegerField(
-        null=False,
-    )
+    spawner_time = models.IntegerField(null=False)
     spawner_options = models.CharField(
         max_length=10240,
         help_text='Options that the spawner understands to start the application',
@@ -54,20 +37,14 @@ class ApplicationTemplate(TimeStampedModel):
 
     class Meta:
         db_table = 'app_applicationtemplate'
-        indexes = [
-            models.Index(fields=['name']),
-        ]
+        indexes = [models.Index(fields=['name'])]
 
     def __str__(self):
         return f'{self.name}'
 
 
 class ApplicationInstance(TimeStampedModel):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     owner = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
 
@@ -78,10 +55,11 @@ class ApplicationInstance(TimeStampedModel):
     )
 
     # Copy of the options to allow for spawners to be changed after (or during) spawning
-    application_template = models.ForeignKey(ApplicationTemplate, on_delete=models.PROTECT)
+    application_template = models.ForeignKey(
+        ApplicationTemplate, on_delete=models.PROTECT
+    )
     spawner = models.CharField(
-        max_length=15,
-        help_text='The spawner used to start the application',
+        max_length=15, help_text='The spawner used to start the application'
     )
     spawner_application_template_options = models.CharField(
         max_length=10240,
@@ -119,14 +97,8 @@ class ApplicationInstance(TimeStampedModel):
     # flexibility. Fargate will error at runtime if passed something it
     # doesn't understand, so we still get runtime errors even through this is
     # stringly-typed.
-    cpu = models.CharField(
-        max_length=16,
-        null=True,  # if not specified by the user
-    )
-    memory = models.CharField(
-        max_length=16,
-        null=True,  # if not specified by the user
-    )
+    cpu = models.CharField(max_length=16, null=True)  # if not specified by the user
+    memory = models.CharField(max_length=16, null=True)  # if not specified by the user
 
     # The purpose of this field is to raise an IntegrityError if multiple running or spawning
     # instances for the same public host name are created, but to allow multiple stopped or
@@ -134,7 +106,7 @@ class ApplicationInstance(TimeStampedModel):
     single_running_or_spawning_integrity = models.CharField(
         max_length=63,
         unique=True,
-        help_text='Used internally to avoid duplicate running applications'
+        help_text='Used internally to avoid duplicate running applications',
     )
 
     class Meta:

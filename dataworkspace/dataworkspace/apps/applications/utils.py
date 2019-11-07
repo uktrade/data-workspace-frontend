@@ -37,7 +37,12 @@ def application_template_and_data_from_host(public_host):
             #   application_template.host_pattern = '<customfield>-<user>'
             #   public_host = 'myapp-12345acd'
             # then host_data will be {'customfield': 'myapp', 'user': '12345acd'}
-            re.match('^' + re.sub('<(.+?)>', '(?P<\\1>.*?)', application_template.host_pattern) + '$', public_host)
+            re.match(
+                '^'
+                + re.sub('<(.+?)>', '(?P<\\1>.*?)', application_template.host_pattern)
+                + '$',
+                public_host,
+            )
         ]
         if host_data
     ]
@@ -50,7 +55,9 @@ def application_template_and_data_from_host(public_host):
 
 
 def api_application_dict(application_instance):
-    spawner_state = get_spawner(application_instance.application_template.spawner).state(
+    spawner_state = get_spawner(
+        application_instance.application_template.spawner
+    ).state(
         application_instance.spawner_application_template_options,
         application_instance.created_date.replace(tzinfo=None),
         application_instance.spawner_application_instance_id,
@@ -60,12 +67,14 @@ def api_application_dict(application_instance):
     # Only pass through the database state if the spawner is running,
     # Otherwise, we are in an error condition, and so return the spawner
     # state, so the client (i.e. the proxy) knows to take action
-    api_state = \
-        application_instance.state if spawner_state == 'RUNNING' else \
-        spawner_state
+    api_state = (
+        application_instance.state if spawner_state == 'RUNNING' else spawner_state
+    )
 
     template_name = application_instance.application_template.name
-    sso_id_hex = hashlib.sha256(str(application_instance.owner.profile.sso_id).encode('utf-8')).hexdigest()
+    sso_id_hex = hashlib.sha256(
+        str(application_instance.owner.profile.sso_id).encode('utf-8')
+    ).hexdigest()
     sso_id_hex_short = sso_id_hex[:8]
 
     return {
@@ -82,7 +91,7 @@ def get_api_visible_application_instance_by_public_host(public_host):
     # it doesn't exist. 'STOPPING' an application is DELETEing it. This may
     # need to be changed in later versions for richer behaviour.
     return ApplicationInstance.objects.get(
-        public_host=public_host, state__in=['RUNNING', 'SPAWNING'],
+        public_host=public_host, state__in=['RUNNING', 'SPAWNING']
     )
 
 
@@ -91,10 +100,12 @@ def application_api_is_allowed(request, public_host):
     owner_sso_id_hex = host_data['user']
 
     request_sso_id_hex = hashlib.sha256(
-        str(request.user.profile.sso_id).encode('utf-8')).hexdigest()
+        str(request.user.profile.sso_id).encode('utf-8')
+    ).hexdigest()
 
-    return (owner_sso_id_hex == request_sso_id_hex[:8] and
-            request.user.has_perm('applications.start_all_applications'))
+    return owner_sso_id_hex == request_sso_id_hex[:8] and request.user.has_perm(
+        'applications.start_all_applications'
+    )
 
 
 def stop_spawner_and_application(application_instance):
@@ -104,8 +115,12 @@ def stop_spawner_and_application(application_instance):
 
 def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
-    application_instance.single_running_or_spawning_integrity = str(application_instance.id)
-    application_instance.save(update_fields=['state', 'single_running_or_spawning_integrity'])
+    application_instance.single_running_or_spawning_integrity = str(
+        application_instance.id
+    )
+    application_instance.save(
+        update_fields=['state', 'single_running_or_spawning_integrity']
+    )
 
 
 def application_instance_max_cpu(application_instance):
@@ -149,7 +164,9 @@ def application_instance_max_cpu(application_instance):
 def kill_idle_fargate():
     logger.info('kill_idle_fargate: Start')
 
-    two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=-2)
+    two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        hours=-2
+    )
     instances = ApplicationInstance.objects.filter(
         spawner='FARGATE',
         state__in=['RUNNING', 'SPAWNING'],
@@ -165,7 +182,9 @@ def kill_idle_fargate():
         try:
             max_cpu, _ = application_instance_max_cpu(instance)
         except Exception:
-            logger.exception('kill_idle_fargate: Unable to find CPU usage for %s', instance)
+            logger.exception(
+                'kill_idle_fargate: Unable to find CPU usage for %s', instance
+            )
             continue
 
         logger.info('kill_idle_fargate: CPU usage for %s is %s', instance, max_cpu)
@@ -212,18 +231,15 @@ def populate_created_stopped_fargate():
     now = datetime.datetime.now(datetime.timezone.utc)
 
     for hours in range(0, 48):
-        start_of_range = now + datetime.timedelta(hours=-hours-1)
+        start_of_range = now + datetime.timedelta(hours=-hours - 1)
         end_of_range = now + datetime.timedelta(hours=-hours)
         instances = ApplicationInstance.objects.filter(
             Q(
                 spawner='FARGATE',
                 created_date__gte=start_of_range,
                 created_date__lt=end_of_range,
-            ) &
-            (
-                Q(spawner_created_at__isnull=True) |
-                Q(spawner_stopped_at__isnull=True)
             )
+            & (Q(spawner_created_at__isnull=True) | Q(spawner_stopped_at__isnull=True))
         ).order_by('-created_date')
 
         for instance in instances:
@@ -232,7 +248,9 @@ def populate_created_stopped_fargate():
             try:
                 options = json.loads(instance.spawner_application_template_options)
                 cluster_name = options['CLUSTER_NAME']
-                task_arn = json.loads(instance.spawner_application_instance_id)['task_arn']
+                task_arn = json.loads(instance.spawner_application_instance_id)[
+                    'task_arn'
+                ]
             except (ValueError, KeyError):
                 continue
 
@@ -246,7 +264,11 @@ def populate_created_stopped_fargate():
                 continue
 
             if not task:
-                logger.info('populate_created_stopped_fargate no task found %s %s', instance, task_arn)
+                logger.info(
+                    'populate_created_stopped_fargate no task found %s %s',
+                    instance,
+                    task_arn,
+                )
                 continue
 
             update_fields = []
@@ -259,7 +281,11 @@ def populate_created_stopped_fargate():
                 update_fields.append('spawner_stopped_at')
 
             if update_fields:
-                logger.info('populate_created_stopped_fargate saving: %s %s', instance, update_fields)
+                logger.info(
+                    'populate_created_stopped_fargate saving: %s %s',
+                    instance,
+                    update_fields,
+                )
                 instance.save(update_fields=update_fields)
 
     logger.info('populate_created_stopped_fargate: End')

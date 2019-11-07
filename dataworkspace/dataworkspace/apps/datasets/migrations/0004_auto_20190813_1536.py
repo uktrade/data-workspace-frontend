@@ -9,7 +9,9 @@ def generate_table_name(apps, _):
         original_table_name = 'refdata__{}'.format(r.id)
         if r.table_name is None or r.table_name == original_table_name:
             r.table_name = 'ref_{}'.format(r.slug.replace('-', '_'))
-            print('Changing table "{}" to "{}"'.format(original_table_name, r.table_name))
+            print(
+                'Changing table "{}" to "{}"'.format(original_table_name, r.table_name)
+            )
             r.schema_version += 1
             r.save()
 
@@ -29,9 +31,7 @@ def generate_table_name(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('datasets', '0003_referencedataset_table_name'),
-    ]
+    dependencies = [('datasets', '0003_referencedataset_table_name')]
 
     operations = [
         migrations.RunPython(

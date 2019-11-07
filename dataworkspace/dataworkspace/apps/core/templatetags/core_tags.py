@@ -16,8 +16,7 @@ def get_attr(model, field):
 def add_class(field, class_attr):
     if 'class' in field.field.widget.attrs:
         field.field.widget.attrs['class'] = '{} {}'.format(
-            field.field.widget.attrs['class'],
-            class_attr
+            field.field.widget.attrs['class'], class_attr
         )
     else:
         field.field.widget.attrs['class'] = class_attr
@@ -26,17 +25,12 @@ def add_class(field, class_attr):
 
 @register.filter
 def add_field_error(field):
-    return add_class(field, '{}--error'.format(
-        field.field.widget.attrs.get('class')
-    ))
+    return add_class(field, '{}--error'.format(field.field.widget.attrs.get('class')))
 
 
 @register.filter
 def pretty_json(field):
-    return format_html(
-        '<pre>{0}</pre>',
-        json.dumps(field, indent=2)
-    )
+    return format_html('<pre>{0}</pre>', json.dumps(field, indent=2))
 
 
 @register.filter
@@ -48,15 +42,9 @@ def not_set_if_none(value):
 
 @register.filter
 def spawner_memory(value):
-    return (
-        '-' if not value else
-        str(int(value) / 1024).rstrip('0').rstrip('.') + 'GB'
-    )
+    return '-' if not value else str(int(value) / 1024).rstrip('0').rstrip('.') + 'GB'
 
 
 @register.filter
 def spawner_cpu(value):
-    return (
-        '-' if not value else
-        str(int(value) / 1024).rstrip('0').rstrip('.')
-    )
+    return '-' if not value else str(int(value) / 1024).rstrip('0').rstrip('.')

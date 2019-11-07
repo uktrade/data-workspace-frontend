@@ -5,9 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0005_applicationtemplate_spawner_time'),
-    ]
+    dependencies = [('applications', '0005_applicationtemplate_spawner_time')]
 
     operations = [
         migrations.AddField(

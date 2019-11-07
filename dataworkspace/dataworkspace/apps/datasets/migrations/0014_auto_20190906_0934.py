@@ -15,18 +15,23 @@ def reorder(apps, _):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0013_referencedatasetuploadlog_referencedatasetuploadlogrecord'),
+        ('datasets', '0013_referencedatasetuploadlog_referencedatasetuploadlogrecord')
     ]
 
     operations = [
         migrations.AlterModelOptions(
             name='referencedatasetfield',
-            options={'ordering': ('sort_order',), 'verbose_name': 'Reference dataset field'},
+            options={
+                'ordering': ('sort_order',),
+                'verbose_name': 'Reference dataset field',
+            },
         ),
         migrations.AddField(
             model_name='referencedataset',
             name='sort_direction',
-            field=models.IntegerField(choices=[(1, 'Ascending'), (2, 'Descending')], default=1),
+            field=models.IntegerField(
+                choices=[(1, 'Ascending'), (2, 'Descending')], default=1
+            ),
         ),
         migrations.AddField(
             model_name='referencedataset',
@@ -34,10 +39,10 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 blank=True,
                 help_text='The field to order records by in any outputs. If not set '
-                          'records will be sorted by last updated date.',
+                'records will be sorted by last updated date.',
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                to='datasets.ReferenceDatasetField'
+                to='datasets.ReferenceDatasetField',
             ),
         ),
         migrations.AddField(

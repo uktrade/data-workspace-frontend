@@ -4,13 +4,10 @@ import os
 import sys
 
 import aiohttp
-from aiohttp import (
-    web,
-)
+from aiohttp import web
 
 
 async def async_main(port, url):
-
     async def handle_healthcheck(_):
         async with aiohttp.ClientSession() as client_session:
             async with client_session.get(url) as response:
@@ -21,10 +18,12 @@ async def async_main(port, url):
         return web.Response(text='OK')
 
     app = web.Application()
-    app.add_routes([
-        web.get('/check', handle_healthcheck),
-        web.get('/check_alb', handle_healthcheck_alb),
-    ])
+    app.add_routes(
+        [
+            web.get('/check', handle_healthcheck),
+            web.get('/check_alb', handle_healthcheck_alb),
+        ]
+    )
 
     runner = web.AppRunner(app)
     await runner.setup()

@@ -10,5 +10,4 @@ class Migration(migrations.Migration):
         ('datasets', '0018_sourcetable_accessible_by_google_data_studio'),
     ]
 
-    operations = [
-    ]
+    operations = []

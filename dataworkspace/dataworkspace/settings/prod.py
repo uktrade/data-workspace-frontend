@@ -1,4 +1,5 @@
-from dataworkspace.settings.base import *
+from dataworkspace.settings.base import *  # noqa: F403, F401
+from dataworkspace.settings.base import env
 
 
 DATABASES = {
@@ -16,7 +17,7 @@ DATABASES = {
             'OPTIONS': {'sslmode': 'require', 'MAX_CONNS': 100},
         }
         for database_name, database in env['DATA_DB'].items()
-    }
+    },
 }
 
 # Only used when collectstatic is run

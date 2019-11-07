@@ -19,17 +19,27 @@ logger = logging.getLogger('app')
 
 
 def get_spawner(name):
-    return {
-        'PROCESS': ProcessSpawner,
-        'FARGATE': FargateSpawner,
-    }[name]
+    return {'PROCESS': ProcessSpawner, 'FARGATE': FargateSpawner}[name]
 
 
 @celery_app.task()
-def spawn(name, user_email_address, user_sso_id, public_host_data,
-          application_instance_id, spawner_options, db_credentials):
-    get_spawner(name).spawn(user_email_address, user_sso_id, public_host_data,
-                            application_instance_id, spawner_options, db_credentials)
+def spawn(
+    name,
+    user_email_address,
+    user_sso_id,
+    public_host_data,
+    application_instance_id,
+    spawner_options,
+    db_credentials,
+):
+    get_spawner(name).spawn(
+        user_email_address,
+        user_sso_id,
+        public_host_data,
+        application_instance_id,
+        spawner_options,
+        db_credentials,
+    )
 
 
 @celery_app.task()
@@ -37,7 +47,7 @@ def stop(name, application_instance_id):
     get_spawner(name).stop(application_instance_id)
 
 
-class ProcessSpawner():
+class ProcessSpawner:
     ''' A slightly overcomplicated and slow local-process spawner, but it is
     designed to simulate multi-stage spawners that call remote APIs. Only
     safe when the cluster is of size 1, and only handles a single running
@@ -54,11 +64,11 @@ class ProcessSpawner():
             proc = subprocess.Popen(cmd, cwd='/home/django')
 
             application_instance = ApplicationInstance.objects.get(
-                id=application_instance_id,
+                id=application_instance_id
             )
-            application_instance.spawner_application_instance_id = json.dumps({
-                'process_id': proc.pid,
-            })
+            application_instance.spawner_application_instance_id = json.dumps(
+                {'process_id': proc.pid}
+            )
             application_instance.save(update_fields=['spawner_application_instance_id'])
 
             gevent.sleep(1)
@@ -85,12 +95,17 @@ class ProcessSpawner():
             return 'RUNNING'
 
         try:
-            return \
-                'RUNNING' if not spawner_application_id_parsed and ten_seconds_ago < created_date else \
-                'STOPPED' if not spawner_application_id_parsed else \
-                'RUNNING' if not proxy_url and twenty_seconds_ago < created_date else \
-                'STOPPED' if not proxy_url else \
-                process_status()
+            return (
+                'RUNNING'
+                if not spawner_application_id_parsed and ten_seconds_ago < created_date
+                else 'STOPPED'
+                if not spawner_application_id_parsed
+                else 'RUNNING'
+                if not proxy_url and twenty_seconds_ago < created_date
+                else 'STOPPED'
+                if not proxy_url
+                else process_status()
+            )
 
         except Exception:
             logger.exception('PROCESS %s %s', spawner_application_id_parsed, proxy_url)
@@ -99,7 +114,7 @@ class ProcessSpawner():
     @staticmethod
     def stop(application_instance_id):
         application_instance = ApplicationInstance.objects.get(
-            id=application_instance_id,
+            id=application_instance_id
         )
         spawner_application_id = application_instance.spawner_application_instance_id
         spawner_application_id_parsed = json.loads(spawner_application_id)
@@ -109,7 +124,7 @@ class ProcessSpawner():
             pass
 
 
-class FargateSpawner():
+class FargateSpawner:
     ''' Spawning is not HA: if the current server goes down after the
     ApplicationInstance is called, but before the ECS task is created, and has
     an IP address, from the point of view of the client, spawning won't
@@ -125,8 +140,14 @@ class FargateSpawner():
     '''
 
     @staticmethod
-    def spawn(user_email_address, user_sso_id, public_host_data,
-              application_instance_id, spawner_options, db_credentials):
+    def spawn(
+        user_email_address,
+        user_sso_id,
+        public_host_data,
+        application_instance_id,
+        spawner_options,
+        db_credentials,
+    ):
 
         try:
             task_arn = None
@@ -147,8 +168,7 @@ class FargateSpawner():
             s3_bucket = options['S3_BUCKET']
 
             database_env = {
-                f'DATABASE_DSN__{database["memorable_name"]}':
-                f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
                 f'user={database["db_user"]} password={database["db_password"]}'
                 for database in db_credentials
             }
@@ -165,7 +185,7 @@ class FargateSpawner():
             }
 
             application_instance = ApplicationInstance.objects.get(
-                id=application_instance_id,
+                id=application_instance_id
             )
             # If CONTAINER_TAG_PATTERN is given, the data from the public_host is used to fill
             # CONTAINER_TAG_PATTERN to work out what Docker tag should be launched
@@ -177,23 +197,36 @@ class FargateSpawner():
                 # Not robust, but the pattern is specified by config rather than user-provided
                 for key, value in public_host_data.items():
                     tag = tag.replace(f'<{key}>', value)
-                definition_arn_with_image = _fargate_task_definition_with_tag(definition_arn, container_name, tag)
+                definition_arn_with_image = _fargate_task_definition_with_tag(
+                    definition_arn, container_name, tag
+                )
 
             # If memory or cpu are given, create a new task definition.
             cpu = application_instance.cpu
             memory = application_instance.memory
             cpu_or_mem = cpu is not None or memory is not None
-            definition_arn_with_cpu_memory_image = \
-                _fargate_task_definition_with_cpu_memory(definition_arn_with_image, cpu, memory) if cpu_or_mem else \
-                definition_arn_with_image
+            definition_arn_with_cpu_memory_image = (
+                _fargate_task_definition_with_cpu_memory(
+                    definition_arn_with_image, cpu, memory
+                )
+                if cpu_or_mem
+                else definition_arn_with_image
+            )
 
             for _ in range(0, 10):
                 # Sometimes there is an error assuming the new role: both IAM  and ECS are
                 # eventually consistent
                 try:
                     start_task_response = _fargate_task_run(
-                        role_arn, cluster_name, container_name, definition_arn_with_cpu_memory_image,
-                        security_groups, subnets, cmd, {**s3_env, **database_env, **env}, s3_sync,
+                        role_arn,
+                        cluster_name,
+                        container_name,
+                        definition_arn_with_cpu_memory_image,
+                        security_groups,
+                        subnets,
+                        cmd,
+                        {**s3_env, **database_env, **env},
+                        s3_sync,
                     )
                 except ClientError:
                     gevent.sleep(3)
@@ -201,22 +234,25 @@ class FargateSpawner():
                     break
 
             task = (
-                start_task_response['tasks'][0] if 'tasks' in start_task_response else
-                start_task_response['task']
+                start_task_response['tasks'][0]
+                if 'tasks' in start_task_response
+                else start_task_response['task']
             )
             task_arn = task['taskArn']
-            application_instance.spawner_application_instance_id = json.dumps({
-                'task_arn': task_arn,
-            })
+            application_instance.spawner_application_instance_id = json.dumps(
+                {'task_arn': task_arn}
+            )
             application_instance.spawner_created_at = task['createdAt']
             application_instance.spawner_cpu = task['cpu']
             application_instance.spawner_memory = task['memory']
-            application_instance.save(update_fields=[
-                'spawner_application_instance_id',
-                'spawner_created_at',
-                'spawner_cpu',
-                'spawner_memory',
-            ])
+            application_instance.save(
+                update_fields=[
+                    'spawner_application_instance_id',
+                    'spawner_created_at',
+                    'spawner_cpu',
+                    'spawner_memory',
+                ]
+            )
 
             application_instance.refresh_from_db()
             if application_instance.state == 'STOPPED':
@@ -253,18 +289,27 @@ class FargateSpawner():
             # Newly created tasks may not yet report a status, or may report
             # status inconsistently due to eventual consistency
             status = _fargate_task_status(cluster_name, task_arn)
-            return \
-                'RUNNING' if status is None and three_minutes_ago < created_date else \
-                'STOPPED' if status is None else \
-                status
+            return (
+                'RUNNING'
+                if status is None and three_minutes_ago < created_date
+                else 'STOPPED'
+                if status is None
+                else status
+            )
 
         try:
-            return \
-                'RUNNING' if not spawner_application_id_parsed and twenty_seconds_ago < created_date else \
-                'STOPPED' if not spawner_application_id_parsed else \
-                'RUNNING' if not proxy_url and three_minutes_ago < created_date else \
-                'STOPPED' if not proxy_url else \
-                get_task_status()
+            return (
+                'RUNNING'
+                if not spawner_application_id_parsed
+                and twenty_seconds_ago < created_date
+                else 'STOPPED'
+                if not spawner_application_id_parsed
+                else 'RUNNING'
+                if not proxy_url and three_minutes_ago < created_date
+                else 'STOPPED'
+                if not proxy_url
+                else get_task_status()
+            )
         except Exception:
             logger.exception('FARGATE %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
@@ -272,11 +317,13 @@ class FargateSpawner():
     @staticmethod
     def stop(application_instance_id):
         application_instance = ApplicationInstance.objects.get(
-            id=application_instance_id,
+            id=application_instance_id
         )
         options = json.loads(application_instance.spawner_application_template_options)
         cluster_name = options['CLUSTER_NAME']
-        task_arn = json.loads(application_instance.spawner_application_instance_id)['task_arn']
+        task_arn = json.loads(application_instance.spawner_application_instance_id)[
+            'task_arn'
+        ]
         _fargate_task_stop(cluster_name, task_arn)
 
         sleep_time = 1
@@ -295,12 +342,12 @@ class FargateSpawner():
 
 def _fargate_task_definition_with_tag(task_family, container_name, tag):
     client = boto3.client('ecs')
-    describe_task_response = client.describe_task_definition(
-        taskDefinition=task_family,
-    )
+    describe_task_response = client.describe_task_definition(taskDefinition=task_family)
     container = [
         container
-        for container in describe_task_response['taskDefinition']['containerDefinitions']
+        for container in describe_task_response['taskDefinition'][
+            'containerDefinitions'
+        ]
         if container['name'] == container_name
     ][0]
     container['image'] += ':' + tag
@@ -310,9 +357,18 @@ def _fargate_task_definition_with_tag(task_family, container_name, tag):
         **{
             key: value
             for key, value in describe_task_response['taskDefinition'].items()
-            if key in [
-                'family', 'taskRoleArn', 'executionRoleArn', 'networkMode', 'containerDefinitions',
-                'volumes', 'placementConstraints', 'requiresCompatibilities', 'cpu', 'memory',
+            if key
+            in [
+                'family',
+                'taskRoleArn',
+                'executionRoleArn',
+                'networkMode',
+                'containerDefinitions',
+                'volumes',
+                'placementConstraints',
+                'requiresCompatibilities',
+                'cpu',
+                'memory',
             ]
         }
     )
@@ -321,23 +377,33 @@ def _fargate_task_definition_with_tag(task_family, container_name, tag):
 
 def _fargate_task_definition_with_cpu_memory(task_family, cpu, memory):
     client = boto3.client('ecs')
-    describe_task_response = client.describe_task_definition(
-        taskDefinition=task_family,
-    )
+    describe_task_response = client.describe_task_definition(taskDefinition=task_family)
     if cpu is not None:
         describe_task_response['taskDefinition']['cpu'] = cpu
     if memory is not None:
         describe_task_response['taskDefinition']['memory'] = memory
-    describe_task_response['taskDefinition']['family'] = \
-        task_family + (f'-{cpu}' if cpu is not None else '') + (f'-{memory}' if memory is not None else '')
+    describe_task_response['taskDefinition']['family'] = (
+        task_family
+        + (f'-{cpu}' if cpu is not None else '')
+        + (f'-{memory}' if memory is not None else '')
+    )
 
     register_tag_response = client.register_task_definition(
         **{
             key: value
             for key, value in describe_task_response['taskDefinition'].items()
-            if key in [
-                'family', 'taskRoleArn', 'executionRoleArn', 'networkMode', 'containerDefinitions',
-                'volumes', 'placementConstraints', 'requiresCompatibilities', 'cpu', 'memory',
+            if key
+            in [
+                'family',
+                'taskRoleArn',
+                'executionRoleArn',
+                'networkMode',
+                'containerDefinitions',
+                'volumes',
+                'placementConstraints',
+                'requiresCompatibilities',
+                'cpu',
+                'memory',
             ]
         }
     )
@@ -347,11 +413,17 @@ def _fargate_task_definition_with_cpu_memory(task_family, cpu, memory):
 def _fargate_task_ip(cluster_name, arn):
     described_task = _fargate_task_describe(cluster_name, arn)
 
-    ip_address_attachements = [
-        attachment['value']
-        for attachment in described_task['attachments'][0]['details']
-        if attachment['name'] == 'privateIPv4Address'
-    ] if described_task and 'attachments' in described_task and described_task['attachments'] else []
+    ip_address_attachements = (
+        [
+            attachment['value']
+            for attachment in described_task['attachments'][0]['details']
+            if attachment['name'] == 'privateIPv4Address'
+        ]
+        if described_task
+        and 'attachments' in described_task
+        and described_task['attachments']
+        else []
+    )
     ip_address = ip_address_attachements[0] if ip_address_attachements else ''
 
     return ip_address
@@ -364,24 +436,27 @@ def _fargate_task_status(cluster_name, arn):
     # Simplify the status. We just care if it's running or will be running
     # Creation of task is eventually consistent, so we don't have a good way
     # of differentiating between a task just created, or long destroyed
-    return \
-        None if not described_task else \
-        'RUNNING' if described_task['lastStatus'] in ('PROVISIONING', 'PENDING', 'RUNNING') else \
-        'STOPPED'
+    return (
+        None
+        if not described_task
+        else 'RUNNING'
+        if described_task['lastStatus'] in ('PROVISIONING', 'PENDING', 'RUNNING')
+        else 'STOPPED'
+    )
 
 
 def _fargate_task_describe(cluster_name, arn):
     client = boto3.client('ecs')
 
-    described_tasks = client.describe_tasks(
-        cluster=cluster_name,
-        tasks=[arn],
-    )
+    described_tasks = client.describe_tasks(cluster=cluster_name, tasks=[arn])
 
-    task = \
-        described_tasks['tasks'][0] if 'tasks' in described_tasks and described_tasks['tasks'] else \
-        described_tasks['task'] if 'task' in described_tasks else \
-        None
+    task = (
+        described_tasks['tasks'][0]
+        if 'tasks' in described_tasks and described_tasks['tasks']
+        else described_tasks['task']
+        if 'task' in described_tasks
+        else None
+    )
 
     return task
 
@@ -389,12 +464,9 @@ def _fargate_task_describe(cluster_name, arn):
 def _fargate_task_stop(cluster_name, task_arn):
     client = boto3.client('ecs')
     sleep_time = 1
-    for i in range(0, 6):
+    for _ in range(0, 6):
         try:
-            client.stop_task(
-                cluster=cluster_name,
-                task=task_arn,
-            )
+            client.stop_task(cluster=cluster_name, task=task_arn)
         except Exception:
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
@@ -403,8 +475,17 @@ def _fargate_task_stop(cluster_name, task_arn):
     raise Exception('Unable to stop Fargate task {}'.format(task_arn))
 
 
-def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
-                      security_groups, subnets, command_and_args, env, s3_sync):
+def _fargate_task_run(
+    role_arn,
+    cluster_name,
+    container_name,
+    definition_arn,
+    security_groups,
+    subnets,
+    command_and_args,
+    env,
+    s3_sync,
+):
     client = boto3.client('ecs')
 
     return client.run_task(
@@ -412,28 +493,25 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
         taskDefinition=definition_arn,
         overrides={
             'taskRoleArn': role_arn,
-            'containerOverrides': [{
-                **(
-                    {
-                        'command': command_and_args,
-                    } if command_and_args else {}
-                ),
-                'environment': [
-                    {
-                        'name': name,
-                        'value': value,
-                    } for name, value in env.items()
-                ],
-                'name': container_name,
-            }] + [{
-                'name': 's3sync',
-                'environment': [
-                    {
-                        'name': name,
-                        'value': value,
-                    } for name, value in env.items()
-                ]
-            }] if s3_sync else [],
+            'containerOverrides': [
+                {
+                    **({'command': command_and_args} if command_and_args else {}),
+                    'environment': [
+                        {'name': name, 'value': value} for name, value in env.items()
+                    ],
+                    'name': container_name,
+                }
+            ]
+            + [
+                {
+                    'name': 's3sync',
+                    'environment': [
+                        {'name': name, 'value': value} for name, value in env.items()
+                    ],
+                }
+            ]
+            if s3_sync
+            else [],
         },
         launchType='FARGATE',
         networkConfiguration={
@@ -441,6 +519,6 @@ def _fargate_task_run(role_arn, cluster_name, container_name, definition_arn,
                 'assignPublicIp': 'DISABLED',
                 'securityGroups': security_groups,
                 'subnets': subnets,
-            },
+            }
         },
     )

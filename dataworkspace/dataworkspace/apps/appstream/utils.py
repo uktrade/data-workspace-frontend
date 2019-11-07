@@ -1,9 +1,7 @@
 import boto3
 import gevent
 
-from django.conf import (
-    settings,
-)
+from django.conf import settings
 
 
 def connect_aws_client(aws_service):
@@ -11,7 +9,7 @@ def connect_aws_client(aws_service):
         aws_service,
         aws_access_key_id=settings.APPSTREAM_AWS_ACCESS_KEY,
         aws_secret_access_key=settings.APPSTREAM_AWS_SECRET_KEY,
-        region_name=settings.APPSTREAM_AWS_REGION
+        region_name=settings.APPSTREAM_AWS_REGION,
     )
     return client
 
@@ -19,9 +17,7 @@ def connect_aws_client(aws_service):
 def get_fleet_status():
     client = connect_aws_client('appstream')
 
-    fleet_status = client.describe_fleets(
-        Names=[settings.APPSTREAM_FLEET_NAME, ]
-    )
+    fleet_status = client.describe_fleets(Names=[settings.APPSTREAM_FLEET_NAME])
     return fleet_status
 
 
@@ -29,8 +25,7 @@ def get_app_sessions():
     client = connect_aws_client('appstream')
 
     app_sessions = client.describe_sessions(
-        StackName=settings.APPSTREAM_STACK_NAME,
-        FleetName=settings.APPSTREAM_FLEET_NAME
+        StackName=settings.APPSTREAM_STACK_NAME, FleetName=settings.APPSTREAM_FLEET_NAME
     )
 
     return app_sessions
@@ -44,7 +39,7 @@ def scale_fleet(min_capacity, max_capacity):
         ResourceId='fleet/' + settings.APPSTREAM_FLEET_NAME,
         ScalableDimension='appstream:fleet:DesiredCapacity',
         MinCapacity=min_capacity,
-        MaxCapacity=max_capacity
+        MaxCapacity=max_capacity,
     )
 
     print(scale_response)
@@ -59,8 +54,10 @@ def get_fleet_scale():
         ScalableDimension='appstream:fleet:DesiredCapacity',
     )
 
-    return(scale_response[
-        'ScalableTargets'][0]['MinCapacity'], scale_response['ScalableTargets'][0]['MaxCapacity'])
+    return (
+        scale_response['ScalableTargets'][0]['MinCapacity'],
+        scale_response['ScalableTargets'][0]['MaxCapacity'],
+    )
 
 
 def check_fleet_running():
@@ -73,18 +70,14 @@ def check_fleet_running():
 def stop_fleet():
     client = connect_aws_client('appstream')
 
-    stop_response = client.stop_fleet(
-        Name=settings.APPSTREAM_FLEET_NAME
-    )
+    stop_response = client.stop_fleet(Name=settings.APPSTREAM_FLEET_NAME)
     print(stop_response)
 
 
 def start_fleet():
     client = connect_aws_client('appstream')
 
-    start_response = client.start_fleet(
-        Name=settings.APPSTREAM_FLEET_NAME
-    )
+    start_response = client.start_fleet(Name=settings.APPSTREAM_FLEET_NAME)
     print(start_response)
 
 

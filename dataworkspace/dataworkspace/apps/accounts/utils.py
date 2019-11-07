@@ -1,6 +1,11 @@
 import logging
 
-from django.contrib.auth import (SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY, authenticate)
+from django.contrib.auth import (
+    SESSION_KEY,
+    BACKEND_SESSION_KEY,
+    HASH_SESSION_KEY,
+    authenticate,
+)
 from django.contrib.sessions.backends.base import CreateError
 
 from django.http import HttpResponseForbidden
@@ -52,4 +57,5 @@ def login_required(func):
             session[HASH_SESSION_KEY] = user.get_session_auth_hash()
 
         return func(request, *args, **kwargs)
+
     return _login_required

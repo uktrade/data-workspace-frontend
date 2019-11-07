@@ -11,8 +11,12 @@ from adminsortable2.admin import CustomInlineFormSet
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 
 from dataworkspace.apps.datasets.model_utils import has_circular_link
-from dataworkspace.apps.datasets.models import SourceLink, DataSet, ReferenceDataset, \
-    ReferenceDatasetField
+from dataworkspace.apps.datasets.models import (
+    SourceLink,
+    DataSet,
+    ReferenceDataset,
+    ReferenceDatasetField,
+)
 
 
 class ReferenceDatasetForm(forms.ModelForm):
@@ -38,7 +42,8 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
         :return:
         """
         return [
-            x.cleaned_data[field] for x in self.forms
+            x.cleaned_data[field]
+            for x in self.forms
             if x.cleaned_data.get(field) and not x.cleaned_data['DELETE']
         ]
 
@@ -57,19 +62,16 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
         # Ensure column names don't clash
         column_names = self._get_all_values_for_field('column_name')
         if len(column_names) != len(set(column_names)):
-            raise forms.ValidationError(
-                'Please ensure column names are unique'
-            )
+            raise forms.ValidationError('Please ensure column names are unique')
 
         # Ensure field names are not duplicated
         names = [
-            x.cleaned_data['name'] for x in self.forms
+            x.cleaned_data['name']
+            for x in self.forms
             if x.cleaned_data.get('name') is not None
         ]
         if len(names) != len(set(names)):
-            raise forms.ValidationError(
-                'Please ensure field names are unique'
-            )
+            raise forms.ValidationError('Please ensure field names are unique')
 
         # Ensure one and only one field is set as the display name field
         display_names = self._get_all_values_for_field('is_display_name')
@@ -78,26 +80,29 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
                 'Please ensure one field is set as the display name'
             )
         if len(display_names) > 1:
-            raise forms.ValidationError(
-                'Please select only one display name field'
-            )
+            raise forms.ValidationError('Please select only one display name field')
 
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):
-    _reserved_column_names = ('id', 'reference_dataset', 'reference_dataset_id', 'updated_date')
-    description = forms.CharField(
-        widget=forms.Textarea(
-            attrs={
-                'rows': '1'
-            }
-        )
+    _reserved_column_names = (
+        'id',
+        'reference_dataset',
+        'reference_dataset_id',
+        'updated_date',
     )
+    description = forms.CharField(widget=forms.Textarea(attrs={'rows': '1'}))
 
     class Meta:
         model = ReferenceDatasetField
         fields = (
-            'name', 'column_name', 'data_type', 'linked_reference_dataset',
-            'description', 'is_identifier', 'is_display_name', 'sort_order',
+            'name',
+            'column_name',
+            'data_type',
+            'linked_reference_dataset',
+            'description',
+            'is_identifier',
+            'is_display_name',
+            'sort_order',
         )
 
     def __init__(self, *args, **kwargs):
@@ -106,7 +111,8 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         # Hide the option of a linked reference dataset if none exist to link to
         if not self.fields['linked_reference_dataset'].queryset.exists():
             self.fields['data_type'].choices = [
-                x for x in self.fields['data_type'].choices
+                x
+                for x in self.fields['data_type'].choices
                 if x[0] != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
             ]
 
@@ -138,10 +144,14 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                 )
 
             # Do not allow users to change a foreign key relationship if records exist
-            if field.id and cleaned['linked_reference_dataset'] != field.linked_reference_dataset:
-                matching_records = self.reference_dataset.get_records().exclude(**{
-                    field.column_name: None
-                })
+            if (
+                field.id
+                and cleaned['linked_reference_dataset']
+                != field.linked_reference_dataset
+            ):
+                matching_records = self.reference_dataset.get_records().exclude(
+                    **{field.column_name: None}
+                )
                 if matching_records.exists():
                     raise forms.ValidationError(
                         'Unable to change linked reference dataset when '
@@ -160,7 +170,9 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                 )
 
             # Ensure a linked to reference dataset doesn't link back to this dataset
-            if has_circular_link(self.reference_dataset, cleaned['linked_reference_dataset']):
+            if has_circular_link(
+                self.reference_dataset, cleaned['linked_reference_dataset']
+            ):
                 raise ValidationError(
                     'Unable to link to a dataset that links to this dataset'
                 )
@@ -173,21 +185,29 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
 
         if self.instance.id is not None:
             # Do not allow changing from foreign key to another data type
-            if new_data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY and \
-                    orig_data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                raise forms.ValidationError('Linked reference dataset data type cannot be updated')
+            if (
+                new_data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                and orig_data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+            ):
+                raise forms.ValidationError(
+                    'Linked reference dataset data type cannot be updated'
+                )
 
             # Do not allow changing from another data type to foreign key
-            if new_data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY and \
-                    orig_data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                raise forms.ValidationError('Data type cannot be changed to linked reference dataset')
+            if (
+                new_data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                and orig_data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+            ):
+                raise forms.ValidationError(
+                    'Data type cannot be changed to linked reference dataset'
+                )
 
             # Do not allow users to change the data type of a column
             # if that column has existing data.
             if new_data_type != orig_data_type:
-                matching_records = self.instance.reference_dataset.get_records().exclude(**{
-                    self.instance.column_name: None
-                })
+                matching_records = self.instance.reference_dataset.get_records().exclude(
+                    **{self.instance.column_name: None}
+                )
                 if matching_records.exists():
                     raise forms.ValidationError(
                         'Unable to change data type when data exists in column'
@@ -198,8 +218,10 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
     def clean_is_identifier(self):
         cleaned = self.cleaned_data
         # Do not allow a foreign key field to be set as an identifier
-        if cleaned.get('is_identifier') and \
-                cleaned.get('data_type') == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+        if (
+            cleaned.get('is_identifier')
+            and cleaned.get('data_type') == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+        ):
             raise ValidationError(
                 'Identifier field cannot be linked reference data type'
             )
@@ -211,16 +233,16 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             raise forms.ValidationError(
                 '"{}" is a reserved column name (along with: "{}")'.format(
                     column_name,
-                    '", "'.join([x for x in self._reserved_column_names if x != column_name])
+                    '", "'.join(
+                        [x for x in self._reserved_column_names if x != column_name]
+                    ),
                 )
             )
         return column_name
 
 
 class ReferenceDataRowDeleteForm(forms.Form):
-    id = forms.CharField(
-        widget=forms.HiddenInput()
-    )
+    id = forms.CharField(widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         self.reference_dataset = kwargs.pop('reference_dataset')
@@ -234,18 +256,16 @@ class ReferenceDataRowDeleteForm(forms.Form):
 
         conflicts = []
         for field in linking_fields:
-            conflicts += field.reference_dataset.get_records().filter(**{
-                '{}__id'.format(field.column_name): self.cleaned_data.get('id')
-            })
+            conflicts += field.reference_dataset.get_records().filter(
+                **{'{}__id'.format(field.column_name): self.cleaned_data.get('id')}
+            )
 
         if conflicts:
-            error_template = get_template('admin/inc/delete_linked_to_record_error.html')
+            error_template = get_template(
+                'admin/inc/delete_linked_to_record_error.html'
+            )
             raise forms.ValidationError(
-                mark_safe(
-                    error_template.render({
-                        'conflicts': conflicts
-                    })
-                )
+                mark_safe(error_template.render({'conflicts': conflicts}))
             )
 
 
@@ -253,7 +273,7 @@ class ReferenceDataRecordUploadForm(forms.Form):
     file = forms.FileField(
         label='CSV file',
         required=True,
-        validators=[validators.FileExtensionValidator(allowed_extensions=['csv'])]
+        validators=[validators.FileExtensionValidator(allowed_extensions=['csv'])],
     )
 
     def __init__(self, *args, **kwargs):
@@ -284,15 +304,13 @@ def clean_identifier(form):
     id_field = reference_dataset.identifier_field.column_name
     cleaned_data = form.cleaned_data
     if id_field in cleaned_data:
-        exists = reference_dataset.get_records().filter(**{
-            id_field: cleaned_data[id_field]
-        }).exclude(
-            id=field.id
+        exists = (
+            reference_dataset.get_records()
+            .filter(**{id_field: cleaned_data[id_field]})
+            .exclude(id=field.id)
         )
         if exists:
-            raise forms.ValidationError(
-                'A record with this identifier already exists'
-            )
+            raise forms.ValidationError('A record with this identifier already exists')
     return cleaned_data[id_field]
 
 
@@ -302,7 +320,9 @@ class DataSetForm(forms.ModelForm):
         required=False,
     )
 
-    eligibility_criteria = DynamicArrayField(base_field=forms.CharField(), required=False)
+    eligibility_criteria = DynamicArrayField(
+        base_field=forms.CharField(), required=False
+    )
 
     class Meta:
         model = DataSet
@@ -312,9 +332,11 @@ class DataSetForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         is_instance = 'instance' in kwargs and kwargs['instance']
-        self.fields['requires_authorization'].initial = \
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION' if is_instance else \
-            True
+        self.fields['requires_authorization'].initial = (
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
+            if is_instance
+            else True
+        )
 
 
 class SourceLinkForm(forms.ModelForm):
@@ -335,9 +357,7 @@ class SourceLinkFormSet(BaseInlineFormSet):
             link = form['id']
             if link.link_type == link.TYPE_LOCAL:
                 if not link.local_file_is_accessible():
-                    raise ValidationError(
-                        'Unable to access local file for deletion'
-                    )
+                    raise ValidationError('Unable to access local file for deletion')
 
 
 class SourceLinkUploadForm(forms.ModelForm):
@@ -346,6 +366,4 @@ class SourceLinkUploadForm(forms.ModelForm):
     class Meta:
         model = SourceLink
         fields = ('dataset', 'name', 'format', 'frequency', 'file')
-        widgets = {
-            'dataset': forms.HiddenInput()
-        }
+        widgets = {'dataset': forms.HiddenInput()}

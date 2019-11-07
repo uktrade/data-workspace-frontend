@@ -8,7 +8,7 @@ services:
     env_file:
       - ./.envs/test.env
     ports:
-      - "8000:8000"
+      - "8000"
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"
@@ -21,11 +21,11 @@ services:
       dockerfile: Dockerfile-test
     image: data-workspace-postgres
     ports:
-      - "5432:5432"
+      - "5432"
   data-workspace-redis:
     build:
       context: redis
       dockerfile: Dockerfile
     image: data-workspace-redis
     ports:
-      - "6379:6379"
+      - "6379"

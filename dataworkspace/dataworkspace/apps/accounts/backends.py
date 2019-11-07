@@ -7,7 +7,6 @@ logger = logging.getLogger('app')
 
 
 class AuthbrokerBackendUsernameIsEmail(ModelBackend):
-
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
             email = request.META['HTTP_SSO_PROFILE_EMAIL']

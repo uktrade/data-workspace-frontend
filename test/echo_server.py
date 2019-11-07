@@ -4,9 +4,7 @@ import logging
 import sys
 
 import aiohttp
-from aiohttp import (
-    web,
-)
+from aiohttp import web
 
 
 async def async_main():
@@ -23,9 +21,9 @@ async def async_main():
             'content': (await request.read()).decode(),
             'headers': dict(request.headers),
         }
-        return web.json_response(data, status=405, headers={
-            'from-upstream': 'upstream-header-value',
-        })
+        return web.json_response(
+            data, status=405, headers={'from-upstream': 'upstream-header-value'}
+        )
 
     async def handle_websockets(request):
         wsock = web.WebSocketResponse()
@@ -44,11 +42,13 @@ async def async_main():
         return wsock
 
     upstream = web.Application()
-    upstream.add_routes([
-        web.get('/http', handle_http),
-        web.patch('/http', handle_http),
-        web.get('/websockets', handle_websockets),
-    ])
+    upstream.add_routes(
+        [
+            web.get('/http', handle_http),
+            web.patch('/http', handle_http),
+            web.get('/websockets', handle_websockets),
+        ]
+    )
     upstream_runner = web.AppRunner(upstream)
     await upstream_runner.setup()
     upstream_site = web.TCPSite(upstream_runner, '0.0.0.0', 8888)

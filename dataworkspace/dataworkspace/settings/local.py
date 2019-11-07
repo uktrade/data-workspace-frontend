@@ -1,6 +1,5 @@
-import sys
-
-from dataworkspace.settings.base import *
+from dataworkspace.settings.base import *  # noqa: F403, F401
+from dataworkspace.settings.base import env
 
 
 DATABASES = {
@@ -23,7 +22,7 @@ DATABASES = {
             'PORT': '5432',
         }
         for database_name, database in env['DATA_DB'].items()
-    }
+    },
 }
 
 STATIC_URL = '/static/'

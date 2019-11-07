@@ -53,14 +53,14 @@ class UserLogModel(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='created+'
+        related_name='created+',
     )
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='updated+'
+        related_name='updated+',
     )
 
     class Meta:
@@ -79,11 +79,7 @@ class DeletableTimestampedUserModel(DeletableModel, TimeStampedUserModel):
 
 class Database(TimeStampedModel):
     # Deliberately no indexes: current plan is only a few public databases.
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     memorable_name = models.CharField(
         validators=[RegexValidator(regex=r'[A-Za-z0-9_]')],
@@ -94,9 +90,11 @@ class Database(TimeStampedModel):
     )
     is_public = models.BooleanField(
         default=False,
-        help_text=('If public, the same credentials for the database will be shared with each user. '
-                   'If not public, each user must be explicilty given access, '
-                   'and temporary credentials will be created for each.')
+        help_text=(
+            'If public, the same credentials for the database will be shared with each user. '
+            'If not public, each user must be explicilty given access, '
+            'and temporary credentials will be created for each.'
+        ),
     )
 
     class Meta:

@@ -5,14 +5,14 @@ import re
 import boto3
 
 from django.conf import settings
-from django.http import (
-    JsonResponse,
-    StreamingHttpResponse,
-)
+from django.http import JsonResponse, StreamingHttpResponse
 
 from psycopg2 import connect, sql
 
-from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationTemplate
+from dataworkspace.apps.applications.models import (
+    ApplicationInstance,
+    ApplicationTemplate,
+)
 from dataworkspace.apps.applications.spawner import spawn
 from dataworkspace.apps.applications.utils import (
     api_application_dict,
@@ -25,112 +25,100 @@ from dataworkspace.apps.core.utils import (
     can_access_table_by_google_data_studio,
     database_dsn,
 )
-from dataworkspace.apps.datasets.models import (
-    SourceTable,
-)
+from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.core.utils import (
     create_s3_role,
     new_private_database_credentials,
 )
 
 
-SCHEMA_STRING = {
-    'dataType': 'STRING',
-    'semantics': {
-        'conceptType': 'DIMENSION',
-    },
-}
+SCHEMA_STRING = {'dataType': 'STRING', 'semantics': {'conceptType': 'DIMENSION'}}
 
 SCHEMA_STRING_DATE = {
     'dataType': 'STRING',
-    'semantics': {
-        'conceptType': 'DIMENSION',
-        'semanticType': 'YEAR_MONTH_DAY',
-    },
+    'semantics': {'conceptType': 'DIMENSION', 'semanticType': 'YEAR_MONTH_DAY'},
 }
 
 SCHEMA_STRING_DATE_TIME = {
     'dataType': 'STRING',
-    'semantics': {
-        'conceptType': 'DIMENSION',
-        'semanticType': 'YEAR_MONTH_DAY_SECOND',
-    },
+    'semantics': {'conceptType': 'DIMENSION', 'semanticType': 'YEAR_MONTH_DAY_SECOND'},
 }
 
-SCHEMA_BOOLEAN = {
-    'dataType': 'BOOLEAN',
-    'semantics': {
-        'conceptType': 'DIMENSION',
-    },
-}
+SCHEMA_BOOLEAN = {'dataType': 'BOOLEAN', 'semantics': {'conceptType': 'DIMENSION'}}
 
-SCHEMA_NUMBER = {
-    'dataType': 'NUMBER',
-    'semantics': {
-        'conceptType': 'METRIC',
-    },
-}
+SCHEMA_NUMBER = {'dataType': 'NUMBER', 'semantics': {'conceptType': 'METRIC'}}
 
 SCHEMA_DATA_TYPE_PATTERNS = (
-    (
-        r'^(character varying.*)|(text)$',
-        SCHEMA_STRING, lambda v: v),
-    (
-        r'^(uuid)$',
-        SCHEMA_STRING, str),
+    (r'^(character varying.*)|(text)$', SCHEMA_STRING, lambda v: v),
+    (r'^(uuid)$', SCHEMA_STRING, str),
     (
         # Not sure if this is suitable for Google Data Studio analysis, but avoids the error if
         # passing an array as a value:
         # "The data returned from the community connector is malformed"
         r'^text\[\]$',
-        SCHEMA_STRING, ','.join),
+        SCHEMA_STRING,
+        ','.join,
+    ),
     (
         r'^date$',
-        SCHEMA_STRING_DATE, lambda v: v.strftime('%Y%m%d') if v is not None else None),
+        SCHEMA_STRING_DATE,
+        lambda v: v.strftime('%Y%m%d') if v is not None else None,
+    ),
     (
         r'^timestamp.*$',
-        SCHEMA_STRING_DATE_TIME, lambda v: v.strftime('%Y%m%d%H%M%S') if v is not None else None),
-    (
-        r'^boolean$',
-        SCHEMA_BOOLEAN, lambda v: v),
-    (
-        r'^(bigint)|(decimal)|(integer)|(numeric)|(real)$',
-        SCHEMA_NUMBER, lambda v: v),
+        SCHEMA_STRING_DATE_TIME,
+        lambda v: v.strftime('%Y%m%d%H%M%S') if v is not None else None,
+    ),
+    (r'^boolean$', SCHEMA_BOOLEAN, lambda v: v),
+    (r'^(bigint)|(decimal)|(integer)|(numeric)|(real)$', SCHEMA_NUMBER, lambda v: v),
 )
 
 logger = logging.getLogger('app')
 
 
 def applications_api_view(request):
-    return \
-        applications_api_GET(request) if request.method == 'GET' else \
-        JsonResponse({}, status=405)
+    return (
+        applications_api_GET(request)
+        if request.method == 'GET'
+        else JsonResponse({}, status=405)
+    )
 
 
 def applications_api_GET(request):
-    return JsonResponse({
-        'applications': [
-            api_application_dict(application)
-            for application in ApplicationInstance.objects.filter(
-                state__in=['RUNNING', 'SPAWNING'],
-            )
-        ]
-    }, status=200)
+    return JsonResponse(
+        {
+            'applications': [
+                api_application_dict(application)
+                for application in ApplicationInstance.objects.filter(
+                    state__in=['RUNNING', 'SPAWNING']
+                )
+            ]
+        },
+        status=200,
+    )
 
 
 def application_api_view(request, public_host):
-    return \
-        JsonResponse({}, status=403) if not application_api_is_allowed(request, public_host) else \
-        application_api_GET(request, public_host) if request.method == 'GET' else \
-        application_api_PUT(request, public_host) if request.method == 'PUT' else \
-        application_api_PATCH(request, public_host) if request.method == 'PATCH' else \
-        application_api_DELETE(request, public_host) if request.method == 'DELETE' else \
-        JsonResponse({}, status=405)
+    return (
+        JsonResponse({}, status=403)
+        if not application_api_is_allowed(request, public_host)
+        else application_api_GET(request, public_host)
+        if request.method == 'GET'
+        else application_api_PUT(request, public_host)
+        if request.method == 'PUT'
+        else application_api_PATCH(request, public_host)
+        if request.method == 'PATCH'
+        else application_api_DELETE(request, public_host)
+        if request.method == 'DELETE'
+        else JsonResponse({}, status=405)
+    )
 
 
 def application_api_GET(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host
+        )
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
@@ -142,16 +130,24 @@ def application_api_PUT(request, public_host):
     # key prevents duplicate spawning/running applications at the same
     # public host
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host
+        )
     except ApplicationInstance.DoesNotExist:
         pass
     else:
-        return JsonResponse({'message': 'Application instance already exists'}, status=409)
+        return JsonResponse(
+            {'message': 'Application instance already exists'}, status=409
+        )
 
     try:
-        application_template, public_host_data = application_template_and_data_from_host(public_host)
+        application_template, public_host_data = application_template_and_data_from_host(
+            public_host
+        )
     except ApplicationTemplate.DoesNotExist:
-        return JsonResponse({'message': 'Application template does not exist'}, status=400)
+        return JsonResponse(
+            {'message': 'Application template does not exist'}, status=400
+        )
 
     credentials = new_private_database_credentials(request.user)
 
@@ -176,15 +172,22 @@ def application_api_PUT(request, public_host):
 
     spawn.delay(
         application_template.spawner,
-        request.user.email, str(request.user.profile.sso_id), public_host_data,
-        application_instance.id, application_template.spawner_options, credentials)
+        request.user.email,
+        str(request.user.profile.sso_id),
+        public_host_data,
+        application_instance.id,
+        application_template.spawner_options,
+        credentials,
+    )
 
     return JsonResponse(api_application_dict(application_instance), status=200)
 
 
 def application_api_PATCH(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host
+        )
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
@@ -201,7 +204,9 @@ def application_api_PATCH(request, public_host):
 
 def application_api_DELETE(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(public_host)
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host
+        )
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=200)
 
@@ -211,9 +216,11 @@ def application_api_DELETE(request, public_host):
 
 
 def aws_credentials_api_view(request):
-    return \
-        aws_credentials_api_GET(request) if request.method == 'GET' else \
-        JsonResponse({}, status=405)
+    return (
+        aws_credentials_api_GET(request)
+        if request.method == 'GET'
+        else JsonResponse({}, status=405)
+    )
 
 
 def aws_credentials_api_GET(request):
@@ -235,19 +242,23 @@ def aws_credentials_api_GET(request):
         else:
             break
 
-    return JsonResponse({
-        'AccessKeyId': credentials['AccessKeyId'],
-        'SecretAccessKey': credentials['SecretAccessKey'],
-        'SessionToken': credentials['SessionToken'],
-        'Expiration': credentials['Expiration']
-    }, status=200)
+    return JsonResponse(
+        {
+            'AccessKeyId': credentials['AccessKeyId'],
+            'SecretAccessKey': credentials['SecretAccessKey'],
+            'SessionToken': credentials['SessionToken'],
+            'Expiration': credentials['Expiration'],
+        },
+        status=200,
+    )
 
 
 def get_postgres_column_names_data_types(sourcetable):
-    with \
-            connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
-            conn.cursor() as cur:
-        cur.execute('''
+    with connect(
+        database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])
+    ) as conn, conn.cursor() as cur:
+        cur.execute(
+            '''
             SELECT
                 pg_attribute.attname AS column_name,
                 pg_catalog.format_type(pg_attribute.atttypid, pg_attribute.atttypmod) AS data_type
@@ -264,7 +275,9 @@ def get_postgres_column_names_data_types(sourcetable):
                 AND pg_class.relname = %s
             ORDER BY
                 attnum ASC;
-        ''', (sourcetable.schema, sourcetable.table))
+        ''',
+            (sourcetable.schema, sourcetable.table),
+        )
         return cur.fetchall()
 
 
@@ -292,10 +305,7 @@ def schema_value_func_for_data_types(sourcetable):
 
 
 def get_schema(schema_value_funcs):
-    return [
-        schema
-        for schema, _ in schema_value_funcs
-    ]
+    return [schema for schema, _ in schema_value_funcs]
 
 
 def get_rows(sourcetable, schema_value_funcs, pagination):
@@ -310,11 +320,12 @@ def get_rows(sourcetable, schema_value_funcs, pagination):
     # We _could_ use `oid` to order rows if there is no primary key, but we
     # would like all tables to have a primary key, so we deliberately don't
     # implement this
-    with \
-            connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
-            conn.cursor() as cur:
+    with connect(
+        database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])
+    ) as conn, conn.cursor() as cur:
 
-        cur.execute('''
+        cur.execute(
+            '''
             SELECT
                 pg_attribute.attname AS column_name
             FROM
@@ -333,91 +344,112 @@ def get_rows(sourcetable, schema_value_funcs, pagination):
                 AND pg_index.indisprimary
             ORDER BY
                 pg_attribute.attnum
-        ''', (sourcetable.schema, sourcetable.table))
+        ''',
+            (sourcetable.schema, sourcetable.table),
+        )
         primary_key_column_names = [row[0] for row in cur.fetchall()]
 
-    with \
-            connect(database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])) as conn, \
-            conn.cursor(name='google_data_studio_all_table_data') as cur:  # Named cursor => server-side cursor
+    with connect(
+        database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])
+    ) as conn, conn.cursor(
+        name='google_data_studio_all_table_data'
+    ) as cur:  # Named cursor => server-side cursor
 
         cur.itersize = cursor_itersize
         cur.arraysize = cursor_itersize
 
-        fields_sql = sql.SQL(',').join([sql.Identifier(schema['name']) for schema, _ in schema_value_funcs])
-        primary_key_sql = sql.SQL(',').join([sql.Identifier(column_name) for column_name in primary_key_column_names])
+        fields_sql = sql.SQL(',').join(
+            [sql.Identifier(schema['name']) for schema, _ in schema_value_funcs]
+        )
+        primary_key_sql = sql.SQL(',').join(
+            [sql.Identifier(column_name) for column_name in primary_key_column_names]
+        )
         schema_sql = sql.Identifier(sourcetable.schema)
         table_sql = sql.Identifier(sourcetable.table)
 
         def query_var_non_paginated():
-            return sql.SQL('''
+            return (
+                sql.SQL(
+                    '''
                 SELECT {} FROM {}.{} ORDER BY {}
-            ''').format(fields_sql, schema_sql, table_sql, primary_key_sql), ()
+            '''
+                ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
+                (),
+            )
 
         def query_vars_paginated():
             limit = int(pagination['rowCount'])
-            offset = int(pagination['startRow']) - 1  # Google Data Studio start is 1-indexed
-            return sql.SQL('''
+            offset = (
+                int(pagination['startRow']) - 1
+            )  # Google Data Studio start is 1-indexed
+            return (
+                sql.SQL(
+                    '''
                 SELECT {} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
-            ''').format(fields_sql, schema_sql, table_sql, primary_key_sql), (limit, offset)
+            '''
+                ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
+                (limit, offset),
+            )
 
-        query_sql, vars_sql = \
-            query_var_non_paginated() if pagination is None else \
-            query_vars_paginated()
+        query_sql, vars_sql = (
+            query_var_non_paginated() if pagination is None else query_vars_paginated()
+        )
 
         cur.execute(query_sql, vars_sql)
 
         while True:
             rows = cur.fetchmany(cursor_itersize)
             for row in rows:
-                yield json.dumps({
-                    'values': [
-                        schema_value_funcs[i][1](value)
-                        for i, value in enumerate(row)
-                    ]
-                }).encode('utf-8')
+                yield json.dumps(
+                    {
+                        'values': [
+                            schema_value_funcs[i][1](value)
+                            for i, value in enumerate(row)
+                        ]
+                    }
+                ).encode('utf-8')
             if not rows:
                 break
 
 
 def table_api_schema_view(request, table_id):
-    return \
-        JsonResponse({}, status=403) if not request.user.is_superuser else \
-        JsonResponse({}, status=403) if not can_access_table_by_google_data_studio(request.user, table_id) else \
-        table_api_schema_POST(request, table_id) if request.method == 'POST' else \
-        JsonResponse({}, status=405)
+    return (
+        JsonResponse({}, status=403)
+        if not request.user.is_superuser
+        else JsonResponse({}, status=403)
+        if not can_access_table_by_google_data_studio(request.user, table_id)
+        else table_api_schema_POST(request, table_id)
+        if request.method == 'POST'
+        else JsonResponse({}, status=405)
+    )
 
 
 def table_api_schema_POST(request, table_id):
     # POST request to support HTTP bodies from Google Data Studio: it doesn't
     # seem to be able to send GETs with bodies
-    sourcetable = SourceTable.objects.get(
-        id=table_id,
-    )
+    sourcetable = SourceTable.objects.get(id=table_id)
     schema_value_funcs = schema_value_func_for_data_types(sourcetable)
-    return JsonResponse({
-        'schema': get_schema(schema_value_funcs)
-    }, status=200)
+    return JsonResponse({'schema': get_schema(schema_value_funcs)}, status=200)
 
 
 def table_api_rows_view(request, table_id):
-    return \
-        JsonResponse({}, status=403) if not request.user.is_superuser else \
-        JsonResponse({}, status=403) if not can_access_table_by_google_data_studio(request.user, table_id) else \
-        table_api_rows_POST(request, table_id) if request.method == 'POST' else \
-        JsonResponse({}, status=405)
+    return (
+        JsonResponse({}, status=403)
+        if not request.user.is_superuser
+        else JsonResponse({}, status=403)
+        if not can_access_table_by_google_data_studio(request.user, table_id)
+        else table_api_rows_POST(request, table_id)
+        if request.method == 'POST'
+        else JsonResponse({}, status=405)
+    )
 
 
 def table_api_rows_POST(request, table_id):
     # POST request to support HTTP bodies from Google Data Studio: it doesn't
     # seem to be able to send GETs with bodies
-    sourcetable = SourceTable.objects.get(
-        id=table_id,
-    )
+    sourcetable = SourceTable.objects.get(id=table_id)
     request_dict = json.loads(request.body)
-    column_names = [
-        field['name']
-        for field in request_dict['fields']
-    ]
+    column_names = [field['name'] for field in request_dict['fields']]
     pagination = request_dict.get('pagination', None)
     schema_value_funcs = [
         (schema, value_func)
@@ -429,7 +461,9 @@ def table_api_rows_POST(request, table_id):
         try:
             # Could be more optimised, e.g. combining yields to reduce socket
             # operations, but KISS
-            yield b'{"schema":' + json.dumps(get_schema(schema_value_funcs)).encode('utf-8') + b',"rows":['
+            yield b'{"schema":' + json.dumps(get_schema(schema_value_funcs)).encode(
+                'utf-8'
+            ) + b',"rows":['
 
             later_row = False
             for row in get_rows(sourcetable, schema_value_funcs, pagination):
@@ -446,4 +480,5 @@ def table_api_rows_POST(request, table_id):
             raise
 
     return StreamingHttpResponse(
-        yield_schema_and_rows_bytes(), content_type='application/json', status=200)
+        yield_schema_and_rows_bytes(), content_type='application/json', status=200
+    )

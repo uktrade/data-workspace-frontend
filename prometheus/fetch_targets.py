@@ -6,10 +6,7 @@ import os
 import sys
 import urllib.parse
 
-from lowhaio import (
-    Pool,
-    buffered,
-)
+from lowhaio import Pool, buffered
 
 
 async def async_main(logger, target_file, url, username, password):
@@ -19,9 +16,13 @@ async def async_main(logger, target_file, url, username, password):
         await asyncio.sleep(10)
         try:
             logger.debug('Fetching from %s', url)
-            headers = ((
-                b'Authorization', b'Basic ' + base64.b64encode(f'{username}:{password}'.encode('ascii'))
-            ),)
+            headers = (
+                (
+                    b'Authorization',
+                    b'Basic '
+                    + base64.b64encode(f'{username}:{password}'.encode('ascii')),
+                ),
+            )
             code, _, body = await request(b'GET', url, headers=headers)
             logger.debug('Code %s', code)
             raw_json = await buffered(body)
@@ -36,9 +37,11 @@ async def async_main(logger, target_file, url, username, password):
                         'user': application['user'],
                     },
                     'targets': [
-                        urllib.parse.urlsplit(application['proxy_url']).hostname + ':8889'
+                        urllib.parse.urlsplit(application['proxy_url']).hostname
+                        + ':8889'
                     ],
-                } for application in applications
+                }
+                for application in applications
                 if application['proxy_url'] is not None
             ]
             logger.debug('Saving %s to %s', file_sd_config, target_file)
