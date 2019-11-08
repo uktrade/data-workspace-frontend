@@ -180,7 +180,10 @@ class AppUserAdmin(UserAdmin):
             ):
                 obj.user_permissions.add(start_all_applications_permission)
                 log_change('Added can_start_all_applications permission')
-            elif start_all_applications_permission in obj.user_permissions.all():
+            elif (
+                    not form.cleaned_data['can_start_all_applications'] and
+                    start_all_applications_permission in obj.user_permissions.all()
+            ):
                 obj.user_permissions.remove(start_all_applications_permission)
                 log_change('Removed can_start_all_applications permission')
 
@@ -191,7 +194,10 @@ class AppUserAdmin(UserAdmin):
             ):
                 obj.user_permissions.add(access_appstream_permission)
                 log_change('Added can_access_appstream permission')
-            elif access_appstream_permission in obj.user_permissions.all():
+            elif (
+                    not form.cleaned_data['can_access_appstream'] and
+                    access_appstream_permission in obj.user_permissions.all()
+            ):
                 obj.user_permissions.remove(access_appstream_permission)
                 log_change('Removed can_access_appstream permission')
 
