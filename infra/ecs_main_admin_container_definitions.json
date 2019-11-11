@@ -61,7 +61,7 @@
     },
     {
       "name": "APPLICATION_TEMPLATES__1__VISIBLE",
-      "value": "True"
+      "value": "False"
     },
     {
       "name": "APPLICATION_TEMPLATES__1__HOST_PATTERN",
@@ -461,7 +461,7 @@
     },
     {
       "name": "APPLICATION_TEMPLATES__5__VISIBLE",
-      "value": "False"
+      "value": "True"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__HOST_PATTERN",
@@ -580,7 +580,7 @@
     },
     {
       "name": "APPLICATION_TEMPLATES__6__VISIBLE",
-      "value": "False"
+      "value": "True"
     },
     {
       "name": "APPLICATION_TEMPLATES__6__HOST_PATTERN",
