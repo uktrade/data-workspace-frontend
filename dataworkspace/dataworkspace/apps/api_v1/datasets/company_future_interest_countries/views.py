@@ -2,6 +2,7 @@ from dataworkspace.apps.datasets.models import DataSet
 from rest_framework.pagination import CursorPagination
 from rest_framework.views import APIView
 
+
 class Pagination(CursorPagination):
     ordering = ('id',)
     offset_cutoff = None

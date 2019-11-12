@@ -111,6 +111,9 @@ async def async_main():
             and request.url.host == root_domain_no_port
         )
 
+    def is_hawk_auth_required(request):
+        return is_dataset_requested(request)
+    
     def is_healthcheck_requested(request):
         return (
             request.url.path == '/healthcheck'
@@ -727,6 +730,62 @@ async def async_main():
             return await handler(request)
 
         return _authenticate_by_basic_auth
+
+    def authenticate_by_hawk_auth():
+
+        async def lookup_credentials(sender_id):
+            for hawk_sender in hawk_senders:
+                if hawk_sender['id'] == sender_id:
+                    return hawk_sender
+
+        async def seen_nonce(nonce, sender_id):
+            nonce_key = f'nonce-{sender_id}-{nonce}'
+            with await redis_pool as conn:
+                nonce_stored = await conn.execute('GET', nonce_key)
+                if nonce_stored:
+                    return True
+                else:
+                    await conn.execute('SET', nonce_key, '1', 'EX', 5, 'NX')
+                    return False
+
+        @web.middleware
+        async def _authenticate_by_hawk_auth(request, handler):
+            hawk_auth_required = is_hawk_auth_required(request)
+            
+            if not hawk_auth_required:
+                return await handler(request)
+
+            # Read request content and store it in _read_bytes property to pass data to regarding endpoint after hawk
+            # authentication.
+            content = await request.read()
+            logger.info('Request method %s', request.method)
+            logger.info('URL HOST %s', request.url.host)
+            logger.info('URL Port %s', request.url.port)
+            logger.info('URL Path %s', request.url.path)
+            logger.info('Content %s', content)
+            logger.info('Headers %s', request.headers['Authorization'])
+            logger.info('Content type %s', request.headers['Content-Type'])
+
+            is_authenticated, error_message, _ = await authenticate_hawk_header(
+                lookup_credentials,
+                seen_nonce,
+                1000,
+                request.headers['Authorization'],
+                request.method,
+                request.url.host,
+                request.url.port,
+                request.url.path,
+                request.headers['Content-Type'],
+                content,
+            )
+            if not is_authenticated:
+                logger.info('Hawk authentication failed.\nError message: %s', str(error_message))
+                return web.Response(status=401)
+
+            logger.info('Hawk authentication succeeded')
+            return await handler(request)
+
+        return _authenticate_by_hawk_auth
 
     def authenticate_by_ip_whitelist():
         @web.middleware
