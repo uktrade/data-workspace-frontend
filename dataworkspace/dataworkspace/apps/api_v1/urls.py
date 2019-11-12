@@ -41,5 +41,5 @@ urlpatterns = [
                 'dataset'
             ),
             namespace='dataset')
-    ), 
+    ),
 ]

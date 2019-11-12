@@ -3,6 +3,7 @@ import json
 import os
 import urllib.request
 
+from django.core.exceptions import ImproperlyConfigured
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
