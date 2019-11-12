@@ -213,7 +213,7 @@ class FargateSpawner:
                 else definition_arn_with_image
             )
 
-            for _ in range(0, 10):
+            for i in range(0, 10):
                 # Sometimes there is an error assuming the new role: both IAM  and ECS are
                 # eventually consistent
                 try:
@@ -230,6 +230,8 @@ class FargateSpawner:
                     )
                 except ClientError:
                     gevent.sleep(3)
+                    if i == 9:
+                        raise
                 else:
                     break
 
