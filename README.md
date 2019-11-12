@@ -142,6 +142,26 @@ A common question is why not just NGINX instead of the custom proxy? The reason 
 While not impossible to leverage NGINX to move some code from the proxy, there would still need to be custom code, and NGINX would have to communicate via some mechanism to this custom code to acheive all of the above: extra HTTP or Redis requests, or maybe through a custom NGINX module. It is suspected that this will make things more complex rather than less, and increase the burden on the developer.
 
 
+## Why is the proxy written using asyncio?
+
+- The proxy fits the typical use-case of event-loop based programming: low CPU but high IO requirements, with potentially high number of connections.
+
+- The asyncio library aiohttp provides enough low-level control over the headers and the bytes of requests and responses to work as a controllable proxy. For example, the typical HTTP request cycle can be programmed fairly explicitly.
+
+  - An incoming request begins: its headers are received.
+  - The proxy makes potentially several requests to the Django application, to Redis, and/or to SSO to authenticate and determine where to route the request.
+  - The incoming request's headers are passed to the application [removing certain hop-by-hop-headers].
+  - The incoming request's body is streamed to the application.
+  - The response headers are sent back to the client, combining cookies from the application and from the proxy.
+  - The response body is streamed back to the client.
+
+  The library also allows for receiving and making WebSockets requests. This is done without knowledge ahead of time which path is WebSockets, and which is HTTP. This is something that doesn't seem possible with, for example, Django Channels.
+
+  Requests and responses can be of the order of several GBs, so this streaming behaviour is a critical requirement.
+
+- Django gives a lot of benefits for the main application: for example, it is within the skill set of most available developers. Only a small fraction of changes need to involve the proxy.
+
+
 ## Comparison with JupyterHub
 
 In addition to being able to run any Docker container, not just JupyterLab, Data Workspace has some deliberate architectural features that are different to JupyterHub.
