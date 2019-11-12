@@ -113,7 +113,7 @@ async def async_main():
 
     def is_hawk_auth_required(request):
         return is_dataset_requested(request)
-    
+
     def is_healthcheck_requested(request):
         return (
             request.url.path == '/healthcheck'
@@ -732,7 +732,6 @@ async def async_main():
         return _authenticate_by_basic_auth
 
     def authenticate_by_hawk_auth():
-
         async def lookup_credentials(sender_id):
             for hawk_sender in hawk_senders:
                 if hawk_sender['id'] == sender_id:
@@ -751,7 +750,7 @@ async def async_main():
         @web.middleware
         async def _authenticate_by_hawk_auth(request, handler):
             hawk_auth_required = is_hawk_auth_required(request)
-            
+
             if not hawk_auth_required:
                 return await handler(request)
 
@@ -779,7 +778,9 @@ async def async_main():
                 content,
             )
             if not is_authenticated:
-                logger.info('Hawk authentication failed.\nError message: %s', str(error_message))
+                logger.info(
+                    'Hawk authentication failed.\nError message: %s', str(error_message)
+                )
                 return web.Response(status=401)
 
             logger.info('Hawk authentication succeeded')
