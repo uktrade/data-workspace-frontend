@@ -152,7 +152,7 @@ def application_instance_max_cpu(application_instance):
     max_cpu = 0.0
     ts_at_max = 0
     for ts, cpu in values:
-        cpu_float = float(cpu) / (1000000000 * 30) * 100
+        cpu_float = float(cpu) / (1_000_000_000 * 30) * 100
         if cpu_float >= max_cpu:
             max_cpu = cpu_float
             ts_at_max = ts
