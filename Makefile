@@ -15,7 +15,7 @@ docker-test-integration: docker-build
 
 
 .PHONY: docker-test
-docker-test: docker-test-unit docker-test-integration
+docker-test: docker-test-integration docker-test-unit
 
 
 .PHONY: check
