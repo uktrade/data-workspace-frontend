@@ -105,6 +105,19 @@ async def async_main():
     def is_requesting_files(request):
         return request.url.host == root_domain_no_port and request.url.path == '/files'
 
+    def is_dataset_requested(request):
+        return (
+            request.url.path.startswith('/api/v1/dataset/')
+            and request.url.host == root_domain_no_port
+        )
+
+    def is_healthcheck_requested(request):
+        return (
+            request.url.path == '/healthcheck'
+            and request.method == 'GET'
+            and not is_app_requested(request)
+        )
+
     def is_table_requested(request):
         return (
             request.url.path.startswith('/api/v1/table/')
@@ -112,6 +125,14 @@ async def async_main():
             and request.method == 'POST'
         )
 
+    def is_sso_auth_required(request):
+        return (
+            not is_healthcheck_requested(request)
+            and not is_service_discovery(request)
+            and not is_table_requested(request)
+            and not is_dataset_requested(request)
+        )        
+    
     def get_peer_ip(request):
         peer_ip = (
             request.headers['x-forwarded-for']
@@ -568,16 +589,7 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-            is_healthcheck = (
-                request.url.path == '/healthcheck'
-                and request.method == 'GET'
-                and not is_app_requested(request)
-            )
-            sso_auth_required = (
-                not is_healthcheck
-                and not is_service_discovery(request)
-                and not is_table_requested(request)
-            )
+            sso_auth_required = is_sso_auth_required(request)
 
             if not sso_auth_required:
                 request.setdefault('sso_profile_headers', ())
