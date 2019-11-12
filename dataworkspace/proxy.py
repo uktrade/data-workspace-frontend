@@ -608,9 +608,10 @@ async def async_main():
             if request.path == redirect_from_sso_path:
                 code = request.query['code']
                 sso_state = request.query['state']
-                redirect_uri_final_from_url, redirect_uri_final_from_session = await get_redirect_uri_final(
-                    get_session_value, sso_state
-                )
+                (
+                    redirect_uri_final_from_url,
+                    redirect_uri_final_from_session,
+                ) = await get_redirect_uri_final(get_session_value, sso_state)
 
                 if redirect_uri_final_from_url != redirect_uri_final_from_session:
                     # We might have been overtaken by a parallel request initiating another auth
