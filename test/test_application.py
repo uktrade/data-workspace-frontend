@@ -996,7 +996,7 @@ async def create_application(env=lambda: {}):
 
 
 async def flush_database():
-    await (
+    await (  # noqa
         await asyncio.create_subprocess_shell(
             'django-admin flush --no-input --database default', env=os.environ
         )

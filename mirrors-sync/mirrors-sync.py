@@ -72,7 +72,7 @@ async def blackhole(body):
     # For some requests we just want to receive the bytes without allocating
     # to a contiguous buffer, so the connection gets replaced back to the
     # connection pool
-    async for _ in body:
+    async for _ in body:  # noqa
         pass
 
 
