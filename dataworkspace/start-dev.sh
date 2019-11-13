@@ -21,7 +21,7 @@ set -e
     # Start nginx, proxy and application
     echo "Starting nginx, proxy, gunicorn application, and celery..."
     parallel --will-cite --line-buffer --jobs 3 --halt now,done=1 ::: \
-        "python manage.py runserver" \
+        "python3 /dataworkspace/dataworkspace/manage.py runserver localhost:8002" \
         "PROXY_PORT='8001' UPSTREAM_ROOT='http://localhost:8002' python3 -m proxy" \
         "nginx -p /home/django"
 )
