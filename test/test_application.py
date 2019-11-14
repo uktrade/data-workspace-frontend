@@ -731,14 +731,19 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        retries = 0
+        while retries < 20:
+            try:
+                table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+                stdout, stderr, code = await create_private_dataset()
+                self.assertEqual(stdout, b'')
+                self.assertEqual(stderr, b'')
+                self.assertEqual(code, 0)
+            except Exception:
+                retries += 1
+                await asyncio.sleep(1)
 
         # Check that with no token there is no access
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
-        stdout, stderr, code = await create_private_dataset()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
-        self.assertEqual(code, 0)
 
         async with session.request(
             'POST', f'http://localapps.com:8000/api/v1/table/{table_id}/schema'
