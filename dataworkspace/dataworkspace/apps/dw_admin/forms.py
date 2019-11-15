@@ -128,6 +128,7 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             # Disable the relationship selector if the data type is not foreign key
             elif self.fields['linked_reference_dataset'].initial is None:
                 self.fields['linked_reference_dataset'].disabled = True
+            self.fields['column_name'].disabled = True
 
     def clean_linked_reference_dataset(self):
         cleaned = self.cleaned_data
@@ -229,6 +230,7 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
 
     def clean_column_name(self):
         column_name = self.cleaned_data['column_name']
+        original_column_name = self.instance.column_name
         if column_name in self._reserved_column_names:
             raise forms.ValidationError(
                 '"{}" is a reserved column name (along with: "{}")'.format(
@@ -238,6 +240,8 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                     ),
                 )
             )
+        if self.instance.id and column_name and column_name != original_column_name:
+            raise forms.ValidationError('column name cannot be updated')
         return column_name
 
 
