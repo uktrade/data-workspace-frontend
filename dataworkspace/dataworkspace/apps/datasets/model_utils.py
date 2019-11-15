@@ -1,6 +1,9 @@
 from contextlib import contextmanager
 
-from dataworkspace.apps.datasets.constants import LINKED_FIELD_DISPLAY_NAME, LINKED_FIELD_IDENTIFIER
+from dataworkspace.apps.datasets.constants import (
+    LINKED_FIELD_DISPLAY_NAME,
+    LINKED_FIELD_IDENTIFIER,
+)
 
 
 @contextmanager

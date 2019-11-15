@@ -50,7 +50,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.model_utils import (
     get_linked_field_display_name,
-    get_linked_field_identifier_name
+    get_linked_field_identifier_name,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event

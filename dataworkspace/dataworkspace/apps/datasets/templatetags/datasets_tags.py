@@ -1,7 +1,9 @@
-
 from django import template
 
-from dataworkspace.apps.datasets.model_utils import get_linked_field_identifier_name, get_linked_field_display_name
+from dataworkspace.apps.datasets.model_utils import (
+    get_linked_field_identifier_name,
+    get_linked_field_display_name,
+)
 
 
 register = template.Library()
