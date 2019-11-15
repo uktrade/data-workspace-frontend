@@ -29,6 +29,8 @@ from dataworkspace.apps.core.models import (
 from dataworkspace.apps.datasets.model_utils import (
     external_model_class,
     has_circular_link,
+    get_linked_field_display_name,
+    get_linked_field_identifier_name,
 )
 
 
@@ -519,8 +521,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         field_names = []
         for field in self.fields.all():
             if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                field_names.append('{}: ID'.format(field.name))
-                field_names.append('{}: Name'.format(field.name))
+                field_names.append(get_linked_field_identifier_name(field))
+                field_names.append(get_linked_field_display_name(field))
             else:
                 field_names.append(field.name)
         return field_names

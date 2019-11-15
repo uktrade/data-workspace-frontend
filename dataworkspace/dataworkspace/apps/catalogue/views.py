@@ -48,6 +48,10 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
 )
 from dataworkspace.apps.datasets.utils import find_dataset
+from dataworkspace.apps.datasets.model_utils import (
+    get_linked_field_display_name,
+    get_linked_field_identifier_name
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
@@ -136,10 +140,10 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 value = getattr(record, field.column_name)
                 # If this is a linked field display the display name and id of that linked record
                 if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                    record_data['{}: ID'.format(field_name)] = (
+                    record_data[get_linked_field_identifier_name(field)] = (
                         value.get_identifier() if value is not None else None
                     )
-                    record_data['{}: Name'.format(field_name)] = (
+                    record_data[get_linked_field_display_name(field)] = (
                         value.get_display_name() if value is not None else None
                     )
                 else:
