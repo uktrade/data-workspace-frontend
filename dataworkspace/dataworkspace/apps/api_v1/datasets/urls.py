@@ -8,5 +8,5 @@ urlpatterns = [
         'future-interest-countries-dataset',
         CompanyFutureInterestCountriesDatasetView.as_view(),
         name='future-interest-countries-dataset',
-    ),
+    )
 ]
