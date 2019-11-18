@@ -54,17 +54,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
+        await asyncio.sleep(10)
 
         # Ensure the user doesn't see the application link since they don't
         # have permission
@@ -118,19 +108,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('Starting Test Application', application_content_2)
 
         # There are forced sleeps in starting a process
-
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -225,18 +203,7 @@ class TestApplication(unittest.TestCase):
         cleanup_application_2 = await create_application()
         self.add_async_cleanup(cleanup_application_2)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         async with session.request(
             'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
@@ -251,18 +218,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
 
         self.assertIn('Starting Test Application', content)
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -305,34 +261,18 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         # Make a request to the home page, which ensures the user is in the DB
         async with session.request('GET', 'http://localapps.com:8000/') as response:
             await response.text()
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await give_user_app_perms()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
+        await asyncio.sleep(1)
+
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
 
         async with session.request(
             'GET',
@@ -357,18 +297,7 @@ class TestApplication(unittest.TestCase):
         )
 
         # There are forced sleeps in starting a process
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -456,18 +385,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         # Make a request to the application home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -513,18 +431,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         # Make a request to the home page, which creates the user...
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -572,18 +479,7 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(cleanup_application)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         async with session.request(
             'GET',
@@ -702,18 +598,7 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(sso_cleanup)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
-
+        await asyncio.sleep(10)
 
         # Make a request to the home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -760,17 +645,12 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
+        await asyncio.sleep(10)
+
+        stdout, stderr, code = await create_private_dataset()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
 
         async with session.request(
             'GET', 'http://localapps.com:8000/catalogue/test_slug_g/test_slug_s'
@@ -851,20 +731,15 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await create_private_dataset()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
+        await asyncio.sleep(10)
 
         # Check that with no token there is no access
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        stdout, stderr, code = await create_private_dataset()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
         async with session.request(
             'POST', f'http://localapps.com:8000/api/v1/table/{table_id}/schema'
         ) as response:
@@ -949,21 +824,11 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertEqual('{}', content)
 
-
-        
         # And that the table must be marked as GDS accessible
-
-        retries = 0
-        while retries < 20:
-            try:
-                stdout, stderr, code = await make_table_google_data_studio_accessible()
-                self.assertEqual(stdout, b'')
-                self.assertEqual(stderr, b'')
-                self.assertEqual(code, 0)
-                break
-            except Exception:
-                retries += 1
-                await asyncio.sleep(1)
+        stdout, stderr, code = await make_table_google_data_studio_accessible()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
 
         async with session.request(
             'POST',
