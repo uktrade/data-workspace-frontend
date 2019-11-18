@@ -18,7 +18,7 @@ from yarl import URL
 
 from dataworkspace.utils import normalise_environment
 from proxy_session import SESSION_KEY, redis_session_middleware
-
+from hawkserver import authenticate_hawk_header
 
 class UserException(Exception):
     pass
@@ -37,6 +37,7 @@ async def async_main():
     env = normalise_environment(os.environ)
     port = int(env['PROXY_PORT'])
     admin_root = env['UPSTREAM_ROOT']
+    hawk_senders = env['HAWK_SENDERS']
     sso_base_url = env['AUTHBROKER_URL']
     sso_client_id = env['AUTHBROKER_CLIENT_ID']
     sso_client_secret = env['AUTHBROKER_CLIENT_SECRET']
@@ -823,6 +824,7 @@ async def async_main():
                 authenticate_by_staff_sso_token(),
                 authenticate_by_staff_sso(),
                 authenticate_by_basic_auth(),
+                authenticate_by_hawk_auth(),
                 authenticate_by_ip_whitelist(),
             ]
         )
