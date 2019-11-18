@@ -189,8 +189,9 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
         'slug',
         'short_description',
         'group',
+        'get_published_version',
+        'published_at',
         'published',
-        'version',
     )
     inlines = [ReferenceDataFieldInline]
     fieldsets = [
@@ -200,6 +201,7 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                 'fields': [
                     'published',
                     'is_joint_dataset',
+                    'get_published_version',
                     'name',
                     'table_name',
                     'slug',
@@ -218,6 +220,14 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
             },
         )
     ]
+    readonly_fields = ('get_published_version',)
+
+    def get_published_version(self, obj):
+        if obj.published_version == '0.0':
+            return ' - '
+        return obj.published_version
+
+    get_published_version.short_description = 'Version'
 
     class Media:
         js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')

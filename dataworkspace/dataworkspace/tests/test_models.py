@@ -1,8 +1,11 @@
 import mock
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import connection, connections, ProgrammingError
 from django.db.models import ProtectedError
+
+from freezegun import freeze_time
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.datasets.models import (
@@ -12,7 +15,9 @@ from dataworkspace.apps.datasets.models import (
     SourceLink,
 )
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import BaseTestCase
+from dataworkspace.tests.common import BaseTestCase, BaseTransactionTestCase
+
+from datetime import datetime, timezone
 
 
 class BaseModelsTests(BaseTestCase):
@@ -69,12 +74,107 @@ class BaseModelsTests(BaseTestCase):
             return None
 
 
-class TestReferenceDatasets(BaseModelsTests):
+class ReferenceDatasetsMixin:
+    databases = ['default', 'test_external_db', 'test_external_db2']
+
+    def _add_record_to_dataset(self, ref_dataset):
+        minor_version = ref_dataset.minor_version
+        field1 = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+        )
+        field2 = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='field2',
+            column_name='field2',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+        )
+        ref_dataset.save_record(
+            None,
+            {
+                'reference_dataset': ref_dataset,
+                field1.column_name: 1,
+                field2.column_name: 'testing...',
+            },
+        )
+        record = ref_dataset.get_record_by_custom_id(1)
+        self.assertIsNotNone(record)
+        record = ref_dataset.get_record_by_internal_id(record.id)
+        self.assertIsNotNone(record)
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, minor_version + 1)
+
+
+class TestTransactionReferenceDatasets(ReferenceDatasetsMixin, BaseTransactionTestCase):
+    def test_republish_without_edit_does_not_increment_version(self):
+        ref_dataset = self._create_reference_dataset(
+            table_name='test_add_record_repub', published=True
+        )
+        self._add_record_to_dataset(ref_dataset)
+        self.assertEqual(ref_dataset.version, '1.1')
+        self.assertEqual(ref_dataset.published_version, '1.1')
+
+        ref_dataset = ReferenceDataset.objects.get(pk=ref_dataset.pk)
+        ref_dataset.published = False
+        ref_dataset.save()
+        self.assertEqual(ref_dataset.version, '1.1')
+        self.assertEqual(ref_dataset.published_version, '1.1')
+
+        field6 = ReferenceDatasetField.objects.create(
+            reference_dataset_id=ref_dataset.pk,
+            name='field6',
+            column_name='field6',
+            required=False,
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+        )
+        ref_dataset.save_record(
+            field6.pk, {'reference_dataset': ref_dataset, field6.name: 1}
+        )
+        ref_dataset.save_record(
+            field6.pk, {'reference_dataset': ref_dataset, field6.name: 2}
+        )
+
+        self.assertEqual(ref_dataset.version, '1.3')
+        self.assertEqual(ref_dataset.published_version, '1.1')
+
+        ref_dataset = ReferenceDataset.objects.get(pk=ref_dataset.pk)
+        ref_dataset.published = True
+        ref_dataset.save()
+        self.assertEqual(ref_dataset.version, '1.2')
+        self.assertEqual(ref_dataset.published_version, '1.2')
+
+
+class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
+    @freeze_time('2019-02-01 02:00:00')
     def test_create_reference_dataset(self):
         ref_dataset = self._create_reference_dataset()
         self.assertTrue(self._table_exists(ref_dataset.table_name))
         self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 0)
         self.assertEqual(ref_dataset.schema_version, 0)
+        self.assertEqual(ref_dataset.published_major_version, 1)
+        self.assertEqual(ref_dataset.published_minor_version, 0)
+        self.assertEqual(
+            ref_dataset.initial_published_at,
+            datetime(2019, 2, 1, 2, 0, tzinfo=timezone.utc),
+        )
+        self.assertEqual(
+            ref_dataset.published_at, datetime(2019, 2, 1, 2, 0, tzinfo=timezone.utc)
+        )
+
+    def test_create_unpublished_reference_dataset(self):
+        ref_dataset = self._create_reference_dataset(published=False)
+        self.assertTrue(self._table_exists(ref_dataset.table_name))
+        self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 0)
+        self.assertEqual(ref_dataset.schema_version, 0)
+        self.assertEqual(ref_dataset.published_major_version, 0)
+        self.assertEqual(ref_dataset.published_minor_version, 0)
+        self.assertIsNone(ref_dataset.initial_published_at)
+        self.assertIsNone(ref_dataset.published_at)
 
     def test_edit_reference_dataset_table_name(self):
         ref_dataset = self._create_reference_dataset()
@@ -85,6 +185,7 @@ class TestReferenceDatasets(BaseModelsTests):
         self.assertFalse(self._table_exists('ref_test_dataset'))
         self.assertTrue(self._table_exists(ref_dataset.table_name))
         self.assertEqual(ref_dataset.major_version, 1)
+        self.assertEqual(ref_dataset.minor_version, 0)
         self.assertEqual(ref_dataset.schema_version, 1)
 
     def test_delete_reference_dataset(self):
@@ -212,35 +313,26 @@ class TestReferenceDatasets(BaseModelsTests):
         self.assertEqual(ref_dataset.major_version, 2)
         self.assertEqual(ref_dataset.schema_version, schema_version + 1)
 
-    def test_add_record(self):
-        ref_dataset = self._create_reference_dataset(table_name='test_add_record')
-        minor_version = ref_dataset.minor_version
-        field1 = ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='field1',
-            column_name='field1',
-            data_type=ReferenceDatasetField.DATA_TYPE_INT,
-            is_identifier=True,
+    def test_add_record_to_published_dataset(self):
+        ref_dataset = self._create_reference_dataset(
+            table_name='test_add_record', published=True
         )
-        field2 = ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='field2',
-            column_name='field2',
-            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+        self._add_record_to_dataset(ref_dataset)
+        self.assertEqual(ref_dataset.version, '1.1')
+        self.assertEqual(ref_dataset.published_version, '1.1')
+
+    def test_add_record_to_unpublished_dataset_then_publish(self):
+        ref_dataset = self._create_reference_dataset(
+            table_name='test_add_record', published=False
         )
-        ref_dataset.save_record(
-            None,
-            {
-                'reference_dataset': ref_dataset,
-                field1.column_name: 1,
-                field2.column_name: 'testing...',
-            },
-        )
-        record = ref_dataset.get_record_by_custom_id(1)
-        self.assertIsNotNone(record)
-        record = ref_dataset.get_record_by_internal_id(record.id)
-        self.assertIsNotNone(record)
-        self.assertEqual(ref_dataset.minor_version, minor_version + 1)
+        self._add_record_to_dataset(ref_dataset)
+        self.assertEqual(ref_dataset.version, '1.1')
+        self.assertEqual(ref_dataset.published_version, '0.0')
+
+        ref_dataset.published = True
+        ref_dataset.save()
+        self.assertEqual(ref_dataset.version, '1.0')
+        self.assertEqual(ref_dataset.published_version, '1.0')
 
     def test_edit_record(self):
         ref_dataset = self._create_reference_dataset(table_name='test_edit_record')
