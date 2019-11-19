@@ -235,16 +235,16 @@ class TestDatasetViews(BaseTestCase):
             [
                 {
                     'id': 1,
-                    'linked: ID': 1,
-                    'linked: Name': 'Linked Display Name',
+                    'linked: id': 1,
+                    'linked: name': 'Linked Display Name',
                     'name': 'Test record',
                     'auto uuid': str(rec1.auto_uuid),
                     'auto id': 1,
                 },
                 {
                     'id': 2,
-                    'linked: ID': None,
-                    'linked: Name': None,
+                    'linked: id': None,
+                    'linked: name': None,
                     'name': 'Ánd again',
                     'auto uuid': str(rec2.auto_uuid),
                     'auto id': 2,
@@ -342,7 +342,7 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content,
-            b'"id","name","linked: ID","linked: Name","auto uuid","auto id"\r\n'
+            b'"id","name","linked: id","linked: name","auto uuid","auto id"\r\n'
             b'1,"Test record",1,"Linked Display Name",%s,1\r\n'
             b'2,"\xc3\x81nd again","","",%s,2\r\n'
             % (str(rec1.auto_uuid).encode(), str(rec2.auto_uuid).encode()),
