@@ -6,7 +6,8 @@
   {{ media }}
 {% endblock %}{% block extrastyle %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static "admin.css" %}">
+  <link rel="stylesheet" href="{% static 'admin.css' %}">
+  <link rel="stylesheet" href="{% static 'data-workspace-admin.css' %}">
 {% endblock extrastyle %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
@@ -31,6 +32,9 @@
       {% endfor %}
       <div class="submit-row">
         <input type="submit" value="Save" class="default" name="_save">
+        <a href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}" class="back-link float-right">
+          Go back
+        </a>
         {% if record_id is not None %}
           <p class="deletelink-box">
             <a href="{% url 'dw-admin:reference-dataset-record-delete' reference_dataset_id=ref_model.id record_id=record_id %}" class="deletelink">

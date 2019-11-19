@@ -48,3 +48,7 @@ table.full-width {
 .success-row {
   background: #dfd;
 }
+
+.float-right {
+   float: right;
+}
