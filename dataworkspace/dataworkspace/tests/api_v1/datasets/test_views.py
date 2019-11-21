@@ -8,9 +8,7 @@ class TestAPIDatasetView(TestCase):
 
     def test_route(self):
         resolver = resolve(self.url)
-        self.assertEqual(
-            resolver.view_name, 'api-v1:dataset:api-dataset-view'
-        )
+        self.assertEqual(resolver.view_name, 'api-v1:dataset:api-dataset-view')
 
     def test_data(self):
         response = self.client.get(self.url)
