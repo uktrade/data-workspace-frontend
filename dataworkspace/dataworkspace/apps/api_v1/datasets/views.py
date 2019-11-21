@@ -1,7 +1,9 @@
 from django.http import HttpResponseNotFound
+
+# from django.shortcuts import get_object_or_404
 from rest_framework.pagination import CursorPagination
 from rest_framework.views import APIView
-from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.datasets.models import SourceTable
 
 
 class Pagination(CursorPagination):
@@ -14,15 +16,20 @@ class APIDatasetView(APIView):
     A GET API view to return the data for the company future countries of interest dataset
     """
 
-    def get(self, request, dataset_id, table_id):
-        print('dataset_id:', dataset_id)
-        print('table_id:', table_id)
-        whitelist = ['future-interest-countries']
+    def get(self, request, dataset_id, source_table_id):
+        # dataset_id = '14983f3e-c557-4175-8dad-7f1a6942d949'
+        # source_table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        whitelist = ['14983f3e-c557-4175-8dad-7f1a6942d949']
         if dataset_id in whitelist:
-            # TODO: logic to get actual dataset
-            dataset = DataSet.objects.values()
+            # source_table = get_object_or_404(
+            #     SourceTable,
+            #     id=source_table_id,
+            #     dataset__id=dataset_id
+            # )
             paginator = Pagination()
-            page = paginator.paginate_queryset(dataset, request, view=self)
+            page = paginator.paginate_queryset(
+                SourceTable.objects.values(), request, view=self
+            )
             return paginator.get_paginated_response(page)
         else:
             return HttpResponseNotFound('Invalid dataset id')
