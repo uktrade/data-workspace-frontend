@@ -5,8 +5,8 @@ from dataworkspace.apps.api_v1.datasets.company_future_interest_countries.views 
 
 urlpatterns = [
     path(
-        'future-interest-countries-dataset',
+        'future-interest-countries',
         CompanyFutureInterestCountriesDatasetView.as_view(),
-        name='future-interest-countries-dataset',
+        name='future-interest-countries',
     )
 ]
