@@ -759,13 +759,6 @@ async def async_main():
             # Read request content and store it in _read_bytes property to pass data to regarding endpoint after hawk
             # authentication.
             content = await request.read()
-            logger.info('Request method %s', request.method)
-            logger.info('URL HOST %s', request.url.host)
-            logger.info('URL Port %s', request.url.port)
-            logger.info('URL Path %s', request.url.path)
-            logger.info('Content %s', content)
-            logger.info('Headers %s', request.headers['Authorization'])
-            logger.info('Content type %s', request.headers['Content-Type'])
 
             is_authenticated, error_message, _ = await authenticate_hawk_header(
                 lookup_credentials,
@@ -785,7 +778,6 @@ async def async_main():
                 )
                 return web.Response(status=401)
 
-            logger.info('Hawk authentication succeeded')
             return await handler(request)
 
         return _authenticate_by_hawk_auth
