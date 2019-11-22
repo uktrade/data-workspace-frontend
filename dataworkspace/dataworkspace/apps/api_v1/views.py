@@ -308,7 +308,7 @@ def get_schema(schema_value_funcs):
     return [schema for schema, _ in schema_value_funcs]
 
 
-def get_rows(sourcetable, schema_value_funcs, pagination):
+def get_rows(sourcetable, schema_value_funcs, query_var):
     cursor_itersize = 1000
 
     # Order the rows by primary key so
@@ -367,34 +367,9 @@ def get_rows(sourcetable, schema_value_funcs, pagination):
         schema_sql = sql.Identifier(sourcetable.schema)
         table_sql = sql.Identifier(sourcetable.table)
 
-        def query_var_non_paginated():
-            return (
-                sql.SQL(
-                    '''
-                SELECT {} FROM {}.{} ORDER BY {}
-            '''
-                ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
-                (),
-            )
-
-        def query_vars_paginated():
-            limit = int(pagination['rowCount'])
-            offset = (
-                int(pagination['startRow']) - 1
-            )  # Google Data Studio start is 1-indexed
-            return (
-                sql.SQL(
-                    '''
-                SELECT {} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
-            '''
-                ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
-                (limit, offset),
-            )
-
-        query_sql, vars_sql = (
-            query_var_non_paginated() if pagination is None else query_vars_paginated()
+        query_sql, vars_sql = query_var(
+            fields_sql, schema_sql, table_sql, primary_key_sql
         )
-
         cur.execute(query_sql, vars_sql)
 
         while True:
@@ -450,7 +425,39 @@ def table_api_rows_POST(request, table_id):
     sourcetable = SourceTable.objects.get(id=table_id)
     request_dict = json.loads(request.body)
     column_names = [field['name'] for field in request_dict['fields']]
-    pagination = request_dict.get('pagination', None)
+
+    def query_vars_paginated(fields_sql, schema_sql, table_sql, primary_key_sql):
+        pagination = request_dict['pagination']
+        limit = int(pagination['rowCount'])
+        offset = (
+            int(pagination['startRow']) - 1
+        )  # Google Data Studio start is 1-indexed
+
+        return (
+            sql.SQL(
+                '''
+            SELECT {} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
+        '''
+            ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
+            (limit, offset),
+        )
+
+    def query_vars_non_paginated(fields_sql, schema_sql, table_sql, primary_key_sql):
+        return (
+            sql.SQL(
+                '''
+            SELECT {} FROM {}.{} ORDER BY {}
+        '''
+            ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
+            (),
+        )
+
+    # fmt: off
+    query_vars = \
+        query_vars_paginated if 'pagination' in request_dict else \
+        query_vars_non_paginated
+    # fmt: on
+
     schema_value_funcs = [
         (schema, value_func)
         for schema, value_func in schema_value_func_for_data_types(sourcetable)
@@ -469,7 +476,7 @@ def table_api_rows_POST(request, table_id):
             yield value
 
             later_row = False
-            for row in get_rows(sourcetable, schema_value_funcs, pagination):
+            for row in get_rows(sourcetable, schema_value_funcs, query_vars):
                 # fmt: off
                 value = \
                     b',' + row if later_row else \
