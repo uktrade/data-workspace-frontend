@@ -375,9 +375,11 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
         while True:
             rows = cur.fetchmany(cursor_itersize)
             for row in rows:
+                requested_field_values = row[len(primary_key_column_names) :]
                 yield {
                     'values': [
-                        schema_value_funcs[i][1](value) for i, value in enumerate(row)
+                        schema_value_funcs[i][1](value)
+                        for i, value in enumerate(requested_field_values)
                     ]
                 }
             if not rows:
@@ -433,9 +435,11 @@ def table_api_rows_POST(request, table_id):
         return (
             sql.SQL(
                 '''
-            SELECT {} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
+            SELECT {},{} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
         '''
-            ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
+            ).format(
+                primary_key_sql, fields_sql, schema_sql, table_sql, primary_key_sql
+            ),
             (limit, offset),
         )
 
@@ -443,9 +447,11 @@ def table_api_rows_POST(request, table_id):
         return (
             sql.SQL(
                 '''
-            SELECT {} FROM {}.{} ORDER BY {}
+            SELECT {},{} FROM {}.{} ORDER BY {}
         '''
-            ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
+            ).format(
+                primary_key_sql, fields_sql, schema_sql, table_sql, primary_key_sql
+            ),
             (),
         )
 
