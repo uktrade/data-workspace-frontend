@@ -129,6 +129,7 @@ class DataSet(TimeStampedModel):
     published = models.BooleanField(default=False)
 
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
+    number_of_downloads = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = 'app_dataset'
@@ -370,6 +371,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     sort_direction = models.IntegerField(
         default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES
     )
+    number_of_downloads = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = 'app_referencedataset'
