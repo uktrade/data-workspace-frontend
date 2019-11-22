@@ -375,14 +375,11 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
         while True:
             rows = cur.fetchmany(cursor_itersize)
             for row in rows:
-                yield json.dumps(
-                    {
-                        'values': [
-                            schema_value_funcs[i][1](value)
-                            for i, value in enumerate(row)
-                        ]
-                    }
-                ).encode('utf-8')
+                yield {
+                    'values': [
+                        schema_value_funcs[i][1](value) for i, value in enumerate(row)
+                    ]
+                }
             if not rows:
                 break
 
@@ -479,8 +476,8 @@ def table_api_rows_POST(request, table_id):
             for row in get_rows(sourcetable, schema_value_funcs, query_vars):
                 # fmt: off
                 value = \
-                    b',' + row if later_row else \
-                    row
+                    b',' + json.dumps(row).encode('utf-8') if later_row else \
+                    json.dumps(row).encode('utf-8')
                 # fmt: on
                 yield value
                 later_row = True
