@@ -472,15 +472,15 @@ def table_api_rows_POST(request, table_id):
             )
             yield value
 
-            later_row = False
-            for row in get_rows(sourcetable, schema_value_funcs, query_vars):
+            for i, row in enumerate(
+                get_rows(sourcetable, schema_value_funcs, query_vars)
+            ):
                 # fmt: off
                 value = \
-                    b',' + json.dumps(row).encode('utf-8') if later_row else \
+                    b',' + json.dumps(row).encode('utf-8') if i != 0 else \
                     json.dumps(row).encode('utf-8')
                 # fmt: on
                 yield value
-                later_row = True
 
             value = b']}'
             yield value
