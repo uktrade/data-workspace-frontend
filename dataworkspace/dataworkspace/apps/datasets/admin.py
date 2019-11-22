@@ -72,7 +72,14 @@ class CustomDatasetQueryInline(admin.TabularInline):
 class DataSetAdmin(admin.ModelAdmin):
     form = DataSetForm
     prepopulated_fields = {'slug': ('name',)}
-    list_display = ('name', 'slug', 'short_description', 'grouping', 'published')
+    list_display = (
+        'name',
+        'slug',
+        'short_description',
+        'grouping',
+        'published',
+        'number_of_downloads',
+    )
     list_filter = ('grouping',)
     inlines = [
         SourceLinkInline,
@@ -105,10 +112,10 @@ class DataSetAdmin(admin.ModelAdmin):
     ]
 
     class Media:
-        js = ("js/min/django_better_admin_arrayfield.min.js",)
+        js = ('js/min/django_better_admin_arrayfield.min.js',)
         css = {
             'all': (
-                "css/min/django_better_admin_arrayfield.min.css",
+                'css/min/django_better_admin_arrayfield.min.css',
                 'data-workspace-admin.css',
             )
         }
