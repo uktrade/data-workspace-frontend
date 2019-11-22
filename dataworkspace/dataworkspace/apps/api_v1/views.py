@@ -461,20 +461,25 @@ def table_api_rows_POST(request, table_id):
         try:
             # Could be more optimised, e.g. combining yields to reduce socket
             # operations, but KISS
-            yield b'{"schema":' + json.dumps(get_schema(schema_value_funcs)).encode(
-                'utf-8'
-            ) + b',"rows":['
+            value = (
+                b'{"schema":'
+                + json.dumps(get_schema(schema_value_funcs)).encode('utf-8')
+                + b',"rows":['
+            )
+            yield value
 
             later_row = False
             for row in get_rows(sourcetable, schema_value_funcs, pagination):
-                if later_row:
-                    yield b',' + row
-                else:
-                    yield row
-
+                # fmt: off
+                value = \
+                    b',' + row if later_row else \
+                    row
+                # fmt: on
+                yield value
                 later_row = True
 
-            yield b']}'
+            value = b']}'
+            yield value
         except Exception:
             logger.exception('Error streaming to Google Data Studio')
             raise
