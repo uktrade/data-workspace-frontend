@@ -474,9 +474,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         field1 = factories.ReferenceDatasetFieldFactory(
             reference_dataset=reference_dataset, data_type=1, is_identifier=True
         )
-        field2 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=reference_dataset, data_type=2
-        )
         num_datasets = ReferenceDataset.objects.count()
         response = self._authenticated_post(
             reverse(
@@ -497,20 +494,19 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'licence': '',
                 'restrictions_on_usage': '',
                 'fields-TOTAL_FORMS': 3,
-                'fields-INITIAL_FORMS': 0,
+                'fields-INITIAL_FORMS': 1,
                 'fields-MIN_NUM_FORMS': 1,
                 'fields-MAX_NUM_FORMS': 1000,
                 'fields-0-id': field1.id,
                 'fields-0-reference_dataset': reference_dataset.id,
                 'fields-0-name': 'updated_field_1',
-                'fields-0-column_name': 'duplicate',
-                'fields-0-data_type': 2,
+                'fields-0-column_name': field1.column_name,
+                'fields-0-data_type': 1,
                 'fields-0-description': 'Updated field 1',
                 'fields-0-is_identifier': 'on',
-                'fields-1-id': field2.id,
                 'fields-1-reference_dataset': reference_dataset.id,
                 'fields-1-name': 'updated_field_2',
-                'fields-1-column_name': 'duplicate',
+                'fields-1-column_name': field1.column_name,
                 'fields-1-data_type': 2,
                 'fields-1-description': 'Updated field 2',
                 'fields-2-reference_dataset': reference_dataset.id,
@@ -526,10 +522,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_edit_reference_dataset_invalid_column_name(self):
         reference_dataset = self._create_reference_dataset()
         field1 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+            reference_dataset=reference_dataset,
+            data_type=1,
+            is_identifier=True,
+            column_name='field_1',
         )
         field2 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=reference_dataset, data_type=2
+            reference_dataset=reference_dataset, data_type=2, column_name='field_2'
         )
         num_datasets = ReferenceDataset.objects.count()
         response = self._authenticated_post(
@@ -584,10 +583,11 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_edit_reference_dataset_duplicate_names(self):
         reference_dataset = self._create_reference_dataset()
         field1 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=reference_dataset, data_type=1, is_identifier=True
-        )
-        field2 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=reference_dataset, data_type=2
+            reference_dataset=reference_dataset,
+            data_type=1,
+            is_identifier=True,
+            column_name='field_1',
+            name='field',
         )
         num_datasets = ReferenceDataset.objects.count()
         response = self._authenticated_post(
@@ -607,34 +607,79 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'enquiries_contact': '',
                 'licence': '',
                 'restrictions_on_usage': '',
-                'sort_field': field2.id,
+                'sort_field': field1.id,
                 'sort_direction': ReferenceDataset.SORT_DIR_DESC,
-                'fields-TOTAL_FORMS': 3,
-                'fields-INITIAL_FORMS': 0,
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 1,
                 'fields-MIN_NUM_FORMS': 1,
                 'fields-MAX_NUM_FORMS': 1000,
                 'fields-0-id': field1.id,
                 'fields-0-reference_dataset': reference_dataset.id,
-                'fields-0-name': 'updated_field',
-                'fields-0-column_name': 'updated_field1',
+                'fields-0-name': field1.name,
+                'fields-0-column_name': 'field_1',
                 'fields-0-data_type': 2,
                 'fields-0-description': 'Updated field 1',
                 'fields-0-is_identifier': 'on',
-                'fields-1-id': field2.id,
                 'fields-1-reference_dataset': reference_dataset.id,
-                'fields-1-name': 'updated_field',
-                'fields-1-column_name': 'updated_field2',
-                'fields-1-data_type': 2,
-                'fields-1-description': 'Updated field 2',
-                'fields-2-reference_dataset': reference_dataset.id,
-                'fields-2-name': 'Added field 1',
-                'fields-2-column_name': 'added_field_1',
-                'fields-2-data_type': 3,
-                'fields-2-description': 'Added field',
+                'fields-1-name': field1.name,
+                'fields-1-column_name': 'field_2',
+                'fields-1-data_type': 3,
+                'fields-1-description': 'Added field',
             },
         )
         self.assertContains(response, 'Please ensure field names are unique')
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+    def test_edit_reference_dataset_update_column_names(self):
+        reference_dataset = self._create_reference_dataset()
+        field1 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=reference_dataset,
+            data_type=1,
+            is_identifier=True,
+            column_name='field_1',
+            description='field 1 description',
+        )
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse(
+                'admin:datasets_referencedataset_change', args=(reference_dataset.id,)
+            ),
+            {
+                'id': reference_dataset.id,
+                'name': reference_dataset.name,
+                'table_name': reference_dataset.table_name,
+                'slug': reference_dataset.slug,
+                'group': reference_dataset.group.id,
+                'external_database': '',
+                'short_description': 'test description that is short',
+                'description': '',
+                'valid_from': '',
+                'valid_to': '',
+                'enquiries_contact': '',
+                'licence': '',
+                'sort_direction': ReferenceDataset.SORT_DIR_DESC,
+                'restrictions_on_usage': '',
+                'fields-TOTAL_FORMS': 1,
+                'fields-INITIAL_FORMS': 1,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-id': str(field1.id),
+                'fields-0-reference_dataset': str(reference_dataset.id),
+                'fields-0-name': field1.name,
+                'fields-0-column_name': 'updated_field_1',
+                'fields-0-data_type': 1,
+                'fields-0-description': 'updated description',
+                'fields-0-is_identifier': 'on',
+                'fields-0-is_display_name': 'on',
+            },
+        )
+        self.assertContains(response, 'was changed successfully')
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+        # column_name field is disabled so post value is ignored
+        field1.refresh_from_db()
+        self.assertEqual(field1.column_name, 'field_1')
+        self.assertEqual(field1.description, 'updated description')
 
     def test_edit_reference_dataset_change_table_name(self):
         # Ensure that the table name cannot be changed via the admin
@@ -739,14 +784,14 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-id': field1.id,
                 'fields-0-reference_dataset': reference_dataset.id,
                 'fields-0-name': 'updated_field_1',
-                'fields-0-column_name': 'updated_field_1',
+                'fields-0-column_name': field1.column_name,
                 'fields-0-data_type': 2,
                 'fields-0-description': 'Updated field 1',
                 'fields-0-is_display_name': 'on',
                 'fields-1-id': field2.id,
                 'fields-1-reference_dataset': reference_dataset.id,
                 'fields-1-name': 'updated_field_2',
-                'fields-1-column_name': 'updated_field_2',
+                'fields-1-column_name': field2.column_name,
                 'fields-1-data_type': 2,
                 'fields-1-description': 'Updated field 2',
                 'fields-1-is_identifier': 'on',
@@ -796,13 +841,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-id': field1.id,
                 'fields-0-reference_dataset': reference_dataset.id,
                 'fields-0-name': 'updated_field_1',
-                'fields-0-column_name': 'updated_field_1',
+                'fields-0-column_name': field1.column_name,
                 'fields-0-data_type': 2,
                 'fields-0-description': 'Updated field 1',
                 'fields-1-id': field2.id,
                 'fields-1-reference_dataset': reference_dataset.id,
                 'fields-1-name': 'updated_field_2',
-                'fields-1-column_name': 'updated_field_2',
+                'fields-1-column_name': field2.column_name,
                 'fields-1-data_type': 2,
                 'fields-1-description': 'Updated field 2',
                 'fields-1-is_identifier': 'on',
@@ -962,14 +1007,14 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-id': field1.id,
                 'fields-0-reference_dataset': reference_dataset.id,
                 'fields-0-name': 'updated_field_1',
-                'fields-0-column_name': 'updated_field_1',
+                'fields-0-column_name': field1.column_name,
                 'fields-0-data_type': 2,
                 'fields-0-description': 'Updated field 1',
                 'fields-0-DELETE': 'on',
                 'fields-1-id': field2.id,
                 'fields-1-reference_dataset': reference_dataset.id,
                 'fields-1-name': 'updated_field_2',
-                'fields-1-column_name': 'updated_field_2',
+                'fields-1-column_name': field2.column_name,
                 'fields-1-data_type': 2,
                 'fields-1-description': 'Updated field 2',
                 'fields-1-is_identifier': 'on',
@@ -1736,12 +1781,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_link_to_non_external_dataset(self):
         # Test that a dataset with external db cannot link to a dataset without one
         linked_to = factories.ReferenceDatasetFactory.create()
-        factories.ReferenceDatasetFieldFactory.create(
-            column_name='refid',
-            reference_dataset=linked_to,
-            data_type=1,
-            is_identifier=True,
-        )
         db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
@@ -1763,7 +1802,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-MIN_NUM_FORMS': 1,
                 'fields-MAX_NUM_FORMS': 1000,
                 'fields-0-name': 'field1',
-                'fields-0-column_name': 'field1',
+                'fields-0-column_name': 'refid',
                 'fields-0-data_type': ReferenceDatasetField.DATA_TYPE_CHAR,
                 'fields-0-description': 'A field',
                 'fields-0-is_identifier': 'on',
@@ -1787,13 +1826,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         db = factories.DatabaseFactory.create()
         linked_to = factories.ReferenceDatasetFactory.create(
             name='linked to', table_name='ext_linked_to', external_database=db
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            name='refid',
-            column_name='refid',
-            reference_dataset=linked_to,
-            data_type=1,
-            is_identifier=True,
         )
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
