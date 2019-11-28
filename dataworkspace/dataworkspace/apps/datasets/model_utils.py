@@ -1,5 +1,10 @@
 from contextlib import contextmanager
 
+from dataworkspace.apps.datasets.constants import (
+    LINKED_FIELD_DISPLAY_NAME,
+    LINKED_FIELD_IDENTIFIER,
+)
+
 
 @contextmanager
 def external_model_class(model_class):
@@ -47,3 +52,24 @@ def has_circular_link(target_dataset, linked_dataset):
             if x.linked_reference_dataset not in checked
         )
     return False
+
+
+def get_linked_field_name(field, field_type):
+    linked_reference_dataset = field.linked_reference_dataset
+    if not linked_reference_dataset:
+        return field.name
+    if field_type == LINKED_FIELD_IDENTIFIER:
+        if linked_reference_dataset.identifier_field:
+            return f'{field.name}: {linked_reference_dataset.identifier_field.name}'
+    elif field_type == LINKED_FIELD_DISPLAY_NAME:
+        if linked_reference_dataset.display_name_field:
+            return f'{field.name}: {linked_reference_dataset.display_name_field.name}'
+    return field.name
+
+
+def get_linked_field_identifier_name(field):
+    return get_linked_field_name(field, LINKED_FIELD_IDENTIFIER)
+
+
+def get_linked_field_display_name(field):
+    return get_linked_field_name(field, LINKED_FIELD_DISPLAY_NAME)

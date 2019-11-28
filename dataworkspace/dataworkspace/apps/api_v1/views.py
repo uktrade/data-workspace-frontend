@@ -309,7 +309,7 @@ def get_schema(schema_value_funcs):
     return [schema for schema, _ in schema_value_funcs]
 
 
-def get_rows(sourcetable, schema_value_funcs, pagination):
+def get_rows(sourcetable, schema_value_funcs, query_var):
     cursor_itersize = 1000
 
     # Order the rows by primary key so
@@ -368,47 +368,21 @@ def get_rows(sourcetable, schema_value_funcs, pagination):
         schema_sql = sql.Identifier(sourcetable.schema)
         table_sql = sql.Identifier(sourcetable.table)
 
-        def query_var_non_paginated():
-            return (
-                sql.SQL(
-                    '''
-                SELECT {} FROM {}.{} ORDER BY {}
-            '''
-                ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
-                (),
-            )
-
-        def query_vars_paginated():
-            limit = int(pagination['rowCount'])
-            offset = (
-                int(pagination['startRow']) - 1
-            )  # Google Data Studio start is 1-indexed
-            return (
-                sql.SQL(
-                    '''
-                SELECT {} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
-            '''
-                ).format(fields_sql, schema_sql, table_sql, primary_key_sql),
-                (limit, offset),
-            )
-
-        query_sql, vars_sql = (
-            query_var_non_paginated() if pagination is None else query_vars_paginated()
+        query_sql, vars_sql = query_var(
+            fields_sql, schema_sql, table_sql, primary_key_sql
         )
-
         cur.execute(query_sql, vars_sql)
 
         while True:
             rows = cur.fetchmany(cursor_itersize)
             for row in rows:
-                yield json.dumps(
-                    {
-                        'values': [
-                            schema_value_funcs[i][1](value)
-                            for i, value in enumerate(row)
-                        ]
-                    }
-                ).encode('utf-8')
+                primary_key_values = row[: len(primary_key_column_names)]
+                requested_field_values = row[len(primary_key_column_names) :]
+                values = [
+                    schema_value_funcs[i][1](value)
+                    for i, value in enumerate(requested_field_values)
+                ]
+                yield {'values': values}, primary_key_values
             if not rows:
                 break
 
@@ -451,31 +425,145 @@ def table_api_rows_POST(request, table_id):
     sourcetable = SourceTable.objects.get(id=table_id)
     request_dict = json.loads(request.body)
     column_names = [field['name'] for field in request_dict['fields']]
-    pagination = request_dict.get('pagination', None)
+
+    def query_vars_search_after(fields_sql, schema_sql, table_sql, primary_key_sql):
+        search_after = request_dict['$searchAfter']
+
+        return (
+            sql.SQL(
+                'SELECT {},{} FROM {}.{} WHERE ({}) > ('
+                + ','.join(['%s'] * len(search_after))
+                + ') ORDER BY {}'
+            ).format(
+                primary_key_sql,
+                fields_sql,
+                schema_sql,
+                table_sql,
+                primary_key_sql,
+                primary_key_sql,
+            ),
+            tuple(search_after),
+        )
+
+    def query_vars_paginated(fields_sql, schema_sql, table_sql, primary_key_sql):
+        pagination = request_dict['pagination']
+        limit = int(pagination['rowCount'])
+        offset = (
+            int(pagination['startRow']) - 1
+        )  # Google Data Studio start is 1-indexed
+
+        return (
+            sql.SQL(
+                '''
+            SELECT {},{} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
+        '''
+            ).format(
+                primary_key_sql, fields_sql, schema_sql, table_sql, primary_key_sql
+            ),
+            (limit, offset),
+        )
+
+    def query_vars_non_paginated(fields_sql, schema_sql, table_sql, primary_key_sql):
+        return (
+            sql.SQL(
+                '''
+            SELECT {},{} FROM {}.{} ORDER BY {}
+        '''
+            ).format(
+                primary_key_sql, fields_sql, schema_sql, table_sql, primary_key_sql
+            ),
+            (),
+        )
+
+    # fmt: off
+    query_vars = \
+        query_vars_search_after if '$searchAfter' in request_dict else \
+        query_vars_paginated if 'pagination' in request_dict else \
+        query_vars_non_paginated
+    # fmt: on
+
     schema_value_funcs = [
         (schema, value_func)
         for schema, value_func in schema_value_func_for_data_types(sourcetable)
         if schema['name'] in column_names
     ]
 
+    # https://developers.google.com/apps-script/guides/services/quotas#current_limitations
+    # URL Fetch response size: 50mb, and a bit of a buffer for http headers and $searchAfter
+    num_bytes_max = 49990000
+
+    # StreamingHttpResponse translates to HTTP/1.1 chunking performed by gunicorn. However,
+    # we don't have any visibility on the actual bytes sent as part of the HTTP body, i.e. each
+    # chunk header and footer. We also don't appear to be able to work-around it and implement
+    # our own chunked-encoder that makes these things visible. The best thing we can do is make
+    # a good guess as to what these are, and add their lengths to the total number of bytes sent
+    def len_chunk_header(num_chunk_bytes):
+        return len('%X\r\n' % num_chunk_bytes)
+
+    len_chunk_footer = len('\r\n')
+
+    chunk_size = 16384
+    queue = []
+    num_bytes_queued = 0
+    num_bytes_sent = 0
+    num_bytes_sent_and_queued = 0
+
+    def yield_chunks(row_bytes):
+        nonlocal queue
+        nonlocal num_bytes_queued
+        nonlocal num_bytes_sent
+        nonlocal num_bytes_sent_and_queued
+
+        queue.append(row_bytes)
+        num_bytes_queued += len(row_bytes)
+        num_bytes_sent_and_queued += len(row_bytes)
+
+        while num_bytes_queued >= chunk_size:
+            to_send_bytes = b''.join(queue)
+            chunk, to_send_bytes = (
+                to_send_bytes[:chunk_size],
+                to_send_bytes[chunk_size:],
+            )
+            queue = [to_send_bytes] if to_send_bytes else []
+            num_bytes_queued = len(to_send_bytes)
+            num_bytes_sent += (
+                len(chunk) + len_chunk_header(len(chunk)) + len_chunk_footer
+            )
+            yield chunk
+
+    def yield_remaining():
+        if queue:
+            yield b''.join(queue)
+
     def yield_schema_and_rows_bytes():
         try:
-            # Could be more optimised, e.g. combining yields to reduce socket
-            # operations, but KISS
-            yield b'{"schema":' + json.dumps(get_schema(schema_value_funcs)).encode(
-                'utf-8'
-            ) + b',"rows":['
+            yield from yield_chunks(
+                b'{"schema":'
+                + json.dumps(get_schema(schema_value_funcs)).encode('utf-8')
+                + b',"rows":['
+            )
 
-            later_row = False
-            for row in get_rows(sourcetable, schema_value_funcs, pagination):
-                if later_row:
-                    yield b',' + row
-                else:
-                    yield row
+            for i, (row, search_after) in enumerate(
+                get_rows(sourcetable, schema_value_funcs, query_vars)
+            ):
+                yield from yield_chunks(
+                    # fmt: off
+                    b',' + json.dumps(row).encode('utf-8') if i != 0 else
+                    json.dumps(row).encode('utf-8')
+                    # fmt: on
+                )
 
-                later_row = True
+                if num_bytes_sent_and_queued > num_bytes_max:
+                    yield from yield_chunks(
+                        b'],"$searchAfter":'
+                        + json.dumps(search_after).encode('utf-8')
+                        + b'}'
+                    )
+                    break
+            else:
+                yield from yield_chunks(b']}')
 
-            yield b']}'
+            yield from yield_remaining()
         except Exception:
             logger.exception('Error streaming to Google Data Studio')
             raise

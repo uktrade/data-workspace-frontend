@@ -71,7 +71,19 @@ function getSchema(request) {
 function getData(request) {
   console.info('getData', request);
   validateRequest(request);
-  return dataWorkspaceRequest('api/v1/table/' + request.configParams.tableId + '/rows', request);
+  var url = 'api/v1/table/' + request.configParams.tableId + '/rows'
+  
+  var data = dataWorkspaceRequest(url, request)
+  var searchAfter = data.$searchAfter;
+
+  while (searchAfter) {
+    request.$searchAfter = searchAfter;
+    data_page = dataWorkspaceRequest(url, request);
+    data.rows = data.rows.concat(data_page.rows);
+    searchAfter = data_page.$searchAfter;
+  }
+  
+  return data;
 }
 
 

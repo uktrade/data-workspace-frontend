@@ -13,6 +13,7 @@ from botocore.exceptions import ClientError
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import F
 from django.forms import model_to_dict
 from django.http import (
     Http404,
@@ -48,6 +49,10 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
 )
 from dataworkspace.apps.datasets.utils import find_dataset
+from dataworkspace.apps.datasets.model_utils import (
+    get_linked_field_display_name,
+    get_linked_field_identifier_name,
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
@@ -136,10 +141,10 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 value = getattr(record, field.column_name)
                 # If this is a linked field display the display name and id of that linked record
                 if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                    record_data['{}: ID'.format(field_name)] = (
+                    record_data[get_linked_field_identifier_name(field)] = (
                         value.get_identifier() if value is not None else None
                     )
-                    record_data['{}: Name'.format(field_name)] = (
+                    record_data[get_linked_field_display_name(field)] = (
                         value.get_display_name() if value is not None else None
                     )
                 else:
@@ -161,6 +166,8 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
                 'download_format': dl_format,
             },
         )
+        ref_dataset.number_of_downloads = F('number_of_downloads') + 1
+        ref_dataset.save(update_fields=['number_of_downloads'])
 
         if dl_format == 'json':
             response['Content-Type'] = 'application/json'
@@ -200,6 +207,8 @@ class SourceLinkDownloadView(DetailView):
             source_link.dataset,
             extra={'path': request.get_full_path(), **model_to_dict(source_link)},
         )
+        dataset.number_of_downloads = F('number_of_downloads') + 1
+        dataset.save(update_fields=['number_of_downloads'])
 
         if source_link.link_type == source_link.TYPE_EXTERNAL:
             return HttpResponseRedirect(source_link.url)
@@ -239,12 +248,11 @@ class SourceDownloadMixin:
         raise NotImplementedError()
 
     def get(self, request, *_, **__):
+        dataset = find_dataset(
+            self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
+        )
         db_object = get_object_or_404(
-            self.model,
-            id=self.kwargs.get('source_id'),
-            dataset=find_dataset(
-                self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
-            ),
+            self.model, id=self.kwargs.get('source_id'), dataset=dataset
         )
 
         if not db_object.dataset.user_has_access(self.request.user):
@@ -259,6 +267,8 @@ class SourceDownloadMixin:
             db_object.dataset,
             extra={'path': request.get_full_path(), **model_to_dict(db_object)},
         )
+        dataset.number_of_downloads = F('number_of_downloads') + 1
+        dataset.save(update_fields=['number_of_downloads'])
         return self.get_table_data(db_object)
 
 
@@ -321,6 +331,8 @@ class CustomDatasetQueryDownloadView(DetailView):
             query.dataset,
             extra={'path': request.get_full_path(), **model_to_dict(query)},
         )
+        dataset.number_of_downloads = F('number_of_downloads') + 1
+        dataset.save(update_fields=['number_of_downloads'])
 
         return streaming_query_response(
             request.user.email,

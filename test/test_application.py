@@ -898,6 +898,20 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(len(content_json_2['rows']), 5)
         self.assertEqual(content_json_1['rows'][0:2], content_json_2['rows'][2:4])
 
+        # Test $searchAfter
+        async with session.request(
+            'POST',
+            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            headers={'Authorization': 'Bearer token-2'},
+            data=(b'{"fields":[{"name":"username"}],"$searchAfter":[100]}'),
+        ) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+        content_json_1 = json.loads(content)
+        print(content_json_1)
+        self.assertEqual(content_json_1['rows'][0]['values'][0], 'user_1@example.com')
+
         # Check that even with a valid token, if a table doesn't exist, get a 403
         table_id_not_exists = '5f8117b4-e05d-442f-8622-8abab7141fd8'
         async with session.request(
@@ -1076,6 +1090,7 @@ async def create_many_users():
         )
         for i in range(0, 200):
             User.objects.create(
+                id=i+100,
                 username='user_' + str(i) + '@example.com',
                 email='user_' + str(i) + '@example.com',
             )

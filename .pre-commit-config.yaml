@@ -25,6 +25,7 @@ repos:
       args:
         - --load-plugins
         - pylint_django
+        - --disable=bad-continuation
         - --disable=broad-except
         - --disable=consider-using-ternary
         - --disable=duplicate-code

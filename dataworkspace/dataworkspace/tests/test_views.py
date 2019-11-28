@@ -9,7 +9,7 @@ from psycopg2 import connect
 import mock
 
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.models import SourceLink
+from dataworkspace.apps.datasets.models import SourceLink, ReferenceDataset, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseTestCase
@@ -219,6 +219,7 @@ class TestDatasetViews(BaseTestCase):
             },
         )
         log_count = EventLog.objects.count()
+        download_count = rds.number_of_downloads
         response = self._authenticated_get(
             reverse(
                 'catalogue:reference_dataset_download',
@@ -235,16 +236,16 @@ class TestDatasetViews(BaseTestCase):
             [
                 {
                     'id': 1,
-                    'linked: ID': 1,
-                    'linked: Name': 'Linked Display Name',
+                    'linked: id': 1,
+                    'linked: name': 'Linked Display Name',
                     'name': 'Test record',
                     'auto uuid': str(rec1.auto_uuid),
                     'auto id': 1,
                 },
                 {
                     'id': 2,
-                    'linked: ID': None,
-                    'linked: Name': None,
+                    'linked: id': None,
+                    'linked: name': None,
                     'name': 'Ánd again',
                     'auto uuid': str(rec2.auto_uuid),
                     'auto id': 2,
@@ -255,6 +256,10 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(
             EventLog.objects.latest().event_type,
             EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+        )
+        self.assertEqual(
+            ReferenceDataset.objects.get(pk=rds.id).number_of_downloads,
+            download_count + 1,
         )
 
     def test_reference_dataset_csv_download(self):
@@ -329,6 +334,7 @@ class TestDatasetViews(BaseTestCase):
             },
         )
         log_count = EventLog.objects.count()
+        download_count = rds.number_of_downloads
         response = self._authenticated_get(
             reverse(
                 'catalogue:reference_dataset_download',
@@ -342,7 +348,7 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content,
-            b'"id","name","linked: ID","linked: Name","auto uuid","auto id"\r\n'
+            b'"id","name","linked: id","linked: name","auto uuid","auto id"\r\n'
             b'1,"Test record",1,"Linked Display Name",%s,1\r\n'
             b'2,"\xc3\x81nd again","","",%s,2\r\n'
             % (str(rec1.auto_uuid).encode(), str(rec2.auto_uuid).encode()),
@@ -351,6 +357,10 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(
             EventLog.objects.latest().event_type,
             EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+        )
+        self.assertEqual(
+            ReferenceDataset.objects.get(pk=rds.id).number_of_downloads,
+            download_count + 1,
         )
 
     def test_reference_dataset_unknown_download(self):
@@ -362,6 +372,7 @@ class TestDatasetViews(BaseTestCase):
             reference_dataset=rds, is_identifier=True
         )
         log_count = EventLog.objects.count()
+        download_count = rds.number_of_downloads
         response = self._authenticated_get(
             reverse(
                 'catalogue:reference_dataset_download',
@@ -374,6 +385,9 @@ class TestDatasetViews(BaseTestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(EventLog.objects.count(), log_count)
+        self.assertEqual(
+            ReferenceDataset.objects.get(pk=rds.id).number_of_downloads, download_count
+        )
 
 
 class TestSupportView(BaseTestCase):
@@ -448,6 +462,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             url='http://example.com',
         )
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(
             reverse(
                 'catalogue:dataset_source_link_download',
@@ -460,6 +475,9 @@ class TestSourceLinkDownloadView(BaseTestCase):
         )
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
+        )
 
     def test_download_external_file(self):
         group = factories.DataGroupingFactory.create()
@@ -473,6 +491,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             url='http://example.com',
         )
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(
             reverse(
                 'catalogue:dataset_source_link_download',
@@ -491,6 +510,9 @@ class TestSourceLinkDownloadView(BaseTestCase):
             EventLog.objects.latest().event_type,
             EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
         )
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count + 1
+        )
 
     @mock.patch('dataworkspace.apps.catalogue.views.boto3.client')
     def test_download_local_file(self, mock_client):
@@ -505,6 +527,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt',
         )
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         mock_client().get_object.return_value = {
             'ContentType': 'text/plain',
             'Body': StreamingBody(
@@ -531,6 +554,9 @@ class TestSourceLinkDownloadView(BaseTestCase):
             EventLog.objects.latest().event_type,
             EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
         )
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count + 1
+        )
 
 
 class TestSourceTableDownloadView(BaseTestCase):
@@ -540,9 +566,13 @@ class TestSourceTableDownloadView(BaseTestCase):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
         source_table = factories.SourceTableFactory(dataset=dataset)
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(source_table.get_absolute_url())
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
+        )
 
     def test_missing_table(self):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
@@ -550,8 +580,12 @@ class TestSourceTableDownloadView(BaseTestCase):
             dataset=dataset,
             database=factories.DatabaseFactory(memorable_name='my_database'),
         )
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(source_table.get_absolute_url())
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
+        )
 
     def test_table_download(self):
         dsn = database_dsn(settings.DATABASES_DATA['my_database'])
@@ -573,6 +607,7 @@ class TestSourceTableDownloadView(BaseTestCase):
             table='download_test',
         )
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(source_table.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -584,6 +619,9 @@ class TestSourceTableDownloadView(BaseTestCase):
             EventLog.objects.latest().event_type,
             EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD,
         )
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count + 1
+        )
 
 
 class TestSourceViewDownloadView(BaseTestCase):
@@ -593,9 +631,13 @@ class TestSourceViewDownloadView(BaseTestCase):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
         source_view = factories.SourceViewFactory(dataset=dataset)
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(source_view.get_absolute_url())
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
+        )
 
     def test_missing_view(self):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
@@ -603,8 +645,12 @@ class TestSourceViewDownloadView(BaseTestCase):
             dataset=dataset,
             database=factories.DatabaseFactory(memorable_name='my_database'),
         )
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(source_view.get_absolute_url())
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
+        )
 
     def test_table_download(self):
         dsn = database_dsn(settings.DATABASES_DATA['my_database'])
@@ -627,6 +673,7 @@ class TestSourceViewDownloadView(BaseTestCase):
             view='download_test_view',
         )
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(source_view.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -637,6 +684,9 @@ class TestSourceViewDownloadView(BaseTestCase):
         self.assertEqual(
             EventLog.objects.latest().event_type,
             EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
+        )
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count + 1
         )
 
 
@@ -672,9 +722,13 @@ class TestCustomQueryDownloadView(BaseTestCase):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
         source_table = factories.SourceTableFactory(dataset=dataset)
         log_count = EventLog.objects.count()
+        download_count = dataset.number_of_downloads
         response = self._authenticated_get(source_table.get_absolute_url())
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
+        self.assertEqual(
+            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
+        )
 
     def test_invalid_sql(self):
         query = self._create_query('SELECT * FROM table_that_does_not_exist;')
@@ -726,6 +780,7 @@ class TestCustomQueryDownloadView(BaseTestCase):
     def test_valid_sql(self):
         query = self._create_query('SELECT * FROM custom_query_test WHERE id IN (1, 3)')
         log_count = EventLog.objects.count()
+        download_count = query.dataset.number_of_downloads
         response = self._authenticated_get(query.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -737,4 +792,8 @@ class TestCustomQueryDownloadView(BaseTestCase):
         self.assertEqual(
             EventLog.objects.latest().event_type,
             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+        )
+        self.assertEqual(
+            DataSet.objects.get(pk=query.dataset.id).number_of_downloads,
+            download_count + 1,
         )

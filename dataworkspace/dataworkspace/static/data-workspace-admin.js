@@ -40,7 +40,7 @@ $(function(){
 	    columnField.attr('_change', 0)
 	}
 
-	if(parseInt(columnField.attr('_change')) == 0){
+	if((parseInt(columnField.attr('_change')) == 0) && (columnField.attr('disabled')) !== 'disabled'){
 	    let columnName;
 	    let urlified = URLify($(this).val());
 	    if(urlified == ''){

@@ -51,7 +51,7 @@
                     </h2>
                   {% endif %}
             {% endfor %}
-	    {% if datasets and perms.datasets_dataset_add %}
+            {% if datasets and perms.datasets_dataset_add %}
                 <p>
                     <a class="govuk-link"
                        href="{% url 'admin:datasets_dataset_add' %}">[New]</a>
@@ -68,24 +68,27 @@
                     {% endif %}
                 </h2>
                 <p class="govuk-body">{{ set.short_description }}</p>
-		{% empty %}
+                {% empty %}
                 {% if not datasets %}
                     <h2 class="govuk-heading-s">
                         No reference datasets available
                     </h2>
                 {% endif %}
-	    {% endfor %}
-	    {% if reference_datasets and perms.datasets_referencedataset_add %}
+        {% endfor %}
+        {% if reference_datasets and perms.datasets_referencedataset_add %}
                 <p>
                     <a class="govuk-link"
                        href="{% url 'admin:datasets_referencedataset_add' %}">[New]</a>
                 </p>
-	    {% endif %}
+        {% endif %}
 
-	    {% if joint_datasets or not datasets %}
-	        <h2 class="govuk-heading-l govuk-!-margin-top-8">Joint reference datasets</h2>
-	    {% endif %}
-	    {% for set in joint_datasets %}
+        {% if joint_datasets or not datasets %}
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Joint reference datasets</h2>
+            <p class="govuk-body">
+                Joint reference datasets show the defined relationship between two or more separate reference datasets.
+            </p>
+        {% endif %}
+        {% for set in joint_datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
                         {{ set.name }}
@@ -95,14 +98,14 @@
                     {% endif %}
                 </h2>
                 <p class="govuk-body">{{ set.short_description }}</p>
-		{% empty %}
-	    {% endfor %}
-	    {% if joint_datasets and perms.datasets_referencedataset_add %}
+        {% empty %}
+        {% endfor %}
+        {% if joint_datasets and perms.datasets_referencedataset_add %}
                 <p>
                     <a class="govuk-link"
                        href="{% url 'admin:datasets_referencedataset_add' %}">[New]</a>
                 </p>
-	    {% endif %}
+        {% endif %}
 
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
 
