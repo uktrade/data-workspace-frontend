@@ -298,14 +298,16 @@ def view_exists(database, schema, view):
         cur.execute(
             """
             SELECT 1
-            FROM
-                pg_catalog.pg_views
-            WHERE
-                schemaname = %s
-            AND
-                viewname = %s
+            FROM pg_catalog.pg_views
+            WHERE schemaname = %(schema)s
+            AND viewname = %(view)s
+            UNION
+            SELECT 1
+            FROM pg_catalog.pg_matviews
+            WHERE schemaname = %(schema)s
+            AND matviewname = %(view)s
         """,
-            (schema, view),
+            {'schema': schema, 'view': view},
         )
         return bool(cur.fetchone())
 
