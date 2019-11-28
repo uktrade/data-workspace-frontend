@@ -72,7 +72,14 @@ class TestAPIDatasetView(TestCase):
             cur.executemany(sql, values)
             
         url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
-        response = self.client.get(url)
+        response = self.client.post(
+            url,
+            {
+                'fields': [{'name': 'id'}, {'name': 'name'}],
+                '$searchAfter': [-1],
+            },
+            content_type='application/json'
+        )
         self.assertEqual(response.status_code, 200)
         expected = {
             'headers': ['id', 'name'],
