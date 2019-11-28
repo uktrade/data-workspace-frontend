@@ -694,12 +694,13 @@ class TestSourceViewDownloadView(BaseTestCase):
         with connect(dsn) as conn, conn.cursor() as cursor:
             cursor.execute(
                 '''
-                CREATE TABLE if not exists download_test_table (field2 int,field1 varchar(255));
-                TRUNCATE TABLE download_test_table;
-                INSERT INTO download_test_table VALUES(1, 'record1');
-                INSERT INTO download_test_table VALUES(2, 'record2');
-                CREATE OR REPLACE MATERIALIZED VIEW materialized_test_view AS
-                SELECT * FROM download_test_table;
+                CREATE TABLE if not exists materialized_test_table (field2 int,field1 varchar(255));
+                TRUNCATE TABLE materialized_test_table;
+                INSERT INTO materialized_test_table VALUES(1, 'record1');
+                INSERT INTO materialized_test_table VALUES(2, 'record2');
+                DROP MATERIALIZED VIEW IF EXISTS materialized_test_view;
+                CREATE MATERIALIZED VIEW materialized_test_view AS
+                SELECT * FROM materialized_test_table;
                 '''
             )
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
@@ -707,7 +708,7 @@ class TestSourceViewDownloadView(BaseTestCase):
             dataset=dataset,
             database=factories.DatabaseFactory(memorable_name='my_database'),
             schema='public',
-            view='download_test_table',
+            view='materialized_test_view',
         )
         log_count = EventLog.objects.count()
         download_count = dataset.number_of_downloads
