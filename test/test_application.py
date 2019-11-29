@@ -10,6 +10,7 @@ import unittest
 import aiohttp
 from aiohttp import web
 import aioredis
+import mohawk
 
 
 def async_test(func):
@@ -924,6 +925,262 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertEqual(content, '{}')
 
+    @async_test
+    async def test_hawk_authenticated_source_table_api_endpoint(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code', 'some-other-code'])
+        tokens = iter(['token-1', 'token-2'])
+        auth_to_me = {
+            # No token-1
+            'Bearer token-2': {
+                'email': 'test@test.com',
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(10)
+
+        # Check that with no authorization header there is no access
+        dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        url = f'http://localapps.com:8000/api/v1/dataset/{dataset_id}/{table_id}'
+        stdout, stderr, code = await create_private_dataset()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            'POST', url
+        ) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 401)
+
+        client_id = os.environ['HAWK_SENDERS__1__id']
+        client_key = os.environ['HAWK_SENDERS__1__key']
+        algorithm = os.environ['HAWK_SENDERS__1__algorithm']
+        method = 'POST'
+        content = json.dumps({"searchAfter": [-1]})
+        content_type = 'application/json'
+        credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
+        print('credentials:', credentials)
+        sender = mohawk.Sender(
+            credentials=credentials,
+            url=url,
+            method=method,
+            content=content,
+            content_type=content_type,
+        )
+        headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
+        
+        async with session.request(
+                'POST', url, data=content, headers=headers
+        ) as response:
+            status = response.status
+            content = await response.text()
+            print('content:', content)
+        self.assertEqual(status, 200)
+
+        # replay attack
+        async with session.request(
+                'POST', url, data=content, headers=headers
+        ) as response:
+            status = response.status
+            content = await response.text()
+            print('content:', content)
+        self.assertEqual(status, 401)
+        
+        # self.assertIn('Forbidden</h1>', content)
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
+        #     headers={'Authorization': 'Bearer something'},
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertIn('Forbidden</h1>', content)
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
+        #     headers={'Authorization': 'Bearer token-2'},
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertEqual('{}', content)
+
+        # async with session.request(
+        #     'POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows'
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertIn('Forbidden</h1>', content)
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer something'},
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertIn('Forbidden</h1>', content)
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertEqual('{}', content)
+
+        # stdout, stderr, code = await give_user_superuser_perms()
+        # self.assertEqual(stdout, b'')
+        # self.assertEqual(stderr, b'')
+        # self.assertEqual(code, 0)
+
+        # # Ensure that superuser perms aren't enough...
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertEqual('{}', content)
+
+        # stdout, stderr, code = await give_user_dataset_perms()
+        # self.assertEqual(stdout, b'')
+        # self.assertEqual(stderr, b'')
+        # self.assertEqual(code, 0)
+
+        # # Ensure that superuser perms aren't enough...
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertEqual('{}', content)
+
+        # # And that the table must be marked as GDS accessible
+        # stdout, stderr, code = await make_table_google_data_studio_accessible()
+        # self.assertEqual(stdout, b'')
+        # self.assertEqual(stderr, b'')
+        # self.assertEqual(code, 0)
+
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
+        #     headers={'Authorization': 'Bearer token-2'},
+        #     data=b'{"fields":[{"name":"id"}]}',
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 200)
+        # self.assertEqual(json.loads(content)['schema'][0]['name'], 'id')
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        #     data=(
+        #         b'{"fields":[{"name":"id"},{"name":"password"},{"name":"last_login"},'
+        #         b'{"name":"is_superuser"},{"name":"username"}]}'
+        #     ),
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 200)
+        # content_json = json.loads(content)
+        # self.assertEqual(
+        #     len(content_json['schema']), len(content_json['rows'][0]['values'])
+        # )
+        # self.assertEqual(content_json['schema'][0]['name'], 'id')
+        # self.assertEqual(content_json['schema'][1]['name'], 'password')
+        # self.assertEqual(content_json['schema'][2]['name'], 'last_login')
+        # self.assertEqual(content_json['schema'][3]['name'], 'is_superuser')
+        # self.assertEqual(content_json['schema'][4]['name'], 'username')
+        # self.assertEqual(content_json['rows'][0]['values'][2], None)
+        # self.assertEqual(content_json['rows'][0]['values'][3], True)
+        # self.assertEqual(content_json['rows'][0]['values'][4], 'test@test.com')
+
+        # # Test pagination
+        # stdout, stderr, code = await create_many_users()
+        # self.assertEqual(stdout, b'')
+        # self.assertEqual(stderr, b'')
+        # self.assertEqual(code, 0)
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        #     data=(
+        #         b'{"fields":[{"name":"username"}],"pagination":{"startRow":5.0,"rowCount":10.0}}'
+        #     ),
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 200)
+        # content_json_1 = json.loads(content)
+        # self.assertEqual(len(content_json_1['rows']), 10)
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        #     data=(
+        #         b'{"fields":[{"name":"username"}],"pagination":{"startRow":3.0,"rowCount":5.0}}'
+        #     ),
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 200)
+        # content_json_2 = json.loads(content)
+        # self.assertEqual(len(content_json_2['rows']), 5)
+        # self.assertEqual(content_json_1['rows'][0:2], content_json_2['rows'][2:4])
+
+        # # Test $searchAfter
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        #     data=(b'{"fields":[{"name":"username"}],"$searchAfter":[100]}'),
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 200)
+        # content_json_1 = json.loads(content)
+        # print(content_json_1)
+        # self.assertEqual(content_json_1['rows'][0]['values'][0], 'user_1@example.com')
+
+        # # Check that even with a valid token, if a table doesn't exist, get a 403
+        # table_id_not_exists = '5f8117b4-e05d-442f-8622-8abab7141fd8'
+        # async with session.request(
+        #     'POST',
+        #     f'http://localapps.com:8000/api/v1/table/{table_id_not_exists}/rows',
+        #     headers={'Authorization': 'Bearer token-2'},
+        # ) as response:
+        #     status = response.status
+        #     content = await response.text()
+        # self.assertEqual(status, 403)
+        # self.assertEqual(content, '{}')
+
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -1128,6 +1385,7 @@ async def create_private_dataset():
             description="test_desc",
             short_description="test_short_desc",
             slug="test_slug_s",
+            id="70ce6fdd-1791-4806-bbe0-4cf880a9cc37",
             volume=1,
             grouping=grouping,
             published=True

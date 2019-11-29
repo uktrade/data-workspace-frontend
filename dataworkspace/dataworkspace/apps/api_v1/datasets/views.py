@@ -1,6 +1,6 @@
 import json
 import psycopg2
-from django.http import StreamingHttpResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from dataworkspace.apps.api_v1.views import (
@@ -12,14 +12,29 @@ from dataworkspace.apps.datasets.models import SourceTable
 
 
 def get_streaming_http_response(request, source_table):
-    # POST request to support HTTP bodies from Google Data Studio: it doesn't
-    # seem to be able to send GETs with bodies
-    # sourcetable = SourceTable.objects.get(id=table_id)
-    request_dict = json.loads(request.body)
-    column_names = [field['name'] for field in request_dict['fields']]
+    print('get_streaming_http_response')
+    print('request.body:', request.body)
+    
+    # validate arguments
+    try:
+        request_dict = json.loads(request.body)
+        fields = request_dict.pop('fields', [])
+        column_names = [field['name'] for field in fields]
+        search_after = request_dict.pop('$searchAfter')
+        assert len(request_dict) == 0
+    except (json.decoder.JSONDecodeError, KeyError, AssertionError) as e:
+        errors = []
+        if type(e) == AssertionError:
+            for key in request_dict.keys():
+                errors.append(f'invalid argument {key}')
+        if len(errors) == 0:
+            errors.append('invalid arguments, specify $searchAfter argument')
+        return JsonResponse(
+            {'errors': errors},
+            status=400
+        )
 
-    def query_vars_search_after(fields_sql, schema_sql, table_sql, primary_key_sql):
-        search_after = request_dict['$searchAfter']
+    def query_vars(fields_sql, schema_sql, table_sql, primary_key_sql):
 
         return (
             psycopg2.sql.SQL(
@@ -37,47 +52,10 @@ def get_streaming_http_response(request, source_table):
             tuple(search_after),
         )
 
-    def query_vars_paginated(fields_sql, schema_sql, table_sql, primary_key_sql):
-        pagination = request_dict['pagination']
-        limit = int(pagination['rowCount'])
-        offset = (
-            int(pagination['startRow']) - 1
-        )  # Google Data Studio start is 1-indexed
-
-        return (
-            psycopg2.sql.SQL(
-                '''
-            SELECT {},{} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
-        '''
-            ).format(
-                primary_key_sql, fields_sql, schema_sql, table_sql, primary_key_sql
-            ),
-            (limit, offset),
-        )
-
-    def query_vars_non_paginated(fields_sql, schema_sql, table_sql, primary_key_sql):
-        return (
-            psycopg2.sql.SQL(
-                '''
-            SELECT {},{} FROM {}.{} ORDER BY {}
-        '''
-            ).format(
-                primary_key_sql, fields_sql, schema_sql, table_sql, primary_key_sql
-            ),
-            (),
-        )
-
-    # fmt: off
-    query_vars = \
-        query_vars_search_after if '$searchAfter' in request_dict else \
-        query_vars_paginated if 'pagination' in request_dict else \
-        query_vars_non_paginated
-    # fmt: on
-
     schema_value_funcs = [
         (schema, value_func)
         for schema, value_func in schema_value_func_for_data_types(source_table)
-        if schema['name'] in column_names
+        if schema['name'] in column_names or column_names == []
     ]
 
     # https://developers.google.com/apps-script/guides/services/quotas#current_limitations
@@ -173,6 +151,7 @@ class APIDatasetView(APIView):
 
     def post(self, request, dataset_id, source_table_id):
 
+        print('api_dataset_view')
         source_table = get_object_or_404(
             SourceTable, id=source_table_id, dataset__id=dataset_id
         )

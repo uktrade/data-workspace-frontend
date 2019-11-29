@@ -84,3 +84,39 @@ class TestAPIDatasetView(TestCase):
             output = output + streaming_output
         output_dict = json.loads(output.decode('utf-8'))
         self.assertEqual(output_dict, expected)
+
+    def test_non_json_request(self):
+
+        # create django objects
+        memorable_name = self.memorable_name
+        table = self.table
+        database = Database.objects.create(memorable_name=memorable_name)
+        data_grouping = DataGrouping.objects.create()
+        dataset = DataSet.objects.create(grouping=data_grouping, volume=0)
+        source_table = SourceTable.objects.create(
+            dataset=dataset, database=database, table=table
+        )
+
+        url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 400)
+        expected = {'errors': ['invalid arguments, specify $searchAfter argument']}
+        self.assertEqual(response.json(), expected)
+
+    def test_invalid_json_request(self):
+
+        # create django objects
+        memorable_name = self.memorable_name
+        table = self.table
+        database = Database.objects.create(memorable_name=memorable_name)
+        data_grouping = DataGrouping.objects.create()
+        dataset = DataSet.objects.create(grouping=data_grouping, volume=0)
+        source_table = SourceTable.objects.create(
+            dataset=dataset, database=database, table=table
+        )
+
+        url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
+        response = self.client.post(url, {}, content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        expected = {'errors': ['invalid arguments, specify $searchAfter argument']}
+        self.assertEqual(response.json(), expected)
