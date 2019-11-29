@@ -87,6 +87,8 @@ COPY exploretiva /exploretiva
 
 USER rstudio
 RUN \
-	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")'
+	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
+	Rscript -e 'install.packages(c("xml2", "base64enc", "curl", "httr", "aws.ec2metadata"))' && \
+	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"))'
 
 CMD ["/usr/lib/rstudio-server/bin/rserver"]
