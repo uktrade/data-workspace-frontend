@@ -1,13 +1,7 @@
-import json, logging, psycopg2, re
-from django.conf import settings
-from django.http import (
-    HttpResponseNotFound,
-    JsonResponse,
-    StreamingHttpResponse,
-)
+import json
+import psycopg2
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
-
-from rest_framework.pagination import CursorPagination
 from rest_framework.views import APIView
 from dataworkspace.apps.api_v1.views import (
     get_rows,
@@ -15,7 +9,7 @@ from dataworkspace.apps.api_v1.views import (
     schema_value_func_for_data_types,
 )
 from dataworkspace.apps.datasets.models import SourceTable
-from dataworkspace.apps.core.utils import database_dsn
+
 
 def get_streaming_http_response(request, source_table):
     # POST request to support HTTP bodies from Google Data Studio: it doesn't
@@ -51,7 +45,7 @@ def get_streaming_http_response(request, source_table):
         )  # Google Data Studio start is 1-indexed
 
         return (
-            sql.SQL(
+            psycopg2.sql.SQL(
                 '''
             SELECT {},{} FROM {}.{} ORDER BY {} LIMIT %s OFFSET %s
         '''
@@ -176,16 +170,11 @@ class APIDatasetView(APIView):
     """
     A GET API view to return the data for the company future countries of interest dataset
     """
-    
+
     def post(self, request, dataset_id, source_table_id):
 
-        from dataworkspace.apps.api_v1.views import table_api_rows_POST
-        
         source_table = get_object_or_404(
-            SourceTable,
-            id=source_table_id,
-            dataset__id=dataset_id
+            SourceTable, id=source_table_id, dataset__id=dataset_id
         )
 
         return get_streaming_http_response(request, source_table)
-
