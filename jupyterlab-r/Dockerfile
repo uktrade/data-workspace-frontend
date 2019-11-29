@@ -128,6 +128,10 @@ RUN \
     echo '  options(repos = r)' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '})' >> /opt/conda/lib/R/etc/Rprofile.site
 
+RUN \
+    Rscript -e 'install.packages(c("xml2", "base64enc", "curl", "httr", "aws.ec2metadata"))' && \
+    Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"))'
+
 ENTRYPOINT ["tini", "-g", "--"]
 
 USER jovyan

@@ -287,6 +287,14 @@ response = client.get_object(
 )
 df = pd.read_csv(response['Body'])
 </pre></code>
+
+                <p class="govuk-body">You can also access the file <code>bigdata/file.csv</code> from R by running the following code</p>
+
+    <code><pre>library("aws.s3")
+filename <- "{{ :: bigdataPrefix }}file.csv"
+df = read.csv(text = rawToChar(get_object(paste(c("s3://{% endverbatim %}{{ bucket }}{% verbatim %}/", Sys.getenv("S3_PREFIX"), filename), collapse=""))))
+</pre></code>
+
         </div>
     </div>
     

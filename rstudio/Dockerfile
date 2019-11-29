@@ -33,8 +33,8 @@ RUN \
 		libcurl4-openssl-dev=7.52.1-5+deb9u9 \
 		libopenblas-base=0.2.19-3 \
 		libpq-dev=9.6.15-0+deb9u1 \
-		libssl-dev=1.1.0k-1~deb9u1 \
-		libssl1.0.2=1.0.2s-1~deb9u1 \
+		libssl-dev=1.1.0l-1~deb9u1 \
+		libssl1.1=1.1.0l-1~deb9u1 \
 		libxml2-dev=2.9.4+dfsg1-2.2+deb9u2 \
 		locales=2.24-11+deb9u4 \
 		python3=3.5.3-1 \
@@ -87,6 +87,8 @@ COPY exploretiva /exploretiva
 
 USER rstudio
 RUN \
-	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")'
+	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
+	Rscript -e 'install.packages(c("xml2", "base64enc", "curl", "httr", "aws.ec2metadata"))' && \
+	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"))'
 
 CMD ["/usr/lib/rstudio-server/bin/rserver"]
