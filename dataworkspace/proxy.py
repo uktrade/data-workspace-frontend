@@ -742,12 +742,9 @@ async def async_main():
         async def seen_nonce(nonce, sender_id):
             nonce_key = f'nonce-{sender_id}-{nonce}'
             with await redis_pool as conn:
-                nonce_stored = await conn.execute('GET', nonce_key)
-                if nonce_stored:
-                    return True
-                else:
-                    await conn.execute('SET', nonce_key, '1', 'EX', 5, 'NX')
-                    return False
+                response = await conn.execute('SET', nonce_key, '1', 'EX', 5, 'NX')
+                seen_nonce = response != b'OK'
+                return seen_nonce
 
         @web.middleware
         async def _authenticate_by_hawk_auth(request, handler):
@@ -763,7 +760,7 @@ async def async_main():
             is_authenticated, error_message, _ = await authenticate_hawk_header(
                 lookup_credentials,
                 seen_nonce,
-                1000,
+                15,
                 request.headers['Authorization'],
                 request.method,
                 request.url.host,
