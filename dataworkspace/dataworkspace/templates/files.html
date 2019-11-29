@@ -292,7 +292,11 @@ df = pd.read_csv(response['Body'])
 
     <code><pre>library("aws.s3")
 filename <- "{{ :: bigdataPrefix }}file.csv"
-df = read.csv(text = rawToChar(get_object(paste(c("s3://{% endverbatim %}{{ bucket }}{% verbatim %}/", Sys.getenv("S3_PREFIX"), filename), collapse=""))))
+df = read.csv(text = rawToChar(get_object(paste(c(
+    "s3://{% endverbatim %}{{ bucket }}{% verbatim %}/",
+    Sys.getenv("S3_PREFIX"), filename),
+    collapse=""
+))))
 </pre></code>
 
         </div>
