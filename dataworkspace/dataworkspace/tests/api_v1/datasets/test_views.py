@@ -49,12 +49,12 @@ class TestAPIDatasetView(TestCase):
         # create django objects
         memorable_name = self.memorable_name
         table = self.table
-        database = Database.objects.create(memorable_name=memorable_name)
-        data_grouping = DataGrouping.objects.create()
-        dataset = DataSet.objects.create(grouping=data_grouping, volume=0)
-        source_table = SourceTable.objects.create(
+        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
+        data_grouping = DataGrouping.objects.get_or_create()[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
+        source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
-        )
+        )[0]
 
         # create external source table
         with psycopg2.connect(
@@ -85,15 +85,15 @@ class TestAPIDatasetView(TestCase):
         output_dict = json.loads(output.decode('utf-8'))
         self.assertEqual(output_dict, expected)
 
-    def test_no_json_data_inrequest(self):
+    def test_no_json_data_in_request(self):
 
         # create django objects
         memorable_name = self.memorable_name
         table = self.table
-        database = Database.objects.create(memorable_name=memorable_name)
-        data_grouping = DataGrouping.objects.create()
-        dataset = DataSet.objects.create(grouping=data_grouping, volume=0)
-        source_table = SourceTable.objects.create(
+        database = Database.objects.get_or_create(memorable_name=memorable_name)
+        data_grouping = DataGrouping.objects.get_or_create()
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)
+        source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
         )
 
@@ -108,10 +108,10 @@ class TestAPIDatasetView(TestCase):
         # create django objects
         memorable_name = self.memorable_name
         table = self.table
-        database = Database.objects.create(memorable_name=memorable_name)
-        data_grouping = DataGrouping.objects.create()
-        dataset = DataSet.objects.create(grouping=data_grouping, volume=0)
-        source_table = SourceTable.objects.create(
+        database = Database.objects.get_or_create(memorable_name=memorable_name)
+        data_grouping = DataGrouping.objects.get_or_create()
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)
+        source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
         )
 
