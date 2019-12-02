@@ -780,16 +780,6 @@ async def async_main():
                 content,
             )
             if not is_authenticated:
-                print('lookup_credentials:', lookup_credentials)
-                print('request.method:', request.method)
-                print('request.url.host:', request.url.host)
-                print('request.url.port:', request.url.port)
-                print('request.url.path:', request.url.path)
-                print(
-                    "request.headers['Content-Type']:", request.headers['Content-Type']
-                )
-                print('error_message:', error_message)
-                print('content:', content)
                 return web.Response(status=401)
 
             return await handler(request)
