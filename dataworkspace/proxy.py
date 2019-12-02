@@ -450,17 +450,12 @@ async def async_main():
         # encoding. AFAIK RStudio uses a custom webserver, so this behaviour
         # is not documented anywhere.
 
-        data = (
-            b''
-            if 'content-length' not in upstream_headers
-            and downstream_request.headers.get('transfer-encoding', '').lower()
-            != 'chunked'
-            else (
-                await downstream_request.read()
-                if downstream_request.content.at_eof()
-                else downstream_request.content
-            )
-        )
+        # fmt: off
+        data = \
+            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else \
+            await downstream_request.read() if downstream_request.content.at_eof() else \
+            downstream_request.content
+        # fmt: on
 
         async with client_session.request(
             upstream_method,
@@ -747,7 +742,7 @@ async def async_main():
         async def seen_nonce(nonce, sender_id):
             nonce_key = f'nonce-{sender_id}-{nonce}'
             with await redis_pool as conn:
-                response = await conn.execute('SET', nonce_key, '1', 'EX', 5, 'NX')
+                response = await conn.execute('SET', nonce_key, '1', 'EX', 60, 'NX')
                 seen_nonce = response != b'OK'
                 return seen_nonce
 

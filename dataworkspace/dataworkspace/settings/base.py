@@ -203,9 +203,3 @@ YOUR_FILES_ENABLED = env.get('YOUR_FILES_ENABLED', 'False') == 'True'
 
 if env.get('SENTRY_DSN') is not None:
     sentry_sdk.init(env['SENTRY_DSN'], integrations=[DjangoIntegration()])
-
-# PAGINATION
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
-    'PAGE_SIZE': 100,
-}
