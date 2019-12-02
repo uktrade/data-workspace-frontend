@@ -962,21 +962,19 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
-        async with session.request(
-            'POST', url
-        ) as response:
+        async with session.request('POST', url) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 401)
 
+        # unauthenticated request
         client_id = os.environ['HAWK_SENDERS__1__id']
-        client_key = os.environ['HAWK_SENDERS__1__key']
+        client_key = 'incorrect_key'
         algorithm = os.environ['HAWK_SENDERS__1__algorithm']
         method = 'POST'
-        content = json.dumps({"searchAfter": [-1]})
+        content = json.dumps({"$searchAfter": [-1]})
         content_type = 'application/json'
         credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
-        print('credentials:', credentials)
         sender = mohawk.Sender(
             credentials=credentials,
             url=url,
@@ -985,201 +983,45 @@ class TestApplication(unittest.TestCase):
             content_type=content_type,
         )
         headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
-        
+
         async with session.request(
-                'POST', url, data=content, headers=headers
+            'POST', url, data=content, headers=headers
         ) as response:
             status = response.status
             content = await response.text()
-            print('content:', content)
+        self.assertEqual(status, 401)
+
+        # authenticated request
+        client_id = os.environ['HAWK_SENDERS__1__id']
+        client_key = os.environ['HAWK_SENDERS__1__key']
+        algorithm = os.environ['HAWK_SENDERS__1__algorithm']
+        method = 'POST'
+        content = json.dumps({"$searchAfter": [-1]})
+        content_type = 'application/json'
+        credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
+        sender = mohawk.Sender(
+            credentials=credentials,
+            url=url,
+            method=method,
+            content=content,
+            content_type=content_type,
+        )
+        headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
+
+        async with session.request(
+            'POST', url, data=content, headers=headers
+        ) as response:
+            status = response.status
+            content = await response.text()
         self.assertEqual(status, 200)
 
         # replay attack
         async with session.request(
-                'POST', url, data=content, headers=headers
+            'POST', url, data=content, headers=headers
         ) as response:
             status = response.status
             content = await response.text()
-            print('content:', content)
         self.assertEqual(status, 401)
-        
-        # self.assertIn('Forbidden</h1>', content)
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
-        #     headers={'Authorization': 'Bearer something'},
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertIn('Forbidden</h1>', content)
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
-        #     headers={'Authorization': 'Bearer token-2'},
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertEqual('{}', content)
-
-        # async with session.request(
-        #     'POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows'
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertIn('Forbidden</h1>', content)
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer something'},
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertIn('Forbidden</h1>', content)
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertEqual('{}', content)
-
-        # stdout, stderr, code = await give_user_superuser_perms()
-        # self.assertEqual(stdout, b'')
-        # self.assertEqual(stderr, b'')
-        # self.assertEqual(code, 0)
-
-        # # Ensure that superuser perms aren't enough...
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertEqual('{}', content)
-
-        # stdout, stderr, code = await give_user_dataset_perms()
-        # self.assertEqual(stdout, b'')
-        # self.assertEqual(stderr, b'')
-        # self.assertEqual(code, 0)
-
-        # # Ensure that superuser perms aren't enough...
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertEqual('{}', content)
-
-        # # And that the table must be marked as GDS accessible
-        # stdout, stderr, code = await make_table_google_data_studio_accessible()
-        # self.assertEqual(stdout, b'')
-        # self.assertEqual(stderr, b'')
-        # self.assertEqual(code, 0)
-
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
-        #     headers={'Authorization': 'Bearer token-2'},
-        #     data=b'{"fields":[{"name":"id"}]}',
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 200)
-        # self.assertEqual(json.loads(content)['schema'][0]['name'], 'id')
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        #     data=(
-        #         b'{"fields":[{"name":"id"},{"name":"password"},{"name":"last_login"},'
-        #         b'{"name":"is_superuser"},{"name":"username"}]}'
-        #     ),
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 200)
-        # content_json = json.loads(content)
-        # self.assertEqual(
-        #     len(content_json['schema']), len(content_json['rows'][0]['values'])
-        # )
-        # self.assertEqual(content_json['schema'][0]['name'], 'id')
-        # self.assertEqual(content_json['schema'][1]['name'], 'password')
-        # self.assertEqual(content_json['schema'][2]['name'], 'last_login')
-        # self.assertEqual(content_json['schema'][3]['name'], 'is_superuser')
-        # self.assertEqual(content_json['schema'][4]['name'], 'username')
-        # self.assertEqual(content_json['rows'][0]['values'][2], None)
-        # self.assertEqual(content_json['rows'][0]['values'][3], True)
-        # self.assertEqual(content_json['rows'][0]['values'][4], 'test@test.com')
-
-        # # Test pagination
-        # stdout, stderr, code = await create_many_users()
-        # self.assertEqual(stdout, b'')
-        # self.assertEqual(stderr, b'')
-        # self.assertEqual(code, 0)
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        #     data=(
-        #         b'{"fields":[{"name":"username"}],"pagination":{"startRow":5.0,"rowCount":10.0}}'
-        #     ),
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 200)
-        # content_json_1 = json.loads(content)
-        # self.assertEqual(len(content_json_1['rows']), 10)
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        #     data=(
-        #         b'{"fields":[{"name":"username"}],"pagination":{"startRow":3.0,"rowCount":5.0}}'
-        #     ),
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 200)
-        # content_json_2 = json.loads(content)
-        # self.assertEqual(len(content_json_2['rows']), 5)
-        # self.assertEqual(content_json_1['rows'][0:2], content_json_2['rows'][2:4])
-
-        # # Test $searchAfter
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        #     data=(b'{"fields":[{"name":"username"}],"$searchAfter":[100]}'),
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 200)
-        # content_json_1 = json.loads(content)
-        # print(content_json_1)
-        # self.assertEqual(content_json_1['rows'][0]['values'][0], 'user_1@example.com')
-
-        # # Check that even with a valid token, if a table doesn't exist, get a 403
-        # table_id_not_exists = '5f8117b4-e05d-442f-8622-8abab7141fd8'
-        # async with session.request(
-        #     'POST',
-        #     f'http://localapps.com:8000/api/v1/table/{table_id_not_exists}/rows',
-        #     headers={'Authorization': 'Bearer token-2'},
-        # ) as response:
-        #     status = response.status
-        #     content = await response.text()
-        # self.assertEqual(status, 403)
-        # self.assertEqual(content, '{}')
 
 
 def client_session():

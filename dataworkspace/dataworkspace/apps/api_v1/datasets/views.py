@@ -14,7 +14,7 @@ from dataworkspace.apps.datasets.models import SourceTable
 def get_streaming_http_response(request, source_table):
     print('get_streaming_http_response')
     print('request.body:', request.body)
-    
+
     # validate arguments
     try:
         request_dict = json.loads(request.body)
@@ -29,10 +29,7 @@ def get_streaming_http_response(request, source_table):
                 errors.append(f'invalid argument {key}')
         if len(errors) == 0:
             errors.append('invalid arguments, specify $searchAfter argument')
-        return JsonResponse(
-            {'errors': errors},
-            status=400
-        )
+        return JsonResponse({'errors': errors}, status=400)
 
     def query_vars(fields_sql, schema_sql, table_sql, primary_key_sql):
 

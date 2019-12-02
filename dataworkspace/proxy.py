@@ -449,12 +449,17 @@ async def async_main():
         # GET responses half way through if the request specified a chunked
         # encoding. AFAIK RStudio uses a custom webserver, so this behaviour
         # is not documented anywhere.
+
         data = (
             b''
             if 'content-length' not in upstream_headers
             and downstream_request.headers.get('transfer-encoding', '').lower()
             != 'chunked'
-            else downstream_request.content
+            else (
+                await downstream_request.read()
+                if downstream_request.content.at_eof()
+                else downstream_request.content
+            )
         )
 
         async with client_session.request(
@@ -780,7 +785,9 @@ async def async_main():
                 print('request.url.host:', request.url.host)
                 print('request.url.port:', request.url.port)
                 print('request.url.path:', request.url.path)
-                print("request.headers['Content-Type']:", request.headers['Content-Type'])
+                print(
+                    "request.headers['Content-Type']:", request.headers['Content-Type']
+                )
                 print('error_message:', error_message)
                 print('content:', content)
                 return web.Response(status=401)
