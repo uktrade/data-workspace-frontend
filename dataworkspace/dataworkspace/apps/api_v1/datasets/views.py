@@ -12,9 +12,6 @@ from dataworkspace.apps.datasets.models import SourceTable
 
 
 def get_streaming_http_response(request, source_table):
-    print('get_streaming_http_response')
-    print('request.body:', request.body)
-
     # validate arguments
     try:
         request_dict = json.loads(request.body)
@@ -148,7 +145,6 @@ class APIDatasetView(APIView):
 
     def post(self, request, dataset_id, source_table_id):
 
-        print('api_dataset_view')
         source_table = get_object_or_404(
             SourceTable, id=source_table_id, dataset__id=dataset_id
         )
