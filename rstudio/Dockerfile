@@ -29,7 +29,6 @@ RUN \
 	apt-get install -y --no-install-recommends \
 		gdebi-core=0.9.5.7+nmu3 \
 		procps=2:3.3.15-2 \
-		python3=3.7.3-1 \
 		r-base=3.5.2-1 \
 		r-base-dev=3.5.2-1 \
 		r-cran-base64enc=0.1-3-2 \
@@ -69,7 +68,6 @@ RUN \
 	echo '})' >> /usr/lib/R/etc/Rprofile.site
 
 COPY rstudio-start.sh /
-COPY rstudio-db-creds.py /
 
 ENV \
 	USER=rstudio
