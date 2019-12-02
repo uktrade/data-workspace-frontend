@@ -78,7 +78,7 @@ ENV \
 RUN \
 	addgroup --system --gid 4356 rstudio && \
 	adduser --disabled-password --gecos '' --ingroup rstudio --uid 4357 rstudio && \
-	Rscript -e "install.packages('DBI'); install.packages('RPostgres'); install.packages('stringr');" && \
+	Rscript -e "install.packages(c('DBI', 'RPostgres', 'stringr'), clean=TRUE)" && \
 	mkdir -p /etc/rstudio/connections && \
 	chown rstudio /etc/rstudio/connections && \
 	chown -R rstudio:rstudio /usr/local/lib/R/site-library
@@ -88,7 +88,7 @@ COPY exploretiva /exploretiva
 USER rstudio
 RUN \
 	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
-	Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata"))' && \
-	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"))'
+	Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata"), clean=TRUE)' && \
+	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
 
 CMD ["/usr/lib/rstudio-server/bin/rserver"]
