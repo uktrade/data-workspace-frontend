@@ -288,16 +288,18 @@ response = client.get_object(
 df = pd.read_csv(response['Body'])
 </pre></code>
 
-                <p class="govuk-body">You can also access the file <code>bigdata/file.csv</code> from R by running the following code.</p>
+                <p class="govuk-body">You can also create a tibble from this file in R by running the following code.</p>
 
     <code><pre>library("aws.s3")
+library("readr")
 filename <- "{{ :: bigdataPrefix }}file.csv"
-df = read.csv(text = rawToChar(get_object(paste(c(
+conn = s3connection(paste(c(
     "s3://{% endverbatim %}{{ bucket }}{% verbatim %}/",
     Sys.getenv("S3_PREFIX"), filename),
     collapse=""
-))))
-</pre></code>
+))
+tb = read_csv(conn)
+close(conn)</pre></code>
 
         </div>
     </div>
