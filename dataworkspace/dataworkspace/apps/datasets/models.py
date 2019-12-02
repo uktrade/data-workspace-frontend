@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import ProtectedError, Count, Q
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.text import slugify
+from django.utils import timezone
 
 from dataworkspace.apps.core.models import (
     TimeStampedModel,
@@ -349,9 +350,18 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     valid_from = models.DateField(null=True, blank=True)
     valid_to = models.DateField(null=True, blank=True)
     published = models.BooleanField(default=False)
+
+    initial_published_at = models.DateField(null=True, blank=True)
+    published_at = models.DateField(null=True, blank=True)
+
     schema_version = models.IntegerField(default=0)
+
     major_version = models.IntegerField(default=1)
     minor_version = models.IntegerField(default=0)
+
+    published_major_version = models.IntegerField(default=0)
+    published_minor_version = models.IntegerField(default=0)
+
     external_database = models.ForeignKey(
         Database,
         null=True,
@@ -386,12 +396,35 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self._original_table_name = self.table_name
         self._original_ext_db = self.external_database
         self._original_sort_order = self.record_sort_order
+        self._original_published = self.published
 
     def _schema_has_changed(self):
         return (
             self.table_name != self._original_table_name
             or self.record_sort_order != self._original_sort_order
         )
+
+    def manage_published(self, create):
+        if not self.published:
+            return
+
+        if not self.initial_published_at:
+            self.initial_published_at = timezone.now()
+            self.major_version = 1
+            self.minor_version = 0
+
+        if self._original_published and not create:
+            self.published_major_version = self.major_version
+            self.published_minor_version = self.minor_version
+        else:
+            self.published_at = timezone.now()
+            if self.major_version > self.published_major_version:
+                self.published_major_version += 1
+                self.published_minor_version = 0
+            elif self.minor_version > self.published_minor_version:
+                self.published_minor_version += 1
+            self.major_version = self.published_major_version
+            self.minor_version = self.published_minor_version
 
     @transaction.atomic
     def save(
@@ -400,6 +433,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         create = self.pk is None
         if not create and self._schema_has_changed():
             self.schema_version += 1
+
+        self.manage_published(create)
+
         super().save(force_insert, force_update, using, update_fields)
         model_class = self.get_record_model_class()
         if create:
@@ -543,6 +579,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     @property
     def version(self):
         return '{}.{}'.format(self.major_version, self.minor_version)
+
+    @property
+    def published_version(self):
+        return '{}.{}'.format(
+            self.published_major_version, self.published_minor_version
+        )
 
     @property
     def record_sort_order(self):

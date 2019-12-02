@@ -2,14 +2,14 @@ import uuid
 
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
+from django.test import TransactionTestCase, TestCase
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.models import ReferenceDataset, DataGrouping
 
 
-class BaseTestCase(TestCase):
+class BaseTestCaseMixin:
     def setUp(self):
         self.user = User.objects.create(
             username='bob.testerson@test.com', is_staff=True, is_superuser=True
@@ -56,6 +56,26 @@ class BaseTestCase(TestCase):
         )
         ref_data_fields.update(kwargs)
         return ReferenceDataset.objects.create(**ref_data_fields)
+
+
+class BaseTestCase(BaseTestCaseMixin, TestCase):
+    pass
+
+
+class BaseTransactionTestCase(BaseTestCaseMixin, TransactionTestCase):
+    """
+    Uses TransactionTestCase so the tests aren't run within a transaction.atomic block.
+    This allows tests that have with transaction.atomic blocks and commit and rollback functionality
+    to be tested.
+
+    https://docs.djangoproject.com/en/2.2/topics/testing/tools/#transactiontestcase
+
+    Due to the schema being manipulated by the codebase when reference dataset tables and fields are created
+    Tests that create then try to amend this structure can result in the following error:
+    `ALTER TABLE "table_name" because it has pending trigger events` using the TransactionTestCase solves this issue.
+    """
+
+    pass
 
 
 class BaseAdminTestCase(BaseTestCase):

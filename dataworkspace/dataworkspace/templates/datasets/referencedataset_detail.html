@@ -58,23 +58,23 @@
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
               <a class="govuk-link" href="{% url 'catalogue:reference_dataset_download' object.group.slug object.slug 'json'%}">
-                {{ object.slug }}-{{ object.version }}.json
+                {{ object.slug }}-{{ object.published_version }}.json
               </a>
             </td>
             <td class="govuk-table__cell">JSON</td>
-            <td class="govuk-table__cell">{{ object.version }}</td>
+            <td class="govuk-table__cell">{{ object.published_version }}</td>
             <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
           </tr>
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
               <a class="govuk-link" href="{% url 'catalogue:reference_dataset_download' object.group.slug object.slug 'csv' %}">
-                {{ object.slug }}-{{ object.version }}.csv
+                {{ object.slug }}-{{ object.published_version }}.csv
               </a>
             </td>
             <td class="govuk-table__cell">
               CSV
             </td>
-            <td class="govuk-table__cell">{{ object.version }}</td>
+            <td class="govuk-table__cell">{{ object.published_version }}</td>
             <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
           </tr>
         </tbody>
