@@ -85,7 +85,7 @@ class TestAPIDatasetView(TestCase):
         output_dict = json.loads(output.decode('utf-8'))
         self.assertEqual(output_dict, expected)
 
-    def test_non_json_request(self):
+    def test_no_json_data_inrequest(self):
 
         # create django objects
         memorable_name = self.memorable_name
@@ -103,7 +103,7 @@ class TestAPIDatasetView(TestCase):
         expected = {'errors': ['invalid arguments, specify $searchAfter argument']}
         self.assertEqual(response.json(), expected)
 
-    def test_invalid_json_request(self):
+    def test_invalid_json_data_in_request(self):
 
         # create django objects
         memorable_name = self.memorable_name
