@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig',
     'adminsortable2',
+    'ckeditor',
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
     'dataworkspace.apps.catalogue',
@@ -202,3 +203,30 @@ YOUR_FILES_ENABLED = env.get('YOUR_FILES_ENABLED', 'False') == 'True'
 
 if env.get('SENTRY_DSN') is not None:
     sentry_sdk.init(env['SENTRY_DSN'], integrations=[DjangoIntegration()])
+
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Custom',
+        'enterMode': 3,
+        'height': 350,
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            [
+                'NumberedList',
+                'BulletedList',
+                '-',
+                'Outdent',
+                'Indent',
+                '-',
+                'JustifyLeft',
+                'JustifyCenter',
+                'JustifyRight',
+                'JustifyBlock',
+            ],
+            ['Format'],
+            ['Cut', 'Copy', 'Paste', '-', 'Undo', 'Redo'],
+        ],
+        'format_tags': 'div;p;h1;h2;h3;h4;h5;h6',
+    }
+}
