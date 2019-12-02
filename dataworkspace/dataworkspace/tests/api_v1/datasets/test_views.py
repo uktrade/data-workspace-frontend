@@ -90,12 +90,12 @@ class TestAPIDatasetView(TestCase):
         # create django objects
         memorable_name = self.memorable_name
         table = self.table
-        database = Database.objects.get_or_create(memorable_name=memorable_name)
-        data_grouping = DataGrouping.objects.get_or_create()
-        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)
+        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
+        data_grouping = DataGrouping.objects.get_or_create()[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
         source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
-        )
+        )[0]
 
         url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
         response = self.client.post(url)
@@ -108,12 +108,12 @@ class TestAPIDatasetView(TestCase):
         # create django objects
         memorable_name = self.memorable_name
         table = self.table
-        database = Database.objects.get_or_create(memorable_name=memorable_name)
-        data_grouping = DataGrouping.objects.get_or_create()
-        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)
+        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
+        data_grouping = DataGrouping.objects.get_or_create()[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
         source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
-        )
+        )[0]
 
         url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
         response = self.client.post(url, {}, content_type='application/json')
