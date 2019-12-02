@@ -153,7 +153,7 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
 
         response = HttpResponse()
         response['Content-Disposition'] = 'attachment; filename={}-{}.{}'.format(
-            ref_dataset.slug, ref_dataset.version, dl_format
+            ref_dataset.slug, ref_dataset.published_version, dl_format
         )
 
         log_event(
@@ -162,7 +162,7 @@ class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
             ref_dataset,
             extra={
                 'path': request.get_full_path(),
-                'reference_dataset_version': ref_dataset.version,
+                'reference_dataset_version': ref_dataset.published_version,
                 'download_format': dl_format,
             },
         )
