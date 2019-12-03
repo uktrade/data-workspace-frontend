@@ -168,7 +168,7 @@ def new_private_database_credentials(user):
                         database_obj.memorable_name,
                         schema,
                         table,
-                        db_user,
+                        db_role,
                     )
                     continue
                 logger.info(
@@ -176,17 +176,17 @@ def new_private_database_credentials(user):
                     database_obj.memorable_name,
                     schema,
                     table,
-                    db_user,
+                    db_role,
                 )
                 cur.execute(
                     sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                        sql.Identifier(schema), sql.Identifier(db_user)
+                        sql.Identifier(schema), sql.Identifier(db_role)
                     )
                 )
                 tables_sql = sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
                     sql.Identifier(schema),
                     sql.Identifier(table),
-                    sql.Identifier(db_user),
+                    sql.Identifier(db_role),
                 )
                 cur.execute(tables_sql)
 
