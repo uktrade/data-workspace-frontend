@@ -755,7 +755,7 @@ class TestSourceLinkModel(BaseTestCase):
                 id='158776ec-5c40-4c58-ba7c-a3425905ec45'
             ).exists()
         )
-        mock_client.assert_called_once()
+        mock_client().head_object.assert_called_once()
         mock_client().delete_object.assert_called_once_with(
             Bucket=settings.AWS_UPLOADS_BUCKET, Key=link.url
         )

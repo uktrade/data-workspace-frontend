@@ -22,7 +22,6 @@ from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataFieldInlineForm,
     SourceLinkForm,
     DataSetForm,
-    SourceLinkFormSet,
     ReferenceDataInlineFormset,
     ReferenceDatasetForm,
 )
@@ -48,7 +47,6 @@ class DataLinkAdmin(admin.ModelAdmin):
 class SourceLinkInline(admin.TabularInline):
     template = 'admin/source_link_inline.html'
     form = SourceLinkForm
-    formset = SourceLinkFormSet
     model = SourceLink
     extra = 1
 

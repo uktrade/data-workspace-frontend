@@ -257,8 +257,9 @@ class SourceLink(TimeStampedModel):
         return True
 
     def _delete_s3_file(self):
-        client = boto3.client('s3')
-        client.delete_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
+        if self.local_file_is_accessible():
+            client = boto3.client('s3')
+            client.delete_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
