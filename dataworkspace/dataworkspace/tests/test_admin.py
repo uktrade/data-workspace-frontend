@@ -2334,8 +2334,8 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 '_continue': 'Save and continue editing',
             },
         )
-        self.assertContains(response, 'Unable to access local file for deletion')
-        self.assertEqual(dataset.sourcelink_set.count(), link_count)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
 
     @mock.patch('dataworkspace.apps.datasets.models.boto3.client')
     def test_delete_local_source_link(self, mock_client):
