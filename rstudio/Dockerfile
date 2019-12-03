@@ -17,6 +17,8 @@ ENV \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8
 
+COPY exploretiva /exploretiva
+
 RUN \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
@@ -54,9 +56,7 @@ RUN \
 	apt-get autoremove -y && \
 	apt-get autoclean -y && \
 	rm -rf /tmp/* && \
-	rm -rf /var/lib/apt/lists/*
-
-RUN \
+	rm -rf /var/lib/apt/lists/* && \
 	echo 'www-port=8888' >> /etc/rstudio/rserver.conf && \
 	echo 'auth-none=1' >> /etc/rstudio/rserver.conf && \
 	echo 'server-daemonize=0' >> /etc/rstudio/rserver.conf && \
@@ -65,7 +65,10 @@ RUN \
 	echo '  r = getOption("repos")' >> /usr/lib/R/etc/Rprofile.site && \
 	echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /usr/lib/R/etc/Rprofile.site && \
 	echo '  options(repos = r)' >> /usr/lib/R/etc/Rprofile.site && \
-	echo '})' >> /usr/lib/R/etc/Rprofile.site
+	echo '})' >> /usr/lib/R/etc/Rprofile.site && \
+	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
+	Rscript -e 'install.packages(c("aws.ec2metadata"), clean=TRUE)' && \
+	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
 
 COPY rstudio-start.sh /
 
@@ -79,12 +82,6 @@ RUN \
 	chown rstudio /etc/rstudio/connections && \
 	chown -R rstudio:rstudio /usr/local/lib/R/site-library
 
-COPY exploretiva /exploretiva
-
 USER rstudio
-RUN \
-	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
-	Rscript -e 'install.packages(c("aws.ec2metadata"), clean=TRUE)' && \
-	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
 
 CMD ["/usr/lib/rstudio-server/bin/rserver"]
