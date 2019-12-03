@@ -24,6 +24,7 @@ RUN \
 	apt-get install -y --no-install-recommends \
 		dirmngr \
 		gnupg2 && \
+	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
 	until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
 	rm -rf /tmp/* && \
 	rm -rf /var/lib/apt/lists/* && \
@@ -31,8 +32,8 @@ RUN \
 	apt-get install -y --no-install-recommends \
 		gdebi-core=0.9.5.7+nmu3 \
 		procps=2:3.3.15-2 \
-		r-base=3.5.2-1 \
-		r-base-dev=3.5.2-1 \
+		r-base=3.6.1-2~bustercran.0 \
+		r-base-dev=3.6.1-2~bustercran.0 \
 		r-cran-base64enc=0.1-3-2 \
 		r-cran-curl=3.3+dfsg-1 \
 		r-cran-dbi=1.0.0-2 \
@@ -41,7 +42,7 @@ RUN \
 		r-cran-tidyverse=1.2.1-1 \
 		r-cran-xml2=1.2.0-3 \
 		r-cran-httr=1.4.0-3 \
-		r-recommended=3.5.2-1 \
+		r-recommended=3.6.1-2~bustercran.0 \
 		wget=1.20.1-1.1 && \
 	wget -q https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5019-amd64.deb && \
 	echo "bfea9b32c04b721d5d2fb29be510b4378d57a6cd6c8c0dc8390b8760a87341b3  rstudio-server-1.2.5019-amd64.deb" | sha256sum -c && \
