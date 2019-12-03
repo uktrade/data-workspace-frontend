@@ -369,7 +369,9 @@ def root_view_GET(request):
         ],
         'appstream_url': settings.APPSTREAM_URL,
         'your_files_enabled': settings.YOUR_FILES_ENABLED,
-        'groupings': DataGrouping.objects.with_published_datasets().order_by(Lower('name')),
+        'groupings': DataGrouping.objects.with_published_datasets().order_by(
+            Lower('name')
+        ),
     }
     return render(request, 'root.html', context)
 
