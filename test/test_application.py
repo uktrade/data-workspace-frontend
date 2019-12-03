@@ -962,7 +962,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
-        async with session.request('POST', url) as response:
+        async with session.request('GET', url) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 401)
@@ -971,9 +971,9 @@ class TestApplication(unittest.TestCase):
         client_id = os.environ['HAWK_SENDERS__1__id']
         client_key = 'incorrect_key'
         algorithm = os.environ['HAWK_SENDERS__1__algorithm']
-        method = 'POST'
-        content = json.dumps({"$searchAfter": [-1]})
-        content_type = 'application/json'
+        method = 'GET'
+        content = ''
+        content_type = ''
         credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
         sender = mohawk.Sender(
             credentials=credentials,
@@ -984,9 +984,7 @@ class TestApplication(unittest.TestCase):
         )
         headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
 
-        async with session.request(
-            'POST', url, data=content, headers=headers
-        ) as response:
+        async with session.request('GET', url, headers=headers) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 401)
@@ -995,9 +993,9 @@ class TestApplication(unittest.TestCase):
         client_id = os.environ['HAWK_SENDERS__1__id']
         client_key = os.environ['HAWK_SENDERS__1__key']
         algorithm = os.environ['HAWK_SENDERS__1__algorithm']
-        method = 'POST'
-        content = json.dumps({"$searchAfter": [-1]})
-        content_type = 'application/json'
+        method = 'GET'
+        content = ''
+        content_type = ''
         credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
         sender = mohawk.Sender(
             credentials=credentials,
@@ -1008,17 +1006,13 @@ class TestApplication(unittest.TestCase):
         )
         headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
 
-        async with session.request(
-            'POST', url, data=content, headers=headers
-        ) as response:
+        async with session.request('GET', url, headers=headers) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 200)
 
         # replay attack
-        async with session.request(
-            'POST', url, data=content, headers=headers
-        ) as response:
+        async with session.request('GET', url, headers=headers) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 401)

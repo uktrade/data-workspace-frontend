@@ -14,7 +14,7 @@ def flush_database(connection):
         sql = 'select current_user'
         cursor.execute(sql)
         current_user = cursor.fetchone()[0]
-        sql = 'DROP SCHEMA public CASCADE;'
+        sql = 'DROP SCHEMA IF EXISTS public CASCADE;'
         cursor.execute(sql)
         sql = 'CREATE SCHEMA public;'
         cursor.execute(sql)
@@ -71,12 +71,7 @@ class TestAPIDatasetView(TestCase):
             cur.executemany(sql, values)
 
         url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
-        response = self.client.post(
-            url,
-            {'fields': [{'name': 'id'}, {'name': 'name'}], '$searchAfter': [-1]},
-            content_type='application/json',
-        )
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get(url)
         expected = {'headers': ['id', 'name'], 'values': [[0, 'abigail'], [1, 'romeo']]}
 
         output = b''
@@ -85,7 +80,7 @@ class TestAPIDatasetView(TestCase):
         output_dict = json.loads(output.decode('utf-8'))
         self.assertEqual(output_dict, expected)
 
-    def test_no_json_data_in_request(self):
+    def test_search_after(self):
 
         # create django objects
         memorable_name = self.memorable_name
@@ -97,26 +92,26 @@ class TestAPIDatasetView(TestCase):
             dataset=dataset, database=database, table=table
         )[0]
 
-        url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 400)
-        expected = {'errors': ['invalid arguments, specify $searchAfter argument']}
-        self.assertEqual(response.json(), expected)
+        # create external source table
+        with psycopg2.connect(
+            database_dsn(settings.DATABASES_DATA[memorable_name])
+        ) as conn, conn.cursor() as cur:
+            sql = '''
+            create table {table} (id int primary key, name varchar(100))
+            '''.format(
+                table=table
+            )
+            cur.execute(sql)
+            sql = '''insert into {table} values (%s, %s)'''.format(table=self.table)
+            values = [(0, 'abigail'), (1, 'romeo')]
+            cur.executemany(sql, values)
 
-    def test_invalid_json_data_in_request(self):
+        url = '/api/v1/dataset/{}/{}?$searchAfter=0'.format(dataset.id, source_table.id)
+        response = self.client.get(url)
+        expected = {'headers': ['id', 'name'], 'values': [[1, 'romeo']]}
 
-        # create django objects
-        memorable_name = self.memorable_name
-        table = self.table
-        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
-        data_grouping = DataGrouping.objects.get_or_create()[0]
-        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
-        source_table = SourceTable.objects.get_or_create(
-            dataset=dataset, database=database, table=table
-        )[0]
-
-        url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
-        response = self.client.post(url, {}, content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        expected = {'errors': ['invalid arguments, specify $searchAfter argument']}
-        self.assertEqual(response.json(), expected)
+        output = b''
+        for streaming_output in response.streaming_content:
+            output = output + streaming_output
+        output_dict = json.loads(output.decode('utf-8'))
+        self.assertEqual(output_dict, expected)

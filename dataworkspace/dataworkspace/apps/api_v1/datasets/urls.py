@@ -1,10 +1,12 @@
 from django.urls import path
-from dataworkspace.apps.api_v1.datasets.views import APIDatasetView
+
+import dataworkspace.apps.api_v1.datasets.views as views
+
 
 urlpatterns = [
     path(
         '<str:dataset_id>/<str:source_table_id>',
-        APIDatasetView.as_view(),
+        views.dataset_api_view_GET,
         name='api-dataset-view',
     )
 ]

@@ -1,56 +1,79 @@
 import json
 import psycopg2
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import StreamingHttpResponse
+from django.conf import settings
 from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
-from dataworkspace.apps.api_v1.views import (
-    get_rows,
-    get_schema,
-    schema_value_func_for_data_types,
-)
+from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.models import SourceTable
 
 
+def get_primary_key(connection, schema, table):
+    sql = psycopg2.sql.SQL(
+        '''
+        SELECT
+            pg_attribute.attname AS column_name
+        FROM
+            pg_catalog.pg_class pg_class_table
+        INNER JOIN
+            pg_catalog.pg_index ON pg_index.indrelid = pg_class_table.oid
+        INNER JOIN
+            pg_catalog.pg_class pg_class_index ON pg_class_index.oid = pg_index.indexrelid
+        INNER JOIN
+            pg_catalog.pg_namespace ON pg_namespace.oid = pg_class_table.relnamespace
+        INNER JOIN
+            pg_catalog.pg_attribute ON pg_attribute.attrelid = pg_class_index.oid
+        WHERE
+            pg_namespace.nspname = %s
+            AND pg_class_table.relname = %s
+            AND pg_index.indisprimary
+        ORDER BY
+            pg_attribute.attnum
+        '''
+    )
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, (schema, table))
+        return [row[0] for row in cursor.fetchall()]
+
+
 def get_streaming_http_response(request, source_table):
-    # validate arguments
-    try:
-        request_dict = json.loads(request.body)
-        fields = request_dict.pop('fields', [])
-        column_names = [field['name'] for field in fields]
-        search_after = request_dict.pop('$searchAfter')
-        assert len(request_dict) == 0
-    except (json.decoder.JSONDecodeError, KeyError, AssertionError) as e:
-        errors = []
-        if type(e) == AssertionError:
-            for key in request_dict.keys():
-                errors.append(f'invalid argument {key}')
-        if len(errors) == 0:
-            errors.append('invalid arguments, specify $searchAfter argument')
-        return JsonResponse({'errors': errors}, status=400)
 
-    def query_vars(fields_sql, schema_sql, table_sql, primary_key_sql):
+    search_after = request.GET.getlist('$searchAfter')
 
-        return (
-            psycopg2.sql.SQL(
-                'SELECT {},{} FROM {}.{} WHERE ({}) > ('
-                + ','.join(['%s'] * len(search_after))
-                + ') ORDER BY {}'
-            ).format(
-                primary_key_sql,
-                fields_sql,
-                schema_sql,
-                table_sql,
-                primary_key_sql,
-                primary_key_sql,
-            ),
-            tuple(search_after),
+    with psycopg2.connect(
+        database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
+    ) as connection:
+        primary_key = get_primary_key(
+            connection, source_table.schema, source_table.table
         )
 
-    schema_value_funcs = [
-        (schema, value_func)
-        for schema, value_func in schema_value_func_for_data_types(source_table)
-        if schema['name'] in column_names or column_names == []
-    ]
+    if search_after == []:
+        where_clause = ''
+        query_args = []
+    else:
+        where_clause = 'where ({}) > ({})'.format(
+            ','.join(primary_key), ','.join(['%s' for i in range(len(search_after))])
+        )
+        query_args = search_after
+
+    sql = psycopg2.sql.SQL(
+        '''
+        select
+            *
+
+        from {schema}.{table}
+
+        {where_clause}
+
+        order by ({primary_key})
+
+        '''.format(
+            schema=source_table.schema,
+            table=source_table.table,
+            primary_key=','.join(primary_key),
+            where_clause=where_clause,
+        )
+    )
 
     # https://developers.google.com/apps-script/guides/services/quotas#current_limitations
     # URL Fetch response size: 50mb, and a bit of a buffer for http headers and $searchAfter
@@ -99,54 +122,62 @@ def get_streaming_http_response(request, source_table):
         if queue:
             yield b''.join(queue)
 
-    def yield_schema_and_rows_bytes():
-        try:
-            yield from yield_chunks(
-                b'{"headers":'
-                + json.dumps(
-                    [column['name'] for column in get_schema(schema_value_funcs)]
-                ).encode('utf-8')
-                + b',"values":['
-            )
+    def get_rows(connection, sql, query_args=None, cursor_itersize=1000):
+        query_args = [] if query_args is None else query_args
+        with connection.cursor() as cursor:
+            cursor.itersize = cursor.itersize
+            cursor.arraysize = cursor.itersize
+            cursor.execute(sql, query_args)
+            columns = [c[0] for c in cursor.description]
 
-            for i, (row, search_after) in enumerate(
-                get_rows(source_table, schema_value_funcs, query_vars)
-            ):
-                yield from yield_chunks(
-                    # fmt: off
-                    b',' + json.dumps(row['values']).encode('utf-8') if i != 0 else
-                    json.dumps(row['values']).encode('utf-8')
-                    # fmt: on
-                )
-
-                if num_bytes_sent_and_queued > num_bytes_max:
-                    yield from yield_chunks(
-                        b'],"$searchAfter":'
-                        + json.dumps(search_after).encode('utf-8')
-                        + b']}'
-                    )
+            while True:
+                rows = cursor.fetchmany(cursor_itersize)
+                for row in rows:
+                    yield row, columns
+                if not rows:
                     break
+
+    def yield_data(connection):
+
+        for i, (row, columns) in enumerate(
+            get_rows(connection, sql, query_args=query_args)
+        ):
+            if i == 0:
+                yield from yield_chunks(
+                    b'{"headers": '
+                    + json.dumps(columns).encode('utf-8')
+                    + b', "values": ['
+                    + json.dumps(row).encode('utf-8')
+                )
             else:
-                yield from yield_chunks(b']}')
+                yield from yield_chunks(b',' + json.dumps(row).encode('utf-8'))
 
-            yield from yield_remaining()
-        except Exception as e:
-            raise e
+            if num_bytes_sent_and_queued > num_bytes_max:
+                search_after = [columns.index(k) for k in primary_key]
+                search_after = [row[i] for i in search_after]
+                search_after = '&'.join(
+                    ['$searchAfter={}'.format(k) for k in search_after]
+                )
+                next_url = '{}?{}'.format(request.build_absolute_uri(), search_after)
+                yield from yield_chunks(
+                    b'], "next": "' + next_url.encode('utf-8') + b'"}'
+                )
+                break
+        else:
+            yield from yield_chunks(b']}')
+        yield from yield_remaining()
 
-    return StreamingHttpResponse(
-        yield_schema_and_rows_bytes(), content_type='application/json', status=200
-    )
-
-
-class APIDatasetView(APIView):
-    """
-    A GET API view to return the data for the company future countries of interest dataset
-    """
-
-    def post(self, request, dataset_id, source_table_id):
-
-        source_table = get_object_or_404(
-            SourceTable, id=source_table_id, dataset__id=dataset_id
+    with psycopg2.connect(
+        database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
+    ) as connection:
+        return StreamingHttpResponse(
+            yield_data(connection), content_type='application/json', status=200
         )
 
-        return get_streaming_http_response(request, source_table)
+def dataset_api_view_GET(request, dataset_id, source_table_id):
+    
+    source_table = get_object_or_404(
+        SourceTable, id=source_table_id, dataset__id=dataset_id
+    )
+    
+    return get_streaming_http_response(request, source_table)
