@@ -174,10 +174,11 @@ def get_streaming_http_response(request, source_table):
             yield_data(connection), content_type='application/json', status=200
         )
 
+
 def dataset_api_view_GET(request, dataset_id, source_table_id):
-    
+
     source_table = get_object_or_404(
         SourceTable, id=source_table_id, dataset__id=dataset_id
     )
-    
+
     return get_streaming_http_response(request, source_table)
