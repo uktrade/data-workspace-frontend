@@ -14,6 +14,7 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F
+from django.db.models.functions import Lower
 from django.forms import model_to_dict
 from django.http import (
     Http404,
@@ -57,21 +58,6 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
 logger = logging.getLogger('app')
-
-
-def get_all_datagroups_viewmodel():
-    vm = []
-    for group in DataGrouping.objects.with_published_datasets():
-        vm.append(
-            {
-                'name': group.name,
-                'short_description': group.short_description,
-                'id': group.id,
-                'slug': group.slug,
-            }
-        )
-
-    return vm
 
 
 @require_GET
@@ -383,7 +369,9 @@ def root_view_GET(request):
         ],
         'appstream_url': settings.APPSTREAM_URL,
         'your_files_enabled': settings.YOUR_FILES_ENABLED,
-        'groupings': get_all_datagroups_viewmodel(),
+        'groupings': DataGrouping.objects.with_published_datasets().order_by(
+            Lower('name')
+        ),
     }
     return render(request, 'root.html', context)
 
