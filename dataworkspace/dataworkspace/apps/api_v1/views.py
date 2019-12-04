@@ -430,16 +430,13 @@ def table_api_rows_POST(request, table_id):
         search_after = request_dict['$searchAfter']
 
         return (
-            sql.SQL(
-                'SELECT {},{} FROM {}.{} WHERE ({}) > ('
-                + ','.join(['%s'] * len(search_after))
-                + ') ORDER BY {}'
-            ).format(
+            sql.SQL('SELECT {},{} FROM {}.{} WHERE ({}) > ({}) ORDER BY {}').format(
                 primary_key_sql,
                 fields_sql,
                 schema_sql,
                 table_sql,
                 primary_key_sql,
+                sql.SQL(',').join(sql.Placeholder() * len(search_after)),
                 primary_key_sql,
             ),
             tuple(search_after),
