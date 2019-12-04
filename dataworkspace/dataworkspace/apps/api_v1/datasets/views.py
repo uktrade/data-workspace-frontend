@@ -144,34 +144,39 @@ def get_streaming_http_response(request, source_table):
         )
 
     if search_after == []:
-        where_clause = ''
-    else:
-        where_clause = 'where ({}) > ({})'.format(
-            '{primary_key}', ','.join(['%s' for i in search_after])
+        sql = psycopg2.sql.SQL(
+            '''
+                select
+                    *
+
+                from {}.{}
+
+                order by {}
+            '''
+        ).format(
+            psycopg2.sql.Identifier(source_table.schema),
+            psycopg2.sql.Identifier(source_table.table),
+            psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
         )
+    else:
+        sql = psycopg2.sql.SQL(
+            '''
+                select
+                    *
 
-    sql = '''
-        select
-            *
+                from {}.{}
 
-        from {}.{}
+                where ({}) > ({})
 
-        {where_holder}
-
-        order by ({primary_key_holder})
-
-    '''.format(
-        '{schema}',
-        '{table}',
-        primary_key_holder='{primary_key}',
-        where_holder=where_clause,
-    )
-
-    sql = psycopg2.sql.SQL(sql).format(
-        schema=psycopg2.sql.Identifier(source_table.schema),
-        table=psycopg2.sql.Identifier(source_table.table),
-        primary_key=psycopg2.sql.Identifier(','.join(primary_key)),
-    )
+                order by {}
+            '''
+        ).format(
+            psycopg2.sql.Identifier(source_table.schema),
+            psycopg2.sql.Identifier(source_table.table),
+            psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
+            psycopg2.sql.SQL(',').join(psycopg2.sql.Placeholder() * len(search_after)),
+            psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
+        )
 
     with psycopg2.connect(
         database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
