@@ -282,13 +282,15 @@ def can_access_table_by_google_data_studio(user, table_id):
 
 
 def source_tables_for_user(user):
-    return SourceTable.objects.filter(
-        Q(dataset__published=True)
-        & (
-            Q(dataset__user_access_type='REQUIRES_AUTHENTICATION')
-            | Q(dataset__datasetuserpermission__user=user)
-        )
-    ).order_by('database__memorable_name', 'schema', 'table', 'id')
+    req_authentication_tables = SourceTable.objects.filter(
+        dataset__published=True, dataset__user_access_type='REQUIRES_AUTHENTICATION'
+    )
+    req_authorization_tables = SourceTable.objects.filter(
+        dataset__published=True,
+        dataset__user_access_type='REQUIRES_AUTHORIZATION',
+        dataset__datasetuserpermission__user=user,
+    )
+    return req_authentication_tables.union(req_authorization_tables)
 
 
 def view_exists(database, schema, view):
