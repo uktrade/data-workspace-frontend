@@ -141,9 +141,10 @@ def application_api_PUT(request, public_host):
         )
 
     try:
-        application_template, public_host_data = application_template_and_data_from_host(
-            public_host
-        )
+        (
+            application_template,
+            public_host_data,
+        ) = application_template_and_data_from_host(public_host)
     except ApplicationTemplate.DoesNotExist:
         return JsonResponse(
             {'message': 'Application template does not exist'}, status=400

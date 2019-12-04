@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from django.views.decorators.csrf import csrf_exempt
 
 from dataworkspace.apps.accounts.utils import login_required
@@ -32,5 +32,11 @@ urlpatterns = [
         'table/<str:table_id>/rows',
         csrf_exempt(login_required(table_api_rows_view)),
         name='table-rows',
+    ),
+    path(
+        'dataset/',
+        include(
+            ('dataworkspace.apps.api_v1.datasets.urls', 'dataset'), namespace='dataset'
+        ),
     ),
 ]

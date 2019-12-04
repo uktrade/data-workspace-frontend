@@ -10,6 +10,7 @@ import unittest
 import aiohttp
 from aiohttp import web
 import aioredis
+import mohawk
 
 
 def async_test(func):
@@ -54,7 +55,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         # Ensure the user doesn't see the application link since they don't
         # have permission
@@ -108,7 +109,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('Starting Test Application', application_content_2)
 
         # There are forced sleeps in starting a process
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -203,7 +204,7 @@ class TestApplication(unittest.TestCase):
         cleanup_application_2 = await create_application()
         self.add_async_cleanup(cleanup_application_2)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         async with session.request(
             'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
@@ -218,7 +219,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
 
         self.assertIn('Starting Test Application', content)
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -297,7 +298,7 @@ class TestApplication(unittest.TestCase):
         )
 
         # There are forced sleeps in starting a process
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -385,7 +386,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         # Make a request to the application home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -431,7 +432,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         # Make a request to the home page, which creates the user...
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -479,7 +480,7 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(cleanup_application)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         async with session.request(
             'GET',
@@ -598,7 +599,7 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         # Make a request to the home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -645,7 +646,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         stdout, stderr, code = await create_private_dataset()
         self.assertEqual(stdout, b'')
@@ -731,7 +732,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(6)
+        await asyncio.sleep(10)
 
         # Check that with no token there is no access
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
@@ -923,6 +924,98 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 403)
         self.assertEqual(content, '{}')
+
+    @async_test
+    async def test_hawk_authenticated_source_table_api_endpoint(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code', 'some-other-code'])
+        tokens = iter(['token-1', 'token-2'])
+        auth_to_me = {
+            # No token-1
+            'Bearer token-2': {
+                'email': 'test@test.com',
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(10)
+
+        # Check that with no authorization header there is no access
+        dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        url = f'http://localapps.com:8000/api/v1/dataset/{dataset_id}/{table_id}'
+        stdout, stderr, code = await create_private_dataset()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request('GET', url) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 401)
+
+        # unauthenticated request
+        client_id = os.environ['HAWK_SENDERS__1__id']
+        client_key = 'incorrect_key'
+        algorithm = os.environ['HAWK_SENDERS__1__algorithm']
+        method = 'GET'
+        content = ''
+        content_type = ''
+        credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
+        sender = mohawk.Sender(
+            credentials=credentials,
+            url=url,
+            method=method,
+            content=content,
+            content_type=content_type,
+        )
+        headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
+
+        async with session.request('GET', url, headers=headers) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 401)
+
+        # authenticated request
+        client_id = os.environ['HAWK_SENDERS__1__id']
+        client_key = os.environ['HAWK_SENDERS__1__key']
+        algorithm = os.environ['HAWK_SENDERS__1__algorithm']
+        method = 'GET'
+        content = ''
+        content_type = ''
+        credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
+        sender = mohawk.Sender(
+            credentials=credentials,
+            url=url,
+            method=method,
+            content=content,
+            content_type=content_type,
+        )
+        headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
+
+        async with session.request('GET', url, headers=headers) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+
+        # replay attack
+        async with session.request('GET', url, headers=headers) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 401)
 
 
 def client_session():
@@ -1128,6 +1221,7 @@ async def create_private_dataset():
             description="test_desc",
             short_description="test_short_desc",
             slug="test_slug_s",
+            id="70ce6fdd-1791-4806-bbe0-4cf880a9cc37",
             volume=1,
             grouping=grouping,
             published=True

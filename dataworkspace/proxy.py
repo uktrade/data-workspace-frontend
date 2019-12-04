@@ -18,6 +18,7 @@ from yarl import URL
 
 from dataworkspace.utils import normalise_environment
 from proxy_session import SESSION_KEY, redis_session_middleware
+from hawkserver import authenticate_hawk_header
 
 
 class UserException(Exception):
@@ -37,6 +38,7 @@ async def async_main():
     env = normalise_environment(os.environ)
     port = int(env['PROXY_PORT'])
     admin_root = env['UPSTREAM_ROOT']
+    hawk_senders = env['HAWK_SENDERS']
     sso_base_url = env['AUTHBROKER_URL']
     sso_client_id = env['AUTHBROKER_CLIENT_ID']
     sso_client_secret = env['AUTHBROKER_CLIENT_SECRET']
@@ -105,11 +107,35 @@ async def async_main():
     def is_requesting_files(request):
         return request.url.host == root_domain_no_port and request.url.path == '/files'
 
+    def is_dataset_requested(request):
+        return (
+            request.url.path.startswith('/api/v1/dataset/')
+            and request.url.host == root_domain_no_port
+        )
+
+    def is_hawk_auth_required(request):
+        return is_dataset_requested(request)
+
+    def is_healthcheck_requested(request):
+        return (
+            request.url.path == '/healthcheck'
+            and request.method == 'GET'
+            and not is_app_requested(request)
+        )
+
     def is_table_requested(request):
         return (
             request.url.path.startswith('/api/v1/table/')
             and request.url.host == root_domain_no_port
             and request.method == 'POST'
+        )
+
+    def is_sso_auth_required(request):
+        return (
+            not is_healthcheck_requested(request)
+            and not is_service_discovery(request)
+            and not is_table_requested(request)
+            and not is_dataset_requested(request)
         )
 
     def get_peer_ip(request):
@@ -423,13 +449,13 @@ async def async_main():
         # GET responses half way through if the request specified a chunked
         # encoding. AFAIK RStudio uses a custom webserver, so this behaviour
         # is not documented anywhere.
-        data = (
-            b''
-            if 'content-length' not in upstream_headers
-            and downstream_request.headers.get('transfer-encoding', '').lower()
-            != 'chunked'
-            else downstream_request.content
-        )
+
+        # fmt: off
+        data = \
+            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else \
+            await downstream_request.read() if downstream_request.content.at_eof() else \
+            downstream_request.content
+        # fmt: on
 
         async with client_session.request(
             upstream_method,
@@ -568,16 +594,7 @@ async def async_main():
 
         @web.middleware
         async def _authenticate_by_sso(request, handler):
-            is_healthcheck = (
-                request.url.path == '/healthcheck'
-                and request.method == 'GET'
-                and not is_app_requested(request)
-            )
-            sso_auth_required = (
-                not is_healthcheck
-                and not is_service_discovery(request)
-                and not is_table_requested(request)
-            )
+            sso_auth_required = is_sso_auth_required(request)
 
             if not sso_auth_required:
                 request.setdefault('sso_profile_headers', ())
@@ -596,9 +613,10 @@ async def async_main():
             if request.path == redirect_from_sso_path:
                 code = request.query['code']
                 sso_state = request.query['state']
-                redirect_uri_final_from_url, redirect_uri_final_from_session = await get_redirect_uri_final(
-                    get_session_value, sso_state
-                )
+                (
+                    redirect_uri_final_from_url,
+                    redirect_uri_final_from_session,
+                ) = await get_redirect_uri_final(get_session_value, sso_state)
 
                 if redirect_uri_final_from_url != redirect_uri_final_from_session:
                     # We might have been overtaken by a parallel request initiating another auth
@@ -715,6 +733,52 @@ async def async_main():
 
         return _authenticate_by_basic_auth
 
+    def authenticate_by_hawk_auth():
+        async def lookup_credentials(sender_id):
+            for hawk_sender in hawk_senders:
+                if hawk_sender['id'] == sender_id:
+                    return hawk_sender
+
+        async def seen_nonce(nonce, sender_id):
+            nonce_key = f'nonce-{sender_id}-{nonce}'
+            with await redis_pool as conn:
+                response = await conn.execute('SET', nonce_key, '1', 'EX', 60, 'NX')
+                seen_nonce = response != b'OK'
+                return seen_nonce
+
+        @web.middleware
+        async def _authenticate_by_hawk_auth(request, handler):
+            hawk_auth_required = is_hawk_auth_required(request)
+
+            if not hawk_auth_required:
+                return await handler(request)
+
+            try:
+                authorization_header = request.headers['Authorization']
+            except KeyError:
+                return web.Response(status=401)
+
+            content = await request.read()
+
+            is_authenticated, error_message, _ = await authenticate_hawk_header(
+                lookup_credentials,
+                seen_nonce,
+                15,
+                authorization_header,
+                request.method,
+                request.url.host,
+                request.url.port,
+                request.url.path,
+                request.headers['Content-Type'],
+                content,
+            )
+            if not is_authenticated:
+                return web.Response(status=401)
+
+            return await handler(request)
+
+        return _authenticate_by_hawk_auth
+
     def authenticate_by_ip_whitelist():
         @web.middleware
         async def _authenticate_by_ip_whitelist(request, handler):
@@ -750,6 +814,7 @@ async def async_main():
                 authenticate_by_staff_sso_token(),
                 authenticate_by_staff_sso(),
                 authenticate_by_basic_auth(),
+                authenticate_by_hawk_auth(),
                 authenticate_by_ip_whitelist(),
             ]
         )
