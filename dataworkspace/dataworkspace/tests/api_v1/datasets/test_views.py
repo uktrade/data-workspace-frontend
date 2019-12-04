@@ -61,18 +61,61 @@ class TestAPIDatasetView(TestCase):
             database_dsn(settings.DATABASES_DATA[memorable_name])
         ) as conn, conn.cursor() as cur:
             sql = '''
-            create table {table} (id int primary key, name varchar(100))
+            create table {table} (id int primary key, name varchar(100), timestamp timestamp)
             '''.format(
                 table=table
             )
             cur.execute(sql)
-            sql = '''insert into {table} values (%s, %s)'''.format(table=self.table)
-            values = [(0, 'abigail'), (1, 'romeo')]
+            sql = '''insert into {table} values (%s, %s, %s)'''.format(table=self.table)
+            values = [
+                (0, 'abigail', '2019-01-01 01:00'),
+                (1, 'romeo', '2019-01-01 02:00'),
+            ]
             cur.executemany(sql, values)
 
         url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
         response = self.client.get(url)
-        expected = {'headers': ['id', 'name'], 'values': [[0, 'abigail'], [1, 'romeo']]}
+        expected = {
+            'headers': ['id', 'name', 'timestamp'],
+            'next': None,
+            'values': [
+                [0, 'abigail', '2019-01-01 01:00:00'],
+                [1, 'romeo', '2019-01-01 02:00:00'],
+            ],
+        }
+
+        output = b''
+        for streaming_output in response.streaming_content:
+            output = output + streaming_output
+        output_dict = json.loads(output.decode('utf-8'))
+        self.assertEqual(output_dict, expected)
+
+    def test_empty_data(self):
+
+        # create django objects
+        memorable_name = self.memorable_name
+        table = self.table
+        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
+        data_grouping = DataGrouping.objects.get_or_create()[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
+        source_table = SourceTable.objects.get_or_create(
+            dataset=dataset, database=database, table=table
+        )[0]
+
+        # create external source table
+        with psycopg2.connect(
+            database_dsn(settings.DATABASES_DATA[memorable_name])
+        ) as conn, conn.cursor() as cur:
+            sql = '''
+            create table {table} (id int primary key, name varchar(100), timestamp timestamp)
+            '''.format(
+                table=table
+            )
+            cur.execute(sql)
+
+        url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
+        response = self.client.get(url)
+        expected = {'headers': ['id', 'name', 'timestamp'], 'next': None, 'values': []}
 
         output = b''
         for streaming_output in response.streaming_content:
@@ -108,7 +151,7 @@ class TestAPIDatasetView(TestCase):
 
         url = '/api/v1/dataset/{}/{}?$searchAfter=0'.format(dataset.id, source_table.id)
         response = self.client.get(url)
-        expected = {'headers': ['id', 'name'], 'values': [[1, 'romeo']]}
+        expected = {'headers': ['id', 'name'], 'values': [[1, 'romeo']], 'next': None}
 
         output = b''
         for streaming_output in response.streaming_content:
