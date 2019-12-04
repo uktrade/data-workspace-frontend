@@ -7,7 +7,7 @@ ENV \
 
 RUN \
 	apk add --no-cache \
-		python3=3.6.8-r0 && \
+		python3=3.6.9-r1 && \
 	python3 -m ensurepip && \
 	pip3 install pip==18.01 && \
 	pip3 install \
