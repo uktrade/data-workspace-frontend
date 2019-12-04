@@ -124,8 +124,6 @@ def get_streaming_http_response(request, source_table):
         if queue:
             yield b''.join(queue)
 
-    # https://developers.google.com/apps-script/guides/services/quotas#current_limitations
-    # URL Fetch response size: 50mb, and a bit of a buffer for http headers and $searchAfter
     num_bytes_max = 49990000
     len_chunk_footer = len('\r\n')
     chunk_size = 16384

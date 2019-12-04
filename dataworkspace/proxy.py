@@ -753,8 +753,6 @@ async def async_main():
             if not hawk_auth_required:
                 return await handler(request)
 
-            # Read request content and store it in _read_bytes property to pass data to regarding endpoint after hawk
-            # authentication.
             try:
                 authorization_header = request.headers['Authorization']
             except KeyError:
