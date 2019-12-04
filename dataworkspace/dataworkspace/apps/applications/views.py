@@ -114,6 +114,7 @@ def tools_html_GET(request):
                 if application_template.visible
             ],
             'appstream_url': settings.APPSTREAM_URL,
+            'your_files_enabled': settings.YOUR_FILES_ENABLED,
         },
     )
 
