@@ -66,6 +66,11 @@ class CustomDatasetQueryInline(admin.TabularInline):
     extra = 0
 
 
+def clone_dataset(modeladmin, request, queryset):
+    for dataset in queryset:
+        dataset.clone()
+
+
 @admin.register(DataSet)
 class DataSetAdmin(admin.ModelAdmin):
     form = DataSetForm
@@ -85,6 +90,7 @@ class DataSetAdmin(admin.ModelAdmin):
         SourceViewInline,
         CustomDatasetQueryInline,
     ]
+    actions = [clone_dataset]
     fieldsets = [
         (
             None,
