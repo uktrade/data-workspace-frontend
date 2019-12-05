@@ -8,7 +8,7 @@
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">Home</a>
     &rsaquo; <a href="{% url 'admin:app_list' app_label='datasets' %}">{{ opts.app_config.verbose_name }}</a>
-    &rsaquo; <a href="{% url 'admin:datasets_dataset_change' dataset.id %}">{{ dataset }}</a>
+    &rsaquo; <a href="{{ dataset.get_admin_edit_url }}">{{ dataset }}</a>
     &rsaquo; Upload Source Link
   </div>
 {% endblock breadcrumbs %}
@@ -16,7 +16,7 @@
   <div id="content-main" class="source-link-upload-form">
     <h1>Upload source link</h1>
     <p>
-      Upload a file and add it as a source link to dataset <a href="{% url 'admin:datasets_dataset_change' dataset.id %}">{{ dataset.name }}</a>.
+      Upload a file and add it as a source link to dataset <a href="{{ dataset.get_admin_edit_url }}">{{ dataset.name }}</a>.
     </p>
     <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
@@ -34,7 +34,7 @@
         {% include "admin/includes/fieldset.html" %}
       {% endfor %}
       <div class="submit-row">
-        <a href="{% url 'admin:datasets_dataset_change' dataset.id %}" class="back-link" style="">
+        <a href="{{ dataset.get_admin_edit_url }}" class="back-link" style="">
           Take me back
         </a>
         <input type="submit" value="Upload" class="default" name="_save">

@@ -317,12 +317,8 @@ def clean_identifier(form):
     return cleaned_data[id_field]
 
 
-class DataSetForm(forms.ModelForm):
-    requires_authorization = forms.BooleanField(
-        label='Each user must be individually authorized to access the data',
-        required=False,
-    )
-
+class BaseDatasetForm(forms.ModelForm):
+    type = forms.HiddenInput()
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )
@@ -330,16 +326,32 @@ class DataSetForm(forms.ModelForm):
     class Meta:
         model = DataSet
         fields = '__all__'
+        widgets = {'type': forms.HiddenInput()}
+
+    def __init__(self, *args, **kwargs):
+        kwargs['initial'] = {'type': self.dataset_type}
+        super().__init__(*args, **kwargs)
+
+
+class DataCutDatasetForm(BaseDatasetForm):
+    dataset_type = DataSet.TYPE_DATA_CUT
+    requires_authorization = forms.BooleanField(
+        label='Each user must be individually authorized to access the data',
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         is_instance = 'instance' in kwargs and kwargs['instance']
         self.fields['requires_authorization'].initial = (
             kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
             if is_instance
             else True
         )
+
+
+class MasterDatasetForm(BaseDatasetForm):
+    dataset_type = DataSet.TYPE_MASTER_DATASET
 
 
 class SourceLinkForm(forms.ModelForm):

@@ -2240,7 +2240,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
         )
         link_count = dataset.sourcelink_set.count()
         response = self._authenticated_post(
-            reverse('admin:datasets_dataset_change', args=(dataset.id,)),
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
             {
                 'published': dataset.published,
                 'name': dataset.name,
@@ -2249,6 +2249,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'grouping': dataset.grouping.id,
                 'description': 'test description',
                 'volume': dataset.volume,
+                'type': 2,
                 'sourcelink_set-TOTAL_FORMS': '1',
                 'sourcelink_set-INITIAL_FORMS': '1',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2266,10 +2267,6 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'sourcelink_set-__prefix__-url': '',
                 'sourcelink_set-__prefix__-format': '',
                 'sourcelink_set-__prefix__-frequency': '',
-                'sourcetable_set-TOTAL_FORMS': '0',
-                'sourcetable_set-INITIAL_FORMS': '0',
-                'sourcetable_set-MIN_NUM_FORMS': '0',
-                'sourcetable_set-MAX_NUM_FORMS': '1000',
                 'sourceview_set-TOTAL_FORMS': '0',
                 'sourceview_set-INITIAL_FORMS': '0',
                 'sourceview_set-MIN_NUM_FORMS': '0',
@@ -2281,6 +2278,8 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 '_continue': 'Save and continue editing',
             },
         )
+        with open('/tmp/test.html', 'w') as fh:
+            fh.write(str(response.content).replace('\\n', ''))
         self.assertContains(response, 'was changed successfully')
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
 
@@ -2296,7 +2295,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
             operation_name='head_object',
         )
         response = self._authenticated_post(
-            reverse('admin:datasets_dataset_change', args=(dataset.id,)),
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
             {
                 'published': dataset.published,
                 'name': dataset.name,
@@ -2305,6 +2304,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'grouping': dataset.grouping.id,
                 'description': 'test description',
                 'volume': dataset.volume,
+                'type': 2,
                 'sourcelink_set-TOTAL_FORMS': '1',
                 'sourcelink_set-INITIAL_FORMS': '1',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2322,10 +2322,6 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'sourcelink_set-__prefix__-url': '',
                 'sourcelink_set-__prefix__-format': '',
                 'sourcelink_set-__prefix__-frequency': '',
-                'sourcetable_set-TOTAL_FORMS': '0',
-                'sourcetable_set-INITIAL_FORMS': '0',
-                'sourcetable_set-MIN_NUM_FORMS': '0',
-                'sourcetable_set-MAX_NUM_FORMS': '1000',
                 'sourceview_set-TOTAL_FORMS': '0',
                 'sourceview_set-INITIAL_FORMS': '0',
                 'sourceview_set-MIN_NUM_FORMS': '0',
@@ -2348,7 +2344,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
         )
         link_count = dataset.sourcelink_set.count()
         response = self._authenticated_post(
-            reverse('admin:datasets_dataset_change', args=(dataset.id,)),
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
             {
                 'published': dataset.published,
                 'name': dataset.name,
@@ -2357,6 +2353,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'grouping': dataset.grouping.id,
                 'description': 'test description',
                 'volume': dataset.volume,
+                'type': 2,
                 'sourcelink_set-TOTAL_FORMS': '1',
                 'sourcelink_set-INITIAL_FORMS': '1',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2374,10 +2371,6 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'sourcelink_set-__prefix__-url': '',
                 'sourcelink_set-__prefix__-format': '',
                 'sourcelink_set-__prefix__-frequency': '',
-                'sourcetable_set-TOTAL_FORMS': '0',
-                'sourcetable_set-INITIAL_FORMS': '0',
-                'sourcetable_set-MIN_NUM_FORMS': '0',
-                'sourcetable_set-MAX_NUM_FORMS': '1000',
                 'sourceview_set-TOTAL_FORMS': '0',
                 'sourceview_set-INITIAL_FORMS': '0',
                 'sourceview_set-MIN_NUM_FORMS': '0',
