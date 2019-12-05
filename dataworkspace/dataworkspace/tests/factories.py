@@ -50,6 +50,14 @@ class DataSetFactory(factory.django.DjangoModelFactory):
         model = 'datasets.DataSet'
 
 
+class DataSetUserPermissionFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    dataset = factory.SubFactory(DataSetFactory)
+
+    class Meta:
+        model = 'datasets.DataSetUserPermission'
+
+
 class SourceLinkFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     dataset = factory.SubFactory(DataSetFactory)
