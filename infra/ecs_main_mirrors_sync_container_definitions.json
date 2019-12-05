@@ -45,6 +45,10 @@
     {
         "name": "MIRROR_PYPI",
         "value": "${mirror_pypi}"
+    },
+    {
+        "name": "MIRROR_DEBIAN",
+        "value": "${mirror_debian}"
     }]
   }
 ]
