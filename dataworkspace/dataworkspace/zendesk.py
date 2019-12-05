@@ -1,4 +1,5 @@
 import logging
+import urllib.parse
 
 from django.conf import settings
 
@@ -19,6 +20,9 @@ def build_ticket_description_text(
     dataset_name, dataset_url, contact_email, user, justification_text, goal_text
 ):
     username = get_username(user)
+    people_url = "https://people.trade.gov.uk/search?search_filters[]=people&query={}".format(
+        urllib.parse.quote(username)
+    )
     ticket_description = f"""Access request for
 {dataset_name}
 {dataset_url}
@@ -26,6 +30,7 @@ def build_ticket_description_text(
 Username:   {username}
 Contact:    {contact_email}
 SSO Login:  {user.email}
+People search: {people_url}
 
 
 What will you use this data for?
