@@ -22,10 +22,16 @@ COPY exploretiva /exploretiva
 RUN \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
+		ca-certificates \
 		dirmngr \
 		gnupg2 && \
+	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
+	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
 	until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
+	apt-get clean -y && \
+	apt-get autoremove -y && \
+	apt-get autoclean -y && \
 	rm -rf /tmp/* && \
 	rm -rf /var/lib/apt/lists/* && \
 	apt-get update && \
@@ -38,7 +44,6 @@ RUN \
 		r-cran-curl=3.3+dfsg-1 \
 		r-cran-dbi=1.0.0-2 \
 		r-cran-rpostgresql=0.6-2+dfsg-2 \
-		r-cran-stringr=1.4.0-1 \
 		r-cran-tidyverse=1.2.1-1 \
 		r-cran-xml2=1.2.0-3 \
 		r-cran-httr=1.4.0-3 \
@@ -58,6 +63,8 @@ RUN \
 	apt-get autoclean -y && \
 	rm -rf /tmp/* && \
 	rm -rf /var/lib/apt/lists/* && \
+	# Remove the last line from sources: the CRAN debian repo that has R itself, which we don't mirror
+	sed -i '$d' /etc/apt/sources.list && \
 	echo 'www-port=8888' >> /etc/rstudio/rserver.conf && \
 	echo 'auth-none=1' >> /etc/rstudio/rserver.conf && \
 	echo 'server-daemonize=0' >> /etc/rstudio/rserver.conf && \
@@ -81,7 +88,10 @@ RUN \
 	adduser --disabled-password --gecos '' --ingroup rstudio --uid 4357 rstudio && \
 	mkdir -p /etc/rstudio/connections && \
 	chown rstudio /etc/rstudio/connections && \
-	chown -R rstudio:rstudio /usr/local/lib/R/site-library
+	chown -R rstudio:rstudio /usr/local/lib/R/site-library && \
+	# Avoids errors when installing Java
+	mkdir -p /usr/share/man/man1mkdir -p /usr/share/man/man1 && \
+	echo "rstudio ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get,/usr/bin/R" >> /etc/sudoers
 
 USER rstudio
 

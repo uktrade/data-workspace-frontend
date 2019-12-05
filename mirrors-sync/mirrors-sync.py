@@ -352,6 +352,15 @@ async def async_main(logger):
     if os.environ['MIRROR_PYPI'] == 'True':
         await pypi_mirror(logger, request, s3_context)
 
+    if os.environ['MIRROR_DEBIAN'] == 'True':
+        await debian_mirror(
+            logger,
+            request,
+            s3_context,
+            'https://cloudfront.debian.net/debian/',
+            'debian/',
+        )
+
     await close_pool()
     await asyncio.sleep(0)
 
@@ -830,10 +839,108 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
             raise Exception()
 
 
+async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix):
+    source_base_parsed = urllib.parse.urlparse(source_base_url)
+    source_base_path = source_base_parsed.path
+
+    done = set()
+    queue = asyncio.Queue()
+    await queue.put(source_base_url)
+
+    logger.info('Finding existing files')
+    existing_relative_keys = {
+        key
+        async for key in s3_list_keys_relative_to_prefix(logger, s3_context, s3_prefix)
+    }
+
+    async def crawl(url):
+        relative_key = urllib.parse.urlparse(url).path[len(source_base_path) :]
+
+        if relative_key in existing_relative_keys and (
+            relative_key.endswith('.deb') or relative_key.endswith('.change')
+        ):
+            # The package files have a version in the file name, so never need to be re-uploaded
+            return
+
+        code, headers, body = await request(b'GET', url)
+        if code != b'200':
+            await blackhole(body)
+            raise Exception(f'{code} {url}')
+
+        headers_lower = dict((key.lower(), value) for key, value in headers)
+        content_type = headers_lower.get(b'content-type', None)
+        target_key = s3_prefix + relative_key
+
+        if content_type == b'text/html':
+            data = await buffered(body)
+            soup = BeautifulSoup(data, 'html.parser')
+            links = soup.find_all('a')
+            for link in links:
+                # The web pages contain URL-encoded URLs, but lowhaio expects non-encoded
+                absolute_str = urllib.parse.urljoin(url, link.get('href'))
+                absolute = urllib.parse.urlparse(absolute_str)
+                absolute = absolute._replace(path=urllib.parse.unquote(absolute.path))
+                absolute_str = absolute.geturl()
+                to_do = (
+                    absolute.netloc == source_base_parsed.netloc
+                    and absolute.path[: len(source_base_path)] == source_base_path
+                    and absolute_str not in done
+                )
+                if to_do:
+                    done.add(absolute_str)
+                    await queue.put(absolute_str)
+            return
+
+        if relative_key in existing_relative_keys:
+            await blackhole(body)
+            return
+
+        content_length = headers_lower[b'content-length']
+        headers = ((b'content-length', content_length),)
+        code, _ = await s3_request_full(
+            logger,
+            s3_context,
+            b'PUT',
+            '/' + target_key,
+            (),
+            headers,
+            lambda: body,
+            'UNSIGNED-PAYLOAD',
+        )
+        if code != b'200':
+            raise Exception()
+
+        existing_relative_keys.add(relative_key)
+
+    async def transfer_task():
+        while True:
+            url = await queue.get()
+            try:
+                for _ in range(0, 10):
+                    try:
+                        await crawl(url)
+                    except (HttpConnectionError, HttpDataError):
+                        await asyncio.sleep(10)
+                    else:
+                        break
+            except Exception:
+                logger.exception('Exception crawling %s', url)
+            finally:
+                queue.task_done()
+
+    tasks = [asyncio.ensure_future(transfer_task()) for _ in range(0, 10)]
+    try:
+        await queue.join()
+    finally:
+        for task in tasks:
+            task.cancel()
+        await asyncio.sleep(0)
+
+
 def main():
     loop = asyncio.get_event_loop()
 
-    logger = logging.getLogger()
+    logger = logging.getLogger('app')
     logger.setLevel(logging.INFO)
 
     handler = logging.StreamHandler(sys.stdout)
