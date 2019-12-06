@@ -188,7 +188,7 @@ class DataSet(TimeStampedModel):
         return reverse('admin:datasets_datacutdataset_change', args=(self.id,))
 
 
-class DataSetUserPermission(TimeStampedUserModel):
+class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
@@ -197,10 +197,17 @@ class DataSetUserPermission(TimeStampedUserModel):
         unique_together = ('user', 'dataset')
 
 
+class MasterDatasetManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(type=DataSet.TYPE_MASTER_DATASET)
+
+
 class MasterDataset(DataSet):
     """
     Proxy model to allow to logically separate out "master" and "data cut" datasets in the admin.
     """
+
+    objects = MasterDatasetManager()
 
     class Meta:
         proxy = True
@@ -216,10 +223,17 @@ class MasterDatasetUserPermission(DataSetUserPermission):
         proxy = True
 
 
+class DataCutDatasetManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(type=DataSet.TYPE_DATA_CUT)
+
+
 class DataCutDataset(DataSet):
     """
     Proxy model to allow to logically separate out "master" and "data cut" datasets in the admin.
     """
+
+    objects = DataCutDatasetManager()
 
     class Meta:
         proxy = True

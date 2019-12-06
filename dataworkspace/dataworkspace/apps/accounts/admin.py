@@ -1,15 +1,20 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.forms.widgets import CheckboxSelectMultiple
 from django.utils.encoding import force_text
 
-from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission
+from dataworkspace.apps.datasets.models import (
+    DataSet,
+    DataSetUserPermission,
+    MasterDataset,
+    DataCutDataset,
+)
 from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     ApplicationTemplateUserPermission,
@@ -40,11 +45,15 @@ class AppUserEditForm(forms.ModelForm):
     can_access_appstream = forms.BooleanField(
         label='Can access AppStream', help_text='For SPSS and STATA', required=False
     )
-    authorized_datasets = forms.ModelMultipleChoiceField(
-        label='Authorized datasets',
+    authorized_master_datasets = forms.ModelMultipleChoiceField(
         required=False,
-        widget=CheckboxSelectMultiple,
-        queryset=None,
+        widget=FilteredSelectMultiple('master datasets', False),
+        queryset=MasterDataset.objects.all().order_by('name'),
+    )
+    authorized_data_cut_datasets = forms.ModelMultipleChoiceField(
+        required=False,
+        widget=FilteredSelectMultiple('data cut datasets', False),
+        queryset=DataCutDataset.objects.all().order_by('name'),
     )
     authorized_visualisations = forms.ModelMultipleChoiceField(
         label='Authorized visualisations',
@@ -73,12 +82,12 @@ class AppUserEditForm(forms.ModelForm):
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields['authorized_datasets'].queryset = DataSet.objects.all().order_by(
-            'grouping__name', 'name', 'id'
-        )
-        self.fields['authorized_datasets'].initial = DataSet.objects.filter(
-            datasetuserpermission__user=instance
-        )
+        self.fields[
+            'authorized_master_datasets'
+        ].initial = MasterDataset.objects.filter(datasetuserpermission__user=instance)
+        self.fields[
+            'authorized_data_cut_datasets'
+        ].initial = DataCutDataset.objects.filter(datasetuserpermission__user=instance)
         self.fields[
             'authorized_visualisations'
         ].queryset = ApplicationTemplate.objects.filter(
@@ -166,6 +175,10 @@ class AppUserAdmin(UserAdmin):
                 ]
             },
         ),
+        (
+            'Dataset Access',
+            {'fields': ['authorized_master_datasets', 'authorized_data_cut_datasets']},
+        ),
     ]
     readonly_fields = ['sso_id']
 
@@ -225,18 +238,18 @@ class AppUserAdmin(UserAdmin):
                 obj.user_permissions.remove(access_appstream_permission)
                 log_change('Removed can_access_appstream permission')
 
-        if 'authorized_datasets' in form.cleaned_data:
-            current_datasets = DataSet.objects.filter(datasetuserpermission__user=obj)
-            for dataset in form.cleaned_data['authorized_datasets']:
-                if dataset not in current_datasets.all():
-                    DataSetUserPermission.objects.create(dataset=dataset, user=obj)
-                    log_change('Added dataset {} permission'.format(dataset))
-            for dataset in current_datasets:
-                if dataset not in form.cleaned_data['authorized_datasets']:
-                    DataSetUserPermission.objects.filter(
-                        dataset=dataset, user=obj
-                    ).delete()
-                    log_change('Removed dataset {} permission'.format(dataset))
+        current_datasets = DataSet.objects.filter(datasetuserpermission__user=obj)
+        authorized_datasets = form.cleaned_data['authorized_master_datasets'].union(
+            form.cleaned_data['authorized_data_cut_datasets']
+        )
+        for dataset in authorized_datasets:
+            if dataset not in current_datasets:
+                DataSetUserPermission.objects.create(dataset=dataset, user=obj)
+                log_change('Added dataset {} permission'.format(dataset))
+        for dataset in current_datasets:
+            if dataset not in authorized_datasets:
+                DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
+                log_change('Removed dataset {} permission'.format(dataset))
 
         if 'authorized_visualisations' in form.cleaned_data:
             current_visualisations = ApplicationTemplate.objects.filter(

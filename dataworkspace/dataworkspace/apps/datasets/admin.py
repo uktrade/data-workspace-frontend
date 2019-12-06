@@ -9,7 +9,6 @@ from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import (
     DataGrouping,
-    DataSet,
     SourceLink,
     SourceTable,
     ReferenceDataset,
@@ -98,16 +97,6 @@ class BaseDatasetAdmin(admin.ModelAdmin):
             )
         }
 
-    def has_module_permission(self, request):
-        """
-        Do not show this modeladmin on the admin pages.
-
-        This model needs to be registered for master and data cut permissions
-        autocompletes to work. It's not necessary to have it visible on the site as all
-        admin edits will go through either `MasterDatasetAdmin` or `DataCutDatasetAdmin`
-        """
-        return False
-
 
 @admin.register(MasterDataset)
 class MasterDatasetAdmin(BaseDatasetAdmin):
@@ -138,13 +127,6 @@ class MasterDatasetAdmin(BaseDatasetAdmin):
         ('Permissions', {'fields': ['eligibility_criteria']}),
     ]
 
-    def has_module_permission(self, request):
-        """Ensure model is editable on the admin pages"""
-        return True
-
-    def get_queryset(self, request):
-        return self.model.objects.filter(type=self.model.TYPE_MASTER_DATASET)
-
 
 @admin.register(DataCutDataset)
 class DataCutDatasetAdmin(BaseDatasetAdmin):
@@ -174,13 +156,6 @@ class DataCutDatasetAdmin(BaseDatasetAdmin):
         ),
         ('Permissions', {'fields': ['requires_authorization', 'eligibility_criteria']}),
     ]
-
-    def has_module_permission(self, request):
-        """Ensure model is editable on the admin pages"""
-        return True
-
-    def get_queryset(self, request):
-        return self.model.objects.filter(type=self.model.TYPE_DATA_CUT)
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
