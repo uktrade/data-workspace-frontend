@@ -150,7 +150,10 @@ def application_api_PUT(request, public_host):
             {'message': 'Application template does not exist'}, status=400
         )
 
-    credentials = new_private_database_credentials(request.user)
+    app_type = application_template.application_type
+    credentials = (
+        new_private_database_credentials(request.user) if app_type == 'TOOL' else []
+    )
 
     try:
         memory, cpu = request.GET['__memory_cpu'].split('_')

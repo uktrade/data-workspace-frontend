@@ -348,9 +348,15 @@ def root_view_GET(request):
     }
 
     def link(application_template):
-        public_host = application_template.host_pattern.replace(
-            '<user>', sso_id_hex_short
-        )
+        # Not the most robust method of finding the hostname, but the patterns aren't ever
+        # directly controlled by users.
+        public_host = application_template.host_pattern
+        public_host = public_host.replace('^', '')
+        public_host = public_host.replace('$', '')
+        # Some patterns have "<user>", but some have "(?P<user>.*)"
+        public_host = public_host.replace('(?P<user>.*)', '<user>')
+        public_host = public_host.replace('<user>', sso_id_hex_short)
+
         return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     context = {

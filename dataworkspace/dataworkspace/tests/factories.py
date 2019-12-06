@@ -131,9 +131,13 @@ class EventLogFactory(factory.django.DjangoModelFactory):
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
+    host_exact = ''
     host_pattern = 'testapplication-<user>'
     nice_name = factory.fuzzy.FuzzyText()
+    spawner = 'PROCESS'
     spawner_time = int(datetime.timestamp(datetime.now()))
+    spawner_options = '{}'
+    application_type = 'TOOL'
 
     class Meta:
         model = 'applications.ApplicationTemplate'

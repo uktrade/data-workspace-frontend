@@ -239,6 +239,83 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
     @async_test
+    async def test_visualisation_shows_content_if_authorized(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application_1 = await create_application()
+        self.add_async_cleanup(cleanup_application_1)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(10)
+
+        stdout, stderr, code = await create_visualisation()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't see the visualisation link on the home page
+        async with session.request('GET', 'http://localapps.com:8000/') as response:
+            content = await response.text()
+        self.assertNotIn('Test Visualisation', content)
+
+        # Ensure the user doesn't have access to the application
+        async with session.request(
+            'GET', 'http://testvisualisation.localapps.com:8000/'
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('Forbidden', content)
+        self.assertEqual(response.status, 403)
+
+        stdout, stderr, code = await give_user_visualisation_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET', 'http://testvisualisation.localapps.com:8000/'
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn('Starting Test Visualisation', application_content_1)
+
+        await asyncio.sleep(10)
+
+        sent_headers = {'from-downstream': 'downstream-header-value'}
+        async with session.request(
+            'GET',
+            'http://testvisualisation.localapps.com:8000/http',
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content['method'], 'GET')
+        self.assertEqual(
+            received_content['headers']['from-downstream'], 'downstream-header-value'
+        )
+        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+
+    @async_test
     async def test_application_custom_cpu_memory(self):
         await flush_database()
         await flush_redis()
@@ -1290,6 +1367,40 @@ async def give_user_dataset_perms():
     return stdout, stderr, code
 
 
+async def give_user_visualisation_perms():
+    python_code = textwrap.dedent(
+        """\
+        from django.contrib.auth.models import (
+            User,
+        )
+        from dataworkspace.apps.applications.models import (
+            VisualisationTemplate,
+            ApplicationTemplateUserPermission,
+        )
+        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        visualisationtemplate = VisualisationTemplate.objects.get(
+            name="testvisualisation",
+        )
+        ApplicationTemplateUserPermission.objects.create(
+            application_template=visualisationtemplate,
+            user=user,
+        )
+        """
+    ).encode('ascii')
+
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
 async def make_table_google_data_studio_accessible():
     python_code = textwrap.dedent(
         """\
@@ -1301,6 +1412,37 @@ async def make_table_google_data_studio_accessible():
         )
         dataset.accessible_by_google_data_studio = True
         dataset.save()
+        """
+    ).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def create_visualisation():
+    python_code = textwrap.dedent(
+        """\
+        from dataworkspace.apps.applications.models import (
+            VisualisationTemplate,
+        )
+        template = VisualisationTemplate.objects.create(
+            name="testvisualisation",
+            host_exact="testvisualisation",
+            host_pattern="testvisualisation",
+            nice_name="Test Visualisation",
+            spawner="PROCESS",
+            spawner_options='{"CMD":["python3", "/test/echo_server.py"]}',
+            spawner_time=60,
+            user_access_type="REQUIRES_AUTHORIZATION",
+        )
         """
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(

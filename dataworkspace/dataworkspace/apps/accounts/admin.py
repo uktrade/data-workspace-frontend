@@ -10,7 +10,11 @@ from django.forms.widgets import CheckboxSelectMultiple
 from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import DataSet, DataSetUserPermission
-from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.models import (
+    ApplicationTemplate,
+    ApplicationTemplateUserPermission,
+    ApplicationInstance,
+)
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -42,6 +46,12 @@ class AppUserEditForm(forms.ModelForm):
         widget=CheckboxSelectMultiple,
         queryset=None,
     )
+    authorized_visualisations = forms.ModelMultipleChoiceField(
+        label='Authorized visualisations',
+        required=False,
+        widget=CheckboxSelectMultiple,
+        queryset=None,
+    )
 
     class Meta:
         model = get_user_model()
@@ -68,6 +78,19 @@ class AppUserEditForm(forms.ModelForm):
         )
         self.fields['authorized_datasets'].initial = DataSet.objects.filter(
             datasetuserpermission__user=instance
+        )
+        self.fields[
+            'authorized_visualisations'
+        ].queryset = ApplicationTemplate.objects.filter(
+            application_type='VISUALISATION'
+        ).order_by(
+            'name', 'id'
+        )
+        self.fields[
+            'authorized_visualisations'
+        ].initial = ApplicationTemplate.objects.filter(
+            application_type='VISUALISATION',
+            applicationtemplateuserpermission__user=instance,
         )
 
 
@@ -139,6 +162,7 @@ class AppUserAdmin(UserAdmin):
                     'is_staff',
                     'is_superuser',
                     'authorized_datasets',
+                    'authorized_visualisations',
                 ]
             },
         ),
@@ -213,6 +237,31 @@ class AppUserAdmin(UserAdmin):
                         dataset=dataset, user=obj
                     ).delete()
                     log_change('Removed dataset {} permission'.format(dataset))
+
+        if 'authorized_visualisations' in form.cleaned_data:
+            current_visualisations = ApplicationTemplate.objects.filter(
+                application_type='VISUALISATION',
+                applicationtemplateuserpermission__user=obj,
+            )
+            for application_template in form.cleaned_data['authorized_visualisations']:
+                if application_template not in current_visualisations.all():
+                    ApplicationTemplateUserPermission.objects.create(
+                        application_template=application_template, user=obj
+                    )
+                    log_change(
+                        'Added application {} permission'.format(application_template)
+                    )
+            for application_template in current_visualisations:
+                if (
+                    application_template
+                    not in form.cleaned_data['authorized_visualisations']
+                ):
+                    ApplicationTemplateUserPermission.objects.filter(
+                        application_template=application_template, user=obj
+                    ).delete()
+                    log_change(
+                        'Removed application {} permission'.format(application_template)
+                    )
 
         super().save_model(request, obj, form, change)
 
