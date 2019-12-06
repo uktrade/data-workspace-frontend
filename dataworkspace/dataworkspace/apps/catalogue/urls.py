@@ -7,7 +7,6 @@ from dataworkspace.apps.catalogue.views import (
     datagroup_item_view,
     ReferenceDatasetDetailView,
     ReferenceDatasetDownloadView,
-    SourceTableDownloadView,
     CustomDatasetQueryDownloadView,
     SourceViewDownloadView,
 )
@@ -24,11 +23,6 @@ urlpatterns = [
         '<str:group_slug>/<str:set_slug>/<str:source_link_id>/link/download',
         login_required(SourceLinkDownloadView.as_view()),
         name='dataset_source_link_download',
-    ),
-    path(
-        '<str:group_slug>/<str:set_slug>/<str:source_id>/table/download',
-        login_required(SourceTableDownloadView.as_view()),
-        name='dataset_source_table_download',
     ),
     path(
         '<str:group_slug>/<str:set_slug>/<str:source_id>/view/download',

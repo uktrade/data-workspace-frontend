@@ -248,6 +248,18 @@ class DataCutDatasetUserPermission(DataSetUserPermission):
 
 
 class BaseSource(TimeStampedModel):
+    FREQ_DAILY = 1
+    FREQ_WEEKLY = 2
+    FREQ_MONTHLY = 3
+    FREQ_QUARTERLY = 4
+    FREQ_ANNUALLY = 5
+    _FREQ_CHOICES = (
+        (FREQ_DAILY, 'Daily'),
+        (FREQ_WEEKLY, 'Weekly'),
+        (FREQ_MONTHLY, 'Monthly'),
+        (FREQ_QUARTERLY, 'Quarterly'),
+        (FREQ_ANNUALLY, 'Annually'),
+    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
     name = models.CharField(
@@ -262,6 +274,7 @@ class BaseSource(TimeStampedModel):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public',
     )
+    frequency = models.IntegerField(choices=_FREQ_CHOICES, default=FREQ_DAILY)
 
     class Meta:
         abstract = True
@@ -282,12 +295,6 @@ class SourceTable(BaseSource):
 
     class Meta:
         db_table = 'app_sourcetable'
-
-    def get_absolute_url(self):
-        return reverse(
-            'catalogue:dataset_source_table_download',
-            args=(self.dataset.grouping.slug, self.dataset.slug, self.id),
-        )
 
     def get_google_data_studio_link(self):
         return settings.GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN.replace(

@@ -559,71 +559,6 @@ class TestSourceLinkDownloadView(BaseTestCase):
         )
 
 
-class TestSourceTableDownloadView(BaseTestCase):
-    databases = ['default', 'my_database']
-
-    def test_forbidden_dataset(self):
-        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
-        source_table = factories.SourceTableFactory(dataset=dataset)
-        log_count = EventLog.objects.count()
-        download_count = dataset.number_of_downloads
-        response = self._authenticated_get(source_table.get_absolute_url())
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(EventLog.objects.count(), log_count)
-        self.assertEqual(
-            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
-        )
-
-    def test_missing_table(self):
-        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
-        source_table = factories.SourceTableFactory(
-            dataset=dataset,
-            database=factories.DatabaseFactory(memorable_name='my_database'),
-        )
-        download_count = dataset.number_of_downloads
-        response = self._authenticated_get(source_table.get_absolute_url())
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(
-            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count
-        )
-
-    def test_table_download(self):
-        dsn = database_dsn(settings.DATABASES_DATA['my_database'])
-        with connect(dsn) as conn, conn.cursor() as cursor:
-            cursor.execute(
-                '''
-                CREATE TABLE if not exists download_test (field2 int,field1 varchar(255));
-                TRUNCATE TABLE download_test;
-                INSERT INTO download_test VALUES(1, 'record1');
-                INSERT INTO download_test VALUES(2, 'record2');
-                '''
-            )
-
-        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
-        source_table = factories.SourceTableFactory(
-            dataset=dataset,
-            database=factories.DatabaseFactory(memorable_name='my_database'),
-            schema='public',
-            table='download_test',
-        )
-        log_count = EventLog.objects.count()
-        download_count = dataset.number_of_downloads
-        response = self._authenticated_get(source_table.get_absolute_url())
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            b''.join(response.streaming_content),
-            b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n',
-        )
-        self.assertEqual(EventLog.objects.count(), log_count + 1)
-        self.assertEqual(
-            EventLog.objects.latest().event_type,
-            EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD,
-        )
-        self.assertEqual(
-            DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count + 1
-        )
-
-
 class TestSourceViewDownloadView(BaseTestCase):
     databases = ['default', 'my_database']
 
@@ -758,10 +693,12 @@ class TestCustomQueryDownloadView(BaseTestCase):
 
     def test_forbidden_dataset(self):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
-        source_table = factories.SourceTableFactory(dataset=dataset)
+        query = factories.CustomDatasetQueryFactory(
+            dataset=dataset, database=self.database, query='SELECT * FROM a_table'
+        )
         log_count = EventLog.objects.count()
         download_count = dataset.number_of_downloads
-        response = self._authenticated_get(source_table.get_absolute_url())
+        response = self._authenticated_get(query.get_absolute_url())
         self.assertEqual(response.status_code, 403)
         self.assertEqual(EventLog.objects.count(), log_count)
         self.assertEqual(

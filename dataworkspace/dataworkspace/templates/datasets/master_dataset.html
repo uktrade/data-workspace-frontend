@@ -1,0 +1,148 @@
+{% extends '_base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block page_title %}{{ model.name }} - {{ model.grouping.name }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link"
+           href="{% url 'catalogue:datagroup_item' model.grouping.slug %}">{{ model.grouping.name }}</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        {{ model.name }}
+      </li>
+      {% if perms.datasets_dataset.change %}
+        <li class="govuk-breadcrumbs__list-item">
+          <a href="{{ model.get_admin_edit_url }}" class="govuk-breadcrumbs__link">[Edit]</a>
+        </li>
+      {% endif %}
+    </ol>
+  </div>
+{% endblock %}
+
+{% block inner_content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ model.name }}</h1>
+      <p class="govuk-body">
+        {{ model.description | linebreaksbr }}
+      </p>
+      <h3 class="govuk-heading-l">Contact</h3>
+      {% include 'partials/contact.html' with model=model.enquiries_contact only %}
+    </div>
+  </div>
+
+  <div class="govuk-grid-row" style="overflow-x: auto;">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Details</h2>
+
+      {% if data_links %}
+        {% if not has_access %}
+          <div class="govuk-warning-text">
+            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+            <div class="govuk-warning-text__text">
+              <strong>
+                <span class="govuk-warning-text__assistive">Warning</span>
+                You do not have permission to access this dataset.
+                <br>
+                {% if model.eligibility_criteria %}
+                  <a class="govuk-link--no-visited-state"
+                     href="{% url 'datasets:eligibility_criteria' model.grouping.slug model.slug %}">Request access</a>
+                {% else %}
+                  <a class="govuk-link--no-visited-state"
+                     href="{% url 'datasets:request_access' model.grouping.slug model.slug %}">Request access</a>
+                {% endif %}
+              </strong>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <table class="govuk-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Name</th>
+          <th class="govuk-table__header">Identifier</th>
+          <th class="govuk-table__header">Dataset added</th>
+          <th class="govuk-table__header">Update frequency</th>
+          {% if user.is_superuser and data_links %}
+            <th class="govuk-table__header">Tools*</th>
+          {% endif %}
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for table in data_links %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ table.name }}</td>
+            <td class="govuk-table__cell">{{ table.schema }}.{{ table.table }}</td>
+            <td class="govuk-table__cell">{{ table.created_date| date:"d/m/Y" }}</td>
+            <td class="govuk-table__cell">{{ table.get_frequency_display }}</td>
+            {% if user.is_superuser %}
+              <td class="govuk-table__cell">
+                {% if table.get_google_data_studio_link and table.accessible_by_google_data_studio %}
+                  <a href="{{ table.get_google_data_studio_link }}">Google Data Studio</a>
+                {% endif %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+        {% if not data_links %}
+          <tr class="govuk-table__row">
+            <td colspan="4" class="govuk-table__cell">No data available</td>
+          </tr>
+        {% endif %}
+        </tbody>
+      </table>
+      {% if user.is_superuser and data_links %}
+        <p class="govuk-body">*Only visible to superusers.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Published Date</dt>
+          <dd class="govuk-summary-list__value">{{ model.created_date| date:"d/m/Y" }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Updated Date</dt>
+          <dd class="govuk-summary-list__value">{{ model.modified_date| date:"d/m/Y" }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Part of</dt>
+          <dd class="govuk-summary-list__value">
+            <a class="govuk-link" href="{% url 'catalogue:datagroup_item' model.grouping.slug %}">
+              {{ model.grouping.name }}
+            </a>
+          </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Licence</dt>
+          <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Retention Policy</dt>
+          <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Personal Data</dt>
+          <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Restrictions on usage</dt>
+          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+{% endblock %}

@@ -47,7 +47,7 @@
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
 
             {% if data_links %}
-                {% if not has_download_access %}
+                {% if not has_access %}
                     <div class="govuk-warning-text">
                         <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
                         <div class="govuk-warning-text__text">
@@ -73,9 +73,6 @@
                     <th class="govuk-table__header">Format</th>
                     <th class="govuk-table__header">File added</th>
                     <th class="govuk-table__header">Frequency</th>
-                    {% if user.is_superuser and data_links %}
-                        <th class="govuk-table__header">Tools*</th>
-                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -83,7 +80,7 @@
                 {% for link in data_links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if not has_download_access %}
+                            {% if not has_access %}
                                 {{ link.name }}
                             {% else %}
                                 <a class="govuk-link" href="{{ link.get_absolute_url }}">
@@ -104,14 +101,6 @@
                             {{ link.frequency }}
                           {% endif %}
                         </td>
-
-                        {% if user.is_superuser %}
-                            <td class="govuk-table__cell">
-                                {% if link.get_google_data_studio_link and link.accessible_by_google_data_studio %}
-                                    <a href="{{ link.get_google_data_studio_link }}">Google Data Studio</a>
-                                {% endif %}
-                            </td>
-                        {% endif %}
                     </tr>
                 {% endfor %}
 
