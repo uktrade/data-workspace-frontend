@@ -319,6 +319,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
     def test_create_reference_dataset_valid(self):
+        ref_dataset_slug = 'test-ref-1'
         num_datasets = ReferenceDataset.objects.count()
         group = factories.DataGroupingFactory.create(name='test group')
         response = self._authenticated_post(
@@ -326,11 +327,11 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test_create_ref_dataset_valid',
-                'slug': 'test-ref-1',
+                'slug': ref_dataset_slug,
                 'group': group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
-                'description': '',
+                'description': 'test description',
                 'valid_from': '',
                 'valid_to': '',
                 'enquiries_contact': '',
@@ -356,6 +357,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(response, 'was added successfully')
         self.assertEqual(num_datasets + 1, ReferenceDataset.objects.count())
+        ref_dataset = ReferenceDataset.objects.get(slug=ref_dataset_slug)
+        self.assertEqual(ref_dataset.description, 'test description')
 
     def test_edit_reference_dataset_duplicate_identifier(self):
         reference_dataset = self._create_reference_dataset()

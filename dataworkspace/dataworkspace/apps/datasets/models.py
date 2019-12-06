@@ -6,6 +6,7 @@ from psycopg2 import sql
 
 import boto3
 from botocore.exceptions import ClientError
+from ckeditor.fields import RichTextField
 
 from django import forms
 from django.apps import apps
@@ -342,7 +343,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     )
     slug = models.SlugField()
     short_description = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
+    description = RichTextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )

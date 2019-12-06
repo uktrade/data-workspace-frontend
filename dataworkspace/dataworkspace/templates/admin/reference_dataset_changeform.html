@@ -1,9 +1,5 @@
 {% extends 'admin/change_form.html' %}
 {% load static core_tags %}
-{% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static "admin.css" %}">
-{% endblock extrastyle %}
 {% block after_related_objects %}
   {% with adminform.form.instance as instance %}
     {% if instance.id %}

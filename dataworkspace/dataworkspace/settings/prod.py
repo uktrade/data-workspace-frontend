@@ -26,3 +26,6 @@ STATIC_ROOT = '/home/django/static/'
 # Used when generating URLs for static files, and routed by nginx _before_
 # hitting proxy.py, so must not conflict with an analysis application
 STATIC_URL = '/__django_static/'
+
+
+CKEDITOR_BASEPATH = STATIC_URL + "ckeditor/ckeditor/"
