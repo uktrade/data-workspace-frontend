@@ -110,6 +110,7 @@ async def async_main():
     def is_dataset_requested(request):
         return (
             request.url.path.startswith('/api/v1/dataset/')
+            or request.url.path.startswith('/api/v1/reference-dataset/')
             and request.url.host == root_domain_no_port
         )
 

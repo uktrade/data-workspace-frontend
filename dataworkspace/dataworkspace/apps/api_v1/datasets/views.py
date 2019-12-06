@@ -1,13 +1,24 @@
 import json
+
 import psycopg2
-from django.http import StreamingHttpResponse
 from django.conf import settings
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
+
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.models import SourceTable
+from dataworkspace.apps.datasets.model_utils import (
+    get_linked_field_identifier_name,
+    get_linked_field_display_name,
+)
+from dataworkspace.apps.datasets.models import (
+    SourceTable,
+    ReferenceDataset,
+    DataGrouping,
+    ReferenceDatasetField,
+)
 
 
-def get_columns(connection, source_table):
+def _get_dataset_columns(connection, source_table):
     sql = psycopg2.sql.SQL('SELECT * from {}.{} LIMIT 0').format(
         psycopg2.sql.Identifier(source_table.schema),
         psycopg2.sql.Identifier(source_table.table),
@@ -17,7 +28,7 @@ def get_columns(connection, source_table):
         return [c[0] for c in cursor.description]
 
 
-def get_rows(connection, sql, query_args=None, cursor_itersize=1000):
+def _get_dataset_rows(connection, sql, query_args=None, cursor_itersize=1000):
     query_args = [] if query_args is None else query_args
     with connection.cursor() as cursor:
         cursor.itersize = cursor.itersize
@@ -32,7 +43,7 @@ def get_rows(connection, sql, query_args=None, cursor_itersize=1000):
                 break
 
 
-def get_primary_key(connection, schema, table):
+def _get_dataset_primary_key(connection, schema, table):
     sql = psycopg2.sql.SQL(
         '''
         SELECT
@@ -61,11 +72,11 @@ def get_primary_key(connection, schema, table):
         return [row[0] for row in cursor.fetchall()]
 
 
-def len_chunk_header(num_chunk_bytes):
+def _len_chunk_header(num_chunk_bytes):
     return len('%X\r\n' % num_chunk_bytes)
 
 
-def get_streaming_http_response(request, source_table):
+def _get_streaming_http_response(request, primary_key, columns, rows):
 
     # StreamingHttpResponse translates to HTTP/1.1 chunking performed by gunicorn. However,
     # we don't have any visibility on the actual bytes sent as part of the HTTP body, i.e. each
@@ -91,7 +102,7 @@ def get_streaming_http_response(request, source_table):
             queue = [to_send_bytes] if to_send_bytes else []
             num_bytes_queued = len(to_send_bytes)
             num_bytes_sent += (
-                len(chunk) + len_chunk_header(len(chunk)) + len_chunk_footer
+                len(chunk) + _len_chunk_header(len(chunk)) + len_chunk_footer
             )
             yield chunk
 
@@ -132,61 +143,10 @@ def get_streaming_http_response(request, source_table):
     num_bytes_sent = 0
     num_bytes_sent_and_queued = 0
 
-    search_after = request.GET.getlist('$searchAfter')
-
-    with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
-    ) as connection:
-        primary_key = get_primary_key(
-            connection, source_table.schema, source_table.table
-        )
-
-    if search_after == []:
-        sql = psycopg2.sql.SQL(
-            '''
-                select
-                    *
-
-                from {}.{}
-
-                order by {}
-            '''
-        ).format(
-            psycopg2.sql.Identifier(source_table.schema),
-            psycopg2.sql.Identifier(source_table.table),
-            psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
-        )
-    else:
-        sql = psycopg2.sql.SQL(
-            '''
-                select
-                    *
-
-                from {}.{}
-
-                where ({}) > ({})
-
-                order by {}
-            '''
-        ).format(
-            psycopg2.sql.Identifier(source_table.schema),
-            psycopg2.sql.Identifier(source_table.table),
-            psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
-            psycopg2.sql.SQL(',').join(psycopg2.sql.Placeholder() * len(search_after)),
-            psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
-        )
-
-    with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
-    ) as connection:
-        columns = get_columns(connection, source_table)
-        rows = get_rows(connection, sql, query_args=search_after)
-        base_url = request.build_absolute_uri()
-        return StreamingHttpResponse(
-            yield_data(columns, rows, base_url),
-            content_type='application/json',
-            status=200,
-        )
+    base_url = request.build_absolute_uri()
+    return StreamingHttpResponse(
+        yield_data(columns, rows, base_url), content_type='application/json', status=200
+    )
 
 
 def dataset_api_view_GET(request, dataset_id, source_table_id):
@@ -195,4 +155,93 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
         SourceTable, id=source_table_id, dataset__id=dataset_id
     )
 
-    return get_streaming_http_response(request, source_table)
+    search_after = request.GET.getlist('$searchAfter')
+
+    with psycopg2.connect(
+        database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
+    ) as connection:
+        primary_key = _get_dataset_primary_key(
+            connection, source_table.schema, source_table.table
+        )
+
+        if search_after == []:
+            sql = psycopg2.sql.SQL(
+                '''
+                    select
+                        *
+                    from {}.{}
+                    order by {}
+                '''
+            ).format(
+                psycopg2.sql.Identifier(source_table.schema),
+                psycopg2.sql.Identifier(source_table.table),
+                psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
+            )
+        else:
+            sql = psycopg2.sql.SQL(
+                '''
+                    select
+                        *
+                    from {}.{}
+                    where ({}) > ({})
+                    order by {}
+                '''
+            ).format(
+                psycopg2.sql.Identifier(source_table.schema),
+                psycopg2.sql.Identifier(source_table.table),
+                psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
+                psycopg2.sql.SQL(',').join(
+                    psycopg2.sql.Placeholder() * len(search_after)
+                ),
+                psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
+            )
+
+        columns = _get_dataset_columns(connection, source_table)
+        rows = _get_dataset_rows(connection, sql, query_args=search_after)
+
+    return _get_streaming_http_response(request, primary_key, columns, rows)
+
+
+def reference_dataset_api_view_GET(request, group_slug, reference_slug):
+    group = get_object_or_404(DataGrouping, slug=group_slug)
+    ref_dataset = get_object_or_404(
+        ReferenceDataset,
+        published=True,
+        deleted=False,
+        group=group,
+        slug=reference_slug,
+    )
+    primary_key = ref_dataset._meta.pk
+    search_after = (request.GET.getlist('$searchAfter') or [0])[
+        0
+    ]  # only one primary key is used for reference datasets
+
+    def get_rows(field_names):
+        query_set = (
+            ref_dataset.get_record_model_class()
+            .objects.filter(reference_dataset=ref_dataset)
+            .filter(**{f'{primary_key.name}__gt': search_after})
+            .order_by(primary_key.name)
+        )
+        for record in query_set:
+            values = [None] * len(field_names)
+            for field in ref_dataset.fields.all():
+                value = getattr(record, field.column_name)
+                # If this is a linked field display the display name and id of that linked record
+                if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                    index = field_names.index(get_linked_field_identifier_name(field))
+                    values[index] = (
+                        value.get_identifier() if value is not None else None
+                    )
+                    index = field_names.index(get_linked_field_display_name(field))
+                    values[index] = (
+                        value.get_display_name() if value is not None else None
+                    )
+                else:
+                    values[field_names.index(field.name)] = value
+            yield values
+
+    field_names = ref_dataset.export_field_names
+    field_names.sort()
+    rows = get_rows(field_names)
+    return _get_streaming_http_response(request, primary_key.name, field_names, rows)

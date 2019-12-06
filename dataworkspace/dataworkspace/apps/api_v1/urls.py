@@ -39,4 +39,11 @@ urlpatterns = [
             ('dataworkspace.apps.api_v1.datasets.urls', 'dataset'), namespace='dataset'
         ),
     ),
+    path(
+        'reference-dataset/',
+        include(
+            ('dataworkspace.apps.api_v1.datasets.urls', 'reference-dataset'),
+            namespace='reference-dataset',
+        ),
+    ),
 ]
