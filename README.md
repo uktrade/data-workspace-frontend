@@ -98,6 +98,9 @@ The infrastructure is heavily Docker/Fargate based. Production Docker images are
 - [sentryproxy](https://quay.io/repository/uktrade/data-workspace-sentryproxy)
   Proxies errors to a Sentry instance: only used by JupyterLab.
 
+- File browser:
+  A single-page-application that offers upload and download of files to/from each user's folder in S3. The data is transferred directly between the user's browser and S3.
+
 
 ## Application lifecycle
 
