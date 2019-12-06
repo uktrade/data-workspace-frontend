@@ -1,3 +1,4 @@
+import copy
 import uuid
 
 from typing import Optional, List
@@ -144,6 +145,42 @@ class DataSet(TimeStampedModel):
             self.user_access_type == 'REQUIRES_AUTHENTICATION'
             or self.datasetuserpermission_set.filter(user=user).exists()
         )
+
+    def clone(self):
+        """Create a copy of the dataset and any related objects.
+
+        New dataset is unpublished and has a name prefixed with
+        "Copy of <original dataset name>".
+
+        Related objects (excluding user permissions) are duplicated
+        for the new dataset.
+
+        """
+
+        CLONE_RELATED_FIELDS = [
+            'sourcetable',
+            'sourceview',
+            'sourcelink',
+            'customdatasetquery',
+        ]
+
+        clone = copy.copy(self)
+
+        clone.pk = None
+        clone.name = f'Copy of {self.name}'
+        clone.published = False
+        clone.save()
+
+        for related_field in CLONE_RELATED_FIELDS:
+            related_objects = [
+                copy.copy(obj) for obj in getattr(self, related_field + "_set").all()
+            ]
+            for obj in related_objects:
+                obj.pk = None
+                obj.dataset = clone
+                obj.save()
+
+        return clone
 
 
 class DataSetUserPermission(models.Model):
