@@ -500,10 +500,36 @@ resource "aws_security_group" "cloudwatch" {
   }
 }
 
+resource "aws_security_group" "ecr_dkr" {
+  name        = "${var.prefix}-ecr-dkr"
+  description = "${var.prefix}-ecr-dkr"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "${var.prefix}-ecr-dkr"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_security_group_rule" "cloudwatch_ingress_https_from_all" {
   description = "ingress-https-from-everywhere"
 
   security_group_id = "${aws_security_group.cloudwatch.id}"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "ecr_dkr_ingress_https_from_all" {
+  description = "ingress-https-from-everywhere"
+
+  security_group_id = "${aws_security_group.ecr_dkr.id}"
   cidr_blocks = ["0.0.0.0/0"]
 
   type        = "ingress"
