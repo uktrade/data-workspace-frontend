@@ -7,7 +7,7 @@ flake8-bugbear==19.8.0
 freezegun==0.3.12
 mock==3.0.5
 mohawk==1.1.0
-pytest==5.2.2
+pytest==5.3.1
 pytest-cov==2.8.1
 pytest-mock==1.11.2
 pytest-django==3.6.0
