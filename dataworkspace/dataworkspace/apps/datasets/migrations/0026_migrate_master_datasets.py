@@ -14,7 +14,7 @@ def migrate_data_cut_to_master_dataset(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0027_add_source_frequency')]
+    dependencies = [('datasets', '0025_add_dataset_type_proxy_models')]
 
     operations = [
         migrations.RunPython(
