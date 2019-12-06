@@ -13,5 +13,5 @@ django-redis==4.10.0
 zenpy==2.0.12
 requests==2.21.0
 django-admin-sortable2==0.7.3
-sentry-sdk==0.11.2
+sentry-sdk==0.13.4
 hawk-server-asyncio==0.0.6
