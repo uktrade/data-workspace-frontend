@@ -165,18 +165,9 @@
                         </a>
                     </dd>
                 </div>
-
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Redaction Note</dt>
-                    <dd class="govuk-summary-list__value">{{ model.redactions | linebreaksbr }}</dd>
-                </div>
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Licence</dt>
                     <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Volume</dt>
-                    <dd class="govuk-summary-list__value">{{ model.volume | intcomma }}</dd>
                 </div>
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Retention Policy</dt>

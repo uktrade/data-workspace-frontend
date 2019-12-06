@@ -1306,7 +1306,6 @@ async def create_private_dataset():
             short_description="test_short_desc",
             slug="test_slug_s",
             id="70ce6fdd-1791-4806-bbe0-4cf880a9cc37",
-            volume=1,
             grouping=grouping,
             published=True
         )

@@ -114,9 +114,7 @@ class DataSet(TimeStampedModel):
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
-    redactions = models.TextField(null=True, blank=True)
     licence = models.CharField(null=True, blank=True, max_length=256)
-    volume = models.IntegerField(null=False, blank=False)
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
     restrictions_on_usage = models.TextField(null=True, blank=True)
