@@ -73,7 +73,6 @@ def clone_dataset(modeladmin, request, queryset):
         dataset.clone()
 
 
-@admin.register(DataSet)
 class BaseDatasetAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
