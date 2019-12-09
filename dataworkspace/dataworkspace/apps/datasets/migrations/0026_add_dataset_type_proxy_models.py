@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0024_auto_20191118_1349')]
+    dependencies = [('datasets', '0025_referencedataset_description_rich_text_field')]
 
     operations = [
         migrations.CreateModel(
