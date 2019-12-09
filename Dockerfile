@@ -11,10 +11,10 @@ COPY requirements.txt requirements.txt
 
 RUN \
 	apk add --no-cache --virtual .build-deps \
-		build-base=0.5-r1 \
-		git=2.22.0-r0 \
-		python3-dev=3.7.5-r1 && \
+		git=2.22.0-r0 && \
 	apk add --no-cache \
+		build-base=0.5-r1 \
+		python3-dev=3.7.5-r1 \
 		nginx=1.16.1-r1 \
 		openssl=1.1.1d-r0 \
 		parallel=20190522-r0 \
