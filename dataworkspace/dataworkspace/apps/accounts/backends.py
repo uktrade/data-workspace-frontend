@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 
 logger = logging.getLogger('app')
 
@@ -18,15 +19,26 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
 
         # This allows a user to be created by email address before they
         # have logged in
-        user, _ = get_user_model().objects.get_or_create(email=email)
-
-        if not user.profile:
-            user.save()
 
         changed = False
-        if user.profile.sso_id != user_id:
-            changed = True
+        User = get_user_model()
+
+        try:
+            user = User.objects.get(profile__sso_id=user_id)
+        except User.DoesNotExist:
+            user, _ = User.objects.get_or_create(email=email)
+
+            # Save is required to create a profile object
+            user.save()
+
             user.profile.sso_id = user_id
+            try:
+                user.save()
+            except IntegrityError:
+                # A concurrent request may have overtaken this one and created a user
+                user = User.objects.get(profile__sso_id=user_id)
+
+        changed = False
 
         if user.username != user.email:
             changed = True
