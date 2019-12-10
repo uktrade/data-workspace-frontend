@@ -5,7 +5,7 @@ celery==4.3.0
 celery-redbeat==0.13.0
 gunicorn[gevent]==19.9.0
 psycogreen==1.0.1
-django==2.2.4
+django==2.2.8
 django-better-admin-arrayfield==1.0.4
 django-ckeditor==5.8.0
 django-db-geventpool==3.1.0
