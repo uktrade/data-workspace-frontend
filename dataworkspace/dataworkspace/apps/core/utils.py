@@ -1,3 +1,4 @@
+import codecs
 import datetime
 import hashlib
 import itertools
@@ -347,7 +348,9 @@ def streaming_query_response(user_email, database, query, filename):
             def write(self, value):
                 return value
 
-        csv_writer = csv.writer(PseudoBuffer(), quoting=csv.QUOTE_NONNUMERIC)
+        pseudo_buffer = PseudoBuffer()
+        pseudo_buffer.write(codecs.BOM_UTF8)
+        csv_writer = csv.writer(pseudo_buffer, quoting=csv.QUOTE_NONNUMERIC)
 
         with connect(
             database_dsn(settings.DATABASES_DATA[database])
