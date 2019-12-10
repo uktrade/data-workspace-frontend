@@ -19,9 +19,9 @@ def get_columns(connection, source_table):
 
 def get_rows(connection, sql, query_args=None, cursor_itersize=1000):
     query_args = [] if query_args is None else query_args
-    with connection.cursor() as cursor:
-        cursor.itersize = cursor.itersize
-        cursor.arraysize = cursor.itersize
+    with connection.cursor(name="api_v1.datasets.views.get-rows") as cursor:
+        cursor.itersize = cursor_itersize
+        cursor.arraysize = cursor_itersize
         cursor.execute(sql, query_args)
 
         while True:
