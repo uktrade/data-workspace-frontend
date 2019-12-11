@@ -47,6 +47,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
@@ -254,6 +255,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
@@ -424,6 +426,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
@@ -589,6 +592,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
@@ -638,6 +642,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
@@ -724,6 +729,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
@@ -943,6 +949,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
                 'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',

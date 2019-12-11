@@ -508,6 +508,10 @@ async def async_main():
 
             request['sso_profile_headers'] = (
                 ('sso-profile-email', me_profile['email']),
+                (
+                    'sso-profile-related-emails',
+                    ','.join(me_profile.get('related_emails', [])),
+                ),
                 ('sso-profile-user-id', me_profile['user_id']),
                 ('sso-profile-first-name', me_profile['first_name']),
                 ('sso-profile-last-name', me_profile['last_name']),
@@ -663,6 +667,10 @@ async def async_main():
             async def handler_with_sso_headers():
                 request['sso_profile_headers'] = (
                     ('sso-profile-email', me_profile['email']),
+                    (
+                        'sso-profile-related-emails',
+                        ','.join(me_profile.get('related_emails', [])),
+                    ),
                     ('sso-profile-user-id', me_profile['user_id']),
                     ('sso-profile-first-name', me_profile['first_name']),
                     ('sso-profile-last-name', me_profile['last_name']),
@@ -686,6 +694,7 @@ async def async_main():
 
             me_profile = {
                 'email': me_profile_full['email'],
+                'related_emails': me_profile_full['related_emails'],
                 'user_id': me_profile_full['user_id'],
                 'first_name': me_profile_full['first_name'],
                 'last_name': me_profile_full['last_name'],
