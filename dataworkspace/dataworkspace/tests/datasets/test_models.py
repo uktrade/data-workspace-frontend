@@ -7,6 +7,8 @@ def test_clone_dataset(db):
 
     assert clone.id
     assert clone.id != ds.id
+    assert clone.slug == ''
+    assert clone.number_of_downloads == 0
     assert clone.name == f'Copy of {ds.name}'
     assert not clone.published
 

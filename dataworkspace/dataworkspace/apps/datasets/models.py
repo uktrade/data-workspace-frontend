@@ -169,6 +169,7 @@ class DataSet(TimeStampedModel):
         clone.pk = None
         clone.name = f'Copy of {self.name}'
         clone.slug = ''
+        clone.number_of_downloads = 0
         clone.published = False
         clone.save()
 
