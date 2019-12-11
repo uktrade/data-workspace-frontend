@@ -12,7 +12,7 @@ COPY requirements.txt requirements.txt
 RUN \
 	apk add --no-cache --virtual .build-deps \
 		build-base=0.5-r1 \
-		git=2.22.0-r0 \
+		git=2.22.2-r0 \
 		python3-dev=3.7.5-r1 && \
 	apk add --no-cache \
 		nginx=1.16.1-r1 \
