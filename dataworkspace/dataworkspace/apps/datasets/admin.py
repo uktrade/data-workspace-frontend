@@ -9,21 +9,23 @@ from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import (
     DataGrouping,
-    DataSet,
     SourceLink,
     SourceTable,
     ReferenceDataset,
     ReferenceDatasetField,
     CustomDatasetQuery,
     SourceView,
+    MasterDataset,
+    DataCutDataset,
 )
 from dataworkspace.apps.core.admin import TimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataFieldInlineForm,
     SourceLinkForm,
-    DataSetForm,
+    DataCutDatasetForm,
     ReferenceDataInlineFormset,
     ReferenceDatasetForm,
+    MasterDatasetForm,
 )
 
 logger = logging.getLogger('app')
@@ -71,9 +73,7 @@ def clone_dataset(modeladmin, request, queryset):
         dataset.clone()
 
 
-@admin.register(DataSet)
-class DataSetAdmin(admin.ModelAdmin):
-    form = DataSetForm
+class BaseDatasetAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
         'name',
@@ -84,13 +84,23 @@ class DataSetAdmin(admin.ModelAdmin):
         'number_of_downloads',
     )
     list_filter = ('grouping',)
-    inlines = [
-        SourceLinkInline,
-        SourceTableInline,
-        SourceViewInline,
-        CustomDatasetQueryInline,
-    ]
+    search_fields = ['name']
     actions = [clone_dataset]
+
+    class Media:
+        js = ('js/min/django_better_admin_arrayfield.min.js',)
+        css = {
+            'all': (
+                'css/min/django_better_admin_arrayfield.min.css',
+                'data-workspace-admin.css',
+            )
+        }
+
+
+@admin.register(MasterDataset)
+class MasterDatasetAdmin(BaseDatasetAdmin):
+    form = MasterDatasetForm
+    inlines = [SourceTableInline]
     fieldsets = [
         (
             None,
@@ -103,26 +113,44 @@ class DataSetAdmin(admin.ModelAdmin):
                     'grouping',
                     'description',
                     'enquiries_contact',
-                    'redactions',
                     'licence',
-                    'volume',
                     'retention_policy',
                     'personal_data',
                     'restrictions_on_usage',
+                    'type',
+                ]
+            },
+        ),
+        ('Permissions', {'fields': ['eligibility_criteria']}),
+    ]
+
+
+@admin.register(DataCutDataset)
+class DataCutDatasetAdmin(BaseDatasetAdmin):
+    form = DataCutDatasetForm
+    inlines = [SourceLinkInline, SourceViewInline, CustomDatasetQueryInline]
+    fieldsets = [
+        (
+            None,
+            {
+                'fields': [
+                    'published',
+                    'name',
+                    'slug',
+                    'short_description',
+                    'grouping',
+                    'description',
+                    'enquiries_contact',
+                    'licence',
+                    'retention_policy',
+                    'personal_data',
+                    'restrictions_on_usage',
+                    'type',
                 ]
             },
         ),
         ('Permissions', {'fields': ['requires_authorization', 'eligibility_criteria']}),
     ]
-
-    class Media:
-        js = ('js/min/django_better_admin_arrayfield.min.js',)
-        css = {
-            'all': (
-                'css/min/django_better_admin_arrayfield.min.css',
-                'data-workspace-admin.css',
-            )
-        }
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):

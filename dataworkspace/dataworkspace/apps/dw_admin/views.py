@@ -354,4 +354,4 @@ class SourceLinkUploadView(
 
     def get_success_url(self):
         messages.success(self.request, 'Source link uploaded successfully')
-        return reverse('admin:datasets_dataset_change', args=(self._get_dataset().id,))
+        return self._get_dataset().get_admin_edit_url()

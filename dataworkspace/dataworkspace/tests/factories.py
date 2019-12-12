@@ -40,7 +40,6 @@ class DataGroupingFactory(factory.django.DjangoModelFactory):
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
-    volume = 1
     grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)

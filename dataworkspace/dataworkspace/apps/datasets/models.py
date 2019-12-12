@@ -98,28 +98,25 @@ class DataGrouping(DeletableTimestampedUserModel):
 
 
 class DataSet(TimeStampedModel):
+    TYPE_MASTER_DATASET = 1
+    TYPE_DATA_CUT = 2
+    _DATASET_TYPE_CHOICES = (
+        (TYPE_MASTER_DATASET, 'Master Dataset'),
+        (TYPE_DATA_CUT, 'Data Cut'),
+    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    type = models.IntegerField(choices=_DATASET_TYPE_CHOICES, default=TYPE_DATA_CUT)
     name = models.CharField(blank=False, null=False, max_length=128)
     slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
-
     short_description = models.CharField(blank=False, null=False, max_length=256)
-
     grouping = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
-
     description = models.TextField(null=False, blank=False)
-
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
-
-    redactions = models.TextField(null=True, blank=True)
     licence = models.CharField(null=True, blank=True, max_length=256)
-
-    volume = models.IntegerField(null=False, blank=False)
-
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
-
     restrictions_on_usage = models.TextField(null=True, blank=True)
     user_access_type = models.CharField(
         max_length=64,
@@ -130,7 +127,6 @@ class DataSet(TimeStampedModel):
         default='REQUIRES_AUTHORIZATION',
     )
     published = models.BooleanField(default=False)
-
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
 
@@ -142,9 +138,9 @@ class DataSet(TimeStampedModel):
 
     def user_has_access(self, user):
         return (
-            self.user_access_type == 'REQUIRES_AUTHENTICATION'
-            or self.datasetuserpermission_set.filter(user=user).exists()
-        )
+            self.type == self.TYPE_DATA_CUT
+            and self.user_access_type == 'REQUIRES_AUTHENTICATION'
+        ) or self.datasetuserpermission_set.filter(user=user).exists()
 
     def clone(self):
         """Create a copy of the dataset and any related objects.
@@ -184,6 +180,11 @@ class DataSet(TimeStampedModel):
 
         return clone
 
+    def get_admin_edit_url(self):
+        if self.type == self.TYPE_MASTER_DATASET:
+            return reverse('admin:datasets_masterdataset_change', args=(self.id,))
+        return reverse('admin:datasets_datacutdataset_change', args=(self.id,))
+
 
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -194,7 +195,71 @@ class DataSetUserPermission(models.Model):
         unique_together = ('user', 'dataset')
 
 
+class MasterDatasetManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(type=DataSet.TYPE_MASTER_DATASET)
+
+
+class MasterDataset(DataSet):
+    """
+    Proxy model to allow to logically separate out "master" and "data cut" datasets in the admin.
+    """
+
+    objects = MasterDatasetManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Master Dataset'
+
+
+class MasterDatasetUserPermission(DataSetUserPermission):
+    """
+    Proxy model to allow for separate admin pages for master and data cut datasets
+    """
+
+    class Meta:
+        proxy = True
+
+
+class DataCutDatasetManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(type=DataSet.TYPE_DATA_CUT)
+
+
+class DataCutDataset(DataSet):
+    """
+    Proxy model to allow to logically separate out "master" and "data cut" datasets in the admin.
+    """
+
+    objects = DataCutDatasetManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Data Cut Dataset'
+
+
+class DataCutDatasetUserPermission(DataSetUserPermission):
+    """
+    Proxy model to allow for separate admin pages for master and data cut datasets
+    """
+
+    class Meta:
+        proxy = True
+
+
 class BaseSource(TimeStampedModel):
+    FREQ_DAILY = 1
+    FREQ_WEEKLY = 2
+    FREQ_MONTHLY = 3
+    FREQ_QUARTERLY = 4
+    FREQ_ANNUALLY = 5
+    _FREQ_CHOICES = (
+        (FREQ_DAILY, 'Daily'),
+        (FREQ_WEEKLY, 'Weekly'),
+        (FREQ_MONTHLY, 'Monthly'),
+        (FREQ_QUARTERLY, 'Quarterly'),
+        (FREQ_ANNUALLY, 'Annually'),
+    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
     name = models.CharField(
@@ -209,6 +274,7 @@ class BaseSource(TimeStampedModel):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public',
     )
+    frequency = models.IntegerField(choices=_FREQ_CHOICES, default=FREQ_DAILY)
 
     class Meta:
         abstract = True
@@ -229,12 +295,6 @@ class SourceTable(BaseSource):
 
     class Meta:
         db_table = 'app_sourcetable'
-
-    def get_absolute_url(self):
-        return reverse(
-            'catalogue:dataset_source_table_download',
-            args=(self.dataset.grouping.slug, self.dataset.slug, self.id),
-        )
 
     def get_google_data_studio_link(self):
         return settings.GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN.replace(

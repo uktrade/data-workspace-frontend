@@ -20,8 +20,7 @@
             </li>
             {% if perms.datasets_dataset.change %}
                 <li class="govuk-breadcrumbs__list-item">
-                    <a href="{% url 'admin:datasets_dataset_change' model.id %}"
-                       class="govuk-breadcrumbs__link">[Edit]</a>
+                    <a href="{{ model.get_admin_edit_url }}" class="govuk-breadcrumbs__link">[Edit]</a>
                 </li>
 
             {% endif %}
@@ -48,7 +47,7 @@
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
 
             {% if data_links %}
-                {% if not has_download_access %}
+                {% if not has_access %}
                     <div class="govuk-warning-text">
                         <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
                         <div class="govuk-warning-text__text">
@@ -74,9 +73,6 @@
                     <th class="govuk-table__header">Format</th>
                     <th class="govuk-table__header">File added</th>
                     <th class="govuk-table__header">Frequency</th>
-                    {% if user.is_superuser and data_links %}
-                        <th class="govuk-table__header">Tools*</th>
-                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -84,7 +80,7 @@
                 {% for link in data_links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if not has_download_access %}
+                            {% if not has_access %}
                                 {{ link.name }}
                             {% else %}
                                 <a class="govuk-link" href="{{ link.get_absolute_url }}">
@@ -105,14 +101,6 @@
                             {{ link.frequency }}
                           {% endif %}
                         </td>
-
-                        {% if user.is_superuser %}
-                            <td class="govuk-table__cell">
-                                {% if link.get_google_data_studio_link and link.accessible_by_google_data_studio %}
-                                    <a href="{{ link.get_google_data_studio_link }}">Google Data Studio</a>
-                                {% endif %}
-                            </td>
-                        {% endif %}
                     </tr>
                 {% endfor %}
 
@@ -166,18 +154,9 @@
                         </a>
                     </dd>
                 </div>
-
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Redaction Note</dt>
-                    <dd class="govuk-summary-list__value">{{ model.redactions | linebreaksbr }}</dd>
-                </div>
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Licence</dt>
                     <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Volume</dt>
-                    <dd class="govuk-summary-list__value">{{ model.volume | intcomma }}</dd>
                 </div>
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Retention Policy</dt>

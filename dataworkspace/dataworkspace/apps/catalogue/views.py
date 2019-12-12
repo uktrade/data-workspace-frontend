@@ -35,7 +35,6 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
 )
 from dataworkspace.apps.core.utils import (
-    table_exists,
     table_data,
     view_exists,
     streaming_query_response,
@@ -44,7 +43,6 @@ from dataworkspace.apps.datasets.models import (
     DataGrouping,
     ReferenceDataset,
     SourceLink,
-    SourceTable,
     ReferenceDatasetField,
     CustomDatasetQuery,
     SourceView,
@@ -85,7 +83,7 @@ def dataset_full_path_view(request, group_slug, set_slug):
 
     context = {
         'model': dataset,
-        'has_download_access': dataset.user_has_access(request.user),
+        'has_access': dataset.user_has_access(request.user),
         'data_links': sorted(
             chain(
                 dataset.sourcelink_set.all(),
@@ -96,7 +94,9 @@ def dataset_full_path_view(request, group_slug, set_slug):
             key=lambda x: x.name,
         ),
     }
-    return render(request, 'dataset.html', context)
+    if dataset.type == dataset.TYPE_MASTER_DATASET:
+        return render(request, 'datasets/master_dataset.html', context)
+    return render(request, 'datasets/data_cut_dataset.html', context)
 
 
 class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancestors
@@ -256,25 +256,6 @@ class SourceDownloadMixin:
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])
         return self.get_table_data(db_object)
-
-
-class SourceTableDownloadView(SourceDownloadMixin, DetailView):
-    model = SourceTable
-    event_log_type = EventLog.TYPE_DATASET_SOURCE_TABLE_DOWNLOAD
-
-    @staticmethod
-    def db_object_exists(db_object):
-        return table_exists(
-            db_object.database.memorable_name, db_object.schema, db_object.table
-        )
-
-    def get_table_data(self, db_object):
-        return table_data(
-            self.request.user.email,
-            db_object.database.memorable_name,
-            db_object.schema,
-            db_object.table,
-        )
 
 
 class SourceViewDownloadView(SourceDownloadMixin, DetailView):

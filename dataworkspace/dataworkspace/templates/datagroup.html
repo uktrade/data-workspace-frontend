@@ -40,7 +40,7 @@
                     <a class="govuk-link" href="{% url 'catalogue:dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
                     {% if perms.datasets_dataset_change %}
                         <a class="govuk-link"
-                           href="{% url 'admin:datasets_dataset_change' set.id %}">[Edit]</a>
+                           href="{{ set.get_admin_edit_url }}">[Edit]</a>
                     {% endif %}
                 </h2>
                 <p class="govuk-body">{{ set.short_description }}</p>
@@ -53,8 +53,9 @@
             {% endfor %}
             {% if datasets and perms.datasets_dataset_add %}
                 <p>
-                    <a class="govuk-link"
-                       href="{% url 'admin:datasets_dataset_add' %}">[New]</a>
+                  <a class="govuk-link"href="{% url 'admin:datasets_masterdataset_add' %}">[New Master Dataset]</a>
+                  &nbsp;
+                  <a class="govuk-link"href="{% url 'admin:datasets_datacutdataset_add' %}">[New Data Cut Dataset]</a>
                 </p>
             {% endif %}
 

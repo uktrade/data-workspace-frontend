@@ -14,7 +14,7 @@
     {% for conflict in conflicts %}
       <tr>
         <td>
-          <a href="{% url 'admin:datasets_dataset_change' conflict.reference_dataset.id %}">
+          <a href="{% url 'admin:datasets_referencedataset_change' conflict.reference_dataset.id %}">
             {{ conflict.reference_dataset.name }}
           </a>
         </td>

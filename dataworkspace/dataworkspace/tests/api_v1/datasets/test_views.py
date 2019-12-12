@@ -51,7 +51,7 @@ class TestAPIDatasetView(TestCase):
         table = self.table
         database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
         data_grouping = DataGrouping.objects.get_or_create()[0]
-        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping)[0]
         source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
         )[0]
@@ -97,7 +97,7 @@ class TestAPIDatasetView(TestCase):
         table = self.table
         database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
         data_grouping = DataGrouping.objects.get_or_create()[0]
-        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping)[0]
         source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
         )[0]
@@ -130,7 +130,7 @@ class TestAPIDatasetView(TestCase):
         table = self.table
         database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
         data_grouping = DataGrouping.objects.get_or_create()[0]
-        dataset = DataSet.objects.get_or_create(grouping=data_grouping, volume=0)[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping)[0]
         source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=table
         )[0]
