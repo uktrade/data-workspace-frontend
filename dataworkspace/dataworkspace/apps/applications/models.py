@@ -18,7 +18,17 @@ class ApplicationTemplate(TimeStampedModel):
         unique=True,
     )
     visible = models.BooleanField(default=True, null=False)
-    host_pattern = models.CharField(max_length=128, blank=False, unique=True)
+
+    # We expect lots of visualisations with fixed hosts, so we use a undex to ensure
+    # that lookups from hostname to application templates are fast...
+    host_exact = models.CharField(max_length=128, blank=True, null=False)
+
+    # ... for these, and for tools, we then want to extract information from the hostname,
+    # for example the user-id, and use regex to extract this based on the pattern. We
+    # could use some of Postgres's regex capability, but suspect it's easier for us to
+    # understand and maintain if we just use Python's.
+    host_pattern = models.CharField(max_length=128, blank=False)
+
     nice_name = models.CharField(
         verbose_name='application',
         validators=[RegexValidator(regex=r'^[a-zA-Z0-9\- ]+$')],
@@ -27,20 +37,62 @@ class ApplicationTemplate(TimeStampedModel):
         unique=True,
     )
     spawner = models.CharField(
-        max_length=10, choices=(('PROCESS', 'Process'),), default='PROCESS'
+        max_length=10,
+        choices=(('PROCESS', 'Process'), ('FARGATE', 'Fargate')),
+        default='FARGATE',
     )
     spawner_time = models.IntegerField(null=False)
     spawner_options = models.CharField(
         max_length=10240,
         help_text='Options that the spawner understands to start the application',
     )
+    application_type = models.CharField(
+        max_length=64,
+        choices=(
+            (
+                'VISUALISATION',
+                'Visualisation: One instance launched and accessed by all authorized users',
+            ),
+            ('TOOL', 'Tool: A separate instance launched for each user'),
+        ),
+        default='TOOL',
+    )
+    user_access_type = models.CharField(
+        max_length=64,
+        choices=(
+            ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
+            ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
+        ),
+        default='REQUIRES_AUTHENTICATION',
+    )
 
     class Meta:
         db_table = 'app_applicationtemplate'
-        indexes = [models.Index(fields=['name'])]
+        indexes = [
+            models.Index(fields=['application_type']),
+            models.Index(fields=['name']),
+            models.Index(fields=['host_exact']),
+        ]
+        unique_together = ('host_exact', 'host_pattern')
 
     def __str__(self):
-        return f'{self.name}'
+        return self.nice_name
+
+
+class VisualisationTemplate(ApplicationTemplate):
+    class Meta:
+        proxy = True
+        verbose_name = 'Visualisation'
+
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        self.visible = False
+        self.application_type = 'VISUALISATION'
+
+        super(VisualisationTemplate, self).save(
+            force_insert, force_update, using, update_fields
+        )
 
 
 class ApplicationInstance(TimeStampedModel):
@@ -123,6 +175,17 @@ class ApplicationInstance(TimeStampedModel):
 
     def __str__(self):
         return f'{self.owner} / {self.public_host} / {self.state}'
+
+
+class ApplicationTemplateUserPermission(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    application_template = models.ForeignKey(
+        ApplicationTemplate, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        db_table = 'app_applicationtemplateuserpermission'
+        unique_together = ('user', 'application_template')
 
 
 class ApplicationInstanceReport(ApplicationInstance):

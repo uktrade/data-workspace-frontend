@@ -26,23 +26,41 @@ logger = logging.getLogger('app')
 
 
 def application_template_and_data_from_host(public_host):
-    # Not efficient, but we don't expect many templates. At the time of writing,
-    # no more than 4 are planned
+    # Visualisations are matched by host_exact, and tools by host_pattern. Potentially down
+    # the road the matching may need to be general, but the current use case requires a
+    # single URL per visualisation, but a group of URLs for a tool (i.e. to extract the owner ID),
+    # and this way uses database index(es) over the expected longer list of visualisations
+
+    # To utilise a database index if we end up with a lot of visualisations
+    matching_visualisation = list(
+        ApplicationTemplate.objects.filter(
+            application_type='VISUALISATION', host_exact=public_host
+        )
+    )
+    matching_templates = matching_visualisation or ApplicationTemplate.objects.filter(
+        application_type='TOOL'
+    )
+
+    def public_host_pattern(application_template):
+        # Historically didn't support standard named regex but used our own
+        # format, e.g. '<customfield>-<user>'. Once all usage of this format
+        # is removed from production, this function can be removed and just
+        # use application_template.host_pattern
+        if '?P<' in application_template.host_pattern:
+            return application_template.host_pattern
+
+        return (
+            '^'
+            + re.sub('<(.+?)>', '(?P<\\1>.*?)', application_template.host_pattern)
+            + '$'
+        )
+
+    # ... and then match on pattern/extract data
     matching = [
         (application_template, host_data.groupdict())
-        for application_template in ApplicationTemplate.objects.all()
+        for application_template in matching_templates
         for host_data in [
-            # Extract the data from public_host using application_template.host_pattern.
-            # For example, if
-            #   application_template.host_pattern = '<customfield>-<user>'
-            #   public_host = 'myapp-12345acd'
-            # then host_data will be {'customfield': 'myapp', 'user': '12345acd'}
-            re.match(
-                '^'
-                + re.sub('<(.+?)>', '(?P<\\1>.*?)', application_template.host_pattern)
-                + '$',
-                public_host,
-            )
+            re.match(public_host_pattern(application_template), public_host)
         ]
         if host_data
     ]
@@ -96,15 +114,40 @@ def get_api_visible_application_instance_by_public_host(public_host):
 
 
 def application_api_is_allowed(request, public_host):
-    _, host_data = application_template_and_data_from_host(public_host)
-    owner_sso_id_hex = host_data['user']
+    application_template, host_data = application_template_and_data_from_host(
+        public_host
+    )
 
     request_sso_id_hex = hashlib.sha256(
         str(request.user.profile.sso_id).encode('utf-8')
     ).hexdigest()
 
-    return owner_sso_id_hex == request_sso_id_hex[:8] and request.user.has_perm(
-        'applications.start_all_applications'
+    def is_tool_and_correct_user_and_allowed_to_start():
+        return (
+            application_template.application_type == 'TOOL'
+            and host_data['user'] == request_sso_id_hex[:8]
+            and request.user.has_perm('applications.start_all_applications')
+        )
+
+    def is_visualisation_and_requires_authentication():
+        return (
+            application_template.application_type == 'VISUALISATION'
+            and application_template.user_access_type == 'REQUIRES_AUTHENTICATION'
+        )
+
+    def is_visualisation_and_requires_authorisation_and_has_authorisation():
+        return (
+            application_template.application_type == 'VISUALISATION'
+            and application_template.user_access_type == 'REQUIRES_AUTHORIZATION'
+            and request.user.applicationtemplateuserpermission_set.filter(
+                application_template=application_template
+            ).exists()
+        )
+
+    return (
+        is_tool_and_correct_user_and_allowed_to_start()
+        or is_visualisation_and_requires_authentication()
+        or is_visualisation_and_requires_authorisation_and_has_authorisation()
     )
 
 

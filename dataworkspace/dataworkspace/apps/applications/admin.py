@@ -11,6 +11,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceReport,
     ApplicationTemplate,
+    VisualisationTemplate,
 )
 from dataworkspace.apps.applications.utils import application_instance_max_cpu
 
@@ -342,3 +343,11 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         response.context_data['summary_total'] = dict(qs.aggregate(**metrics))
 
         return response
+
+
+@admin.register(VisualisationTemplate)
+class VisualisationTemplateAdmin(admin.ModelAdmin):
+    exclude = ('visible', 'application_type')
+
+    def get_queryset(self, request):
+        return self.model.objects.filter(application_type='VISUALISATION')
