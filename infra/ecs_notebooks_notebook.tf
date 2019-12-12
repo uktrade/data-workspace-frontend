@@ -109,6 +109,19 @@ data "aws_iam_policy_document" "notebook_task_execution" {
       "${aws_cloudwatch_log_group.notebook.arn}",
     ]
   }
+
+  statement {
+    actions = [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "notebook_s3_access_ecs_tasks_assume_role" {
@@ -212,6 +225,21 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_s3_notebooks" {
 
     resources = [
       "arn:aws:s3:::${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}/*",
+    ]
+  }
+
+  statement {
+    principals {
+      type = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+        "s3:GetObject",
+    ]
+
+    resources = [
+      "arn:aws:s3:::prod-${data.aws_region.aws_region.name}-starport-layer-bucket/*",
     ]
   }
 }

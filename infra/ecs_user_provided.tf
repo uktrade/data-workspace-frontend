@@ -31,7 +31,7 @@ data "template_file" "user_provided_container_definitions" {
     container_name   = "${local.user_provided_container_name}"
     container_cpu    = "${local.user_provided_container_cpu}"
     container_memory = "${local.user_provided_container_memory}"
-    container_image  = "${var.user_provided_container_image}"
+    container_image  = "${aws_ecr_repository.user_provided.repository_url}"
 
     log_group  = "${aws_cloudwatch_log_group.notebook.name}"
     log_region = "${data.aws_region.aws_region.name}"
