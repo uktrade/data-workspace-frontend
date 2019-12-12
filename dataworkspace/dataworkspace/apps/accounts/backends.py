@@ -11,6 +11,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
             email = request.META['HTTP_SSO_PROFILE_EMAIL']
+            related_emails = request.META['HTTP_SSO_PROFILE_RELATED_EMAILS'].split(',')
             user_id = request.META['HTTP_SSO_PROFILE_USER_ID']
             last_name = request.META['HTTP_SSO_PROFILE_LAST_NAME']
             first_name = request.META['HTTP_SSO_PROFILE_FIRST_NAME']
@@ -26,7 +27,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
         try:
             user = User.objects.get(profile__sso_id=user_id)
         except User.DoesNotExist:
-            user, _ = User.objects.get_or_create(email=email)
+            user, _ = User.objects.get_or_create(email__in=[email] + related_emails)
 
             # Save is required to create a profile object
             user.save()

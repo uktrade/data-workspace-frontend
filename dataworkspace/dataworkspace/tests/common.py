@@ -25,6 +25,7 @@ class BaseTestCaseMixin:
 
         self.user_data = {
             'HTTP_SSO_PROFILE_EMAIL': self.user.email,
+            'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
             'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
             'HTTP_SSO_PROFILE_LAST_NAME': 'Bob',
             'HTTP_SSO_PROFILE_FIRST_NAME': 'Testerson',
