@@ -2277,8 +2277,6 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 '_continue': 'Save and continue editing',
             },
         )
-        with open('/tmp/test.html', 'w') as fh:
-            fh.write(str(response.content).replace('\\n', ''))
         self.assertContains(response, 'was changed successfully')
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
 
