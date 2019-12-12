@@ -7,6 +7,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.forms import CheckboxSelectMultiple
 from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import (
