@@ -7,7 +7,6 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.forms import CheckboxSelectMultiple
 from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import (
@@ -59,7 +58,7 @@ class AppUserEditForm(forms.ModelForm):
     authorized_visualisations = forms.ModelMultipleChoiceField(
         label='Authorized visualisations',
         required=False,
-        widget=CheckboxSelectMultiple,
+        widget=FilteredSelectMultiple('visualisations', False),
         queryset=None,
     )
 
@@ -171,14 +170,18 @@ class AppUserAdmin(UserAdmin):
                     'can_access_appstream',
                     'is_staff',
                     'is_superuser',
-                    'authorized_datasets',
-                    'authorized_visualisations',
                 ]
             },
         ),
         (
-            'Dataset Access',
-            {'fields': ['authorized_master_datasets', 'authorized_data_cut_datasets']},
+            'Data Access',
+            {
+                'fields': [
+                    'authorized_master_datasets',
+                    'authorized_data_cut_datasets',
+                    'authorized_visualisations',
+                ]
+            },
         ),
     ]
     readonly_fields = ['sso_id']
