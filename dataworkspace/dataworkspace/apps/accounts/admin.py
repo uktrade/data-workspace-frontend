@@ -238,18 +238,19 @@ class AppUserAdmin(UserAdmin):
                 obj.user_permissions.remove(access_appstream_permission)
                 log_change('Removed can_access_appstream permission')
 
-        current_datasets = DataSet.objects.filter(datasetuserpermission__user=obj)
-        authorized_datasets = form.cleaned_data['authorized_master_datasets'].union(
-            form.cleaned_data['authorized_data_cut_datasets']
+        current_datasets = set(DataSet.objects.filter(datasetuserpermission__user=obj))
+        authorized_datasets = set(
+            form.cleaned_data['authorized_master_datasets'].union(
+                form.cleaned_data['authorized_data_cut_datasets']
+            )
         )
-        for dataset in authorized_datasets:
-            if dataset not in current_datasets:
-                DataSetUserPermission.objects.create(dataset=dataset, user=obj)
-                log_change('Added dataset {} permission'.format(dataset))
-        for dataset in current_datasets:
-            if dataset not in authorized_datasets:
-                DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
-                log_change('Removed dataset {} permission'.format(dataset))
+
+        for dataset in authorized_datasets - current_datasets:
+            DataSetUserPermission.objects.create(dataset=dataset, user=obj)
+            log_change('Added dataset {} permission'.format(dataset))
+        for dataset in current_datasets - authorized_datasets:
+            DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
+            log_change('Removed dataset {} permission'.format(dataset))
 
         if 'authorized_visualisations' in form.cleaned_data:
             current_visualisations = ApplicationTemplate.objects.filter(
