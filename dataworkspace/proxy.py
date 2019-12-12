@@ -5,8 +5,10 @@ import ipaddress
 import json
 import logging
 import os
+import random
 import secrets
 import sys
+import string
 import urllib
 
 import aiohttp
@@ -25,14 +27,20 @@ class UserException(Exception):
     pass
 
 
+class ContextAdapter(logging.LoggerAdapter):
+    def process(self, msg, kwargs):
+        return f'[{self.extra["context"]}] {msg}', kwargs
+
+
 PROFILE_CACHE_PREFIX = 'data_workspace_profile'
+CONTEXT_ALPHABET = string.ascii_letters + string.digits
 
 
 async def async_main():
     stdout_handler = logging.StreamHandler(sys.stdout)
-    for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access']:
+    for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access', 'proxy']:
         logger = logging.getLogger(logger_name)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         logger.addHandler(stdout_handler)
 
     env = normalise_environment(os.environ)
@@ -62,6 +70,11 @@ async def async_main():
     # When spawning and tring to detect if the app is running,
     # we fail quickly and often so a connection check is quick
     spawning_http_timeout = aiohttp.ClientTimeout(sock_read=5, sock_connect=2)
+
+    def get_random_context_logger():
+        return ContextAdapter(
+            logger, {'context': ''.join(random.choices(CONTEXT_ALPHABET, k=8))}
+        )
 
     def without_transfer_encoding(request_or_response):
         return CIMultiDict(
@@ -309,7 +322,7 @@ async def async_main():
         downstream_request, method, upstream_url, query, host_html_path, host_api_url
     ):
         try:
-            logger.debug('Spawning: Attempting to connect to %s', upstream_url)
+            logger.info('Spawning: Attempting to connect to %s', upstream_url)
             response = await handle_http(
                 downstream_request,
                 method,
@@ -320,7 +333,7 @@ async def async_main():
             )
 
         except Exception:
-            logger.debug('Spawning: Failed to connect to %s', upstream_url)
+            logger.info('Spawning: Failed to connect to %s', upstream_url)
             return await handle_http(
                 downstream_request,
                 'GET',
@@ -480,6 +493,35 @@ async def async_main():
 
         return downstream_response
 
+    def server_logger():
+        @web.middleware
+        async def _server_logger(request, handler):
+
+            request_logger = get_random_context_logger()
+            request['logger'] = request_logger
+
+            request_logger.info(
+                'Receiving (%s) (%s %s HTTP/%s.%s) (%s) (%s)',
+                *(
+                    (request.remote, request.method, request.path_qs)
+                    + request.version
+                    + (
+                        request.headers.get('User-Agent', '-'),
+                        request.headers.get('X-Forwarded-For', '-'),
+                    )
+                ),
+            )
+
+            response = await handler(request)
+
+            request_logger.info(
+                'Responding (%s) (%s)', response.status, response.content_length
+            )
+
+            return response
+
+        return _server_logger
+
     def authenticate_by_staff_sso_token():
 
         me_path = 'api/v1/user/me/'
@@ -493,6 +535,9 @@ async def async_main():
                 return await handler(request)
 
             if 'Authorization' not in request.headers:
+                request['logger'].info(
+                    'SSO-token unathenticated: missing authorization header'
+                )
                 return await handle_admin(request, 'GET', '/error_403', {})
 
             async with client_session.get(
@@ -504,6 +549,9 @@ async def async_main():
                 )
 
             if not me_profile:
+                request['logger'].info(
+                    'SSO-token unathenticated: bad authorization header'
+                )
                 return await handle_admin(request, 'GET', '/error_403', {})
 
             request['sso_profile_headers'] = (
@@ -515,6 +563,12 @@ async def async_main():
                 ('sso-profile-user-id', me_profile['user_id']),
                 ('sso-profile-first-name', me_profile['first_name']),
                 ('sso-profile-last-name', me_profile['last_name']),
+            )
+
+            request['logger'].info(
+                'SSO-token authenticated: %s %s',
+                me_profile['email'],
+                me_profile['user_id'],
             )
 
             return await handler(request)
@@ -675,6 +729,13 @@ async def async_main():
                     ('sso-profile-first-name', me_profile['first_name']),
                     ('sso-profile-last-name', me_profile['last_name']),
                 )
+
+                request['logger'].info(
+                    'SSO-authenticated: %s %s',
+                    me_profile['email'],
+                    me_profile['user_id'],
+                )
+
                 return await handler(request)
 
             if me_profile:
@@ -738,6 +799,8 @@ async def async_main():
             ):
                 return web.Response(status=401)
 
+            request['logger'].info('Basic-authenticated: %s', basic_auth_user)
+
             return await handler(request)
 
         return _authenticate_by_basic_auth
@@ -765,11 +828,12 @@ async def async_main():
             try:
                 authorization_header = request.headers['Authorization']
             except KeyError:
+                request['logger'].info('Hawk missing header')
                 return web.Response(status=401)
 
             content = await request.read()
 
-            is_authenticated, error_message, _ = await authenticate_hawk_header(
+            is_authenticated, error_message, creds = await authenticate_hawk_header(
                 lookup_credentials,
                 seen_nonce,
                 15,
@@ -782,7 +846,10 @@ async def async_main():
                 content,
             )
             if not is_authenticated:
+                request['logger'].info('Hawk unauthenticated: %s', error_message)
                 return web.Response(status=401)
+
+            request['logger'].info('Hawk authenticated: %s', creds['id'])
 
             return await handler(request)
 
@@ -808,8 +875,10 @@ async def async_main():
             )
 
             if not peer_ip_in_whitelist:
+                request['logger'].info('IP-whitelist unauthenticated: %s', peer_ip)
                 return await handle_admin(request, 'GET', '/error_403', {})
 
+            request['logger'].info('IP-whitelist authenticated: %s', peer_ip)
             return await handler(request)
 
         return _authenticate_by_ip_whitelist
@@ -819,6 +888,7 @@ async def async_main():
     ) as client_session:
         app = web.Application(
             middlewares=[
+                server_logger(),
                 redis_session_middleware(redis_pool, root_domain_no_port),
                 authenticate_by_staff_sso_token(),
                 authenticate_by_staff_sso(),
