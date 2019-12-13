@@ -11,6 +11,7 @@ from psycopg2 import connect, sql
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
+    ApplicationInstanceDbUsers,
     ApplicationTemplate,
 )
 from dataworkspace.apps.applications.spawner import spawn
@@ -173,6 +174,15 @@ def application_api_PUT(request, public_host):
         cpu=cpu,
         memory=memory,
     )
+
+    # The database users are stored so when the database users are cleaned up,
+    # we know _not_ to delete any users used by running or spawning apps
+    for creds in credentials:
+        ApplicationInstanceDbUsers.objects.create(
+            application_instance=application_instance,
+            db_id=creds['db_id'],
+            db_username=creds['db_user'],
+        )
 
     spawn.delay(
         application_template.spawner,
