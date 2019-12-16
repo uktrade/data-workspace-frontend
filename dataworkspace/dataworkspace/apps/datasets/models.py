@@ -97,6 +97,14 @@ class DataGrouping(DeletableTimestampedUserModel):
         return f'{self.name}'
 
 
+class SourceTag(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class DataSet(TimeStampedModel):
     TYPE_MASTER_DATASET = 1
     TYPE_DATA_CUT = 2
@@ -129,6 +137,7 @@ class DataSet(TimeStampedModel):
     published = models.BooleanField(default=False)
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
+    source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
 
     class Meta:
         db_table = 'app_dataset'
