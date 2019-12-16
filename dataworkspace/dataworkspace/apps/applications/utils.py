@@ -7,6 +7,7 @@ import re
 
 import gevent
 import requests
+from psycopg2 import connect, sql
 
 from django.conf import settings
 from django.db.models import Q
@@ -18,8 +19,11 @@ from dataworkspace.apps.applications.spawner import (
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
+    ApplicationInstanceDbUsers,
     ApplicationTemplate,
 )
+from dataworkspace.apps.core.models import Database
+from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
@@ -332,3 +336,122 @@ def populate_created_stopped_fargate():
                 instance.save(update_fields=update_fields)
 
     logger.info('populate_created_stopped_fargate: End')
+
+
+@celery_app.task()
+def delete_unused_datasets_users():
+    logger.info('delete_unused_datasets_users: Start')
+
+    for memorable_name, database_data in settings.DATABASES_DATA.items():
+        database_obj = Database.objects.get(memorable_name=memorable_name)
+        database_name = database_data['NAME']
+
+        with connect(database_dsn(database_data)) as conn, conn.cursor() as cur:
+            logger.info('delete_unused_datasets_users: finding database users')
+            cur.execute(
+                """
+                SELECT usename FROM pg_catalog.pg_user
+                WHERE valuntil != 'infinity' AND usename LIKE 'user_%'
+                ORDER BY usename;
+            """
+            )
+            usenames = [result[0] for result in cur.fetchall()]
+
+            logger.info('delete_unused_datasets_users: finding schemas')
+            cur.execute(
+                """
+                SELECT DISTINCT schemaname FROM pg_tables
+                WHERE schemaname != 'pg_catalog' and schemaname != 'information_schema'
+                ORDER BY schemaname;
+            """
+            )
+            schemas = [result[0] for result in cur.fetchall()]
+
+        logger.info(
+            'delete_unused_datasets_users: waiting in case they were just created'
+        )
+        gevent.sleep(15)
+
+        # We want to be able to delete db users created, but then _not_ associated with an
+        # running application, such as those from a STOPPED application, but also from those
+        # that were created but then the server went down before the application was created.
+        in_use_usenames = set(
+            ApplicationInstanceDbUsers.objects.filter(
+                db=database_obj,
+                db_username__in=usenames,
+                application_instance__state__in=['RUNNING', 'SPAWNING'],
+            ).values_list('db_username', flat=True)
+        )
+        not_in_use_usernames = [
+            usename for usename in usenames if usename not in in_use_usenames
+        ]
+
+        schema_revokes = [
+            'REVOKE USAGE ON SCHEMA {} FROM {};',
+            'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {} FROM {};',
+            'REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {} FROM {};',
+            'REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA {} FROM {};',
+            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON TABLES FROM {}',
+            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON SEQUENCES FROM {}',
+            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON FUNCTIONS FROM {}',
+        ]
+
+        with connect(database_dsn(database_data)) as conn:
+            conn.autocommit = True
+            with conn.cursor() as cur:
+                for usename in not_in_use_usernames:
+                    try:
+                        logger.info(
+                            'delete_unused_datasets_users: revoking credentials for %s',
+                            usename,
+                        )
+                        cur.execute(
+                            sql.SQL('REVOKE CONNECT ON DATABASE {} FROM {};').format(
+                                sql.Identifier(database_name), sql.Identifier(usename)
+                            )
+                        )
+                        cur.execute(
+                            sql.SQL(
+                                'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'
+                            ).format(
+                                sql.Identifier(database_name), sql.Identifier(usename)
+                            )
+                        )
+
+                        for schema in schemas:
+                            for schema_revoke in schema_revokes:
+                                try:
+                                    cur.execute(
+                                        sql.SQL(schema_revoke).format(
+                                            sql.Identifier(schema),
+                                            sql.Identifier(usename),
+                                        )
+                                    )
+                                except Exception:
+                                    # This is likely to happen for private schemas where the current user
+                                    # does not have revoke privileges. We carry on in a best effort
+                                    # to remove the user
+                                    logger.info(
+                                        'delete_unused_datasets_users: Unable to %s %s %s',
+                                        schema_revoke,
+                                        schema,
+                                        usename,
+                                    )
+
+                        logger.info(
+                            'delete_unused_datasets_users: dropping user %s', usename
+                        )
+                        cur.execute(
+                            sql.SQL('DROP USER {};').format(sql.Identifier(usename))
+                        )
+                    except Exception:
+                        logger.exception(
+                            'delete_unused_datasets_users: Failed deleting %s', usename
+                        )
+                    else:
+                        logger.info(
+                            'delete_unused_datasets_users: revoked credentials for and dropped %s',
+                            usename,
+                        )
+
+    logger.info('delete_unused_datasets_users: End')

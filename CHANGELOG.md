@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2019-12-17
+
+### Added
+
+- Cronjob to delete unused datasets database users to work around a de facto maximum number of users in a Postgres database.
+
+
 ## 2019-12-16
 
 ### Changed

@@ -177,6 +177,11 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': 60 * 10,
         'args': (),
     },
+    'delete-unused-datasets-users': {
+        'task': 'dataworkspace.apps.applications.utils.delete_unused_datasets_users',
+        'schedule': 60 * 10,
+        'args': (),
+    },
 }
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
 

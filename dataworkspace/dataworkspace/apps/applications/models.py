@@ -185,6 +185,9 @@ class ApplicationInstanceDbUsers(TimeStampedModel):
         ApplicationInstance, on_delete=models.CASCADE
     )
 
+    class Meta:
+        indexes = [models.Index(fields=['db_username'])]
+
 
 class ApplicationTemplateUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
