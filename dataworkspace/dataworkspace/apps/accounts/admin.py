@@ -186,6 +186,9 @@ class AppUserAdmin(UserAdmin):
     ]
     readonly_fields = ['sso_id']
 
+    class Media:
+        css = {'all': ('data-workspace-admin.css',)}
+
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         content_type = ContentType.objects.get_for_model(obj).pk
