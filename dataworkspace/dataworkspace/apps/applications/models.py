@@ -4,7 +4,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 
-from dataworkspace.apps.core.models import TimeStampedModel
+from dataworkspace.apps.core.models import Database, TimeStampedModel
 
 
 class ApplicationTemplate(TimeStampedModel):
@@ -175,6 +175,15 @@ class ApplicationInstance(TimeStampedModel):
 
     def __str__(self):
         return f'{self.owner} / {self.public_host} / {self.state}'
+
+
+class ApplicationInstanceDbUsers(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    db = models.ForeignKey(Database, on_delete=models.CASCADE)
+    db_username = models.CharField(max_length=256)
+    application_instance = models.ForeignKey(
+        ApplicationInstance, on_delete=models.CASCADE
+    )
 
 
 class ApplicationTemplateUserPermission(models.Model):

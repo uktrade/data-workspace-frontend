@@ -61,7 +61,9 @@ def new_private_database_credentials(user):
         db_schema = f'{stem}{short_sso_id}'
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
-        valid_until = (datetime.date.today() + datetime.timedelta(days=31)).isoformat()
+        valid_until = (
+            datetime.datetime.now() + datetime.timedelta(days=31)
+        ).isoformat()
         with connections[database_obj.memorable_name].cursor() as cur:
             # Create a user...
             cur.execute(
@@ -193,6 +195,7 @@ def new_private_database_credentials(user):
 
         return {
             'memorable_name': database_obj.memorable_name,
+            'db_id': database_obj.id,
             'db_name': database_data['NAME'],
             'db_host': database_data['HOST'],
             'db_port': database_data['PORT'],
