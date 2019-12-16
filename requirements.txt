@@ -10,7 +10,7 @@ django-better-admin-arrayfield==1.0.4
 django-ckeditor==5.8.0
 django-db-geventpool==3.1.0
 django-redis==4.10.0
-zenpy==2.0.15
+zenpy==2.0.16
 requests==2.22.0
 django-admin-sortable2==0.7.5
 sentry-sdk==0.13.5
