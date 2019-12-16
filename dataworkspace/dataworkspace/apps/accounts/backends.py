@@ -27,7 +27,10 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
         try:
             user = User.objects.get(profile__sso_id=user_id)
         except User.DoesNotExist:
-            user, _ = User.objects.get_or_create(email__in=[email] + related_emails)
+            user, _ = User.objects.get_or_create(
+                email__in=[email] + related_emails,
+                defaults={'email': email, 'username': email},
+            )
 
             # Save is required to create a profile object
             user.save()
