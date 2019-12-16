@@ -17,6 +17,7 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
     MasterDataset,
     DataCutDataset,
+    SourceTag,
 )
 from dataworkspace.apps.core.admin import TimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (
@@ -86,6 +87,7 @@ class BaseDatasetAdmin(admin.ModelAdmin):
     list_filter = ('grouping',)
     search_fields = ['name']
     actions = [clone_dataset]
+    autocomplete_fields = ['source_tags']
 
     class Media:
         js = ('js/min/django_better_admin_arrayfield.min.js',)
@@ -109,6 +111,7 @@ class MasterDatasetAdmin(BaseDatasetAdmin):
                     'published',
                     'name',
                     'slug',
+                    'source_tags',
                     'short_description',
                     'grouping',
                     'description',
@@ -137,6 +140,7 @@ class DataCutDatasetAdmin(BaseDatasetAdmin):
                     'published',
                     'name',
                     'slug',
+                    'source_tags',
                     'short_description',
                     'grouping',
                     'description',
@@ -173,6 +177,12 @@ class DataCutDatasetAdmin(BaseDatasetAdmin):
                     obj.user_access_type
                 ),
             )
+
+
+@admin.register(SourceTag)
+class SourceTagAdmin(admin.ModelAdmin):
+    fields = ['name']
+    search_fields = ['name']
 
 
 class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):

@@ -9,6 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- New model `SourceTag`
+- New `source_tag` field added to `MasterDataset` and `DataCutDataset` pointing to `SourceTag`
+
+
+## 2019-12-12
+
+### Added
+
 - New changelog `CHANGELOG.md`.
 - New frequency field on `SourceTable` and `SourceView` models.
 
@@ -18,4 +26,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New filterable dataset user permission selector on the user admin page.
 - Split `dataset.html` out into `data_cut_dataset.html` and `master_dataset.html`.
 - Removes unused dataset fields `redactions` and `volume`.
-
