@@ -52,3 +52,6 @@ table.full-width {
 .float-right {
    float: right;
 }
+.app-auth.model-user.change-form .selector-available select {
+  overflow-x: auto;
+}
