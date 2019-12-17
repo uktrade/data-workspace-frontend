@@ -48,12 +48,16 @@ class AppUserEditForm(forms.ModelForm):
     authorized_master_datasets = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('master datasets', False),
-        queryset=MasterDataset.objects.all().order_by('name'),
+        queryset=MasterDataset.objects.filter(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        ).order_by('name'),
     )
     authorized_data_cut_datasets = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('data cut datasets', False),
-        queryset=DataCutDataset.objects.all().order_by('name'),
+        queryset=DataCutDataset.objects.filter(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        ).order_by('name'),
     )
     authorized_visualisations = forms.ModelMultipleChoiceField(
         label='Authorized visualisations',

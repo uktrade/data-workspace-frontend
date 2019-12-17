@@ -88,50 +88,6 @@ class BaseDatasetAdmin(admin.ModelAdmin):
     search_fields = ['name']
     actions = [clone_dataset]
     autocomplete_fields = ['source_tags']
-
-    class Media:
-        js = ('js/min/django_better_admin_arrayfield.min.js',)
-        css = {
-            'all': (
-                'css/min/django_better_admin_arrayfield.min.css',
-                'data-workspace-admin.css',
-            )
-        }
-
-
-@admin.register(MasterDataset)
-class MasterDatasetAdmin(BaseDatasetAdmin):
-    form = MasterDatasetForm
-    inlines = [SourceTableInline]
-    fieldsets = [
-        (
-            None,
-            {
-                'fields': [
-                    'published',
-                    'name',
-                    'slug',
-                    'source_tags',
-                    'short_description',
-                    'grouping',
-                    'description',
-                    'enquiries_contact',
-                    'licence',
-                    'retention_policy',
-                    'personal_data',
-                    'restrictions_on_usage',
-                    'type',
-                ]
-            },
-        ),
-        ('Permissions', {'fields': ['eligibility_criteria']}),
-    ]
-
-
-@admin.register(DataCutDataset)
-class DataCutDatasetAdmin(BaseDatasetAdmin):
-    form = DataCutDatasetForm
-    inlines = [SourceLinkInline, SourceViewInline, CustomDatasetQueryInline]
     fieldsets = [
         (
             None,
@@ -156,6 +112,15 @@ class DataCutDatasetAdmin(BaseDatasetAdmin):
         ('Permissions', {'fields': ['requires_authorization', 'eligibility_criteria']}),
     ]
 
+    class Media:
+        js = ('js/min/django_better_admin_arrayfield.min.js',)
+        css = {
+            'all': (
+                'css/min/django_better_admin_arrayfield.min.css',
+                'data-workspace-admin.css',
+            )
+        }
+
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         original_user_access_type = obj.user_access_type
@@ -177,6 +142,18 @@ class DataCutDatasetAdmin(BaseDatasetAdmin):
                     obj.user_access_type
                 ),
             )
+
+
+@admin.register(MasterDataset)
+class MasterDatasetAdmin(BaseDatasetAdmin):
+    form = MasterDatasetForm
+    inlines = [SourceTableInline]
+
+
+@admin.register(DataCutDataset)
+class DataCutDatasetAdmin(BaseDatasetAdmin):
+    form = DataCutDatasetForm
+    inlines = [SourceLinkInline, SourceViewInline, CustomDatasetQueryInline]
 
 
 @admin.register(SourceTag)

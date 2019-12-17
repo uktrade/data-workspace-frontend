@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Fix bug where admins were unable to create master datasets with "authentication only" permissions
+
+
+## 2019-12-16
+
+### Changed
+
 - Fix bug on user admin form where long dataset names were not visible
 - Fix bug with new users seeing an error on loading any page: relating to SSO integration
 
