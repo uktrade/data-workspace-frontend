@@ -51,14 +51,6 @@
                     </h2>
                   {% endif %}
             {% endfor %}
-            {% if datasets and perms.datasets_dataset_add %}
-                <p>
-                  <a class="govuk-link"href="{% url 'admin:datasets_masterdataset_add' %}">[New Master Dataset]</a>
-                  &nbsp;
-                  <a class="govuk-link"href="{% url 'admin:datasets_datacutdataset_add' %}">[New Data Cut Dataset]</a>
-                </p>
-            {% endif %}
-
             {% for set in reference_datasets %}
                 <h2 class="govuk-heading-m">
                     <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
@@ -76,11 +68,17 @@
                     </h2>
                 {% endif %}
         {% endfor %}
+        {% if datasets and perms.datasets_dataset_add %}
+            <p>
+              <a class="govuk-link"href="{% url 'admin:datasets_masterdataset_add' %}">[New Master Dataset]</a>
+              &nbsp;
+              <a class="govuk-link"href="{% url 'admin:datasets_datacutdataset_add' %}">[New Data Cut Dataset]</a>
+            </p>
+        {% endif %}
         {% if reference_datasets and perms.datasets_referencedataset_add %}
-                <p>
-                    <a class="govuk-link"
-                       href="{% url 'admin:datasets_referencedataset_add' %}">[New]</a>
-                </p>
+          <p>
+              <a class="govuk-link" href="{% url 'admin:datasets_referencedataset_add' %}">[New Reference Dataset]</a>
+          </p>
         {% endif %}
 
         {% if joint_datasets or not datasets %}
