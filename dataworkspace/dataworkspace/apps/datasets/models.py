@@ -147,9 +147,9 @@ class DataSet(TimeStampedModel):
 
     def user_has_access(self, user):
         return (
-            self.type == self.TYPE_DATA_CUT
-            and self.user_access_type == 'REQUIRES_AUTHENTICATION'
-        ) or self.datasetuserpermission_set.filter(user=user).exists()
+            self.user_access_type == 'REQUIRES_AUTHENTICATION'
+            or self.datasetuserpermission_set.filter(user=user).exists()
+        )
 
     def clone(self):
         """Create a copy of the dataset and any related objects.
