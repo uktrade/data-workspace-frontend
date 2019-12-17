@@ -106,6 +106,22 @@
       {% endif %}
     </div>
   </div>
+
+  {% if user.is_superuser and fields %}
+  <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+          <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Fields</h2>
+          <p class="govuk-body">*Only visible to superusers.</p>
+          <ul class="govuk-list govuk-list--bullet">
+            {% for field in fields %}
+            <li>{{ field  }}</li>
+            {% endfor %}
+          </ul>
+
+      </div>
+  </div>
+  {% endif %}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
