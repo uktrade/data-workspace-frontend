@@ -305,6 +305,9 @@ class SourceTable(BaseSource):
     class Meta:
         db_table = 'app_sourcetable'
 
+    def __str__(self):
+        return f'{self.name} ({self.id})'
+
     def get_google_data_studio_link(self):
         return settings.GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN.replace(
             '<table-id>', str(self.id)
