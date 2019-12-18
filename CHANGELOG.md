@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2019-12-18
+
+### Added
+
+- Display a list of data fields on the dataset page
+
 
 ## 2019-12-17
 
