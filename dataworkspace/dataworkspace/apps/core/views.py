@@ -64,11 +64,6 @@ class SupportView(FormView):
             self.request.user,
             cleaned['email'],
             cleaned['message'],
-            attachments=[
-                cleaned[x]
-                for x in ['attachment1', 'attachment2', 'attachment3']
-                if cleaned[x] is not None
-            ],
         )
         return HttpResponseRedirect(
             reverse('support-success', kwargs={'ticket_id': ticket_id})
