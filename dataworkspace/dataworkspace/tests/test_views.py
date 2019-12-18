@@ -2,7 +2,6 @@ import io
 
 from botocore.response import StreamingBody
 from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from psycopg2 import connect
 

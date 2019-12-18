@@ -61,9 +61,7 @@ class SupportView(FormView):
     def form_valid(self, form):
         cleaned = form.cleaned_data
         ticket_id = create_support_request(
-            self.request.user,
-            cleaned['email'],
-            cleaned['message'],
+            self.request.user, cleaned['email'], cleaned['message']
         )
         return HttpResponseRedirect(
             reverse('support-success', kwargs={'ticket_id': ticket_id})
