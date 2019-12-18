@@ -121,21 +121,22 @@
         </div>
     </div>
 
-    {% if user.is_superuser and fields %}
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Fields</h2>
-            <p class="govuk-body">*Only visible to superusers.</p>
-            <ul class="govuk-list govuk-list--bullet">
-              {% for field in fields %}
-              <li>{{ field  }}</li>
-              {% endfor %}
-            </ul>
-
-        </div>
-    </div>
+    {% if fields %}
+    <details class="govuk-details" data-module="govuk-details">
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">
+          Data fields
+        </span>
+      </summary>
+      <div class="govuk-details__text">
+        <ul class="govuk-list govuk-list--bullet">
+          {% for field in fields %}
+          <li>{{ field  }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </details>
     {% endif %}
-
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
