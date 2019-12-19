@@ -119,7 +119,7 @@ def create_zendesk_ticket(
     return ticket_audit.ticket.id
 
 
-def create_support_request(user, email, message, attachments=()):
+def create_support_request(user, email, message):
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,
         email=settings.ZENDESK_EMAIL,
@@ -137,10 +137,4 @@ def create_support_request(user, email, message, attachments=()):
             ],
         )
     )
-    if attachments:
-        uploads = [client.attachments.upload(x) for x in attachments]
-        ticket_audit.ticket.comment = Comment(
-            body='Additional attachments', uploads=[x.token for x in uploads]
-        )
-        client.tickets.update(ticket_audit.ticket)
     return ticket_audit.ticket.id

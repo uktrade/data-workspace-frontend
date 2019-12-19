@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Display a list of data fields on the dataset page
 
+### Changed
+
+- Remove ability to upload files as part of a support request.
+
 
 ## 2019-12-17
 
