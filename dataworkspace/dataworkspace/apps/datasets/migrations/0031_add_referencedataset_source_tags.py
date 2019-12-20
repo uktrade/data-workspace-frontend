@@ -11,6 +11,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='referencedataset',
             name='source_tags',
-            field=models.ManyToManyField(blank=True, related_name='_referencedataset_source_tags_+', to='datasets.SourceTag'),
-        ),
+            field=models.ManyToManyField(
+                blank=True,
+                related_name='_referencedataset_source_tags_+',
+                to='datasets.SourceTag',
+            ),
+        )
     ]
