@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig',
     'adminsortable2',
     'ckeditor',
+    'waffle',
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
     'dataworkspace.apps.catalogue',
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'waffle.middleware.WaffleMiddleware',
     'dataworkspace.middleware.disable_client_side_caching',
 ]
 

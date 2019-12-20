@@ -37,7 +37,7 @@
             {% endif %}
             {% for set in datasets %}
                 <h2 class="govuk-heading-m">
-                    <a class="govuk-link" href="{% url 'catalogue:dataset_fullpath' model.slug set.slug %}">{{ set.name }}</a>
+                    <a class="govuk-link" href="{{ set.get_absolute_url }}">{{ set.name }}</a>
                     {% if perms.datasets_dataset_change %}
                         <a class="govuk-link"
                            href="{{ set.get_admin_edit_url }}">[Edit]</a>
@@ -53,7 +53,7 @@
             {% endfor %}
             {% for set in reference_datasets %}
                 <h2 class="govuk-heading-m">
-                    <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
+                    <a class="govuk-link" href="{{ set.get_absolute_url }}">
                         {{ set.name }}
                     </a>
                     {% if perms.datasets_referencedataset_change %}
@@ -89,7 +89,7 @@
         {% endif %}
         {% for set in joint_datasets %}
                 <h2 class="govuk-heading-m">
-                    <a class="govuk-link" href="{% url 'catalogue:reference_dataset' model.slug set.slug %}">
+                    <a class="govuk-link" href="{{ set.get_absolute_url }}">
                         {{ set.name }}
                     </a>
                     {% if perms.datasets_referencedataset_change %}

@@ -24,4 +24,9 @@ urlpatterns = [
         login_required(views.request_access_success_view),
         name='request_access_success',
     ),
+    path(
+        '<str:dataset_uuid>',
+        login_required(views.DatasetDetailView.as_view()),
+        name='dataset_detail',
+    ),
 ]

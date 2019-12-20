@@ -13,8 +13,7 @@
                    href="{% url 'catalogue:datagroup_item' dataset.grouping.slug %}">{{ dataset.grouping.name }}</a>
             </li>
             <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link"
-                   href="{% url 'catalogue:dataset_fullpath' dataset.grouping.slug dataset.slug %}">{{ dataset.name }}</a>
+                <a class="govuk-breadcrumbs__link" href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>
             </li>
             <li class="govuk-breadcrumbs__list-item">Eligibility criteria
             </li>

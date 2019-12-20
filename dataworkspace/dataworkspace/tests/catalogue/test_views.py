@@ -1,7 +1,6 @@
 import pytest
 import psycopg2
 from django.conf import settings
-from django.urls import reverse
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.tests import factories
@@ -48,12 +47,7 @@ def test_master_dataset_fields(client, dataset_db):
         table='dataset_test2',
     )
 
-    response = client.get(
-        reverse(
-            'catalogue:dataset_fullpath',
-            kwargs={'group_slug': ds.grouping.slug, 'set_slug': ds.slug},
-        )
-    )
+    response = client.get(ds.get_absolute_url())
 
     assert response.status_code == 200
     assert response.context["fields"] == [
@@ -71,12 +65,7 @@ def test_view_data_cut_fields(client, dataset_db):
         dataset=ds, database=dataset_db, schema='public', view='dataset_view'
     )
 
-    response = client.get(
-        reverse(
-            'catalogue:dataset_fullpath',
-            kwargs={'group_slug': ds.grouping.slug, 'set_slug': ds.slug},
-        )
-    )
+    response = client.get(ds.get_absolute_url())
 
     assert response.status_code == 200
     assert response.context["fields"] == ['id', 'name', 'date']
@@ -90,12 +79,7 @@ def test_query_data_cut_fields(client, dataset_db):
         query="SELECT id customid, name customname FROM dataset_test",
     )
 
-    response = client.get(
-        reverse(
-            'catalogue:dataset_fullpath',
-            kwargs={'group_slug': ds.grouping.slug, 'set_slug': ds.slug},
-        )
-    )
+    response = client.get(ds.get_absolute_url())
 
     assert response.status_code == 200
     assert response.context["fields"] == ['customid', 'customname']
@@ -105,12 +89,7 @@ def test_link_data_cut_doesnt_have_fields(client):
     ds = factories.DataSetFactory.create(published=True)
     factories.SourceLinkFactory(dataset=ds)
 
-    response = client.get(
-        reverse(
-            'catalogue:dataset_fullpath',
-            kwargs={'group_slug': ds.grouping.slug, 'set_slug': ds.slug},
-        )
-    )
+    response = client.get(ds.get_absolute_url())
 
     assert response.status_code == 200
     assert response.context["fields"] is None

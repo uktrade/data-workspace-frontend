@@ -194,6 +194,11 @@ class DataSet(TimeStampedModel):
             return reverse('admin:datasets_masterdataset_change', args=(self.id,))
         return reverse('admin:datasets_datacutdataset_change', args=(self.id,))
 
+    def get_absolute_url(self):
+        return '{}#{}'.format(
+            reverse('datasets:dataset_detail', args=(self.id,)), self.slug
+        )
+
 
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -435,6 +440,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     SORT_DIR_ASC = 1
     SORT_DIR_DESC = 2
     _SORT_DIR_CHOICES = ((SORT_DIR_ASC, 'Ascending'), (SORT_DIR_DESC, 'Descending'))
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     is_joint_dataset = models.BooleanField(default=False)
     group = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -495,6 +501,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES
     )
     number_of_downloads = models.PositiveIntegerField(default=0)
+    source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
 
     class Meta:
         db_table = 'app_referencedataset'
@@ -883,6 +890,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         if self.external_database is not None:
             return ['default', self.external_database.memorable_name]
         return ['default']
+
+    def get_absolute_url(self):
+        return '{}#{}'.format(
+            reverse('datasets:dataset_detail', args=(self.uuid,)), self.slug
+        )
 
 
 class ReferenceDatasetRecordBase(models.Model):

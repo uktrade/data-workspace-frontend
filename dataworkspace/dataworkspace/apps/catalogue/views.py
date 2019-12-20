@@ -6,7 +6,6 @@ import logging
 import os
 
 from contextlib import closing
-from itertools import chain
 
 import boto3
 from botocore.exceptions import ClientError
@@ -30,7 +29,6 @@ from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 from psycopg2 import sql
 
-from dataworkspace import datasets_db
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
@@ -81,52 +79,7 @@ def datagroup_item_view(request, slug):
 @require_GET
 def dataset_full_path_view(request, group_slug, set_slug):
     dataset = find_dataset(group_slug, set_slug)
-
-    source_tables = sorted(dataset.sourcetable_set.all(), key=lambda x: x.name)
-    source_views = dataset.sourceview_set.all()
-    custom_queries = dataset.customdatasetquery_set.all()
-
-    if source_tables:
-        columns = []
-        for table in source_tables:
-            columns += [
-                "{}.{}".format(table.table, column)
-                for column in datasets_db.get_columns(
-                    table.database.memorable_name,
-                    schema=table.schema,
-                    table=table.table,
-                )
-            ]
-    elif source_views:
-        columns = datasets_db.get_columns(
-            source_views[0].database.memorable_name,
-            schema=source_views[0].schema,
-            table=source_views[0].view,
-        )
-    elif custom_queries:
-        columns = datasets_db.get_columns(
-            custom_queries[0].database.memorable_name, query=custom_queries[0].query
-        )
-    else:
-        columns = None
-
-    context = {
-        'model': dataset,
-        'has_access': dataset.user_has_access(request.user),
-        'data_links': sorted(
-            chain(
-                dataset.sourcelink_set.all(),
-                source_tables,
-                source_views,
-                custom_queries,
-            ),
-            key=lambda x: x.name,
-        ),
-        'fields': columns,
-    }
-    if dataset.type == dataset.TYPE_MASTER_DATASET:
-        return render(request, 'datasets/master_dataset.html', context)
-    return render(request, 'datasets/data_cut_dataset.html', context)
+    return HttpResponseRedirect(dataset.get_absolute_url())
 
 
 class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancestors
@@ -141,6 +94,9 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
             group=group,
             slug=self.kwargs.get('reference_slug'),
         )
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponseRedirect(self.get_object().get_absolute_url())
 
 
 class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):

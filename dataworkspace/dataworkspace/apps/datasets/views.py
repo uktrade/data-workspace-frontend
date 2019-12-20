@@ -1,9 +1,14 @@
+from itertools import chain
+
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
+from django.views.generic import DetailView
 
+from dataworkspace import datasets_db
 from dataworkspace.apps.datasets.forms import RequestAccessForm, EligibilityCriteriaForm
+from dataworkspace.apps.datasets.models import ReferenceDataset, DataSet
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.zendesk import create_zendesk_ticket
 
@@ -55,9 +60,7 @@ def request_access_view(request, group_slug, set_slug):
 
             dataset_name = f'{dataset.grouping.name} > {dataset.name}'
 
-            dataset_url = request.build_absolute_uri(
-                reverse('catalogue:dataset_fullpath', args=[group_slug, set_slug])
-            )
+            dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
 
             ticket_reference = create_zendesk_ticket(
                 contact_email,
@@ -95,3 +98,79 @@ def request_access_success_view(request):
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
     )
+
+
+class DatasetDetailView(DetailView):
+    def _is_reference_dataset(self):
+        return isinstance(self.object, ReferenceDataset)
+
+    def get_object(self, queryset=None):
+        try:
+            return ReferenceDataset.objects.live().get(
+                uuid=self.kwargs['dataset_uuid'], published=True
+            )
+        except ReferenceDataset.DoesNotExist:
+            pass
+
+        return get_object_or_404(
+            DataSet, published=True, id=self.kwargs['dataset_uuid']
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data()
+        if self._is_reference_dataset():
+            return ctx
+
+        source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
+        source_views = self.object.sourceview_set.all()
+        custom_queries = self.object.customdatasetquery_set.all()
+
+        if source_tables:
+            columns = []
+            for table in source_tables:
+                columns += [
+                    "{}.{}".format(table.table, column)
+                    for column in datasets_db.get_columns(
+                        table.database.memorable_name,
+                        schema=table.schema,
+                        table=table.table,
+                    )
+                ]
+        elif source_views:
+            columns = datasets_db.get_columns(
+                source_views[0].database.memorable_name,
+                schema=source_views[0].schema,
+                table=source_views[0].view,
+            )
+        elif custom_queries:
+            columns = datasets_db.get_columns(
+                custom_queries[0].database.memorable_name, query=custom_queries[0].query
+            )
+        else:
+            columns = None
+
+        ctx.update(
+            {
+                'model': self.object,
+                'has_access': self.object.user_has_access(self.request.user),
+                'data_links': sorted(
+                    chain(
+                        self.object.sourcelink_set.all(),
+                        source_tables,
+                        source_views,
+                        custom_queries,
+                    ),
+                    key=lambda x: x.name,
+                ),
+                'fields': columns,
+            }
+        )
+        return ctx
+
+    def get_template_names(self):
+        if self._is_reference_dataset():
+            return ['datasets/referencedataset_detail.html']
+        elif self.object.type == DataSet.TYPE_MASTER_DATASET:
+            return ['datasets/master_dataset.html']
+        elif self.object.type == DataSet.TYPE_DATA_CUT:
+            return ['datasets/data_cut_dataset.html']
