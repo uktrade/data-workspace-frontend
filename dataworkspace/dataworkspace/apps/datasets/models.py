@@ -435,6 +435,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     SORT_DIR_ASC = 1
     SORT_DIR_DESC = 2
     _SORT_DIR_CHOICES = ((SORT_DIR_ASC, 'Ascending'), (SORT_DIR_DESC, 'Descending'))
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     is_joint_dataset = models.BooleanField(default=False)
     group = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -1014,6 +1015,8 @@ class ReferenceDatasetField(TimeStampedUserModel):
         blank=True,
     )
     sort_order = models.PositiveIntegerField(default=0, blank=False, null=False)
+    # legacy_reference_dataset_id = models.IntegerField(null=True)
+    # legacy_linked_reference_dataset_id = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'app_referencedatasetfield'
