@@ -213,6 +213,7 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
         'published',
     )
     inlines = [ReferenceDataFieldInline]
+    autocomplete_fields = ['source_tags']
     fieldsets = [
         (
             None,
@@ -224,6 +225,7 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                     'name',
                     'table_name',
                     'slug',
+                    'source_tags',
                     'group',
                     'external_database',
                     'short_description',

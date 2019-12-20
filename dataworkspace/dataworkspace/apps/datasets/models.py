@@ -496,6 +496,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES
     )
     number_of_downloads = models.PositiveIntegerField(default=0)
+    source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
 
     class Meta:
         db_table = 'app_referencedataset'
