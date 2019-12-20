@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## 2019-12-20
+
+### Added
+
+- Adds django-waffle for feature flag support
+- New field `uuid` added to `ReferenceDataset` and populated.
+- New field `source_tags` added to `ReferenceDataset`.
+- New shared url and view for datasets and reference datasets with format `/datasets/<uuid>#slug`
+
+### Changed
+
+- Old dataset and reference dataset endpoints (`/<group slug>/<dataset slug>/`) now redirect to the new url style above
+- Update all templates to use `get_absolute_url()` for datasets and reference datasets
+
 ## 2019-12-18
 
 ### Added
