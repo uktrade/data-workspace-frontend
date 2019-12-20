@@ -109,12 +109,7 @@ class TestDatasetViews(BaseTestCase):
         ds = factories.DataSetFactory.create(grouping=group, published=False)
         factories.SourceLinkFactory(dataset=ds)
         factories.SourceLinkFactory(dataset=ds)
-        response = self._authenticated_get(
-            reverse(
-                'catalogue:dataset_fullpath',
-                kwargs={'group_slug': group.slug, 'set_slug': ds.slug},
-            )
-        )
+        response = self._authenticated_get(ds.get_absolute_url())
         self.assertEqual(response.status_code, 404)
 
     def test_dataset_detail_view_published(self):
@@ -123,30 +118,17 @@ class TestDatasetViews(BaseTestCase):
         ds = factories.DataSetFactory.create(grouping=group, published=True)
         sl1 = factories.SourceLinkFactory(dataset=ds)
         sl2 = factories.SourceLinkFactory(dataset=ds)
-        response = self._authenticated_get(
-            reverse(
-                'catalogue:dataset_fullpath',
-                kwargs={'group_slug': group.slug, 'set_slug': ds.slug},
-            )
-        )
+        response = self._authenticated_get(ds.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, ds.name)
         self.assertContains(response, sl1.name, 1)
         self.assertContains(response, sl2.name, 1)
 
     def test_reference_dataset_detail_view(self):
-        group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
-        rds = factories.ReferenceDatasetFactory.create(
-            group=group, table_name='test_detail_view'
-        )
+        rds = factories.ReferenceDatasetFactory.create(table_name='test_detail_view')
         factories.ReferenceDatasetFieldFactory(reference_dataset=rds)
-        response = self._authenticated_get(
-            reverse(
-                'catalogue:reference_dataset',
-                kwargs={'group_slug': group.slug, 'reference_slug': rds.slug},
-            )
-        )
+        response = self._authenticated_get(rds.get_absolute_url())
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, rds.name)
 

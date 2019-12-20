@@ -28,7 +28,7 @@
             {% if dataset %}
                 <p class="govuk-body">
                     Return to
-                    <a href="{% url 'catalogue:dataset_fullpath' dataset.grouping.slug dataset.slug %}">
+                    <a href="{{ dataset.get_absolute_url }}">
                         {{ dataset }}
                     </a>
                 </p>

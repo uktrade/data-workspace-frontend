@@ -194,6 +194,11 @@ class DataSet(TimeStampedModel):
             return reverse('admin:datasets_masterdataset_change', args=(self.id,))
         return reverse('admin:datasets_datacutdataset_change', args=(self.id,))
 
+    def get_absolute_url(self):
+        return '{}#{}'.format(
+            reverse('datasets:dataset_detail', args=(self.id,)), self.slug
+        )
+
 
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -885,6 +890,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         if self.external_database is not None:
             return ['default', self.external_database.memorable_name]
         return ['default']
+
+    def get_absolute_url(self):
+        return '{}#{}'.format(
+            reverse('datasets:dataset_detail', args=(self.uuid,)), self.slug
+        )
 
 
 class ReferenceDatasetRecordBase(models.Model):
