@@ -126,8 +126,21 @@ def new_private_database_credentials(user):
                   obj record;
                 BEGIN
                   FOR obj IN
-                    SELECT * FROM pg_event_trigger_ddl_commands()
-                    WHERE command_tag='CREATE TABLE' AND left(schema_name, {}) = '{}'
+                    SELECT
+                        * FROM pg_event_trigger_ddl_commands()
+                    WHERE
+                        command_tag IN ('ALTER TABLE', 'CREATE TABLE')
+                        -- Prevent infinite loop by not altering tables that have the correct owner
+                        -- already. Note pg_trigger_depth() can be used for triggers, but we're in
+                        -- an _event_ trigger.
+                        AND left(schema_name, {}) = '{}'
+                        AND (
+                            SELECT pg_tables.tableowner
+                            FROM pg_tables
+                            WHERE pg_tables.schemaname = schema_name AND pg_tables.tablename = (
+                                SELECT pg_class.relname FROM pg_class WHERE pg_class.oid = objid
+                            )
+                        ) != schema_name
                   LOOP
                     EXECUTE format('ALTER TABLE %s OWNER TO %s', obj.object_identity, quote_ident(obj.schema_name));
                   END LOOP;
@@ -144,7 +157,7 @@ def new_private_database_credentials(user):
                 BEGIN
                   CREATE EVENT TRIGGER set_table_owner
                   ON ddl_command_end
-                  WHEN tag IN ('CREATE TABLE')
+                  WHEN tag IN ('ALTER TABLE', 'CREATE TABLE')
                   EXECUTE PROCEDURE set_table_owner();
                 EXCEPTION WHEN OTHERS THEN
                   NULL;
