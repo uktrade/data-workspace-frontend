@@ -1026,8 +1026,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
         blank=True,
     )
     sort_order = models.PositiveIntegerField(default=0, blank=False, null=False)
-    # legacy_reference_dataset_id = models.IntegerField(null=True)
-    # legacy_linked_reference_dataset_id = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'app_referencedatasetfield'
