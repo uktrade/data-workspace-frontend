@@ -347,7 +347,24 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
 
 @admin.register(VisualisationTemplate)
 class VisualisationTemplateAdmin(admin.ModelAdmin):
-    exclude = ('visible', 'application_type')
+
+    fieldsets = [
+        (
+            None,
+            {
+                'fields': [
+                    'name',
+                    'host_exact',
+                    'host_pattern',
+                    'nice_name',
+                    'spawner',
+                    'spawner_time',
+                    'spawner_options',
+                    'user_access_type',
+                ]
+            },
+        )
+    ]
 
     def get_queryset(self, request):
         return self.model.objects.filter(application_type='VISUALISATION')
