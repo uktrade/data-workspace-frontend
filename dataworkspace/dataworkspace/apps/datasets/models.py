@@ -180,7 +180,7 @@ class DataSet(TimeStampedModel):
 
         for related_field in CLONE_RELATED_FIELDS:
             related_objects = [
-                copy.copy(obj) for obj in getattr(self, related_field + "_set").all()
+                copy.copy(obj) for obj in getattr(self, related_field + '_set').all()
             ]
             for obj in related_objects:
                 obj.pk = None
