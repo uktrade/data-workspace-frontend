@@ -1,8 +1,15 @@
 FROM data-workspace
 
-COPY requirements-dev.txt requirements-dev.txt
-
 USER root
+
+COPY requirements-dev.txt requirements-dev.txt
+RUN \
+	apk add --no-cache \
+		gcc \
+		musl-dev \
+		postgresql-dev \
+		python3-dev
+
 RUN pip3 install -r requirements-dev.txt
 
 USER django

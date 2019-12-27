@@ -41,6 +41,10 @@ def db_role_schema_suffix_for_user(user):
     return hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest()[:8]
 
 
+def db_role_schema_suffix_for_app(application_template):
+    return 'app_' + application_template.name
+
+
 def new_private_database_credentials(db_role_and_schema_suffix, source_tables, db_user):
     password_alphabet = string.ascii_letters + string.digits
 
@@ -305,6 +309,18 @@ def source_tables_for_user(user):
         dataset__published=True,
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__datasetuserpermission__user=user,
+    )
+    return req_authentication_tables.union(req_authorization_tables)
+
+
+def source_tables_for_app(application_template):
+    req_authentication_tables = SourceTable.objects.filter(
+        dataset__published=True, dataset__user_access_type='REQUIRES_AUTHENTICATION'
+    )
+    req_authorization_tables = SourceTable.objects.filter(
+        dataset__published=True,
+        dataset__user_access_type='REQUIRES_AUTHORIZATION',
+        dataset__datasetapplicationtemplatepermission__application_template=application_template,
     )
     return req_authentication_tables.union(req_authorization_tables)
 

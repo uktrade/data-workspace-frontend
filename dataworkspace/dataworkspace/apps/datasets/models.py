@@ -29,6 +29,7 @@ from dataworkspace.apps.core.models import (
     Database,
     DeletableQuerySet,
 )
+from dataworkspace.apps.applications.models import ApplicationTemplate
 from dataworkspace.apps.datasets.model_utils import (
     external_model_class,
     has_circular_link,
@@ -207,6 +208,17 @@ class DataSetUserPermission(models.Model):
     class Meta:
         db_table = 'app_datasetuserpermission'
         unique_together = ('user', 'dataset')
+
+
+class DataSetApplicationTemplatePermission(models.Model):
+    application_template = models.ForeignKey(
+        ApplicationTemplate, on_delete=models.CASCADE
+    )
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'app_datasetapplicationtemplatepermission'
+        unique_together = ('dataset', 'application_template')
 
 
 class MasterDatasetManager(models.Manager):

@@ -16,6 +16,8 @@ services:
       - "localapps.com:127.0.0.1"
       - "testapplication-23b40dd9.localapps.com:127.0.0.1"
       - "testvisualisation.localapps.com:127.0.0.1"
+      - "testvisualisation-a.localapps.com:127.0.0.1"
+      - "testvisualisation-b.localapps.com:127.0.0.1"
   data-workspace-postgres:
     build:
       context: postgres

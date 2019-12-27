@@ -55,13 +55,21 @@ class ProcessSpawner:
     '''
 
     @staticmethod
-    def spawn(_, __, ___, application_instance_id, spawner_options, ____):
+    def spawn(_, __, ___, application_instance_id, spawner_options, db_credentials):
 
         try:
             gevent.sleep(1)
             cmd = json.loads(spawner_options)['CMD']
+
+            database_env = {
+                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
+                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                f'user={database["db_user"]} password={database["db_password"]}'
+                for database in db_credentials
+            }
+
             logger.info('Starting %s', cmd)
-            proc = subprocess.Popen(cmd, cwd='/home/django')
+            proc = subprocess.Popen(cmd, cwd='/home/django', env=database_env)
 
             application_instance = ApplicationInstance.objects.get(
                 id=application_instance_id
