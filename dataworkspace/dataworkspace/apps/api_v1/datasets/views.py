@@ -30,7 +30,7 @@ def _get_dataset_columns(connection, source_table):
 
 def _get_dataset_rows(connection, sql, query_args=None, cursor_itersize=1000):
     query_args = [] if query_args is None else query_args
-    with connection.cursor(name="api_v1.datasets.views.get-rows") as cursor:
+    with connection.cursor(name='api_v1.datasets.views.get-rows') as cursor:
         cursor.itersize = cursor_itersize
         cursor.arraysize = cursor_itersize
         cursor.execute(sql, query_args)
@@ -135,7 +135,7 @@ def _get_streaming_http_response(request, primary_key, columns, rows):
         if queue:
             yield b''.join(queue)
 
-    num_bytes_max = 49990000
+    num_bytes_max = 49_990_000
     len_chunk_footer = len('\r\n')
     chunk_size = 16384
     queue = []
