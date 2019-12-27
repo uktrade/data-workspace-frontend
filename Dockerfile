@@ -16,7 +16,7 @@ RUN \
 		python3-dev=3.7.5-r1 && \
 	apk add --no-cache \
 		nginx=1.16.1-r1 \
-		openssl=1.1.1d-r0 \
+		openssl=1.1.1d-r2 \
 		parallel=20190522-r0 \
 		py3-gevent==1.3.4-r2 \
 		py3-psycopg2=2.7.7-r1 \
