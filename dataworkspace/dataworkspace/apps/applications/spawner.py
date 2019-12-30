@@ -168,7 +168,8 @@ class FargateSpawner:
             s3_bucket = options['S3_BUCKET']
 
             database_env = {
-                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
+                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
                 f'user={database["db_user"]} password={database["db_password"]}'
                 for database in db_credentials
             }
