@@ -174,7 +174,7 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         try:
             instance.delete_record(form.cleaned_data['id'])
         except Exception as e:
-            form.form.add_error(None, e)
+            form.add_error(None, e)
             return self.form_invalid(form)
         return super().form_valid(form)
 
