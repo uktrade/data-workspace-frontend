@@ -878,12 +878,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             else:
                 with external_model_class(model_class) as mc:
                     mc.objects.using(external_database).create(
-                        id=record.id, **record_data
+                        id=record.id, reference_dataset_id=self.id, **record_data
                     )
             saved_ids.append(record.id)
 
-        # Delete any records that are in the external db but not local
-        model_class.objects.using(external_database).exclude(pk__in=saved_ids).delete()
+        with external_model_class(model_class) as mc:
+            mc.objects.using(external_database).exclude(pk__in=saved_ids).delete()
 
     def increment_schema_version(self):
         self.schema_version += 1
