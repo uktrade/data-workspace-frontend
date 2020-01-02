@@ -31,15 +31,22 @@ def database_dsn(database_data):
     )
 
 
-def new_private_database_credentials(user):
-    password_alphabet = string.ascii_letters + string.digits
+def postgres_user(stem):
     user_alphabet = string.ascii_lowercase + string.digits
+    unique_enough = ''.join(secrets.choice(user_alphabet) for i in range(5))
+    return 'user_' + re.sub('[^a-z0-9]', '_', stem.lower()) + '_' + unique_enough
 
-    def postgres_user():
-        unique_enough = ''.join(secrets.choice(user_alphabet) for i in range(5))
-        return (
-            'user_' + re.sub('[^a-z0-9]', '_', user.email.lower()) + '_' + unique_enough
-        )
+
+def db_role_schema_suffix_for_user(user):
+    return hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest()[:8]
+
+
+def db_role_schema_suffix_for_app(application_template):
+    return 'app_' + application_template.name
+
+
+def new_private_database_credentials(db_role_and_schema_suffix, source_tables, db_user):
+    password_alphabet = string.ascii_letters + string.digits
 
     def postgres_password():
         return ''.join(secrets.choice(password_alphabet) for i in range(64))
@@ -50,15 +57,11 @@ def new_private_database_credentials(user):
         # - a permanent database role that is the owner of the schema
         # - temporary database users, each of which are GRANTed the role
 
-        db_user = postgres_user()
         db_password = postgres_password()
-        short_sso_id = hashlib.sha256(
-            str(user.profile.sso_id).encode('utf-8')
-        ).hexdigest()[:8]
         stem = '_user_'
         # These must be the same so the below trigger can use a table's schema_name to set its role
-        db_role = f'{stem}{short_sso_id}'
-        db_schema = f'{stem}{short_sso_id}'
+        db_role = f'{stem}{db_role_and_schema_suffix}'
+        db_schema = f'{stem}{db_role_and_schema_suffix}'
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (
@@ -222,7 +225,7 @@ def new_private_database_credentials(user):
             for source_table in source_tables_for_database
         ]
         for database_obj, source_tables_for_database in itertools.groupby(
-            source_tables_for_user(user), lambda source_table: source_table.database
+            source_tables, lambda source_table: source_table.database
         )
     }
     creds = [
@@ -230,10 +233,12 @@ def new_private_database_credentials(user):
         for database_obj, tables in database_to_tables.items()
     ]
 
-    # Create a profile in case it doesn't have one
+    return creds
+
+
+def write_credentials_to_bucket(user, creds):
     logger.info('settings.NOTEBOOKS_BUCKET %s', settings.NOTEBOOKS_BUCKET)
     if settings.NOTEBOOKS_BUCKET is not None:
-        user.save()
         bucket = settings.NOTEBOOKS_BUCKET
         s3_client = boto3.client('s3')
         s3_prefix = (
@@ -259,8 +264,6 @@ def new_private_database_credentials(user):
                 Key=key,
                 ACL='bucket-owner-full-control',
             )
-
-    return creds
 
 
 def can_access_schema_table(user, database, schema, table):
@@ -306,6 +309,18 @@ def source_tables_for_user(user):
         dataset__published=True,
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__datasetuserpermission__user=user,
+    )
+    return req_authentication_tables.union(req_authorization_tables)
+
+
+def source_tables_for_app(application_template):
+    req_authentication_tables = SourceTable.objects.filter(
+        dataset__published=True, dataset__user_access_type='REQUIRES_AUTHENTICATION'
+    )
+    req_authorization_tables = SourceTable.objects.filter(
+        dataset__published=True,
+        dataset__user_access_type='REQUIRES_AUTHORIZATION',
+        dataset__datasetapplicationtemplatepermission__application_template=application_template,
     )
     return req_authentication_tables.union(req_authorization_tables)
 

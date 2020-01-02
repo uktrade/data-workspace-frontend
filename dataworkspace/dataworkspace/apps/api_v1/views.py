@@ -29,7 +29,13 @@ from dataworkspace.apps.core.utils import (
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.core.utils import (
     create_s3_role,
+    db_role_schema_suffix_for_app,
+    db_role_schema_suffix_for_user,
     new_private_database_credentials,
+    source_tables_for_app,
+    source_tables_for_user,
+    postgres_user,
+    write_credentials_to_bucket,
 )
 
 
@@ -152,9 +158,26 @@ def application_api_PUT(request, public_host):
         )
 
     app_type = application_template.application_type
-    credentials = (
-        new_private_database_credentials(request.user) if app_type == 'TOOL' else []
+
+    (source_tables, db_role_schema_suffix) = (
+        (
+            source_tables_for_user(request.user),
+            db_role_schema_suffix_for_user(request.user),
+        )
+        if app_type == 'TOOL'
+        else (
+            source_tables_for_app(application_template),
+            db_role_schema_suffix_for_app(application_template),
+        )
     )
+
+    credentials = new_private_database_credentials(
+        db_role_schema_suffix, source_tables, postgres_user(request.user.email)
+    )
+
+    if app_type == 'TOOL':
+        # For AppStream to access credentials
+        write_credentials_to_bucket(request.user, credentials)
 
     try:
         memory, cpu = request.GET['__memory_cpu'].split('_')

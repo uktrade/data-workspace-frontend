@@ -1,11 +1,17 @@
 from datetime import datetime
 from itertools import product
 
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.models import User, Permission
+from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
 from django.db.models.functions import Least
+from django.utils.encoding import force_text
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -13,6 +19,12 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
+from dataworkspace.apps.datasets.models import (
+    DataSet,
+    DataSetApplicationTemplatePermission,
+    MasterDataset,
+)
+
 from dataworkspace.apps.applications.utils import application_instance_max_cpu
 
 
@@ -345,9 +357,96 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         return response
 
 
+class VisualisationTemplateEditForm(forms.ModelForm):
+    authorized_master_datasets = forms.ModelMultipleChoiceField(
+        required=False,
+        widget=FilteredSelectMultiple('master datasets', False),
+        queryset=MasterDataset.objects.filter(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        ).order_by('name'),
+    )
+
+    class Meta:
+        model = ApplicationTemplate
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            instance = kwargs['instance']
+        except KeyError:
+            return
+
+        self.fields[
+            'authorized_master_datasets'
+        ].initial = MasterDataset.objects.filter(
+            datasetapplicationtemplatepermission__application_template=instance
+        )
+
+
 @admin.register(VisualisationTemplate)
 class VisualisationTemplateAdmin(admin.ModelAdmin):
-    exclude = ('visible', 'application_type')
+
+    form = VisualisationTemplateEditForm
+
+    fieldsets = [
+        (
+            None,
+            {
+                'fields': [
+                    'name',
+                    'host_exact',
+                    'host_pattern',
+                    'nice_name',
+                    'spawner',
+                    'spawner_time',
+                    'spawner_options',
+                    'user_access_type',
+                    'authorized_master_datasets',
+                ]
+            },
+        )
+    ]
 
     def get_queryset(self, request):
         return self.model.objects.filter(application_type='VISUALISATION')
+
+    @transaction.atomic
+    def save_model(self, request, obj, form, change):
+        content_type = ContentType.objects.get_for_model(obj).pk
+        object_repr = force_text(obj)
+        user_id = request.user.pk
+        object_id = obj.pk
+
+        def log_change(message):
+            LogEntry.objects.log_action(
+                user_id=user_id,
+                content_type_id=content_type,
+                object_id=object_id,
+                object_repr=object_repr,
+                action_flag=CHANGE,
+                change_message=message,
+            )
+
+        current_master_datasets = set(
+            DataSet.objects.filter(
+                datasetapplicationtemplatepermission__application_template=obj
+            )
+        )
+        authorized_master_datasets = set(
+            form.cleaned_data['authorized_master_datasets']
+        )
+
+        for dataset in authorized_master_datasets - current_master_datasets:
+            DataSetApplicationTemplatePermission.objects.create(
+                dataset=dataset, application_template=obj
+            )
+            log_change('Added dataset {} permission'.format(dataset))
+        for dataset in current_master_datasets - authorized_master_datasets:
+            DataSetApplicationTemplatePermission.objects.filter(
+                dataset=dataset, application_template=obj
+            ).delete()
+            log_change('Removed dataset {} permission'.format(dataset))
+
+        super().save_model(request, obj, form, change)

@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Missing migration on ReferenceDataset and ReferenceDatasetField
+- DataSet access to visualisation applications
 
 ### Changed
 
