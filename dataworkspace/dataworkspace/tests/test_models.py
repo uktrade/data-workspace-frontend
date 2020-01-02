@@ -440,61 +440,6 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         # Deleting the dataset should fail
         self.assertRaises(ProtectedError, lambda _: linked_to_dataset.delete(), 1)
 
-    def test_delete_linked_to_reference_dataset_record(self):
-        # Test that a linked to record cannot be deleted
-
-        # Create a linked_to dataset and id field
-        linked_to_dataset = factories.ReferenceDatasetFactory.create(
-            table_name='linked_to_dataset'
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            column_name='refid',
-            reference_dataset=linked_to_dataset,
-            is_identifier=True,
-            is_display_name=True,
-        )
-
-        # Create a linked from dataset and id, link fields
-        linked_from_dataset = factories.ReferenceDatasetFactory.create(
-            table_name='linked_from_dataset'
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            column_name='refid',
-            reference_dataset=linked_from_dataset,
-            is_identifier=True,
-            is_display_name=True,
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            column_name='link',
-            reference_dataset=linked_from_dataset,
-            is_identifier=True,
-            is_display_name=True,
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=linked_to_dataset,
-        )
-
-        # Create a record in the linked_to dataset
-        linked_to_record = linked_to_dataset.save_record(
-            None, {'reference_dataset': linked_to_dataset, 'refid': 'xxx'}
-        )
-
-        # Create a record in the linked_from dataset linking to the linked_to record
-        linked_from_dataset.save_record(
-            None,
-            {
-                'reference_dataset': linked_from_dataset,
-                'refid': 'xxx',
-                'link_id': linked_to_dataset.get_records().first().id,
-            },
-        )
-
-        # Deleting the linked to record should fail
-        self.assertRaises(
-            ProtectedError,
-            lambda _: linked_to_dataset.delete_record(linked_to_record.id),
-            1,
-        )
-
     def test_two_circular_linked_datasets(self):
         # Ensure two datasets cannot be linked to each other
         ref_dataset1 = self._create_reference_dataset(table_name='circular_link_1')

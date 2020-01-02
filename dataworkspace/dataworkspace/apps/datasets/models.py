@@ -1219,7 +1219,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
                 {
                     'verbose_name': 'Linked Reference Dataset',
                     'to': self.linked_reference_dataset.get_record_model_class(),
-                    'on_delete': models.PROTECT,
+                    'on_delete': models.DO_NOTHING,
                 }
             )
         elif self.data_type == self.DATA_TYPE_UUID:
