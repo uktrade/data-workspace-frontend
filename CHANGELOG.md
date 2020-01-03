@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Version of mobius3, to include changes to better sync nested directories, for the upcoming connection to GitLab from tools
 - Which local files are synced to S3 from the tools local home folder to include `.git`
+- Gitlab, running in Docker, but on its own EC2 instance
 
 
 ## 2020-01-08
