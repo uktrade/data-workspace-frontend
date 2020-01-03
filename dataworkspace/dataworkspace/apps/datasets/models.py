@@ -1167,6 +1167,12 @@ class ReferenceDatasetField(TimeStampedUserModel):
                         model_class,
                         model_class._meta.get_field(self._original_column_name),
                     )
+
+        # Remove reference dataset sort field if it is set to this field
+        if self.reference_dataset.sort_field == self:
+            self.reference_dataset.sort_field = None
+            self.reference_dataset.save()
+
         super().delete(using, keep_parents)
         self.reference_dataset.increment_schema_version()
         self.reference_dataset.increment_major_version()
