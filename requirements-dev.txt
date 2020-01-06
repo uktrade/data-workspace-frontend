@@ -10,5 +10,5 @@ mock==3.0.5
 mohawk==1.1.0
 pytest==5.3.2
 pytest-cov==2.8.1
-pytest-mock==1.13.0
+pytest-mock==2.0.0
 pytest-django==3.7.0
