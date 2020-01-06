@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+<<<<<<< HEAD
 ## 2020-01-14
 
 ### Changed
@@ -44,6 +45,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Allow for filtering by source tag on dataset admin listing pages
+
+
+## 2020-01-06
+
+### Added
+
+- Give users permissions to access reference dataset tables via tools
+- Give visualisations permissions to access reference data
+
+### Changed
+
+- Fix bug where reference dataset field could not be deleted if it was set to sort field
+- Fix bug where errors were not displayed if record deletion failed
+- Fix issue where deleting a record failed if the record linked to an "external" reference dataset
+- Fix bug where incorrect name was returned if display name was of type 'linked reference dataset'
 
 
 ## 2019-12-27
