@@ -81,10 +81,11 @@ class BaseDatasetAdmin(admin.ModelAdmin):
         'slug',
         'short_description',
         'grouping',
+        'get_source_tags',
         'published',
         'number_of_downloads',
     )
-    list_filter = ('grouping',)
+    list_filter = ('grouping', 'source_tags')
     search_fields = ['name']
     actions = [clone_dataset]
     autocomplete_fields = ['source_tags']
@@ -120,6 +121,11 @@ class BaseDatasetAdmin(admin.ModelAdmin):
                 'data-workspace-admin.css',
             )
         }
+
+    def get_source_tags(self, obj):
+        return ', '.join([x.name for x in obj.source_tags.all()])
+
+    get_source_tags.short_description = 'Source Tags'
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
