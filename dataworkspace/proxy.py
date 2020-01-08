@@ -385,7 +385,7 @@ async def async_main():
         )
 
     async def handle_admin(downstream_request, method, path, query):
-        upstream_url = URL(admin_root).with_path(path).with_query(query)
+        upstream_url = URL(admin_root).with_path(path)
         return await handle_http(
             downstream_request,
             method,
