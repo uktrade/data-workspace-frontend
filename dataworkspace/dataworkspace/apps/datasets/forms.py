@@ -1,4 +1,5 @@
 from django import forms
+from .models import DataSet, SourceTag
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
@@ -26,4 +27,24 @@ class EligibilityCriteriaForm(forms.Form):
         widget=forms.RadioSelect,
         coerce=lambda x: True if x == 'yes' else False,
         choices=(('no', 'No'), ('yes', 'Yes')),
+    )
+
+
+class DatasetSearchForm(forms.Form):
+    q = forms.CharField(required=False)
+
+    use = forms.MultipleChoiceField(
+        choices=[
+            (DataSet.TYPE_MASTER_DATASET, 'Analyse in tools'),
+            (DataSet.TYPE_DATA_CUT, 'Download'),
+            (0, 'Reference'),
+        ],
+        required=False,
+        widget=FilterWidget("Data use"),
+    )
+
+    source = forms.ModelMultipleChoiceField(
+        queryset=SourceTag.objects.order_by('name').all(),
+        required=False,
+        widget=FilterWidget("Data source"),
     )

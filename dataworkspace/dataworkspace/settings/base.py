@@ -240,3 +240,5 @@ CKEDITOR_CONFIGS = {
 }
 
 FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
+
+SEARCH_RESULTS_DATASETS_PER_PAGE = 7

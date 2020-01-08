@@ -1,0 +1,68 @@
+{% extends '_base.html' %}
+{% load humanize %}
+{% load static %}
+{% load datasets_tags %}
+
+{% block page_title %}Search - {{ block.super }}{% endblock %}
+
+{% block inner_content %}
+
+<form action="/datasets/" method="get">
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">Welcome to Data Workspace</h1>
+    <p class="govuk-body-l">
+      Data Workspace is where DIT staff and partners can access, analyse and securely share data relevant to DIT.
+    </p>
+  </div>
+
+    <div class="govuk-grid-column-two-thirds">
+      <div class="search-field govuk-!-margin-bottom-9">
+        <!-- <label class="govuk-label search-field__label" for="search">Search data</label> -->
+        <div class="search-field-wrapper">
+          <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input" value="{{ query }}" aria-controls="">
+          <div class="search-field-submit-wrapper search-field__item">
+            <input class="search-field__submit" type="submit" value="Search">
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-one-third">
+    {{ form.use }}
+    {{ form.source }}
+  </div>
+  <div class="govuk-grid-column-two-thirds">
+    {% for dataset in datasets %}
+    <div class="search-result">
+      <h2 class="govuk-heading-m">
+        <a class="govuk-link" href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>
+        {% if perms.datasets_dataset_change %}
+          <a class="govuk-link" href="{{ dataset.get_admin_edit_url }}">[Edit]</a>
+        {% endif %}
+      </h2>
+      <p class="govuk-body">{{ dataset.short_description }}</p>
+    </div>
+    {% endfor %}
+
+    <nav role="navigation" class="govuk-body">
+      Displaying datasets {{ datasets.start_index  }}&ndash;{{ datasets.end_index }} of {{ datasets.paginator.count }}
+      <ul class="pagination govuk-list">
+          {% if datasets.has_previous %}
+            <li><a href="{% url_replace page=datasets.previous_page_number %}">Previous</a></li>
+          {% endif %}
+
+          {% if datasets.has_next %}
+            <li><a href="{% url_replace page=datasets.next_page_number %}">Next</a></li>
+          {% endif %}
+      </ul>
+    </nav>
+
+  </div>
+</div>
+</form>
+
+{% endblock %}

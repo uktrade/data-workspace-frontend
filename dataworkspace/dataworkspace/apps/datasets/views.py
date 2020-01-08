@@ -1,5 +1,8 @@
 from itertools import chain
 
+from django.conf import settings
+from django.core.paginator import Paginator
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
@@ -7,8 +10,12 @@ from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.datasets.forms import RequestAccessForm, EligibilityCriteriaForm
-from dataworkspace.apps.datasets.models import ReferenceDataset, DataSet
+from dataworkspace.apps.datasets.forms import (
+    DatasetSearchForm,
+    RequestAccessForm,
+    EligibilityCriteriaForm,
+)
+from dataworkspace.apps.datasets.models import DataSet, ReferenceDataset
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.zendesk import create_zendesk_ticket
 
@@ -174,3 +181,61 @@ class DatasetDetailView(DetailView):
             return ['datasets/master_dataset.html']
         elif self.object.type == DataSet.TYPE_DATA_CUT:
             return ['datasets/data_cut_dataset.html']
+
+
+def filter_datasets(datasets, query, source, use=None):
+    search = SearchVector('name', 'short_description')
+    search_query = SearchQuery(query)
+
+    datasets = datasets.annotate(
+        search=search, search_rank=SearchRank(search, search_query)
+    )
+
+    if query:
+        datasets = datasets.filter(search=query)
+
+    if source:
+        datasets = datasets.filter(source_tags__in=source)
+
+    if use:
+        datasets = datasets.filter(type__in=use)
+
+    return datasets
+
+
+@require_GET
+def find_datasets(request):
+    form = DatasetSearchForm(request.GET)
+
+    if form.is_valid():
+        query = form.cleaned_data.get("q")
+        use = form.cleaned_data.get("use")
+        source = form.cleaned_data.get("source")
+
+    datasets = filter_datasets(DataSet.objects, query, source, use)
+
+    # Include reference datasets if required
+    if not use or "0" in use:
+        reference_datasets = filter_datasets(ReferenceDataset.objects, query, source)
+        datasets = datasets.values(
+            'id', 'name', 'short_description', 'search_rank'
+        ).union(
+            reference_datasets.values(
+                'uuid', 'name', 'short_description', 'search_rank'
+            )
+        )
+
+    paginator = Paginator(
+        datasets.order_by('-search_rank', 'name'),
+        settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
+    )
+
+    return render(
+        request,
+        'datasets/index.html',
+        {
+            "form": form,
+            "query": query,
+            "datasets": paginator.get_page(request.GET.get("page")),
+        },
+    )
