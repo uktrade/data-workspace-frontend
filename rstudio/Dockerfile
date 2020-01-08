@@ -34,14 +34,15 @@ RUN \
 	apt-get autoclean -y && \
 	rm -rf /tmp/* && \
 	rm -rf /var/lib/apt/lists/* && \
-	apt-get update && \
-	apt-get install -y --no-install-recommends \
+	apt-get -o Acquire::Check-Valid-Until=false update && \
+	apt-get -o Acquire::Check-Valid-Until=false install -y --no-install-recommends \
 		gdebi-core=0.9.5.7+nmu3 \
 		procps=2:3.3.15-2 \
 		r-base=3.6.1-2~bustercran.0 \
 		r-base-dev=3.6.1-2~bustercran.0 \
 		r-cran-base64enc=0.1-3-2 \
 		r-cran-curl=3.3+dfsg-1 \
+		r-cran-data.table=1.12.0+dfsg-1 \
 		r-cran-dbi=1.0.0-2 \
 		r-cran-rpostgresql=0.6-2+dfsg-2 \
 		r-cran-tidyverse=1.2.1-1 \
