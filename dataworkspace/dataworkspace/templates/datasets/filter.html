@@ -1,0 +1,19 @@
+{% with id=widget.attrs.id %}
+<div class="govuk-form-group">
+  <fieldset{% if id %} id="{{ id }}"{% endif %} class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+        <h2 class="govuk-fieldset__heading">{{ widget.group_label }}</h2>
+      </legend>
+      <span id="waste-hint" class="govuk-hint">
+        Select all that apply.
+      </span>
+      <div class="govuk-checkboxes">
+      {% for group, options, index in widget.optgroups %}
+        {% for option in options %}
+          {% include option.template_name with widget=option %}
+        {% endfor %}
+      {%endfor %}
+      </div>
+  </fieldset>
+</div>
+{% endwith %}
