@@ -143,7 +143,7 @@ def _get_streaming_http_response(request, primary_key, columns, rows):
     num_bytes_sent = 0
     num_bytes_sent_and_queued = 0
 
-    base_url = request.build_absolute_uri()
+    base_url = request.build_absolute_uri().split('?')[0]
     return StreamingHttpResponse(
         yield_data(columns, rows, base_url), content_type='application/json', status=200
     )
