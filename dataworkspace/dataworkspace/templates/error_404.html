@@ -3,9 +3,15 @@
 {% block page_title %}Page not found - {{ block.super }}{% endblock %}
 
 {% block inner_content %}
-    <div class="govuk-form-group--error">
-        <h1 class="govuk-heading-l">Page not found</h1>
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Page not found</h1>
 
-        <p class="govuk-body">If you entered a web address please check it was correct.</p>
+        <p class="govuk-body">If you typed the web address, check it is correct.</p>
+
+        <p class="govuk-body">If you pasted the web address, check you copied the entire address.</p>
+
+        <p class="govuk-body">If you believe you are seeing this message in error, <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
+      </div>
     </div>
 {% endblock %}
