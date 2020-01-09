@@ -213,6 +213,8 @@ def find_datasets(request):
         query = form.cleaned_data.get("q")
         use = form.cleaned_data.get("use")
         source = form.cleaned_data.get("source")
+    else:
+        return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
     datasets = filter_datasets(DataSet.objects, query, source, use)
 
