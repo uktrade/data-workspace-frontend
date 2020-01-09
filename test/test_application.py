@@ -282,7 +282,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn('Forbidden', content)
+        self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
         stdout, stderr, code = await give_user_visualisation_perms('testvisualisation')
@@ -632,7 +632,7 @@ class TestApplication(unittest.TestCase):
         # ... and can make requests to the home page...
         async with session.request('GET', 'http://localapps.com:8000/') as response:
             content = await response.text()
-        self.assertNotIn('Forbidden', content)
+        self.assertNotIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 200)
 
         # ... but not the application...
@@ -640,7 +640,7 @@ class TestApplication(unittest.TestCase):
             'GET', 'http://testapplication-23b40dd9.localapps.com:8000/http'
         ) as response:
             content = await response.text()
-        self.assertIn('Forbidden', content)
+        self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
         # ... and it can't be spoofed...
@@ -650,7 +650,7 @@ class TestApplication(unittest.TestCase):
             headers={'x-forwarded-for': '1.2.3.4'},
         ) as response:
             content = await response.text()
-        self.assertIn('Forbidden', content)
+        self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
         await cleanup_application()
@@ -701,7 +701,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn('Forbidden', content)
+        self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
         async with session.request(
@@ -711,7 +711,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn('Forbidden', content)
+        self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
         # The healthcheck is allowed from a private IP: simulates ALB
@@ -753,7 +753,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn('Forbidden', content)
+        self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
     @async_test
@@ -935,7 +935,7 @@ class TestApplication(unittest.TestCase):
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
-        self.assertIn('Forbidden</h1>', content)
+        self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
             f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
@@ -944,7 +944,7 @@ class TestApplication(unittest.TestCase):
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
-        self.assertIn('Forbidden</h1>', content)
+        self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
             f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
@@ -961,7 +961,7 @@ class TestApplication(unittest.TestCase):
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
-        self.assertIn('Forbidden</h1>', content)
+        self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
             f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
@@ -970,7 +970,7 @@ class TestApplication(unittest.TestCase):
             status = response.status
             content = await response.text()
         self.assertEqual(status, 403)
-        self.assertIn('Forbidden</h1>', content)
+        self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
             f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
