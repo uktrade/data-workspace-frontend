@@ -156,12 +156,14 @@ def test_find_datasets_combines_results(client):
         {
             'id': ds.id,
             'name': ds.name,
+            'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
         },
         {
             'id': rds.uuid,
             'name': rds.name,
+            'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
         },
@@ -185,12 +187,14 @@ def test_find_datasets_filters_by_query(client):
         {
             'id': ds.id,
             'name': ds.name,
+            'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
         },
         {
             'id': rds.uuid,
             'name': rds.name,
+            'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
         },
@@ -212,12 +216,14 @@ def test_find_datasets_filters_by_use(client):
         {
             'id': ds.id,
             'name': ds.name,
+            'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
         },
         {
             'id': rds.uuid,
             'name': rds.name,
+            'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
         },
@@ -245,12 +251,14 @@ def test_find_datasets_filters_by_source(client):
         {
             'id': ds.id,
             'name': ds.name,
+            'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
         },
         {
             'id': rds.uuid,
             'name': rds.name,
+            'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
         },

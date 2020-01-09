@@ -222,10 +222,10 @@ def find_datasets(request):
     if not use or "0" in use:
         reference_datasets = filter_datasets(ReferenceDataset.objects, query, source)
         datasets = datasets.values(
-            'id', 'name', 'short_description', 'search_rank'
+            'id', 'name', 'slug', 'short_description', 'search_rank'
         ).union(
             reference_datasets.values(
-                'uuid', 'name', 'short_description', 'search_rank'
+                'uuid', 'name', 'slug', 'short_description', 'search_rank'
             )
         )
 

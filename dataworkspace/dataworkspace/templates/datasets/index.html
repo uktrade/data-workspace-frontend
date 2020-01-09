@@ -39,10 +39,7 @@
     {% for dataset in datasets %}
     <div class="search-result">
       <h2 class="govuk-heading-m">
-        <a class="govuk-link" href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>
-        {% if perms.datasets_dataset_change %}
-          <a class="govuk-link" href="{{ dataset.get_admin_edit_url }}">[Edit]</a>
-        {% endif %}
+        <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}</a>
       </h2>
       <p class="govuk-body">{{ dataset.short_description }}</p>
     </div>
