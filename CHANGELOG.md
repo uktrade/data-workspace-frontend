@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-01-08
+
+### Added
+
+- Initial version of the datasets search page with data use and source filters. Only available to Data Workspace staff users at the moment.
 
 ## 2020-01-09
 

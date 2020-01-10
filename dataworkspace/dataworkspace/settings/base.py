@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.forms',
     'django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig',
     'adminsortable2',
     'ckeditor',
@@ -237,3 +238,7 @@ CKEDITOR_CONFIGS = {
         'format_tags': 'div;p;h1;h2;h3;h4;h5;h6',
     }
 }
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
+
+SEARCH_RESULTS_DATASETS_PER_PAGE = 7

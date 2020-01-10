@@ -1,6 +1,7 @@
 import mock
 import pytest
 from django.urls import reverse
+from waffle.testutils import override_flag
 
 from dataworkspace.tests import factories
 
@@ -139,3 +140,126 @@ def test_old_reference_dataset_url_redirects_to_new_url(client):
     )
     assert response.status_code == 302
     assert response['Location'] == rds.get_absolute_url()
+
+
+@override_flag('datasets-search', active=True)
+def test_find_datasets_combines_results(client):
+    ds = factories.DataSetFactory.create(published=True, name='A dataset')
+    rds = factories.ReferenceDatasetFactory.create(
+        published=True, name='A reference dataset'
+    )
+
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds.id,
+            'name': ds.name,
+            'slug': ds.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds.short_description,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': mock.ANY,
+            'short_description': rds.short_description,
+        },
+    ]
+
+
+@override_flag('datasets-search', active=True)
+def test_find_datasets_filters_by_query(client):
+    factories.DataSetFactory.create(published=True, name='A dataset')
+    factories.ReferenceDatasetFactory.create(published=True, name='A reference dataset')
+
+    ds = factories.DataSetFactory.create(published=True, name='A new dataset')
+    rds = factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "new"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds.id,
+            'name': ds.name,
+            'slug': ds.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds.short_description,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': mock.ANY,
+            'short_description': rds.short_description,
+        },
+    ]
+
+
+@override_flag('datasets-search', active=True)
+def test_find_datasets_filters_by_use(client):
+    factories.DataSetFactory.create(published=True, type=1, name='A dataset')
+    ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
+    rds = factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"use": [0, 2]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds.id,
+            'name': ds.name,
+            'slug': ds.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds.short_description,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': mock.ANY,
+            'short_description': rds.short_description,
+        },
+    ]
+
+
+@override_flag('datasets-search', active=True)
+def test_find_datasets_filters_by_source(client):
+    source = factories.SourceTagFactory()
+    _ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
+    _ds.source_tags.set([factories.SourceTagFactory()])
+
+    ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
+    ds.source_tags.set([source, factories.SourceTagFactory()])
+
+    rds = factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+    rds.source_tags.set([source])
+
+    response = client.get(reverse('datasets:find_datasets'), {"source": [source.id]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds.id,
+            'name': ds.name,
+            'slug': ds.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds.short_description,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': mock.ANY,
+            'short_description': rds.short_description,
+        },
+    ]

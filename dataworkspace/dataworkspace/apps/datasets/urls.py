@@ -4,6 +4,7 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets import views
 
 urlpatterns = [
+    path('', login_required(views.find_datasets), name='find_datasets'),
     path(
         '<str:group_slug>/<str:set_slug>/eligibility-criteria',
         login_required(views.eligibility_criteria_view),

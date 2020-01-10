@@ -39,6 +39,14 @@ class DataGroupingFactory(factory.django.DjangoModelFactory):
         model = 'datasets.DataGrouping'
 
 
+class SourceTagFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    name = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = 'datasets.SourceTag'
+
+
 class DataSetFactory(factory.django.DjangoModelFactory):
     grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
