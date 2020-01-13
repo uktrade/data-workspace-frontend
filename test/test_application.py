@@ -100,14 +100,14 @@ class TestApplication(unittest.TestCase):
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('Starting Test Application', application_content_1)
+        self.assertIn('Test Application is loading...', application_content_1)
 
         async with session.request(
             'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
         ) as response:
             application_content_2 = await response.text()
 
-        self.assertIn('Starting Test Application', application_content_2)
+        self.assertIn('Test Application is loading...', application_content_2)
 
         # There are forced sleeps in starting a process
         await asyncio.sleep(10)
@@ -219,7 +219,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn('Starting Test Application', content)
+        self.assertIn('Test Application is loading...', content)
         await asyncio.sleep(10)
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
@@ -295,7 +295,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('Starting Test testvisualisation', application_content_1)
+        self.assertIn('testvisualisation is loading...', application_content_1)
 
         await asyncio.sleep(10)
 
@@ -370,7 +370,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('Starting Test testvisualisation-a', application_content_1)
+        self.assertIn('testvisualisation-a is loading...', application_content_1)
 
         await asyncio.sleep(10)
 
@@ -407,7 +407,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             application_content_2 = await response.text()
 
-        self.assertIn('Starting Test testvisualisation-b', application_content_2)
+        self.assertIn('testvisualisation-b is loading...', application_content_2)
 
         await asyncio.sleep(10)
 
@@ -466,20 +466,14 @@ class TestApplication(unittest.TestCase):
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn(
-            'Starting Test Application with 2 CPU and 1 GB of memory',
-            application_content_1,
-        )
+        self.assertIn('Test Application is loading...', application_content_1)
 
         async with session.request(
             'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
         ) as response:
             application_content_2 = await response.text()
 
-        self.assertIn(
-            'Starting Test Application with 2 CPU and 1 GB of memory',
-            application_content_2,
-        )
+        self.assertIn('Test Application is loading...', application_content_2)
 
         # There are forced sleeps in starting a process
         await asyncio.sleep(10)
@@ -673,7 +667,7 @@ class TestApplication(unittest.TestCase):
             headers={'x-forwarded-for': '1.2.3.4'},
         ) as response:
             content = await response.text()
-        self.assertIn('Starting Test Application', content)
+        self.assertIn('Test Application is loading...', content)
         self.assertEqual(response.status, 202)
 
         async with session.request(
@@ -682,7 +676,7 @@ class TestApplication(unittest.TestCase):
             headers={'x-forwarded-for': '6.5.4.3, 1.2.3.4'},
         ) as response:
             content = await response.text()
-        self.assertIn('Starting Test Application', content)
+        self.assertIn('Test Application is loading...', content)
         self.assertEqual(response.status, 202)
 
         async with session.request(
@@ -691,7 +685,7 @@ class TestApplication(unittest.TestCase):
             headers={'x-forwarded-for': '5.1.1.1'},
         ) as response:
             content = await response.text()
-        self.assertIn('Starting Test Application', content)
+        self.assertIn('Test Application is loading...', content)
         self.assertEqual(response.status, 202)
 
         async with session.request(

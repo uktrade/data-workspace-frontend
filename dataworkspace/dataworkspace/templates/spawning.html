@@ -3,122 +3,88 @@
 {% block page_title %}{{ application_nice_name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
-    <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-            <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link" href="{{ root_href }}">Home</a>
-            </li>
-
-            <li class="govuk-breadcrumbs__list-item">
-                {{ application_nice_name }}
-            </li>
-        </ol>
-    </div>
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{{ root_href }}">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'applications:tools' %}">Tools</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">{{ application_nice_name }} is loading</li>
+    </ol>
+  </div>
 {% endblock %}
 
 {% block head %}
-    {{ block.super }}
-    <style>
-        .numeric {
-            font-variant-numeric: tabular-nums;
+  {{ block.super }}
+  <script>
+    (() => {
+      function getStatus(url) {
+        return new Promise((resolve, reject) => {
+          var request = new XMLHttpRequest();
+          request.addEventListener('load', () => {
+            resolve(request.status);
+          });
+          request.addEventListener('error', reject);
+            request.open('GET', url);
+            // Usually the application is started by just going to the same URL that we're
+            // on / we're querying, which is the same URL as the final application.
+            // However, in the case of error the error is returned in the same request
+            // change deletes the application instance on the server. In order to show
+            // the error on a reload, we ensure we don't delete the application instance
+            // from the XMLHttpRequest. We _could_ show error dynamically via JavaScript,
+            // but we also want the errors to be shown on a full page load anyway, so we
+            // choose to only show error using the one mechanism
+            request.setRequestHeader('x-data-workspace-no-modify-application-instance', 'true')
+            request.send();
+          });
         }
-    </style>
-    <script>
-        (() => {
-            function getStatus(url) {
-                return new Promise((resolve, reject) => {
-                    var request = new XMLHttpRequest();
-                    request.addEventListener('load', () => {
-                        resolve(request.status);
-                    });
-                    request.addEventListener('error', reject);
-                    request.open('GET', url);
-                    // Usually the application is started by just going to the same URL that we're
-                    // on / we're querying, which is the same URL as the final application.
-                    // However, in the case of error the error is returned in the same request
-                    // change deletes the application instance on the server. In order to show
-                    // the error on a reload, we ensure we don't delete the application instance
-                    // from the XMLHttpRequest. We _could_ show error dynamically via JavaScript,
-                    // but we also want the errors to be shown on a full page load anyway, so we
-                    // choose to only show error using the one mechanism
-                    request.setRequestHeader('x-data-workspace-no-modify-application-instance', 'true')
-                    request.send(); 
-                });
-            }
 
-            async function reloadIfNot202() {
-                try {
-                    var status = await getStatus(window.location.href);
-                } catch {
-                    window.setTimeout(reloadIfNot202, 10000);
-                    return;
-                }
+        async function reloadIfNot202() {
+          try {
+            var status = await getStatus(window.location.href);
+          } catch {
+            window.setTimeout(reloadIfNot202, 10000);
+            return;
+          }
 
-                if (status != 202) {
-                    window.location.reload();
-                    return;
-                }
+          if (status != 202) {
+            window.location.reload();
+            return;
+          }
 
-                window.setTimeout(reloadIfNot202, 2000);
-            }
+          window.setTimeout(reloadIfNot202, 2000);
+      }
 
-            window.setTimeout(reloadIfNot202, 2000);
-        })();
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // User seconds remaining rather than server time to allow the
-            // server and browser to be different, and we use
-            // window.performance.now which is monotonically increasing even
-            // if the local clock changes
-            var element = document.getElementById('time-remaining');
-            var slowMessage = document.getElementById('slow-message');
-            var end_time = window.performance.now() + {{ seconds_remaining_float }} * 1000;
-
-            function leftPad(str, pad, length) {
-                while (str.length < length) {
-                    str = pad + str;
-                }
-                return str;
-            }
-
-            function timeToNextFrame(now) {
-                var remaining = Math.max(end_time - now, 0.0) / 1000.0;
-                var toNextMaybeZero = remaining - Math.floor(remaining);
-                var toNext = toNextMaybeZero === 0.0 ? 1000.0 : (toNextMaybeZero * 1000);
-                return toNext;
-            }
-
-            function showRemaining() {
-                var now = window.performance.now();
-                var remaining_total = Math.max(0, Math.ceil((end_time - now) / 1000));
-
-                var seconds = remaining_total % 60;
-                var minutes = (remaining_total - seconds) / 60;
-                element.textContent = minutes.toString() + ':' + leftPad(seconds.toString(), '0', 2);
-
-                if (remaining_total == 0) {
-                    slowMessage.style.display = 'block';
-                    return;
-                }
-                window.setTimeout(showRemaining, timeToNextFrame(now));
-            }
-
-            window.setTimeout(showRemaining, timeToNextFrame(window.performance.now()))
-        });
-    </script>
+      window.setTimeout(reloadIfNot202, 2000);
+    })();
+  </script>
 {% endblock %}
 
 {% block inner_content %}
-    <div class="govuk-panel govuk-panel--confirmation govuk-panel--confirmation--left govuk-!-padding-5">
-        <h1 class="govuk-panel__title govuk-!-font-size-27 govuk-!-margin-bottom-2">
-            Starting {{ application_nice_name }} {{ cpu_memory_string }}
-        </h1>
-
-        <div class="govuk-!-font-size-27 govuk-panel__body">
-            Time remaining: <span class="numeric" id="time-remaining">{{ time_remaining }}</span></li>
-            <p style="margin-bottom: 0; display: none;" id="slow-message">{{ application_nice_name }} is taking longer than expected to start. Please wait.</p>
-        </div>
+  <div class="govuk-panel govuk-panel--confirmation govuk-!-padding-8 govuk-!-margin-bottom-6">
+    <h1 class="govuk-panel__title govuk-!-font-size-47 govuk-!-padding-bottom-3">
+      {{ application_nice_name }} is loading...
+    </h1>
+    <h2 class="govuk-panel__body govuk-!-font-size-36 govuk-!-margin-bottom-1">
+      This will take 2 minutes approximately<br />
+    </h2>
+  </div>
+  <p class="govuk-body">
+    {{ application_nice_name }} will be automatically stopped after two hours of inactivity
+  </p>
+  <div class="govuk-grid-row govuk-!-margin-top-6">
+    <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-inset-text">
+        <p class="govuk-body">
+          {{ loading_message.title }}
+          <br />
+          {{ loading_message.body }}
+        </p>
+      </div>
+      <p class="govuk-body">Remember you have a personal responsibility - alongside DIT’s corporate responsibility - to protect data.</p>
+      <p class="govuk-body">If you’re unsure about what you can and can’t do, contact the Data Protection team (<a class="govuk-link" href="mailto:data.protection@trade.gov.uk">data.protection@trade.gov.uk</a>) or talk to your line manager.</p>
     </div>
-
-    <p class="govuk-body">{{ application_nice_name }} will be automatically stopped after two hours of inactivity.</p>
+  </div>
 {% endblock %}

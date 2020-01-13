@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Initial version of the datasets search page with data use and source filters. Only available to Data Workspace staff users at the moment.
 
+# 2020-01-10
+
+### Changed
+
+- Display data protection messaging on tool loading pages
+
+
 ## 2020-01-09
 
 ### Changed
