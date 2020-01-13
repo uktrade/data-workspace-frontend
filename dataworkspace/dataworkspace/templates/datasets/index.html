@@ -37,6 +37,8 @@
     {{ form.source }}
   </div>
   <div class="govuk-grid-column-two-thirds">
+    <p class="govuk-body">{{ datasets.paginator.count }} results</p>
+    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
     {% for dataset in datasets %}
     <div class="search-result">
       <h2 class="govuk-heading-m">
