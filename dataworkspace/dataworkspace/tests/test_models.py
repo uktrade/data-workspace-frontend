@@ -440,61 +440,6 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         # Deleting the dataset should fail
         self.assertRaises(ProtectedError, lambda _: linked_to_dataset.delete(), 1)
 
-    def test_delete_linked_to_reference_dataset_record(self):
-        # Test that a linked to record cannot be deleted
-
-        # Create a linked_to dataset and id field
-        linked_to_dataset = factories.ReferenceDatasetFactory.create(
-            table_name='linked_to_dataset'
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            column_name='refid',
-            reference_dataset=linked_to_dataset,
-            is_identifier=True,
-            is_display_name=True,
-        )
-
-        # Create a linked from dataset and id, link fields
-        linked_from_dataset = factories.ReferenceDatasetFactory.create(
-            table_name='linked_from_dataset'
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            column_name='refid',
-            reference_dataset=linked_from_dataset,
-            is_identifier=True,
-            is_display_name=True,
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            column_name='link',
-            reference_dataset=linked_from_dataset,
-            is_identifier=True,
-            is_display_name=True,
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=linked_to_dataset,
-        )
-
-        # Create a record in the linked_to dataset
-        linked_to_record = linked_to_dataset.save_record(
-            None, {'reference_dataset': linked_to_dataset, 'refid': 'xxx'}
-        )
-
-        # Create a record in the linked_from dataset linking to the linked_to record
-        linked_from_dataset.save_record(
-            None,
-            {
-                'reference_dataset': linked_from_dataset,
-                'refid': 'xxx',
-                'link_id': linked_to_dataset.get_records().first().id,
-            },
-        )
-
-        # Deleting the linked to record should fail
-        self.assertRaises(
-            ProtectedError,
-            lambda _: linked_to_dataset.delete_record(linked_to_record.id),
-            1,
-        )
-
     def test_two_circular_linked_datasets(self):
         # Ensure two datasets cannot be linked to each other
         ref_dataset1 = self._create_reference_dataset(table_name='circular_link_1')
@@ -1466,3 +1411,122 @@ class TestExternalModels(BaseModelsTests):
                 'linked_from_external_dataset', database='test_external_db'
             )
         )
+
+    def test_delete_reference_dataset_sort_field(self):
+        # Create a dataset to link to
+        linked_to_dataset = self._create_reference_dataset(
+            table_name='linked_to_external_dataset'
+        )
+        # Create an identifier field
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_to_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+            is_display_name=False,
+        )
+        # Create a display name field
+        name_field = ReferenceDatasetField.objects.create(
+            reference_dataset=linked_to_dataset,
+            name='field2',
+            column_name='field2',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=False,
+            is_display_name=True,
+        )
+        # Set the sort field
+        linked_to_dataset.sort_field = name_field
+        linked_to_dataset.save()
+
+        # Create a linked_from dataset
+        linked_from_dataset = self._create_reference_dataset(
+            table_name='linked_from_external_dataset'
+        )
+        # Create identifier field
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_from_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+            is_display_name=True,
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_from_dataset,
+            name='field2',
+            column_name='field2',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset=linked_to_dataset,
+        )
+
+        # Deleting the name field should work even though it's the sort field
+        name_field.delete()
+        linked_to_dataset.refresh_from_db()
+        self.assertIsNone(linked_to_dataset.sort_field)
+
+    def test_linked_display_name_field(self):
+        # Create a dataset to link to
+        linked_to_dataset = self._create_reference_dataset(
+            table_name='linked_to_external_dataset'
+        )
+        # Create an identifier field
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_to_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+            is_display_name=False,
+        )
+        # Create a display name field
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_to_dataset,
+            name='field2',
+            column_name='field2',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=False,
+            is_display_name=True,
+        )
+        # Add some records
+        rec1 = linked_to_dataset.save_record(
+            None,
+            {'reference_dataset': linked_to_dataset, 'field1': 1, 'field2': 'test1'},
+        )
+        rec2 = linked_to_dataset.save_record(
+            None,
+            {'reference_dataset': linked_to_dataset, 'field1': 2, 'field2': 'test2'},
+        )
+
+        # Create a linked_from dataset
+        linked_from_dataset = self._create_reference_dataset(
+            table_name='linked_from_external_dataset'
+        )
+        # Create identifier field
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_from_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+            is_display_name=False,
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_from_dataset,
+            name='field2',
+            column_name='field2',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset=linked_to_dataset,
+            is_display_name=True,
+        )
+        # Add some records
+        rec3 = linked_from_dataset.save_record(
+            None,
+            {'reference_dataset': linked_from_dataset, 'field1': 1, 'field2': rec1},
+        )
+        rec4 = linked_from_dataset.save_record(
+            None,
+            {'reference_dataset': linked_from_dataset, 'field1': 2, 'field2': rec2},
+        )
+        self.assertEqual(rec3.get_display_name(), rec1.get_display_name())
+        self.assertEqual(rec4.get_display_name(), rec2.get_display_name())

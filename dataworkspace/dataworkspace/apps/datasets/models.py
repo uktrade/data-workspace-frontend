@@ -878,12 +878,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             else:
                 with external_model_class(model_class) as mc:
                     mc.objects.using(external_database).create(
-                        id=record.id, **record_data
+                        id=record.id, reference_dataset_id=self.id, **record_data
                     )
             saved_ids.append(record.id)
 
-        # Delete any records that are in the external db but not local
-        model_class.objects.using(external_database).exclude(pk__in=saved_ids).delete()
+        with external_model_class(model_class) as mc:
+            mc.objects.using(external_database).exclude(pk__in=saved_ids).delete()
 
     def increment_schema_version(self):
         self.schema_version += 1
@@ -922,11 +922,13 @@ class ReferenceDatasetRecordBase(models.Model):
         return self.get_display_name()
 
     def get_display_name(self):
-        return getattr(
-            self,
-            self.reference_dataset.display_name_field.column_name,
-            'Unknown record',
-        )
+        display_name_field = self.reference_dataset.display_name_field
+        if display_name_field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+            linked_record = getattr(self, display_name_field.column_name)
+            if linked_record is not None:
+                return linked_record.get_display_name()
+            return 'Unknown record'
+        return getattr(self, display_name_field.column_name, 'Unknown record')
 
     def get_identifier(self):
         return getattr(self, self.reference_dataset.identifier_field.column_name, None)
@@ -1167,6 +1169,12 @@ class ReferenceDatasetField(TimeStampedUserModel):
                         model_class,
                         model_class._meta.get_field(self._original_column_name),
                     )
+
+        # Remove reference dataset sort field if it is set to this field
+        if self.reference_dataset.sort_field == self:
+            self.reference_dataset.sort_field = None
+            self.reference_dataset.save()
+
         super().delete(using, keep_parents)
         self.reference_dataset.increment_schema_version()
         self.reference_dataset.increment_major_version()
@@ -1213,7 +1221,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
                 {
                     'verbose_name': 'Linked Reference Dataset',
                     'to': self.linked_reference_dataset.get_record_model_class(),
-                    'on_delete': models.PROTECT,
+                    'on_delete': models.DO_NOTHING,
                 }
             )
         elif self.data_type == self.DATA_TYPE_UUID:

@@ -18,7 +18,7 @@ from django.db import connections
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.datasets.models import DataSet, SourceTable
+from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
 
@@ -221,11 +221,11 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
 
     database_to_tables = {
         database_obj: [
-            (source_table.schema, source_table.table)
+            (source_table['schema'], source_table['table'])
             for source_table in source_tables_for_database
         ]
         for database_obj, source_tables_for_database in itertools.groupby(
-            source_tables, lambda source_table: source_table.database
+            source_tables, lambda source_table: source_table['database']
         )
     }
     creds = [
@@ -310,7 +310,17 @@ def source_tables_for_user(user):
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__datasetuserpermission__user=user,
     )
-    return req_authentication_tables.union(req_authorization_tables)
+    source_tables = [
+        {'database': x.database, 'schema': x.schema, 'table': x.table}
+        for x in req_authentication_tables.union(req_authorization_tables)
+    ]
+    reference_dataset_tables = [
+        {'database': x.external_database, 'schema': 'public', 'table': x.table_name}
+        for x in ReferenceDataset.objects.filter(published=True, deleted=False).exclude(
+            external_database=None
+        )
+    ]
+    return source_tables + reference_dataset_tables
 
 
 def source_tables_for_app(application_template):
@@ -322,7 +332,17 @@ def source_tables_for_app(application_template):
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__datasetapplicationtemplatepermission__application_template=application_template,
     )
-    return req_authentication_tables.union(req_authorization_tables)
+    source_tables = [
+        {'database': x.database, 'schema': x.schema, 'table': x.table}
+        for x in req_authentication_tables.union(req_authorization_tables)
+    ]
+    reference_dataset_tables = [
+        {'database': x.external_database, 'schema': 'public', 'table': x.table_name}
+        for x in ReferenceDataset.objects.filter(published=True, deleted=False).exclude(
+            external_database=None
+        )
+    ]
+    return source_tables + reference_dataset_tables
 
 
 def view_exists(database, schema, view):

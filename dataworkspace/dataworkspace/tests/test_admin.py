@@ -2171,6 +2171,62 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             .exists()
         )
 
+    def test_delete_sort_field(self):
+        reference_dataset = self._create_reference_dataset()
+        field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=2, is_display_name=True
+        )
+        reference_dataset.sort_field = field1
+        reference_dataset.save()
+
+        response = self._authenticated_post(
+            reverse(
+                'admin:datasets_referencedataset_change', args=(reference_dataset.id,)
+            ),
+            {
+                'id': reference_dataset.id,
+                'name': 'test updated',
+                'table_name': reference_dataset.table_name,
+                'slug': 'test-ref-1',
+                'group': reference_dataset.group.id,
+                'external_database': '',
+                'short_description': 'test description that is short',
+                'description': '',
+                'valid_from': '',
+                'valid_to': '',
+                'enquiries_contact': '',
+                'licence': '',
+                'restrictions_on_usage': '',
+                'sort_field': field1.id,
+                'sort_direction': ReferenceDataset.SORT_DIR_DESC,
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 2,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-id': field1.id,
+                'fields-0-reference_dataset': reference_dataset.id,
+                'fields-0-name': 'updated_field_1',
+                'fields-0-column_name': field1.column_name,
+                'fields-0-data_type': 2,
+                'fields-0-description': 'Updated field 1',
+                'fields-0-DELETE': 'on',
+                'fields-1-id': field2.id,
+                'fields-1-reference_dataset': reference_dataset.id,
+                'fields-1-name': 'updated_field_2',
+                'fields-1-column_name': field2.column_name,
+                'fields-1-data_type': 2,
+                'fields-1-description': 'Updated field 2',
+                'fields-1-is_identifier': 'on',
+                'fields-1-is_display_name': 'on',
+            },
+        )
+        self.assertContains(response, 'was changed successfully')
+        reference_dataset.refresh_from_db()
+        self.assertIsNone(reference_dataset.sort_field)
+
 
 class TestSourceLinkAdmin(BaseAdminTestCase):
     def test_source_link_upload_get(self):
