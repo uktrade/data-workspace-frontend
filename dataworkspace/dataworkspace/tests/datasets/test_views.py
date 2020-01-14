@@ -144,6 +144,7 @@ def test_old_reference_dataset_url_redirects_to_new_url(client):
 
 @override_flag('datasets-search', active=True)
 def test_find_datasets_combines_results(client):
+    factories.DataSetFactory.create(published=False, name='Unpublished dataset')
     ds = factories.DataSetFactory.create(published=True, name='A dataset')
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A reference dataset'

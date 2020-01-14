@@ -188,7 +188,7 @@ def filter_datasets(datasets, query, source, use=None):
     search = SearchVector('name', 'short_description')
     search_query = SearchQuery(query)
 
-    datasets = datasets.annotate(
+    datasets = datasets.filter(published=True).annotate(
         search=search, search_rank=SearchRank(search, search_query)
     )
 
@@ -220,7 +220,9 @@ def find_datasets(request):
 
     # Include reference datasets if required
     if not use or "0" in use:
-        reference_datasets = filter_datasets(ReferenceDataset.objects, query, source)
+        reference_datasets = filter_datasets(
+            ReferenceDataset.objects.live(), query, source
+        )
         datasets = datasets.values(
             'id', 'name', 'slug', 'short_description', 'search_rank'
         ).union(
