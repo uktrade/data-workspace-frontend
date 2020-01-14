@@ -37,6 +37,7 @@ RUN \
 	apt-get -o Acquire::Check-Valid-Until=false update && \
 	apt-get -o Acquire::Check-Valid-Until=false install -y --no-install-recommends \
 		gdebi-core=0.9.5.7+nmu3 \
+		git=1:2.20.1-2 \
 		procps=2:3.3.15-2 \
 		r-base=3.6.1-2~bustercran.0 \
 		r-base-dev=3.6.1-2~bustercran.0 \

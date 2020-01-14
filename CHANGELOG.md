@@ -5,12 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
-<<<<<<< HEAD
 ## 2020-01-14
+
+### Added
+
+- git to RStudio and JupyterLab, ready for the upcoming connection to GitLab
+
 
 ### Changed
 
 - Version of mobius3, to include changes to better sync nested directories, for the upcoming connection to GitLab from tools
+- Which local files are synced to S3 from the tools local home folder to include `.git`
 
 
 ## 2020-01-08
