@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## 2020-01-14
+
+### Changed
+
+- Version of mobius3, to include changes to better sync nested directories, for the upcoming connection to GitLab from tools
+
+
 ## 2020-01-08
 
 ### Added
