@@ -93,6 +93,15 @@ variable s3sync_container_image {}
 variable google_analytics_site_id {}
 variable google_data_studio_connector_pattern {}
 
+variable gitlab_domain {}
+variable gitlab_bucket {}
+variable gitlab_container_image {}
+variable gitlab_db_instance_class {}
+
+variable gitlab_sso_id {}
+variable gitlab_sso_secret {}
+variable gitlab_sso_domain {}
+
 locals {
   registry_container_name    = "jupyterhub-registry"
   registry_container_port    = "5000"
@@ -147,4 +156,7 @@ locals {
   prometheus_alb_port = "443"
   prometheus_container_memory     = 512
   prometheus_container_cpu        = 256
+
+  gitlab_container_memory = 8192
+  gitlab_container_cpu    = 4096
 }
