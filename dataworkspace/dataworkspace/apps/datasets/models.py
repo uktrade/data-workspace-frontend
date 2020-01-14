@@ -678,12 +678,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return:
         """
         try:
-            field = self.fields.get(is_display_name=True)
+            return self.fields.get(is_display_name=True)
         except ReferenceDatasetField.DoesNotExist:
-            field = self.fields.get(is_identifier=True)
-        if field.data_type == field.DATA_TYPE_FOREIGN_KEY:
-            return field.linked_reference_dataset.display_name_field
-        return field
+            return self.fields.get(is_identifier=True)
 
     @property
     def export_field_names(self) -> List[str]:
@@ -925,11 +922,13 @@ class ReferenceDatasetRecordBase(models.Model):
         return self.get_display_name()
 
     def get_display_name(self):
-        return getattr(
-            self,
-            self.reference_dataset.display_name_field.column_name,
-            'Unknown record',
-        )
+        display_name_field = self.reference_dataset.display_name_field
+        if display_name_field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+            linked_record = getattr(self, display_name_field.column_name)
+            if linked_record is not None:
+                return linked_record.get_display_name()
+            return 'Unknown record'
+        return getattr(self, display_name_field.column_name, 'Unknown record')
 
     def get_identifier(self):
         return getattr(self, self.reference_dataset.identifier_field.column_name, None)
