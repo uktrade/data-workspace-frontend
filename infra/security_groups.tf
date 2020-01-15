@@ -388,18 +388,6 @@ resource "aws_security_group" "admin_db" {
   }
 }
 
-resource "aws_security_group_rule" "admin_sdb_egress_https_to_cloudwatch" {
-  description = "egress-https-to-cloudwatch"
-
-  security_group_id = "${aws_security_group.admin_db.id}"
-  source_security_group_id = "${aws_security_group.cloudwatch.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
 resource "aws_security_group_rule" "admin_db_ingress_postgres_from_admin_service" {
   description = "ingress-postgres-from-admin-service"
 
@@ -850,18 +838,6 @@ resource "aws_security_group" "gitlab_redis" {
   lifecycle {
     create_before_destroy = true
   }
-}
-
-resource "aws_security_group_rule" "gitlab_redis_egress_https_to_cloudwatch" {
-  description = "egress-https-to-cloudwatch"
-
-  security_group_id = "${aws_security_group.gitlab_redis.id}"
-  source_security_group_id = "${aws_security_group.cloudwatch.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
 }
 
 resource "aws_security_group_rule" "admin_gitlab_ingress_from_gitlab_service" {
