@@ -52,11 +52,11 @@
       Displaying datasets {{ datasets.start_index  }}&ndash;{{ datasets.end_index }} of {{ datasets.paginator.count }}
       <ul class="pagination govuk-list">
         {% if datasets.has_previous %}
-          <li><a href="{% url_replace page=datasets.previous_page_number %}">Previous</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=datasets.previous_page_number %}">Previous</a></li>
         {% endif %}
 
         {% if datasets.number > 3 %}
-          <li><a href="{% url_replace page=1 %}">{{ 1 }}</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=1 %}">{{ 1 }}</a></li>
           {% if datasets.number > 4 %}<li>&hellip;</li>{% endif %}
         {% endif %}
 
@@ -65,18 +65,18 @@
           {% if datasets.number == i %}
             <li class="active">{{ i }}</li>
           {% elif i >= datasets.number|add:'-2' and i <= datasets.number|add:'2' %}
-            <li><a href="{% url_replace page=i %}">{{ i }}</a></li>
+            <li><a class="govuk-link" href="{% url_replace page=i %}">{{ i }}</a></li>
           {% endif %}
         {% endfor %}
         {% endif %}
 
         {% if datasets.paginator.num_pages > datasets.number|add:'2' %}
           {% if datasets.paginator.num_pages > datasets.number|add:'3' %}<li>&hellip;</li>{% endif %}
-          <li><a href="{% url_replace page=datasets.paginator.num_pages %}">{{ datasets.paginator.num_pages }}</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=datasets.paginator.num_pages %}">{{ datasets.paginator.num_pages }}</a></li>
         {% endif %}
 
         {% if datasets.has_next %}
-          <li><a href="{% url_replace page=datasets.next_page_number %}">Next</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=datasets.next_page_number %}">Next</a></li>
         {% endif %}
       </ul>
     </nav>
