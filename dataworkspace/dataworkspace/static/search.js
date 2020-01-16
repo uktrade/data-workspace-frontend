@@ -1,6 +1,31 @@
 (function ($) {
   "use strict";
 
+  var ToggleInputClassOnFocus = function ($el) {
+    var $toggleTarget = $el.find('.js-class-toggle')
+
+    if (!inputIsEmpty()) {
+      addFocusClass()
+    }
+
+    $toggleTarget.on('focus', addFocusClass)
+    $toggleTarget.on('blur', removeFocusClassFromEmptyInput)
+
+    function inputIsEmpty () {
+      return $toggleTarget.val() === ''
+    }
+
+    function addFocusClass () {
+      $toggleTarget.addClass('focus')
+    }
+
+    function removeFocusClassFromEmptyInput () {
+      if (inputIsEmpty()) {
+        $toggleTarget.removeClass('focus')
+      }
+    }
+  }
+
   var LiveSearch = function(formSelector, wrapperSelector){
     this.wrapperSelector = wrapperSelector;
     this.$wrapper = $(wrapperSelector);
@@ -168,5 +193,6 @@
 
   $(document).ready(function() {
     var form = new LiveSearch('#live-search-form', '#live-search-wrapper');
+    var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
   });
 })(jQuery);
