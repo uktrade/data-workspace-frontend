@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-01-16
+
+### Changed
+
+- Fix issue where admins were unable to create new users
+
+
 ## 2020-01-15
 
 ### Changed
