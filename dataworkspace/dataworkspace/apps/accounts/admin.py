@@ -251,8 +251,12 @@ class AppUserAdmin(UserAdmin):
 
         current_datasets = set(DataSet.objects.filter(datasetuserpermission__user=obj))
         authorized_datasets = set(
-            form.cleaned_data.get('authorized_master_datasets', DataSet.objects.none()).union(
-                form.cleaned_data.get('authorized_data_cut_datasets', DataSet.objects.none())
+            form.cleaned_data.get(
+                'authorized_master_datasets', DataSet.objects.none()
+            ).union(
+                form.cleaned_data.get(
+                    'authorized_data_cut_datasets', DataSet.objects.none()
+                )
             )
         )
 
