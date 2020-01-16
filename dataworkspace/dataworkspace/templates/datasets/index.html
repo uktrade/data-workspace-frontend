@@ -3,11 +3,17 @@
 {% load static %}
 {% load datasets_tags %}
 
+{% block head %}
+    {{ block.super }}
+    <script src="{% get_static_prefix %}jquery-3.4.1.min.js"></script>
+    <script src="{% get_static_prefix %}search.js"></script>
+{% endblock %}
+
 {% block page_title %}Search - {{ block.super }}{% endblock %}
 
 {% block inner_content %}
 
-<form action="/datasets/" method="get">
+<form id="live-search-form" action="/datasets/" method="get">
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
@@ -36,7 +42,7 @@
     {{ form.use }}
     {{ form.source }}
   </div>
-  <div class="govuk-grid-column-two-thirds">
+  <div id="live-search-wrapper" class="govuk-grid-column-two-thirds">
     <p class="govuk-body">{{ datasets.paginator.count }} results</p>
     <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
     {% for dataset in datasets %}
