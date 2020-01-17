@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Fix issue where admins were unable to create new users
+- Update search results on filter / search input change
+- Add search input "placeholder" label
 
 
 ## 2020-01-15
