@@ -448,6 +448,9 @@ def streaming_query_response(user_email, database, query, filename):
             except gevent.queue.Empty:
                 pass
 
+        if put_db_rows_to_queue_job.exception:
+            raise put_db_rows_to_queue_job.exception
+
         logger.info(
             'streaming_query_response end: %s %s %s', user_email, database, query
         )
