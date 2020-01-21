@@ -1,11 +1,13 @@
 FROM alpine:3.10
 
 RUN apk --no-cache add \
-	dnsmasq==2.80-r3 \
-	python3=3.7.3-r0
+	python3=3.7.5-r1
 
-COPY dnsmasq-set-dhcp.py /dnsmasq-set-dhcp.py
-COPY dnsmasq-entrypoint.sh /entrypoint.sh
+RUN pip3 install \
+	aiodnsresolver==0.0.151 \
+	dnsrewriteproxy==0.0.13
+
+COPY set-dhcp.py nameserver.py entrypoint.sh /
 
 ENTRYPOINT ["sh"]
 CMD ["entrypoint.sh"]

@@ -24,7 +24,8 @@ RUN \
 	apt-get install -y --no-install-recommends \
 		ca-certificates \
 		dirmngr \
-		gnupg2 && \
+		gnupg2 \
+		ssh && \
 	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
 	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \

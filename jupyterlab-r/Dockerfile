@@ -25,6 +25,7 @@ RUN \
         git=2.18.2-r0 \
         libexecinfo-dev=1.1-r0 \
         linux-headers=4.4.6-r2 \
+        openssh-client=7.7_p1-r4 \
         texlive-xetex=20170524-r5 \
         texmf-dist-latexextra=2017.46770-r0 && \
     apk add --no-cache --virtual .build-deps \

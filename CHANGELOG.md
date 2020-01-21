@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Bumped version of nginx to 1.16.1-r2
+- Use dns-rewrite-proxy instead of dnsmasq to allow gitlab.publicdomain.com to resolve to a private ip address inside tools
+- Security groups to allow the tools to communicate with gitlab on port 22
+
+### Added
+
+- SSH to each tool, so git can connect using SSH.
 
 
 ## 2020-01-16
