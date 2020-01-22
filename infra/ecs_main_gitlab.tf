@@ -35,7 +35,7 @@ resource "aws_ecs_service" "gitlab" {
 }
 
 resource "aws_service_discovery_service" "gitlab" {
-  name = "${var.prefix}-gitlab"
+  name = "gitlab"
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.jupyterhub.id}"
     dns_records {

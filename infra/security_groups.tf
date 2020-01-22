@@ -450,6 +450,18 @@ resource "aws_security_group_rule" "notebooks_egress_https_to_everywhere" {
   protocol  = "tcp"
 }
 
+resource "aws_security_group_rule" "notebooks_egress_ssh_to_gitlab_service" {
+  description = "ingress-ssh-from-nlb"
+
+  security_group_id = "${aws_security_group.notebooks.id}"
+  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+
+  type        = "egress"
+  from_port   = "22"
+  to_port     = "22"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "notebooks_egress_dns_tcp" {
   description = "egress-dns-tcp"
 
@@ -783,6 +795,18 @@ resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb" {
 
   security_group_id = "${aws_security_group.gitlab_service.id}"
   cidr_blocks = ["${aws_eip.gitlab.private_ip}/32"]
+
+  type        = "ingress"
+  from_port   = "22"
+  to_port     = "22"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_notebooks" {
+  description = "ingress-ssh-from-nlb"
+
+  security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id = "${aws_security_group.notebooks.id}"
 
   type        = "ingress"
   from_port   = "22"
