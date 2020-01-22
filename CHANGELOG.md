@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-01-22
+
+### Changed
+
+- What directories are synced from tools to include .ssh, to better support the upcoming GitLab integration.
+
+
 ## 2020-01-20
 
 ### Changed
