@@ -26,7 +26,8 @@ RUN \
         linux-headers=4.4.6-r2 \
         openssh-client=7.7_p1-r4 \
         texlive-xetex=20170524-r5 \
-        texmf-dist-latexextra=2017.46770-r0 && \
+        texmf-dist-latexextra=2017.46770-r0 \
+        zlib-dev=1.2.11-r1 && \
     apk add --no-cache --virtual .build-deps \
         wget=1.20.3-r0 && \
     wget https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -O /etc/apk/keys/sgerrand.rsa.pub && \
@@ -37,6 +38,16 @@ RUN \
         glibc-2.28-r0.apk && \
     rm /etc/apk/keys/sgerrand.rsa.pub && \
     rm glibc-2.28-r0.apk && \
+    wget -q https://github.com/git/git/archive/v2.25.0.zip && \
+    echo "ec29702c69b55f5af8431f392310188c679512c17f5bc890e00275a1a536c5a3  v2.25.0.zip" | sha256sum -c && \
+    unzip v2.25.0.zip && \
+    cd ./git-2.25.0 && \
+    autoconf && \
+    ./configure NO_MMAP=1 --without-tcltk && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -r -f v2.25.0.zip git-2.25.0 && \
     wget http://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
     echo "e1045ee415162f944b6aebfe560b8fee  miniconda.sh" | md5sum -c && \
     mkdir -p "$CONDA_DIR" && \

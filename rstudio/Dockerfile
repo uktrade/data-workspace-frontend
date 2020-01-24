@@ -37,8 +37,9 @@ RUN \
 	rm -rf /var/lib/apt/lists/* && \
 	apt-get -o Acquire::Check-Valid-Until=false update && \
 	apt-get -o Acquire::Check-Valid-Until=false install -y --no-install-recommends \
+		autoconf \
 		gdebi-core=0.9.5.7+nmu3 \
-		git=1:2.20.1-2 \
+		gettext \
 		procps=2:3.3.15-2 \
 		r-base=3.6.1-2~bustercran.0 \
 		r-base-dev=3.6.1-2~bustercran.0 \
@@ -56,7 +57,18 @@ RUN \
 	echo "bfea9b32c04b721d5d2fb29be510b4378d57a6cd6c8c0dc8390b8760a87341b3  rstudio-server-1.2.5019-amd64.deb" | sha256sum -c && \
 	gdebi --non-interactive rstudio-server-1.2.5019-amd64.deb && \
 	rm rstudio-server-1.2.5019-amd64.deb && \
+	wget -q https://github.com/git/git/archive/v2.25.0.zip && \
+	echo "ec29702c69b55f5af8431f392310188c679512c17f5bc890e00275a1a536c5a3  v2.25.0.zip" | sha256sum -c && \
+	unzip v2.25.0.zip && \
+	cd /git-2.25.0 && \
+	autoconf && \
+	./configure NO_MMAP=1 --without-tcltk && \
+	make && \
+	make install && \
+	cd .. && \
+	rm -r -f v2.25.0.zip git-2.25.0 && \
 	apt-get remove --purge -y \
+		autoconf \
 		dirmngr \
 		gdebi-core \
 		gnupg2 \
