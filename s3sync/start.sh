@@ -19,4 +19,4 @@ mobius3 \
     --log-level INFO \
     --credentials-source ecs-container-endpoint \
     --exclude-remote '(.*(/|^)\.checkpoints/)|(.*(/|^)bigdata/.*)' \
-    --exclude-local '^(?!.*/\.git($|(/.+)))((.*/\..*)|(.*(/|^)bigdata/.*))'
+    --exclude-local '^(?!.*/\.ssh($|(/.+)))(?!.*/\.git($|(/.+)))((.*/\..*)|(.*(/|^)bigdata/.*))'
