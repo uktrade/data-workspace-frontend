@@ -438,6 +438,9 @@ class CustomDatasetQuery(TimeStampedModel):
         verbose_name = 'SQL Query'
         verbose_name_plural = 'SQL Queries'
 
+    def __str__(self):
+        return f'{self.dataset.name}: {self.name}'
+
     def get_absolute_url(self):
         return reverse(
             'catalogue:dataset_query_download',

@@ -27,6 +27,7 @@ from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataInlineFormset,
     ReferenceDatasetForm,
     MasterDatasetForm,
+    CustomDatasetQueryForm,
 )
 
 logger = logging.getLogger('app')
@@ -286,3 +287,9 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                 f.instance.created_by = request.user
             f.instance.updated_by = request.user
         super().save_formset(request, form, formset, change)
+
+
+@admin.register(CustomDatasetQuery)
+class CustomDatasetQueryAdmin(admin.ModelAdmin):
+    search_fields = ['name', 'query', 'dataset__name']
+    form = CustomDatasetQueryForm

@@ -15,6 +15,8 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
     ReferenceDatasetField,
+    CustomDatasetQuery,
+    DataCutDataset,
 )
 
 
@@ -364,3 +366,11 @@ class SourceLinkUploadForm(forms.ModelForm):
         model = SourceLink
         fields = ('dataset', 'name', 'format', 'frequency', 'file')
         widgets = {'dataset': forms.HiddenInput()}
+
+
+class CustomDatasetQueryForm(forms.ModelForm):
+    model = CustomDatasetQuery
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['dataset'].queryset = DataCutDataset.objects.all()
