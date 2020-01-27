@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Version of mobius3, and its configuration to fix syncing issues with .git directories
 
+### Added
+
+- Nano editor in tools images, to ease editing of dotfiles
+
 
 ## 2020-01-22
 
