@@ -19,4 +19,5 @@ mobius3 \
     --log-level INFO \
     --credentials-source ecs-container-endpoint \
     --exclude-remote '(.*(/|^)\.checkpoints/)|(.*(/|^)bigdata/.*)' \
-    --exclude-local '^(?!.*/\.ssh($|(/.+)))(?!.*/\.git($|(/.+)))((.*/\..*)|(.*(/|^)bigdata/.*))'
+    --exclude-local '^(?!.*/\.ssh($|(/.+)))(?!.*/\.git($|(/.+)))((.*/\..*)|(.*(/|^)bigdata/.*))' \
+    --upload-on-create '^.*/\.git/objects/pack/.+\.((pack)|(m?idx))$'
