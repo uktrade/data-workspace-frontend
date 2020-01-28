@@ -44,6 +44,10 @@ def healthcheck_view(_):
     return HttpResponse('OK')
 
 
+def about_page_view(request):
+    return render(request, 'about.html', {}, status=200)
+
+
 class SupportView(FormView):
     form_class = SupportForm
     template_name = 'core/support.html'

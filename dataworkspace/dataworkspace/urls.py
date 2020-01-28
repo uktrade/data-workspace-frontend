@@ -6,6 +6,7 @@ from django.urls import path, include
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.catalogue.views import root_view
 from dataworkspace.apps.core.views import (
+    about_page_view,
     public_error_403_html_view,
     public_error_404_html_view,
     public_error_500_html_view,
@@ -29,6 +30,7 @@ admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
     path('', login_required(root_view), name='root'),
+    path('about/', login_required(about_page_view), name='about'),
     path('error_403', public_error_403_html_view),
     path('error_404', public_error_404_html_view),
     path('error_500', public_error_500_html_view),
