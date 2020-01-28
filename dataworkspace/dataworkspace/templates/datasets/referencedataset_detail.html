@@ -10,11 +10,6 @@
         <a class="govuk-breadcrumbs__link" href="/">Home</a>
       </li>
       <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link" href="{% url 'catalogue:datagroup_item' object.group.slug %}">
-          {{ object.group.name }}
-        </a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item">
         {{ object.name }}
       </li>
       {% if perms.datasets_referencedataset.change %}
@@ -208,16 +203,6 @@
           </dt>
           <dd class="govuk-summary-list__value">
             {{ object.data_last_updated| date:"d/m/Y" }}
-          </dd>
-        </div>
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">
-            Part of
-          </dt>
-          <dd class="govuk-summary-list__value">
-            <a class="govuk-link" href="{% url 'catalogue:datagroup_item' object.group.slug %}">
-              {{ object.group.name }}
-            </a>
           </dd>
         </div>
         <div class="govuk-summary-list__row">
