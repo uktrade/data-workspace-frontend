@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-01-28
+
+### Added
+
+- New header layout for the search UI (only visible with users with a feature flag set)
+- Navigation links in the footer (behind a feature flag)
+- New about page
+
+
 ## 2020-01-27
 
 ### Changed
