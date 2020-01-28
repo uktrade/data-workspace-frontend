@@ -139,6 +139,20 @@ class DataSet(TimeStampedModel):
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
     source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
+    information_asset_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='info_asset_owned_datasets',
+        null=True,
+        blank=True,
+    )
+    information_asset_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='info_asset_managed_datasets',
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = 'app_dataset'
@@ -438,6 +452,9 @@ class CustomDatasetQuery(TimeStampedModel):
         verbose_name = 'SQL Query'
         verbose_name_plural = 'SQL Queries'
 
+    def __str__(self):
+        return f'{self.dataset.name}: {self.name}'
+
     def get_absolute_url(self):
         return reverse(
             'catalogue:dataset_query_download',
@@ -514,6 +531,20 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     )
     number_of_downloads = models.PositiveIntegerField(default=0)
     source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
+    information_asset_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='info_asset_owned_reference_datasets',
+        null=True,
+        blank=True,
+    )
+    information_asset_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='info_asset_managed_reference_datasets',
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = 'app_referencedataset'

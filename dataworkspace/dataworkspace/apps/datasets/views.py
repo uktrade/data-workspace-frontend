@@ -78,8 +78,8 @@ def request_access_view(request, group_slug, set_slug):
                 user_url,
                 dataset_name,
                 dataset_url,
-                dataset.grouping.information_asset_owner,
-                dataset.grouping.information_asset_manager,
+                dataset.information_asset_owner,
+                dataset.information_asset_manager,
             )
 
             url = reverse('datasets:request_access_success')

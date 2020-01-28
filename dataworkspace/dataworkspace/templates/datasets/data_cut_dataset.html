@@ -186,7 +186,18 @@
                     <dt class="govuk-summary-list__key">Restrictions on usage</dt>
                     <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
                 </div>
-
+                <div class="govuk-summary-list__row">
+                  <dt class="govuk-summary-list__key">Information Asset Manager</dt>
+                  <dd class="govuk-summary-list__value">
+                    {% include 'partials/contact.html' with model=model.information_asset_manager %}
+                  </dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                  <dt class="govuk-summary-list__key">Information Asset Owner</dt>
+                  <dd class="govuk-summary-list__value">
+                    {% include 'partials/contact.html' with model=model.information_asset_owner %}
+                  </dd>
+                </div>
             </dl>
         </div>
     </div>

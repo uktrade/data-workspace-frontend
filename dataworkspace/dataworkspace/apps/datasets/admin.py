@@ -27,6 +27,7 @@ from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataInlineFormset,
     ReferenceDatasetForm,
     MasterDatasetForm,
+    CustomDatasetQueryForm,
 )
 
 logger = logging.getLogger('app')
@@ -102,6 +103,8 @@ class BaseDatasetAdmin(admin.ModelAdmin):
                     'grouping',
                     'description',
                     'enquiries_contact',
+                    'information_asset_owner',
+                    'information_asset_manager',
                     'licence',
                     'retention_policy',
                     'personal_data',
@@ -239,6 +242,8 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                     'valid_from',
                     'valid_to',
                     'enquiries_contact',
+                    'information_asset_owner',
+                    'information_asset_manager',
                     'licence',
                     'restrictions_on_usage',
                     'sort_field',
@@ -286,3 +291,9 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                 f.instance.created_by = request.user
             f.instance.updated_by = request.user
         super().save_formset(request, form, formset, change)
+
+
+@admin.register(CustomDatasetQuery)
+class CustomDatasetQueryAdmin(admin.ModelAdmin):
+    search_fields = ['name', 'query', 'dataset__name']
+    form = CustomDatasetQueryForm

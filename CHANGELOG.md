@@ -11,6 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Version of mobius3, and its configuration to fix syncing issues with .git directories
 
+### Added
+
+- Adds an admin page for `CustomDatasetQuery` models.
+- 2 new fields were added to the `DataSet` and `ReferenceDataset` models:
+    - `information_asset_manager`
+    - `information_asset_owner`
+
 
 ## 2020-01-22
 
