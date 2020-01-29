@@ -295,60 +295,6 @@ class CustomDatasetQueryDownloadView(DetailView):
         )
 
 
-def root_view(request):
-    return (
-        root_view_GET(request) if request.method == 'GET' else HttpResponse(status=405)
-    )
-
-
-def root_view_GET(request):
-    sso_id_hex = hashlib.sha256(
-        str(request.user.profile.sso_id).encode('utf-8')
-    ).hexdigest()
-    sso_id_hex_short = sso_id_hex[:8]
-
-    application_instances = {
-        application_instance.application_template: application_instance
-        for application_instance in filter_api_visible_application_instances_by_owner(
-            request.user
-        )
-    }
-
-    def link(application_template):
-        # Not the most robust method of finding the hostname, but the patterns aren't ever
-        # directly controlled by users.
-        public_host = application_template.host_pattern
-        public_host = public_host.replace('^', '')
-        public_host = public_host.replace('$', '')
-        # Some patterns have "<user>", but some have "(?P<user>.*)"
-        public_host = public_host.replace('(?P<user>.*)', '<user>')
-        public_host = public_host.replace('<user>', sso_id_hex_short)
-
-        return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
-
-    context = {
-        'applications': [
-            {
-                'name': application_template.name,
-                'nice_name': application_template.nice_name,
-                'link': link(application_template),
-                'instance': application_instances.get(application_template, None),
-            }
-            for application_template in ApplicationTemplate.objects.all().order_by(
-                'name'
-            )
-            for application_link in [link(application_template)]
-            if application_template.visible
-        ],
-        'appstream_url': settings.APPSTREAM_URL,
-        'your_files_enabled': settings.YOUR_FILES_ENABLED,
-        'groupings': DataGrouping.objects.with_published_datasets().order_by(
-            Lower('name')
-        ),
-    }
-    return render(request, 'root.html', context)
-
-
 def filter_api_visible_application_instances_by_owner(owner):
     # From the point of view of the API, /public_host/<host-name> is a single
     # spawning or running application, and if it's not spawning or running

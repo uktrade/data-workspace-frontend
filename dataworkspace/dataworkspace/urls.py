@@ -4,7 +4,6 @@ from django.contrib import admin
 from django.urls import path, include
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.catalogue.views import root_view
 from dataworkspace.apps.core.views import (
     about_page_view,
     public_error_403_html_view,
@@ -15,6 +14,7 @@ from dataworkspace.apps.core.views import (
     table_data_view,
     file_browser_html_view,
 )
+from dataworkspace.apps.datasets.views import find_datasets
 from dataworkspace.apps.appstream.views import (
     appstream_view,
     appstream_admin_view,
@@ -29,7 +29,7 @@ admin.site.site_header = 'Data Workspace'
 admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
-    path('', login_required(root_view), name='root'),
+    path('', login_required(find_datasets), name='root'),
     path('about/', login_required(about_page_view), name='about'),
     path('error_403', public_error_403_html_view),
     path('error_404', public_error_404_html_view),

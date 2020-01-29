@@ -23,29 +23,6 @@ class TestDatasetViews(BaseTestCase):
         response = self._authenticated_get(reverse('root'))
         self.assertEqual(response.status_code, 200)
 
-    def test_homepage_group_list(self):
-        group_with_published_dataset = factories.DataGroupingFactory.create()
-        factories.DataSetFactory(grouping=group_with_published_dataset, published=True)
-
-        group_with_unpublished_dataset = factories.DataGroupingFactory.create()
-        factories.DataSetFactory(
-            grouping=group_with_unpublished_dataset, published=False
-        )
-
-        empty_group = factories.DataGroupingFactory.create()
-
-        deleted_group = factories.DataGroupingFactory.create()
-        deleted_group.delete()
-
-        response = self._authenticated_get(reverse('root'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, group_with_published_dataset.name, 1)
-        self.assertNotContains(response, group_with_unpublished_dataset.name)
-        self.assertNotContains(response, empty_group.name)
-
-        # Do not show deleted groups
-        self.assertNotContains(response, deleted_group.name)
-
     def test_group_detail_view(self):
         group = factories.DataGroupingFactory.create()
 
