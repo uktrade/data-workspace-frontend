@@ -8,7 +8,6 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView
-from waffle.decorators import waffle_flag
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.datasets.forms import (
@@ -205,7 +204,6 @@ def filter_datasets(datasets, query, source, use=None):
 
 
 @require_GET
-@waffle_flag('datasets-search')
 def find_datasets(request):
     form = DatasetSearchForm(request.GET)
 
