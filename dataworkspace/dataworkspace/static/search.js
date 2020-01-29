@@ -89,7 +89,7 @@
       pageUpdated = this.updateResults();
       pageUpdated.done(
         function(){
-          var newPath = window.location.origin + window.location.pathname + "?" + $.param(this.state);
+          var newPath = window.location.origin + this.$form.attr('action') + "?" + $.param(this.state);
           history.pushState(this.state, '', newPath);
         }.bind(this)
       );
