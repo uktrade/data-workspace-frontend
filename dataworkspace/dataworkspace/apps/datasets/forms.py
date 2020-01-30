@@ -35,8 +35,8 @@ class DatasetSearchForm(forms.Form):
 
     use = forms.MultipleChoiceField(
         choices=[
-            (DataSet.TYPE_MASTER_DATASET, 'Analyse in tools'),
             (DataSet.TYPE_DATA_CUT, 'Download'),
+            (DataSet.TYPE_MASTER_DATASET, 'Analyse in tools'),
             (0, 'Reference'),
         ],
         required=False,
