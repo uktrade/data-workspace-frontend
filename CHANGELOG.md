@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-01-28
 
+### Changed
+
+- Version of mobius3 to sync the mode of files in tools
+
+
+## 2020-01-28
+
 ### Added
 
 - New header layout for the search UI (only visible with users with a feature flag set)

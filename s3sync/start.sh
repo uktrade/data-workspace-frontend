@@ -13,7 +13,8 @@ set -e
 # b) contain a sqlite database for temporary data
 mobius3 \
     /home/s3sync/data \
-    https://s3-${S3_REGION}.amazonaws.com/${S3_BUCKET}/ \
+    ${S3_BUCKET} \
+    https://s3-${S3_REGION}.amazonaws.com/{}/ \
     ${S3_REGION} \
     --prefix ${S3_PREFIX} \
     --log-level INFO \
