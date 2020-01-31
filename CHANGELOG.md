@@ -20,6 +20,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - datasets-search feature flag
 
 
+## 2020-01-30
+
+### Changed
+
+- Up queue timeout on streaming downloads to try to mitigate "queue full" errors
+
+
 ## 2020-01-28
 
 ### Changed

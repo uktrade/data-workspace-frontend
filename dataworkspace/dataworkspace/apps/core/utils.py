@@ -390,6 +390,7 @@ def streaming_query_response(user_email, database, query, filename):
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
     cursor_itersize = 1000
     queue_size = 3
+    queue_timeout = 60
     bytes_queue = gevent.queue.Queue(maxsize=queue_size)
 
     def put_db_rows_to_queue():
@@ -427,12 +428,12 @@ def streaming_query_response(user_email, database, query, filename):
                         csv_writer.writerow(
                             [column_desc[0] for column_desc in cur.description]
                         ),
-                        timeout=10,
+                        timeout=queue_timeout,
                     )
                 bytes_fetched = ''.join(
                     csv_writer.writerow(row) for row in rows
                 ).encode('utf-8')
-                bytes_queue.put(bytes_fetched, timeout=15)
+                bytes_queue.put(bytes_fetched, timeout=queue_timeout)
                 i += len(rows)
                 if not rows:
                     break
