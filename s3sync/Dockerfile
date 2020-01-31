@@ -1,4 +1,4 @@
-FROM quay.io/uktrade/mobius3:v0.0.28
+FROM quay.io/uktrade/mobius3:v0.0.32
 
 COPY start.sh /
 
