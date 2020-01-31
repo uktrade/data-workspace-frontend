@@ -56,7 +56,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Ensure the user doesn't see the application link since they don't
         # have permission
@@ -205,7 +205,7 @@ class TestApplication(unittest.TestCase):
         cleanup_application_2 = await create_application()
         self.add_async_cleanup(cleanup_application_2)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         async with session.request(
             'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
@@ -264,7 +264,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         stdout, stderr, code = await create_visualisation_echo('testvisualisation')
         self.assertEqual(stdout, b'')
@@ -341,7 +341,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Ensure user created
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -446,7 +446,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Make a request to the home page, which ensures the user is in the DB
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -564,7 +564,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Make a request to the application home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -611,7 +611,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Make a request to the home page, which creates the user...
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -659,7 +659,7 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(cleanup_application)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         async with session.request(
             'GET',
@@ -779,7 +779,7 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Make a request to the home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
@@ -827,7 +827,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         stdout, stderr, code = await create_private_dataset()
         self.assertEqual(stdout, b'')
@@ -914,7 +914,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Check that with no token there is no access
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
@@ -1134,7 +1134,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
         # Check that with no authorization header there is no access
         dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
