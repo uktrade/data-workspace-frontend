@@ -1,5 +1,4 @@
 import csv
-import hashlib
 import io
 import json
 import logging
@@ -13,7 +12,6 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F
-from django.db.models.functions import Lower
 from django.forms import model_to_dict
 from django.http import (
     Http404,
@@ -23,16 +21,14 @@ from django.http import (
     HttpResponseServerError,
     HttpResponseRedirect,
     HttpResponseNotFound,
+    QueryDict,
 )
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 from psycopg2 import sql
 
-from dataworkspace.apps.applications.models import (
-    ApplicationInstance,
-    ApplicationTemplate,
-)
 from dataworkspace.apps.core.utils import (
     table_data,
     view_exists,
@@ -59,21 +55,22 @@ logger = logging.getLogger('app')
 
 @require_GET
 def datagroup_item_view(request, slug):
-    item = get_object_or_404(DataGrouping.objects.with_published_datasets(), slug=slug)
-
-    context = {
-        'model': item,
-        'datasets': item.dataset_set.filter(published=True).order_by('name'),
-        'reference_datasets': item.referencedataset_set.live()
-        .filter(published=True)
-        .exclude(is_joint_dataset=True)
-        .order_by('name'),
-        'joint_datasets': item.referencedataset_set.live()
-        .filter(is_joint_dataset=True, published=True)
-        .order_by('name'),
+    GROUP_TO_SEARCH_QUERY = {
+        "data-hub-companies": {"q": "Data Hub companies"},
+        "data-hub-contacts": {"q": "Data Hub contacts"},
+        "data-hub-interactions-service-deliveries": {"q": "Data Hub interactions"},
+        "data-hub-investment-projects": {"q": "Data Hub investment projects"},
+        "export-wins": {"q": "Export Wins"},
+        "one-list": {"q": "One List"},
+        "reference-data-sets": {"use": "0"},
     }
 
-    return render(request, 'datagroup.html', context)
+    search_params = QueryDict('', mutable=True)
+    search_params.update(GROUP_TO_SEARCH_QUERY.get(slug, {}))
+
+    return HttpResponseRedirect(
+        reverse('datasets:find_datasets') + '?' + search_params.urlencode()
+    )
 
 
 @require_GET
@@ -293,17 +290,3 @@ class CustomDatasetQueryDownloadView(DetailView):
             sql.SQL(query.query),
             query.get_filename(),
         )
-
-
-def filter_api_visible_application_instances_by_owner(owner):
-    # From the point of view of the API, /public_host/<host-name> is a single
-    # spawning or running application, and if it's not spawning or running
-    # it doesn't exist. 'STOPPING' an application is DELETEing it. This may
-    # need to be changed in later versions for richer behaviour.
-    return ApplicationInstance.objects.filter(
-        owner=owner, state__in=['RUNNING', 'SPAWNING']
-    )
-
-
-def _flatten(to_flatten):
-    return [item for sub_list in to_flatten for item in sub_list]
