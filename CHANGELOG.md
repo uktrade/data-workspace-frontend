@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-01-31
+
+### Changed
+
+- Search page is enabled for everyone
+- Dataset group pages now redirect to search results
+- Home page now displays the new search page with links in header and footer
+
+### Removed
+
+- Old home page
+- Dataset group pages
+- datasets-search feature flag
+
+
 ## 2020-01-28
 
 ### Changed
