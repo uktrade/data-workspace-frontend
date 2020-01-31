@@ -23,85 +23,12 @@ class TestDatasetViews(BaseTestCase):
         response = self._authenticated_get(reverse('root'))
         self.assertEqual(response.status_code, 200)
 
-    def test_homepage_group_list(self):
-        group_with_published_dataset = factories.DataGroupingFactory.create()
-        factories.DataSetFactory(grouping=group_with_published_dataset, published=True)
-
-        group_with_unpublished_dataset = factories.DataGroupingFactory.create()
-        factories.DataSetFactory(
-            grouping=group_with_unpublished_dataset, published=False
-        )
-
-        empty_group = factories.DataGroupingFactory.create()
-
-        deleted_group = factories.DataGroupingFactory.create()
-        deleted_group.delete()
-
-        response = self._authenticated_get(reverse('root'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, group_with_published_dataset.name, 1)
-        self.assertNotContains(response, group_with_unpublished_dataset.name)
-        self.assertNotContains(response, empty_group.name)
-
-        # Do not show deleted groups
-        self.assertNotContains(response, deleted_group.name)
-
     def test_group_detail_view(self):
-        group = factories.DataGroupingFactory.create()
-
-        ds1 = factories.DataSetFactory.create(grouping=group, published=True)
-        ds2 = factories.DataSetFactory.create(grouping=group, published=False)
-        ds3 = factories.DataSetFactory.create()
-        ds4 = factories.DataSetFactory.create(grouping=group, published=False)
-        ds4.delete()
-
-        rds1 = factories.ReferenceDatasetFactory(
-            group=group, published=True, table_name='rds1'
-        )
-        rds2 = factories.ReferenceDatasetFactory(
-            group=group, published=False, table_name='rds2'
-        )
-        rds3 = factories.ReferenceDatasetFactory()
-        rds4 = factories.ReferenceDatasetFactory(
-            group=group, published=False, table_name='rds3'
-        )
-        rds4.delete()
-
         response = self._authenticated_get(
-            reverse('catalogue:datagroup_item', kwargs={'slug': group.slug})
+            reverse('catalogue:datagroup_item', kwargs={'slug': 'test-slug'})
         )
-        self.assertEqual(response.status_code, 200)
-
-        # Ensure datasets in group are displayed
-        self.assertContains(response, ds1.name, 1)
-        self.assertContains(response, rds1.name, 1)
-
-        # Ensure unpublished datasets are not displayed
-        self.assertContains(response, ds2.name, 0)
-        self.assertContains(response, rds2.name, 0)
-
-        # Ensure datasets not in group are not displayed
-        self.assertNotContains(response, ds3.name)
-        self.assertNotContains(response, rds3.name)
-
-        # Ensure deleted datasets are not displayed
-        self.assertNotContains(response, ds4.name)
-        self.assertNotContains(response, rds4.name)
-
-        # Ensure empty groups are not visible
-        empty = factories.DataGroupingFactory.create()
-        response = self._authenticated_get(
-            reverse('catalogue:datagroup_item', kwargs={'slug': empty.slug})
-        )
-        self.assertEqual(response.status_code, 404)
-
-        # Ensure groups with no published datasets are not visible
-        unpublished = factories.DataGroupingFactory.create()
-        factories.DataSetFactory.create(grouping=unpublished, published=False)
-        response = self._authenticated_get(
-            reverse('catalogue:datagroup_item', kwargs={'slug': unpublished.slug})
-        )
-        self.assertEqual(response.status_code, 404)
+        assert response.status_code == 302
+        assert response['Location'] == reverse('datasets:find_datasets') + "?"
 
     def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()

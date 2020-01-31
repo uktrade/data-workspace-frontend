@@ -69,18 +69,6 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
-        # Make a request to the home page
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
-            content = await response.text()
-
-        # Ensure the user sees the link to the application
-        self.assertEqual(200, response.status)
-        self.assertIn('Test Application</a>', content)
-
-        self.assertIn(
-            'href="http://testapplication-23b40dd9.localapps.com:8000/"', content
-        )
-
         # Make a request to the tools page
         async with session.request(
             'GET', 'http://localapps.com:8000/tools/'
@@ -783,22 +771,8 @@ class TestApplication(unittest.TestCase):
 
         # Make a request to the home page
         async with session.request('GET', 'http://localapps.com:8000/') as response:
-            content = await response.text()
-
-        self.assertEqual(number_of_times_at_sso(), 2)
-        self.assertEqual(200, response.status)
-
-        stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
-        self.assertEqual(code, 0)
-
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
-            content = await response.text()
-
-        self.assertIn('>Test Application</a>', content)
-
-        self.assertIn('http://testapplication-23b40dd9.localapps.com:8000/', content)
+            self.assertEqual(number_of_times_at_sso(), 2)
+            self.assertEqual(200, response.status)
 
     @async_test
     async def test_application_download(self):

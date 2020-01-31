@@ -1,7 +1,6 @@
 import mock
 import pytest
 from django.urls import reverse
-from waffle.testutils import override_flag
 
 from dataworkspace.tests import factories
 
@@ -142,7 +141,6 @@ def test_old_reference_dataset_url_redirects_to_new_url(client):
     assert response['Location'] == rds.get_absolute_url()
 
 
-@override_flag('datasets-search', active=True)
 def test_find_datasets_combines_results(client):
     factories.DataSetFactory.create(published=False, name='Unpublished search dataset')
     ds = factories.DataSetFactory.create(published=True, name='A search dataset')
@@ -171,7 +169,6 @@ def test_find_datasets_combines_results(client):
     ]
 
 
-@override_flag('datasets-search', active=True)
 def test_find_datasets_filters_by_query(client):
     factories.DataSetFactory.create(published=True, name='A dataset')
     factories.ReferenceDatasetFactory.create(published=True, name='A reference dataset')
@@ -202,7 +199,6 @@ def test_find_datasets_filters_by_query(client):
     ]
 
 
-@override_flag('datasets-search', active=True)
 def test_find_datasets_filters_by_use(client):
     factories.DataSetFactory.create(published=True, type=1, name='A dataset')
     ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
@@ -231,7 +227,6 @@ def test_find_datasets_filters_by_use(client):
     ]
 
 
-@override_flag('datasets-search', active=True)
 def test_find_datasets_filters_by_source(client):
     source = factories.SourceTagFactory()
     _ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
