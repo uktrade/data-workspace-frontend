@@ -1,5 +1,29 @@
-FROM alpine:3.8
+FROM debian:buster-slim
 
+# Must be the same as the s3sync user in the s3sync container so it
+# can modify files
+RUN \
+    groupadd -g 4356 jovyan && \
+    useradd -u 4357 jovyan -g jovyan -m
+
+RUN \
+    apt-get update && \
+        apt-get install -y --no-install-recommends \
+        autoconf=2.69-11 \
+        build-essential=12.6 \
+        git=1:2.20.1-2+deb10u1 \
+        openssh-client=1:7.9p1-10+deb10u1 \
+        texlive-xetex=2018.20190227-2 \
+        texlive-generic-extra=2018.20190227-2 \
+        texlive-fonts-recommended=2018.20190227-2 \
+        wget=1.20.1-1.1 \
+        ca-certificates
+
+# Set the locale
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y locales && \
+    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+        dpkg-reconfigure --frontend=noninteractive locales && \
+        update-locale LANG=en_US.UTF-8
 ENV \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
@@ -10,34 +34,8 @@ ENV \
 ENV \
     PATH="$CONDA_DIR/bin:$PATH"
 
-# Must be the same as the s3sync user in the s3sync container so it
-# can modify files
 RUN \
-    addgroup -S -g 4356 jovyan && \
-    adduser -S -u 4357 jovyan -G jovyan
-
-RUN \
-    apk add --no-cache \
-        bash=4.4.19-r1 \
-        autoconf=2.69-r2 \
-        build-base=0.5-r1 \
-        gfortran=6.4.0-r9 \
-        git=2.18.2-r0 \
-        linux-headers=4.4.6-r2 \
-        openssh-client=7.7_p1-r4 \
-        texlive-xetex=20170524-r5 \
-        texmf-dist-latexextra=2017.46770-r0 && \
-    apk add --no-cache --virtual .build-deps \
-        wget=1.20.3-r0 && \
-    wget https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -O /etc/apk/keys/sgerrand.rsa.pub && \
-    echo "8d6f142f06af51fa5533245d48f2248f  /etc/apk/keys/sgerrand.rsa.pub" | md5sum -c && \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk && \
-    echo "e1107610a518b879adeb39a2d4b2385e  glibc-2.28-r0.apk" | md5sum -c && \
-    apk add --no-cache \
-        glibc-2.28-r0.apk && \
-    rm /etc/apk/keys/sgerrand.rsa.pub && \
-    rm glibc-2.28-r0.apk && \
-    wget http://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
+    wget https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
     echo "e1045ee415162f944b6aebfe560b8fee  miniconda.sh" | md5sum -c && \
     mkdir -p "$CONDA_DIR" && \
     bash miniconda.sh -f -b -p "$CONDA_DIR" && \
@@ -76,11 +74,10 @@ RUN \
         'xorg-libxrender=0.9.10' && \
     conda clean -tipsy && \
     pip install \
-        pip==19.2.3 && \
+        pip==20.0.2 && \
     pip install \
         aiocontextvars==0.2.2 \
         sentry-sdk==0.9.0 && \
-    apk del .build-deps && \
     chown -R jovyan $CONDA_DIR
 
 RUN \
@@ -107,8 +104,18 @@ RUN \
     echo '[global]' > /etc/pip.conf && \
     echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf
 
+EXPOSE 8888
+
 ENTRYPOINT ["tini", "-g", "--"]
 
 USER jovyan
 
 WORKDIR /home/jovyan
+
+CMD ["/opt/conda/bin/jupyter", \
+    "lab", \
+    "--config=/etc/jupyter/jupyter_notebook_config.py", \
+    "--NotebookApp.token=''", \
+    "--NotebookApp.ip='0.0.0.0'", \
+    "--NotebookApp.allow_remote_access=True", \
+    "--NotebookApp.port=8888"]
