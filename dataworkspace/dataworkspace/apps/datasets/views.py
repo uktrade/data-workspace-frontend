@@ -184,8 +184,8 @@ class DatasetDetailView(DetailView):
 
 
 def filter_datasets(datasets, query, source, use=None):
-    search = SearchVector('name', 'short_description')
-    search_query = SearchQuery(query)
+    search = SearchVector('name', 'short_description', config='english')
+    search_query = SearchQuery(query, config='english')
 
     datasets = datasets.filter(published=True).annotate(
         search=search, search_rank=SearchRank(search, search_query)
