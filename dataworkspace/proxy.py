@@ -77,28 +77,23 @@ async def async_main():
         )
 
     def without_transfer_encoding(request_or_response):
-        return CIMultiDict(
-            tuple(
-                (key, value)
-                for key, value in request_or_response.headers.items()
-                if key.lower() != 'transfer-encoding'
-            )
+        return tuple(
+            (key, value)
+            for key, value in request_or_response.headers.items()
+            if key.lower() != 'transfer-encoding'
         )
 
     def admin_headers(downstream_request):
-        return CIMultiDict(
-            tuple(without_transfer_encoding(downstream_request).items())
+        return (
+            without_transfer_encoding(downstream_request)
             + downstream_request['sso_profile_headers']
         )
 
     def application_headers(downstream_request):
-        return CIMultiDict(
-            tuple(without_transfer_encoding(downstream_request).items())
-            + (
-                (('x-scheme', downstream_request.headers['x-forwarded-proto']),)
-                if 'x-forwarded-proto' in downstream_request.headers
-                else ()
-            )
+        return without_transfer_encoding(downstream_request) + (
+            (('x-scheme', downstream_request.headers['x-forwarded-proto']),)
+            if 'x-forwarded-proto' in downstream_request.headers
+            else ()
         )
 
     def is_service_discovery(request):
@@ -212,7 +207,7 @@ async def async_main():
             return await handle_http(
                 downstream_request,
                 'GET',
-                admin_headers(downstream_request),
+                CIMultiDict(admin_headers(downstream_request)),
                 URL(admin_root).with_path(f'/error_{status}'),
                 params,
                 default_http_timeout,
@@ -226,7 +221,7 @@ async def async_main():
         host_html_path = '/tools/' + public_host
 
         async with client_session.request(
-            'GET', host_api_url, headers=admin_headers(downstream_request)
+            'GET', host_api_url, headers=CIMultiDict(admin_headers(downstream_request))
         ) as response:
             host_exists = response.status == 200
             application = await response.json()
@@ -240,7 +235,9 @@ async def async_main():
                 not in downstream_request.headers
             ):
                 async with client_session.request(
-                    'DELETE', host_api_url, headers=admin_headers(downstream_request)
+                    'DELETE',
+                    host_api_url,
+                    headers=CIMultiDict(admin_headers(downstream_request)),
                 ) as delete_response:
                     await delete_response.read()
             raise UserException('Application ' + application['state'], 500)
@@ -259,7 +256,7 @@ async def async_main():
                     'PUT',
                     host_api_url,
                     params=params,
-                    headers=admin_headers(downstream_request),
+                    headers=CIMultiDict(admin_headers(downstream_request)),
                 ) as response:
                     host_exists = response.status == 200
                     application = await response.json()
@@ -281,7 +278,7 @@ async def async_main():
             return await handle_http(
                 downstream_request,
                 'GET',
-                admin_headers(downstream_request),
+                CIMultiDict(admin_headers(downstream_request)),
                 admin_root + host_html_path + '/spawning',
                 {},
                 default_http_timeout,
@@ -313,7 +310,9 @@ async def async_main():
     async def handle_application_websocket(downstream_request, proxy_url, path, query):
         upstream_url = URL(proxy_url).with_path(path).with_query(query)
         return await handle_websocket(
-            downstream_request, application_headers(downstream_request), upstream_url
+            downstream_request,
+            CIMultiDict(application_headers(downstream_request)),
+            upstream_url,
         )
 
     def application_upstream(proxy_url, path):
@@ -327,7 +326,7 @@ async def async_main():
             response = await handle_http(
                 downstream_request,
                 method,
-                application_headers(downstream_request),
+                CIMultiDict(application_headers(downstream_request)),
                 upstream_url,
                 query,
                 spawning_http_timeout,
@@ -338,7 +337,7 @@ async def async_main():
             return await handle_http(
                 downstream_request,
                 'GET',
-                admin_headers(downstream_request),
+                CIMultiDict(admin_headers(downstream_request)),
                 admin_root + host_html_path + '/spawning',
                 {},
                 default_http_timeout,
@@ -353,7 +352,7 @@ async def async_main():
                     'PATCH',
                     host_api_url,
                     json={'state': 'RUNNING'},
-                    headers=admin_headers(downstream_request),
+                    headers=CIMultiDict(admin_headers(downstream_request)),
                     timeout=default_http_timeout,
                 ) as patch_response:
                     await patch_response.read()
@@ -378,7 +377,7 @@ async def async_main():
         return await handle_http(
             downstream_request,
             method,
-            application_headers(downstream_request),
+            CIMultiDict(application_headers(downstream_request)),
             upstream_url,
             query,
             default_http_timeout,
@@ -389,7 +388,7 @@ async def async_main():
         return await handle_http(
             downstream_request,
             method,
-            admin_headers(downstream_request),
+            CIMultiDict(admin_headers(downstream_request)),
             upstream_url,
             query,
             default_http_timeout,
@@ -485,7 +484,7 @@ async def async_main():
             downstream_response = await with_session_cookie(
                 web.StreamResponse(
                     status=upstream_response.status,
-                    headers=without_transfer_encoding(upstream_response),
+                    headers=CIMultiDict(without_transfer_encoding(upstream_response)),
                 )
             )
             await downstream_response.prepare(downstream_request)
