@@ -63,6 +63,49 @@ async def async_main():
     except ValueError:
         root_port = None
 
+    csp_common = "frame-ancestors 'none';object-src 'none';upgrade-insecure-requests;"
+
+    # "Admin" pages are shown on the root domain, but also when spawning applications on
+    # <my-application>.<root_domain>, so we explicitly name the domain instead of using 'self'
+    csp_admin_common = (
+        f'default-src {root_domain};'
+        f'base-uri {root_domain};'
+        f'font-src {root_domain} data:;'
+        f'form-action {root_domain} *.{root_domain};'
+        f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com;'
+        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com;"
+        f"style-src 'unsafe-inline' {root_domain};"
+    )
+
+    csp_admin_non_files = csp_common + csp_admin_common
+
+    # Only on the files page do we allow connection to S3. At the time of writing,
+    # we use path-style access to S3, so have no more-granular way of restricting
+    csp_admin_files = (
+        csp_common
+        + csp_admin_common
+        + f'connect-src {root_domain} https://s3.eu-west-2.amazonaws.com;'
+    )
+
+    # A spawning application on <my-application>.<root_domain> shows the admin-styled site,
+    # fetching assets from <root_domain>, but also makes requests to the current domain
+    csp_application_spawning = (
+        csp_common + csp_admin_common + f"connect-src {root_domain} 'self';"
+    )
+
+    # A running application should only connect to self: this is where we have the most
+    # concern because we run the least-trusted code
+    csp_application_running = csp_common + (
+        "default-src 'self';"
+        "base-uri 'self';"
+        "font-src 'self' data:;"
+        "form-action 'self';"
+        "img-src 'self' data:;"
+        # Both JupyterLab and RStudio need `unsafe-eval`
+        "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
+        "style-src 'unsafe-inline' 'self';"
+    )
+
     redis_pool = await aioredis.create_redis_pool(redis_url)
 
     default_http_timeout = aiohttp.ClientTimeout()
@@ -211,6 +254,7 @@ async def async_main():
                 URL(admin_root).with_path(f'/error_{status}'),
                 params,
                 default_http_timeout,
+                (('content-security-policy', csp_admin_non_files),),
             )
 
     async def handle_application(is_websocket, downstream_request, method, path, query):
@@ -282,6 +326,7 @@ async def async_main():
                 admin_root + host_html_path + '/spawning',
                 {},
                 default_http_timeout,
+                (('content-security-policy', csp_application_spawning),),
             )
 
         return (
@@ -330,6 +375,9 @@ async def async_main():
                 upstream_url,
                 query,
                 spawning_http_timeout,
+                # Although the application is spawning, if the response makes it back to the client,
+                # we know the application is running, so we return the _running_ CSP headers
+                (('content-security-policy', csp_application_running),),
             )
 
         except Exception:
@@ -341,6 +389,7 @@ async def async_main():
                 admin_root + host_html_path + '/spawning',
                 {},
                 default_http_timeout,
+                (('content-security-policy', csp_admin_non_files),),
             )
 
         else:
@@ -381,6 +430,7 @@ async def async_main():
             upstream_url,
             query,
             default_http_timeout,
+            (('content-security-policy', csp_application_running),),
         )
 
     async def handle_admin(downstream_request, method, path, query):
@@ -392,6 +442,14 @@ async def async_main():
             upstream_url,
             query,
             default_http_timeout,
+            (
+                (
+                    'content-security-policy',
+                    csp_admin_files
+                    if is_requesting_files(downstream_request)
+                    else csp_admin_non_files,
+                ),
+            ),
         )
 
     async def handle_websocket(downstream_request, upstream_headers, upstream_url):
@@ -456,6 +514,7 @@ async def async_main():
         upstream_url,
         upstream_query,
         timeout,
+        response_headers,
     ):
         # Avoid aiohttp treating request as chunked unnecessarily, which works
         # for some upstream servers, but not all. Specifically RStudio drops
@@ -484,7 +543,9 @@ async def async_main():
             downstream_response = await with_session_cookie(
                 web.StreamResponse(
                     status=upstream_response.status,
-                    headers=CIMultiDict(without_transfer_encoding(upstream_response)),
+                    headers=CIMultiDict(
+                        without_transfer_encoding(upstream_response) + response_headers
+                    ),
                 )
             )
             await downstream_response.prepare(downstream_request)

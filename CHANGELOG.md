@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-02-04
 
+### Added
+
+- Content-Security-Policy header to mitigate risk of egress
+
 ### Changed
 
 - JupyterLab R and JupyterLab Python docker images have been migrated to Debian 10.
