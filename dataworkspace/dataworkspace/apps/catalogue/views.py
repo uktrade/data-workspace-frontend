@@ -35,7 +35,7 @@ from dataworkspace.apps.core.utils import (
     streaming_query_response,
 )
 from dataworkspace.apps.datasets.models import (
-    DataGrouping,
+    DataSet,
     ReferenceDataset,
     SourceLink,
     ReferenceDatasetField,
@@ -75,7 +75,7 @@ def datagroup_item_view(request, slug):
 
 @require_GET
 def dataset_full_path_view(request, group_slug, set_slug):
-    dataset = find_dataset(group_slug, set_slug)
+    dataset = get_object_or_404(DataSet, grouping__slug=group_slug, slug=set_slug, published=True)
     return HttpResponseRedirect(dataset.get_absolute_url())
 
 
@@ -83,12 +83,11 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
     model = ReferenceDataset
 
     def get_object(self, queryset=None):
-        group = get_object_or_404(DataGrouping, slug=self.kwargs.get('group_slug'))
         return get_object_or_404(
             ReferenceDataset,
             published=True,
             deleted=False,
-            group=group,
+            group__slug=self.kwargs.get('group_slug'),
             slug=self.kwargs.get('reference_slug'),
         )
 

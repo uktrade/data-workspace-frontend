@@ -21,21 +21,21 @@ from dataworkspace.zendesk import create_zendesk_ticket
 
 
 @require_http_methods(['GET', 'POST'])
-def eligibility_criteria_view(request, group_slug, set_slug):
-    dataset = find_dataset(group_slug, set_slug)
+def eligibility_criteria_view(request, dataset_uuid):
+    dataset = find_dataset(dataset_uuid)
 
     if request.method == 'POST':
         form = EligibilityCriteriaForm(request.POST)
         if form.is_valid():
             if form.cleaned_data['meet_criteria']:
                 return HttpResponseRedirect(
-                    reverse('datasets:request_access', args=[group_slug, set_slug])
+                    reverse('datasets:request_access', args=[dataset_uuid])
                 )
             else:
                 return HttpResponseRedirect(
                     reverse(
                         'datasets:eligibility_criteria_not_met',
-                        args=[group_slug, set_slug],
+                        args=[dataset_uuid],
                     )
                 )
 
@@ -43,15 +43,15 @@ def eligibility_criteria_view(request, group_slug, set_slug):
 
 
 @require_GET
-def eligibility_criteria_not_met_view(request, group_slug, set_slug):
-    dataset = find_dataset(group_slug, set_slug)
+def eligibility_criteria_not_met_view(request, dataset_uuid):
+    dataset = find_dataset(dataset_uuid)
 
     return render(request, 'eligibility_criteria_not_met.html', {'dataset': dataset})
 
 
 @require_http_methods(['GET', 'POST'])
-def request_access_view(request, group_slug, set_slug):
-    dataset = find_dataset(group_slug, set_slug)
+def request_access_view(request, dataset_uuid):
+    dataset = find_dataset(dataset_uuid)
 
     if request.method == 'POST':
         form = RequestAccessForm(request.POST)
@@ -81,7 +81,7 @@ def request_access_view(request, group_slug, set_slug):
 
             url = reverse('datasets:request_access_success')
             return HttpResponseRedirect(
-                f'{url}?ticket={ticket_reference}&group={group_slug}&set={set_slug}'
+                f'{url}?ticket={ticket_reference}&set={dataset_uuid}'
             )
 
     return render(
@@ -95,10 +95,9 @@ def request_access_view(request, group_slug, set_slug):
 def request_access_success_view(request):
     # yes this could cause 400 errors but Todo - replace with session / messages
     ticket = request.GET['ticket']
-    group_slug = request.GET['group']
-    set_slug = request.GET['set']
+    dataset_uuid = request.GET['set']
 
-    dataset = find_dataset(group_slug, set_slug)
+    dataset = find_dataset(dataset_uuid)
 
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
