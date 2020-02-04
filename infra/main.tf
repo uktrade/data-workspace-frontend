@@ -123,8 +123,8 @@ locals {
 
   user_provided_container_name   = "user-provided"
   user_provided_container_port   = "8888"
-  user_provided_container_memory = 512
-  user_provided_container_cpu    = 256
+  user_provided_container_memory = 8192
+  user_provided_container_cpu    = 1024
 
   logstash_container_name       = "jupyterhub-logstash"
   logstash_alb_port             = "443"
