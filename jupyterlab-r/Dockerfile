@@ -1,5 +1,31 @@
-FROM alpine:3.8
+FROM debian:buster-slim
 
+# Must be the same as the s3sync user in the s3sync container so it
+# can modify files
+RUN \
+    groupadd -g 4356 jovyan && \
+    useradd -u 4357 jovyan -g jovyan -m
+
+RUN \
+    apt-get update && \
+        apt-get install -y --no-install-recommends \
+        autoconf=2.69-11 \
+        build-essential=12.6 \
+        gfortran=4:8.3.0-1 \
+        git=1:2.20.1-2+deb10u1 \
+        openssh-client=1:7.9p1-10+deb10u1 \
+        texlive-xetex=2018.20190227-2 \
+        texlive-generic-extra=2018.20190227-2 \
+        texlive-fonts-recommended=2018.20190227-2 \
+        wget=1.20.1-1.1 \
+        r-cran-tidyverse=1.2.1-1 \
+        ca-certificates
+
+# Set the locale
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y locales && \
+    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+        dpkg-reconfigure --frontend=noninteractive locales && \
+        update-locale LANG=en_US.UTF-8
 ENV \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
@@ -10,34 +36,7 @@ ENV \
 ENV \
     PATH="$CONDA_DIR/bin:$PATH"
 
-# Must be the same as the s3sync user in the s3sync container so it
-# can modify files
 RUN \
-    addgroup -S -g 4356 jovyan && \
-    adduser -S -u 4357 jovyan -G jovyan
-
-RUN \
-    apk add --no-cache \
-        bash=4.4.19-r1 \
-        autoconf=2.69-r2 \
-        build-base=0.5-r1 \
-        gfortran=6.4.0-r9 \
-        git=2.18.2-r0 \
-        libexecinfo-dev=1.1-r0 \
-        linux-headers=4.4.6-r2 \
-        openssh-client=7.7_p1-r4 \
-        texlive-xetex=20170524-r5 \
-        texmf-dist-latexextra=2017.46770-r0 && \
-    apk add --no-cache --virtual .build-deps \
-        wget=1.20.3-r0 && \
-    wget https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -O /etc/apk/keys/sgerrand.rsa.pub && \
-    echo "8d6f142f06af51fa5533245d48f2248f  /etc/apk/keys/sgerrand.rsa.pub" | md5sum -c && \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk && \
-    echo "e1107610a518b879adeb39a2d4b2385e  glibc-2.28-r0.apk" | md5sum -c && \
-    apk add --no-cache \
-        glibc-2.28-r0.apk && \
-    rm /etc/apk/keys/sgerrand.rsa.pub && \
-    rm glibc-2.28-r0.apk && \
     wget http://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
     echo "e1045ee415162f944b6aebfe560b8fee  miniconda.sh" | md5sum -c && \
     mkdir -p "$CONDA_DIR" && \
@@ -77,37 +76,11 @@ RUN \
     jupyter kernelspec uninstall python3 -f && \
     rm -r -f /opt/conda/lib/python3.7/site-packages/ipykernel && \
     conda clean -tipsy && \
-    apk del .build-deps && \
-    chown -R jovyan $CONDA_DIR
-
-# The R package tidyverse depends on fs, which needs automake 1.14, which is not supplied by apk
-# https://github.com/r-lib/fs/issues/210, and automake 1.14 needs a version of Perl earlier than
-# 5.22 https://github.com/easybuilders/easybuild-easyconfigs/issues/1822#issuecomment-311507178
-# and odd numbers of Perl are development versions, so choosing the latest 5.20
-RUN \
-    apk add --no-cache --virtual .build-deps \
-        wget=1.20.3-r0 && \
-    wget https://www.cpan.org/src/5.0/perl-5.20.3.tar.gz && \
-    echo "3524e3a76b71650ab2f794fd68e45c366ec375786d2ad2dca767da424bbb9b4a  perl-5.20.3.tar.gz" | sha256sum -c && \
-    tar -zxvf perl-5.20.3.tar.gz && \
-    cd perl-5.20.3 && \
-    ./Configure -des && \
-    make && \
-    # make test && \
-    make install && \
-    cd .. && \
-    rm -r -f perl-5.20.3 && \
-    wget https://ftp.gnu.org/gnu/automake/automake-1.14.1.tar.gz && \
-    echo "814c2333f350ce00034a1fe718e0e4239998ceea7b0aff67e9fd273ed6dfc23b  automake-1.14.1.tar.gz" | sha256sum -c && \
-    tar -zxvf automake-1.14.1.tar.gz && \
-    rm -r -f automake-1.14.1.tar.gz && \
-    cd automake-1.14.1 && \
-    ./configure && \
-    make && \
-    make install && \
-    cd .. && \
-    rm -r -f automake-1.14.1 && \
-    apk del .build-deps
+    chown -R jovyan $CONDA_DIR  && \
+    pip install \
+        pip==20.0.2 && \
+    pip install \
+        sentry-sdk==0.9.0
 
 COPY jupyterlab_database_access /jupyterlab_database_access
 COPY jupyterlab_template_notebooks /jupyterlab_template_notebooks
@@ -134,8 +107,18 @@ RUN \
     Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata"), clean=TRUE)' && \
     Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
 
+EXPOSE 8888
+
 ENTRYPOINT ["tini", "-g", "--"]
 
 USER jovyan
 
 WORKDIR /home/jovyan
+
+CMD ["/opt/conda/bin/jupyter", \
+    "lab", \
+    "--config=/etc/jupyter/jupyter_notebook_config.py", \
+    "--NotebookApp.token=''", \
+    "--NotebookApp.ip='0.0.0.0'", \
+    "--NotebookApp.allow_remote_access=True", \
+    "--NotebookApp.port=8888"]
