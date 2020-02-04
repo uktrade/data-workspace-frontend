@@ -21,20 +21,20 @@ RUN \
         r-cran-tidyverse=1.2.1-1 \
         ca-certificates
 
-    # Set the locale
-    RUN DEBIAN_FRONTEND=noninteractive apt-get install -y locales && \
-        sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-            dpkg-reconfigure --frontend=noninteractive locales && \
-            update-locale LANG=en_US.UTF-8
-    ENV \
-        LC_ALL=en_US.UTF-8 \
-        LANG=en_US.UTF-8 \
-        LANGUAGE=en_US.UTF-8 \
-        CONDA_DIR=/opt/conda \
-        LD_LIBRARY_PATH=/lib
+# Set the locale
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y locales && \
+    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+        dpkg-reconfigure --frontend=noninteractive locales && \
+        update-locale LANG=en_US.UTF-8
+ENV \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8 \
+    CONDA_DIR=/opt/conda \
+    LD_LIBRARY_PATH=/lib
 
-    ENV \
-        PATH="$CONDA_DIR/bin:$PATH"
+ENV \
+    PATH="$CONDA_DIR/bin:$PATH"
 
 RUN \
     wget http://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
