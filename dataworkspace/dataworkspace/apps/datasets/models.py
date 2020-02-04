@@ -158,7 +158,7 @@ class DataSet(TimeStampedModel):
         db_table = 'app_dataset'
 
     def __str__(self):
-        return f'{self.grouping.name} - {self.name}'
+        return self.name
 
     def user_has_access(self, user):
         return (

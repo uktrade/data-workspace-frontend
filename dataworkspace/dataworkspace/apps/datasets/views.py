@@ -65,8 +65,6 @@ def request_access_view(request, group_slug, set_slug):
             )
             user_url = request.build_absolute_uri(user_edit_relative)
 
-            dataset_name = f'{dataset.grouping.name} > {dataset.name}'
-
             dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
 
             ticket_reference = create_zendesk_ticket(
@@ -75,7 +73,7 @@ def request_access_view(request, group_slug, set_slug):
                 goal,
                 justification,
                 user_url,
-                dataset_name,
+                dataset.name,
                 dataset_url,
                 dataset.information_asset_owner,
                 dataset.information_asset_manager,
