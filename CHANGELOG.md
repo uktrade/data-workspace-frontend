@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-02-03
 
+### Added
+
+- Referrer-Policy header to avoid sending the Referer header in any case
+
+
+## 2020-02-03
+
 ### Changed
 
 - The amount of memory and CPU available to visualisations
