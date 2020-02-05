@@ -391,7 +391,7 @@ async def async_main():
                 admin_root + host_html_path + '/spawning',
                 {},
                 default_http_timeout,
-                (('content-security-policy', csp_admin_non_files),),
+                (('content-security-policy', csp_application_spawning),),
             )
 
         else:
