@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-02-05
 
+### Changed
+
+- Trigger when a user creates tables in their own schema using CREATE TABLE AS, so they are accessible in other tools
+
 ### Added
 
 - Add admin pages for SourceView and SourceTable
