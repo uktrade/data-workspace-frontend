@@ -1,17 +1,107 @@
 import io
 
+import mock
+import psycopg2
+import pytest
 from botocore.response import StreamingBody
 from django.conf import settings
 from django.urls import reverse
 from psycopg2 import connect
-
-import mock
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.models import SourceLink, ReferenceDataset, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseTestCase
+
+
+@pytest.fixture
+def dataset_db():
+    database = factories.DatabaseFactory(memorable_name='my_database')
+    with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
+        conn.cursor().execute(
+            '''
+            CREATE TABLE IF NOT EXISTS dataset_test (
+                id INT,
+                name VARCHAR(255),
+                date DATE
+            );
+
+            CREATE TABLE IF NOT EXISTS dataset_test2 (
+                id INT,
+                name VARCHAR(255)
+            );
+
+            CREATE OR REPLACE VIEW dataset_view AS (SELECT * FROM dataset_test);
+            '''
+        )
+
+    return database
+
+
+def test_master_dataset_fields(client, dataset_db):
+    ds = factories.DataSetFactory.create(published=True)
+    factories.SourceTableFactory(
+        dataset=ds,
+        name='d1',
+        database=dataset_db,
+        schema='public',
+        table='dataset_test',
+    )
+    factories.SourceTableFactory(
+        dataset=ds,
+        name='d2',
+        database=dataset_db,
+        schema='public',
+        table='dataset_test2',
+    )
+
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert response.context["fields"] == [
+        'dataset_test.id',
+        'dataset_test.name',
+        'dataset_test.date',
+        'dataset_test2.id',
+        'dataset_test2.name',
+    ]
+
+
+def test_view_data_cut_fields(client, dataset_db):
+    ds = factories.DataSetFactory.create(published=True)
+    factories.SourceViewFactory(
+        dataset=ds, database=dataset_db, schema='public', view='dataset_view'
+    )
+
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert response.context["fields"] == ['id', 'name', 'date']
+
+
+def test_query_data_cut_fields(client, dataset_db):
+    ds = factories.DataSetFactory.create(published=True)
+    factories.CustomDatasetQueryFactory(
+        dataset=ds,
+        database=dataset_db,
+        query="SELECT id customid, name customname FROM dataset_test",
+    )
+
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert response.context["fields"] == ['customid', 'customname']
+
+
+def test_link_data_cut_doesnt_have_fields(client):
+    ds = factories.DataSetFactory.create(published=True)
+    factories.SourceLinkFactory(dataset=ds)
+
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert response.context["fields"] is None
 
 
 class TestDatasetViews(BaseTestCase):
@@ -22,13 +112,6 @@ class TestDatasetViews(BaseTestCase):
     def test_homepage(self):
         response = self._authenticated_get(reverse('root'))
         self.assertEqual(response.status_code, 200)
-
-    def test_group_detail_view(self):
-        response = self._authenticated_get(
-            reverse('catalogue:datagroup_item', kwargs={'slug': 'test-slug'})
-        )
-        assert response.status_code == 302
-        assert response['Location'] == reverse('datasets:find_datasets') + "?"
 
     def test_dataset_detail_view_unpublished(self):
         group = factories.DataGroupingFactory.create()
@@ -129,7 +212,7 @@ class TestDatasetViews(BaseTestCase):
         download_count = rds.number_of_downloads
         response = self._authenticated_get(
             reverse(
-                'catalogue:reference_dataset_download',
+                'datasets:reference_dataset_download',
                 kwargs={
                     'dataset_uuid': rds.uuid,
                     'format': 'json',
@@ -242,7 +325,7 @@ class TestDatasetViews(BaseTestCase):
         download_count = rds.number_of_downloads
         response = self._authenticated_get(
             reverse(
-                'catalogue:reference_dataset_download',
+                'datasets:reference_dataset_download',
                 kwargs={
                     'dataset_uuid': rds.uuid,
                     'format': 'csv',
@@ -278,7 +361,7 @@ class TestDatasetViews(BaseTestCase):
         download_count = rds.number_of_downloads
         response = self._authenticated_get(
             reverse(
-                'catalogue:reference_dataset_download',
+                'datasets:reference_dataset_download',
                 kwargs={
                     'dataset_uuid': rds.uuid,
                     'format': 'madeup',
@@ -290,36 +373,6 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(
             ReferenceDataset.objects.get(pk=rds.id).number_of_downloads, download_count
         )
-
-
-class TestSupportView(BaseTestCase):
-    def test_create_support_request_invalid_email(self):
-        response = self._authenticated_post(
-            reverse('support'), {'email': 'x', 'message': 'test message'}
-        )
-        self.assertContains(response, 'Enter a valid email address')
-
-    def test_create_support_request_invalid_message(self):
-        response = self._authenticated_post(
-            reverse('support'), {'email': 'noreply@example.com', 'message': ''}
-        )
-        self.assertContains(response, 'This field is required')
-
-    @mock.patch('dataworkspace.apps.core.views.create_support_request')
-    def test_create_support_request(self, mock_create_request):
-        mock_create_request.return_value = 999
-        response = self._authenticated_post(
-            reverse('support'),
-            data={'email': 'noreply@example.com', 'message': 'A test message'},
-            post_format='multipart',
-        )
-        self.assertContains(
-            response,
-            'Your request has been received. Your reference is: '
-            '<strong>999</strong>.',
-            html=True,
-        )
-        mock_create_request.assert_called_once()
 
 
 class TestSourceLinkDownloadView(BaseTestCase):
@@ -337,7 +390,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
         download_count = dataset.number_of_downloads
         response = self._authenticated_get(
             reverse(
-                'catalogue:dataset_source_link_download',
+                'datasets:dataset_source_link_download',
                 kwargs={
                     'dataset_uuid': dataset.id,
                     'source_link_id': link.id,
@@ -364,7 +417,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
         download_count = dataset.number_of_downloads
         response = self._authenticated_get(
             reverse(
-                'catalogue:dataset_source_link_download',
+                'datasets:dataset_source_link_download',
                 kwargs={
                     'dataset_uuid': dataset.id,
                     'source_link_id': link.id,
@@ -383,7 +436,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             DataSet.objects.get(pk=dataset.id).number_of_downloads, download_count + 1
         )
 
-    @mock.patch('dataworkspace.apps.catalogue.views.boto3.client')
+    @mock.patch('dataworkspace.apps.datasets.views.boto3.client')
     def test_download_local_file(self, mock_client):
         dataset = factories.DataSetFactory.create(
             published=True, user_access_type='REQUIRES_AUTHENTICATION'
@@ -404,7 +457,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
         }
         response = self._authenticated_get(
             reverse(
-                'catalogue:dataset_source_link_download',
+                'datasets:dataset_source_link_download',
                 kwargs={
                     'dataset_uuid': dataset.id,
                     'source_link_id': link.id,
