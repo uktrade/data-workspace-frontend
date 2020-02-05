@@ -63,7 +63,7 @@ async def async_main():
     except ValueError:
         root_port = None
 
-    csp_common = "frame-ancestors 'none';object-src 'none';upgrade-insecure-requests;"
+    csp_common = "object-src 'none';upgrade-insecure-requests;"
 
     # "Admin" pages are shown on the root domain, but also when spawning applications on
     # <my-application>.<root_domain>, so we explicitly name the domain instead of using 'self'
@@ -72,6 +72,7 @@ async def async_main():
         f'base-uri {root_domain};'
         f'font-src {root_domain} data:;'
         f'form-action {root_domain} *.{root_domain};'
+        f'frame-ancestors {root_domain};'
         f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com;'
         f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com;"
         f"style-src 'unsafe-inline' {root_domain};"
@@ -100,6 +101,7 @@ async def async_main():
         "base-uri 'self';"
         "font-src 'self' data:;"
         "form-action 'self';"
+        "frame-ancestors 'self';"
         "img-src 'self' data:;"
         # Both JupyterLab and RStudio need `unsafe-eval`
         "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
