@@ -118,7 +118,7 @@ class DataSet(TimeStampedModel):
     name = models.CharField(blank=False, null=False, max_length=128)
     slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
     short_description = models.CharField(blank=False, null=False, max_length=256)
-    grouping = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
+    grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     description = models.TextField(null=False, blank=False)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
@@ -468,7 +468,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     _SORT_DIR_CHOICES = ((SORT_DIR_ASC, 'Ascending'), (SORT_DIR_DESC, 'Descending'))
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     is_joint_dataset = models.BooleanField(default=False)
-    group = models.ForeignKey(DataGrouping, on_delete=models.CASCADE)
+    group = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     table_name = models.CharField(
         verbose_name='Table name',
@@ -548,7 +548,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         verbose_name = 'Reference dataset'
 
     def __str__(self):
-        return '{}: {}'.format(self.group.name, self.name)
+        return self.name
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
