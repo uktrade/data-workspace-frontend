@@ -143,18 +143,14 @@ class TestDatasetViews(BaseTestCase):
         self.assertContains(response, rds.name)
 
     def test_reference_dataset_json_download(self):
-        linked_rds = factories.ReferenceDatasetFactory.create(
-            table_name='test_json'
-        )
+        linked_rds = factories.ReferenceDatasetFactory.create(table_name='test_json')
         linked_field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
         )
-        rds = factories.ReferenceDatasetFactory.create(
-            table_name='test_jso2'
-        )
+        rds = factories.ReferenceDatasetFactory.create(table_name='test_jso2')
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, name='id', data_type=2, is_identifier=True
         )
@@ -213,10 +209,7 @@ class TestDatasetViews(BaseTestCase):
         response = self._authenticated_get(
             reverse(
                 'datasets:reference_dataset_download',
-                kwargs={
-                    'dataset_uuid': rds.uuid,
-                    'format': 'json',
-                },
+                kwargs={'dataset_uuid': rds.uuid, 'format': 'json'},
             )
         )
         self.assertEqual(response.status_code, 200)
@@ -252,18 +245,14 @@ class TestDatasetViews(BaseTestCase):
         )
 
     def test_reference_dataset_csv_download(self):
-        linked_rds = factories.ReferenceDatasetFactory.create(
-            table_name='test_csv'
-        )
+        linked_rds = factories.ReferenceDatasetFactory.create(table_name='test_csv')
         linked_field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
         )
-        rds = factories.ReferenceDatasetFactory.create(
-            table_name='test_csv2'
-        )
+        rds = factories.ReferenceDatasetFactory.create(table_name='test_csv2')
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='id',
@@ -326,10 +315,7 @@ class TestDatasetViews(BaseTestCase):
         response = self._authenticated_get(
             reverse(
                 'datasets:reference_dataset_download',
-                kwargs={
-                    'dataset_uuid': rds.uuid,
-                    'format': 'csv',
-                },
+                kwargs={'dataset_uuid': rds.uuid, 'format': 'csv'},
             )
         )
         self.assertEqual(response.status_code, 200)
@@ -351,9 +337,7 @@ class TestDatasetViews(BaseTestCase):
         )
 
     def test_reference_dataset_unknown_download(self):
-        rds = factories.ReferenceDatasetFactory.create(
-            table_name='test_csv'
-        )
+        rds = factories.ReferenceDatasetFactory.create(table_name='test_csv')
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, is_identifier=True
         )
@@ -362,10 +346,7 @@ class TestDatasetViews(BaseTestCase):
         response = self._authenticated_get(
             reverse(
                 'datasets:reference_dataset_download',
-                kwargs={
-                    'dataset_uuid': rds.uuid,
-                    'format': 'madeup',
-                },
+                kwargs={'dataset_uuid': rds.uuid, 'format': 'madeup'},
             )
         )
         self.assertEqual(response.status_code, 404)
@@ -391,10 +372,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
         response = self._authenticated_get(
             reverse(
                 'datasets:dataset_source_link_download',
-                kwargs={
-                    'dataset_uuid': dataset.id,
-                    'source_link_id': link.id,
-                },
+                kwargs={'dataset_uuid': dataset.id, 'source_link_id': link.id},
             )
         )
         self.assertEqual(response.status_code, 403)
@@ -418,10 +396,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
         response = self._authenticated_get(
             reverse(
                 'datasets:dataset_source_link_download',
-                kwargs={
-                    'dataset_uuid': dataset.id,
-                    'source_link_id': link.id,
-                },
+                kwargs={'dataset_uuid': dataset.id, 'source_link_id': link.id},
             )
         )
         self.assertRedirects(
@@ -458,10 +433,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
         response = self._authenticated_get(
             reverse(
                 'datasets:dataset_source_link_download',
-                kwargs={
-                    'dataset_uuid': dataset.id,
-                    'source_link_id': link.id,
-                },
+                kwargs={'dataset_uuid': dataset.id, 'source_link_id': link.id},
             )
         )
         self.assertEqual(response.status_code, 200)

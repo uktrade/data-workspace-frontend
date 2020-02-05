@@ -209,8 +209,7 @@ def eligibility_criteria_view(request, dataset_uuid):
             else:
                 return HttpResponseRedirect(
                     reverse(
-                        'datasets:eligibility_criteria_not_met',
-                        args=[dataset_uuid],
+                        'datasets:eligibility_criteria_not_met', args=[dataset_uuid]
                     )
                 )
 

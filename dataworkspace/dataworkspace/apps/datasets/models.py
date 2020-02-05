@@ -354,8 +354,7 @@ class SourceView(BaseSource):
 
     def get_absolute_url(self):
         return reverse(
-            'datasets:dataset_source_view_download',
-            args=(self.dataset.id, self.id),
+            'datasets:dataset_source_view_download', args=(self.dataset.id, self.id)
         )
 
 
@@ -424,8 +423,7 @@ class SourceLink(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse(
-            'datasets:dataset_source_link_download',
-            args=(self.dataset.id, self.id),
+            'datasets:dataset_source_link_download', args=(self.dataset.id, self.id)
         )
 
 
@@ -457,8 +455,7 @@ class CustomDatasetQuery(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse(
-            'datasets:dataset_query_download',
-            args=(self.dataset.id, self.id),
+            'datasets:dataset_query_download', args=(self.dataset.id, self.id)
         )
 
     def get_filename(self):

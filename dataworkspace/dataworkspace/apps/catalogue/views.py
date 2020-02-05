@@ -1,18 +1,12 @@
 import logging
 
-from django.http import (
-    HttpResponseRedirect,
-    QueryDict,
-)
+from django.http import HttpResponseRedirect, QueryDict
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 
-from dataworkspace.apps.datasets.models import (
-    DataSet,
-    ReferenceDataset,
-)
+from dataworkspace.apps.datasets.models import DataSet, ReferenceDataset
 
 logger = logging.getLogger('app')
 
@@ -39,7 +33,9 @@ def datagroup_item_view(request, slug):
 
 @require_GET
 def dataset_full_path_view(request, group_slug, set_slug):
-    dataset = get_object_or_404(DataSet, grouping__slug=group_slug, slug=set_slug, published=True)
+    dataset = get_object_or_404(
+        DataSet, grouping__slug=group_slug, slug=set_slug, published=True
+    )
     return HttpResponseRedirect(dataset.get_absolute_url())
 
 
