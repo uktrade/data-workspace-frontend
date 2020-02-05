@@ -132,7 +132,7 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
                     SELECT
                         * FROM pg_event_trigger_ddl_commands()
                     WHERE
-                        command_tag IN ('ALTER TABLE', 'CREATE TABLE')
+                        command_tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
                         -- Prevent infinite loop by not altering tables that have the correct owner
                         -- already. Note pg_trigger_depth() can be used for triggers, but we're in
                         -- an _event_ trigger.
