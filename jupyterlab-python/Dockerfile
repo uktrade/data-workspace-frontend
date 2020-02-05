@@ -11,6 +11,7 @@ RUN \
           texlive-generic-extra=2018.20190227-2 \
           texlive-fonts-recommended=2018.20190227-2 \
           wget=1.20.1-1.1 \
+          sudo=1.8.27-1+deb10u1 \
           ca-certificates && \
       echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
       locale-gen en_US.utf8  && \
@@ -33,6 +34,7 @@ ENV \
 RUN \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
+    echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
     wget https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
     echo "e1045ee415162f944b6aebfe560b8fee  miniconda.sh" | md5sum -c && \
     mkdir -p "$CONDA_DIR" && \

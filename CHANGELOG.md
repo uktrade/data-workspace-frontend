@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - JupyterLab R and JupyterLab Python docker images have been cleaned up.
+- Add the ability to sudo as the jovyan user.
 - Trigger when a user creates tables in their own schema using CREATE TABLE AS, so they are accessible in other tools
 
 ### Added
