@@ -8,7 +8,6 @@ from django.db import transaction
 from django.utils.encoding import force_text
 
 from dataworkspace.apps.datasets.models import (
-    DataGrouping,
     SourceLink,
     SourceTable,
     ReferenceDataset,
@@ -33,17 +32,6 @@ from dataworkspace.apps.dw_admin.forms import (
 )
 
 logger = logging.getLogger('app')
-
-
-@admin.register(DataGrouping)
-class DataGroupingAdmin(TimeStampedUserAdmin):
-    prepopulated_fields = {'slug': ('name',)}
-    list_display = ('name', 'slug', 'short_description')
-    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
-
-    def get_queryset(self, request):
-        # Only show non-deleted groups in admin
-        return self.model.objects.live()
 
 
 class DataLinkAdmin(admin.ModelAdmin):
@@ -83,12 +71,11 @@ class BaseDatasetAdmin(admin.ModelAdmin):
         'name',
         'slug',
         'short_description',
-        'grouping',
         'get_source_tags',
         'published',
         'number_of_downloads',
     )
-    list_filter = ('grouping', 'source_tags')
+    list_filter = ('source_tags',)
     search_fields = ['name']
     actions = [clone_dataset]
     autocomplete_fields = ['source_tags']
@@ -102,7 +89,6 @@ class BaseDatasetAdmin(admin.ModelAdmin):
                     'slug',
                     'source_tags',
                     'short_description',
-                    'grouping',
                     'description',
                     'enquiries_contact',
                     'information_asset_owner',
@@ -218,7 +204,6 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
         'name',
         'slug',
         'short_description',
-        'group',
         'get_published_version',
         'published_at',
         'published',
@@ -237,7 +222,6 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
                     'table_name',
                     'slug',
                     'source_tags',
-                    'group',
                     'external_database',
                     'short_description',
                     'description',
