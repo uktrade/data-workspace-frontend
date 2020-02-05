@@ -24,14 +24,11 @@ def test_old_dataset_url_redirects_to_new_url(client):
 
 
 def test_old_reference_dataset_url_redirects_to_new_url(client):
-    group = factories.DataGroupingFactory.create()
-    rds = factories.ReferenceDatasetFactory.create(
-        group=group, table_name='test_detail_view'
-    )
+    rds = factories.ReferenceDatasetFactory.create(table_name='test_detail_view')
     response = client.get(
         reverse(
             'catalogue:reference_dataset',
-            kwargs={'group_slug': group.slug, 'reference_slug': rds.slug},
+            kwargs={'group_slug': rds.group.slug, 'reference_slug': rds.slug},
         )
     )
     assert response.status_code == 302

@@ -809,7 +809,8 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://localapps.com:8000/catalogue/test_slug_g/test_slug_s'
+            'GET',
+            'http://localapps.com:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
         ) as response:
             content = await response.text()
 
@@ -830,7 +831,8 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://localapps.com:8000/catalogue/test_slug_g/test_slug_s'
+            'GET',
+            'http://localapps.com:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
         ) as response:
             content = await response.text()
 
@@ -1364,14 +1366,8 @@ async def create_private_dataset():
         """\
         from dataworkspace.apps.core.models import Database
         from dataworkspace.apps.datasets.models import (
-            DataGrouping,
             DataSet,
             SourceTable,
-        )
-        grouping = DataGrouping.objects.create(
-            name="test_datagrouping",
-            short_description="test_short_desc",
-            slug="test_slug_g",
         )
         dataset = DataSet.objects.create(
             name="test_dataset",
@@ -1379,7 +1375,6 @@ async def create_private_dataset():
             short_description="test_short_desc",
             slug="test_slug_s",
             id="70ce6fdd-1791-4806-bbe0-4cf880a9cc37",
-            grouping=grouping,
             published=True
         )
         SourceTable.objects.create(

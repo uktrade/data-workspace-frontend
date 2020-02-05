@@ -114,18 +114,16 @@ class TestDatasetViews(BaseTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_dataset_detail_view_unpublished(self):
-        group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
-        ds = factories.DataSetFactory.create(grouping=group, published=False)
+        ds = factories.DataSetFactory.create(published=False)
         factories.SourceLinkFactory(dataset=ds)
         factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(ds.get_absolute_url())
         self.assertEqual(response.status_code, 404)
 
     def test_dataset_detail_view_published(self):
-        group = factories.DataGroupingFactory.create()
         factories.DataSetFactory.create()
-        ds = factories.DataSetFactory.create(grouping=group, published=True)
+        ds = factories.DataSetFactory.create(published=True)
         sl1 = factories.SourceLinkFactory(dataset=ds)
         sl2 = factories.SourceLinkFactory(dataset=ds)
         response = self._authenticated_get(ds.get_absolute_url())
