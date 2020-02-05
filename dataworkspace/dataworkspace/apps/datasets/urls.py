@@ -26,7 +26,7 @@ urlpatterns = [
         name='request_access',
     ),
     path(
-        'request-access-success',
+        '<str:dataset_uuid>/request-access-success',
         login_required(views.request_access_success_view),
         name='request_access_success',
     ),
