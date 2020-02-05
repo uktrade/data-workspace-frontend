@@ -160,7 +160,7 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
                 BEGIN
                   CREATE EVENT TRIGGER set_table_owner
                   ON ddl_command_end
-                  WHEN tag IN ('ALTER TABLE', 'CREATE TABLE')
+                  WHEN tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
                   EXECUTE PROCEDURE set_table_owner();
                 EXCEPTION WHEN OTHERS THEN
                   NULL;
