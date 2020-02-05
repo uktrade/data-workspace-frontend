@@ -95,7 +95,17 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
         return HttpResponseRedirect(self.get_object().get_absolute_url())
 
 
-class ReferenceDatasetDownloadView(ReferenceDatasetDetailView):
+class ReferenceDatasetDownloadView(DetailView):
+    model = ReferenceDataset
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            ReferenceDataset,
+            published=True,
+            deleted=False,
+            uuid=self.kwargs.get('dataset_uuid'),
+        )
+
     def get(self, request, *args, **kwargs):
         dl_format = self.kwargs.get('format')
         if dl_format not in ['json', 'csv']:
@@ -158,9 +168,7 @@ class SourceLinkDownloadView(DetailView):
     model = SourceLink
 
     def get(self, request, *args, **kwargs):
-        dataset = find_dataset(
-            self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
-        )
+        dataset = find_dataset(self.kwargs.get('dataset_uuid'))
 
         if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
@@ -216,9 +224,7 @@ class SourceDownloadMixin:
         raise NotImplementedError()
 
     def get(self, request, *_, **__):
-        dataset = find_dataset(
-            self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
-        )
+        dataset = find_dataset(self.kwargs.get('dataset_uuid'))
         db_object = get_object_or_404(
             self.model, id=self.kwargs.get('source_id'), dataset=dataset
         )
@@ -263,9 +269,7 @@ class CustomDatasetQueryDownloadView(DetailView):
     model = CustomDatasetQuery
 
     def get(self, request, *args, **kwargs):
-        dataset = find_dataset(
-            self.kwargs.get('group_slug'), self.kwargs.get('set_slug')
-        )
+        dataset = find_dataset(self.kwargs.get('dataset_uuid'))
 
         if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()

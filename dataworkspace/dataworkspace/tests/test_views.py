@@ -60,9 +60,8 @@ class TestDatasetViews(BaseTestCase):
         self.assertContains(response, rds.name)
 
     def test_reference_dataset_json_download(self):
-        group = factories.DataGroupingFactory.create()
         linked_rds = factories.ReferenceDatasetFactory.create(
-            group=group, table_name='test_json'
+            table_name='test_json'
         )
         linked_field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
@@ -71,7 +70,7 @@ class TestDatasetViews(BaseTestCase):
             reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
         )
         rds = factories.ReferenceDatasetFactory.create(
-            group=group, table_name='test_jso2'
+            table_name='test_jso2'
         )
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, name='id', data_type=2, is_identifier=True
@@ -132,8 +131,7 @@ class TestDatasetViews(BaseTestCase):
             reverse(
                 'catalogue:reference_dataset_download',
                 kwargs={
-                    'group_slug': group.slug,
-                    'reference_slug': rds.slug,
+                    'dataset_uuid': rds.uuid,
                     'format': 'json',
                 },
             )
@@ -171,9 +169,8 @@ class TestDatasetViews(BaseTestCase):
         )
 
     def test_reference_dataset_csv_download(self):
-        group = factories.DataGroupingFactory.create()
         linked_rds = factories.ReferenceDatasetFactory.create(
-            group=group, table_name='test_csv'
+            table_name='test_csv'
         )
         linked_field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
@@ -182,7 +179,7 @@ class TestDatasetViews(BaseTestCase):
             reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
         )
         rds = factories.ReferenceDatasetFactory.create(
-            group=group, table_name='test_csv2'
+            table_name='test_csv2'
         )
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
@@ -247,8 +244,7 @@ class TestDatasetViews(BaseTestCase):
             reverse(
                 'catalogue:reference_dataset_download',
                 kwargs={
-                    'group_slug': group.slug,
-                    'reference_slug': rds.slug,
+                    'dataset_uuid': rds.uuid,
                     'format': 'csv',
                 },
             )
@@ -272,9 +268,8 @@ class TestDatasetViews(BaseTestCase):
         )
 
     def test_reference_dataset_unknown_download(self):
-        group = factories.DataGroupingFactory.create()
         rds = factories.ReferenceDatasetFactory.create(
-            group=group, table_name='test_csv'
+            table_name='test_csv'
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, is_identifier=True
@@ -285,8 +280,7 @@ class TestDatasetViews(BaseTestCase):
             reverse(
                 'catalogue:reference_dataset_download',
                 kwargs={
-                    'group_slug': group.slug,
-                    'reference_slug': rds.slug,
+                    'dataset_uuid': rds.uuid,
                     'format': 'madeup',
                 },
             )
@@ -330,9 +324,8 @@ class TestSupportView(BaseTestCase):
 
 class TestSourceLinkDownloadView(BaseTestCase):
     def test_forbidden_dataset(self):
-        group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group, published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -346,8 +339,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             reverse(
                 'catalogue:dataset_source_link_download',
                 kwargs={
-                    'group_slug': group.slug,
-                    'set_slug': dataset.slug,
+                    'dataset_uuid': dataset.id,
                     'source_link_id': link.id,
                 },
             )
@@ -359,9 +351,8 @@ class TestSourceLinkDownloadView(BaseTestCase):
         )
 
     def test_download_external_file(self):
-        group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group, published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -375,8 +366,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             reverse(
                 'catalogue:dataset_source_link_download',
                 kwargs={
-                    'group_slug': group.slug,
-                    'set_slug': dataset.slug,
+                    'dataset_uuid': dataset.id,
                     'source_link_id': link.id,
                 },
             )
@@ -395,9 +385,8 @@ class TestSourceLinkDownloadView(BaseTestCase):
 
     @mock.patch('dataworkspace.apps.catalogue.views.boto3.client')
     def test_download_local_file(self, mock_client):
-        group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group, published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -417,8 +406,7 @@ class TestSourceLinkDownloadView(BaseTestCase):
             reverse(
                 'catalogue:dataset_source_link_download',
                 kwargs={
-                    'group_slug': group.slug,
-                    'set_slug': dataset.slug,
+                    'dataset_uuid': dataset.id,
                     'source_link_id': link.id,
                 },
             )
