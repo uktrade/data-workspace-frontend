@@ -17,6 +17,9 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetField,
     CustomDatasetQuery,
     DataCutDataset,
+    SourceView,
+    SourceTable,
+    MasterDataset,
 )
 
 
@@ -374,3 +377,19 @@ class CustomDatasetQueryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['dataset'].queryset = DataCutDataset.objects.all()
+
+
+class SourceViewForm(forms.ModelForm):
+    model = SourceView
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['dataset'].queryset = DataCutDataset.objects.all()
+
+
+class SourceTableForm(forms.ModelForm):
+    model = SourceTable
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['dataset'].queryset = MasterDataset.objects.all()

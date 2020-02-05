@@ -28,6 +28,8 @@ from dataworkspace.apps.dw_admin.forms import (
     ReferenceDatasetForm,
     MasterDatasetForm,
     CustomDatasetQueryForm,
+    SourceTableForm,
+    SourceViewForm,
 )
 
 logger = logging.getLogger('app')
@@ -297,3 +299,15 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
 class CustomDatasetQueryAdmin(admin.ModelAdmin):
     search_fields = ['name', 'query', 'dataset__name']
     form = CustomDatasetQueryForm
+
+
+@admin.register(SourceView)
+class SourceViewAdmin(admin.ModelAdmin):
+    search_fields = ['name', 'view', 'dataset__name']
+    form = SourceViewForm
+
+
+@admin.register(SourceTable)
+class SourceTableAdmin(admin.ModelAdmin):
+    search_fields = ['name', 'table', 'dataset__name']
+    form = SourceTableForm
