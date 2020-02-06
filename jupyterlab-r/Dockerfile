@@ -1,31 +1,28 @@
 FROM debian:buster-slim
 
-# Must be the same as the s3sync user in the s3sync container so it
-# can modify files
-RUN \
-    groupadd -g 4356 jovyan && \
-    useradd -u 4357 jovyan -g jovyan -m
-
 RUN \
     apt-get update && \
         apt-get install -y --no-install-recommends \
-        autoconf=2.69-11 \
-        build-essential=12.6 \
-        gfortran=4:8.3.0-1 \
-        git=1:2.20.1-2+deb10u1 \
-        openssh-client=1:7.9p1-10+deb10u1 \
-        texlive-xetex=2018.20190227-2 \
-        texlive-generic-extra=2018.20190227-2 \
-        texlive-fonts-recommended=2018.20190227-2 \
-        wget=1.20.1-1.1 \
-        r-cran-tidyverse=1.2.1-1 \
-        ca-certificates
+          locales=2.28-10 \
+          build-essential=12.6 \
+          gfortran=4:8.3.0-1 \
+          git=1:2.20.1-2+deb10u1 \
+          openssh-client=1:7.9p1-10+deb10u1 \
+          texlive-xetex=2018.20190227-2 \
+          texlive-generic-extra=2018.20190227-2 \
+          texlive-fonts-recommended=2018.20190227-2 \
+          wget=1.20.1-1.1 \
+          r-cran-tidyverse=1.2.1-1 \
+          sudo=1.8.27-1+deb10u1 \
+          ca-certificates && \
+      echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
+      locale-gen en_US.utf8  && \
+      apt-get clean -y && \
+    	apt-get autoremove -y && \
+    	apt-get autoclean -y && \
+    	rm -rf /tmp/* && \
+    	rm -rf /var/lib/apt/lists/*
 
-# Set the locale
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y locales && \
-    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-        dpkg-reconfigure --frontend=noninteractive locales && \
-        update-locale LANG=en_US.UTF-8
 ENV \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
@@ -37,6 +34,9 @@ ENV \
     PATH="$CONDA_DIR/bin:$PATH"
 
 RUN \
+    groupadd -g 4356 jovyan && \
+    useradd -u 4357 jovyan -g jovyan -m && \
+    echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
     wget http://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
     echo "e1045ee415162f944b6aebfe560b8fee  miniconda.sh" | md5sum -c && \
     mkdir -p "$CONDA_DIR" && \
@@ -101,13 +101,17 @@ RUN \
     echo '  r = getOption("repos")' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  options(repos = r)' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    echo '})' >> /opt/conda/lib/R/etc/Rprofile.site
-
-RUN \
+    echo '})' >> /opt/conda/lib/R/etc/Rprofile.site && \
     Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata"), clean=TRUE)' && \
-    Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
+    Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)' && \
+    apt-get remove --purge -y \
+      wget && \
+    apt-get clean -y && \
+  	apt-get autoremove -y && \
+  	apt-get autoclean -y && \
+  	rm -rf /tmp/* && \
+  	rm -rf /var/lib/apt/lists/*
 
-EXPOSE 8888
 
 ENTRYPOINT ["tini", "-g", "--"]
 
