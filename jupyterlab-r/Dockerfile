@@ -2,26 +2,15 @@ FROM debian:buster-slim
 
 RUN \
     apt-get update && \
-        apt-get install -y --no-install-recommends \
-          locales=2.28-10 \
-          build-essential=12.6 \
-          gfortran=4:8.3.0-1 \
-          git=1:2.20.1-2+deb10u1 \
-          openssh-client=1:7.9p1-10+deb10u1 \
-          texlive-xetex=2018.20190227-2 \
-          texlive-generic-extra=2018.20190227-2 \
-          texlive-fonts-recommended=2018.20190227-2 \
-          wget=1.20.1-1.1 \
-          r-cran-tidyverse=1.2.1-1 \
-          sudo=1.8.27-1+deb10u1 \
-          ca-certificates && \
-      echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
-      locale-gen en_US.utf8  && \
-      apt-get clean -y && \
-    	apt-get autoremove -y && \
-    	apt-get autoclean -y && \
-    	rm -rf /tmp/* && \
-    	rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+        locales=2.28-10 && \
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
+    locale-gen en_US.utf8 && \
+    apt-get clean -y && \
+    apt-get autoremove -y && \
+    apt-get autoclean -y && \
+    rm -rf /tmp/* && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV \
     LC_ALL=en_US.UTF-8 \
@@ -34,6 +23,34 @@ ENV \
     PATH="$CONDA_DIR/bin:$PATH"
 
 RUN \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        dirmngr \
+        gnupg2 \
+        ssh && \
+    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
+    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
+    echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
+    until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
+    apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
+    apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
+        build-essential=12.6 \
+        gfortran=4:8.3.0-1 \
+        git=1:2.20.1-2 \
+        openssh-client=1:7.9p1-10+deb10u1 \
+        texlive-xetex=2018.20190227-2 \
+        texlive-generic-extra=2018.20190227-2 \
+        texlive-fonts-recommended=2018.20190227-2 \
+        wget=1.20.1-1.1 \
+        r-cran-tidyverse=1.2.1-1 \
+        sudo=1.8.27-1+deb10u1 \
+        ca-certificates && \
+    apt-get clean -y && \
+        apt-get autoremove -y && \
+        apt-get autoclean -y && \
+        rm -rf /tmp/* && \
+        rm -rf /var/lib/apt/lists/* && \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
     echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
@@ -80,7 +97,18 @@ RUN \
     pip install \
         pip==20.0.2 && \
     pip install \
-        sentry-sdk==0.9.0
+        sentry-sdk==0.9.0 && \
+    apt-get remove --purge -y \
+        wget && \
+    apt-get clean -y && \
+    apt-get autoremove -y && \
+    apt-get autoclean -y && \
+    rm -rf /tmp/* && \
+    rm -rf /var/lib/apt/lists/* && \
+    # Remove the last line from sources: the CRAN debian repo that has R itself, which we don't mirror
+    sed -i '$d' /etc/apt/sources.list && \
+    # Avoids errors when installing Java
+    mkdir -p /usr/share/man/man1mkdir -p /usr/share/man/man1
 
 COPY jupyterlab_database_access /jupyterlab_database_access
 COPY jupyterlab_template_notebooks /jupyterlab_template_notebooks
@@ -92,26 +120,16 @@ RUN \
         /jupyterlab_database_access \
         /jupyterlab_template_notebooks/browser && \
     npm cache clean --force && \
-    node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean
-
-COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
-
-RUN \
+    node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean && \
     echo 'local({' > /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  r = getOption("repos")' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  options(repos = r)' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '})' >> /opt/conda/lib/R/etc/Rprofile.site && \
     Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata"), clean=TRUE)' && \
-    Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)' && \
-    apt-get remove --purge -y \
-      wget && \
-    apt-get clean -y && \
-  	apt-get autoremove -y && \
-  	apt-get autoclean -y && \
-  	rm -rf /tmp/* && \
-  	rm -rf /var/lib/apt/lists/*
+    Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
 
+COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 ENTRYPOINT ["tini", "-g", "--"]
 

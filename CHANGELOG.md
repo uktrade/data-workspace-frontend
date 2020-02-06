@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-02-06
 
+### Changed
+
+- Which debian repository is used in JupyterLab R and Python, to our mirror, so packages can be installed from inside them
+
 ### Added
 
 - Retries when fetching dependencies when building the RStudio image. The S3 mirror is surprisingly flaky.
