@@ -936,6 +936,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             reverse('datasets:dataset_detail', args=(self.uuid,)), self.slug
         )
 
+    def get_admin_edit_url(self):
+        return reverse('admin:datasets_referencedataset_change', args=(self.id,))
+
 
 class ReferenceDatasetRecordBase(models.Model):
     reference_dataset = models.ForeignKey(

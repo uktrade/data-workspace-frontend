@@ -303,12 +303,13 @@ def can_access_table_by_google_data_studio(user, table_id):
 
 def source_tables_for_user(user):
     req_authentication_tables = SourceTable.objects.filter(
-        dataset__published=True, dataset__user_access_type='REQUIRES_AUTHENTICATION'
+        dataset__user_access_type='REQUIRES_AUTHENTICATION',
+        **{'dataset__published': True} if not user.is_superuser else {},
     )
     req_authorization_tables = SourceTable.objects.filter(
-        dataset__published=True,
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__datasetuserpermission__user=user,
+        **{'dataset__published': True} if not user.is_superuser else {},
     )
     source_tables = [
         {'database': x.database, 'schema': x.schema, 'table': x.table}
@@ -316,9 +317,9 @@ def source_tables_for_user(user):
     ]
     reference_dataset_tables = [
         {'database': x.external_database, 'schema': 'public', 'table': x.table_name}
-        for x in ReferenceDataset.objects.filter(published=True, deleted=False).exclude(
-            external_database=None
-        )
+        for x in ReferenceDataset.objects.filter(
+            deleted=False, **{'published': True} if not user.is_superuser else {}
+        ).exclude(external_database=None)
     ]
     return source_tables + reference_dataset_tables
 

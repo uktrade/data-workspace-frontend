@@ -1,0 +1,13 @@
+<div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+  <h2 class="govuk-error-summary__title" id="error-summary-title">
+    You are viewing an unpublished dataset.
+  </h2>
+  <div class="govuk-error-summary__body">
+    <p class="govuk-body">
+      This dataset is only visible to superusers.
+      {% if perms.datasets_dataset.change %}
+        You can publish it via the <a href="{{ model.get_admin_edit_url }}" class="govuk-breadcrumbs__link">admin page</a>.
+      {% endif %}
+    </p>
+  </div>
+</div>
