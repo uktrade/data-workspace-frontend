@@ -403,12 +403,11 @@ def streaming_query_response(user_email, database, query, filename):
         pseudo_buffer = PseudoBuffer()
         pseudo_buffer.write(codecs.BOM_UTF8)
         csv_writer = csv.writer(pseudo_buffer, quoting=csv.QUOTE_NONNUMERIC)
-        now = datetime.datetime.utcnow().isoformat()
 
         with connect(
             database_dsn(settings.DATABASES_DATA[database])
         ) as conn, conn.cursor(
-            name=f'{user_email}_{filename}_{now}'
+            name='all_table_data'
         ) as cur:  # Named cursor => server-side cursor
 
             conn.set_session(readonly=True)
