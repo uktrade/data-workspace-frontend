@@ -5,5 +5,7 @@ from dataworkspace.apps.datasets.models import DataSet
 
 def find_dataset(dataset_uuid, user):
     return get_object_or_404(
-        DataSet, id=dataset_uuid, **{'published': True} if not user.is_superuser else {}
+        DataSet.objects.live(),
+        id=dataset_uuid,
+        **{'published': True} if not user.is_superuser else {}
     )

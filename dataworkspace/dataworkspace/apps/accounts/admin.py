@@ -48,16 +48,16 @@ class AppUserEditForm(forms.ModelForm):
     authorized_master_datasets = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('master datasets', False),
-        queryset=MasterDataset.objects.filter(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        ).order_by('name'),
+        queryset=MasterDataset.objects.live()
+        .filter(user_access_type='REQUIRES_AUTHORIZATION')
+        .order_by('name'),
     )
     authorized_data_cut_datasets = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('data cut datasets', False),
-        queryset=DataCutDataset.objects.filter(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        ).order_by('name'),
+        queryset=DataCutDataset.objects.live()
+        .filter(user_access_type='REQUIRES_AUTHORIZATION')
+        .order_by('name'),
     )
     authorized_visualisations = forms.ModelMultipleChoiceField(
         label='Authorized visualisations',
@@ -88,10 +88,14 @@ class AppUserEditForm(forms.ModelForm):
 
         self.fields[
             'authorized_master_datasets'
-        ].initial = MasterDataset.objects.filter(datasetuserpermission__user=instance)
+        ].initial = MasterDataset.objects.live().filter(
+            datasetuserpermission__user=instance
+        )
         self.fields[
             'authorized_data_cut_datasets'
-        ].initial = DataCutDataset.objects.filter(datasetuserpermission__user=instance)
+        ].initial = DataCutDataset.objects.live().filter(
+            datasetuserpermission__user=instance
+        )
         self.fields[
             'authorized_visualisations'
         ].queryset = ApplicationTemplate.objects.filter(
@@ -249,7 +253,9 @@ class AppUserAdmin(UserAdmin):
                 obj.user_permissions.remove(access_appstream_permission)
                 log_change('Removed can_access_appstream permission')
 
-        current_datasets = set(DataSet.objects.filter(datasetuserpermission__user=obj))
+        current_datasets = set(
+            DataSet.objects.live().filter(datasetuserpermission__user=obj)
+        )
         authorized_datasets = set(
             form.cleaned_data.get(
                 'authorized_master_datasets', DataSet.objects.none()

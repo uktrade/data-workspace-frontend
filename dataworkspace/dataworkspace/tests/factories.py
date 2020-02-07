@@ -52,6 +52,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
     published = True
+    deleted = False
 
     class Meta:
         model = 'datasets.DataSet'

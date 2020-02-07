@@ -131,6 +131,11 @@ class TestDatasetViews:
         response = request_client.get(ds.get_absolute_url())
         assert response.status_code == status
 
+    def test_deleted_dataset_detail_view(self, client):
+        ds = factories.DataSetFactory.create(published=True, deleted=True)
+        response = client.get(ds.get_absolute_url())
+        assert response.status_code == 404
+
     @pytest.mark.parametrize(
         'request_client,published',
         [('client', True), ('staff_client', True), ('staff_client', False)],

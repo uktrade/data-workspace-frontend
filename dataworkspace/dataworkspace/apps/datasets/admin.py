@@ -18,7 +18,7 @@ from dataworkspace.apps.datasets.models import (
     DataCutDataset,
     SourceTag,
 )
-from dataworkspace.apps.core.admin import TimeStampedUserAdmin
+from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataFieldInlineForm,
     SourceLinkForm,
@@ -65,7 +65,7 @@ def clone_dataset(modeladmin, request, queryset):
         dataset.clone()
 
 
-class BaseDatasetAdmin(admin.ModelAdmin):
+class BaseDatasetAdmin(DeletableTimeStampedUserAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
         'name',
@@ -195,11 +195,10 @@ class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):
 
 
 @admin.register(ReferenceDataset)
-class ReferenceDatasetAdmin(TimeStampedUserAdmin):
+class ReferenceDatasetAdmin(DeletableTimeStampedUserAdmin):
     form = ReferenceDatasetForm
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
-    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
     list_display = (
         'name',
         'slug',
@@ -250,21 +249,6 @@ class ReferenceDatasetAdmin(TimeStampedUserAdmin):
     class Media:
         js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')
 
-    def get_queryset(self, request):
-        # Only show non-deleted reference datasets in admin
-        return self.model.objects.live()
-
-    def get_actions(self, request):
-        """
-        Disable bulk delete so tables can be managed.
-        :param request:
-        :return:
-        """
-        actions = super().get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
-        return actions
-
     def get_readonly_fields(self, request, obj=None):
         # Do not allow editing of table names via the admin
         if obj is not None:
@@ -284,14 +268,23 @@ class CustomDatasetQueryAdmin(admin.ModelAdmin):
     search_fields = ['name', 'query', 'dataset__name']
     form = CustomDatasetQueryForm
 
+    def get_queryset(self, request):
+        return self.model.objects.filter(dataset__deleted=False)
+
 
 @admin.register(SourceView)
 class SourceViewAdmin(admin.ModelAdmin):
     search_fields = ['name', 'view', 'dataset__name']
     form = SourceViewForm
 
+    def get_queryset(self, request):
+        return self.model.objects.filter(dataset__deleted=False)
+
 
 @admin.register(SourceTable)
 class SourceTableAdmin(admin.ModelAdmin):
     search_fields = ['name', 'table', 'dataset__name']
     form = SourceTableForm
+
+    def get_queryset(self, request):
+        return self.model.objects.filter(dataset__deleted=False)

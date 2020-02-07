@@ -376,7 +376,7 @@ class CustomDatasetQueryForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['dataset'].queryset = DataCutDataset.objects.all()
+        self.fields['dataset'].queryset = DataCutDataset.objects.live()
 
 
 class SourceViewForm(forms.ModelForm):
@@ -384,7 +384,7 @@ class SourceViewForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['dataset'].queryset = DataCutDataset.objects.all()
+        self.fields['dataset'].queryset = DataCutDataset.objects.live()
 
 
 class SourceTableForm(forms.ModelForm):
@@ -392,4 +392,4 @@ class SourceTableForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['dataset'].queryset = MasterDataset.objects.all()
+        self.fields['dataset'].queryset = MasterDataset.objects.live()

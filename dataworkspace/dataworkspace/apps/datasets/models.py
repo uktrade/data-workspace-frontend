@@ -106,7 +106,7 @@ class SourceTag(TimeStampedModel):
         return self.name
 
 
-class DataSet(TimeStampedModel):
+class DataSet(DeletableTimestampedUserModel):
     TYPE_MASTER_DATASET = 1
     TYPE_DATA_CUT = 2
     _DATASET_TYPE_CHOICES = (
@@ -235,7 +235,7 @@ class DataSetApplicationTemplatePermission(models.Model):
         unique_together = ('dataset', 'application_template')
 
 
-class MasterDatasetManager(models.Manager):
+class MasterDatasetManager(DeletableQuerySet):
     def get_queryset(self):
         return super().get_queryset().filter(type=DataSet.TYPE_MASTER_DATASET)
 
@@ -261,7 +261,7 @@ class MasterDatasetUserPermission(DataSetUserPermission):
         proxy = True
 
 
-class DataCutDatasetManager(models.Manager):
+class DataCutDatasetManager(DeletableQuerySet):
     def get_queryset(self):
         return super().get_queryset().filter(type=DataSet.TYPE_DATA_CUT)
 

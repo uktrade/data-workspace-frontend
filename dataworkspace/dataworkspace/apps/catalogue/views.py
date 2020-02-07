@@ -34,7 +34,7 @@ def datagroup_item_view(request, slug):
 @require_GET
 def dataset_full_path_view(request, group_slug, set_slug):
     dataset = get_object_or_404(
-        DataSet, grouping__slug=group_slug, slug=set_slug, published=True
+        DataSet.objects.live(), grouping__slug=group_slug, slug=set_slug, published=True
     )
     return HttpResponseRedirect(dataset.get_absolute_url())
 
@@ -44,9 +44,8 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
 
     def get_object(self, queryset=None):
         return get_object_or_404(
-            ReferenceDataset,
+            ReferenceDataset.objects.live(),
             published=True,
-            deleted=False,
             group__slug=self.kwargs.get('group_slug'),
             slug=self.kwargs.get('reference_slug'),
         )

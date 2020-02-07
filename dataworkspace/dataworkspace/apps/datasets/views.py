@@ -88,7 +88,7 @@ def find_datasets(request):
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
-    datasets = filter_datasets(DataSet.objects, query, source, use)
+    datasets = filter_datasets(DataSet.objects.live(), query, source, use)
 
     # Include reference datasets if required
     if not use or "0" in use:
@@ -132,7 +132,9 @@ class DatasetDetailView(DetailView):
         except ReferenceDataset.DoesNotExist:
             pass
 
-        return get_object_or_404(DataSet, id=self.kwargs['dataset_uuid'], **filters)
+        return get_object_or_404(
+            DataSet.objects.live(), id=self.kwargs['dataset_uuid'], **filters
+        )
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
@@ -277,9 +279,8 @@ class ReferenceDatasetDownloadView(DetailView):
 
     def get_object(self, queryset=None):
         return get_object_or_404(
-            ReferenceDataset,
+            ReferenceDataset.objects.live(),
             uuid=self.kwargs.get('dataset_uuid'),
-            deleted=False,
             **{'published': True} if not self.request.user.is_superuser else {},
         )
 
