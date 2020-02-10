@@ -8,7 +8,7 @@ services:
     image: data-workspace
     ports:
       - "8000:8000"
-    env_file: .env
+    env_file: .envs/dev.env
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"

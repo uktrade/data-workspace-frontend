@@ -10,7 +10,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            touch .env
+            touch .envs/dev.env
             make docker-test
       - run:
           name: Install requirements
