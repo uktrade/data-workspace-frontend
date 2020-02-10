@@ -390,7 +390,7 @@ def streaming_query_response(user_email, database, query, filename):
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
     cursor_itersize = 1000
     queue_size = 3
-    queue_timeout = 60
+    queue_timeout = 60 * 2
     bytes_queue = gevent.queue.Queue(maxsize=queue_size)
 
     def put_db_rows_to_queue():
