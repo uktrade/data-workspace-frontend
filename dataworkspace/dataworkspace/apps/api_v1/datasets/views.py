@@ -13,7 +13,6 @@ from dataworkspace.apps.datasets.model_utils import (
 from dataworkspace.apps.datasets.models import (
     SourceTable,
     ReferenceDataset,
-    DataGrouping,
     ReferenceDatasetField,
 )
 
@@ -203,12 +202,11 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
 
 
 def reference_dataset_api_view_GET(request, group_slug, reference_slug):
-    group = get_object_or_404(DataGrouping, slug=group_slug)
     ref_dataset = get_object_or_404(
         ReferenceDataset,
         published=True,
         deleted=False,
-        group=group,
+        group__slug=group_slug,
         slug=reference_slug,
     )
     primary_key = ref_dataset._meta.pk

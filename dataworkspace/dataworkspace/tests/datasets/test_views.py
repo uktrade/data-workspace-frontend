@@ -13,34 +13,27 @@ from dataworkspace.tests import factories
     ],
 )
 def test_dataset_has_request_access_link(client, eligibility_criteria, view_name):
-    group = factories.DataGroupingFactory.create()
     ds = factories.DataSetFactory.create(
-        grouping=group, eligibility_criteria=eligibility_criteria, published=True
+        eligibility_criteria=eligibility_criteria, published=True
     )
 
     factories.SourceLinkFactory(dataset=ds)
 
     response = client.get(ds.get_absolute_url())
 
-    request_access_url = reverse(view_name, args=[group.slug, ds.slug])
+    request_access_url = reverse(view_name, args=[ds.id])
 
     assert response.status_code == 200
     assert request_access_url in str(response.content)
 
 
 def test_eligibility_criteria_list(client):
-    group = factories.DataGroupingFactory.create()
     ds = factories.DataSetFactory.create(
-        grouping=group,
-        eligibility_criteria=['Criteria 1', 'Criteria 2'],
-        published=True,
+        eligibility_criteria=['Criteria 1', 'Criteria 2'], published=True
     )
 
     response = client.get(
-        reverse(
-            'datasets:eligibility_criteria',
-            kwargs={'group_slug': group.slug, 'set_slug': ds.slug},
-        )
+        reverse('datasets:eligibility_criteria', kwargs={'dataset_uuid': ds.id})
     )
 
     assert response.status_code == 200
@@ -56,25 +49,18 @@ def test_eligibility_criteria_list(client):
     ],
 )
 def test_submit_eligibility_criteria(client, test_case, meet_criteria, redirect_view):
-    group = factories.DataGroupingFactory.create()
     ds = factories.DataSetFactory.create(
-        grouping=group,
-        eligibility_criteria=['Criteria 1', 'Criteria 3'],
-        published=True,
+        eligibility_criteria=['Criteria 1', 'Criteria 3'], published=True
     )
 
     response = client.post(
-        reverse(
-            'datasets:eligibility_criteria',
-            kwargs={'group_slug': group.slug, 'set_slug': ds.slug},
-        ),
+        reverse('datasets:eligibility_criteria', kwargs={'dataset_uuid': ds.id}),
         data={"meet_criteria": meet_criteria},
         follow=True,
     )
 
     test_case.assertRedirects(
-        response,
-        reverse(redirect_view, kwargs={'group_slug': group.slug, 'set_slug': ds.slug}),
+        response, reverse(redirect_view, kwargs={'dataset_uuid': ds.id})
     )
 
 
@@ -83,14 +69,10 @@ def test_request_access_form(client, mocker):
         'dataworkspace.apps.datasets.views.create_zendesk_ticket'
     )
 
-    group = factories.DataGroupingFactory.create()
-    ds = factories.DataSetFactory.create(grouping=group, published=True)
+    ds = factories.DataSetFactory.create(published=True)
 
     response = client.post(
-        reverse(
-            'datasets:request_access',
-            kwargs={'group_slug': group.slug, 'set_slug': ds.slug},
-        ),
+        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
         data={
             "email": "user@example.com",
             "goal": "My goal",
@@ -107,38 +89,11 @@ def test_request_access_form(client, mocker):
         "My goal",
         "My justification",
         mock.ANY,
-        f"{group.name} > {ds.name}",
+        ds.name,
         mock.ANY,
         None,
         None,
     )
-
-
-def test_old_dataset_url_redirects_to_new_url(client):
-    ds = factories.DataSetFactory.create(published=True)
-    response = client.get(
-        reverse(
-            'catalogue:dataset_fullpath',
-            kwargs={'group_slug': ds.grouping.slug, 'set_slug': ds.slug},
-        )
-    )
-    assert response.status_code == 302
-    assert response['Location'] == ds.get_absolute_url()
-
-
-def test_old_reference_dataset_url_redirects_to_new_url(client):
-    group = factories.DataGroupingFactory.create()
-    rds = factories.ReferenceDatasetFactory.create(
-        group=group, table_name='test_detail_view'
-    )
-    response = client.get(
-        reverse(
-            'catalogue:reference_dataset',
-            kwargs={'group_slug': group.slug, 'reference_slug': rds.slug},
-        )
-    )
-    assert response.status_code == 302
-    assert response['Location'] == rds.get_absolute_url()
 
 
 def test_find_datasets_combines_results(client):

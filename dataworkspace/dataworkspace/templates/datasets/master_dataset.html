@@ -2,7 +2,7 @@
 {% load humanize %}
 {% load static %}
 
-{% block page_title %}{{ model.name }} - {{ model.grouping.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -49,10 +49,10 @@
                 <br>
                 {% if model.eligibility_criteria %}
                   <a class="govuk-link--no-visited-state"
-                     href="{% url 'datasets:eligibility_criteria' model.grouping.slug model.slug %}">Request access</a>
+                     href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
                 {% else %}
                   <a class="govuk-link--no-visited-state"
-                     href="{% url 'datasets:request_access' model.grouping.slug model.slug %}">Request access</a>
+                     href="{% url 'datasets:request_access' model.id %}">Request access</a>
                 {% endif %}
               </strong>
             </div>

@@ -6,7 +6,7 @@ from django.test import TransactionTestCase, TestCase
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.datasets.models import ReferenceDataset, DataGrouping
+from dataworkspace.apps.datasets.models import ReferenceDataset
 
 
 class BaseTestCaseMixin:
@@ -44,11 +44,7 @@ class BaseTestCaseMixin:
 
     @staticmethod
     def _create_reference_dataset(**kwargs):
-        group = DataGrouping.objects.get_or_create(
-            name='Test Group 1', slug='test-group-1', short_description='Testing...'
-        )[0]
         ref_data_fields = dict(
-            group=group,
             name='Test Reference Dataset 1',
             table_name='ref_test_dataset',
             short_description='Testing...',

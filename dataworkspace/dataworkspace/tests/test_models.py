@@ -9,7 +9,6 @@ from freezegun import freeze_time
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.datasets.models import (
-    DataGrouping,
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
@@ -684,9 +683,8 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
 class TestSourceLinkModel(BaseTestCase):
     @mock.patch('dataworkspace.apps.datasets.models.boto3.client')
     def test_delete_local_source_link(self, mock_client):
-        group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group, published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -707,9 +705,8 @@ class TestSourceLinkModel(BaseTestCase):
 
     @mock.patch('dataworkspace.apps.datasets.models.boto3.client')
     def test_delete_external_source_link(self, mock_client):
-        group = factories.DataGroupingFactory.create()
         dataset = factories.DataSetFactory.create(
-            grouping=group, published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -1089,11 +1086,7 @@ class TestExternalModels(BaseModelsTests):
 
     def test_create_external_database(self):
         # Ensure existing records are synced to any new database on creation
-        group = DataGrouping.objects.create(
-            name='Test Group 1', slug='test-group-1', short_description='Testing...'
-        )
         ref_dataset = ReferenceDataset.objects.create(
-            group=group,
             name='Test Reference Dataset 1',
             table_name='ext_db_test',
             short_description='Testing...',
@@ -1118,11 +1111,7 @@ class TestExternalModels(BaseModelsTests):
         self.assertTrue(self._record_exists('ext_db_test', 'field1', 2))
 
     def test_edit_add_external_database(self):
-        group = DataGrouping.objects.create(
-            name='Test Group 1', slug='test-group-1', short_description='Testing...'
-        )
         ref_dataset = ReferenceDataset.objects.create(
-            group=group,
             name='Test Reference Dataset 1',
             table_name='ext_db_edit_test',
             short_description='Testing...',
@@ -1157,11 +1146,7 @@ class TestExternalModels(BaseModelsTests):
         )
 
     def test_edit_change_external_database(self):
-        group = DataGrouping.objects.create(
-            name='Test Group 1', slug='test-group-1', short_description='Testing...'
-        )
         ref_dataset = ReferenceDataset.objects.create(
-            group=group,
             name='Test Reference Dataset 1',
             table_name='ext_db_change_test',
             short_description='Testing...',
@@ -1207,11 +1192,7 @@ class TestExternalModels(BaseModelsTests):
         )
 
     def test_edit_remove_external_database(self):
-        group = DataGrouping.objects.create(
-            name='Test Group 1', slug='test-group-1', short_description='Testing...'
-        )
         ref_dataset = ReferenceDataset.objects.create(
-            group=group,
             name='Test Reference Dataset 1',
             table_name='ext_db_delete_test',
             short_description='Testing...',

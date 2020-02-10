@@ -1,7 +1,7 @@
 {% extends '_base.html' %}
 {% load static humanize core_tags datasets_tags %}
 
-{% block page_title %}{{ object.name }} - {{ object.grouping.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}{{ object.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -52,7 +52,7 @@
         <tbody>
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
-              <a class="govuk-link" href="{% url 'catalogue:reference_dataset_download' object.group.slug object.slug 'json'%}">
+              <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' object.uuid 'json'%}">
                 {{ object.slug }}-{{ object.published_version }}.json
               </a>
             </td>
@@ -62,7 +62,7 @@
           </tr>
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
-              <a class="govuk-link" href="{% url 'catalogue:reference_dataset_download' object.group.slug object.slug 'csv' %}">
+              <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' object.uuid 'csv' %}">
                 {{ object.slug }}-{{ object.published_version }}.csv
               </a>
             </td>

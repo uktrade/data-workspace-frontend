@@ -37,14 +37,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_no_fields(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'fields-TOTAL_FORMS': 0,
                 'fields-INITIAL_FORMS': 1,
@@ -59,14 +57,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_no_identifiers(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'fields-TOTAL_FORMS': 1,
                 'fields-INITIAL_FORMS': 1,
@@ -86,14 +82,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_multiple_identifiers(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'fields-TOTAL_FORMS': 2,
                 'fields-INITIAL_FORMS': 1,
@@ -114,14 +108,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_duplicate_column_names(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'fields-TOTAL_FORMS': 2,
                 'fields-INITIAL_FORMS': 1,
@@ -143,14 +135,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_duplicate_names(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'fields-TOTAL_FORMS': 2,
                 'fields-INITIAL_FORMS': 1,
@@ -172,13 +162,11 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_invalid_column_name(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'fields-TOTAL_FORMS': 2,
                 'fields-INITIAL_FORMS': 0,
@@ -205,14 +193,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_existing_table_name(self):
         self._create_reference_dataset()
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create(name='test group')
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test_dataset',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -242,14 +228,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_invalid_table_name(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create(name='test group')
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'test_dataset',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -281,14 +265,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
     def test_create_reference_dataset_uppercase_table_name(self):
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create(name='test group')
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_UPPERCASE',
                 'slug': 'test-ref-1',
-                'group': group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -321,14 +303,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_create_reference_dataset_valid(self):
         ref_dataset_slug = 'test-ref-1'
         num_datasets = ReferenceDataset.objects.count()
-        group = factories.DataGroupingFactory.create(name='test group')
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
             {
                 'name': 'test ref 1',
                 'table_name': 'ref_test_create_ref_dataset_valid',
                 'slug': ref_dataset_slug,
-                'group': group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': 'test description',
@@ -378,7 +358,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -434,7 +413,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -487,7 +465,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -543,7 +520,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -602,7 +578,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test ref 1',
                 'table_name': 'ref_test1',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -652,7 +627,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': reference_dataset.name,
                 'table_name': reference_dataset.table_name,
                 'slug': reference_dataset.slug,
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -711,7 +685,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': reference_dataset.name,
                 'table_name': 'ref_test_updated',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': reference_dataset.short_description,
                 'description': '',
@@ -769,7 +742,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test updated',
                 'table_name': 'ref_test_updated',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -829,7 +801,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'id': reference_dataset.id,
                 'name': 'test updated',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -884,7 +855,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'id': reference_dataset.id,
                 'name': 'test updated',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -937,7 +907,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'id': reference_dataset.id,
                 'name': 'test updated',
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'short_description': 'test description that is short',
                 'description': '',
                 'valid_from': '',
@@ -992,7 +961,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test updated',
                 'table_name': reference_dataset.table_name,
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -1378,7 +1346,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test updated',
                 'table_name': reference_dataset.table_name,
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -1435,7 +1402,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test updated',
                 'table_name': reference_dataset.table_name,
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -1526,7 +1492,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(
             response,
-            'Deleting the Reference dataset \'Test Group 1: Test Reference Dataset 1\' '
+            'Deleting the Reference dataset \'Test Reference Dataset 1\' '
             'would require deleting the following protected related objects',
         )
 
@@ -1651,7 +1617,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test updated',
                 'table_name': ref_ds1.table_name,
                 'slug': 'test-ref-1',
-                'group': ref_ds1.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -1740,7 +1705,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test updated',
                 'table_name': ref_ds1.table_name,
                 'slug': 'test-ref-1',
-                'group': ref_ds1.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -1775,9 +1739,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(
             response,
             'The Reference dataset "<a href="/admin/datasets/referencedataset/{}/change/">'
-            'Test Group 1: test updated</a>" was changed successfully.'.format(
-                ref_ds1.id
-            ),
+            'test updated</a>" was changed successfully.'.format(ref_ds1.id),
             html=True,
         )
 
@@ -1791,7 +1753,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test linked non-external',
                 'table_name': 'ref_test_non_external_dataset_link',
                 'slug': 'test-ref-link-non-external',
-                'group': factories.DataGroupingFactory.create(name='test group').id,
                 'external_database': db.id,
                 'short_description': 'test description that is short',
                 'description': '',
@@ -1836,7 +1797,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'linked from',
                 'table_name': 'ref_test_non_external_dataset_link',
                 'slug': 'test-ref-link-non-external',
-                'group': factories.DataGroupingFactory.create(name='test group').id,
                 'external_database': db.id,
                 'short_description': 'test description that is short',
                 'description': '',
@@ -1867,7 +1827,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(
             response,
             'The Reference dataset "<a href="/admin/datasets/referencedataset/{}/change/">'
-            'test group: linked from</a>" was added successfully.'.format(
+            'linked from</a>" was added successfully.'.format(
                 ReferenceDataset.objects.last().id
             ),
             html=True,
@@ -1952,7 +1912,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': ref_ds2.name,
                 'table_name': ref_ds2.table_name,
                 'slug': ref_ds2.slug,
-                'group': ref_ds2.group.id,
                 'external_database': '',
                 'short_description': 'xxx',
                 'description': '',
@@ -2191,7 +2150,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'name': 'test updated',
                 'table_name': reference_dataset.table_name,
                 'slug': 'test-ref-1',
-                'group': reference_dataset.group.id,
                 'external_database': '',
                 'short_description': 'test description that is short',
                 'description': '',
@@ -2302,7 +2260,6 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'name': dataset.name,
                 'slug': dataset.slug,
                 'short_description': 'test short description',
-                'grouping': dataset.grouping.id,
                 'description': 'test description',
                 'type': 2,
                 'sourcelink_set-TOTAL_FORMS': '1',
@@ -2354,7 +2311,6 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'name': dataset.name,
                 'slug': dataset.slug,
                 'short_description': 'test short description',
-                'grouping': dataset.grouping.id,
                 'description': 'test description',
                 'type': 2,
                 'sourcelink_set-TOTAL_FORMS': '1',
@@ -2402,7 +2358,6 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'name': dataset.name,
                 'slug': dataset.slug,
                 'short_description': 'test short description',
-                'grouping': dataset.grouping.id,
                 'description': 'test description',
                 'type': 2,
                 'sourcelink_set-TOTAL_FORMS': '1',
