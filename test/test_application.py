@@ -60,7 +60,9 @@ class TestApplication(unittest.TestCase):
 
         # Ensure the user doesn't see the application link since they don't
         # have permission
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             content = await response.text()
         self.assertNotIn('Test Application', content)
 
@@ -71,7 +73,7 @@ class TestApplication(unittest.TestCase):
 
         # Make a request to the tools page
         async with session.request(
-            'GET', 'http://localapps.com:8000/tools/'
+            'GET', 'http://dataworkspace.test:8000/tools/'
         ) as response:
             content = await response.text()
 
@@ -80,18 +82,18 @@ class TestApplication(unittest.TestCase):
         self.assertIn('Test Application</button>', content)
 
         self.assertIn(
-            'action="http://testapplication-23b40dd9.localapps.com:8000/"', content
+            'action="http://testapplication-23b40dd9.dataworkspace.test:8000/"', content
         )
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
         ) as response:
             application_content_1 = await response.text()
 
         self.assertIn('Test Application is loading...', application_content_1)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
         ) as response:
             application_content_2 = await response.text()
 
@@ -107,7 +109,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
@@ -128,7 +130,7 @@ class TestApplication(unittest.TestCase):
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
             'PATCH',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             data=sent_content(),
             headers=sent_headers,
         ) as response:
@@ -145,7 +147,7 @@ class TestApplication(unittest.TestCase):
 
         # Assert that transfer-encoding does not become chunked unnecessarily
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.localapps.com:8000/http'
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/http'
         ) as response:
             received_content = await response.json()
         header_keys = [key.lower() for key in received_content['headers'].keys()]
@@ -153,7 +155,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'PATCH',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             data=b'1234',
         ) as response:
             received_content = await response.json()
@@ -164,7 +166,7 @@ class TestApplication(unittest.TestCase):
         # Make a websockets connection to the proxy
         sent_headers = {'from-downstream-websockets': 'websockets-header-value'}
         async with session.ws_connect(
-            'http://testapplication-23b40dd9.localapps.com:8000/websockets',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/websockets',
             headers=sent_headers,
         ) as wsock:
             msg = await wsock.receive()
@@ -196,14 +198,14 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(15)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
         ) as response:
             error_content = await response.text()
 
         self.assertIn('Application STOPPED', error_content)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
         ) as response:
             content = await response.text()
 
@@ -213,7 +215,7 @@ class TestApplication(unittest.TestCase):
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
@@ -260,13 +262,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         # Ensure the user doesn't see the visualisation link on the home page
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             content = await response.text()
         self.assertNotIn('Test testvisualisation', content)
 
         # Ensure the user doesn't have access to the application
         async with session.request(
-            'GET', 'http://testvisualisation.localapps.com:8000/'
+            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
         ) as response:
             content = await response.text()
 
@@ -279,7 +283,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://testvisualisation.localapps.com:8000/'
+            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
         ) as response:
             application_content_1 = await response.text()
 
@@ -290,7 +294,7 @@ class TestApplication(unittest.TestCase):
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
             'GET',
-            'http://testvisualisation.localapps.com:8000/http',
+            'http://testvisualisation.dataworkspace.test:8000/http',
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
@@ -332,7 +336,9 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(15)
 
         # Ensure user created
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             await response.text()
 
         stdout, stderr, code = await create_private_dataset()
@@ -354,7 +360,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://testvisualisation-a.localapps.com:8000/'
+            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
         ) as response:
             application_content_1 = await response.text()
 
@@ -363,7 +369,7 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(10)
 
         async with session.request(
-            'GET', 'http://testvisualisation-a.localapps.com:8000/http'
+            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/http'
         ) as response:
             received_status = response.status
             await response.text()
@@ -391,7 +397,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://testvisualisation-b.localapps.com:8000/'
+            'GET', 'http://testvisualisation-b.dataworkspace.test:8000/'
         ) as response:
             application_content_2 = await response.text()
 
@@ -400,7 +406,7 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(10)
 
         async with session.request(
-            'GET', 'http://testvisualisation-b.localapps.com:8000/http'
+            'GET', 'http://testvisualisation-b.dataworkspace.test:8000/http'
         ) as response:
             received_status = response.status
             received_content = await response.json()
@@ -437,7 +443,9 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(15)
 
         # Make a request to the home page, which ensures the user is in the DB
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             await response.text()
 
         await asyncio.sleep(1)
@@ -449,7 +457,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/',
             params={'__memory_cpu': '1024_2048'},
         ) as response:
             application_content_1 = await response.text()
@@ -457,7 +465,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('Test Application is loading...', application_content_1)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.localapps.com:8000/'
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
         ) as response:
             application_content_2 = await response.text()
 
@@ -473,7 +481,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
@@ -494,7 +502,7 @@ class TestApplication(unittest.TestCase):
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
             'PATCH',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             data=sent_content(),
             headers=sent_headers,
         ) as response:
@@ -512,7 +520,7 @@ class TestApplication(unittest.TestCase):
         # Make a websockets connection to the proxy
         sent_headers = {'from-downstream-websockets': 'websockets-header-value'}
         async with session.ws_connect(
-            'http://testapplication-23b40dd9.localapps.com:8000/websockets',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/websockets',
             headers=sent_headers,
         ) as wsock:
             msg = await wsock.receive()
@@ -555,7 +563,9 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(15)
 
         # Make a request to the application home page
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             content = await response.text()
 
         self.assertEqual(200, response.status)
@@ -563,7 +573,7 @@ class TestApplication(unittest.TestCase):
 
         # Make a request to the application admin page
         async with session.request(
-            'GET', 'http://localapps.com:8000/admin'
+            'GET', 'http://dataworkspace.test:8000/admin'
         ) as response:
             content = await response.text()
 
@@ -602,7 +612,9 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(15)
 
         # Make a request to the home page, which creates the user...
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             await response.text()
 
         # ... with application permissions...
@@ -612,14 +624,16 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         # ... and can make requests to the home page...
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             content = await response.text()
         self.assertNotIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 200)
 
         # ... but not the application...
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.localapps.com:8000/http'
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/http'
         ) as response:
             content = await response.text()
         self.assertIn('You are not allowed to access this page', content)
@@ -628,7 +642,7 @@ class TestApplication(unittest.TestCase):
         # ... and it can't be spoofed...
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers={'x-forwarded-for': '1.2.3.4'},
         ) as response:
             content = await response.text()
@@ -651,7 +665,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers={'x-forwarded-for': '1.2.3.4'},
         ) as response:
             content = await response.text()
@@ -660,7 +674,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers={'x-forwarded-for': '6.5.4.3, 1.2.3.4'},
         ) as response:
             content = await response.text()
@@ -669,7 +683,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers={'x-forwarded-for': '5.1.1.1'},
         ) as response:
             content = await response.text()
@@ -678,7 +692,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers={'x-forwarded-for': '6.5.4.3'},
         ) as response:
             content = await response.text()
@@ -688,7 +702,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/http',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
             headers={'x-forwarded-for': '1.2.3.4, 6.5.4.3'},
         ) as response:
             content = await response.text()
@@ -698,7 +712,7 @@ class TestApplication(unittest.TestCase):
 
         # The healthcheck is allowed from a private IP: simulates ALB
         async with session.request(
-            'GET', 'http://localapps.com:8000/healthcheck'
+            'GET', 'http://dataworkspace.test:8000/healthcheck'
         ) as response:
             content = await response.text()
 
@@ -708,7 +722,7 @@ class TestApplication(unittest.TestCase):
         # ... and from a publically routable one: simulates Pingdom
         async with session.request(
             'GET',
-            'http://localapps.com:8000/healthcheck',
+            'http://dataworkspace.test:8000/healthcheck',
             headers={'x-forwarded-for': '8.8.8.8'},
         ) as response:
             content = await response.text()
@@ -719,7 +733,7 @@ class TestApplication(unittest.TestCase):
         # ... but not allowed to get to the application
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/healthcheck',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/healthcheck',
             headers={},
         ) as response:
             content = await response.text()
@@ -730,7 +744,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testapplication-23b40dd9.localapps.com:8000/healthcheck',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/healthcheck',
             headers={'x-forwarded-for': '8.8.8.8'},
         ) as response:
             content = await response.text()
@@ -770,7 +784,9 @@ class TestApplication(unittest.TestCase):
         await asyncio.sleep(15)
 
         # Make a request to the home page
-        async with session.request('GET', 'http://localapps.com:8000/') as response:
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
             self.assertEqual(number_of_times_at_sso(), 2)
             self.assertEqual(200, response.status)
 
@@ -810,14 +826,15 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://localapps.com:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
+            'http://dataworkspace.test:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
         ) as response:
             content = await response.text()
 
         self.assertIn('You do not have permission to access these links', content)
 
         async with session.request(
-            'GET', 'http://localapps.com:8000/table_data/my_database/public/auth_user'
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/auth_user',
         ) as response:
             content = await response.text()
             status = response.status
@@ -832,14 +849,15 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://localapps.com:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
+            'http://dataworkspace.test:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
         ) as response:
             content = await response.text()
 
         self.assertNotIn('You do not have permission to access these links', content)
 
         async with session.request(
-            'GET', 'http://localapps.com:8000/table_data/my_database/public/auth_user'
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/auth_user',
         ) as response:
             content = await response.text()
 
@@ -900,7 +918,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'POST', f'http://localapps.com:8000/api/v1/table/{table_id}/schema'
+            'POST', f'http://dataworkspace.test:8000/api/v1/table/{table_id}/schema'
         ) as response:
             status = response.status
             content = await response.text()
@@ -908,7 +926,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/schema',
             headers={'Authorization': 'Bearer something'},
         ) as response:
             status = response.status
@@ -917,7 +935,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/schema',
             headers={'Authorization': 'Bearer token-2'},
         ) as response:
             status = response.status
@@ -926,7 +944,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual('{}', content)
 
         async with session.request(
-            'POST', f'http://localapps.com:8000/api/v1/table/{table_id}/rows'
+            'POST', f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows'
         ) as response:
             status = response.status
             content = await response.text()
@@ -934,7 +952,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer something'},
         ) as response:
             status = response.status
@@ -943,7 +961,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('You are not allowed to access this page</h1>', content)
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
         ) as response:
             status = response.status
@@ -959,7 +977,7 @@ class TestApplication(unittest.TestCase):
         # Ensure that superuser perms aren't enough...
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
         ) as response:
             status = response.status
@@ -975,7 +993,7 @@ class TestApplication(unittest.TestCase):
         # Ensure that superuser perms aren't enough...
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
         ) as response:
             status = response.status
@@ -991,7 +1009,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/schema',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/schema',
             headers={'Authorization': 'Bearer token-2'},
             data=b'{"fields":[{"name":"id"}]}',
         ) as response:
@@ -1001,7 +1019,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(json.loads(content)['schema'][0]['name'], 'id')
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
             data=(
                 b'{"fields":[{"name":"id"},{"name":"password"},{"name":"last_login"},'
@@ -1031,7 +1049,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
             data=(
                 b'{"fields":[{"name":"username"}],"pagination":{"startRow":5.0,"rowCount":10.0}}'
@@ -1044,7 +1062,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(len(content_json_1['rows']), 10)
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
             data=(
                 b'{"fields":[{"name":"username"}],"pagination":{"startRow":3.0,"rowCount":5.0}}'
@@ -1060,7 +1078,7 @@ class TestApplication(unittest.TestCase):
         # Test $searchAfter
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
             data=(b'{"fields":[{"name":"username"}],"$searchAfter":[100]}'),
         ) as response:
@@ -1075,7 +1093,7 @@ class TestApplication(unittest.TestCase):
         table_id_not_exists = '5f8117b4-e05d-442f-8622-8abab7141fd8'
         async with session.request(
             'POST',
-            f'http://localapps.com:8000/api/v1/table/{table_id_not_exists}/rows',
+            f'http://dataworkspace.test:8000/api/v1/table/{table_id_not_exists}/rows',
             headers={'Authorization': 'Bearer token-2'},
         ) as response:
             status = response.status
@@ -1115,7 +1133,7 @@ class TestApplication(unittest.TestCase):
         # Check that with no authorization header there is no access
         dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
-        url = f'http://localapps.com:8000/api/v1/dataset/{dataset_id}/{table_id}'
+        url = f'http://dataworkspace.test:8000/api/v1/dataset/{dataset_id}/{table_id}'
         stdout, stderr, code = await create_private_dataset()
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')

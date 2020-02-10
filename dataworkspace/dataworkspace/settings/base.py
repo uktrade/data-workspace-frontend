@@ -13,7 +13,7 @@ env = normalise_environment(os.environ)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = env['SECRET_KEY']
-DEBUG = 'localapps.com' in env['ALLOWED_HOSTS']
+DEBUG = 'dataworkspace.test' in env['ALLOWED_HOSTS']
 
 
 def aws_fargate_private_ip():
