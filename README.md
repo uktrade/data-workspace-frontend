@@ -9,10 +9,10 @@ Allows users to launch applications in order to analyse data
 Set the required variables by
 
 ```bash
-cp analysis-workspace.env .env
+cp .envs/sample.env .envs/dev.env
 ```
 
-and edit `.env`, specifically replacing `AUTHBROKER_*`. Start the application by
+and edit `dev.env`, specifically replacing `AUTHBROKER_*`. Start the application by
 
 ```bash
 docker-compose up --build

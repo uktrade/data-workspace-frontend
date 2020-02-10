@@ -47,6 +47,7 @@ target/
 .env
 
 .direnv/
+.envs/dev.env
 
 # OSX
 
