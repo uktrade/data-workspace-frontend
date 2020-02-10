@@ -470,7 +470,7 @@ def streaming_query_response(user_email, database, query, filename):
     put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
     put_db_rows_to_queue_job.link_exception(handle_exception)
 
-    response = StreamingHttpResponse(yield_bytes_from_queue(),  content_type='text/csv')
+    response = StreamingHttpResponse(yield_bytes_from_queue(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
