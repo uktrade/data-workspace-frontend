@@ -73,26 +73,14 @@ def test_request_access_form(client, mocker):
 
     response = client.post(
         reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
-        data={
-            "email": "user@example.com",
-            "goal": "My goal",
-            "justification": "My justification",
-        },
+        data={"email": "user@example.com", "goal": "My goal"},
         follow=True,
     )
 
     assert response.status_code == 200
 
     create_zendesk_ticket.assert_called_once_with(
-        "user@example.com",
-        mock.ANY,
-        "My goal",
-        "My justification",
-        mock.ANY,
-        ds.name,
-        mock.ANY,
-        None,
-        None,
+        "user@example.com", mock.ANY, "My goal", mock.ANY, ds.name, mock.ANY, None, None
     )
 
 

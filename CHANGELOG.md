@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Local development domain set to `dataworkspace.test`
 - Increase streaming download queue timeout to 2 minutes
+- Rephrased and merged request access form goal and justification questions into one
+
 
 ## 2020-02-06
 

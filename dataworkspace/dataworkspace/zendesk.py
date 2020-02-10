@@ -17,7 +17,7 @@ def get_username(user):
 
 
 def build_ticket_description_text(
-    dataset_name, dataset_url, contact_email, user, justification_text, goal_text
+    dataset_name, dataset_url, contact_email, user, goal_text
 ):
     username = get_username(user)
     people_url = "https://people.trade.gov.uk/search?search_filters[]=people&query={}".format(
@@ -33,13 +33,10 @@ SSO Login:  {user.email}
 People search: {people_url}
 
 
-What will you use this data for?
+Why do you need this data?
 
 {goal_text}
 
-Why is this data necessary for you to perform your role?
-
-{justification_text}
 """
 
     logger.debug(ticket_description)
@@ -76,7 +73,6 @@ def create_zendesk_ticket(
     contact_email,
     user,
     goal,
-    justification_text,
     approval_url,
     dataset_name,
     dataset_url,
@@ -90,7 +86,7 @@ def create_zendesk_ticket(
     )
 
     ticket_description = build_ticket_description_text(
-        dataset_name, dataset_url, contact_email, user, justification_text, goal
+        dataset_name, dataset_url, contact_email, user, goal
     )
 
     private_comment = build_private_comment_text(
