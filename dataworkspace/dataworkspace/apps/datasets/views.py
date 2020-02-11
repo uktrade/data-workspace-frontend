@@ -231,7 +231,6 @@ def request_access_view(request, dataset_uuid):
         form = RequestAccessForm(request.POST)
         if form.is_valid():
             goal = form.cleaned_data['goal']
-            justification = form.cleaned_data['justification']
             contact_email = form.cleaned_data['email']
 
             user_edit_relative = reverse(
@@ -245,7 +244,6 @@ def request_access_view(request, dataset_uuid):
                 contact_email,
                 request.user,
                 goal,
-                justification,
                 user_url,
                 dataset.name,
                 dataset_url,
