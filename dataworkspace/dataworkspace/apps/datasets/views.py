@@ -252,9 +252,7 @@ def request_access_view(request, dataset_uuid):
             )
 
             url = reverse('datasets:request_access_success', args=[dataset_uuid])
-            return HttpResponseRedirect(
-                f'{url}?ticket={ticket_reference}&set={dataset_uuid}'
-            )
+            return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
 
     return render(
         request,
@@ -267,7 +265,6 @@ def request_access_view(request, dataset_uuid):
 def request_access_success_view(request, dataset_uuid):
     # yes this could cause 400 errors but Todo - replace with session / messages
     ticket = request.GET['ticket']
-    dataset_uuid = request.GET['set']
 
     dataset = find_dataset(dataset_uuid)
 
