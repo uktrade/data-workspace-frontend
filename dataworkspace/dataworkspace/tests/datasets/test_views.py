@@ -214,3 +214,17 @@ def test_find_datasets_filters_by_source(client):
             'short_description': rds.short_description,
         },
     ]
+
+
+def test_request_access_success_content(client):
+    ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
+
+    response = client.get(
+        reverse('datasets:request_access_success', kwargs={"dataset_uuid": ds.id}),
+        {"ticket": "test-ticket-id"},
+    )
+
+    assert (
+        'Your request has been received. It will normally be completed within 5 working days.'
+        in response.content.decode(response.charset)
+    )

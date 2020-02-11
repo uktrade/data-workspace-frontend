@@ -254,9 +254,7 @@ def request_access_view(request, dataset_uuid):
             )
 
             url = reverse('datasets:request_access_success', args=[dataset_uuid])
-            return HttpResponseRedirect(
-                f'{url}?ticket={ticket_reference}&set={dataset_uuid}'
-            )
+            return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
 
     return render(
         request,
