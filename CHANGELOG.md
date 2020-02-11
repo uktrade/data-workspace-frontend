@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Set expectations for users requesting access to datasets.
+- Fixed passing environment variables to visualisations with database credentials.
 
 ## 2020-02-10
 

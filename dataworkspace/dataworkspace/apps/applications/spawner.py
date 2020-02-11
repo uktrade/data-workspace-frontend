@@ -513,16 +513,19 @@ def _fargate_task_run(
                     'name': container_name,
                 }
             ]
-            + [
-                {
-                    'name': 's3sync',
-                    'environment': [
-                        {'name': name, 'value': value} for name, value in env.items()
-                    ],
-                }
-            ]
-            if s3_sync
-            else [],
+            + (
+                [
+                    {
+                        'name': 's3sync',
+                        'environment': [
+                            {'name': name, 'value': value}
+                            for name, value in env.items()
+                        ],
+                    }
+                ]
+                if s3_sync
+                else []
+            ),
         },
         launchType='FARGATE',
         networkConfiguration={
