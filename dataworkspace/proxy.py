@@ -98,17 +98,20 @@ async def async_main():
 
     # A running application should only connect to self: this is where we have the most
     # concern because we run the least-trusted code
-    csp_application_running = csp_common + (
-        "default-src 'self';"
-        "base-uri 'self';"
-        "font-src 'self' data:;"
-        "form-action 'self';"
-        "frame-ancestors 'self';"
-        "img-src 'self' data:;"
-        # Both JupyterLab and RStudio need `unsafe-eval`
-        "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
-        "style-src 'unsafe-inline' 'self';"
-    )
+    def csp_application_running(host):
+        return csp_common + (
+            "default-src 'self';"
+            "base-uri 'self';"
+            # Safari does not have a 'self' for WebSockets
+            f"connect-src 'self' wss://{host};"
+            "font-src 'self' data:;"
+            "form-action 'self';"
+            "frame-ancestors 'self';"
+            "img-src 'self' data:;"
+            # Both JupyterLab and RStudio need `unsafe-eval`
+            "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
+            "style-src 'unsafe-inline' 'self';"
+        )
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
 
@@ -370,6 +373,7 @@ async def async_main():
     async def handle_application_http_spawning(
         downstream_request, method, upstream_url, query, host_html_path, host_api_url
     ):
+        host = downstream_request.headers['host']
         try:
             logger.info('Spawning: Attempting to connect to %s', upstream_url)
             response = await handle_http(
@@ -381,7 +385,7 @@ async def async_main():
                 spawning_http_timeout,
                 # Although the application is spawning, if the response makes it back to the client,
                 # we know the application is running, so we return the _running_ CSP headers
-                (('content-security-policy', csp_application_running),),
+                (('content-security-policy', csp_application_running(host)),),
             )
 
         except Exception:
@@ -426,7 +430,7 @@ async def async_main():
         # async with client_session.request('DELETE', host_api_url, headers=headers) as delete_response:
         #     await delete_response.read()
         #     raise
-
+        host = downstream_request.headers['host']
         return await handle_http(
             downstream_request,
             method,
@@ -434,7 +438,7 @@ async def async_main():
             upstream_url,
             query,
             default_http_timeout,
-            (('content-security-policy', csp_application_running),),
+            (('content-security-policy', csp_application_running(host)),),
         )
 
     async def handle_admin(downstream_request, method, path, query):
