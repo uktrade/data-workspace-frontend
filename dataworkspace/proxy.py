@@ -268,6 +268,11 @@ async def async_main():
         public_host, _, _ = downstream_request.url.host.partition(
             f'.{root_domain_no_port}'
         )
+        public_host, _, port_override_str = public_host.partition('--')
+        try:
+            port_override = int(port_override_str)
+        except ValueError:
+            port_override = None
         host_api_url = admin_root + '/api/v1/application/' + public_host
         host_html_path = '/tools/' + public_host
 
@@ -338,13 +343,13 @@ async def async_main():
 
         return (
             await handle_application_websocket(
-                downstream_request, application['proxy_url'], path, query
+                downstream_request, application['proxy_url'], path, query, port_override
             )
             if is_websocket
             else await handle_application_http_spawning(
                 downstream_request,
                 method,
-                application_upstream(application['proxy_url'], path),
+                application_upstream(application['proxy_url'], path, port_override),
                 query,
                 host_html_path,
                 host_api_url,
@@ -353,22 +358,30 @@ async def async_main():
             else await handle_application_http_running(
                 downstream_request,
                 method,
-                application_upstream(application['proxy_url'], path),
+                application_upstream(application['proxy_url'], path, port_override),
                 query,
                 host_api_url,
             )
         )
 
-    async def handle_application_websocket(downstream_request, proxy_url, path, query):
-        upstream_url = URL(proxy_url).with_path(path).with_query(query)
+    async def handle_application_websocket(
+        downstream_request, proxy_url, path, query, port_override
+    ):
+        upstream_url = application_upstream(proxy_url, path, port_override).with_query(
+            query
+        )
         return await handle_websocket(
             downstream_request,
             CIMultiDict(application_headers(downstream_request)),
             upstream_url,
         )
 
-    def application_upstream(proxy_url, path):
-        return URL(proxy_url).with_path(path)
+    def application_upstream(proxy_url, path, port_override):
+        return (
+            URL(proxy_url).with_path(path)
+            if port_override is None
+            else URL(proxy_url).with_path(path).with_port(port_override)
+        )
 
     async def handle_application_http_spawning(
         downstream_request, method, upstream_url, query, host_html_path, host_api_url

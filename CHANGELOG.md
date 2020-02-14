@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Link in README when developing locally
+- For each tool at mytool-[sso-id].domain.com, allow mytool-[sso-id]--9000.domain.com to route through to the application.
 
 
 ## 2020-02-14
