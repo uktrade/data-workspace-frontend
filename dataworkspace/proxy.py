@@ -15,12 +15,12 @@ import aiohttp
 from aiohttp import web
 
 import aioredis
+from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
 from yarl import URL
 
 from dataworkspace.utils import normalise_environment
 from proxy_session import SESSION_KEY, redis_session_middleware
-from hawkserver import authenticate_hawk_header
 
 
 class UserException(Exception):
