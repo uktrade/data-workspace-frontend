@@ -5,6 +5,7 @@ import psycopg2
 import pytest
 from botocore.response import StreamingBody
 from django.conf import settings
+from django.test import override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.core.utils import database_dsn
@@ -370,6 +371,50 @@ class TestDatasetViews:
             ReferenceDataset.objects.get(pk=rds.id).number_of_downloads
             == download_count
         )
+
+    @override_settings(REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS=1)
+    @pytest.mark.django_db
+    def test_reference_dataset_detail_view(self, client):
+        factories.DataSetFactory.create()
+        rds = factories.ReferenceDatasetFactory.create(table_name='test_detail_view')
+        field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='id', data_type=2, is_identifier=True
+        )
+        field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name', data_type=1
+        )
+        field3 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='desc', data_type=1
+        )
+        rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 1,
+                field2.column_name: 'Test record',
+                field3.column_name: 'Test Desc 1',
+            },
+        )
+        rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 2,
+                field2.column_name: 'Ánd again',
+                field3.column_name: None,
+            },
+        )
+
+        response = client.get(rds.get_absolute_url())
+        assert response.status_code == 200
+        assert rds.name.encode('utf-8') in response.content
+        assert response.context['record_count'] == 2
+        assert response.context['preview_limit'] == 1
+        assert response.context['records'].count() == 1
+        actual_record = response.context['records'].first()
+        assert getattr(actual_record, field1.column_name) == 1
+        assert getattr(actual_record, field2.column_name) == 'Test record'
+        assert getattr(actual_record, field3.column_name) == 'Test Desc 1'
 
 
 class TestSourceLinkDownloadView:
