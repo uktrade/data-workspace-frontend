@@ -65,7 +65,7 @@ async def async_main():
 
     csp_common = "object-src 'none';"
     if root_domain not in ['dataworkspace.test:8000']:
-        csp_common += "upgrade-insecure-requests;"
+        csp_common += 'upgrade-insecure-requests;'
 
     # "Admin" pages are shown on the root domain, but also when spawning applications on
     # <my-application>.<root_domain>, so we explicitly name the domain instead of using 'self'
