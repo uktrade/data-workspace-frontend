@@ -69,9 +69,7 @@ pipeline {
 
     stage('release: dev') {
       steps {
-        build job: "data-workspace-dev", parameters: [
-          string(name: "DockerTag", value: params.GIT_COMMIT),
-        ]
+        ecs_pipeline("analysisworkspace-dev", params.GIT_COMMIT)
       }
     }
 
@@ -87,9 +85,7 @@ pipeline {
       }
 
       steps {
-        build job: "data-workspace-staging", parameters: [
-          string(name: "DockerTag", value: params.GIT_COMMIT),
-        ]
+        ecs_pipeline("data-workspace-staging", params.GIT_COMMIT)
       }
     }
 
@@ -105,10 +101,19 @@ pipeline {
       }
 
       steps {
-        build job: "data-workspace-prod", parameters: [
-          string(name: "DockerTag", value: params.GIT_COMMIT),
-        ]
+        ecs_pipeline("jupyterhub", params.GIT_COMMIT)
       }
     }
+  }
+}
+
+void ecs_pipeline(cluster, version) {
+  lock("data-workspace-ecs-pipeline-${cluster}") {
+    build job: "ecs-pipeline", parameters: [
+        string(name: "Image", value: "quay.io/uktrade/data-workspace:${version}"),
+        string(name: "Cluster", value: cluster),
+        string(name: "Service", value: "${cluster}-admin"),
+        string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY")
+    ]
   }
 }
