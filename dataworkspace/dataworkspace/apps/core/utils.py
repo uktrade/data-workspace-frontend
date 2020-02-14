@@ -270,14 +270,18 @@ def can_access_schema_table(user, database, schema, table):
     sourcetable = SourceTable.objects.filter(
         schema=schema, table=table, database__memorable_name=database
     )
-    has_source_table_perms = DataSet.objects.filter(
-        Q(published=True)
-        & Q(sourcetable__in=sourcetable)
-        & (
-            Q(user_access_type='REQUIRES_AUTHENTICATION')
-            | Q(datasetuserpermission__user=user)
+    has_source_table_perms = (
+        DataSet.objects.live()
+        .filter(
+            Q(published=True)
+            & Q(sourcetable__in=sourcetable)
+            & (
+                Q(user_access_type='REQUIRES_AUTHENTICATION')
+                | Q(datasetuserpermission__user=user)
+            )
         )
-    ).exists()
+        .exists()
+    )
 
     return has_source_table_perms
 
@@ -289,26 +293,31 @@ def can_access_table_by_google_data_studio(user, table_id):
         )
     except SourceTable.DoesNotExist:
         return False
-    has_source_table_perms = DataSet.objects.filter(
-        Q(published=True)
-        & Q(sourcetable=sourcetable)
-        & (
-            Q(user_access_type='REQUIRES_AUTHENTICATION')
-            | Q(datasetuserpermission__user=user)
+    has_source_table_perms = (
+        DataSet.objects.live()
+        .filter(
+            Q(published=True)
+            & Q(sourcetable=sourcetable)
+            & (
+                Q(user_access_type='REQUIRES_AUTHENTICATION')
+                | Q(datasetuserpermission__user=user)
+            )
         )
-    ).exists()
+        .exists()
+    )
 
     return has_source_table_perms
 
 
 def source_tables_for_user(user):
     req_authentication_tables = SourceTable.objects.filter(
-        dataset__published=True, dataset__user_access_type='REQUIRES_AUTHENTICATION'
+        dataset__user_access_type='REQUIRES_AUTHENTICATION',
+        **{'dataset__published': True} if not user.is_superuser else {},
     )
     req_authorization_tables = SourceTable.objects.filter(
-        dataset__published=True,
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__datasetuserpermission__user=user,
+        **{'dataset__published': True} if not user.is_superuser else {},
     )
     source_tables = [
         {'database': x.database, 'schema': x.schema, 'table': x.table}
@@ -316,9 +325,9 @@ def source_tables_for_user(user):
     ]
     reference_dataset_tables = [
         {'database': x.external_database, 'schema': 'public', 'table': x.table_name}
-        for x in ReferenceDataset.objects.filter(published=True, deleted=False).exclude(
-            external_database=None
-        )
+        for x in ReferenceDataset.objects.live()
+        .filter(deleted=False, **{'published': True} if not user.is_superuser else {})
+        .exclude(external_database=None)
     ]
     return source_tables + reference_dataset_tables
 
@@ -338,9 +347,9 @@ def source_tables_for_app(application_template):
     ]
     reference_dataset_tables = [
         {'database': x.external_database, 'schema': 'public', 'table': x.table_name}
-        for x in ReferenceDataset.objects.filter(published=True, deleted=False).exclude(
-            external_database=None
-        )
+        for x in ReferenceDataset.objects.live()
+        .filter(published=True, deleted=False)
+        .exclude(external_database=None)
     ]
     return source_tables + reference_dataset_tables
 

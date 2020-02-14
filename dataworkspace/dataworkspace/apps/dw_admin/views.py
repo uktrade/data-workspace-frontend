@@ -307,7 +307,7 @@ class SourceLinkUploadView(
         return self.request.user.is_superuser
 
     def _get_dataset(self):
-        return get_object_or_404(DataSet, pk=self.kwargs['dataset_id'])
+        return get_object_or_404(DataSet.objects.live(), pk=self.kwargs['dataset_id'])
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

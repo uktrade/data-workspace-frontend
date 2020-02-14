@@ -1,7 +1,7 @@
 {% extends '_base.html' %}
 {% load static humanize core_tags datasets_tags %}
 
-{% block page_title %}{{ object.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -10,11 +10,11 @@
         <a class="govuk-breadcrumbs__link" href="/">Home</a>
       </li>
       <li class="govuk-breadcrumbs__list-item">
-        {{ object.name }}
+        {{ model.name }}
       </li>
       {% if perms.datasets_referencedataset.change %}
         <li class="govuk-breadcrumbs__list-item">
-          <a href="{% url 'admin:datasets_referencedataset_change' object.id %}" class="govuk-breadcrumbs__link">
+          <a href="{% url 'admin:datasets_referencedataset_change' model.id %}" class="govuk-breadcrumbs__link">
             [Edit]
           </a>
         </li>
@@ -24,15 +24,18 @@
 {% endblock %}
 
 {% block inner_content %}
+  {% if not model.published %}
+    {% include 'partials/unpublished_banner.html' with model=object %}
+  {% endif %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-      <h1 class="govuk-heading-l">{{ object.name }}</h1>
+      <h1 class="govuk-heading-l">{{ model.name }}</h1>
       <div class="govuk-body">
-        {{ object.description|safe }}
+        {{ model.description|safe }}
       </div>
-      {% if object.enquiries_contact %}
+      {% if model.enquiries_contact %}
         <h3 class="govuk-heading-m">Contact</h3>
-        {% include 'partials/contact.html' with model=object.enquiries_contact only %}
+        {% include 'partials/contact.html' with model=model.enquiries_contact only %}
       {% endif %}
     </div>
   </div>
@@ -52,25 +55,25 @@
         <tbody>
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
-              <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' object.uuid 'json'%}">
-                {{ object.slug }}-{{ object.published_version }}.json
+              <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' model.uuid 'json'%}">
+                {{ model.slug }}-{{ model.published_version }}.json
               </a>
             </td>
             <td class="govuk-table__cell">JSON</td>
-            <td class="govuk-table__cell">{{ object.published_version }}</td>
-            <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
+            <td class="govuk-table__cell">{{ model.published_version }}</td>
+            <td class="govuk-table__cell">{{ model.data_last_updated }}</td>
           </tr>
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
-              <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' object.uuid 'csv' %}">
-                {{ object.slug }}-{{ object.published_version }}.csv
+              <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' model.uuid 'csv' %}">
+                {{ model.slug }}-{{ model.published_version }}.csv
               </a>
             </td>
             <td class="govuk-table__cell">
               CSV
             </td>
-            <td class="govuk-table__cell">{{ object.published_version }}</td>
-            <td class="govuk-table__cell">{{ object.data_last_updated }}</td>
+            <td class="govuk-table__cell">{{ model.published_version }}</td>
+            <td class="govuk-table__cell">{{ model.data_last_updated }}</td>
           </tr>
         </tbody>
       </table>
@@ -83,7 +86,7 @@
         Field definitions
       </h2>
       <dl class="govuk-summary-list">
-        {% for field in object.fields.all %}
+        {% for field in model.fields.all %}
             {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
             <div class="govuk-summary-list__row">
               <dt class="govuk-summary-list__key">{% linked_field_identifier_name field %}</dt>
@@ -121,7 +124,7 @@
       <h2 class="govuk-heading-m govuk-!-margin-top-8">
         Data preview
       </h2>
-      {% with object.get_records|length as num_records %}
+      {% with model.get_records|length as num_records %}
         <p class="govuk-body">
           Showing <strong>{{ num_records }}</strong> record{{ num_records|pluralize }}
         </p>
@@ -130,7 +133,7 @@
         <table class="govuk-table govuk-!-font-size-16">
           <thead>
             <tr class="govuk-table__row">
-              {% for field in object.fields.all %}
+              {% for field in model.fields.all %}
                 {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
                   <th class="govuk-table__header ref-data-col-id">{% linked_field_identifier_name field %}</th>
                   <th class="govuk-table__header ref-data-col-character-field">{% linked_field_display_name field %}</th>
@@ -146,7 +149,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for record in object.get_records %}
+            {% for record in model.get_records %}
               <tr class="govuk-table__row">
                 {% for field in record.reference_dataset.fields.all %}
                   {% with record|get_attr:field.column_name as value %}
@@ -166,7 +169,7 @@
                 {% endfor %}
                 {% if perms.datasets_referencedataset.change %}
                   <td class="govuk-table__cell">
-                    <a href="{% url 'dw-admin:reference-dataset-record-edit' object.id record.id %}">
+                    <a href="{% url 'dw-admin:reference-dataset-record-edit' model.id record.id %}">
                       Edit
                     </a>
                   </td>
@@ -174,7 +177,7 @@
               </tr>
             {% empty %}
               <tr class="govuk-table__row">
-                <td colspan="{{ object.field_names|length }}">
+                <td colspan="{{ model.field_names|length }}">
                   This reference dataset doesn't have any data yet.
                 </td>
               </tr>
@@ -194,7 +197,7 @@
             Published date
           </dt>
           <dd class="govuk-summary-list__value">
-            {{ object.created_date| date:"d/m/Y" }}
+            {{ model.created_date| date:"d/m/Y" }}
           </dd>
         </div>
         <div class="govuk-summary-list__row">
@@ -202,16 +205,16 @@
             Updated date
           </dt>
           <dd class="govuk-summary-list__value">
-            {{ object.data_last_updated| date:"d/m/Y" }}
+            {{ model.data_last_updated| date:"d/m/Y" }}
           </dd>
         </div>
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Licence</dt>
-          <dd class="govuk-summary-list__value">{{ object.licence }}</dd>
+          <dd class="govuk-summary-list__value">{{ model.licence }}</dd>
         </div>
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Restrictions on usage</dt>
-          <dd class="govuk-summary-list__value">{{ object.restrictions_on_usage | linebreaksbr }}</dd>
+          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
         </div>
       </dl>
     </div>

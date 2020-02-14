@@ -361,9 +361,9 @@ class VisualisationTemplateEditForm(forms.ModelForm):
     authorized_master_datasets = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('master datasets', False),
-        queryset=MasterDataset.objects.filter(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        ).order_by('name'),
+        queryset=MasterDataset.objects.live()
+        .filter(user_access_type='REQUIRES_AUTHORIZATION')
+        .order_by('name'),
     )
 
     class Meta:
@@ -380,7 +380,7 @@ class VisualisationTemplateEditForm(forms.ModelForm):
 
         self.fields[
             'authorized_master_datasets'
-        ].initial = MasterDataset.objects.filter(
+        ].initial = MasterDataset.objects.live().filter(
             datasetapplicationtemplatepermission__application_template=instance
         )
 
@@ -430,7 +430,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
             )
 
         current_master_datasets = set(
-            DataSet.objects.filter(
+            DataSet.objects.live().filter(
                 datasetapplicationtemplatepermission__application_template=obj
             )
         )

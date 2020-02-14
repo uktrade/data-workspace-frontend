@@ -151,7 +151,7 @@ def _get_streaming_http_response(request, primary_key, columns, rows):
 def dataset_api_view_GET(request, dataset_id, source_table_id):
 
     source_table = get_object_or_404(
-        SourceTable, id=source_table_id, dataset__id=dataset_id
+        SourceTable, id=source_table_id, dataset__id=dataset_id, dataset__deleted=False
     )
 
     search_after = request.GET.getlist('$searchAfter')
@@ -203,9 +203,8 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
 
 def reference_dataset_api_view_GET(request, group_slug, reference_slug):
     ref_dataset = get_object_or_404(
-        ReferenceDataset,
+        ReferenceDataset.objects.live(),
         published=True,
-        deleted=False,
         group__slug=group_slug,
         slug=reference_slug,
     )

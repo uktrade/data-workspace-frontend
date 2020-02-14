@@ -23,6 +23,9 @@
 {% endblock %}
 
 {% block inner_content %}
+  {% if not model.published %}
+    {% include 'partials/unpublished_banner.html' %}
+  {% endif %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">{{ model.name }}</h1>
