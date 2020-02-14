@@ -1,6 +1,8 @@
 import csv
 
 from django import forms
+from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.auth import get_user_model
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.template.loader import get_template
@@ -331,6 +333,11 @@ class BaseDatasetForm(forms.ModelForm):
         label='Each user must be individually authorized to access the data',
         required=False,
     )
+    authorized_users = forms.ModelMultipleChoiceField(
+        required=False,
+        widget=FilteredSelectMultiple('users', False),
+        queryset=get_user_model().objects.filter().order_by('email'),
+    )
 
     class Meta:
         model = DataSet
@@ -341,10 +348,19 @@ class BaseDatasetForm(forms.ModelForm):
         kwargs['initial'] = {'type': self.dataset_type}
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
+
         self.fields['requires_authorization'].initial = (
             kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
             if is_instance
             else True
+        )
+
+        self.fields['authorized_users'].initial = (
+            get_user_model().objects.filter(
+                datasetuserpermission__dataset=kwargs['instance']
+            )
+            if is_instance
+            else get_user_model().objects.none()
         )
 
 
