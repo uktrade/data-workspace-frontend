@@ -138,6 +138,8 @@ class DatasetDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
+        ctx['model'] = self.object
+
         if self._is_reference_dataset():
             return ctx
 
@@ -171,7 +173,6 @@ class DatasetDetailView(DetailView):
 
         ctx.update(
             {
-                'model': self.object,
                 'has_access': self.object.user_has_access(self.request.user),
                 'data_links': sorted(
                     chain(
