@@ -156,9 +156,9 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .loading-spinner {
   border: 12px solid #ffffff;
   border-radius: 50%;
-  border-top-color: #1d70b8;
-  width: 80px;
-  height: 80px;
+  border-top-color: #00703c;
+  width: 90px;
+  height: 90px;
   -webkit-animation: spin 2s linear infinite;
   animation: spin 2s linear infinite;
   margin: 0 auto;
