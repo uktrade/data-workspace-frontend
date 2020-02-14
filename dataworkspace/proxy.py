@@ -532,7 +532,10 @@ async def async_main():
 
         # fmt: off
         data = \
-            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else \
+            b'' if (
+                'content-length' not in upstream_headers
+                and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked'
+            ) else \
             await downstream_request.read() if downstream_request.content.at_eof() else \
             downstream_request.content
         # fmt: on
