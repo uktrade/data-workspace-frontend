@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - The CSP header to explicitly allow Websocket requests by named domain: required for Safari since 'self' does not seem to work
+- Remove source created date from data cut and master dataset detail pages.
 
 
 ## 2020-02-12
@@ -25,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Set expectations for users requesting access to datasets.
 - Fixed passing environment variables to visualisations with database credentials.
+
 
 ## 2020-02-10
 

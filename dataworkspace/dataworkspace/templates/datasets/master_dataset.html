@@ -68,7 +68,6 @@
         <tr class="govuk-table__row">
           <th class="govuk-table__header">Name</th>
           <th class="govuk-table__header">Identifier</th>
-          <th class="govuk-table__header">Dataset added</th>
           <th class="govuk-table__header">Update frequency</th>
           {% if user.is_superuser and data_links %}
             <th class="govuk-table__header">Tools*</th>
@@ -81,7 +80,6 @@
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">{{ table.name }}</td>
             <td class="govuk-table__cell">{{ table.schema }}.{{ table.table }}</td>
-            <td class="govuk-table__cell">{{ table.created_date| date:"d/m/Y" }}</td>
             <td class="govuk-table__cell">{{ table.get_frequency_display }}</td>
             {% if user.is_superuser %}
               <td class="govuk-table__cell">

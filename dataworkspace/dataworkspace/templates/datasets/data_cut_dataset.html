@@ -69,7 +69,6 @@
                 <tr class="govuk-table__row">
                     <th class="govuk-table__header">Link to the data</th>
                     <th class="govuk-table__header">Format</th>
-                    <th class="govuk-table__header">File added</th>
                     <th class="govuk-table__header">Frequency</th>
                 </tr>
                 </thead>
@@ -88,9 +87,6 @@
                         </td>
                         <td class="govuk-table__cell">
                           {% if link.format %}{{ link.format }}{% else %}CSV{% endif %}
-                        </td>
-                        <td class="govuk-table__cell">
-                            {{ link.created_date| date:"d/m/Y"   }}
                         </td>
                         <td class="govuk-table__cell">
                           {% if link.get_frequency_display %}
