@@ -24,7 +24,7 @@ With the default environment, you will need the below in your `/etc/hosts` file.
 127.0.0.1       dataworkspace.test
 ```
 
-And the application will be visible at http://dataworkspace.test. This is to be able to properly test cookies that are shared with subdomains.
+And the application will be visible at http://dataworkspace.test:8000. This is to be able to properly test cookies that are shared with subdomains.
 
 
 ## Creating migrations / running management commands
