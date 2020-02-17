@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-02-14
 
+### Added
+
+- Dataset user permissions can be viewed / modified from the dataset admin page
+
 ### Changed
 
 - The CSP header to explicitly allow Websocket requests by named domain: required for Safari since 'self' does not seem to work

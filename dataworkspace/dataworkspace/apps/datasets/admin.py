@@ -3,6 +3,7 @@ import logging
 from adminsortable2.admin import SortableInlineAdminMixin
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils.encoding import force_text
@@ -17,6 +18,7 @@ from dataworkspace.apps.datasets.models import (
     MasterDataset,
     DataCutDataset,
     SourceTag,
+    DataSetUserPermission,
 )
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (
@@ -101,7 +103,16 @@ class BaseDatasetAdmin(DeletableTimeStampedUserAdmin):
                 ]
             },
         ),
-        ('Permissions', {'fields': ['requires_authorization', 'eligibility_criteria']}),
+        (
+            'Permissions',
+            {
+                'fields': [
+                    'requires_authorization',
+                    'eligibility_criteria',
+                    'authorized_users',
+                ]
+            },
+        ),
     ]
 
     class Media:
@@ -126,6 +137,39 @@ class BaseDatasetAdmin(DeletableTimeStampedUserAdmin):
             if form.cleaned_data['requires_authorization']
             else 'REQUIRES_AUTHENTICATION'
         )
+
+        current_authorized_users = set(
+            get_user_model().objects.filter(datasetuserpermission__dataset=obj)
+        )
+
+        authorized_users = set(
+            form.cleaned_data.get('authorized_users', get_user_model().objects.none())
+        )
+
+        user_content_type_id = ContentType.objects.get_for_model(get_user_model()).pk
+
+        for user in authorized_users - current_authorized_users:
+            DataSetUserPermission.objects.create(dataset=obj, user=user)
+            LogEntry.objects.log_action(
+                user_id=request.user.pk,
+                content_type_id=user_content_type_id,
+                object_id=user.pk,
+                object_repr=force_text(user),
+                action_flag=CHANGE,
+                change_message=f"Added dataset {obj} permission",
+            )
+
+        for user in current_authorized_users - authorized_users:
+            DataSetUserPermission.objects.filter(dataset=obj, user=user).delete()
+            LogEntry.objects.log_action(
+                user_id=request.user.pk,
+                content_type_id=user_content_type_id,
+                object_id=user.pk,
+                object_repr=force_text(user),
+                action_flag=CHANGE,
+                change_message=f"Removed dataset {obj} permission",
+            )
+
         super().save_model(request, obj, form, change)
 
         if original_user_access_type != obj.user_access_type:
