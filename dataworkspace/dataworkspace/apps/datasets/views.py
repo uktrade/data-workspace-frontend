@@ -141,8 +141,19 @@ class DatasetDetailView(DetailView):
         ctx['model'] = self.object
 
         if self._is_reference_dataset():
-            return ctx
+            records = self.object.get_records()
+            total_record_count = records.count()
+            preview_limit = self.get_preview_limit(total_record_count)
+            records = records[:preview_limit]
 
+            ctx.update(
+                {
+                    'preview_limit': preview_limit,
+                    'record_count': total_record_count,
+                    'records': records,
+                }
+            )
+            return ctx
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
         source_views = self.object.sourceview_set.all()
         custom_queries = self.object.customdatasetquery_set.all()
@@ -195,6 +206,9 @@ class DatasetDetailView(DetailView):
             return ['datasets/master_dataset.html']
         elif self.object.type == DataSet.TYPE_DATA_CUT:
             return ['datasets/data_cut_dataset.html']
+
+    def get_preview_limit(self, record_count):
+        return min([record_count, settings.REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS])
 
 
 @require_http_methods(['GET', 'POST'])

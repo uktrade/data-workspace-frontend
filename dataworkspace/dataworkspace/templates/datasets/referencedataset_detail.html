@@ -124,11 +124,9 @@
       <h2 class="govuk-heading-m govuk-!-margin-top-8">
         Data preview
       </h2>
-      {% with model.get_records|length as num_records %}
-        <p class="govuk-body">
-          Showing <strong>{{ num_records }}</strong> record{{ num_records|pluralize }}
-        </p>
-      {% endwith %}
+      <p class="govuk-body">
+        Showing {% if preview_limit < record_count %}first {% endif %}<strong>{{ preview_limit }}</strong> record{{ preview_limit|pluralize }} {% if preview_limit < record_count %} of <strong>{{ record_count }}</strong>{% endif %}
+      </p>
       <div class="scrollable-table">
         <table class="govuk-table govuk-!-font-size-16">
           <thead>
@@ -149,7 +147,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for record in model.get_records %}
+            {% for record in records %}
               <tr class="govuk-table__row">
                 {% for field in record.reference_dataset.fields.all %}
                   {% with record|get_attr:field.column_name as value %}
