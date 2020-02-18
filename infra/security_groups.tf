@@ -37,10 +37,22 @@ resource "aws_security_group_rule" "dnsmasq_ingress_dns_tcp_notebooks" {
 }
 
 resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_notebooks" {
-  description = "ingress-dns-udp"
+  description = "ingress-dns-udp-notebooks"
 
   security_group_id = "${aws_security_group.dnsmasq.id}"
   source_security_group_id = "${aws_security_group.notebooks.id}"
+
+  type        = "ingress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
+}
+
+resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_gitlab_runner" {
+  description = "ingress-dns-udp-gitlab-runner"
+
+  security_group_id = "${aws_security_group.dnsmasq.id}"
+  source_security_group_id = "${aws_security_group.gitlab_runner.id}"
 
   type        = "ingress"
   from_port   = "53"
@@ -814,6 +826,18 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_nlb" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "gitlab_service_ingress_https_from_gitlab_runner" {
+  description = "ingress-https-from-gitlab-runner"
+
+  security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id =  "${aws_security_group.gitlab_runner.id}"
+
+  type        = "ingress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb" {
   description = "ingress-ssh-from-nlb"
 
@@ -949,5 +973,69 @@ resource "aws_security_group_rule" "gitlab-ec2-egress-all" {
   type        = "egress"
   from_port   = "0"
   to_port     = "65535"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "gitlab-ec2-ingress-ssh" {
+  description = "egress-ssh"
+
+  security_group_id = "${aws_security_group.gitlab-ec2.id}"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  type        = "ingress"
+  from_port   = "22"
+  to_port     = "22"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group" "gitlab_runner" {
+  name        = "${var.prefix}-gitlab-runner"
+  description = "${var.prefix}-gitlab-runner"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags {
+    Name = "${var.prefix}-gitlab-runner"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dnsmasq" {
+  description = "egress-dns-udp-dnsmasq"
+
+  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  source_security_group_id = "${aws_security_group.dnsmasq.id}"
+
+  type        = "egress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
+}
+
+# Connections to AWS package repos and GitLab
+resource "aws_security_group_rule" "gitlab_runner_egress_http" {
+  description = "egress-https"
+
+  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  type        = "egress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
+# Connections to ECR and CloudWatch
+resource "aws_security_group_rule" "gitlab_runner_egress_https" {
+  description = "egress-https"
+
+  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
   protocol    = "tcp"
 }

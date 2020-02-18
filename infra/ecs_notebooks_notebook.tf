@@ -247,7 +247,10 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_s3_notebooks" {
     ]
 
     resources = [
+      # For docker to pull from ECR
       "arn:aws:s3:::prod-${data.aws_region.aws_region.name}-starport-layer-bucket/*",
+      # For AWS Linux 2 packages
+      "arn:aws:s3:::amazonlinux.*.amazonaws.com/*",
     ]
   }
 }

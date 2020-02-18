@@ -419,7 +419,8 @@ resource "aws_instance" "gitlab" {
 
   vpc_security_group_ids      = ["${aws_security_group.gitlab-ec2.id}"]
   associate_public_ip_address = "false"
-  key_name                    = "michal"
+  key_name                    = "${var.gitlab_key}"
+
   subnet_id                   = "${aws_subnet.private_with_egress.*.id[0]}"
   user_data                   = <<EOF
   #!/bin/bash
@@ -478,4 +479,70 @@ resource "aws_eip" "gitlab" {
     # VPN routing may depend on this
     prevent_destroy = true
   }
+}
+
+resource "aws_autoscaling_group" "gitlab_runner" {
+  name_prefix               = "${var.prefix}-gitlab-runner-"
+  max_size                  = 2
+  min_size                  = 1
+  desired_capacity          = 1
+  health_check_grace_period = 120
+  health_check_type         = "EC2"
+  launch_configuration      = "${aws_launch_configuration.gitlab_runner.name}"
+  vpc_zone_identifier       = ["${aws_subnet.private_without_egress.*.id}"]
+
+  tags = [{
+    key                 = "Name"
+    value               = "${var.prefix}-gitlab-runner-asg"
+    propagate_at_launch = true
+  }]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_launch_configuration" "gitlab_runner" {
+  name_prefix     = "${var.prefix}-gitlab-runner-"
+  # This is the ECS optimized image, although we're not running ECS. It's
+  # handy since it has everything docker installed, and cuts down on the
+  # types of infrastructure
+  image_id        = "ami-0749bd3fac17dc2cc"
+  instance_type   = "t3a.medium"
+  security_groups = ["${aws_security_group.gitlab_runner.id}"]
+  key_name        = "${var.gitlab_runner_key}"
+
+  associate_public_ip_address = false
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  user_data = <<EOF
+  #!/bin/bash
+  #
+  set -e
+  sudo yum update -y
+  sudo curl -L --output /usr/local/bin/gitlab-runner https://s3.eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/gitlab-runner/gitlab-runner-linux-amd64
+  sudo chmod +x /usr/local/bin/gitlab-runner
+  sudo ln -s /usr/local/bin/gitlab-runner /usr/bin/gitlab-runner
+  sudo useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
+
+  sudo mkdir -p /etc/gitlab-runner
+  sudo echo "concurrent = 10" >> /etc/gitlab-runner/config.toml
+  sudo echo "check_interval = 1" >> /etc/gitlab-runner/config.toml
+
+  sudo gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
+  sudo gitlab-runner start
+  # Connects via HTTP, but uses private ip, not public internet
+  sudo gitlab-runner register \
+    --non-interactive \
+    --url "http://${var.gitlab_domain}/" \
+    --registration-token "${var.gitlab_runner_visualisations_deployment_project_token}" \
+    --executor "shell" \
+    --description "visualisations-deployment" \
+    --access-level "not_protected" \
+    --run-untagged="true" \
+    --locked="true"
+  EOF
 }
