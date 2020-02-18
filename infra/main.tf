@@ -116,8 +116,10 @@ locals {
   admin_alb_port          = "443"
   admin_api_path          = "/api/v1/databases"
 
-  notebook_container_name   = "jupyterhub-notebook"
-  notebook_container_port   = "8888"
+  notebook_container_name     = "jupyterhub-notebook"
+  notebook_container_port     = "8888"
+  notebook_container_port_dev = "9000"
+
   notebook_container_memory = 8192
   notebook_container_cpu    = 1024
 

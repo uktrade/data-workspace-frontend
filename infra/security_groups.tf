@@ -362,6 +362,18 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_notebooks" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "admin_service_egress_http_dev_to_notebooks" {
+  description = "egress-http-dev-to-notebooks"
+
+  security_group_id = "${aws_security_group.admin_service.id}"
+  source_security_group_id = "${aws_security_group.notebooks.id}"
+
+  type        = "egress"
+  from_port   = "${local.notebook_container_port_dev}"
+  to_port     = "${local.notebook_container_port_dev}"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "admin_service_egress_postgres_to_admin_db" {
   description = "egress-postgres-to-admin-db"
 
@@ -423,6 +435,18 @@ resource "aws_security_group_rule" "notebooks_ingress_https_from_admin" {
   type      = "ingress"
   from_port = "${local.notebook_container_port}"
   to_port   = "${local.notebook_container_port}"
+  protocol  = "tcp"
+}
+
+resource "aws_security_group_rule" "notebooks_ingress_http_dev_from_admin" {
+  description = "ingress-http-dev-from-jupytehub"
+
+  security_group_id = "${aws_security_group.notebooks.id}"
+  source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type      = "ingress"
+  from_port = "${local.notebook_container_port_dev}"
+  to_port   = "${local.notebook_container_port_dev}"
   protocol  = "tcp"
 }
 

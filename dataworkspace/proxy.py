@@ -15,12 +15,12 @@ import aiohttp
 from aiohttp import web
 
 import aioredis
+from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
 from yarl import URL
 
 from dataworkspace.utils import normalise_environment
 from proxy_session import SESSION_KEY, redis_session_middleware
-from hawkserver import authenticate_hawk_header
 
 
 class UserException(Exception):
@@ -65,7 +65,7 @@ async def async_main():
 
     csp_common = "object-src 'none';"
     if root_domain not in ['dataworkspace.test:8000']:
-        csp_common += "upgrade-insecure-requests;"
+        csp_common += 'upgrade-insecure-requests;'
 
     # "Admin" pages are shown on the root domain, but also when spawning applications on
     # <my-application>.<root_domain>, so we explicitly name the domain instead of using 'self'
@@ -268,6 +268,11 @@ async def async_main():
         public_host, _, _ = downstream_request.url.host.partition(
             f'.{root_domain_no_port}'
         )
+        public_host, _, port_override_str = public_host.partition('--')
+        try:
+            port_override = int(port_override_str)
+        except ValueError:
+            port_override = None
         host_api_url = admin_root + '/api/v1/application/' + public_host
         host_html_path = '/tools/' + public_host
 
@@ -338,13 +343,13 @@ async def async_main():
 
         return (
             await handle_application_websocket(
-                downstream_request, application['proxy_url'], path, query
+                downstream_request, application['proxy_url'], path, query, port_override
             )
             if is_websocket
             else await handle_application_http_spawning(
                 downstream_request,
                 method,
-                application_upstream(application['proxy_url'], path),
+                application_upstream(application['proxy_url'], path, port_override),
                 query,
                 host_html_path,
                 host_api_url,
@@ -353,22 +358,30 @@ async def async_main():
             else await handle_application_http_running(
                 downstream_request,
                 method,
-                application_upstream(application['proxy_url'], path),
+                application_upstream(application['proxy_url'], path, port_override),
                 query,
                 host_api_url,
             )
         )
 
-    async def handle_application_websocket(downstream_request, proxy_url, path, query):
-        upstream_url = URL(proxy_url).with_path(path).with_query(query)
+    async def handle_application_websocket(
+        downstream_request, proxy_url, path, query, port_override
+    ):
+        upstream_url = application_upstream(proxy_url, path, port_override).with_query(
+            query
+        )
         return await handle_websocket(
             downstream_request,
             CIMultiDict(application_headers(downstream_request)),
             upstream_url,
         )
 
-    def application_upstream(proxy_url, path):
-        return URL(proxy_url).with_path(path)
+    def application_upstream(proxy_url, path, port_override):
+        return (
+            URL(proxy_url).with_path(path)
+            if port_override is None
+            else URL(proxy_url).with_path(path).with_port(port_override)
+        )
 
     async def handle_application_http_spawning(
         downstream_request, method, upstream_url, query, host_html_path, host_api_url
@@ -532,7 +545,10 @@ async def async_main():
 
         # fmt: off
         data = \
-            b'' if 'content-length' not in upstream_headers and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked' else \
+            b'' if (
+                'content-length' not in upstream_headers
+                and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked'
+            ) else \
             await downstream_request.read() if downstream_request.content.at_eof() else \
             downstream_request.content
         # fmt: on
