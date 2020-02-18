@@ -70,6 +70,14 @@ resource "aws_cloudwatch_log_group" "notebook" {
   retention_in_days = "3653"
 }
 
+resource "aws_cloudwatch_log_subscription_filter" "notebook" {
+  count = "${var.cloudwatch_subscription_filter ? 1 : 0}"
+  name            = "${var.prefix}-notebook"
+  log_group_name  = "${aws_cloudwatch_log_group.notebook.name}"
+  filter_pattern  = ""
+  destination_arn = "${var.cloudwatch_destination_arn}"
+}
+
 resource "aws_iam_role" "notebook_task_execution" {
   name               = "${var.prefix}-notebook-task-execution"
   path               = "/"
