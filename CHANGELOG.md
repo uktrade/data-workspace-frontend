@@ -11,6 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated the reference data set view to limit the number of rows previewed.
 
 
+## 2020-02-19
+
+### Added
+
+- Packages in RStudio to include more frequently-used ones
+
+
 ## 2020-02-17
 
 ### Changed
