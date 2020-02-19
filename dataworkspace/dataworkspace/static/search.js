@@ -26,7 +26,7 @@
     }
   }
 
-  var LiveSearch = function(formSelector, wrapperSelector){
+  var LiveSearch = function(formSelector, wrapperSelector, GTM){
     this.wrapperSelector = wrapperSelector;
     this.$wrapper = $(wrapperSelector);
     this.$form = $(formSelector);
@@ -34,6 +34,7 @@
     this.state = false;
     this.previousState = false;
     this.resultsCache = {};
+    this.GTM = GTM;
 
     this.originalState = this.$form.serializeArray();
     this.saveState();
@@ -89,6 +90,8 @@
       pageUpdated = this.updateResults();
       pageUpdated.done(
         function(){
+          if (typeof(this.GTM) !== 'undefined') {this.GTM.pushSearchEvent();}
+          
           var newPath = window.location.origin + this.$form.attr('action') + "?" + $.param(this.state);
           history.pushState(this.state, '', newPath);
         }.bind(this)
@@ -192,7 +195,7 @@
 
 
   $(document).ready(function() {
-    var form = new LiveSearch('#live-search-form', '#live-search-wrapper');
+    var form = new LiveSearch('#live-search-form', '#live-search-wrapper', new GTMDatasetSearchSupport());
     var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
   });
 })(jQuery);

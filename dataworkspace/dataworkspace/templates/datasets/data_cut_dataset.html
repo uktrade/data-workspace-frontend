@@ -4,6 +4,10 @@
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
+{% block extraGTMDataLayer %}
+<script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "datacut"})</script>
+{% endblock %}
+
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">

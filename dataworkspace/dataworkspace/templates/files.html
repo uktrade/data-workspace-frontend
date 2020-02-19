@@ -307,8 +307,8 @@ close(conn)</pre></code>
 {% endverbatim %}
     <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}aws-sdk-2.521.0.min.js"></script>
     <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}explorer-v1.js"></script>
-{% verbatim %}
     <script nonce="{{ request.csp_nonce }}">
+{% verbatim %}
     angular.module('aws-js-s3-explorer').factory('Config', () => {
         return {
             region: 'eu-west-2',

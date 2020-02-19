@@ -80,3 +80,10 @@ class BaseAdminTestCase(BaseTestCase):
         super().setUp()
         # Authenticate the user on the admin site
         self._authenticated_post(reverse('admin:index'))
+
+
+def get_response_csp_as_set(response):
+    policies = response['Content-Security-Policy'].split(';')
+    policies = {policy.strip() for policy in policies}
+
+    return policies
