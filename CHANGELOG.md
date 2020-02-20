@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## 2020-02-20
+
+### Changed
+
+- Separated the JupyterLab Python and R config directories to avoid strange behavior/conflicts when we come to sync them to S3
+
+
 ## 2020-02-17
 
 ### Changed

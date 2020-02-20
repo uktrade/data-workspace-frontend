@@ -528,8 +528,8 @@
       "value": "${fargate_spawner__task_subnet}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ENV__DUMMY",
-      "value": "value"
+      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ENV__JUPYTER_CONFIG_DIR",
+      "value": "/home/jovyan/.jupyterlab_python"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__PORT",
@@ -648,8 +648,8 @@
       "value": "${fargate_spawner__task_subnet}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__ENV__DUMMY",
-      "value": "value"
+      "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__ENV__JUPYTER_CONFIG_DIR",
+      "value": "/home/jovyan/.jupyterlab_r"
     },
     {
       "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__PORT",
