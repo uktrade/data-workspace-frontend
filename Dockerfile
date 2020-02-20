@@ -5,7 +5,7 @@ ENV \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8 \
 	PYTHONPATH=/dataworkspace \
-	DJANGO_SETTINGS_MODULE=dataworkspace.settings.prod
+	DJANGO_SETTINGS_MODULE=dataworkspace.settings.base
 
 COPY requirements.txt requirements.txt
 
