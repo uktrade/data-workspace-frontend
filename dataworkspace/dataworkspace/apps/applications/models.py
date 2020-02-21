@@ -170,6 +170,7 @@ class ApplicationInstance(TimeStampedModel):
         ]
         permissions = [
             ('start_all_applications', 'Can start all applications'),
+            ('develop_visualisations', 'Can develop visualisations'),
             ('access_appstream', 'Can access appstream'),
         ]
 

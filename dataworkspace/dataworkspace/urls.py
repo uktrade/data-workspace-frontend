@@ -56,6 +56,13 @@ urlpatterns = [
         ),
     ),
     path(
+        'visualisations/',
+        include(
+            ('dataworkspace.apps.applications.urls_visualisations', 'visualisations'),
+            namespace='visualisations',
+        ),
+    ),
+    path(
         'catalogue/',
         include(
             ('dataworkspace.apps.catalogue.urls', 'catalogue'), namespace='catalogue'
