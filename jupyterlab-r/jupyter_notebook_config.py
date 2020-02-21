@@ -32,3 +32,4 @@ c = get_config()  # pylint: disable=undefined-variable # noqa
 
 c.NotebookApp.ip = '0.0.0.0'
 c.NotebookApp.log_level = 'DEBUG'
+c.NotebookApp.terminado_settings = {'shell_command': ['bash']}

@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Separated the JupyterLab Python and R config directories to avoid strange behavior/conflicts when we come to sync them to S3
 - Separated the JupyterLab Python and R data and runtime directories to avoid strange behavior/conflicts when we come to sync them to S3
+- Default shell in JupyterLab to bash
 
 
 ## 2020-02-17
