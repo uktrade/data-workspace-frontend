@@ -8,9 +8,8 @@ set -e
 # Excluding .checkpoints from remote to not have issues with jupyters3
 # .checkpoints folders that are subfolders of files in S3. Other dot files
 # already on the remote _are_ synced to local
-# Excluding all all dot files locally, except .git, since they
-# a) are probably unnecessary
-# b) contain a sqlite database for temporary data
+# Exclude .__mobius3_flush__ files locally, since there is a suspected bug
+# in mobius3 where they can end up being uploaded
 mobius3 \
     /home/s3sync/data \
     ${S3_BUCKET} \
@@ -20,5 +19,5 @@ mobius3 \
     --log-level INFO \
     --credentials-source ecs-container-endpoint \
     --exclude-remote '(.*(/|^)\.checkpoints/)|(.*(/|^)bigdata/.*)' \
-    --exclude-local '^(?!.*/\.ssh($|(/.+)))(?!.*/\.git($|(/.+)))((.*/\..*)|(.*(/|^)bigdata/.*))' \
+    --exclude-local '(.*(/|^)\.__mobius3_flush__.*)|(.*(/|^)bigdata/.*)' \
     --upload-on-create '^.*/\.git/objects/pack/.+\.((pack)|(m?idx))$'
