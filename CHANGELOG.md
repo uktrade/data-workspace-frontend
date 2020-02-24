@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Sync all hidden files to and from S3, specifically for .gitignore
+- The proxy to support Websocket sub-protocols
+
+### Added
+
+- A remote desktop tool, hidden for now so it does not show in the UI
 
 
 ## 2020-02-20
