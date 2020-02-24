@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - A remote desktop tool, hidden for now so it does not show in the UI
+- A visualisations page, just showing links to projects in a certain group in GitLab, accessible to superusers and users that have the can_develop_visualisations permission.
 
 
 ## 2020-02-20

@@ -3,8 +3,10 @@ import random
 
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect
+
+import requests
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -148,3 +150,22 @@ def tools_html_POST(request):
             request, 'Stopped ' + application_instance.application_template.nice_name
         )
     return redirect(redirect_target)
+
+
+def visualisations_html_view(request):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        return HttpResponseForbidden()
+
+    if not request.method == 'GET':
+        return HttpResponse(status=405)
+
+    return visualisations_html_GET(request)
+
+
+def visualisations_html_GET(request):
+    response = requests.get(
+        f'{settings.GITLAB_URL}api/v4/groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
+        headers={'PRIVATE-TOKEN': settings.GITLAB_TOKEN},
+    )
+    projects = response.json()
+    return render(request, 'visualisations.html', {'projects': projects}, status=200)

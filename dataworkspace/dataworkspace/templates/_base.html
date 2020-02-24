@@ -63,6 +63,14 @@
             </a>
           </li>
           {% endif %}
+          {% if can_see_visualisations_tab %}
+          {% url 'visualisations:root' as visualisations_root_url %}
+          <li class="govuk-header__navigation-item{% if request.get_full_path == visualisations_root_url %} govuk-header__navigation-item--active{% endif %}">
+            <a class="govuk-header__link" href="{{ visualisations_root_url }}">
+              Visualisations
+            </a>
+          </li>
+          {% endif %}
           {% url 'about' as about_url %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == about_url %} govuk-header__navigation-item--active{% endif %}">
             <a class="govuk-header__link" href="{{ about_url }}">
@@ -114,6 +122,13 @@
               <li class="govuk-footer__inline-list-item">
                 <a class="govuk-footer__link" href="{{ tools_url  }}">
                   Tools
+                </a>
+              </li>
+              {% endif %}
+              {% if can_see_visualisations_tab %}
+              <li class="govuk-footer__inline-list-item">
+                <a class="govuk-footer__link" href="{{ visualisations_root_url  }}">
+                  Visualisations
                 </a>
               </li>
               {% endif %}

@@ -42,6 +42,11 @@ class AppUserEditForm(forms.ModelForm):
         help_text='For JupyterLab, rStudio and pgAdmin',
         required=False,
     )
+    can_develop_visualisations = forms.BooleanField(
+        label='Can develop visualisations',
+        help_text='To deploy and manage visualisations from code in Gitlab',
+        required=False,
+    )
     can_access_appstream = forms.BooleanField(
         label='Can access AppStream', help_text='For SPSS and STATA', required=False
     )
@@ -78,6 +83,13 @@ class AppUserEditForm(forms.ModelForm):
             'can_start_all_applications'
         ].initial = instance.user_permissions.filter(
             codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+
+        self.fields[
+            'can_develop_visualisations'
+        ].initial = instance.user_permissions.filter(
+            codename='develop_visualisations',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
@@ -175,6 +187,7 @@ class AppUserAdmin(UserAdmin):
             {
                 'fields': [
                     'can_start_all_applications',
+                    'can_develop_visualisations',
                     'can_access_appstream',
                     'is_staff',
                     'is_superuser',
@@ -220,6 +233,10 @@ class AppUserAdmin(UserAdmin):
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
+        develop_visualisations_permission = Permission.objects.get(
+            codename='develop_visualisations',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
         access_appstream_permission = Permission.objects.get(
             codename='access_appstream',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -238,6 +255,20 @@ class AppUserAdmin(UserAdmin):
             ):
                 obj.user_permissions.remove(start_all_applications_permission)
                 log_change('Removed can_start_all_applications permission')
+
+        if 'can_develop_visualisations' in form.cleaned_data:
+            if (
+                form.cleaned_data['can_develop_visualisations']
+                and develop_visualisations_permission not in obj.user_permissions.all()
+            ):
+                obj.user_permissions.add(develop_visualisations_permission)
+                log_change('Added can_develop_visualisations permission')
+            elif (
+                not form.cleaned_data['can_develop_visualisations']
+                and develop_visualisations_permission in obj.user_permissions.all()
+            ):
+                obj.user_permissions.remove(develop_visualisations_permission)
+                log_change('Removed can_develop_visualisations permission')
 
         if 'can_access_appstream' in form.cleaned_data:
             if (
