@@ -37,7 +37,7 @@ Modified by the Department for International Trade
 
 {% block head %}
     {{ block.super }}
-    <script src="{% get_static_prefix %}angular-1.7.8.min.js"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}angular-1.7.8.min.js"></script>
     <link rel="stylesheet" href="{% get_static_prefix %}explorer-v1.css">
 {% endblock %}
 
@@ -305,10 +305,10 @@ close(conn)</pre></code>
     </div>
     
 {% endverbatim %}
-    <script src="{% get_static_prefix %}aws-sdk-2.521.0.min.js"></script>
-    <script src="{% get_static_prefix %}explorer-v1.js"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}aws-sdk-2.521.0.min.js"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}explorer-v1.js"></script>
 {% verbatim %}
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
     angular.module('aws-js-s3-explorer').factory('Config', () => {
         return {
             region: 'eu-west-2',

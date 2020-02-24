@@ -2,7 +2,7 @@
 
 {% block head %}
     {{ block.super }}
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         window.addEventListener('DOMContentLoaded', () => {
             var element = document.getElementById('fleet-status');
             function getStatus(url) {

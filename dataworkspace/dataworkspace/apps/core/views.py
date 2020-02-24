@@ -11,6 +11,7 @@ from django.http import (
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import FormView
+from csp.decorators import csp_update
 
 from dataworkspace.apps.core.forms import SupportForm
 from dataworkspace.apps.core.utils import (
@@ -112,6 +113,9 @@ def file_browser_html_view(request):
     )
 
 
+@csp_update(
+    CONNECT_SRC=[settings.APPLICATION_ROOT_DOMAIN, "https://s3.eu-west-2.amazonaws.com"]
+)
 def file_browser_html_GET(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
 

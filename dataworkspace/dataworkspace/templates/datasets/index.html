@@ -5,8 +5,8 @@
 
 {% block head %}
     {{ block.super }}
-    <script src="{% get_static_prefix %}jquery-3.4.1.min.js"></script>
-    <script src="{% get_static_prefix %}search.js"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}jquery-3.4.1.min.js"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}search.js"></script>
 {% endblock %}
 
 {% block page_title %}Search - {{ block.super }}{% endblock %}

@@ -66,6 +66,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'waffle.middleware.WaffleMiddleware',
     'dataworkspace.middleware.disable_client_side_caching',
+    'csp.middleware.CSPMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -160,6 +161,36 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # tests don't have to worry about fixtures / editing the database
 APPLICATION_TEMPLATES = env['APPLICATION_TEMPLATES']
 APPLICATION_ROOT_DOMAIN = env['APPLICATION_ROOT_DOMAIN']
+
+# CSP Headers
+CSP_DEFAULT_SRC = [APPLICATION_ROOT_DOMAIN]
+CSP_OBJECT_SRC = ["'none'"]
+CSP_UPGRADE_INSECURE_REQUESTS = False if DEBUG else True
+CSP_BASE_URI = [APPLICATION_ROOT_DOMAIN]
+CSP_FONT_SRC = [APPLICATION_ROOT_DOMAIN, "data:", "https://fonts.gstatic.com"]
+CSP_FORM_ACTION = [APPLICATION_ROOT_DOMAIN, f"*.{APPLICATION_ROOT_DOMAIN}"]
+CSP_FRAME_ANCESTORS = [APPLICATION_ROOT_DOMAIN]
+CSP_IMG_SRC = [
+    APPLICATION_ROOT_DOMAIN,
+    "data:",
+    "https://www.googletagmanager.com",
+    "https://www.googletagmanager.com",
+    "https://www.google-analytics.com",
+    "https://ssl.gstatic.com",
+    "https://www.gstatic.com",
+]
+CSP_SCRIPT_SRC = [
+    APPLICATION_ROOT_DOMAIN,
+    "https://www.googletagmanager.com",
+    "https://www.google-analytics.com",
+    "https://tagmanager.google.com",
+]
+CSP_STYLE_SRC = [
+    APPLICATION_ROOT_DOMAIN,
+    "https://tagmanager.google.com",
+    "https://fonts.googleapis.com",
+]
+CSP_INCLUDE_NONCE_IN = ['script-src']
 
 ZENDESK_EMAIL = env['ZENDESK_EMAIL']
 ZENDESK_SUBDOMAIN = env['ZENDESK_SUBDOMAIN']

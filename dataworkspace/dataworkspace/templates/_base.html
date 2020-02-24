@@ -23,8 +23,8 @@
 
   {% if not debug %}
      <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_site_id }}"></script>
-    <script>
+    <script nonce="{{ request.csp_nonce }}" async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_site_id }}"></script>
+    <script nonce="{{ request.csp_nonce }}">
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -35,7 +35,7 @@
 </head>
 
 <body class="govuk-template__body">
-  <script>
+  <script nonce="{{ request.csp_nonce }}">
     document.body.className = document.body.className + ' js-enabled';
   </script>
 
@@ -158,8 +158,8 @@
     </div>
   </footer>
 
-  <script src="{% get_static_prefix %}govuk-frontend-3.3.0.min.js"></script>
-  <script>
+  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.3.0.min.js"></script>
+  <script nonce="{{ request.csp_nonce }}">
     window.GOVUKFrontend.initAll();
   </script>
 </body>
