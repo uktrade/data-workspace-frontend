@@ -10,6 +10,5 @@ chmod 0600 ssl.key ssl.crt
 
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=postgres
-export POSTGRES_DB=postgres
 
 docker-entrypoint.sh "$@" -c ssl=on -c ssl_cert_file=/ssl.crt -c ssl_key_file=/ssl.key
