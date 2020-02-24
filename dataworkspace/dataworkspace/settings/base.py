@@ -193,7 +193,6 @@ PROMETHEUS_DOMAIN = env['PROMETHEUS_DOMAIN']
 GOOGLE_ANALYTICS_SITE_ID = env['GOOGLE_ANALYTICS_SITE_ID']
 AWS_UPLOADS_BUCKET = env['UPLOADS_BUCKET']
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-DATABASES_DATA = env['DATA_DB']
 
 GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN = env['GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN']
 
@@ -268,6 +267,10 @@ DATABASES = {
         }
         for database_name, database in env['DATA_DB'].items()
     },
+}
+
+DATABASES_DATA = {
+    db: db_config for db, db_config in DATABASES.items() if db in env['DATA_DB']
 }
 
 # Only used when collectstatic is run

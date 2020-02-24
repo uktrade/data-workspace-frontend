@@ -15,7 +15,7 @@ from dataworkspace.tests import factories
 
 
 @pytest.fixture
-def dataset_db():
+def dataset_db(db):
     database = factories.DatabaseFactory(memorable_name='my_database')
     with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
         conn.cursor().execute(
