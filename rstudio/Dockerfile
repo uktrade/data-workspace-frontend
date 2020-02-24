@@ -38,9 +38,11 @@ RUN \
 	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
 	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
 		gdebi-core=0.9.5.7+nmu3 \
+		gfortran=4:8.3.0-1 \
 		git=1:2.20.1-2 \
 		procps=2:3.3.15-2 \
 		libgsl-dev=2.5+dfsg-6 \
+		libxml2-dev=2.9.4+dfsg1-7+b3 \
 		r-base=3.6.1-2~bustercran.0 \
 		r-base-dev=3.6.1-2~bustercran.0 \
 		r-cran-base64enc=0.1-3-2 \
@@ -48,7 +50,6 @@ RUN \
 		r-cran-data.table=1.12.0+dfsg-1 \
 		r-cran-dbi=1.0.0-2 \
 		r-cran-rpostgresql=0.6-2+dfsg-2 \
-		r-cran-tidyverse=1.2.1-1 \
 		r-cran-xml2=1.2.0-3 \
 		r-cran-httr=1.4.0-3 \
 		r-recommended=3.6.1-2~bustercran.0 \
@@ -79,7 +80,7 @@ RUN \
 	echo '  options(repos = r)' >> /usr/lib/R/etc/Rprofile.site && \
 	echo '})' >> /usr/lib/R/etc/Rprofile.site && \
 	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
-	Rscript -e 'install.packages(c("aws.ec2metadata", "ggraph", "igraph", "text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2"), clean=TRUE)' && \
+	Rscript -e 'install.packages(c("aws.ec2metadata", "ggraph", "igraph", "text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2", "tidyverse"), clean=TRUE)' && \
 	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
 
 COPY rstudio-start.sh /

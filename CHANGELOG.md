@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Sync all hidden files to and from S3, specifically for .gitignore
 - The proxy to support Websocket sub-protocols
+- The version of tidyverse in the RStudio image to support pivot_longer
 
 ### Added
 
