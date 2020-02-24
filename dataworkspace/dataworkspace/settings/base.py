@@ -264,6 +264,7 @@ DATABASES = {
             'CONN_MAX_AGE': 0,
             **database,
             'OPTIONS': {'sslmode': 'require', 'MAX_CONNS': 100},
+            'TEST': {'MIGRATE': False},
         }
         for database_name, database in env['DATA_DB'].items()
     },
