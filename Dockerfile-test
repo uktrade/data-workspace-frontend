@@ -8,10 +8,12 @@ RUN \
 		gcc \
 		musl-dev \
 		postgresql-dev \
-		python3-dev
+		python3-dev \
+                make
 
 RUN pip3 install -r requirements-dev.txt
 
 USER django
 
 COPY test /test
+COPY . /src

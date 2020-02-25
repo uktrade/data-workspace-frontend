@@ -6,7 +6,8 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Run test
           command: |
@@ -17,18 +18,13 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - checkout
-      - setup_remote_docker
-      - run:
-          name: Install requirements
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements-dev.txt
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Run static checks
           command: |
-            . venv/bin/activate
-            make check
+            touch .envs/dev.env
+            make docker-lint
 
 workflows:
   version: 2

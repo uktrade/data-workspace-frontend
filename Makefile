@@ -18,6 +18,11 @@ docker-test-integration: docker-build
 docker-test: docker-test-integration docker-test-unit
 
 
+.PHONY: docker-lint
+docker-lint: docker-build
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test sh -c "cd src && make check"
+
+
 .PHONY: check
 check:
 	flake8 .
