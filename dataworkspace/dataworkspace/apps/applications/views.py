@@ -185,10 +185,16 @@ def visualisations_html_GET(request):
     if len(users) > 1:
         return HttpResponse(status=500)
 
+    if has_gitlab_user:
+        params = (('sudo', users[0]['id']),)
+    else:
+        params = (('visibility', 'internal'),)
+
     projects = gitlab_api_v4(
         f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
-        params=(('archived', 'false'),),
+        params=(('archived', 'false'),) + params,
     )
+
     return render(
         request,
         'visualisations.html',
