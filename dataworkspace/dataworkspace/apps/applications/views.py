@@ -152,6 +152,14 @@ def tools_html_POST(request):
     return redirect(redirect_target)
 
 
+def gitlab_api_v4(path, params=()):
+    return requests.get(
+        f'{settings.GITLAB_URL}api/v4/{path}',
+        params=params,
+        headers={'PRIVATE-TOKEN': settings.GITLAB_TOKEN},
+    ).json()
+
+
 def visualisations_html_view(request):
     if not request.user.has_perm('applications.develop_visualisations'):
         return HttpResponseForbidden()
@@ -163,9 +171,33 @@ def visualisations_html_view(request):
 
 
 def visualisations_html_GET(request):
-    response = requests.get(
-        f'{settings.GITLAB_URL}api/v4/groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
-        headers={'PRIVATE-TOKEN': settings.GITLAB_TOKEN},
+    users = gitlab_api_v4(
+        f'/users',
+        params=(
+            ('extern_uid', request.user.profile.sso_id),
+            ('provider', 'oauth2_generic'),
+        ),
     )
-    projects = response.json()
-    return render(request, 'visualisations.html', {'projects': projects}, status=200)
+    has_gitlab_user = bool(users)
+
+    # Something has really gone wrong if GitLab has multiple users with the
+    # same SSO ID
+    if len(users) > 1:
+        return HttpResponse(status=500)
+
+    if has_gitlab_user:
+        params = (('sudo', users[0]['id']),)
+    else:
+        params = (('visibility', 'internal'),)
+
+    projects = gitlab_api_v4(
+        f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
+        params=(('archived', 'false'),) + params,
+    )
+
+    return render(
+        request,
+        'visualisations.html',
+        {'has_gitlab_user': has_gitlab_user, 'projects': projects},
+        status=200,
+    )

@@ -20,6 +20,16 @@
 {% block inner_content %}
     <h1 class="govuk-heading-l">Visualisations</h1>
 
+    {% if not has_gitlab_user %}
+    <div class="govuk-inset-text">
+        <p class="govuk-body">It looks like GitLab does not have a user record for you. Please visit <a href="{{ gitlab_url }}" class="govuk-link">visit GitLab</a>, which will create one automatically. Then return to this page.</p>
+    </div>
+    {% endif %}
+
+    {% if has_gitlab_user and not projects %}
+        <p class="govuk-body">You do not have access to any visualisations in GitLab. If you think you should have access, please <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
+    {% endif %}
+
     {% for project in projects %}
         <h2 class="govuk-heading-m">{{ project.name }}</h2>
         <p class="govuk-body"><a href="{{ project.web_url }}" class="govuk-link">GitLab project</a></p>
