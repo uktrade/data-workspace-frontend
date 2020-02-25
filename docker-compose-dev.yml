@@ -26,7 +26,7 @@ services:
           django-admin ensure_application_template_models
 
           echo "Starting proxy and django dev server"
-          parallel --will-cite --line-buffer --jobs 2 --halt now,done=1 ::: \
+          parallel --will-cite --line-buffer --jobs 2 --halt now,fail=1 ::: \
               "django-admin runserver 8002" \
               "PROXY_PORT=8000 UPSTREAM_ROOT=http://localhost:8002 python3 -m proxy"
       )

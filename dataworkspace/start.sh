@@ -20,7 +20,7 @@ set -e
 
     # Start nginx, proxy and application
     echo "Starting nginx, proxy, gunicorn application, and celery..."
-    parallel --will-cite --line-buffer --jobs 5 --halt now,done=1 ::: \
+    parallel --will-cite --line-buffer --jobs 5 --halt now,fail=1 ::: \
         "celery worker --app dataworkspace.cel.celery_app --pool gevent --concurrency 150" \
         "celery beat   --app dataworkspace.cel.celery_app --pidfile /home/django/celerybeat.pid -S redbeat.RedBeatScheduler" \
         "gunicorn dataworkspace.wsgi:application -c gunicorn_config.py" \
