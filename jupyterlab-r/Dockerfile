@@ -38,7 +38,7 @@ RUN \
         build-essential=12.6 \
         gfortran=4:8.3.0-1 \
         git=1:2.20.1-2 \
-        openssh-client=1:7.9p1-10+deb10u1 \
+        openssh-client=1:7.9p1-10+deb10u2 \
         texlive-xetex=2018.20190227-2 \
         texlive-generic-extra=2018.20190227-2 \
         texlive-fonts-recommended=2018.20190227-2 \
@@ -136,6 +136,11 @@ ENTRYPOINT ["tini", "-g", "--"]
 USER jovyan
 
 WORKDIR /home/jovyan
+
+# The ipython history database does not play well with mobius3, surfacing
+# occasional errors like "attempt to write a readonly database", so we store
+# it where mobius3 does not sync
+ENV IPYTHONDIR=/tmp/ipython
 
 CMD ["/opt/conda/bin/jupyter", \
     "lab", \
