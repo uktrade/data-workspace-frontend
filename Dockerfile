@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM alpine:3.10 AS base
 
 ENV \
 	LC_ALL=en_US.UTF-8 \
@@ -21,16 +21,37 @@ RUN \
 		py3-gevent==1.3.4-r2 \
 		py3-psycopg2=2.7.7-r1 \
 		python3=3.7.5-r1 && \
-	python3 -m ensurepip && \
-	pip3 install -r requirements.txt && \
 	rm /etc/nginx/conf.d/default.conf && \
 	rm /etc/nginx/nginx.conf && \
-	apk del .build-deps
+	python3 -m ensurepip && \
+	pip3 install -r requirements.txt && \
+	apk del .build-deps && \
+	adduser -S django
+
+FROM base AS test
+
+COPY requirements-dev.txt requirements-dev.txt
+RUN apk add --no-cache \
+        gcc \
+        musl-dev \
+        postgresql-dev \
+        python3-dev
+
+RUN pip3 install -r requirements-dev.txt
+
+COPY dataworkspace /dataworkspace
+COPY etc /etc
+
+USER django
+
+COPY test /test
+
+
+FROM base AS live
 
 COPY dataworkspace /dataworkspace
 COPY etc /etc
 
 CMD ["/dataworkspace/start.sh"]
 
-RUN adduser -S django
 USER django
