@@ -1,5 +1,0 @@
-FROM postgres:10.4
-
-COPY /entrypoint.sh /
-COPY /init-test-databases.sh /docker-entrypoint-initdb.d/
-ENTRYPOINT /entrypoint.sh

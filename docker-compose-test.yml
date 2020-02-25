@@ -21,7 +21,7 @@ services:
   data-workspace-postgres:
     build:
       context: postgres
-      dockerfile: Dockerfile-test
+      dockerfile: Dockerfile
     image: data-workspace-postgres
     ports:
       - "5432"

@@ -20,7 +20,7 @@ async def async_main():
     async def handle_http(_):
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute('SELECT * FROM auth_user')
+                await cur.execute('SELECT * FROM test_dataset')
                 rows = [row[0] for row in await cur.fetchall()]
 
         return web.json_response({'data': rows}, status=200)

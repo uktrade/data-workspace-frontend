@@ -342,7 +342,6 @@ class TestApplication(unittest.TestCase):
             await response.text()
 
         stdout, stderr, code = await create_private_dataset()
-        print(stderr)
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -411,7 +410,7 @@ class TestApplication(unittest.TestCase):
             received_status = response.status
             received_content = await response.json()
 
-        self.assertEqual(received_content, {'data': [1]})
+        self.assertEqual(received_content, {'data': [1, 2]})
         self.assertEqual(received_status, 200)
 
     @async_test
@@ -834,7 +833,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://dataworkspace.test:8000/table_data/my_database/public/auth_user',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
         ) as response:
             content = await response.text()
             status = response.status
@@ -857,29 +856,15 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://dataworkspace.test:8000/table_data/my_database/public/auth_user',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
         ) as response:
             content = await response.text()
 
         rows = list(csv.reader(io.StringIO(content)))
-        self.assertEqual(
-            rows[0],
-            [
-                'id',
-                'password',
-                'last_login',
-                'is_superuser',
-                'username',
-                'first_name',
-                'last_name',
-                'email',
-                'is_staff',
-                'is_active',
-                'date_joined',
-            ],
-        )
-        self.assertEqual(rows[1][4], 'test@test.com')
-        self.assertEqual(rows[2][0], 'Number of rows: 1')
+        self.assertEqual(rows[0], ['id', 'data'])
+        self.assertEqual(rows[1][1], 'test data 1')
+        self.assertEqual(rows[2][1], 'test data 2')
+        self.assertEqual(rows[3][0], 'Number of rows: 2')
 
     @async_test
     async def test_google_data_studio_download(self):
@@ -1011,7 +996,7 @@ class TestApplication(unittest.TestCase):
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/schema',
             headers={'Authorization': 'Bearer token-2'},
-            data=b'{"fields":[{"name":"id"}]}',
+            data=b'{"fields":[{"name":"data"}]}',
         ) as response:
             status = response.status
             content = await response.text()
@@ -1021,10 +1006,7 @@ class TestApplication(unittest.TestCase):
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
-            data=(
-                b'{"fields":[{"name":"id"},{"name":"password"},{"name":"last_login"},'
-                b'{"name":"is_superuser"},{"name":"username"}]}'
-            ),
+            data=b'{"fields":[{"name":"data"}]}',
         ) as response:
             status = response.status
             content = await response.text()
@@ -1033,14 +1015,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(
             len(content_json['schema']), len(content_json['rows'][0]['values'])
         )
-        self.assertEqual(content_json['schema'][0]['name'], 'id')
-        self.assertEqual(content_json['schema'][1]['name'], 'password')
-        self.assertEqual(content_json['schema'][2]['name'], 'last_login')
-        self.assertEqual(content_json['schema'][3]['name'], 'is_superuser')
-        self.assertEqual(content_json['schema'][4]['name'], 'username')
-        self.assertEqual(content_json['rows'][0]['values'][2], None)
-        self.assertEqual(content_json['rows'][0]['values'][3], True)
-        self.assertEqual(content_json['rows'][0]['values'][4], 'test@test.com')
+        self.assertEqual(content_json['schema'][0]['name'], 'data')
+        self.assertEqual(content_json['rows'][0]['values'][0], 'test data 1')
+        self.assertEqual(content_json['rows'][1]['values'][0], 'test data 2')
 
         # Test pagination
         stdout, stderr, code = await create_many_users()
@@ -1052,42 +1029,41 @@ class TestApplication(unittest.TestCase):
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
             data=(
-                b'{"fields":[{"name":"username"}],"pagination":{"startRow":5.0,"rowCount":10.0}}'
+                b'{"fields":[{"name":"data"}],"pagination":{"startRow":1.0,"rowCount":10.0}}'
             ),
         ) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 200)
         content_json_1 = json.loads(content)
-        self.assertEqual(len(content_json_1['rows']), 10)
+        self.assertEqual(len(content_json_1['rows']), 2)
         async with session.request(
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
             data=(
-                b'{"fields":[{"name":"username"}],"pagination":{"startRow":3.0,"rowCount":5.0}}'
+                b'{"fields":[{"name":"data"}],"pagination":{"startRow":2.0,"rowCount":5.0}}'
             ),
         ) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 200)
         content_json_2 = json.loads(content)
-        self.assertEqual(len(content_json_2['rows']), 5)
-        self.assertEqual(content_json_1['rows'][0:2], content_json_2['rows'][2:4])
+        self.assertEqual(len(content_json_2['rows']), 1)
+        self.assertEqual(content_json_1['rows'][1:2], content_json_2['rows'][0:1])
 
         # Test $searchAfter
         async with session.request(
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
             headers={'Authorization': 'Bearer token-2'},
-            data=(b'{"fields":[{"name":"username"}],"$searchAfter":[100]}'),
+            data=(b'{"fields":[{"name":"data"}],"$searchAfter":[1]}'),
         ) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 200)
         content_json_1 = json.loads(content)
-        print(content_json_1)
-        self.assertEqual(content_json_1['rows'][0]['values'][0], 'user_1@example.com')
+        self.assertEqual(content_json_1['rows'][0]['values'][0], 'test data 2')
 
         # Check that even with a valid token, if a table doesn't exist, get a 403
         table_id_not_exists = '5f8117b4-e05d-442f-8622-8abab7141fd8'
@@ -1400,7 +1376,7 @@ async def create_private_dataset():
             dataset=dataset,
             database=Database.objects.get(memorable_name="my_database"),
             schema="public",
-            table="auth_user",
+            table="test_dataset",
         )
         """
     ).encode('ascii')

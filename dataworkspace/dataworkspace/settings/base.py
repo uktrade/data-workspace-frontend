@@ -193,7 +193,6 @@ PROMETHEUS_DOMAIN = env['PROMETHEUS_DOMAIN']
 GOOGLE_ANALYTICS_SITE_ID = env['GOOGLE_ANALYTICS_SITE_ID']
 AWS_UPLOADS_BUCKET = env['UPLOADS_BUCKET']
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-DATABASES_DATA = env['DATA_DB']
 
 GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN = env['GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN']
 
@@ -251,3 +250,36 @@ REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS = int(
 GITLAB_URL = env.get('GITLAB_URL')
 GITLAB_TOKEN = env.get('GITLAB_TOKEN')
 GITLAB_VISUALISATIONS_GROUP = env.get('GITLAB_VISUALISATIONS_GROUP')
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
+        'CONN_MAX_AGE': 0,
+        **env['ADMIN_DB'],
+        'OPTIONS': {'sslmode': 'require', 'MAX_CONNS': 20},
+    },
+    **{
+        database_name: {
+            'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
+            'CONN_MAX_AGE': 0,
+            **database,
+            'OPTIONS': {'sslmode': 'require', 'MAX_CONNS': 100},
+            'TEST': {'MIGRATE': False},
+        }
+        for database_name, database in env['DATA_DB'].items()
+    },
+}
+
+DATABASES_DATA = {
+    db: db_config for db, db_config in DATABASES.items() if db in env['DATA_DB']
+}
+
+# Only used when collectstatic is run
+STATIC_ROOT = '/home/django/static/'
+
+# Used when generating URLs for static files, and routed by nginx _before_
+# hitting proxy.py, so must not conflict with an analysis application
+STATIC_URL = '/__django_static/'
+
+
+CKEDITOR_BASEPATH = STATIC_URL + "ckeditor/ckeditor/"
