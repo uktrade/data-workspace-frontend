@@ -185,7 +185,10 @@ def visualisations_html_GET(request):
     if len(users) > 1:
         return HttpResponse(status=500)
 
-    projects = gitlab_api_v4(f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects')
+    projects = gitlab_api_v4(
+        f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
+        params=(('archived', 'false'),),
+    )
     return render(
         request,
         'visualisations.html',
