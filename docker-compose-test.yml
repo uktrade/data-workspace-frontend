@@ -1,9 +1,10 @@
-version: "3"
+version: "3.4"
 services:
   data-workspace-test:
     build:
       context: .
-      dockerfile: Dockerfile-test
+      dockerfile: Dockerfile
+      target: test
     image: data-workspace-test
     env_file:
       - ./.envs/test.env

@@ -1,6 +1,5 @@
 .PHONY: docker-build
 docker-build:
-	docker-compose build data-workspace
 	docker-compose -f docker-compose-test.yml build
 
 
@@ -16,6 +15,11 @@ docker-test-integration: docker-build
 
 .PHONY: docker-test
 docker-test: docker-test-integration docker-test-unit
+
+
+.PHONY: docker-clean
+docker-clean:
+	docker-compose -f docker-compose-test.yml -p data-workspace-test down -v
 
 
 .PHONY: check
