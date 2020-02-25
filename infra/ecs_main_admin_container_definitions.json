@@ -533,11 +533,11 @@
     },
     {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ENV__JUPYTER_DATA_DIR",
-      "value": "/home/jovyan/.local/share/jupyterlab_python"
+      "value": "/tmp/jupyterlab_python"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ENV__JUPYTER_RUNTIME_DIR",
-      "value": "/home/jovyan/.local/share/jupyterlab_python/runtime"
+      "value": "/tmp/jupyterlab_python/runtime"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__PORT",
@@ -661,11 +661,11 @@
     },
     {
       "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__ENV__JUPYTER_DATA_DIR",
-      "value": "/home/jovyan/.local/share/jupyterlab_r"
+      "value": "/tmp/jupyterlab_r"
     },
     {
       "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__ENV__JUPYTER_RUNTIME_DIR",
-      "value": "/home/jovyan/.local/share/jupyterlab_r/runtime"
+      "value": "/tmp/jupyterlab_r/runtime"
     },
     {
       "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__PORT",
