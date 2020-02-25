@@ -181,7 +181,7 @@ class AppUserAdmin(UserAdmin):
     )
     form = AppUserEditForm
     fieldsets = [
-        (None, {'fields': ['email', 'sso_id', 'first_name', 'last_name']}),
+        (None, {'fields': ['email', 'sso_id', 'first_name', 'last_name', 'groups']}),
         (
             'Permissions',
             {

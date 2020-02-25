@@ -1,5 +1,5 @@
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import Client, TestCase
 
 
@@ -41,6 +41,36 @@ def user_data(db):
 @pytest.fixture
 def client(user_data):
     return Client(**user_data)
+
+
+@pytest.fixture
+def sme_user(db):
+    sme_group = Group.objects.get(name="Subject Matter Experts")
+    user = User.objects.create(
+        username='jane.sampledóttir@test.com', is_staff=True, is_superuser=False
+    )
+    sme_group.user_set.add(user)
+    sme_group.save()
+
+    return user
+
+
+@pytest.fixture
+def sme_user_data(db, sme_user):
+    return {
+        'HTTP_SSO_PROFILE_EMAIL': sme_user.email,
+        'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
+        'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d70',
+        'HTTP_SSO_PROFILE_LAST_NAME': 'Sampledóttir',
+        'HTTP_SSO_PROFILE_FIRST_NAME': 'Jane',
+    }
+
+
+@pytest.fixture
+def sme_client(sme_user, sme_user_data):
+    client = Client(**sme_user_data)
+    client.force_login(sme_user)
+    return client
 
 
 @pytest.fixture

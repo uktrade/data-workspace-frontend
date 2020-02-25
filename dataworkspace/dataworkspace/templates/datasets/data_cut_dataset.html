@@ -48,7 +48,7 @@
         <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
 
-            {% if data_links %}
+            {% if data_links_with_link_toggle %}
                 {% if not has_access %}
                     <div class="govuk-warning-text">
                         <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -78,31 +78,31 @@
                 </thead>
                 <tbody>
 
-                {% for link in data_links %}
+                {% for data_link, can_show_link in data_links_with_link_toggle %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if not has_access %}
-                                {{ link.name }}
+                            {% if has_access and can_show_link %}
+                            <a class="govuk-link" href="{{ data_link.get_absolute_url }}">
+                                {{ data_link.name }}
+                            </a>
                             {% else %}
-                                <a class="govuk-link" href="{{ link.get_absolute_url }}">
-                                    {{ link.name }}
-                                </a>
+                                {{ data_link.name }}
                             {% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                          {% if link.format %}{{ link.format }}{% else %}CSV{% endif %}
+                          {% if data_link.format %}{{ data_link.format }}{% else %}CSV{% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                          {% if link.get_frequency_display %}
-                            {{ link.get_frequency_display }}
+                          {% if data_link.get_frequency_display %}
+                            {{ data_link.get_frequency_display }}
                           {% else %}
-                            {{ link.frequency }}
+                            {{ data_link.frequency }}
                           {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
 
-                {% if not data_links %}
+                {% if not data_links_with_link_toggle %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available
@@ -113,7 +113,7 @@
                 </tbody>
             </table>
 
-            {% if user.is_superuser and data_links %}
+            {% if user.is_superuser and data_links_with_link_toggle %}
                 <p class="govuk-body">*Only visible to superusers.</p>
             {% endif %}
         </div>

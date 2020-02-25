@@ -30,7 +30,8 @@ class ReferenceDatasetForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['sort_field'].queryset = self.instance.fields.all()
+        if 'sort_field' in self.fields:
+            self.fields['sort_field'].queryset = self.instance.fields.all()
 
 
 class ReferenceDataInlineFormset(CustomInlineFormSet):
@@ -50,7 +51,7 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
         return [
             x.cleaned_data[field]
             for x in self.forms
-            if x.cleaned_data.get(field) and not x.cleaned_data['DELETE']
+            if x.cleaned_data.get(field) and not x.cleaned_data.get('DELETE')
         ]
 
     def clean(self):
@@ -366,6 +367,17 @@ class BaseDatasetForm(forms.ModelForm):
 
 class DataCutDatasetForm(BaseDatasetForm):
     dataset_type = DataSet.TYPE_DATA_CUT
+
+    def clean(self):
+        if 'published' in self.changed_data and self.cleaned_data['published'] is True:
+            if not all(
+                query.reviewed for query in self.instance.customdatasetquery_set.all()
+            ):
+                raise forms.ValidationError(
+                    {
+                        'published': 'You must review all the SQL queries before you can publish this data cut.'
+                    }
+                )
 
 
 class MasterDatasetForm(BaseDatasetForm):

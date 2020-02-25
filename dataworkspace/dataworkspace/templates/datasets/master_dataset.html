@@ -45,7 +45,7 @@
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Details</h2>
 
-      {% if data_links %}
+      {% if data_links_with_link_toggle %}
         {% if not has_access %}
           <div class="govuk-warning-text">
             <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -73,35 +73,35 @@
           <th class="govuk-table__header">Name</th>
           <th class="govuk-table__header">Identifier</th>
           <th class="govuk-table__header">Update frequency</th>
-          {% if user.is_superuser and data_links %}
+          {% if user.is_superuser and data_links_with_link_toggle %}
             <th class="govuk-table__header">Tools*</th>
           {% endif %}
         </tr>
         </thead>
         <tbody>
 
-        {% for table in data_links %}
+        {% for data_link, _ in data_links_with_link_toggle %}
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell">{{ table.name }}</td>
-            <td class="govuk-table__cell">{{ table.schema }}.{{ table.table }}</td>
-            <td class="govuk-table__cell">{{ table.get_frequency_display }}</td>
+            <td class="govuk-table__cell">{{ data_link.name }}</td>
+            <td class="govuk-table__cell">{{ data_link.schema }}.{{ data_link.table }}</td>
+            <td class="govuk-table__cell">{{ data_link.get_frequency_display }}</td>
             {% if user.is_superuser %}
               <td class="govuk-table__cell">
-                {% if table.get_google_data_studio_link and table.accessible_by_google_data_studio %}
+                {% if data_link.get_google_data_studio_link and link.data_link.accessible_by_google_data_studio %}
                   <a href="{{ table.get_google_data_studio_link }}">Google Data Studio</a>
                 {% endif %}
               </td>
             {% endif %}
           </tr>
         {% endfor %}
-        {% if not data_links %}
+        {% if not data_links_with_link_toggle %}
           <tr class="govuk-table__row">
             <td colspan="4" class="govuk-table__cell">No data available</td>
           </tr>
         {% endif %}
         </tbody>
       </table>
-      {% if user.is_superuser and data_links %}
+      {% if user.is_superuser and data_links_with_link_toggle %}
         <p class="govuk-body">*Only visible to superusers.</p>
       {% endif %}
     </div>

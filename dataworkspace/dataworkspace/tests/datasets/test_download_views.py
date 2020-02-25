@@ -641,7 +641,7 @@ class TestCustomQueryDownloadView:
     def _get_database(self):
         return factories.DatabaseFactory(memorable_name='my_database')
 
-    def _create_query(self, sql, published=True):
+    def _create_query(self, sql, reviewed=True, published=True):
         with psycopg2.connect(self._get_dsn()) as conn, conn.cursor() as cursor:
             cursor.execute(
                 '''
@@ -660,7 +660,7 @@ class TestCustomQueryDownloadView:
             user_access_type='REQUIRES_AUTHENTICATION', published=published
         )
         return factories.CustomDatasetQueryFactory(
-            dataset=dataset, database=self._get_database(), query=sql
+            dataset=dataset, database=self._get_database(), query=sql, reviewed=reviewed
         )
 
     def test_forbidden_dataset(self, client):
@@ -750,3 +750,24 @@ class TestCustomQueryDownloadView:
             DataSet.objects.get(pk=query.dataset.id).number_of_downloads
             == download_count + 1
         )
+
+    @pytest.mark.parametrize(
+        "request_client, reviewed, status",
+        (
+            ("sme_client", False, 403),
+            ("sme_client", True, 200),
+            ("staff_client", False, 200),
+            ("staff_client", True, 200),
+        ),
+        indirect=["request_client"],
+    )
+    @pytest.mark.django_db
+    def test_only_superuser_can_download_unreviewed_query(
+        self, request_client, reviewed, status
+    ):
+        query = self._create_query(
+            'SELECT * FROM custom_query_test', published=False, reviewed=reviewed
+        )
+
+        response = request_client.get(query.get_absolute_url())
+        assert response.status_code == status
