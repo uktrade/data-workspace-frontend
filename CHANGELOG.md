@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The visualisations page shows a message asking the user to visit GitLab if they haven't already.
 - The visualisations page asks the user to contact support if they have no access to any projects.
 - The visualisations page shows all internal visualisations if the user hasn't yet visited GitLab, or all the visualisations visible projects if they have.
+- Where the ipython directory is, from the home directory that is synced using mobius3, to /tmp. This avoids occasional sqllite "attempt to write a readonly database" errors.
 
 
 ## 2020-02-24
