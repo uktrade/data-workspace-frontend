@@ -152,6 +152,13 @@ def tools_html_POST(request):
     return redirect(redirect_target)
 
 
+def gitlab_api_v4(path):
+    return requests.get(
+        f'{settings.GITLAB_URL}api/v4/{path}',
+        headers={'PRIVATE-TOKEN': settings.GITLAB_TOKEN},
+    ).json()
+
+
 def visualisations_html_view(request):
     if not request.user.has_perm('applications.develop_visualisations'):
         return HttpResponseForbidden()
@@ -163,9 +170,5 @@ def visualisations_html_view(request):
 
 
 def visualisations_html_GET(request):
-    response = requests.get(
-        f'{settings.GITLAB_URL}api/v4/groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
-        headers={'PRIVATE-TOKEN': settings.GITLAB_TOKEN},
-    )
-    projects = response.json()
+    projects = gitlab_api_v4(f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects')
     return render(request, 'visualisations.html', {'projects': projects}, status=200)
