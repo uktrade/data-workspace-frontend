@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Support for Google Tag Manager to manage analytics
+- FontAwesome attribution in the source of the Files page
+- Branches in the Visualisations page
 
 
 ## 2020-02-25
