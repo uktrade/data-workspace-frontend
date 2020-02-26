@@ -198,6 +198,10 @@ def visualisations_html_GET(request):
     return render(
         request,
         'visualisations.html',
-        {'has_gitlab_user': has_gitlab_user, 'projects': projects},
+        {
+            'gitlab_url': settings.GITLAB_URL,
+            'has_gitlab_user': has_gitlab_user,
+            'projects': projects,
+        },
         status=200,
     )

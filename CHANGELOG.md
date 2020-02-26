@@ -9,6 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Fixed the broken link to GitLab from the visualisations page
+- Removed duplicated word in visualisations page
+
+
+## 2020-02-25
+
+### Changed
+
 - The visualisations page shows a message asking the user to visit GitLab if they haven't already.
 - The visualisations page asks the user to contact support if they have no access to any projects.
 - The visualisations page shows all internal visualisations if the user hasn't yet visited GitLab, or all the visualisations visible projects if they have.
