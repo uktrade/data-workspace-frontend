@@ -13,6 +13,12 @@ def get_attr(model, field):
 
 
 @register.filter
+def get_key(dictionary, field):
+    """Gets an key of an dictionary dynamically from a name"""
+    return dictionary[field]
+
+
+@register.filter
 def add_class(field, class_attr):
     if 'class' in field.field.widget.attrs:
         field.field.widget.attrs['class'] = '{} {}'.format(
