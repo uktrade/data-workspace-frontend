@@ -361,6 +361,9 @@ async def async_main(logger):
             'debian/',
         )
 
+    if os.environ['MIRROR_NLTK'] == 'True':
+        await nltk_mirror(logger, request, s3_context, 'nltk/')
+
     await close_pool()
     await asyncio.sleep(0)
 
@@ -935,6 +938,94 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
         for task in tasks:
             task.cancel()
         await asyncio.sleep(0)
+
+
+async def nltk_mirror(logger, request, s3_context, s3_prefix):
+    base = 'https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/'
+    input_index_url = f'{base}/index.xml'
+
+    # Fetch index file
+    code, headers, body = await request(b'GET', input_index_url)
+    if code != b'200':
+        raise Exception('Unable to fetch index')
+    headers_xml_lower = dict((key.lower(), value) for key, value in headers)
+    index_xml_content_type = headers_xml_lower[b'content-type']
+    index_xml = ET.fromstring(await buffered(body))
+
+    # Transfer package contents to S£ if they haven't already
+    for package in index_xml.findall('./packages/package'):
+        package_original_url = package.attrib['url']
+        package_checksum = package.attrib['checksum']
+        package_id = package.attrib['id']
+
+        # The NTLK downloader is sensitive to the extension of the file
+        _, ext = os.path.splitext(package_original_url)
+        new_path = f'/{s3_prefix}{package_id}-{package_checksum}{ext}'
+
+        package.attrib[
+            'url'
+        ] = f'https://{s3_context.bucket.host}/{s3_context.bucket.name}{new_path}'
+
+        # If the file already exists, don't re-upload. Named including the
+        # checksum deliberately so we can do this
+        code, _ = await s3_request_full(
+            logger,
+            s3_context,
+            b'HEAD',
+            new_path,
+            (),
+            headers,
+            empty_async_iterator,
+            'UNSIGNED-PAYLOAD',
+        )
+        logger.info('%s %s', f'{s3_context.bucket.name}{new_path}', code)
+        if code == b'200':
+            continue
+
+        # Stream the file to S3
+        code, headers, body = await request(b'GET', package_original_url)
+        if code != b'200':
+            await blackhole(body)
+            raise Exception(f'{code} {package_original_url}')
+
+        headers_lower = dict((key.lower(), value) for key, value in headers)
+        headers = (
+            (b'content-length', headers_lower[b'content-length']),
+            (b'content-type', headers_lower[b'content-type']),
+        )
+        code, _ = await s3_request_full(
+            logger,
+            s3_context,
+            b'PUT',
+            new_path,
+            (),
+            headers,
+            lambda: body,
+            'UNSIGNED-PAYLOAD',
+        )
+        if code != b'200':
+            raise Exception()
+
+    # The ascii encoding is important: the nltk downloader seems to assume
+    # attributes are ascii
+    output_xml_str = ET.tostring(index_xml, encoding='ascii', method='xml')
+    index_xml_content_length = str(len(output_xml_str)).encode('ascii')
+    headers = (
+        (b'content-length', index_xml_content_length),
+        (b'content-type', index_xml_content_type),
+    )
+    code, _ = await s3_request_full(
+        logger,
+        s3_context,
+        b'PUT',
+        f'/{s3_prefix}index.xml',
+        (),
+        headers,
+        streamed(output_xml_str),
+        'UNSIGNED-PAYLOAD',
+    )
+    if code != b'200':
+        raise Exception()
 
 
 def main():
