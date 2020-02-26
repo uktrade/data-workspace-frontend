@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-02-26
 
+### Changed
+
+- Remove the permissions check for showing the Visualisations tab to try to reduce the effect of running out database connections.
+
+
 ### Added
 
 - Support for Google Tag Manager to manage analytics
