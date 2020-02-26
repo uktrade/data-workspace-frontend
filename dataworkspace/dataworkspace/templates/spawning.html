@@ -18,7 +18,7 @@
 
 {% block head %}
   {{ block.super }}
-  <script>
+  <script nonce="{{ request.csp_nonce }}">
     (() => {
       function getStatus(url) {
         return new Promise((resolve, reject) => {

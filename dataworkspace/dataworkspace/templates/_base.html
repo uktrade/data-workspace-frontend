@@ -22,20 +22,47 @@
   <link rel="stylesheet" href="{% get_static_prefix %}data-workspace.css">
 
   {% if not debug %}
-     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_site_id }}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '{{ google_analytics_site_id }}');
-    </script>
+    {% if gtm_container_id %}
+      <!-- Google Tag Manager's "Data Layer" -->
+      <script nonce="{{ request.csp_nonce }}">
+        window.dataLayer = window.dataLayer || [];
+      </script>
+      {% block extraGTMDataLayer %}
+      {% endblock %}
+      <!-- End Google Tag Manager's "Data Layer" -->
+      
+      <!-- Google Tag Manager -->
+      <script nonce="{{ request.csp_nonce }}">
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl+'{{ gtm_container_environment_params | safe }}';
+      var n=d.querySelector('[nonce]');n&&j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'));
+      f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{{ gtm_container_id }}');
+      </script>
+      <!-- End Google Tag Manager -->
+    {% else %}
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script nonce="{{ request.csp_nonce }}" async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_site_id }}"></script>
+      <script nonce="{{ request.csp_nonce }}">
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ google_analytics_site_id }}');
+      </script>
+    {% endif %}
   {% endif %}
+  
   {% block head %}{% endblock %}
 </head>
 
 <body class="govuk-template__body">
-  <script>
+  {% if not debug and gtm_container_id %}
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ gtm_container_id }}{{ gtm_container_environment_params | safe }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+  {% endif %}
+  <script nonce="{{ request.csp_nonce }}">
     document.body.className = document.body.className + ' js-enabled';
   </script>
 
@@ -158,8 +185,8 @@
     </div>
   </footer>
 
-  <script src="{% get_static_prefix %}govuk-frontend-3.3.0.min.js"></script>
-  <script>
+  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.3.0.min.js"></script>
+  <script nonce="{{ request.csp_nonce }}">
     window.GOVUKFrontend.initAll();
   </script>
 </body>

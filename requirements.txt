@@ -17,3 +17,4 @@ django-admin-sortable2==0.7.5
 sentry-sdk==0.14.1
 hawk-server-asyncio==0.0.6
 django-waffle==0.20.0
+django-csp==3.6

@@ -2,7 +2,7 @@ import mock
 
 from django.urls import reverse
 
-from dataworkspace.tests.common import BaseTestCase
+from dataworkspace.tests.common import BaseTestCase, get_response_csp_as_set
 
 
 class TestSupportView(BaseTestCase):
@@ -33,3 +33,14 @@ class TestSupportView(BaseTestCase):
             html=True,
         )
         mock_create_request.assert_called_once()
+
+
+def test_csp_on_files_endpoint_includes_s3(client):
+    response = client.get(reverse('files'))
+    assert response.status_code == 200
+
+    policies = get_response_csp_as_set(response)
+    assert (
+        "connect-src dataworkspace.test:8000 https://s3.eu-west-2.amazonaws.com"
+        in policies
+    )
