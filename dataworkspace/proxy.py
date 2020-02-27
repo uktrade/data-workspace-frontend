@@ -7,14 +7,14 @@ import logging
 import os
 import random
 import secrets
-import sys
 import string
+import sys
 import urllib
+from collections import defaultdict
 
 import aiohttp
-from aiohttp import web
-
 import aioredis
+from aiohttp import web
 from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
 from yarl import URL
@@ -322,7 +322,7 @@ async def async_main():
                 admin_root + host_html_path + '/spawning',
                 {},
                 default_http_timeout,
-                (('content-security-policy', csp_application_spawning),),
+                (('Content-Security-Policy', csp_application_spawning),),
             )
 
         return (
@@ -382,7 +382,7 @@ async def async_main():
                 spawning_http_timeout,
                 # Although the application is spawning, if the response makes it back to the client,
                 # we know the application is running, so we return the _running_ CSP headers
-                (('content-security-policy', csp_application_running(host)),),
+                (('Content-Security-Policy', csp_application_running(host)),),
             )
 
         except Exception:
@@ -394,7 +394,7 @@ async def async_main():
                 admin_root + host_html_path + '/spawning',
                 {},
                 default_http_timeout,
-                (('content-security-policy', csp_application_spawning),),
+                (('Content-Security-Policy', csp_application_spawning),),
             )
 
         else:
@@ -435,7 +435,7 @@ async def async_main():
             upstream_url,
             query,
             default_http_timeout,
-            (('content-security-policy', csp_application_running(host)),),
+            (('Content-Security-Policy', csp_application_running(host)),),
         )
 
     async def handle_admin(downstream_request, method, path, query):
@@ -509,6 +509,25 @@ async def async_main():
 
         return downstream_ws
 
+    def merge_content_security_policies(headers: CIMultiDict):
+        csps = headers.getall('Content-Security-Policy', [])
+        if len(csps) > 1:
+            policies = defaultdict(set)
+            for csp in csps:
+                for policy in csp.split(';'):
+                    try:
+                        policy_name, policy_details = policy.strip().split(" ", 1)
+                        policies[policy_name].update(policy_details.split())
+                    except ValueError:
+                        logger.warning("Ignoring policy: `%s`", policy)
+
+            del headers['Content-Security-Policy']
+            headers['Content-Security-Policy'] = ";".join(
+                f"{k} {' '.join(v)}" for k, v in policies.items()
+            )
+
+        return headers
+
     async def handle_http(
         downstream_request,
         upstream_method,
@@ -543,14 +562,15 @@ async def async_main():
             allow_redirects=False,
             timeout=timeout,
         ) as upstream_response:
+            response_headers = CIMultiDict(
+                without_transfer_encoding(upstream_response) + response_headers
+            )
+            response_headers = merge_content_security_policies(response_headers)
 
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(
                 web.StreamResponse(
-                    status=upstream_response.status,
-                    headers=CIMultiDict(
-                        without_transfer_encoding(upstream_response) + response_headers
-                    ),
+                    status=upstream_response.status, headers=response_headers
                 )
             )
             await downstream_response.prepare(downstream_request)
