@@ -194,6 +194,26 @@ def visualisations_html_GET(request):
         params=(('archived', 'false'),) + params,
     )
 
+    def branch_sort_key(project):
+        # Sort default branch first, the remaining in last commit order
+        def _sort_key(branch):
+            return (
+                branch['name'] == project['default_branch'],
+                branch['commit']['committed_date'],
+                branch['name'],
+            )
+
+        return _sort_key
+
+    project_branches = {
+        project['id']: sorted(
+            gitlab_api_v4(f'/projects/{project["id"]}/repository/branches'),
+            key=branch_sort_key(project),
+            reverse=True,
+        )
+        for project in projects
+    }
+
     return render(
         request,
         'visualisations.html',
@@ -201,6 +221,7 @@ def visualisations_html_GET(request):
             'gitlab_url': settings.GITLAB_URL,
             'has_gitlab_user': has_gitlab_user,
             'projects': projects,
+            'project_branches': project_branches,
         },
         status=200,
     )
