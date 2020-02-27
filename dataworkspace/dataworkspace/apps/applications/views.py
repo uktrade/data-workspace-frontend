@@ -1,12 +1,12 @@
 import hashlib
 import random
 
+import requests
+from csp.decorators import csp_exempt
 from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import render, redirect
-
-import requests
+from django.shortcuts import redirect, render
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -16,9 +16,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
 )
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
-
 from dataworkspace.apps.core.views import public_error_500_html_view
-
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -51,6 +49,7 @@ TOOL_LOADING_MESSAGES = [
 ]
 
 
+@csp_exempt
 def application_spawning_html_view(request, public_host):
     return (
         application_spawning_html_GET(request, public_host)
