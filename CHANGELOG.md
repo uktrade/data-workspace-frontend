@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-02-28
+
+### Added
+
+- If the current user has developer or higher privileges on each GitLab project. This is mostly to find out how slow the API requests are going to be in production.
+
+
 ## 2020-02-26
 
 ### Changed

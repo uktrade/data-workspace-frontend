@@ -214,6 +214,20 @@ def visualisations_html_GET(request):
         for project in projects
     }
 
+    # It looks like the only way to check the current user's access level is
+    # to fetch all the users who have access to the project
+    developer_access_level = 30
+    is_project_developer = {
+        project['id']: has_gitlab_user
+        and True
+        in (
+            project_user['id'] == users[0]['id']
+            and project_user['access_level'] >= developer_access_level
+            for project_user in gitlab_api_v4(f'/projects/{project["id"]}/members/all')
+        )
+        for project in projects
+    }
+
     return render(
         request,
         'visualisations.html',
@@ -222,6 +236,7 @@ def visualisations_html_GET(request):
             'has_gitlab_user': has_gitlab_user,
             'projects': projects,
             'project_branches': project_branches,
+            'is_project_developer': is_project_developer,
         },
         status=200,
     )
