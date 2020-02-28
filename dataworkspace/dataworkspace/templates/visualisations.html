@@ -58,6 +58,11 @@
 
     {% for project in projects %}
         <h2 class="govuk-heading-m">{{ project.name }}</h2>
+
+        {% if is_project_developer|get_key:project.id %}
+        <p class="govuk-body">You have developer privileges on {{ project.name }}.</p>
+        {% endif %}
+
         <dl class="govuk-summary-list">
         {% for branch in project_branches|get_key:project.id %}
             <div class="govuk-summary-list__row">
