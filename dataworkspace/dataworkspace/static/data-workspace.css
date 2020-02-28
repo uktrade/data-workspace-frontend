@@ -171,3 +171,21 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* The GDS styles assume the presence of the GOV UK logo + crown, which we
+   don't have, so without these tweaks the white Menu button on mobile is too
+   low: too close to the border of the black top bar.
+
+   As with most (but not all) styles in GDS, this position is "mobile-first",
+   with @media min-width to apply styles on larger screen only. This makes it
+   slightly awkward to override a style on only one width of screen: the value
+   of the style on the larger sizes must be copied and pasted after the
+   override in @media min-width blocks. */
+.govuk-header__menu-button {
+  top: 12px;  /* The original value is 20px */
+}
+@media (min-width: 40.0625em) {
+  .govuk-header__menu-button {
+      top: 15px;  /* The original GDS value */
+  }
+}

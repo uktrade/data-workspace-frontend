@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Remove the permissions check for showing the Visualisations tab to try to reduce the effect of running out database connections.
+- The location of the Menu button in the main navigation on mobile to make up for the lack of the GOV UK logo + crown which the GDS styles assume.
 
 
 ### Added
