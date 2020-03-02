@@ -17,6 +17,12 @@ ENV \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8
 
+# Allow man pages to be installed: slim has hacks to exclude them, so we
+# hack the hacks https://unix.stackexchange.com/a/480460/361685
+RUN \
+    sed -i '/path-exclude \/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/docker && \
+    sed -i '/path-exclude \/usr\/share\/groff/d' /etc/dpkg/dpkg.cfg.d/docker
+
 COPY exploretiva /exploretiva
 
 RUN \
@@ -40,9 +46,11 @@ RUN \
 		gdebi-core=0.9.5.7+nmu3 \
 		gfortran=4:8.3.0-1 \
 		git=1:2.20.1-2 \
+        git-man=1:2.20.1-2 \
 		procps=2:3.3.15-2 \
 		libgsl-dev=2.5+dfsg-6 \
 		libxml2-dev=2.9.4+dfsg1-7+b3 \
+        man-db=2.8.5-2 \
 		r-base=3.6.1-2~bustercran.0 \
 		r-base-dev=3.6.1-2~bustercran.0 \
 		r-cran-base64enc=0.1-3-2 \
