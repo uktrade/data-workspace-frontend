@@ -93,7 +93,6 @@ def api_application_dict(application_instance):
         application_instance.state if spawner_state == 'RUNNING' else spawner_state
     )
 
-    template_name = application_instance.application_template.name
     sso_id_hex = hashlib.sha256(
         str(application_instance.owner.profile.sso_id).encode('utf-8')
     ).hexdigest()
@@ -103,7 +102,6 @@ def api_application_dict(application_instance):
         'proxy_url': application_instance.proxy_url,
         'state': api_state,
         'user': sso_id_hex_short,
-        'name': template_name,
     }
 
 
