@@ -22,6 +22,12 @@ ENV \
 ENV \
     PATH="$CONDA_DIR/bin:$PATH"
 
+# Allow man pages to be installed: slim has hacks to exclude them, so we
+# hack the hacks https://unix.stackexchange.com/a/480460/361685
+RUN \
+    sed -i '/path-exclude \/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/docker && \
+    sed -i '/path-exclude \/usr\/share\/groff/d' /etc/dpkg/dpkg.cfg.d/docker
+
 RUN \
     apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -37,6 +43,8 @@ RUN \
     apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
         build-essential=12.6 \
         git=1:2.20.1-2 \
+        git-man=1:2.20.1-2 \
+        man-db=2.8.5-2 \
         openssh-client=1:7.9p1-10+deb10u2 \
         texlive-xetex=2018.20190227-2 \
         texlive-generic-extra=2018.20190227-2 \
