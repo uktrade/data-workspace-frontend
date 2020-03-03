@@ -1738,8 +1738,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(
             response,
-            'The Reference dataset "<a href="/admin/datasets/referencedataset/{}/change/">'
-            'test updated</a>" was changed successfully.'.format(ref_ds1.id),
+            'The Reference dataset “<a href="/admin/datasets/referencedataset/{}/change/">'
+            'test updated</a>” was changed successfully.'.format(ref_ds1.id),
             html=True,
         )
 
@@ -1826,8 +1826,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(
             response,
-            'The Reference dataset "<a href="/admin/datasets/referencedataset/{}/change/">'
-            'linked from</a>" was added successfully.'.format(
+            'The Reference dataset “<a href="/admin/datasets/referencedataset/{}/change/">'
+            'linked from</a>” was added successfully.'.format(
                 ReferenceDataset.objects.last().id
             ),
             html=True,
@@ -2008,7 +2008,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             reverse('dw-admin:reference-dataset-record-upload', args=(ref_ds1.id,)),
             {'file': file1},
         )
-        self.assertContains(response, 'File extension &#39;txt&#39; is not allowed.')
+        self.assertContains(response, 'File extension “txt” is not allowed.')
 
     def test_reference_data_upload(self):
         ref_ds1 = factories.ReferenceDatasetFactory.create(
