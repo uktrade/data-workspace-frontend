@@ -4,6 +4,7 @@ boto3==1.12.12
 celery==4.4.1
 celery-redbeat==0.13.0
 gunicorn[gevent]==20.0.4
+gevent==1.4.0
 psycogreen==1.0.2
 django==3.0.3
 django-better-admin-arrayfield==1.0.5
