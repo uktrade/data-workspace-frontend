@@ -96,19 +96,19 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
 
 class ApplicationFilter(SimpleListFilter):
     title = 'Filter by application'
-    parameter_name = 'application_template__name'
+    parameter_name = 'application_template__id'
     template = 'admin/application_instance_report_filter.html'
 
     def lookups(self, request, model_admin):
         return tuple(
-            (app.name, app.nice_name)
+            (app.id, app.nice_name)
             for app in ApplicationTemplate.objects.all().order_by('nice_name')
         )
 
     def queryset(self, request, queryset):
         try:
             queryset_filter = {
-                'application_template__name': request.GET['application_template__name']
+                'application_template__id': request.GET['application_template__id']
             }
         except KeyError:
             queryset_filter = {}
@@ -233,7 +233,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         )
 
         try:
-            app_filter = {'name__in': [request.GET['application_template__name']]}
+            app_filter = {'id__in': [request.GET['application_template__id']]}
         except KeyError:
             app_filter = {}
 
@@ -363,7 +363,7 @@ class VisualisationTemplateEditForm(forms.ModelForm):
         widget=FilteredSelectMultiple('master datasets', False),
         queryset=MasterDataset.objects.live()
         .filter(user_access_type='REQUIRES_AUTHORIZATION')
-        .order_by('name'),
+        .order_by('nice_name'),
     )
 
     class Meta:
