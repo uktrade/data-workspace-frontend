@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Reduce usage of application 'name' in favour of nice_name and id
+- Upgrade to Django 3.0.3
 
 
 ## 2020-02-28
