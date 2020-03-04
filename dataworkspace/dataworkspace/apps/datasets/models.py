@@ -572,6 +572,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         blank=True,
     )
 
+    # Used as a parallel to DataSet.type, which will help other parts of the codebase
+    # easily distinguish between reference datasets, datacuts, and master datasets.
+    type = DataSetType.REFERENCE.value
+
     class Meta:
         db_table = 'app_referencedataset'
         verbose_name = 'Reference dataset'

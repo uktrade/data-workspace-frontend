@@ -57,7 +57,6 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
-    get_dataset_type,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -181,9 +180,8 @@ class DatasetDetailView(DetailView):
                 pass
 
         if dataset:
-            dataset_type = get_dataset_type(dataset)
             perm_codename = dataset_type_to_manage_unpublished_permission_codename(
-                dataset_type
+                dataset.type
             )
 
             if not dataset.published and not self.request.user.has_perm(perm_codename):
