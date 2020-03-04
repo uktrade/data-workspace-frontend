@@ -363,7 +363,7 @@ class VisualisationTemplateEditForm(forms.ModelForm):
         widget=FilteredSelectMultiple('master datasets', False),
         queryset=MasterDataset.objects.live()
         .filter(user_access_type='REQUIRES_AUTHORIZATION')
-        .order_by('nice_name'),
+        .order_by('name'),
     )
 
     class Meta:
