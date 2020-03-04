@@ -37,10 +37,6 @@
             <p class="govuk-body">
                 {{ model.description | linebreaksbr }}
             </p>
-
-            <h3 class="govuk-heading-l">Contact</h3>
-            {% include 'partials/contact.html' with model=model.enquiries_contact only %}
-
         </div>
     </div>
 
@@ -186,6 +182,9 @@
                   </dd>
                 </div>
             </dl>
+            {% if model.enquiries_contact %}
+              {% include 'partials/contact.html' with model=model.enquiries_contact as_section=True only %}
+            {% endif %}
         </div>
     </div>
 {% endblock %}

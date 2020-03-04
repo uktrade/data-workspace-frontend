@@ -1,7 +1,14 @@
+{% if as_section %}
+<h3 class="govuk-heading-m">Contact</h3>
+<p class="govuk-body">
+  Use this contact to ask questions about this data and how to use it.
+</p>
+{% endif %}
+
 <p class="govuk-body">
     {{ model.first_name }} {{ model.last_name }}
     {% if model.email %}
         <br/>
-        <a href="mailto:{{ model.email }}">{{ model.email }}</a>
+        <a class="govuk-link" href="mailto:{{ model.email }}">{{ model.email }}</a>
     {% endif %}
 </p>
