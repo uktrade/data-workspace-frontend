@@ -368,17 +368,6 @@ class BaseDatasetForm(forms.ModelForm):
 class DataCutDatasetForm(BaseDatasetForm):
     dataset_type = DataSet.TYPE_DATA_CUT
 
-    def clean(self):
-        if 'published' in self.changed_data and self.cleaned_data['published'] is True:
-            if not all(
-                query.reviewed for query in self.instance.customdatasetquery_set.all()
-            ):
-                raise forms.ValidationError(
-                    {
-                        'published': 'You must review all the SQL queries before you can publish this data cut.'
-                    }
-                )
-
 
 class MasterDatasetForm(BaseDatasetForm):
     dataset_type = DataSet.TYPE_MASTER_DATASET
@@ -405,6 +394,23 @@ class CustomDatasetQueryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['dataset'].queryset = DataCutDataset.objects.live()
+
+
+class CustomDatasetQueryInlineForm(forms.ModelForm):
+    model = CustomDatasetQuery
+
+    def clean(self):
+        super().clean()
+
+        if (
+            self.cleaned_data.get('reviewed') is False
+            and self.cleaned_data['dataset'].published is True
+        ):
+            raise forms.ValidationError(
+                {
+                    'reviewed': 'You must review this SQL query before the dataset can be published.'
+                }
+            )
 
 
 class SourceViewForm(forms.ModelForm):

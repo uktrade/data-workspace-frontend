@@ -2477,7 +2477,6 @@ class TestDatasetAdminPytest:
                 'customdatasetquery_set-0-database': str(sql.database.id),
                 'customdatasetquery_set-0-query': 'test',
                 'customdatasetquery_set-0-frequency': 1,
-                'customdatasetquery_set-0-reviewed': 'OFF',
                 '_continue': 'Save and continue editing',
             },
             follow=True,
@@ -2486,7 +2485,7 @@ class TestDatasetAdminPytest:
         assert response.status_code == 200
         assert DataSet.objects.get(id=dataset.id).published is False
         assert (
-            "You must review all the SQL queries before you can publish this data cut."
+            "You must review this SQL query before the dataset can be published."
             in response.content.decode(response.charset)
         )
 

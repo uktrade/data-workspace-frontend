@@ -33,6 +33,7 @@ from dataworkspace.apps.dw_admin.forms import (
     SourceLinkForm,
     SourceTableForm,
     SourceViewForm,
+    CustomDatasetQueryInlineForm,
 )
 
 logger = logging.getLogger('app')
@@ -110,6 +111,7 @@ class SourceViewInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
 
 class CustomDatasetQueryInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     model = CustomDatasetQuery
+    form = CustomDatasetQueryInlineForm
     extra = 0
     manage_unpublished_permission_codename = (
         'datasets.manage_unpublished_datacut_datasets'
