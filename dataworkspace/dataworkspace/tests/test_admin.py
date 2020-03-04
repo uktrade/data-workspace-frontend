@@ -1,20 +1,27 @@
+from functools import partial
 import mock
 
 from botocore.exceptions import ClientError
 
+from django.contrib.auth.models import User, Permission
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from django.test import Client
 
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
     ReferenceDatasetUploadLogRecord,
     ReferenceDatasetUploadLog,
+    DataSet,
+    CustomDatasetQuery,
 )
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import BaseAdminTestCase
+from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
+import pytest
 
 
 class TestCustomAdminSite(BaseAdminTestCase):
@@ -2431,3 +2438,346 @@ class TestDatasetAdmin(BaseAdminTestCase):
         mock_client().delete_object.assert_called_once_with(
             Bucket=settings.AWS_UPLOADS_BUCKET, Key='http://test.com'
         )
+
+
+class TestDatasetAdminPytest:
+    def test_sql_queries_must_be_reviewed_before_publishing(self, staff_client):
+        dataset = factories.DataSetFactory.create(published=False)
+        sql = factories.CustomDatasetQueryFactory.create(
+            dataset=dataset, reviewed=False
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': 2,
+                'sourcelink_set-TOTAL_FORMS': '0',
+                'sourcelink_set-INITIAL_FORMS': '0',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourceview_set-TOTAL_FORMS': '0',
+                'sourceview_set-INITIAL_FORMS': '0',
+                'sourceview_set-MIN_NUM_FORMS': '0',
+                'sourceview_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '1',
+                'customdatasetquery_set-INITIAL_FORMS': '1',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-0-id': sql.id,
+                'customdatasetquery_set-0-dataset': str(dataset.id),
+                'customdatasetquery_set-0-name': 'test',
+                'customdatasetquery_set-0-database': str(sql.database.id),
+                'customdatasetquery_set-0-query': 'test',
+                'customdatasetquery_set-0-frequency': 1,
+                '_continue': 'Save and continue editing',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert DataSet.objects.get(id=dataset.id).published is False
+        assert (
+            "You must review this SQL query before the dataset can be published."
+            in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.parametrize(
+        "request_client, expected_response_code, can_review",
+        (
+            ("client", 404, False),
+            ("sme_client", 200, False),
+            ("staff_client", 200, True),
+        ),
+        indirect=['request_client'],
+    )
+    def test_sql_queries_can_only_be_reviewed_by_superusers(
+        self, request_client, expected_response_code, can_review
+    ):
+        dataset = factories.DataSetFactory.create(published=False)
+        sql = factories.CustomDatasetQueryFactory.create(
+            dataset=dataset, reviewed=False
+        )
+
+        # Login to admin site
+        request_client.post(reverse('admin:index'), follow=True)
+
+        response = request_client.post(
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
+            {
+                'published': False,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': 2,
+                'sourcelink_set-TOTAL_FORMS': '0',
+                'sourcelink_set-INITIAL_FORMS': '0',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourceview_set-TOTAL_FORMS': '0',
+                'sourceview_set-INITIAL_FORMS': '0',
+                'sourceview_set-MIN_NUM_FORMS': '0',
+                'sourceview_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '1',
+                'customdatasetquery_set-INITIAL_FORMS': '1',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-0-id': sql.id,
+                'customdatasetquery_set-0-dataset': str(dataset.id),
+                'customdatasetquery_set-0-name': 'test',
+                'customdatasetquery_set-0-database': str(sql.database.id),
+                'customdatasetquery_set-0-query': 'test',
+                'customdatasetquery_set-0-frequency': 1,
+                'customdatasetquery_set-0-reviewed': True,
+                '_continue': 'Save and continue editing',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == expected_response_code
+        assert CustomDatasetQuery.objects.get(id=sql.id).reviewed == can_review
+
+    @pytest.mark.parametrize(
+        "request_client, expected_response_code, should_publish",
+        (
+            ("client", 404, False),
+            ("sme_client", 200, False),
+            ("staff_client", 200, True),
+        ),
+        indirect=['request_client'],
+    )
+    def test_datacut_can_only_be_published_by_superuser(
+        self, request_client, expected_response_code, should_publish
+    ):
+        dataset = factories.DataSetFactory.create(published=False)
+
+        # Login to admin site
+        request_client.post(reverse('admin:index'), follow=True)
+
+        response = request_client.post(
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': 2,
+                'sourcelink_set-TOTAL_FORMS': '0',
+                'sourcelink_set-INITIAL_FORMS': '0',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourceview_set-TOTAL_FORMS': '0',
+                'sourceview_set-INITIAL_FORMS': '0',
+                'sourceview_set-MIN_NUM_FORMS': '0',
+                'sourceview_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '0',
+                'customdatasetquery_set-INITIAL_FORMS': '0',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == expected_response_code
+        assert DataSet.objects.get(id=dataset.id).published == should_publish
+
+    @pytest.mark.parametrize(
+        ("manage_unpublished_permission, admin_change_view, DatasetFactory"),
+        (
+            (
+                "manage_unpublished_master_datasets",
+                'admin:datasets_masterdataset_change',
+                partial(factories.DataSetFactory.create, type=DataSetType.MASTER.value),
+            ),
+            (
+                "manage_unpublished_datacut_datasets",
+                'admin:datasets_datacutdataset_change',
+                partial(
+                    factories.DataSetFactory.create, type=DataSetType.DATACUT.value
+                ),
+            ),
+            (
+                "manage_unpublished_reference_datasets",
+                'admin:datasets_referencedataset_change',
+                factories.ReferenceDatasetFactory.create,
+            ),
+        ),
+    )
+    @pytest.mark.django_db
+    def test_manage_dataset_permission_allows_viewing_but_not_editing_published_datasets(
+        self, manage_unpublished_permission, admin_change_view, DatasetFactory
+    ):
+        dataset = DatasetFactory(published=True)
+        user = User.objects.create(is_staff=True)
+        perm = Permission.objects.get(codename=manage_unpublished_permission)
+        user.user_permissions.add(perm)
+        user.save()
+
+        unauthenticated_client = Client()
+        authenticated_client = Client(**get_http_sso_data(user))
+
+        for client in [unauthenticated_client, authenticated_client]:
+            if client is authenticated_client:
+                # Log into admin site
+                client.post(reverse('admin:index'), follow=True)
+
+            view_response = client.get(
+                reverse(admin_change_view, args=(dataset.id,)), follow=True
+            )
+            change_response = client.post(
+                reverse(admin_change_view, args=(dataset.id,)), follow=True
+            )
+
+            assert view_response.status_code == (
+                200 if client is authenticated_client else 403
+            )
+            assert change_response.status_code == 403
+
+    @pytest.mark.django_db
+    def test_manage_master_dataset_permission_allows_editing_unpublished_datasets(self):
+        dataset = factories.DataSetFactory.create(
+            published=False, name='original', type=DataSet.TYPE_MASTER_DATASET
+        )
+        user = User.objects.create(is_staff=True)
+        perm = Permission.objects.get(codename='manage_unpublished_master_datasets')
+        user.user_permissions.add(perm)
+        user.save()
+
+        client = Client(**get_http_sso_data(user))
+
+        # Login to admin site
+        client.post(reverse('admin:index'), follow=True)
+
+        response = client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': False,
+                'name': 'changed',
+                'slug': dataset.slug,
+                'short_description': 'some description',
+                'description': 'some description',
+                'type': 1,
+                'sourcetable_set-TOTAL_FORMS': '0',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert DataSet.objects.get(id=dataset.id).name == 'changed'
+
+    @pytest.mark.django_db
+    def test_manage_datacut_dataset_permission_allows_editing_unpublished_datasets(
+        self
+    ):
+        dataset = factories.DataSetFactory.create(
+            published=False, name='original', type=DataSet.TYPE_DATA_CUT
+        )
+        user = User.objects.create(is_staff=True)
+        perm = Permission.objects.get(codename='manage_unpublished_datacut_datasets')
+        user.user_permissions.add(perm)
+        user.save()
+
+        client = Client(**get_http_sso_data(user))
+
+        # Login to admin site
+        client.post(reverse('admin:index'), follow=True)
+
+        response = client.post(
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
+            {
+                'published': False,
+                'name': 'changed',
+                'slug': dataset.slug,
+                'short_description': 'some description',
+                'description': 'some description',
+                'type': 2,
+                'sourcelink_set-TOTAL_FORMS': '0',
+                'sourcelink_set-INITIAL_FORMS': '0',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourceview_set-TOTAL_FORMS': '0',
+                'sourceview_set-INITIAL_FORMS': '0',
+                'sourceview_set-MIN_NUM_FORMS': '0',
+                'sourceview_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '0',
+                'customdatasetquery_set-INITIAL_FORMS': '0',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
+                '_continue': 'Save and continue editing',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert DataSet.objects.get(id=dataset.id).name == 'changed'
+
+    @pytest.mark.django_db
+    def test_manage_reference_dataset_permission_allows_editing_unpublished_datasets(
+        self
+    ):
+        dataset = ReferenceDataset.objects.create(
+            name='Test Reference Dataset 1',
+            table_name='ref_test_dataset',
+            short_description='Testing...',
+            slug='test-reference-dataset-1',
+            published=False,
+        )
+        field1 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=dataset,
+            data_type=1,
+            is_identifier=True,
+            column_name='field_1',
+            description='field 1 description',
+        )
+
+        user = User.objects.create(is_staff=True)
+        perm = Permission.objects.get(codename='manage_unpublished_reference_datasets')
+        user.user_permissions.add(perm)
+        user.save()
+
+        client = Client(**get_http_sso_data(user))
+
+        # Login to admin site
+        client.post(reverse('admin:index'), follow=True)
+
+        response = client.post(
+            reverse('admin:datasets_referencedataset_change', args=(dataset.id,)),
+            {
+                'id': dataset.id,
+                'name': 'changed',
+                'table_name': dataset.table_name,
+                'slug': dataset.slug,
+                'short_description': 'test description that is short',
+                'sort_direction': ReferenceDataset.SORT_DIR_DESC,
+                'fields-TOTAL_FORMS': 1,
+                'fields-INITIAL_FORMS': 1,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-id': str(field1.id),
+                'fields-0-reference_dataset': str(dataset.id),
+                'fields-0-name': field1.name,
+                'fields-0-column_name': 'updated_field_1',
+                'fields-0-data_type': 1,
+                'fields-0-description': 'updated description',
+                'fields-0-is_identifier': 'on',
+                'fields-0-is_display_name': 'on',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert ReferenceDataset.objects.get(id=dataset.id).name == 'changed'

@@ -2,36 +2,38 @@ import logging
 
 from adminsortable2.admin import SortableInlineAdminMixin
 from django.contrib import admin
-from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils.encoding import force_text
 from csp.decorators import csp_update
 
+from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.datasets.models import (
-    SourceLink,
-    SourceTable,
+    CustomDatasetQuery,
+    DataCutDataset,
+    DataSetUserPermission,
+    MasterDataset,
     ReferenceDataset,
     ReferenceDatasetField,
-    CustomDatasetQuery,
-    SourceView,
-    MasterDataset,
-    DataCutDataset,
+    SourceLink,
+    SourceTable,
     SourceTag,
-    DataSetUserPermission,
+    SourceView,
 )
-from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.dw_admin.forms import (
-    ReferenceDataFieldInlineForm,
-    SourceLinkForm,
+    CustomDatasetQueryForm,
     DataCutDatasetForm,
+    MasterDatasetForm,
+    ReferenceDataFieldInlineForm,
     ReferenceDataInlineFormset,
     ReferenceDatasetForm,
-    MasterDatasetForm,
-    CustomDatasetQueryForm,
+    SourceLinkForm,
     SourceTableForm,
     SourceViewForm,
+    CustomDatasetQueryInlineForm,
 )
 
 logger = logging.getLogger('app')
@@ -41,26 +43,93 @@ class DataLinkAdmin(admin.ModelAdmin):
     list_display = ('name', 'format', 'url', 'dataset')
 
 
-class SourceLinkInline(admin.TabularInline):
+class ManageUnpublishedDatasetsMixin(BaseModelAdmin):
+    """
+    This class gets mixed in with ModelAdmin subclasses that are used to manage datasets. This
+    can be the main dataset ModelAdmin or the ModelAdmins used for additional (meta)data, e.g.
+    CustomDatasetQueryInline.
+    """
+
+    manage_unpublished_permission_codename = None
+
+    def __init__(self, *args, **kwargs):
+        if self.manage_unpublished_permission_codename is None:
+            raise NotImplementedError(
+                "Must define class attribute `manage_unpublished_permission_codename`"
+            )
+        super().__init__(*args, **kwargs)
+
+    def has_add_permission(self, request):
+        if request.user.has_perm(self.manage_unpublished_permission_codename):
+            return True
+
+        return super().has_add_permission(request)
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.has_perm(self.manage_unpublished_permission_codename):
+            return True
+
+        return super().has_view_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        native_perms = super().has_view_permission(request, obj)
+
+        if request.user.has_perm(self.manage_unpublished_permission_codename):
+            if obj and hasattr(obj, 'published'):
+                return not obj.published or native_perms
+
+            return True
+
+        return native_perms
+
+
+class SourceLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     template = 'admin/source_link_inline.html'
     form = SourceLinkForm
     model = SourceLink
     extra = 1
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_datacut_datasets'
+    )
 
 
-class SourceTableInline(admin.TabularInline):
+class SourceTableInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     model = SourceTable
     extra = 1
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_master_datasets'
+    )
 
 
-class SourceViewInline(admin.TabularInline):
+class SourceViewInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     model = SourceView
     extra = 1
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_datacut_datasets'
+    )
 
 
-class CustomDatasetQueryInline(admin.TabularInline):
+class CustomDatasetQueryInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     model = CustomDatasetQuery
+    form = CustomDatasetQueryInlineForm
     extra = 0
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_datacut_datasets'
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        # SQL queries should be reviewed by a superuser
+        extra_readonly = set()
+        if not request.user.is_superuser and request.user.has_perm(
+            self.manage_unpublished_permission_codename
+        ):
+            extra_readonly.add('reviewed')
+
+        readonly_fields = readonly_fields + tuple(extra_readonly)
+
+        return readonly_fields
 
 
 def clone_dataset(modeladmin, request, queryset):
@@ -68,7 +137,25 @@ def clone_dataset(modeladmin, request, queryset):
         dataset.clone()
 
 
-class BaseDatasetAdmin(DeletableTimeStampedUserAdmin):
+class PermissionedDatasetAdmin(
+    DeletableTimeStampedUserAdmin, ManageUnpublishedDatasetsMixin
+):
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
+        # Don't allow users who can only manage unpublished datasets, to publish a dataset
+        extra_readonly = []
+        if not request.user.is_superuser and request.user.has_perm(
+            self.manage_unpublished_permission_codename
+        ):
+            extra_readonly.append('published')
+
+        readonly_fields = readonly_fields + tuple(extra_readonly)
+
+        return readonly_fields
+
+
+class BaseDatasetAdmin(PermissionedDatasetAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = (
         'name',
@@ -190,12 +277,18 @@ class BaseDatasetAdmin(DeletableTimeStampedUserAdmin):
 class MasterDatasetAdmin(BaseDatasetAdmin):
     form = MasterDatasetForm
     inlines = [SourceTableInline]
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_master_datasets'
+    )
 
 
 @admin.register(DataCutDataset)
 class DataCutDatasetAdmin(BaseDatasetAdmin):
     form = DataCutDatasetForm
     inlines = [SourceLinkInline, SourceViewInline, CustomDatasetQueryInline]
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_datacut_datasets'
+    )
 
 
 @admin.register(SourceTag)
@@ -204,7 +297,9 @@ class SourceTagAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):
+class ReferenceDataFieldInline(
+    SortableInlineAdminMixin, admin.TabularInline, ManageUnpublishedDatasetsMixin
+):
     form = ReferenceDataFieldInlineForm
     formset = ReferenceDataInlineFormset
     model = ReferenceDatasetField
@@ -229,6 +324,9 @@ class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):
             },
         )
     ]
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_reference_datasets'
+    )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Do not allow a link between a reference dataset field and it's parent reference dataset
@@ -240,7 +338,7 @@ class ReferenceDataFieldInline(SortableInlineAdminMixin, admin.TabularInline):
 
 
 @admin.register(ReferenceDataset)
-class ReferenceDatasetAdmin(DeletableTimeStampedUserAdmin):
+class ReferenceDatasetAdmin(PermissionedDatasetAdmin):
     form = ReferenceDatasetForm
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
@@ -283,6 +381,9 @@ class ReferenceDatasetAdmin(DeletableTimeStampedUserAdmin):
         )
     ]
     readonly_fields = ('get_published_version',)
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_reference_datasets'
+    )
 
     def get_published_version(self, obj):
         if obj.published_version == '0.0':
@@ -295,10 +396,13 @@ class ReferenceDatasetAdmin(DeletableTimeStampedUserAdmin):
         js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')
 
     def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+
         # Do not allow editing of table names via the admin
         if obj is not None:
-            return self.readonly_fields + ('table_name',)
-        return self.readonly_fields
+            return readonly_fields + ('table_name',)
+
+        return readonly_fields
 
     def save_formset(self, request, form, formset, change):
         for f in formset.forms:

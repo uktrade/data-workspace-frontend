@@ -2,8 +2,10 @@ import csv
 import io
 import json
 import os
+from collections import namedtuple
 from contextlib import closing
 from itertools import chain
+from typing import Union
 
 import boto3
 from botocore.exceptions import ClientError
@@ -11,57 +13,98 @@ from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import F
+from django.db.models import F, Q
 from django.forms import model_to_dict
 from django.http import (
     Http404,
     HttpResponse,
     HttpResponseForbidden,
-    StreamingHttpResponse,
-    HttpResponseServerError,
-    HttpResponseRedirect,
     HttpResponseNotFound,
+    HttpResponseRedirect,
+    HttpResponseServerError,
+    StreamingHttpResponse,
 )
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView
 from psycopg2 import sql
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.core.utils import (
+    streaming_query_response,
+    table_data,
+    view_exists,
+)
 from dataworkspace.apps.datasets.forms import (
     DatasetSearchForm,
-    RequestAccessForm,
     EligibilityCriteriaForm,
-)
-from dataworkspace.apps.datasets.models import (
-    DataSet,
-    ReferenceDataset,
-    SourceLink,
-    ReferenceDatasetField,
-    CustomDatasetQuery,
-    SourceView,
+    RequestAccessForm,
 )
 from dataworkspace.apps.datasets.model_utils import (
     get_linked_field_display_name,
     get_linked_field_identifier_name,
 )
-from dataworkspace.apps.datasets.utils import find_dataset
-from dataworkspace.apps.core.utils import (
-    table_data,
-    view_exists,
-    streaming_query_response,
+from dataworkspace.apps.datasets.models import (
+    CustomDatasetQuery,
+    DataSet,
+    ReferenceDataset,
+    ReferenceDatasetField,
+    SourceLink,
+    SourceView,
+)
+from dataworkspace.apps.datasets.utils import (
+    dataset_type_to_manage_unpublished_permission_codename,
+    find_dataset,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.zendesk import create_zendesk_ticket
 
 
-def filter_datasets(datasets, query, source, use=None):
+def filter_datasets(
+    datasets: Union[ReferenceDataset, DataSet],
+    query,
+    source,
+    use=None,
+    user=None,
+    form=None,
+):
     search = SearchVector('name', 'short_description', config='english')
     search_query = SearchQuery(query, config='english')
 
-    datasets = datasets.filter(published=True).annotate(
+    dataset_filter = Q(published=True)
+
+    if user:
+        if datasets.model is ReferenceDataset:
+            reference_type = DataSetType.REFERENCE.value
+            reference_perm = dataset_type_to_manage_unpublished_permission_codename(
+                reference_type
+            )
+
+            if user.has_perm(reference_perm):
+                dataset_filter |= Q(published=False)
+
+        if datasets.model is DataSet:
+            master_type, datacut_type = (
+                DataSetType.MASTER.value,
+                DataSetType.DATACUT.value,
+            )
+            master_perm = dataset_type_to_manage_unpublished_permission_codename(
+                master_type
+            )
+            datacut_perm = dataset_type_to_manage_unpublished_permission_codename(
+                datacut_type
+            )
+
+            if user.has_perm(master_perm) and (not use or str(master_type) in use):
+                dataset_filter |= Q(published=False, type=master_type)
+
+            if user.has_perm(datacut_perm) and (not use or str(datacut_type) in use):
+                dataset_filter |= Q(published=False, type=datacut_type)
+
+    datasets = datasets.filter(dataset_filter).annotate(
         search=search, search_rank=SearchRank(search, search_query)
     )
 
@@ -88,12 +131,14 @@ def find_datasets(request):
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
-    datasets = filter_datasets(DataSet.objects.live(), query, source, use)
+    datasets = filter_datasets(
+        DataSet.objects.live(), query, source, use, user=request.user, form=form
+    )
 
     # Include reference datasets if required
-    if not use or "0" in use:
+    if not use or str(DataSetType.REFERENCE.value) in use:
         reference_datasets = filter_datasets(
-            ReferenceDataset.objects.live(), query, source
+            ReferenceDataset.objects.live(), query, source, user=request.user, form=form
         )
         datasets = datasets.values(
             'id', 'name', 'slug', 'short_description', 'search_rank'
@@ -124,17 +169,28 @@ class DatasetDetailView(DetailView):
         return isinstance(self.object, ReferenceDataset)
 
     def get_object(self, queryset=None):
-        filters = {'published': True} if not self.request.user.is_superuser else {}
+        dataset_uuid = self.kwargs['dataset_uuid']
+        dataset = None
         try:
-            return ReferenceDataset.objects.live().get(
-                uuid=self.kwargs['dataset_uuid'], **filters
-            )
+            dataset = ReferenceDataset.objects.live().get(uuid=dataset_uuid)
         except ReferenceDataset.DoesNotExist:
-            pass
+            try:
+                dataset = DataSet.objects.live().get(id=dataset_uuid)
+            except DataSet.DoesNotExist:
+                pass
 
-        return get_object_or_404(
-            DataSet.objects.live(), id=self.kwargs['dataset_uuid'], **filters
-        )
+        if dataset:
+            perm_codename = dataset_type_to_manage_unpublished_permission_codename(
+                dataset.type
+            )
+
+            if not dataset.published and not self.request.user.has_perm(perm_codename):
+                dataset = None
+
+        if not dataset:
+            raise Http404('No dataset matches the given query.')
+
+        return dataset
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
@@ -182,18 +238,31 @@ class DatasetDetailView(DetailView):
         else:
             columns = None
 
+        data_links = sorted(
+            chain(
+                self.object.sourcelink_set.all(),
+                source_tables,
+                source_views,
+                custom_queries,
+            ),
+            key=lambda x: x.name,
+        )
+
+        DataLinkWithLinkToggle = namedtuple(
+            'DataLinkWithLinkToggle', ('data_link', 'can_show_link')
+        )
+        data_links_with_link_toggle = [
+            DataLinkWithLinkToggle(
+                data_link=data_link,
+                can_show_link=data_link.can_show_link_for_user(self.request.user),
+            )
+            for data_link in data_links
+        ]
+
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
-                'data_links': sorted(
-                    chain(
-                        self.object.sourcelink_set.all(),
-                        source_tables,
-                        source_views,
-                        custom_queries,
-                    ),
-                    key=lambda x: x.name,
-                ),
+                'data_links_with_link_toggle': data_links_with_link_toggle,
                 'fields': columns,
             }
         )
@@ -470,6 +539,9 @@ class CustomDatasetQueryDownloadView(DetailView):
         query = get_object_or_404(
             self.model, id=self.kwargs.get('query_id'), dataset=dataset
         )
+
+        if not query.reviewed and not request.user.is_superuser:
+            return HttpResponseForbidden()
 
         log_event(
             request.user,

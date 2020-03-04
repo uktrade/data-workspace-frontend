@@ -30,6 +30,7 @@ from dataworkspace.apps.core.models import (
     DeletableQuerySet,
 )
 from dataworkspace.apps.applications.models import ApplicationTemplate
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.model_utils import (
     external_model_class,
     has_circular_link,
@@ -107,8 +108,8 @@ class SourceTag(TimeStampedModel):
 
 
 class DataSet(DeletableTimestampedUserModel):
-    TYPE_MASTER_DATASET = 1
-    TYPE_DATA_CUT = 2
+    TYPE_MASTER_DATASET = DataSetType.MASTER.value
+    TYPE_DATA_CUT = DataSetType.DATACUT.value
     _DATASET_TYPE_CHOICES = (
         (TYPE_MASTER_DATASET, 'Master Dataset'),
         (TYPE_DATA_CUT, 'Data Cut'),
@@ -250,6 +251,12 @@ class MasterDataset(DataSet):
     class Meta:
         proxy = True
         verbose_name = 'Master Dataset'
+        permissions = [
+            (
+                "manage_unpublished_master_datasets",
+                "Manage (create, view, edit) unpublished master datasets",
+            )
+        ]
 
 
 class MasterDatasetUserPermission(DataSetUserPermission):
@@ -276,6 +283,12 @@ class DataCutDataset(DataSet):
     class Meta:
         proxy = True
         verbose_name = 'Data Cut Dataset'
+        permissions = [
+            (
+                "manage_unpublished_datacut_datasets",
+                "Manage (create, view, edit) unpublished datacut datasets",
+            )
+        ]
 
 
 class DataCutDatasetUserPermission(DataSetUserPermission):
@@ -344,6 +357,9 @@ class SourceTable(BaseSource):
             '<table-id>', str(self.id)
         )
 
+    def can_show_link_for_user(self, user):
+        return False
+
 
 class SourceView(BaseSource):
     view = models.CharField(
@@ -356,6 +372,9 @@ class SourceView(BaseSource):
         return reverse(
             'datasets:dataset_source_view_download', args=(self.dataset.id, self.id)
         )
+
+    def can_show_link_for_user(self, user):
+        return True
 
 
 class SourceLink(TimeStampedModel):
@@ -426,6 +445,9 @@ class SourceLink(TimeStampedModel):
             'datasets:dataset_source_link_download', args=(self.dataset.id, self.id)
         )
 
+    def can_show_link_for_user(self, user):
+        return True
+
 
 class CustomDatasetQuery(TimeStampedModel):
     FREQ_DAILY = 1
@@ -445,6 +467,7 @@ class CustomDatasetQuery(TimeStampedModel):
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
     query = models.TextField()
     frequency = models.IntegerField(choices=_FREQ_CHOICES)
+    reviewed = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'SQL Query'
@@ -460,6 +483,12 @@ class CustomDatasetQuery(TimeStampedModel):
 
     def get_filename(self):
         return '{}.csv'.format(slugify(self.name))
+
+    def can_show_link_for_user(self, user):
+        if user.is_superuser:
+            return True
+
+        return self.reviewed
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
@@ -543,9 +572,19 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         blank=True,
     )
 
+    # Used as a parallel to DataSet.type, which will help other parts of the codebase
+    # easily distinguish between reference datasets, datacuts, and master datasets.
+    type = DataSetType.REFERENCE.value
+
     class Meta:
         db_table = 'app_referencedataset'
         verbose_name = 'Reference dataset'
+        permissions = [
+            (
+                "manage_unpublished_reference_datasets",
+                "Manage (create, view, edit) unpublished reference datasets",
+            )
+        ]
 
     def __str__(self):
         return self.name

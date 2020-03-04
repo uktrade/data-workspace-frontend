@@ -4,6 +4,7 @@ from datetime import datetime
 import factory.fuzzy
 
 from django.contrib.auth import get_user_model
+from dataworkspace.apps.datasets.models import DataSet
 
 
 class UserProfileFactory(factory.django.DjangoModelFactory):
@@ -53,6 +54,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     slug = factory.fuzzy.FuzzyText(length=10)
     published = True
     deleted = False
+    type = DataSet.TYPE_DATA_CUT
 
     class Meta:
         model = 'datasets.DataSet'
@@ -97,9 +99,11 @@ class SourceViewFactory(factory.django.DjangoModelFactory):
 
 
 class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
+    id = factory.Sequence(lambda n: n)
     name = factory.fuzzy.FuzzyText()
     dataset = factory.SubFactory(DataSetFactory)
     database = factory.SubFactory(DatabaseFactory)
+    reviewed = True
     frequency = 1
 
     class Meta:
@@ -112,7 +116,7 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     slug = factory.fuzzy.FuzzyText(length=10)
     published = True
     schema_version = factory.Sequence(lambda n: n)
-    table_name = factory.fuzzy.FuzzyText(length=20)
+    table_name = factory.fuzzy.FuzzyText(length=20, prefix='ref_')
 
     class Meta:
         model = 'datasets.ReferenceDataset'

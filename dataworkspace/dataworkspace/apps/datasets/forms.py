@@ -1,5 +1,6 @@
 from django import forms
-from .models import DataSet, SourceTag
+from .models import SourceTag
+from dataworkspace.apps.datasets.constants import DataSetType
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
@@ -34,9 +35,9 @@ class DatasetSearchForm(forms.Form):
 
     use = forms.MultipleChoiceField(
         choices=[
-            (DataSet.TYPE_DATA_CUT, 'Download'),
-            (DataSet.TYPE_MASTER_DATASET, 'Analyse in tools'),
-            (0, 'Reference'),
+            (DataSetType.DATACUT.value, 'Download'),
+            (DataSetType.MASTER.value, 'Analyse in tools'),
+            (DataSetType.REFERENCE.value, 'Reference'),
         ],
         required=False,
         widget=FilterWidget("Data use"),

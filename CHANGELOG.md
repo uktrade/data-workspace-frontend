@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-03-03
 
+### Added
+
+- New permissions to allow users to manage only unpublished datasets.
+- A new group, "Subject Matter Experts", that has permissions to manage unpublished master and datacut datasets.
+
 ### Changed
 
 - Reduce usage of application 'name' in favour of nice_name and id

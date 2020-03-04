@@ -87,3 +87,13 @@ def get_response_csp_as_set(response):
     policies = {policy.strip() for policy in policies}
 
     return policies
+
+
+def get_http_sso_data(user):
+    return {
+        'HTTP_SSO_PROFILE_EMAIL': user.email,
+        'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
+        'HTTP_SSO_PROFILE_USER_ID': uuid.uuid4(),
+        'HTTP_SSO_PROFILE_LAST_NAME': user.last_name,
+        'HTTP_SSO_PROFILE_FIRST_NAME': user.first_name,
+    }

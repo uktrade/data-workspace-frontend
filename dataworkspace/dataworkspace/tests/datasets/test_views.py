@@ -1,8 +1,12 @@
 import mock
 import pytest
+from django.contrib.auth.models import User, Permission
 from django.urls import reverse
+from django.test import Client
 
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.tests import factories
+from dataworkspace.tests.common import get_http_sso_data
 
 
 @pytest.mark.parametrize(
@@ -202,6 +206,70 @@ def test_find_datasets_filters_by_source(client):
             'short_description': rds.short_description,
         },
     ]
+
+
+@pytest.mark.parametrize(
+    'permissions, result_dataset_names',
+    (
+        (['manage_unpublished_master_datasets'], {"Master dataset"}),
+        (['manage_unpublished_datacut_datasets'], {"Datacut dataset"}),
+        (['manage_unpublished_reference_datasets'], {"Reference dataset"}),
+        (
+            [
+                'manage_unpublished_master_datasets',
+                'manage_unpublished_datacut_datasets',
+            ],
+            {"Master dataset", "Datacut dataset"},
+        ),
+        (
+            [
+                'manage_unpublished_master_datasets',
+                'manage_unpublished_reference_datasets',
+            ],
+            {"Master dataset", "Reference dataset"},
+        ),
+        (
+            [
+                'manage_unpublished_datacut_datasets',
+                'manage_unpublished_reference_datasets',
+            ],
+            {"Datacut dataset", "Reference dataset"},
+        ),
+        (
+            [
+                'manage_unpublished_master_datasets',
+                'manage_unpublished_datacut_datasets',
+                'manage_unpublished_reference_datasets',
+            ],
+            {"Master dataset", "Datacut dataset", "Reference dataset"},
+        ),
+    ),
+)
+@pytest.mark.django_db
+def test_find_datasets_includes_unpublished_results_based_on_permissions(
+    permissions, result_dataset_names
+):
+    user = User.objects.create(is_staff=True)
+    perms = Permission.objects.filter(codename__in=permissions).all()
+    user.user_permissions.add(*perms)
+    user.save()
+
+    client = Client(**get_http_sso_data(user))
+
+    factories.DataSetFactory.create(
+        published=False, type=DataSetType.MASTER.value, name='Master dataset'
+    )
+    factories.DataSetFactory.create(
+        published=False, type=DataSetType.DATACUT.value, name='Datacut dataset'
+    )
+    factories.ReferenceDatasetFactory.create(published=False, name='Reference dataset')
+
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert {
+        dataset['name'] for dataset in response.context["datasets"]
+    } == result_dataset_names
 
 
 def test_request_access_success_content(client):
