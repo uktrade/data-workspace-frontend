@@ -27,7 +27,6 @@ def spawn(
     name,
     user_email_address,
     user_sso_id,
-    public_host_data,
     application_instance_id,
     spawner_options,
     db_credentials,
@@ -35,7 +34,6 @@ def spawn(
     get_spawner(name).spawn(
         user_email_address,
         user_sso_id,
-        public_host_data,
         application_instance_id,
         spawner_options,
         db_credentials,
@@ -55,7 +53,7 @@ class ProcessSpawner:
     '''
 
     @staticmethod
-    def spawn(_, __, ___, application_instance_id, spawner_options, db_credentials):
+    def spawn(_, __, application_instance_id, spawner_options, db_credentials):
 
         try:
             gevent.sleep(1)
@@ -151,7 +149,6 @@ class FargateSpawner:
     def spawn(
         user_email_address,
         user_sso_id,
-        public_host_data,
         application_instance_id,
         spawner_options,
         db_credentials,
@@ -196,30 +193,15 @@ class FargateSpawner:
             application_instance = ApplicationInstance.objects.get(
                 id=application_instance_id
             )
-            # If CONTAINER_TAG_PATTERN is given, the data from the public_host is used to fill
-            # CONTAINER_TAG_PATTERN to work out what Docker tag should be launched
-            try:
-                tag = options['CONTAINER_TAG_PATTERN']
-            except KeyError:
-                definition_arn_with_image = definition_arn
-            else:
-                # Not robust, but the pattern is specified by config rather than user-provided
-                for key, value in public_host_data.items():
-                    tag = tag.replace(f'<{key}>', value)
-                definition_arn_with_image = _fargate_task_definition_with_tag(
-                    definition_arn, container_name, tag
-                )
 
             # If memory or cpu are given, create a new task definition.
             cpu = application_instance.cpu
             memory = application_instance.memory
             cpu_or_mem = cpu is not None or memory is not None
-            definition_arn_with_cpu_memory_image = (
-                _fargate_task_definition_with_cpu_memory(
-                    definition_arn_with_image, cpu, memory
-                )
+            definition_arn_with_cpu_memory = (
+                _fargate_task_definition_with_cpu_memory(definition_arn, cpu, memory)
                 if cpu_or_mem
-                else definition_arn_with_image
+                else definition_arn
             )
 
             for i in range(0, 10):
@@ -230,7 +212,7 @@ class FargateSpawner:
                         role_arn,
                         cluster_name,
                         container_name,
-                        definition_arn_with_cpu_memory_image,
+                        definition_arn_with_cpu_memory,
                         security_groups,
                         subnets,
                         cmd,

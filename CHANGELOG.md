@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Fix incorrection change of name -> nice name in Django admin
+- Remove unused (and not-planned-to-be-used) 'user-provided' code and config.
 
 
 ## 2020-03-03
