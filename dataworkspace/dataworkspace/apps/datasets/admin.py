@@ -149,6 +149,8 @@ class BaseDatasetAdmin(DeletableTimeStampedUserAdmin):
 
         user_content_type_id = ContentType.objects.get_for_model(get_user_model()).pk
 
+        super().save_model(request, obj, form, change)
+
         for user in authorized_users - current_authorized_users:
             DataSetUserPermission.objects.create(dataset=obj, user=user)
             LogEntry.objects.log_action(
@@ -170,8 +172,6 @@ class BaseDatasetAdmin(DeletableTimeStampedUserAdmin):
                 action_flag=CHANGE,
                 change_message=f"Removed dataset {obj} permission",
             )
-
-        super().save_model(request, obj, form, change)
 
         if original_user_access_type != obj.user_access_type:
             LogEntry.objects.log_action(
