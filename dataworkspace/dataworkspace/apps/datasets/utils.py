@@ -31,11 +31,8 @@ def get_dataset_type(dataset: Union[DataSet, ReferenceDataset]):
 
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
-    if dataset_type == DataSetType.REFERENCE.value:
-        return 'datasets.manage_unpublished_reference_datasets'
-    elif dataset_type == DataSetType.MASTER.value:
-        return 'datasets.manage_unpublished_master_datasets'
-    elif dataset_type == DataSetType.DATACUT.value:
-        return 'datasets.manage_unpublished_datacut_datasets'
-
-    raise ValueError(f"Unknown dataset type: {dataset_type}")
+    return {
+        DataSetType.REFERENCE.value: 'datasets.manage_unpublished_reference_datasets',
+        DataSetType.MASTER.value: 'datasets.manage_unpublished_master_datasets',
+        DataSetType.DATACUT.value: 'datasets.manage_unpublished_datacut_datasets',
+    }[dataset_type]
