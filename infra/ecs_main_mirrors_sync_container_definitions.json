@@ -49,6 +49,10 @@
     {
         "name": "MIRROR_DEBIAN",
         "value": "${mirror_debian}"
+    },
+    {
+        "name": "MIRROR_NLTK",
+        "value": "${mirror_nltk}"
     }]
   }
 ]

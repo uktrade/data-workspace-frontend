@@ -47,6 +47,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Branches in the Visualisations page
 
 
+## 2020-02-26
+
+### Added
+
+- Mirror of NLTK
+
+
 ## 2020-02-25
 
 ### Changed
