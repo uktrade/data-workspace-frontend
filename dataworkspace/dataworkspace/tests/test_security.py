@@ -25,7 +25,7 @@ def test_baseline_content_security_policy(client):
 
 
 def test_edit_reference_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
-    staff_client
+    staff_client,
 ):
     dataset = factories.ReferenceDatasetFactory.create()
 

@@ -2681,7 +2681,7 @@ class TestDatasetAdminPytest:
 
     @pytest.mark.django_db
     def test_manage_datacut_dataset_permission_allows_editing_unpublished_datasets(
-        self
+        self,
     ):
         dataset = factories.DataSetFactory.create(
             published=False, name='original', type=DataSet.TYPE_DATA_CUT
@@ -2727,7 +2727,7 @@ class TestDatasetAdminPytest:
 
     @pytest.mark.django_db
     def test_manage_reference_dataset_permission_allows_editing_unpublished_datasets(
-        self
+        self,
     ):
         dataset = ReferenceDataset.objects.create(
             name='Test Reference Dataset 1',
@@ -2781,3 +2781,58 @@ class TestDatasetAdminPytest:
 
         assert response.status_code == 200
         assert ReferenceDataset.objects.get(id=dataset.id).name == 'changed'
+
+    @pytest.mark.parametrize(
+        "published, expected_reviewed_status", ((False, False), (True, True))
+    )
+    @pytest.mark.django_db
+    def test_unpublished_datacut_query_review_flag_is_toggled_off_if_query_changed_when_already_reviewed(
+        self, staff_client, published, expected_reviewed_status
+    ):
+        dataset = factories.DataSetFactory.create(published=published)
+        sql = factories.CustomDatasetQueryFactory.create(
+            dataset=dataset, reviewed=True, query="original query"
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
+            {
+                'published': published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': 2,
+                'sourcelink_set-TOTAL_FORMS': '0',
+                'sourcelink_set-INITIAL_FORMS': '0',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourceview_set-TOTAL_FORMS': '0',
+                'sourceview_set-INITIAL_FORMS': '0',
+                'sourceview_set-MIN_NUM_FORMS': '0',
+                'sourceview_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '1',
+                'customdatasetquery_set-INITIAL_FORMS': '1',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-0-id': sql.id,
+                'customdatasetquery_set-0-dataset': str(dataset.id),
+                'customdatasetquery_set-0-name': 'test',
+                'customdatasetquery_set-0-database': str(sql.database.id),
+                'customdatasetquery_set-0-query': 'changed query',
+                'customdatasetquery_set-0-frequency': 1,
+                'customdatasetquery_set-0-reviewed': True,
+                '_continue': 'Save and continue editing',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert CustomDatasetQuery.objects.get(id=sql.id).query == "changed query"
+        assert (
+            CustomDatasetQuery.objects.get(id=sql.id).reviewed
+            == expected_reviewed_status
+        )
