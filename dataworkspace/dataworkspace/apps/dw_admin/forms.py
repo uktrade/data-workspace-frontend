@@ -412,6 +412,17 @@ class CustomDatasetQueryInlineForm(forms.ModelForm):
                 }
             )
 
+        if (
+            self.instance.reviewed is True
+            and self.cleaned_data['dataset'].published is False
+        ):
+            if set(self.changed_data) - {"reviewed"}:
+                self.cleaned_data['reviewed'] = False
+
+                # We need to also update the instance directly, as well, because the `reviewed` field will not otherwise
+                # be updated for users who have `reviewed` as a read-only field (i.e. "Subject Matter Experts").
+                self.instance.reviewed = False
+
 
 class SourceViewForm(forms.ModelForm):
     model = SourceView
