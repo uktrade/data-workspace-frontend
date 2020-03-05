@@ -79,6 +79,19 @@ class ApplicationTemplate(TimeStampedModel):
         return self.nice_name
 
 
+class ToolTemplate(ApplicationTemplate):
+    class Meta:
+        proxy = True
+        verbose_name = 'Tool'
+
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        self.application_type = 'TOOL'
+
+        super(ToolTemplate, self).save(force_insert, force_update, using, update_fields)
+
+
 class VisualisationTemplate(ApplicationTemplate):
     class Meta:
         proxy = True

@@ -17,6 +17,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceReport,
     ApplicationTemplate,
+    ToolTemplate,
     VisualisationTemplate,
 )
 from dataworkspace.apps.datasets.models import (
@@ -355,6 +356,39 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         response.context_data['summary_total'] = dict(qs.aggregate(**metrics))
 
         return response
+
+
+class ToolTemplateEditForm(forms.ModelForm):
+    class Meta:
+        model = ApplicationTemplate
+        fields = '__all__'
+
+
+@admin.register(ToolTemplate)
+class ToolTemplateAdmin(admin.ModelAdmin):
+
+    form = ToolTemplateEditForm
+
+    fieldsets = [
+        (
+            None,
+            {
+                'fields': [
+                    'name',
+                    'host_exact',
+                    'host_pattern',
+                    'nice_name',
+                    'spawner',
+                    'spawner_time',
+                    'spawner_options',
+                    'visible',
+                ]
+            },
+        )
+    ]
+
+    def get_queryset(self, request):
+        return self.model.objects.filter(application_type='TOOL')
 
 
 class VisualisationTemplateEditForm(forms.ModelForm):
