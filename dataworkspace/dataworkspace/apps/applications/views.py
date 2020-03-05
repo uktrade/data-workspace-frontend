@@ -99,10 +99,8 @@ def tools_html_GET(request):
     }
 
     def link(application_template):
-        public_host = application_template.host_pattern.replace(
-            '<user>', sso_id_hex_short
-        )
-        return f'{request.scheme}://{public_host}.{settings.APPLICATION_ROOT_DOMAIN}/'
+        app = application_template.host_exact
+        return f'{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     return render(
         request,
