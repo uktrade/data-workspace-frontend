@@ -148,10 +148,7 @@ def application_api_PUT(request, public_host):
         )
 
     try:
-        (
-            application_template,
-            public_host_data,
-        ) = application_template_and_data_from_host(public_host)
+        application_template, _ = application_template_and_data_from_host(public_host)
     except ApplicationTemplate.DoesNotExist:
         return JsonResponse(
             {'message': 'Application template does not exist'}, status=400
@@ -207,11 +204,13 @@ def application_api_PUT(request, public_host):
             db_username=creds['db_user'],
         )
 
+    tag = None if application_template.application_type == 'TOOL' else public_host
+
     spawn.delay(
         application_template.spawner,
         request.user.email,
         str(request.user.profile.sso_id),
-        public_host_data,
+        tag,
         application_instance.id,
         application_template.spawner_options,
         credentials,

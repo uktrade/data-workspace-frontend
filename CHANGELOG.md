@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove unused "User Provided" application
 - Clickable links in reference dataset description
 - Support more double-hyphens in hosts
+- De-generalise how hosts are converted to Docker tags for visualisations
 
 
 ## 2020-03-04
