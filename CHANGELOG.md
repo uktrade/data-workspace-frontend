@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Remove unused "User Provided" application
+- Clickable links in reference dataset description
 
 
 ## 2020-03-04
