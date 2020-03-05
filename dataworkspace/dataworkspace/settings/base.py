@@ -266,11 +266,15 @@ CKEDITOR_CONFIGS = {
                 'JustifyCenter',
                 'JustifyRight',
                 'JustifyBlock',
+                '-',
+                'Link',
+                'Unlink',
             ],
             ['Format'],
             ['Cut', 'Copy', 'Paste', '-', 'Undo', 'Redo'],
         ],
         'format_tags': 'div;p;h1;h2;h3;h4;h5;h6',
+        'linkShowAdvancedTab': False,
     }
 }
 
