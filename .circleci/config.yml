@@ -8,10 +8,13 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Run test
+          name: Build docker images
           command: |
             touch .envs/dev.env
-            make docker-test-integration
+            make docker-build
+      - run:
+          name: Run integration tests
+          command: make docker-test-integration
   docker-test-unit:
     docker:
       - image: circleci/python:3.7
@@ -19,10 +22,13 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Run test
+          name: Build docker images
           command: |
             touch .envs/dev.env
-            make docker-test-unit
+            make docker-build
+      - run:
+          name: Run unit tests
+          command: make docker-test-unit
   check-linting:
     docker:
       - image: circleci/python:3.7
