@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove now-unnecessary constraint on host_exact,host_pattern
 - Require host_exact to be populated for tools on start
 - Remove unused host_pattern: tools and visualisation now just use host_exact
+- The definition of host_exact so its unique (and still has an index)
 
 
 ## 2020-03-05

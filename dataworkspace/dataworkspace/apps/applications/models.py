@@ -18,7 +18,7 @@ class ApplicationTemplate(TimeStampedModel):
         unique=True,
     )
     visible = models.BooleanField(default=True, null=False)
-    host_exact = models.CharField(max_length=128, blank=True, null=False)
+    host_exact = models.CharField(max_length=128, blank=True, null=False, unique=True)
     nice_name = models.CharField(
         verbose_name='application',
         validators=[RegexValidator(regex=r'^[a-zA-Z0-9\- ]+$')],
@@ -61,7 +61,6 @@ class ApplicationTemplate(TimeStampedModel):
         indexes = [
             models.Index(fields=['application_type']),
             models.Index(fields=['name']),
-            models.Index(fields=['host_exact']),
         ]
 
     def __str__(self):
