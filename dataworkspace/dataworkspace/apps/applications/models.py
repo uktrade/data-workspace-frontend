@@ -73,7 +73,6 @@ class ApplicationTemplate(TimeStampedModel):
             models.Index(fields=['name']),
             models.Index(fields=['host_exact']),
         ]
-        unique_together = ('host_exact', 'host_pattern')
 
     def __str__(self):
         return self.nice_name
