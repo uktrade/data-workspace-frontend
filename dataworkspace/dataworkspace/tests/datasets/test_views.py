@@ -284,3 +284,31 @@ def test_request_access_success_content(client):
         'Your request has been received. It will normally be completed within 5 working days.'
         in response.content.decode(response.charset)
     )
+
+
+@pytest.mark.parametrize(
+    "source_urls, show_warning",
+    (
+        (["s3://some-bucket/some-object"], False),
+        (["s3://some-bucket/some-object", "s3://some-bucket/some-other-object"], False),
+        (["http://some.data.com/download.csv"], True),
+        (["s3://some-bucket/some-object", "http://some.data.com/download.csv"], True),
+    ),
+)
+@pytest.mark.django_db
+def test_dataset_shows_external_link_warning(source_urls, show_warning):
+    ds = factories.DataSetFactory.create(published=True)
+    user = User.objects.create()
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+
+    for source_url in source_urls:
+        factories.SourceLinkFactory.create(dataset=ds, url=source_url)
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert (
+        "This data set is hosted by an external source."
+        in response.content.decode(response.charset)
+    ) is show_warning
