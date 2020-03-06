@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Remove now-unnecessary constraint on host_exact,host_pattern
+- Require host_exact to be populated for tools on start
 
 
 ## 2020-03-05
