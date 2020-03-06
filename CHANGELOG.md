@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Clickable links in reference dataset description
 - Support more double-hyphens in hosts
 - De-generalise how hosts are converted to Docker tags for visualisations
+- De-generalise how hosts are converted to correct ApplicationTemplates for tools
 
 
 ## 2020-03-04

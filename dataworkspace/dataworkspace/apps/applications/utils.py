@@ -3,7 +3,6 @@ import hashlib
 import json
 import logging
 import urllib.parse
-import re
 
 import gevent
 import requests
@@ -29,51 +28,56 @@ from dataworkspace.cel import celery_app
 logger = logging.getLogger('app')
 
 
-def application_template_and_data_from_host(public_host):
-    # Visualisations are matched by host_exact, and tools by host_pattern. Potentially down
-    # the road the matching may need to be general, but the current use case requires a
-    # single URL per visualisation, but a group of URLs for a tool (i.e. to extract the owner ID),
-    # and this way uses database index(es) over the expected longer list of visualisations
+def is_8_char_hex(val):
+    try:
+        int(val, 16)
+    except ValueError:
+        return False
+    else:
+        return len(val) == 8
 
-    # To utilise a database index if we end up with a lot of visualisations
-    matching_visualisation = list(
-        ApplicationTemplate.objects.filter(
-            application_type='VISUALISATION', host_exact=public_host
+
+def application_template_and_user_from_host(public_host):
+    # This does make it impossible for a visualisation to have the host of
+    # the form <tool-name>-<user-id>, but I suspect is very unlikely
+
+    possible_tool_root, _, tool_root_or_user = public_host.rpartition('-')
+
+    if possible_tool_root and is_8_char_hex(tool_root_or_user):
+        tool_root = possible_tool_root
+        user = tool_root_or_user
+    else:
+        tool_root = public_host
+        user = None
+
+    matching_tools = (
+        list(
+            ApplicationTemplate.objects.filter(
+                application_type='TOOL', host_exact=tool_root
+            )
         )
-    )
-    matching_templates = matching_visualisation or ApplicationTemplate.objects.filter(
-        application_type='TOOL'
+        if user
+        else []
     )
 
-    def public_host_pattern(application_template):
-        # Historically didn't support standard named regex but used our own
-        # format, e.g. '<customfield>-<user>'. Once all usage of this format
-        # is removed from production, this function can be removed and just
-        # use application_template.host_pattern
-        if '?P<' in application_template.host_pattern:
-            return application_template.host_pattern
-
-        return (
-            '^'
-            + re.sub('<(.+?)>', '(?P<\\1>.*?)', application_template.host_pattern)
-            + '$'
+    matching_visualisations = (
+        list(
+            ApplicationTemplate.objects.filter(
+                application_type='VISUALISATION', host_exact=public_host
+            )
         )
+        if not user
+        else []
+    )
 
-    # ... and then match on pattern/extract data
-    matching = [
-        (application_template, host_data.groupdict())
-        for application_template in matching_templates
-        for host_data in [
-            re.match(public_host_pattern(application_template), public_host)
-        ]
-        if host_data
-    ]
+    matching = matching_tools + matching_visualisations
+
     if not matching:
         raise ApplicationTemplate.DoesNotExist()
     if len(matching) > 1:
         raise Exception('Too many ApplicatinTemplate matching host')
 
-    return matching[0]
+    return (matching[0], user)
 
 
 def api_application_dict(application_instance):
@@ -116,7 +120,7 @@ def get_api_visible_application_instance_by_public_host(public_host):
 
 
 def application_api_is_allowed(request, public_host):
-    application_template, host_data = application_template_and_data_from_host(
+    application_template, host_user = application_template_and_user_from_host(
         public_host
     )
 
@@ -127,7 +131,7 @@ def application_api_is_allowed(request, public_host):
     def is_tool_and_correct_user_and_allowed_to_start():
         return (
             application_template.application_type == 'TOOL'
-            and host_data['user'] == request_sso_id_hex[:8]
+            and host_user == request_sso_id_hex[:8]
             and request.user.has_perm('applications.start_all_applications')
         )
 
