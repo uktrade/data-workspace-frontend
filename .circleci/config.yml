@@ -31,6 +31,36 @@ jobs:
       - run:
           name: Run unit tests
           command: make docker-test-unit
+  docker-test-caching:
+    docker:
+      - image: circleci/python:3.7
+    resource_class: small
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build docker images
+          command: |
+            touch .envs/dev.env
+            echo -e "\n\n\n\n\nPull latest master image"
+            docker pull quay.io/uktrade/data-workspace:master
+            echo -e "\n\n\n\n\nBuild new image - hopefully with cache?"
+            docker build --cache-from=alpine:3.10,quay.io/uktrade/data-workspace:master .
+            echo -e "\n\n\n\n\nBuild via docker-compose"
+            make docker-build
+            echo -e "\n\n\n\n\nlocal filesystem"
+            ls -lisan
+            sha256sum requirements.txt
+            echo -e "\n\n\n\n\nquay image"
+            docker run -it quay.io/uktrade/data-workspace:master ls -lisan
+            docker run -it quay.io/uktrade/data-workspace:master sha256sum requirements.txt
+            echo -e "\n\n\n\n\nlocal image"
+            docker run -it data-workspace-test ls -lisan
+            docker run -it data-workspace-test sha256sum requirements.txt
+            echo -e "\n\n\n\n\nquay history"
+            docker history --no-trunc quay.io/uktrade/data-workspace:master
+            echo -e "\n\n\n\n\nlocal history"
+            docker history --no-trunc data-workspace-test
   check-linting:
     docker:
       - image: circleci/python:3.7
@@ -57,3 +87,4 @@ workflows:
       - check-linting
       - docker-test-unit
       - docker-test-integration
+      - docker-test-caching
