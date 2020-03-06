@@ -27,7 +27,7 @@ def spawn(
     name,
     user_email_address,
     user_sso_id,
-    public_host_data,
+    tag,
     application_instance_id,
     spawner_options,
     db_credentials,
@@ -35,7 +35,7 @@ def spawn(
     get_spawner(name).spawn(
         user_email_address,
         user_sso_id,
-        public_host_data,
+        tag,
         application_instance_id,
         spawner_options,
         db_credentials,
@@ -151,7 +151,7 @@ class FargateSpawner:
     def spawn(
         user_email_address,
         user_sso_id,
-        public_host_data,
+        tag,
         application_instance_id,
         spawner_options,
         db_credentials,
@@ -196,19 +196,13 @@ class FargateSpawner:
             application_instance = ApplicationInstance.objects.get(
                 id=application_instance_id
             )
-            # If CONTAINER_TAG_PATTERN is given, the data from the public_host is used to fill
-            # CONTAINER_TAG_PATTERN to work out what Docker tag should be launched
-            try:
-                tag = options['CONTAINER_TAG_PATTERN']
-            except KeyError:
-                definition_arn_with_image = definition_arn
-            else:
-                # Not robust, but the pattern is specified by config rather than user-provided
-                for key, value in public_host_data.items():
-                    tag = tag.replace(f'<{key}>', value)
-                definition_arn_with_image = _fargate_task_definition_with_tag(
-                    definition_arn, container_name, tag
-                )
+
+            # Tag is given, create a new task definition
+            definition_arn_with_image = (
+                _fargate_task_definition_with_tag(definition_arn, container_name, tag)
+                if tag
+                else definition_arn
+            )
 
             # If memory or cpu are given, create a new task definition.
             cpu = application_instance.cpu
