@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-03-06
+
+### Changed
+
+- Remove now-unnecessary constraint on host_exact,host_pattern
+
+
 ## 2020-03-05
 
 ### Changed
