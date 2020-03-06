@@ -18,17 +18,7 @@ class ApplicationTemplate(TimeStampedModel):
         unique=True,
     )
     visible = models.BooleanField(default=True, null=False)
-
-    # We expect lots of visualisations with fixed hosts, so we use a undex to ensure
-    # that lookups from hostname to application templates are fast...
     host_exact = models.CharField(max_length=128, blank=True, null=False)
-
-    # ... for these, and for tools, we then want to extract information from the hostname,
-    # for example the user-id, and use regex to extract this based on the pattern. We
-    # could use some of Postgres's regex capability, but suspect it's easier for us to
-    # understand and maintain if we just use Python's.
-    host_pattern = models.CharField(max_length=128, blank=False)
-
     nice_name = models.CharField(
         verbose_name='application',
         validators=[RegexValidator(regex=r'^[a-zA-Z0-9\- ]+$')],
