@@ -264,6 +264,10 @@ class DatasetDetailView(DetailView):
                 'has_access': self.object.user_has_access(self.request.user),
                 'data_links_with_link_toggle': data_links_with_link_toggle,
                 'fields': columns,
+                'data_hosted_externally': any(
+                    not source_link.url.startswith('s3://')
+                    for source_link in self.object.sourcelink_set.all()
+                ),
             }
         )
         return ctx
