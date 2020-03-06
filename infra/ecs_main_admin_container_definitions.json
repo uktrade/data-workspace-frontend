@@ -68,6 +68,10 @@
       "value": "jupyterlab-<user>"
     },
     {
+      "name": "APPLICATION_TEMPLATES__1__HOST_EXACT",
+      "value": "jupyterlab"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__1__NICE_NAME",
       "value": "JupyterLab"
     },
@@ -188,6 +192,10 @@
       "value": "rstudio-<user>"
     },
     {
+      "name": "APPLICATION_TEMPLATES__2__HOST_EXACT",
+      "value": "rstudio"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__2__NICE_NAME",
       "value": "RStudio"
     },
@@ -288,6 +296,10 @@
       "value": "pgadmin-<user>"
     },
     {
+      "name": "APPLICATION_TEMPLATES__3__HOST_EXACT",
+      "value": "pgadmin"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__3__NICE_NAME",
       "value": "pgAdmin"
     },
@@ -374,6 +386,10 @@
     {
       "name": "APPLICATION_TEMPLATES__5__HOST_PATTERN",
       "value": "jupyterlabpython-<user>"
+    },
+    {
+      "name": "APPLICATION_TEMPLATES__5__HOST_EXACT",
+      "value": "jupyterlabpython"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__NICE_NAME",
@@ -504,6 +520,10 @@
       "value": "jupyterlabr-<user>"
     },
     {
+      "name": "APPLICATION_TEMPLATES__6__HOST_EXACT",
+      "value": "jupyterlabr"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__6__NICE_NAME",
       "value": "JupyterLab R"
     },
@@ -632,6 +652,10 @@
   "value": "metabase-<user>"
 },
 {
+  "name": "APPLICATION_TEMPLATES__7__HOST_EXACT",
+  "value": "metabase"
+},
+{
   "name": "APPLICATION_TEMPLATES__7__NICE_NAME",
   "value": "Metabase"
 },
@@ -720,6 +744,10 @@
   "value": "pgweb-<user>"
 },
 {
+  "name": "APPLICATION_TEMPLATES__8__HOST_EXACT",
+  "value": "pgweb"
+},
+{
   "name": "APPLICATION_TEMPLATES__8__NICE_NAME",
   "value": "pgweb"
 },
@@ -806,6 +834,10 @@
 {
   "name": "APPLICATION_TEMPLATES__9__HOST_PATTERN",
   "value": "remotedesktop-<user>"
+},
+{
+  "name": "APPLICATION_TEMPLATES__9__HOST_EXACT",
+  "value": "remotedesktop"
 },
 {
   "name": "APPLICATION_TEMPLATES__9__NICE_NAME",
