@@ -31,6 +31,9 @@ RUN \
 		ca-certificates \
 		dirmngr \
 		gnupg2 \
+		lmodern \
+		texlive \
+		texlive-latex-extra \
 		ssh && \
 	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
 	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \

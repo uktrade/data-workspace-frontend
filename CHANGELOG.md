@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - A "warning" section for data links that point at externally-hosted sources.
+- The texlive package to RStudio to enable creation of PDFs
 
 ### Changed
 
