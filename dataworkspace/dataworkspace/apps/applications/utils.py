@@ -106,6 +106,8 @@ def api_application_dict(application_instance):
         'proxy_url': application_instance.proxy_url,
         'state': api_state,
         'user': sso_id_hex_short,
+        # Used by metrics to label the application
+        'name': application_instance.application_template.nice_name,
     }
 
 
