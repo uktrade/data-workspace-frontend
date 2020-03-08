@@ -87,7 +87,9 @@ jobs:
             cat docker-build.log | grep '\-\-\->' | grep -v 'Using cache' | grep -v 'Running in' | sed -e "s/[ >-]//g" | sort | uniq > layers.txt
             cat layers.txt
             echo $(cat layers.txt)
-            docker save -o caches/images.tar $(cat layers.txt)
+            sed -i.old '1s;^;docker save -o caches/images.tar ;' layers.txt
+            echo $(cat layers.txt)
+            bash -c $(cat layers.txt)
       - save_cache:
           key: v1-{{ .Branch }}-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-{{ .BuildNum }}
           paths:
