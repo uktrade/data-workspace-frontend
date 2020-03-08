@@ -108,9 +108,13 @@ jobs:
           name: Pull docker images
           command: |
             set +o pipefail
-            docker pull quay.io/samuel_williams/cache:test || true
-            docker pull quay.io/samuel_williams/cache:postgres || true
-            docker pull quay.io/samuel_williams/cache:redis || true
+            export IMAGE_TAG_SUFFIX=$(sha256sum Dockerfile | cut -c1-8)-$(sha256sum requirements.txt | cut -c1-8)-$(sha256sum requirements-dev.txt | cut -c1-8)
+            docker pull quay.io/samuel_williams/cache:test-${IMAGE_TAG_SUFFIX}                                   || docker pull quay.io/samuel_williams/cache:test                                   || true
+            docker tag quay.io/samuel_williams/cache:test-${IMAGE_TAG_SUFFIX} data-workspace-test:latest         || docker tag quay.io/samuel_williams/cache:test data-workspace-test:latest         || true
+            docker pull quay.io/samuel_williams/cache:postgres-${IMAGE_TAG_SUFFIX}                               || docker pull quay.io/samuel_williams/cache:postgres                               || true
+            docker tag quay.io/samuel_williams/cache:postgres-${IMAGE_TAG_SUFFIX} data-workspace-postgres:latest || docker tag quay.io/samuel_williams/cache:postgres data-workspace-postgres:latest || true
+            docker pull quay.io/samuel_williams/cache:redis-${IMAGE_TAG_SUFFIX}                                  || docker pull quay.io/samuel_williams/cache:redis                                  || true
+            docker tag quay.io/samuel_williams/cache:redis-${IMAGE_TAG_SUFFIX} data-workspace-redis:latest       || docker tag quay.io/samuel_williams/cache:redis data-workspace-redis:latest       || true
       - run:
           name: Build docker images
           command: |
@@ -118,12 +122,19 @@ jobs:
       - run:
           name: Push docker images
           command: |
+            export IMAGE_TAG_SUFFIX=$(sha256sum Dockerfile | cut -c1-8)-$(sha256sum requirements.txt | cut -c1-8)-$(sha256sum requirements-dev.txt | cut -c1-8)
             docker tag data-workspace-test:latest quay.io/samuel_williams/cache:test
+            docker tag data-workspace-test:latest quay.io/samuel_williams/cache:test-${IMAGE_TAG_SUFFIX}
             docker push quay.io/samuel_williams/cache:test
+            docker push quay.io/samuel_williams/cache:test-${IMAGE_TAG_SUFFIX}
             docker tag data-workspace-postgres:latest quay.io/samuel_williams/cache:postgres
+            docker tag data-workspace-postgres:latest quay.io/samuel_williams/cache:postgres-${IMAGE_TAG_SUFFIX}
             docker push quay.io/samuel_williams/cache:postgres
+            docker push quay.io/samuel_williams/cache:postgres-${IMAGE_TAG_SUFFIX}
             docker tag data-workspace-redis:latest quay.io/samuel_williams/cache:redis
+            docker tag data-workspace-redis:latest quay.io/samuel_williams/cache:redis-${IMAGE_TAG_SUFFIX}
             docker push quay.io/samuel_williams/cache:redis
+            docker push quay.io/samuel_williams/cache:redis-${IMAGE_TAG_SUFFIX}
   check-linting:
     docker:
       - image: circleci/python:3.7
