@@ -5,6 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: test
+      cache_from:
+        - quay.io/samuel_williams/cache:test
     image: data-workspace-test
     env_file:
       - ./.envs/test.env
@@ -23,6 +25,8 @@ services:
     build:
       context: postgres
       dockerfile: Dockerfile
+      cache_from:
+        - quay.io/samuel_williams/cache:postgres
     image: data-workspace-postgres
     ports:
       - "5432"
@@ -30,6 +34,8 @@ services:
     build:
       context: redis
       dockerfile: Dockerfile
+      cache_from:
+        - quay.io/samuel_williams/cache:redis
     image: data-workspace-redis
     ports:
       - "6379"

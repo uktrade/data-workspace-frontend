@@ -93,6 +93,37 @@ jobs:
           key: v1-{{ .Branch }}-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-{{ .BuildNum }}
           paths:
             - caches/
+  docker-test-remote-caching:
+    docker:
+      - image: circleci/python:3.7
+    resource_class: small
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Log into quay.io
+          command: |
+            docker login -u="${TEST_QUAY_IO_USERNAME}" -p="${TEST_QUAY_IO_PASSWORD}" quay.io
+      - run:
+          name: Pull docker images
+          command: |
+            set +o pipefail
+            docker pull quay.io/samuel_williams/cache:test || true
+            docker pull quay.io/samuel_williams/cache:postgres || true
+            docker pull quay.io/samuel_williams/cache:redis || true
+      - run:
+          name: Build docker images
+          command: |
+            make docker-build
+      - run:
+          name: Push docker images
+          command: |
+            docker tag data-workspace-test:latest quay.io/samuel_williams/cache:test
+            docker push quay.io/samuel_williams/cache:test
+            docker tag data-workspace-postgres:latest quay.io/samuel_williams/cache:postgres
+            docker push quay.io/samuel_williams/cache:postgres
+            docker tag data-workspace-redis:latest quay.io/samuel_williams/cache:redis
+            docker push quay.io/samuel_williams/cache:redis
   check-linting:
     docker:
       - image: circleci/python:3.7
@@ -116,4 +147,4 @@ workflows:
   version: 2
   build:
     jobs:
-      - docker-test-hack-caching
+      - docker-test-remote-caching
