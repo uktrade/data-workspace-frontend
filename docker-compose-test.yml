@@ -5,9 +5,6 @@ services:
       context: .
       dockerfile: Dockerfile
       target: test
-      cache_from:
-        - "alpine:3.10"
-        - "quay.io/uktrade/data-workspace:master"
     image: data-workspace-test
     env_file:
       - ./.envs/test.env

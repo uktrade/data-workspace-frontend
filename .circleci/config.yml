@@ -61,6 +61,37 @@ jobs:
             docker history --no-trunc quay.io/uktrade/data-workspace:master
             echo -e "\n\n\n\n\nlocal history"
             docker history --no-trunc data-workspace-test
+  docker-test-hack-caching:
+    docker:
+      - image: circleci/python:3.7
+    resource_class: small
+    steps:
+      - checkout
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v1-{{ .Branch }}-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt"}}
+            - v1-{{ .Branch }}
+            - v1
+      - run:
+          name: Load docker images
+          command: |
+            set +o pipefail
+            if [ -f caches/images.tar ]; then docker load < caches/images.tar; docker images; fi
+      - run:
+          name: Build docker images
+          command: |
+            set -x
+            mkdir -p caches
+            make docker-build | tee docker-build.log
+            cat docker-build.log | grep '\-\-\->' | grep -v 'Using cache' | grep -v 'Running in' | sed -e "s/[ >-]//g" | sort | uniq > layers.txt
+            cat layers.txt
+            echo $(cat layers.txt)
+            docker save -o caches/images.tar $(cat layers.txt)
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-{{ .BuildNum }}
+          paths:
+            - caches/
   check-linting:
     docker:
       - image: circleci/python:3.7
@@ -84,7 +115,4 @@ workflows:
   version: 2
   build:
     jobs:
-      - check-linting
-      - docker-test-unit
-      - docker-test-integration
-      - docker-test-caching
+      - docker-test-hack-caching
