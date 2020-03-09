@@ -98,6 +98,11 @@
             </a>
           </li>
           {% endif %}
+          <li class="govuk-header__navigation-item">
+            <a class="govuk-header__link" href="https://data-services-help.trade.gov.uk/data-workspace">
+              Help
+            </a>
+          </li>
           {% url 'about' as about_url %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == about_url %} govuk-header__navigation-item--active{% endif %}">
             <a class="govuk-header__link" href="{{ about_url }}">
@@ -159,6 +164,11 @@
                 </a>
               </li>
               {% endif %}
+              <li class="govuk-footer__inline-list-item">
+                <a class="govuk-footer__link" href="https://data-services-help.trade.gov.uk/data-workspace">
+                  Help
+                </a>
+              </li>
               <li class="govuk-footer__inline-list-item">
                 <a class="govuk-footer__link" href="{{ about_url  }}">
                   About
