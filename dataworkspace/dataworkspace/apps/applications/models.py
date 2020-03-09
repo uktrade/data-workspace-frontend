@@ -178,6 +178,8 @@ class ApplicationInstance(TimeStampedModel):
         help_text='Used internally to avoid duplicate running applications',
     )
 
+    commit_id = models.CharField(null=True, max_length=8)
+
     class Meta:
         db_table = 'app_applicationinstance'
         indexes = [

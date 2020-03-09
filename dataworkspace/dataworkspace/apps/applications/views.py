@@ -68,6 +68,7 @@ def application_spawning_html_GET(request, public_host):
 
     context = {
         'application_nice_name': application_instance.application_template.nice_name,
+        'commit_id': application_instance.commit_id,
         'loading_message': TOOL_LOADING_MESSAGES[
             random.randint(0, len(TOOL_LOADING_MESSAGES) - 1)
         ],
