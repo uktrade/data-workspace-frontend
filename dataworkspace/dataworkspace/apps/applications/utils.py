@@ -41,19 +41,19 @@ def application_template_and_user_from_host(public_host):
     # This does make it impossible for a visualisation to have the host of
     # the form <tool-name>-<user-id>, but I suspect is very unlikely
 
-    possible_tool_root, _, tool_root_or_user = public_host.rpartition('-')
+    possible_host_prefix, _, host_prefix_or_user = public_host.rpartition('-')
 
-    if possible_tool_root and is_8_char_hex(tool_root_or_user):
-        tool_root = possible_tool_root
-        user = tool_root_or_user
+    if possible_host_prefix and is_8_char_hex(host_prefix_or_user):
+        host_prefix = possible_host_prefix
+        user = host_prefix_or_user
     else:
-        tool_root = public_host
+        host_prefix = public_host
         user = None
 
     matching_tools = (
         list(
             ApplicationTemplate.objects.filter(
-                application_type='TOOL', host_exact=tool_root
+                application_type='TOOL', host_exact=host_prefix
             )
         )
         if user
@@ -63,7 +63,7 @@ def application_template_and_user_from_host(public_host):
     matching_visualisations = (
         list(
             ApplicationTemplate.objects.filter(
-                application_type='VISUALISATION', host_exact=public_host
+                application_type='VISUALISATION', host_exact=host_prefix
             )
         )
         if not user
