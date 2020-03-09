@@ -7,13 +7,15 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
     template_name = 'datasets/filter.html'
     option_template_name = "datasets/filter_option.html"
 
-    def __init__(self, group_label, *args, **kwargs):
+    def __init__(self, group_label, hint_text=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._group_label = group_label
+        self._hint_text = hint_text
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context['widget']['group_label'] = self._group_label
+        context['widget']['hint_text'] = self._hint_text
         return context
 
 
@@ -33,6 +35,12 @@ class EligibilityCriteriaForm(forms.Form):
 class DatasetSearchForm(forms.Form):
     q = forms.CharField(required=False)
 
+    access = forms.MultipleChoiceField(
+        choices=[('yes', 'You have access')],
+        required=False,
+        widget=FilterWidget("Access status"),
+    )
+
     use = forms.MultipleChoiceField(
         choices=[
             (DataSetType.DATACUT.value, 'Download'),
@@ -40,11 +48,11 @@ class DatasetSearchForm(forms.Form):
             (DataSetType.REFERENCE.value, 'Reference'),
         ],
         required=False,
-        widget=FilterWidget("Data use"),
+        widget=FilterWidget("Data use", hint_text="Select all that apply."),
     )
 
     source = forms.ModelMultipleChoiceField(
         queryset=SourceTag.objects.order_by('name').all(),
         required=False,
-        widget=FilterWidget("Data source"),
+        widget=FilterWidget("Data source", hint_text="Select all that apply."),
     )
