@@ -164,6 +164,7 @@ class FargateSpawner:
             cluster_name = options['CLUSTER_NAME']
             container_name = options['CONTAINER_NAME']
             definition_arn = options['DEFINITION_ARN']
+            ecr_repository_name = options.get('ECR_REPOSITORY_NAME')
             security_groups = options['SECURITY_GROUPS']
             subnets = options['SUBNETS']
             cmd = options['CMD'] if 'CMD' in options else []
@@ -196,6 +197,14 @@ class FargateSpawner:
             application_instance = ApplicationInstance.objects.get(
                 id=application_instance_id
             )
+
+            # Fail early if ECR doesn't have the tag
+            if (
+                ecr_repository_name
+                and tag
+                and not _ecr_tag_exists(ecr_repository_name, tag)
+            ):
+                raise Exception('Unable to find docker tag in ECR')
 
             # Tag is given, create a new task definition
             definition_arn_with_image = (
@@ -343,6 +352,18 @@ class FargateSpawner:
                 pass
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
+
+
+def _ecr_tag_exists(repositoryName, tag):
+    client = boto3.client('ecr')
+    try:
+        return bool(
+            client.describe_images(
+                repositoryName=repositoryName, imageIds=[{'imageTag': tag}]
+            )['imageDetails']
+        )
+    except client.exceptions.ImageNotFoundException:
+        return False
 
 
 def _fargate_task_definition_with_tag(task_family, container_name, tag):
