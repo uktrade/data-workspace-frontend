@@ -252,12 +252,15 @@ async def async_main():
         public_host, _, _ = downstream_request.url.host.partition(
             f'.{root_domain_no_port}'
         )
-        public_host, _, public_host_or_port_override = public_host.rpartition('--')
+        possible_public_host, _, public_host_or_port_override = public_host.rpartition(
+            '--'
+        )
         try:
             port_override = int(public_host_or_port_override)
         except ValueError:
-            public_host = public_host_or_port_override
             port_override = None
+        else:
+            public_host = possible_public_host
         host_api_url = admin_root + '/api/v1/application/' + public_host
         host_html_path = '/tools/' + public_host
 

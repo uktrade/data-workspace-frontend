@@ -77,6 +77,13 @@
                 <dd class="govuk-summary-list__value">
                     <a class="govuk-link govuk-link--no-visited-state" href="{{ gitlab_url }}{{ project.path_with_namespace }}/commit/{{ branch.commit.id }}">{{ branch.commit.title }} ({{ branch.commit.short_id }})</a>
                 </dd>
+                {% with preview_link=project_branches_preview_links|get_key:project.id|get_key:branch.name %}
+                    {% if preview_link %}
+                    <dd class="govuk-summary-list__actions">
+                        <a class="govuk-link govuk-link--no-visited-state" href="{{ preview_link }}">Preview</a>
+                    </dd>
+                    {% endif %}
+                {% endwith %}
             </div>
         {% endfor %}
         </dl>

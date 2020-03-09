@@ -18,7 +18,7 @@ from dataworkspace.apps.applications.spawner import spawn
 from dataworkspace.apps.applications.utils import (
     api_application_dict,
     application_api_is_allowed,
-    application_template_and_user_from_host,
+    application_template_tag_user_from_host,
     get_api_visible_application_instance_by_public_host,
     set_application_stopped,
 )
@@ -148,7 +148,9 @@ def application_api_PUT(request, public_host):
         )
 
     try:
-        application_template, _ = application_template_and_user_from_host(public_host)
+        application_template, tag, _ = application_template_tag_user_from_host(
+            public_host
+        )
     except ApplicationTemplate.DoesNotExist:
         return JsonResponse(
             {'message': 'Application template does not exist'}, status=400
@@ -203,8 +205,6 @@ def application_api_PUT(request, public_host):
             db_id=creds['db_id'],
             db_username=creds['db_user'],
         )
-
-    tag = None if application_template.application_type == 'TOOL' else public_host
 
     spawn.delay(
         application_template.spawner,

@@ -308,6 +308,78 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
     @async_test
+    async def test_visualisation_commit_shows_content_if_authorized(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application_1 = await create_application()
+        self.add_async_cleanup(cleanup_application_1)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await asyncio.sleep(15)
+
+        stdout, stderr, code = await create_visualisation_echo('testvisualisation')
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't have access to the application
+        async with session.request(
+            'GET', 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('You are not allowed to access this page', content)
+        self.assertEqual(response.status, 403)
+
+        stdout, stderr, code = await give_user_visualisation_perms('testvisualisation')
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET', 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn('testvisualisation is loading...', application_content_1)
+
+        await asyncio.sleep(10)
+
+        sent_headers = {'from-downstream': 'downstream-header-value'}
+        async with session.request(
+            'GET',
+            'http://testvisualisation--58d9e87e.dataworkspace.test:8000/http',
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content['method'], 'GET')
+        self.assertEqual(
+            received_content['headers']['from-downstream'], 'downstream-header-value'
+        )
+        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+
+    @async_test
     async def test_visualisation_shows_dataset_if_authorised(self):
         await flush_database()
         await flush_redis()

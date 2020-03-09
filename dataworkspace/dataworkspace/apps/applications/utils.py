@@ -37,17 +37,28 @@ def is_8_char_hex(val):
         return len(val) == 8
 
 
-def application_template_and_user_from_host(public_host):
+def application_template_tag_user_from_host(public_host):
     # This does make it impossible for a visualisation to have the host of
     # the form <tool-name>-<user-id>, but I suspect is very unlikely
 
-    possible_host_prefix, _, host_prefix_or_user = public_host.rpartition('-')
+    # The value after the rightmost '--', if it's there, is the commit id
+    possible_host_prefix, _, host_prefix_or_commit_id = public_host.rpartition('--')
+    if possible_host_prefix and is_8_char_hex(host_prefix_or_commit_id):
+        # At this time we don't use the commit id directly: it's just stripped
+        # off to find the host_prefix. This may change later when we need to
+        # trigger a build based on the commit id
+        host_prefix = possible_host_prefix
+    else:
+        host_prefix = public_host
 
+    # The value after the rightmost '-', if it's there, is the user id
+    possible_host_prefix, _, host_prefix_or_user = host_prefix.rpartition('-')
     if possible_host_prefix and is_8_char_hex(host_prefix_or_user):
         host_prefix = possible_host_prefix
         user = host_prefix_or_user
     else:
-        host_prefix = public_host
+        # Redundant, but making it explicit that host_prefix is unchanged
+        host_prefix = host_prefix
         user = None
 
     matching_tools = (
@@ -72,12 +83,16 @@ def application_template_and_user_from_host(public_host):
 
     matching = matching_tools + matching_visualisations
 
+    # Visualisations are all in the same docker repo with different tags,
+    # while tools are each in their own repo
+    tag = public_host if matching_visualisations else None
+
     if not matching:
         raise ApplicationTemplate.DoesNotExist()
     if len(matching) > 1:
         raise Exception('Too many ApplicatinTemplate matching host')
 
-    return (matching[0], user)
+    return (matching[0], tag, user)
 
 
 def api_application_dict(application_instance):
@@ -122,7 +137,7 @@ def get_api_visible_application_instance_by_public_host(public_host):
 
 
 def application_api_is_allowed(request, public_host):
-    application_template, host_user = application_template_and_user_from_host(
+    application_template, _, host_user = application_template_tag_user_from_host(
         public_host
     )
 
