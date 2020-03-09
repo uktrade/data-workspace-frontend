@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Published/Updated dates from dataset detail views
 
+### Added
+
+- Links to preview visualisations in the visualisations page (but nothing in place to build these if the tags don't exist)
+
 
 ## 2020-03-07
 
