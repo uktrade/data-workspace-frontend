@@ -151,22 +151,6 @@
 
             <dl class="govuk-summary-list">
                 <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">
-                        Published Date
-                    </dt>
-                    <dd class="govuk-summary-list__value">
-                        {{ model.created_date| date:"d/m/Y" }}
-                    </dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">
-                        Updated Date
-                    </dt>
-                    <dd class="govuk-summary-list__value">
-                        {{ model.modified_date| date:"d/m/Y" }}
-                    </dd>
-                </div>
-                <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Licence</dt>
                     <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
                 </div>
