@@ -60,6 +60,14 @@ class DataSetFactory(factory.django.DjangoModelFactory):
         model = 'datasets.DataSet'
 
 
+class DatacutDataSetFactory(DataSetFactory):
+    type = DataSet.TYPE_DATA_CUT
+
+
+class MasterDataSetFactory(DataSetFactory):
+    type = DataSet.TYPE_MASTER_DATASET
+
+
 class DataSetUserPermissionFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     dataset = factory.SubFactory(DataSetFactory)

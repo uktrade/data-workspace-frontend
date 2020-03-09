@@ -2,9 +2,12 @@ import pytest
 
 from django.urls import reverse
 
-from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.tests.common import get_response_csp_as_set
-from dataworkspace.tests import factories
+from dataworkspace.tests.factories import (
+    DatacutDataSetFactory,
+    MasterDataSetFactory,
+    ReferenceDatasetFactory,
+)
 
 
 def test_baseline_content_security_policy(client):
@@ -28,28 +31,23 @@ def test_baseline_content_security_policy(client):
 
 
 @pytest.mark.parametrize(
-    'url,unsafe_inline_script',
+    'url,factory,unsafe_inline_script',
     (
-        ('admin:datasets_referencedataset_add', True),
-        ('admin:datasets_referencedataset_change', True),
-        ('admin:datasets_masterdataset_add', True),
-        ('admin:datasets_masterdataset_change', True),
-        ('admin:datasets_datacutdataset_add', True),
-        ('admin:datasets_datacutdataset_change', True),
-        ('admin:index', False),
+        ('admin:datasets_referencedataset_add', None, True),
+        ('admin:datasets_referencedataset_change', ReferenceDatasetFactory, True),
+        ('admin:datasets_masterdataset_add', None, True),
+        ('admin:datasets_masterdataset_change', MasterDataSetFactory, True),
+        ('admin:datasets_datacutdataset_add', None, True),
+        ('admin:datasets_datacutdataset_change', DatacutDataSetFactory, True),
+        ('admin:index', None, False),
     ),
 )
 def test_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
-    staff_client, url, unsafe_inline_script
+    staff_client, url, factory, unsafe_inline_script
 ):
     args = None
-    if 'change' in url:
-        if 'reference' in url:
-            dataset = factories.ReferenceDatasetFactory.create()
-        elif 'datacut' in url:
-            dataset = factories.DataSetFactory.create()
-        else:
-            dataset = factories.DataSetFactory.create(type=DataSetType.MASTER.value)
+    if factory:
+        dataset = factory.create()
         args = (dataset.id,)
 
     # Log into admin
@@ -57,14 +55,14 @@ def test_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
 
     full_url = reverse(url, args=args)
     response = staff_client.get(full_url, follow=True)
-    script_src = get_src(response, 'script-src')
+    script_src = get_csp_section(response, 'script-src')
     assert ("'unsafe-inline'" in script_src) is unsafe_inline_script
 
-    style_src = get_src(response, 'style-src')
+    style_src = get_csp_section(response, 'style-src')
     assert "'unsafe-inline'" in style_src
 
 
-def get_src(response, policy_type):
+def get_csp_section(response, policy_type):
     return next(
         filter(
             lambda policy: policy.strip().startswith(policy_type),
