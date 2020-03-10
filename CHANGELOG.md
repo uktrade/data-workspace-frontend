@@ -6,16 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-03-09
 
-### Removed
+### Added
 
-- Published/Updated dates from dataset detail views
-
-
-## 2020-03-09
+- "Help" link to header/footer
 
 ### Changed
 
 - Master/Datacut dataset descriptions changed to rich text fields
+
+### Removed
+
+- Published/Updated dates from dataset detail views
 
 ### Added
 

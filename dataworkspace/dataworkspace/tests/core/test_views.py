@@ -1,4 +1,6 @@
 import mock
+import pytest
+from bs4 import BeautifulSoup
 
 from django.urls import reverse
 
@@ -44,3 +46,101 @@ def test_csp_on_files_endpoint_includes_s3(client):
         "connect-src dataworkspace.test:8000 https://s3.eu-west-2.amazonaws.com"
         in policies
     )
+
+
+@pytest.mark.parametrize(
+    "request_client, expected_links",
+    (
+        (
+            "client",
+            [
+                ("Data Workspace", "http://dataworkspace.test:8000/"),
+                ("Home", "http://dataworkspace.test:8000/"),
+                ("Help", "https://data-services-help.trade.gov.uk/data-workspace"),
+                ("About", "/about/"),
+            ],
+        ),
+        (
+            "staff_client",
+            [
+                ("Data Workspace", "http://dataworkspace.test:8000/"),
+                ("Home", "http://dataworkspace.test:8000/"),
+                ("Tools", "/tools/"),
+                ("Help", "https://data-services-help.trade.gov.uk/data-workspace"),
+                ("About", "/about/"),
+            ],
+        ),
+    ),
+    indirect=["request_client"],
+)
+def test_header_links(request_client, expected_links):
+    response = request_client.get(reverse("root"))
+
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    header_links = soup.find("header").find_all("a")
+
+    link_labels = [
+        (link.get_text(strip=True), link.get('href')) for link in header_links
+    ]
+
+    assert link_labels == expected_links
+
+
+@pytest.mark.parametrize(
+    "request_client, expected_links",
+    (
+        (
+            "client",
+            [
+                ('Home', 'http://dataworkspace.test:8000/'),
+                ('Help', 'https://data-services-help.trade.gov.uk/data-workspace'),
+                ('About', '/about/'),
+                (
+                    'Privacy Policy',
+                    'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
+                ),
+                (
+                    'Open Government Licence v3.0',
+                    'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
+                ),
+                (
+                    '© Crown copyright',
+                    'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/',
+                ),
+            ],
+        ),
+        (
+            "staff_client",
+            [
+                ('Home', 'http://dataworkspace.test:8000/'),
+                ("Tools", "/tools/"),
+                ('Help', 'https://data-services-help.trade.gov.uk/data-workspace'),
+                ('About', '/about/'),
+                (
+                    'Privacy Policy',
+                    'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
+                ),
+                (
+                    'Open Government Licence v3.0',
+                    'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
+                ),
+                (
+                    '© Crown copyright',
+                    'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/',
+                ),
+            ],
+        ),
+    ),
+    indirect=["request_client"],
+)
+def test_footer_links(request_client, expected_links):
+    response = request_client.get(reverse("root"))
+
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    footer_links = soup.find("footer").find_all("a")
+
+    link_labels = [
+        (link.get_text(strip=True), link.get('href')) for link in footer_links
+    ]
+
+    assert link_labels == expected_links
