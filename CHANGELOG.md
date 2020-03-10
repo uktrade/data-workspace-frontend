@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-03-09
+
+### Changed
+
+- Master/Datacut dataset descriptions changed to rich text fields
+
+
 ## 2020-03-07
 
 ### Changed

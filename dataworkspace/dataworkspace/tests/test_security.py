@@ -1,7 +1,13 @@
+import pytest
+
 from django.urls import reverse
 
 from dataworkspace.tests.common import get_response_csp_as_set
-from dataworkspace.tests import factories
+from dataworkspace.tests.factories import (
+    DatacutDataSetFactory,
+    MasterDataSetFactory,
+    ReferenceDatasetFactory,
+)
 
 
 def test_baseline_content_security_policy(client):
@@ -24,24 +30,42 @@ def test_baseline_content_security_policy(client):
     assert policies == expected_policies
 
 
-def test_edit_reference_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
-    staff_client,
+@pytest.mark.parametrize(
+    'url,factory,unsafe_inline_script',
+    (
+        ('admin:datasets_referencedataset_add', None, True),
+        ('admin:datasets_referencedataset_change', ReferenceDatasetFactory, True),
+        ('admin:datasets_masterdataset_add', None, True),
+        ('admin:datasets_masterdataset_change', MasterDataSetFactory, True),
+        ('admin:datasets_datacutdataset_add', None, True),
+        ('admin:datasets_datacutdataset_change', DatacutDataSetFactory, True),
+        ('admin:index', None, False),
+    ),
+)
+def test_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
+    staff_client, url, factory, unsafe_inline_script
 ):
-    dataset = factories.ReferenceDatasetFactory.create()
+    args = None
+    if factory:
+        dataset = factory.create()
+        args = (dataset.id,)
 
     # Log into admin
     staff_client.get(reverse("admin:index"), follow=True)
 
-    urls = [
-        reverse("admin:datasets_referencedataset_add"),
-        reverse('admin:datasets_referencedataset_change', args=(dataset.id,)),
-    ]
-    for url in urls:
-        response = staff_client.get(url, follow=True)
-        script_src = next(
-            filter(
-                lambda policy: policy.strip().startswith('script-src'),
-                response.get('content-security-policy').split(';'),
-            )
+    full_url = reverse(url, args=args)
+    response = staff_client.get(full_url, follow=True)
+    script_src = get_csp_section(response, 'script-src')
+    assert ("'unsafe-inline'" in script_src) is unsafe_inline_script
+
+    style_src = get_csp_section(response, 'style-src')
+    assert "'unsafe-inline'" in style_src
+
+
+def get_csp_section(response, policy_type):
+    return next(
+        filter(
+            lambda policy: policy.strip().startswith(policy_type),
+            response.get('content-security-policy').split(';'),
         )
-        assert "'unsafe-inline'" in script_src
+    )

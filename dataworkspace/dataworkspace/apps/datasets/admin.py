@@ -39,6 +39,21 @@ from dataworkspace.apps.dw_admin.forms import (
 logger = logging.getLogger('app')
 
 
+class CSPRichTextEditorMixin:
+
+    # We allow inline scripts to run on this page in order to support CKEditor,
+    # which gives rich-text formatting but unfortunately uses inline scripts to
+    # do so - and we don't have a clean way to either hash the inline script on-demand
+    # or inject our request CSP nonce.
+    @csp_update(SCRIPT_SRC="'unsafe-inline'")
+    def add_view(self, request, form_url='', extra_context=None):
+        return super().add_view(request, form_url, extra_context)
+
+    @csp_update(SCRIPT_SRC="'unsafe-inline'")
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        return super().change_view(request, object_id, form_url, extra_context)
+
+
 class DataLinkAdmin(admin.ModelAdmin):
     list_display = ('name', 'format', 'url', 'dataset')
 
@@ -274,7 +289,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
 
 @admin.register(MasterDataset)
-class MasterDatasetAdmin(BaseDatasetAdmin):
+class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = MasterDatasetForm
     inlines = [SourceTableInline]
     manage_unpublished_permission_codename = (
@@ -283,7 +298,7 @@ class MasterDatasetAdmin(BaseDatasetAdmin):
 
 
 @admin.register(DataCutDataset)
-class DataCutDatasetAdmin(BaseDatasetAdmin):
+class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = DataCutDatasetForm
     inlines = [SourceLinkInline, SourceViewInline, CustomDatasetQueryInline]
     manage_unpublished_permission_codename = (
@@ -338,7 +353,7 @@ class ReferenceDataFieldInline(
 
 
 @admin.register(ReferenceDataset)
-class ReferenceDatasetAdmin(PermissionedDatasetAdmin):
+class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
     form = ReferenceDatasetForm
     change_form_template = 'admin/reference_dataset_changeform.html'
     prepopulated_fields = {'slug': ('name',)}
@@ -410,18 +425,6 @@ class ReferenceDatasetAdmin(PermissionedDatasetAdmin):
                 f.instance.created_by = request.user
             f.instance.updated_by = request.user
         super().save_formset(request, form, formset, change)
-
-    # We allow inline scripts to run on this page in order to support CKEditor,
-    # which gives rich-text formatting but unfortunately uses inline scripts to
-    # do so - and we don't have a clean way to either hash the inline script on-demand
-    # or inject our request CSP nonce.
-    @csp_update(SCRIPT_SRC="'unsafe-inline'")
-    def add_view(self, request, form_url='', extra_context=None):
-        return super().add_view(request, form_url, extra_context)
-
-    @csp_update(SCRIPT_SRC="'unsafe-inline'")
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        return super().change_view(request, object_id, form_url, extra_context)
 
 
 @admin.register(CustomDatasetQuery)
