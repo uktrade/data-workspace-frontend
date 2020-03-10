@@ -56,7 +56,10 @@ def test_csp_on_files_endpoint_includes_s3(client):
             [
                 ("Data Workspace", "http://dataworkspace.test:8000/"),
                 ("Home", "http://dataworkspace.test:8000/"),
-                ("Help", "https://data-services-help.trade.gov.uk/data-workspace"),
+                (
+                    "Help centre",
+                    "https://data-services-help.trade.gov.uk/data-workspace",
+                ),
                 ("About", "/about/"),
             ],
         ),
@@ -66,7 +69,10 @@ def test_csp_on_files_endpoint_includes_s3(client):
                 ("Data Workspace", "http://dataworkspace.test:8000/"),
                 ("Home", "http://dataworkspace.test:8000/"),
                 ("Tools", "/tools/"),
-                ("Help", "https://data-services-help.trade.gov.uk/data-workspace"),
+                (
+                    "Help centre",
+                    "https://data-services-help.trade.gov.uk/data-workspace",
+                ),
                 ("About", "/about/"),
             ],
         ),
@@ -93,7 +99,10 @@ def test_header_links(request_client, expected_links):
             "client",
             [
                 ('Home', 'http://dataworkspace.test:8000/'),
-                ('Help', 'https://data-services-help.trade.gov.uk/data-workspace'),
+                (
+                    'Help centre',
+                    'https://data-services-help.trade.gov.uk/data-workspace',
+                ),
                 ('About', '/about/'),
                 (
                     'Privacy Policy',
@@ -114,7 +123,10 @@ def test_header_links(request_client, expected_links):
             [
                 ('Home', 'http://dataworkspace.test:8000/'),
                 ("Tools", "/tools/"),
-                ('Help', 'https://data-services-help.trade.gov.uk/data-workspace'),
+                (
+                    'Help centre',
+                    'https://data-services-help.trade.gov.uk/data-workspace',
+                ),
                 ('About', '/about/'),
                 (
                     'Privacy Policy',
