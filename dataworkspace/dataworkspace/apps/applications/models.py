@@ -65,6 +65,11 @@ class ApplicationTemplate(TimeStampedModel):
         ),
         default='REQUIRES_AUTHENTICATION',
     )
+    gitlab_project_id = models.IntegerField(
+        null=True,
+        unique=True,
+        help_text='The ID of the corresponding project in GitLab',
+    )
 
     class Meta:
         db_table = 'app_applicationtemplate'

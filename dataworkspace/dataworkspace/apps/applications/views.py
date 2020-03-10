@@ -212,6 +212,25 @@ def visualisations_html_GET(request):
         for project in projects
     }
 
+    application_templates = {
+        application_template.gitlab_project_id: application_template
+        for application_template in ApplicationTemplate.objects.filter(
+            gitlab_project_id__in=[project['id'] for project in projects]
+        )
+    }
+    project_branches_preview_links = {
+        project_id: {
+            branch[
+                'name'
+            ]: f'{request.scheme}://{application_templates[project_id].host_exact}--'
+            + f'{branch["commit"]["short_id"]}.{settings.APPLICATION_ROOT_DOMAIN}/'
+            if project_id in application_templates
+            else None
+            for branch in project_branches
+        }
+        for project_id, project_branches in project_branches.items()
+    }
+
     # It looks like the only way to check the current user's access level is
     # to fetch all the users who have access to the project
     developer_access_level = 30
@@ -234,6 +253,7 @@ def visualisations_html_GET(request):
             'has_gitlab_user': has_gitlab_user,
             'projects': projects,
             'project_branches': project_branches,
+            'project_branches_preview_links': project_branches_preview_links,
             'is_project_developer': is_project_developer,
         },
         status=200,
