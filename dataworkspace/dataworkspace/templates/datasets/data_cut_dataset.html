@@ -34,9 +34,9 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">{{ model.name }}</h1>
-            <div class="govuk-body">
-                {{ model.description | safe }}
-            </div>
+            <p class="govuk-body">
+                {{ model.description | linebreaksbr }}
+            </p>
         </div>
     </div>
 

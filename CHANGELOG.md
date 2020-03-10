@@ -4,14 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-03-10
+
+### Removed
+
+- Rich text formatting from datacuts and master datasets due to formatting issues (newlines are lost).
+
+
 ## 2020-03-09
 
 ### Removed
 
 - Published/Updated dates from dataset detail views
-
-
-## 2020-03-09
 
 ### Changed
 

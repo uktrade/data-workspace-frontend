@@ -120,7 +120,7 @@ class DataSet(DeletableTimestampedUserModel):
     slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
     short_description = models.CharField(blank=False, null=False, max_length=256)
     grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
-    description = RichTextField(null=False, blank=False)
+    description = models.TextField(null=False, blank=False)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
