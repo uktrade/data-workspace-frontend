@@ -1,5 +1,6 @@
 from django.urls import reverse
 
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.tests.common import get_response_csp_as_set
 from dataworkspace.tests import factories
 
