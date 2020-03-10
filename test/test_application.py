@@ -359,7 +359,8 @@ class TestApplication(unittest.TestCase):
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('testvisualisation is loading...', application_content_1)
+        self.assertIn('testvisualisation [58d9e87e]', application_content_1)
+        self.assertIn('is loading...', application_content_1)
 
         await asyncio.sleep(10)
 

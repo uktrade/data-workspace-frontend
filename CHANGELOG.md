@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Links to preview visualisations in the visualisations page (but nothing in place to build these if the tags don't exist)
+- The commit ID when starting an app via a specific commit ID
 
 
 ## 2020-03-07

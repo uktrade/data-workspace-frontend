@@ -18,7 +18,7 @@ from dataworkspace.apps.applications.spawner import spawn
 from dataworkspace.apps.applications.utils import (
     api_application_dict,
     application_api_is_allowed,
-    application_template_tag_user_from_host,
+    application_template_tag_user_commit_from_host,
     get_api_visible_application_instance_by_public_host,
     set_application_stopped,
 )
@@ -148,7 +148,7 @@ def application_api_PUT(request, public_host):
         )
 
     try:
-        application_template, tag, _ = application_template_tag_user_from_host(
+        application_template, tag, _, commit_id = application_template_tag_user_commit_from_host(
             public_host
         )
     except ApplicationTemplate.DoesNotExist:
@@ -195,6 +195,7 @@ def application_api_PUT(request, public_host):
         single_running_or_spawning_integrity=public_host,
         cpu=cpu,
         memory=memory,
+        commit_id=commit_id,
     )
 
     # The database users are stored so when the database users are cleaned up,

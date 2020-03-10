@@ -65,7 +65,7 @@
 {% block inner_content %}
   <div class="govuk-panel govuk-panel--confirmation govuk-!-padding-8 govuk-!-margin-bottom-6">
     <h1 class="govuk-panel__title govuk-!-font-size-47 govuk-!-padding-bottom-3">
-      {{ application_nice_name }} is loading...
+      {{ application_nice_name }} {% if commit_id %}[{{ commit_id }}]<br />{% endif %}is loading...
     </h1>
     <div class="govuk-!-margin-bottom-7 loading-spinner"></div>
     <h2 class="govuk-panel__body govuk-!-font-size-36 govuk-!-margin-bottom-1">
