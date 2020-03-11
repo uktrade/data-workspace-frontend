@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - "Help" link to header/footer
+- A dataset filter for uses to only see datasets they have access to
 
 ### Changed
 

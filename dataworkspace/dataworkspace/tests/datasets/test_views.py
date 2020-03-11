@@ -208,6 +208,43 @@ def test_find_datasets_filters_by_source(client):
     ]
 
 
+@pytest.mark.django_db
+def test_find_datasets_filters_by_access():
+    user = factories.UserFactory.create()
+    client = Client(**get_http_sso_data(user))
+
+    master = factories.DataSetFactory.create(
+        published=True, type=DataSetType.MASTER.value, name='Master'
+    )
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=master)
+    factories.DataSetFactory.create(
+        published=True, type=DataSetType.DATACUT.value, name='Datacut'
+    )
+    reference = factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"access": "yes"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': reference.uuid,
+            'name': reference.name,
+            'slug': reference.slug,
+            'search_rank': mock.ANY,
+            'short_description': reference.short_description,
+        },
+        {
+            'id': master.id,
+            'name': master.name,
+            'slug': master.slug,
+            'search_rank': mock.ANY,
+            'short_description': master.short_description,
+        },
+    ]
+
+
 @pytest.mark.parametrize(
     'permissions, result_dataset_names',
     (

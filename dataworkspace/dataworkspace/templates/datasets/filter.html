@@ -4,9 +4,11 @@
       <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
         <h2 class="govuk-fieldset__heading">{{ widget.group_label }}</h2>
       </legend>
+      {% if widget.hint_text %}
       <span id="waste-hint" class="govuk-hint">
-        Select all that apply.
+        {{ widget.hint_text }}
       </span>
+      {% endif %}
       <div class="govuk-checkboxes">
       {% for group, options, index in widget.optgroups %}
         {% for option in options %}

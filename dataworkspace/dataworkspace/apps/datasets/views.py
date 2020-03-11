@@ -66,6 +66,7 @@ from dataworkspace.zendesk import create_zendesk_ticket
 def filter_datasets(
     datasets: Union[ReferenceDataset, DataSet],
     query,
+    access,
     source,
     use=None,
     user=None,
@@ -108,6 +109,9 @@ def filter_datasets(
         search=search, search_rank=SearchRank(search, search_query)
     )
 
+    if access and datasets.model is not ReferenceDataset:
+        datasets = datasets.filter(datasetuserpermission__isnull=False)
+
     if query:
         datasets = datasets.filter(search=query)
 
@@ -126,19 +130,25 @@ def find_datasets(request):
 
     if form.is_valid():
         query = form.cleaned_data.get("q")
+        access = form.cleaned_data.get("access")
         use = form.cleaned_data.get("use")
         source = form.cleaned_data.get("source")
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
     datasets = filter_datasets(
-        DataSet.objects.live(), query, source, use, user=request.user, form=form
+        DataSet.objects.live(), query, access, source, use, user=request.user, form=form
     )
 
     # Include reference datasets if required
     if not use or str(DataSetType.REFERENCE.value) in use:
         reference_datasets = filter_datasets(
-            ReferenceDataset.objects.live(), query, source, user=request.user, form=form
+            ReferenceDataset.objects.live(),
+            query,
+            access,
+            source,
+            user=request.user,
+            form=form,
         )
         datasets = datasets.values(
             'id', 'name', 'slug', 'short_description', 'search_rank'
