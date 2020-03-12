@@ -456,6 +456,10 @@ resource "aws_ebs_volume" "gitlab" {
   size              = 256
   encrypted         = true
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
     Name = "${var.prefix}-gitlab"
   }
