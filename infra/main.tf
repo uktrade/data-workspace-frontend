@@ -98,10 +98,14 @@ variable gitlab_domain {}
 variable gitlab_bucket {}
 variable gitlab_container_image {}
 variable gitlab_db_instance_class {}
+variable gitlab_runner_visualisations_deployment_project_token {}
 
 variable gitlab_sso_id {}
 variable gitlab_sso_secret {}
 variable gitlab_sso_domain {}
+
+variable gitlab_key {}
+variable gitlab_runner_key {}
 
 locals {
   registry_container_name    = "jupyterhub-registry"

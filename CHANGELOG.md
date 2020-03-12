@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The lifecycle policy on the GitLab EBS volume to prevent accidental destruction
 
+### Added
+
+- A GitLab runner to run visualisation builds
+
 
 ## 2020-03-09
 
