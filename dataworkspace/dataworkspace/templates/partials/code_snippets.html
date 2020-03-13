@@ -1,0 +1,54 @@
+{% load core_tags %}
+{% load static %}
+
+{% if perms.applications.start_all_applications or perms.applications.access_appstream %}
+  {% if code_snippets %}
+  <link rel="stylesheet" href="{% get_static_prefix %}assets/vendor/highlight/styles/a11y-light.css">
+
+  <h2 class="govuk-heading-l govuk-!-margin-top-8">Code snippets</h2>
+  <div class="govuk-tabs" data-module="govuk-tabs">
+    <h2 class="govuk-tabs__title">Contents</h2>
+    <ul class="govuk-tabs__list">
+      <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
+        <a class="govuk-tabs__tab" href="#code-snippet-python">Python</a>
+      </li>
+      <li class="govuk-tabs__list-item">
+        <a class="govuk-tabs__tab" href="#code-snippet-r">R</a>
+      </li>
+      <li class="govuk-tabs__list-item">
+        <a class="govuk-tabs__tab" href="#code-snippet-sql">SQL</a>
+      </li>
+    </ul>
+    <div class="govuk-tabs__panel" id="code-snippet-python">
+      <h2 class="govuk-heading-l">Python</h2>
+      <div class="app-example__code">
+        <pre data-module="app-copy">
+          <code class="hljs python">{{ code_snippets.python }}</code>
+        </pre>
+      </div>
+    </div>
+
+    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-r">
+      <h2 class="govuk-heading-l">R</h2>
+      <div class="app-example__code">
+        <pre data-module="app-copy">
+          <code class="hljs r">{{ code_snippets.r }}</code>
+        </pre>
+      </div>
+    </div>
+
+    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-sql">
+      <h2 class="govuk-heading-l">SQL</h2>
+      <div class="app-example__code">
+        <pre data-module="app-copy">
+          <code class="hljs psql">{{ code_snippets.sql }}</code>
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="{% get_static_prefix %}app-copy.js"></script>
+  <script src="{% get_static_prefix %}assets/vendor/highlight/highlight.pack.js"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+  {% endif %}
+{% endif %}

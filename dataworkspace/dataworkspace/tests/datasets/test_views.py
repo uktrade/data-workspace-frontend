@@ -385,3 +385,34 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
         "This data set is hosted by an external source."
         in response.content.decode(response.charset)
     ) is show_warning
+
+
+@pytest.mark.django_db
+def test_dataset_shows_code_snippets_to_tool_user():
+    ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
+    user = User.objects.create(is_superuser=False)
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+    factories.SourceTableFactory.create(
+        dataset=ds, schema="public", table="MY_LOVELY_TABLE"
+    )
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert (
+        """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
+        not in response.content.decode(response.charset)
+    )
+
+    user.is_superuser = True
+    user.save()
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert (
+        """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
+        in response.content.decode(response.charset)
+    )

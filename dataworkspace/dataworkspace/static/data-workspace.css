@@ -1,3 +1,6 @@
+@import 'app-tabs.css';
+@import 'app-copy.css';
+
 .govuk-panel--confirmation--left {
   text-align:left;
 }

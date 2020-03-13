@@ -1,0 +1,19 @@
+pre {
+  position: relative;
+  max-width: inherit;
+  margin-bottom: 0;
+  padding: 0;
+  border: 0;
+  outline: 1px solid transparent;
+  background-color: #f3f2f1;
+  font-size: inherit;
+}
+
+pre code {
+  display: block;
+  padding: 20px;
+  overflow-x: auto;
+  background-color: #f3f2f1 !important;
+  margin-bottom: -1em;
+  font-size: 19px;
+}

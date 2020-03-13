@@ -1,7 +1,12 @@
+import pytest
+
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import DataSet
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
+    get_code_snippets,
 )
+from dataworkspace.tests.factories import DataSetFactory, SourceTableFactory
 
 
 def test_dataset_type_to_manage_unpublished_permission_codename():
@@ -19,3 +24,17 @@ def test_dataset_type_to_manage_unpublished_permission_codename():
         )
         == 'datasets.manage_unpublished_master_datasets'
     )
+
+
+@pytest.mark.django_db
+def test_get_code_snippets():
+    ds = DataSetFactory.create(type=DataSetType.MASTER.value)
+
+    assert get_code_snippets(ds) == {}
+
+    SourceTableFactory.create(dataset=ds, schema="public", table="MY_LOVELY_TABLE")
+
+    snippets = get_code_snippets(ds)
+    assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['python']
+    assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['r']
+    assert snippets['sql'] == """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50"""
