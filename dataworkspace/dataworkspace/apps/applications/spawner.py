@@ -13,6 +13,13 @@ import gevent
 
 from dataworkspace.cel import celery_app
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.gitlab import (
+    ECR_PROJECT_ID,
+    SUCCESS_PIPELINE_STATUSES,
+    RUNNING_PIPELINE_STATUSES,
+    gitlab_api_v4,
+    gitlab_api_v4_ecr_pipeline_trigger,
+)
 from dataworkspace.apps.core.utils import create_s3_role
 
 logger = logging.getLogger('app')
@@ -198,13 +205,45 @@ class FargateSpawner:
                 id=application_instance_id
             )
 
-            # Fail early if ECR doesn't have the tag
+            # Build tag if we can and it doesn't already exist
             if (
                 ecr_repository_name
                 and tag
+                and application_instance.commit_id
+                and application_instance.application_template.gitlab_project_id
                 and not _ecr_tag_exists(ecr_repository_name, tag)
             ):
-                raise Exception('Unable to find docker tag in ECR')
+                pipeline = gitlab_api_v4_ecr_pipeline_trigger(
+                    ECR_PROJECT_ID,
+                    application_instance.application_template.gitlab_project_id,
+                    application_instance.commit_id,
+                    ecr_repository_name,
+                    tag,
+                )
+                if 'id' not in pipeline:
+                    raise Exception('Unable to start pipeline: {}'.format(pipeline))
+                pipeline_id = pipeline['id']
+
+                for _ in range(0, 60 * 5):
+                    gevent.sleep(3)
+                    pipeline = gitlab_api_v4(
+                        'GET', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}'
+                    )
+                    logger.info('Fetched pipeline %s', pipeline)
+                    if (
+                        pipeline['status'] not in RUNNING_PIPELINE_STATUSES
+                        and pipeline['status'] not in SUCCESS_PIPELINE_STATUSES
+                    ):
+                        raise Exception('Pipeline failed {}'.format(pipeline))
+                    if pipeline['status'] in SUCCESS_PIPELINE_STATUSES:
+                        break
+                else:
+                    logger.error('Pipeline took too long, cancelling: %s', pipeline)
+                    gitlab_api_v4(
+                        'POST',
+                        f'/projects/{ECR_PROJECT_ID}/pipeline/{pipeline_id}/cancel',
+                    )
+                    raise Exception('Pipeline {} took too long'.format(pipeline))
 
             # Tag is given, create a new task definition
             definition_arn_with_image = (

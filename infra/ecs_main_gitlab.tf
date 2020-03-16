@@ -523,10 +523,17 @@ resource "aws_launch_configuration" "gitlab_runner" {
   #
   set -e
   yum update -y
+  yum install -y git jq unzip
+
+  curl "https://s3.eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/aws-cli/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  ./aws/install
+
   curl -L --output /usr/local/bin/gitlab-runner https://s3.eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/gitlab-runner/gitlab-runner-linux-amd64
   chmod +x /usr/local/bin/gitlab-runner
   ln -s /usr/local/bin/gitlab-runner /usr/bin/gitlab-runner
   useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
+  usermod -aG docker gitlab-runner
 
   mkdir -p /etc/gitlab-runner
   echo "concurrent = 10" >> /etc/gitlab-runner/config.toml
