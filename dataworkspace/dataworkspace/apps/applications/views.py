@@ -1,7 +1,6 @@
 import hashlib
 import random
 
-import requests
 from csp.decorators import csp_exempt
 from django.conf import settings
 from django.contrib import messages
@@ -11,6 +10,7 @@ from django.shortcuts import redirect, render
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
 )
+from dataworkspace.apps.applications.gitlab import gitlab_api_v4
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
@@ -150,14 +150,6 @@ def tools_html_POST(request):
     return redirect(redirect_target)
 
 
-def gitlab_api_v4(path, params=()):
-    return requests.get(
-        f'{settings.GITLAB_URL}api/v4/{path}',
-        params=params,
-        headers={'PRIVATE-TOKEN': settings.GITLAB_TOKEN},
-    ).json()
-
-
 def visualisations_html_view(request):
     if not request.user.has_perm('applications.develop_visualisations'):
         return HttpResponseForbidden()
@@ -170,6 +162,7 @@ def visualisations_html_view(request):
 
 def visualisations_html_GET(request):
     users = gitlab_api_v4(
+        'GET',
         f'/users',
         params=(
             ('extern_uid', request.user.profile.sso_id),
@@ -189,6 +182,7 @@ def visualisations_html_GET(request):
         params = (('visibility', 'internal'),)
 
     projects = gitlab_api_v4(
+        'GET',
         f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
         params=(('archived', 'false'),) + params,
     )
@@ -206,7 +200,7 @@ def visualisations_html_GET(request):
 
     project_branches = {
         project['id']: sorted(
-            gitlab_api_v4(f'/projects/{project["id"]}/repository/branches'),
+            gitlab_api_v4('GET', f'/projects/{project["id"]}/repository/branches'),
             key=branch_sort_key(project),
             reverse=True,
         )
@@ -241,7 +235,9 @@ def visualisations_html_GET(request):
         in (
             project_user['id'] == users[0]['id']
             and project_user['access_level'] >= developer_access_level
-            for project_user in gitlab_api_v4(f'/projects/{project["id"]}/members/all')
+            for project_user in gitlab_api_v4(
+                'GET', f'/projects/{project["id"]}/members/all'
+            )
         )
         for project in projects
     }
