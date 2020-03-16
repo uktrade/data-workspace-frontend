@@ -522,20 +522,20 @@ resource "aws_launch_configuration" "gitlab_runner" {
   #!/bin/bash
   #
   set -e
-  sudo yum update -y
-  sudo curl -L --output /usr/local/bin/gitlab-runner https://s3.eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/gitlab-runner/gitlab-runner-linux-amd64
-  sudo chmod +x /usr/local/bin/gitlab-runner
-  sudo ln -s /usr/local/bin/gitlab-runner /usr/bin/gitlab-runner
-  sudo useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
+  yum update -y
+  curl -L --output /usr/local/bin/gitlab-runner https://s3.eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/gitlab-runner/gitlab-runner-linux-amd64
+  chmod +x /usr/local/bin/gitlab-runner
+  ln -s /usr/local/bin/gitlab-runner /usr/bin/gitlab-runner
+  useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
 
-  sudo mkdir -p /etc/gitlab-runner
-  sudo echo "concurrent = 10" >> /etc/gitlab-runner/config.toml
-  sudo echo "check_interval = 1" >> /etc/gitlab-runner/config.toml
+  mkdir -p /etc/gitlab-runner
+  echo "concurrent = 10" >> /etc/gitlab-runner/config.toml
+  echo "check_interval = 1" >> /etc/gitlab-runner/config.toml
 
-  sudo gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
-  sudo gitlab-runner start
+  gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
+  gitlab-runner start
   # Connects via HTTP, but uses private ip, not public internet
-  sudo gitlab-runner register \
+  gitlab-runner register \
     --non-interactive \
     --url "http://${var.gitlab_domain}/" \
     --registration-token "${var.gitlab_runner_visualisations_deployment_project_token}" \
