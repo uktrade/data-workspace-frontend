@@ -165,31 +165,31 @@ APPLICATION_ROOT_DOMAIN = env['APPLICATION_ROOT_DOMAIN']
 # CSP Headers
 CSP_DEFAULT_SRC = [APPLICATION_ROOT_DOMAIN]
 CSP_OBJECT_SRC = ["'none'"]
-CSP_UPGRADE_INSECURE_REQUESTS = False if DEBUG else True
+CSP_UPGRADE_INSECURE_REQUESTS = not DEBUG
 CSP_BASE_URI = [APPLICATION_ROOT_DOMAIN]
-CSP_FONT_SRC = [APPLICATION_ROOT_DOMAIN, "data:", "https://fonts.gstatic.com"]
-CSP_FORM_ACTION = [APPLICATION_ROOT_DOMAIN, f"*.{APPLICATION_ROOT_DOMAIN}"]
+CSP_FONT_SRC = [APPLICATION_ROOT_DOMAIN, 'data:', 'https://fonts.gstatic.com']
+CSP_FORM_ACTION = [APPLICATION_ROOT_DOMAIN, f'*.{APPLICATION_ROOT_DOMAIN}']
 CSP_FRAME_ANCESTORS = [APPLICATION_ROOT_DOMAIN]
 CSP_IMG_SRC = [
     APPLICATION_ROOT_DOMAIN,
-    "data:",
-    "https://www.googletagmanager.com",
-    "https://www.googletagmanager.com",
-    "https://www.google-analytics.com",
-    "https://ssl.gstatic.com",
-    "https://www.gstatic.com",
+    'data:',
+    'https://www.googletagmanager.com',
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
+    'https://ssl.gstatic.com',
+    'https://www.gstatic.com',
 ]
 CSP_SCRIPT_SRC = [
     APPLICATION_ROOT_DOMAIN,
-    "https://www.googletagmanager.com",
-    "https://www.google-analytics.com",
-    "https://tagmanager.google.com",
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
+    'https://tagmanager.google.com',
 ]
 CSP_STYLE_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "'unsafe-inline'",
-    "https://tagmanager.google.com",
-    "https://fonts.googleapis.com",
+    'https://tagmanager.google.com',
+    'https://fonts.googleapis.com',
 ]
 CSP_INCLUDE_NONCE_IN = ['script-src']
 
@@ -322,4 +322,4 @@ STATIC_ROOT = '/home/django/static/'
 STATIC_URL = '/__django_static/'
 
 
-CKEDITOR_BASEPATH = STATIC_URL + "ckeditor/ckeditor/"
+CKEDITOR_BASEPATH = STATIC_URL + 'ckeditor/ckeditor/'
