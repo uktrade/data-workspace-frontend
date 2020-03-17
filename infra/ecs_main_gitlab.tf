@@ -509,6 +509,7 @@ resource "aws_launch_configuration" "gitlab_runner" {
   # types of infrastructure
   image_id        = "ami-0749bd3fac17dc2cc"
   instance_type   = "t3a.medium"
+  iam_instance_profile = "${aws_iam_instance_profile.gitlab_runner.name}"
   security_groups = ["${aws_security_group.gitlab_runner.id}"]
   key_name        = "${var.gitlab_runner_key}"
 
@@ -552,4 +553,82 @@ resource "aws_launch_configuration" "gitlab_runner" {
     --run-untagged="true" \
     --locked="true"
   EOF
+}
+
+resource "aws_iam_instance_profile" "gitlab_runner" {
+  name = "${var.prefix}-gitlab-runner"
+  role = "${aws_iam_role.gitlab_runner.name}"
+}
+
+resource "aws_iam_role" "gitlab_runner" {
+  name = "${var.prefix}-gitlab-runner"
+  path = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.gitlab_runner_assume_role.json}"
+}
+
+data "aws_iam_policy_document" "gitlab_runner_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "gitlab_runner" {
+  name   = "${var.prefix}-gitlab-runner"
+  policy = "${data.aws_iam_policy_document.gitlab_runner.json}"
+}
+
+data "aws_iam_policy_document" "gitlab_runner" {
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+
+  # Read only for the base images
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.visualisation_base.arn}",
+      "${aws_ecr_repository.visualisation_base_r.arn}",
+    ]
+  }
+
+  # All for user-provided
+  statement {
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:GetRepositoryPolicy",
+      "ecr:DescribeRepositories",
+      "ecr:ListImages",
+      "ecr:DescribeImages",
+      "ecr:BatchGetImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage",
+    ]
+    resources = [
+      "${aws_ecr_repository.user_provided.arn}",
+    ]
+  }
+}
+
+resource "aws_iam_policy_attachment" "gitlab_runner" {
+  name       = "${var.prefix}-gitlab-runner"
+  roles      = ["${aws_iam_role.gitlab_runner.name}"]
+  policy_arn = "${aws_iam_policy.gitlab_runner.arn}"
 }

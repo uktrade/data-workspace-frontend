@@ -588,6 +588,18 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_admin-service" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_gitlab_runner" {
+  description = "ingress-https-from-gitlab-runner"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.gitlab_runner.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "cloudwatch_ingress_https_from_all" {
   description = "ingress-https-from-everywhere"
 
@@ -1038,6 +1050,18 @@ resource "aws_security_group" "gitlab_runner" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_security_group_rule" "gitlab_runner_egress_https_to_ecr_api" {
+  description = "egress-https-to-ecr-api"
+
+  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  source_security_group_id = "${aws_security_group.ecr_api.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
 }
 
 resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dnsmasq" {
