@@ -313,6 +313,18 @@ resource "aws_security_group" "admin_service" {
   }
 }
 
+resource "aws_security_group_rule" "gitlab_service_egress_https_to_ecr_api" {
+  description = "egress-https-to-ecr-api"
+
+  security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id = "${aws_security_group.ecr_api.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "admin_service_egress_https_to_cloudwatch" {
   description = "egress-https-to-cloudwatch"
 
@@ -548,6 +560,32 @@ resource "aws_security_group" "ecr_dkr" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_security_group" "ecr_api" {
+  name        = "${var.prefix}-ecr-api"
+  description = "${var.prefix}-ecr-api"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "${var.prefix}-ecr-api"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_admin-service" {
+  description = "ingress-https-from-admin-service"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
 }
 
 resource "aws_security_group_rule" "cloudwatch_ingress_https_from_all" {
