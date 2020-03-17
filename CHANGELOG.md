@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-03-17
+
+### Changed
+
+- Use VPC endpoint for ECR API access (needed for upcoming changes to access the API from the GitLab runner, which does not have internet access)
+
+
 ## 2020-03-14
 
 ### Added
