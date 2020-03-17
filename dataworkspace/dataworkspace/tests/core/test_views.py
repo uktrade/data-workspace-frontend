@@ -56,11 +56,11 @@ def test_csp_on_files_endpoint_includes_s3(client):
             [
                 ("Data Workspace", "http://dataworkspace.test:8000/"),
                 ("Home", "http://dataworkspace.test:8000/"),
+                ("About", "/about/"),
                 (
                     "Help centre",
                     "https://data-services-help.trade.gov.uk/data-workspace",
                 ),
-                ("About", "/about/"),
             ],
         ),
         (
@@ -69,11 +69,11 @@ def test_csp_on_files_endpoint_includes_s3(client):
                 ("Data Workspace", "http://dataworkspace.test:8000/"),
                 ("Home", "http://dataworkspace.test:8000/"),
                 ("Tools", "/tools/"),
+                ("About", "/about/"),
                 (
                     "Help centre",
                     "https://data-services-help.trade.gov.uk/data-workspace",
                 ),
-                ("About", "/about/"),
             ],
         ),
     ),
@@ -99,11 +99,11 @@ def test_header_links(request_client, expected_links):
             "client",
             [
                 ('Home', 'http://dataworkspace.test:8000/'),
+                ('About', '/about/'),
                 (
                     'Help centre',
                     'https://data-services-help.trade.gov.uk/data-workspace',
                 ),
-                ('About', '/about/'),
                 (
                     'Privacy Policy',
                     'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
@@ -123,11 +123,11 @@ def test_header_links(request_client, expected_links):
             [
                 ('Home', 'http://dataworkspace.test:8000/'),
                 ("Tools", "/tools/"),
+                ('About', '/about/'),
                 (
                     'Help centre',
                     'https://data-services-help.trade.gov.uk/data-workspace',
                 ),
-                ('About', '/about/'),
                 (
                     'Privacy Policy',
                     'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
