@@ -226,9 +226,7 @@ class FargateSpawner:
 
                 for _ in range(0, 60 * 5):
                     gevent.sleep(3)
-                    pipeline = gitlab_api_v4(
-                        'GET', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}'
-                    )
+                    pipeline = _gitlab_ecr_pipeline_get(pipeline_id)
                     logger.info('Fetched pipeline %s', pipeline)
                     if (
                         pipeline['status'] not in RUNNING_PIPELINE_STATUSES
@@ -239,10 +237,7 @@ class FargateSpawner:
                         break
                 else:
                     logger.error('Pipeline took too long, cancelling: %s', pipeline)
-                    gitlab_api_v4(
-                        'POST',
-                        f'/projects/{ECR_PROJECT_ID}/pipeline/{pipeline_id}/cancel',
-                    )
+                    _gitlab_ecr_pipeline_cancel(pipeline_id)
                     raise Exception('Pipeline {} took too long'.format(pipeline))
 
             # Tag is given, create a new task definition
@@ -391,6 +386,16 @@ class FargateSpawner:
                 pass
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
+
+
+def _gitlab_ecr_pipeline_cancel(pipeline_id):
+    return gitlab_api_v4(
+        'POST', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}/cancel'
+    )
+
+
+def _gitlab_ecr_pipeline_get(pipeline_id):
+    return gitlab_api_v4('GET', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}')
 
 
 def _ecr_tag_exists(repositoryName, tag):
