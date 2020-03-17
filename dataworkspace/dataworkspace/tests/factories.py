@@ -16,6 +16,7 @@ class UserProfileFactory(factory.django.DjangoModelFactory):
 
 class UserFactory(factory.django.DjangoModelFactory):
     username = factory.LazyAttribute(lambda _: f'test.user+{uuid.uuid4()}@example.com')
+    email = factory.LazyAttribute(lambda o: o.username)
     password = '12345'
 
     class Meta:

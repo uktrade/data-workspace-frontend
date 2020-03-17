@@ -210,18 +210,47 @@ def test_find_datasets_filters_by_source(client):
 
 @pytest.mark.django_db
 def test_find_datasets_filters_by_access():
-    user = factories.UserFactory.create()
+    user = factories.UserFactory.create(is_superuser=False)
+    user2 = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
 
-    master = factories.DataSetFactory.create(
-        published=True, type=DataSetType.MASTER.value, name='Master'
+    public_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER.value,
+        name='Master - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
     )
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=master)
+    access_granted_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER.value,
+        name='Master - access granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.DataSetUserPermissionFactory.create(
+        user=user, dataset=access_granted_master
+    )
+    factories.DataSetUserPermissionFactory.create(
+        user=user2, dataset=access_granted_master
+    )
     factories.DataSetFactory.create(
-        published=True, type=DataSetType.DATACUT.value, name='Datacut'
+        published=True,
+        type=DataSetType.MASTER.value,
+        name='Master - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
     )
-    reference = factories.ReferenceDatasetFactory.create(
-        published=True, name='A new reference dataset'
+
+    access_not_granted_datacut = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT.value,
+        name='Datacut - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.DataSetUserPermissionFactory.create(
+        user=user2, dataset=access_not_granted_datacut
+    )
+
+    public_reference = factories.ReferenceDatasetFactory.create(
+        published=True, name='Reference - public'
     )
 
     response = client.get(reverse('datasets:find_datasets'), {"access": "yes"})
@@ -229,18 +258,25 @@ def test_find_datasets_filters_by_access():
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         {
-            'id': reference.uuid,
-            'name': reference.name,
-            'slug': reference.slug,
+            'id': access_granted_master.id,
+            'name': access_granted_master.name,
+            'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
-            'short_description': reference.short_description,
+            'short_description': access_granted_master.short_description,
         },
         {
-            'id': master.id,
-            'name': master.name,
-            'slug': master.slug,
+            'id': public_master.id,
+            'name': public_master.name,
+            'slug': public_master.slug,
             'search_rank': mock.ANY,
-            'short_description': master.short_description,
+            'short_description': public_master.short_description,
+        },
+        {
+            'id': public_reference.uuid,
+            'name': public_reference.name,
+            'slug': public_reference.slug,
+            'search_rank': mock.ANY,
+            'short_description': public_reference.short_description,
         },
     ]
 
