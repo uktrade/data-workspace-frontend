@@ -165,6 +165,7 @@ class FargateSpawner:
     ):
 
         try:
+            pipeline_id = None
             task_arn = None
             options = json.loads(spawner_options)
 
@@ -316,9 +317,16 @@ class FargateSpawner:
 
             raise Exception('Spawner timed out before finding ip address')
         except Exception:
-            logger.exception('FARGATE %s %s', application_instance_id, spawner_options)
+            logger.exception(
+                'Spawning %s %s %s',
+                pipeline_id,
+                application_instance_id,
+                spawner_options,
+            )
             if task_arn:
                 _fargate_task_stop(cluster_name, task_arn)
+            if pipeline_id:
+                _gitlab_ecr_pipeline_cancel(pipeline_id)
 
     @staticmethod
     def state(spawner_options, created_date, spawner_application_id, proxy_url):
