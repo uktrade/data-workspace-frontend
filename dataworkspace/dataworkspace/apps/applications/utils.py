@@ -136,9 +136,12 @@ def get_api_visible_application_instance_by_public_host(public_host):
 
 
 def application_api_is_allowed(request, public_host):
-    application_template, _, host_user, _ = application_template_tag_user_commit_from_host(
-        public_host
-    )
+    (
+        application_template,
+        _,
+        host_user,
+        _,
+    ) = application_template_tag_user_commit_from_host(public_host)
 
     request_sso_id_hex = hashlib.sha256(
         str(request.user.profile.sso_id).encode('utf-8')
