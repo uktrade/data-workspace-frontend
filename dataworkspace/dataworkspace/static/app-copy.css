@@ -1,0 +1,48 @@
+/*
+Lifted from GOV.UK Design System
+
+https://github.com/alphagov/govuk-design-system/blob/019a80390f344b8470b29bd8411813daf4425964/src/stylesheets/main.scss
+ */
+
+.app-copy-button {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-weight: 400;
+    font-size: 14px;
+    font-size: .875rem;
+    position: absolute;
+    z-index: 1;
+    top: 10px;
+    right: 10px;
+    min-width: 110px;
+    padding: 3px 10px;
+    border: 1px solid #00823b;
+    color: #00823b;
+    background-color: #fff;
+    -webkit-box-shadow: 0 2px 0 0 #00703c;
+    box-shadow: 0 2px 0 0 #00703c;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.app-copy-button:focus:not(:hover) {
+    color: #0b0c0c;
+    background-color: #fd0;
+    -webkit-box-shadow: 0 2px 0 0 #0b0c0c;
+    box-shadow: 0 2px 0 0 #0b0c0c
+}
+
+.app-copy-button:active,.app-copy-button:focus {
+    padding: 2px 10px;
+    border: 2px solid #fd0;
+    outline: 2px solid transparent;
+    -webkit-box-shadow: none;
+    box-shadow: none
+}
+
+.app-copy-button:active {
+    margin-top: 2px;
+    -webkit-box-shadow: none;
+    box-shadow: none
+}

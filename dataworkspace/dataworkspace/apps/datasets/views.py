@@ -57,6 +57,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
+    get_code_snippets,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -281,6 +282,7 @@ class DatasetDetailView(DetailView):
                     not source_link.url.startswith('s3://')
                     for source_link in self.object.sourcelink_set.all()
                 ),
+                'code_snippets': get_code_snippets(self.object),
             }
         )
         return ctx
