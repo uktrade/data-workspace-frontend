@@ -148,9 +148,12 @@ def application_api_PUT(request, public_host):
         )
 
     try:
-        application_template, tag, _, commit_id = application_template_tag_user_commit_from_host(
-            public_host
-        )
+        (
+            application_template,
+            tag,
+            _,
+            commit_id,
+        ) = application_template_tag_user_commit_from_host(public_host)
     except ApplicationTemplate.DoesNotExist:
         return JsonResponse(
             {'message': 'Application template does not exist'}, status=400

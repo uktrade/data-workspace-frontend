@@ -111,8 +111,14 @@ def filter_datasets(
     )
 
     if user and access and datasets.model is not ReferenceDataset:
-        access_filter = Q(user_access_type='REQUIRES_AUTHENTICATION') | Q(
-            datasetuserpermission__user=user
+        access_filter = (
+            Q(user_access_type='REQUIRES_AUTHENTICATION')
+            & (
+                Q(datasetuserpermission__user=user)
+                | Q(datasetuserpermission__isnull=True)
+            )
+        ) | Q(
+            user_access_type='REQUIRES_AUTHORIZATION', datasetuserpermission__user=user
         )
         datasets = datasets.filter(access_filter)
 
@@ -142,7 +148,7 @@ def find_datasets(request):
 
     datasets = filter_datasets(
         DataSet.objects.live(), query, access, source, use, user=request.user, form=form
-    )
+    ).values('id', 'name', 'slug', 'short_description', 'search_rank')
 
     # Include reference datasets if required
     if not use or str(DataSetType.REFERENCE.value) in use:
@@ -154,9 +160,7 @@ def find_datasets(request):
             user=request.user,
             form=form,
         )
-        datasets = datasets.values(
-            'id', 'name', 'slug', 'short_description', 'search_rank'
-        ).union(
+        datasets = datasets.union(
             reference_datasets.values(
                 'uuid', 'name', 'slug', 'short_description', 'search_rank'
             )

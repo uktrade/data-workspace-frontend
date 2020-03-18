@@ -281,6 +281,45 @@ def test_find_datasets_filters_by_access():
     ]
 
 
+@pytest.mark.django_db
+def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once():
+    """Meant to prevent a regression where the combination of these two filters would return datasets multiple times
+    based on the number of users with permissions to see that dataset, but the dataset didn't actually require any
+    permission to use."""
+    user = factories.UserFactory.create(is_superuser=False)
+    user2 = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    access_granted_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER.value,
+        name='Master - access redundantly granted',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.DataSetUserPermissionFactory.create(
+        user=user, dataset=access_granted_master
+    )
+    factories.DataSetUserPermissionFactory.create(
+        user=user2, dataset=access_granted_master
+    )
+
+    response = client.get(
+        reverse('datasets:find_datasets'),
+        {"access": "yes", "use": str(DataSetType.MASTER.value)},
+    )
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': access_granted_master.id,
+            'name': access_granted_master.name,
+            'slug': access_granted_master.slug,
+            'search_rank': mock.ANY,
+            'short_description': access_granted_master.short_description,
+        }
+    ]
+
+
 @pytest.mark.parametrize(
     'permissions, result_dataset_names',
     (
