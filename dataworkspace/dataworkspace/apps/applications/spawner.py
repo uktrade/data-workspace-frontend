@@ -225,7 +225,7 @@ class FargateSpawner:
                     raise Exception('Unable to start pipeline: {}'.format(pipeline))
                 pipeline_id = pipeline['id']
 
-                for _ in range(0, 60 * 5):
+                for _ in range(0, 300):
                     gevent.sleep(3)
                     pipeline = _gitlab_ecr_pipeline_get(pipeline_id)
                     logger.info('Fetched pipeline %s', pipeline)
