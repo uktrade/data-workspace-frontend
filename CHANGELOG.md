@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Code snippets to master datasets for users who have access to tools, for getting quickly started working with the data.
 
+### Changed
+
+- Fixed links to branches and commits in visualisations page
+
 ## 2020-03-17
 
 ### Changed
