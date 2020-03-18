@@ -4,9 +4,9 @@
     {{ field.label }}
   </label>
   {% if field.help_text %}
-    <span class="govuk-hint">
+    <div class="govuk-hint">
       {{ field.help_text }}
-    </span>
+    </div>
   {% endif %}
   {% for error in field.errors %}
     <span class="govuk-error-message">
