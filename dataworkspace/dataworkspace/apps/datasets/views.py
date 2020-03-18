@@ -109,8 +109,11 @@ def filter_datasets(
         search=search, search_rank=SearchRank(search, search_query)
     )
 
-    if access and datasets.model is not ReferenceDataset:
-        datasets = datasets.filter(datasetuserpermission__isnull=False)
+    if user and access and datasets.model is not ReferenceDataset:
+        access_filter = Q(user_access_type='REQUIRES_AUTHENTICATION') | Q(
+            datasetuserpermission__user=user
+        )
+        datasets = datasets.filter(access_filter)
 
     if query:
         datasets = datasets.filter(search=query)
