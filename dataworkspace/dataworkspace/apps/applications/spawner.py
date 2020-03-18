@@ -96,8 +96,8 @@ class ProcessSpawner:
 
     @staticmethod
     def state(_, created_date, spawner_application_id, proxy_url):
-        ten_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-10)
-        twenty_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-20)
+        ten_seconds_ago = datetime.datetime.now() - datetime.timedelta(seconds=10)
+        twenty_seconds_ago = datetime.datetime.now() - datetime.timedelta(seconds=20)
         spawner_application_id_parsed = json.loads(spawner_application_id)
 
         # We have 10 seconds for the spawner to create the ID. In this case,
@@ -335,8 +335,8 @@ class FargateSpawner:
         spawner_application_id_parsed = json.loads(spawner_application_id)
         cluster_name = spawner_options['CLUSTER_NAME']
 
-        three_minutes_ago = datetime.datetime.now() + datetime.timedelta(seconds=-180)
-        twenty_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-20)
+        three_minutes_ago = datetime.datetime.now() - datetime.timedelta(seconds=180)
+        twenty_seconds_ago = datetime.datetime.now() - datetime.timedelta(seconds=20)
 
         # We can't just depend on connectivity to the proxy url, since another
         # task may now be using is IP address. We must query the ECS API
