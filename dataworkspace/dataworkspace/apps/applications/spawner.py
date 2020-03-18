@@ -335,7 +335,7 @@ class FargateSpawner:
         spawner_application_id_parsed = json.loads(spawner_application_id)
         cluster_name = spawner_options['CLUSTER_NAME']
 
-        three_minutes_ago = datetime.datetime.now() - datetime.timedelta(seconds=180)
+        three_minutes_ago = datetime.datetime.now() - datetime.timedelta(minutes=3)
         twenty_seconds_ago = datetime.datetime.now() - datetime.timedelta(seconds=20)
 
         # We can't just depend on connectivity to the proxy url, since another
