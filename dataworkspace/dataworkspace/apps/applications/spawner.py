@@ -96,8 +96,8 @@ class ProcessSpawner:
 
     @staticmethod
     def state(_, created_date, spawner_application_id, proxy_url):
-        ten_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-10)
-        twenty_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-20)
+        ten_seconds_ago = datetime.datetime.now() - datetime.timedelta(seconds=10)
+        twenty_seconds_ago = datetime.datetime.now() - datetime.timedelta(seconds=20)
         spawner_application_id_parsed = json.loads(spawner_application_id)
 
         # We have 10 seconds for the spawner to create the ID. In this case,
@@ -165,6 +165,7 @@ class FargateSpawner:
     ):
 
         try:
+            pipeline_id = None
             task_arn = None
             options = json.loads(spawner_options)
 
@@ -223,12 +224,16 @@ class FargateSpawner:
                 if 'id' not in pipeline:
                     raise Exception('Unable to start pipeline: {}'.format(pipeline))
                 pipeline_id = pipeline['id']
+                application_instance.spawner_application_instance_id = json.dumps(
+                    {'pipeline_id': pipeline_id, 'task_arn': None}
+                )
+                application_instance.save(
+                    update_fields=['spawner_application_instance_id']
+                )
 
-                for _ in range(0, 60 * 5):
+                for _ in range(0, 300):
                     gevent.sleep(3)
-                    pipeline = gitlab_api_v4(
-                        'GET', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}'
-                    )
+                    pipeline = _gitlab_ecr_pipeline_get(pipeline_id)
                     logger.info('Fetched pipeline %s', pipeline)
                     if (
                         pipeline['status'] not in RUNNING_PIPELINE_STATUSES
@@ -239,10 +244,7 @@ class FargateSpawner:
                         break
                 else:
                     logger.error('Pipeline took too long, cancelling: %s', pipeline)
-                    gitlab_api_v4(
-                        'POST',
-                        f'/projects/{ECR_PROJECT_ID}/pipeline/{pipeline_id}/cancel',
-                    )
+                    _gitlab_ecr_pipeline_cancel(pipeline_id)
                     raise Exception('Pipeline {} took too long'.format(pipeline))
 
             # Tag is given, create a new task definition
@@ -293,7 +295,7 @@ class FargateSpawner:
             )
             task_arn = task['taskArn']
             application_instance.spawner_application_instance_id = json.dumps(
-                {'task_arn': task_arn}
+                {'pipeline_id': pipeline_id, 'task_arn': task_arn}
             )
             application_instance.spawner_created_at = task['createdAt']
             application_instance.spawner_cpu = task['cpu']
@@ -321,48 +323,80 @@ class FargateSpawner:
 
             raise Exception('Spawner timed out before finding ip address')
         except Exception:
-            logger.exception('FARGATE %s %s', application_instance_id, spawner_options)
+            logger.exception(
+                'Spawning %s %s %s',
+                pipeline_id,
+                application_instance_id,
+                spawner_options,
+            )
             if task_arn:
                 _fargate_task_stop(cluster_name, task_arn)
+            if pipeline_id:
+                _gitlab_ecr_pipeline_cancel(pipeline_id)
 
     @staticmethod
     def state(spawner_options, created_date, spawner_application_id, proxy_url):
-        logger.info(spawner_options)
-        spawner_options = json.loads(spawner_options)
-        spawner_application_id_parsed = json.loads(spawner_application_id)
-        cluster_name = spawner_options['CLUSTER_NAME']
-
-        three_minutes_ago = datetime.datetime.now() + datetime.timedelta(seconds=-180)
-        twenty_seconds_ago = datetime.datetime.now() + datetime.timedelta(seconds=-20)
-
-        # We can't just depend on connectivity to the proxy url, since another
-        # task may now be using is IP address. We must query the ECS API
-        def get_task_status():
-            task_arn = spawner_application_id_parsed['task_arn']
-            # Newly created tasks may not yet report a status, or may report
-            # status inconsistently due to eventual consistency
-            status = _fargate_task_status(cluster_name, task_arn)
-            return (
-                'RUNNING'
-                if status is None and three_minutes_ago < created_date
-                else 'STOPPED'
-                if status is None
-                else status
-            )
-
         try:
-            return (
-                'RUNNING'
-                if not spawner_application_id_parsed
-                and twenty_seconds_ago < created_date
-                else 'STOPPED'
-                if not spawner_application_id_parsed
-                else 'RUNNING'
-                if not proxy_url and three_minutes_ago < created_date
-                else 'STOPPED'
-                if not proxy_url
-                else get_task_status()
-            )
+            logger.info(spawner_options)
+            spawner_options = json.loads(spawner_options)
+            spawner_application_id_parsed = json.loads(spawner_application_id)
+            cluster_name = spawner_options['CLUSTER_NAME']
+
+            now = datetime.datetime.now()
+            fifteen_minutes_ago = now - datetime.timedelta(minutes=15)
+            three_minutes_ago = now - datetime.timedelta(minutes=3)
+            twenty_seconds_ago = now - datetime.timedelta(seconds=20)
+
+            task_arn = spawner_application_id_parsed.get('task_arn')
+            pipeline_id = spawner_application_id_parsed.get('pipeline_id')
+
+            # Give twenty seconds for something to start...
+            if not pipeline_id and not task_arn and created_date > twenty_seconds_ago:
+                return 'RUNNING'
+            if not pipeline_id and not task_arn:
+                return 'STOPPED'
+
+            # ... if started pipeline, but not yet the task, give 15 minutes to complete...
+            if pipeline_id and not task_arn:
+                pipeline = _gitlab_ecr_pipeline_get(pipeline_id)
+                pipeline_status = pipeline['status']
+                if (
+                    pipeline_status in RUNNING_PIPELINE_STATUSES
+                    and created_date > fifteen_minutes_ago
+                ):
+                    return 'RUNNING'
+                if pipeline_status not in SUCCESS_PIPELINE_STATUSES:
+                    return 'STOPPED'
+
+            # ... find when the task _should_ have been created
+            if pipeline_id:
+                task_should_be_created = datetime.datetime.strptime(
+                    _gitlab_ecr_pipeline_get(pipeline_id)['finished_at'],
+                    '%Y-%m-%dT%H:%M:%S.%fZ',
+                )
+            else:
+                task_should_be_created = created_date
+
+            # ... give twenty seconds to create the task...
+            if not task_arn:
+                if task_should_be_created > twenty_seconds_ago:
+                    return 'RUNNING'
+                return 'STOPPED'
+
+            # .... give three minutes to get the task itself (to mitigate eventual consistency)...
+            task = _fargate_task_describe(cluster_name, task_arn)
+            if task is None and task_should_be_created > three_minutes_ago:
+                return 'RUNNING'
+            if task is None:
+                return 'STOPPED'
+
+            # ... and the spawner is running if the task is running or starting...
+            if task['lastStatus'] in ('PROVISIONING', 'PENDING', 'RUNNING'):
+                return 'RUNNING'
+
+            # ... and the spawner is stopped not if it's not
+            return 'STOPPED'
+
         except Exception:
             logger.exception('FARGATE %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
@@ -391,6 +425,16 @@ class FargateSpawner:
                 pass
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
+
+
+def _gitlab_ecr_pipeline_cancel(pipeline_id):
+    return gitlab_api_v4(
+        'POST', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}/cancel'
+    )
+
+
+def _gitlab_ecr_pipeline_get(pipeline_id):
+    return gitlab_api_v4('GET', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}')
 
 
 def _ecr_tag_exists(repositoryName, tag):
@@ -492,22 +536,6 @@ def _fargate_task_ip(cluster_name, arn):
     ip_address = ip_address_attachements[0] if ip_address_attachements else ''
 
     return ip_address
-
-
-def _fargate_task_status(cluster_name, arn):
-    described_task = _fargate_task_describe(cluster_name, arn)
-    logger.info('Described task %s %s %s', cluster_name, arn, described_task)
-
-    # Simplify the status. We just care if it's running or will be running
-    # Creation of task is eventually consistent, so we don't have a good way
-    # of differentiating between a task just created, or long destroyed
-    return (
-        None
-        if not described_task
-        else 'RUNNING'
-        if described_task['lastStatus'] in ('PROVISIONING', 'PENDING', 'RUNNING')
-        else 'STOPPED'
-    )
 
 
 def _fargate_task_describe(cluster_name, arn):

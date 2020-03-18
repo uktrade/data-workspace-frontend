@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Use VPC endpoint for ECR API access (needed for upcoming changes to access the API from the GitLab runner, which does not have internet access)
+- When determining the spawner status, take GitLab pipeline status and time into account, otherwise the spawner is marked as stopped because it takes too long for the task to be created
 
 
 ## 2020-03-14
