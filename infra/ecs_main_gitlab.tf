@@ -224,7 +224,7 @@ resource "aws_lb" "gitlab" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id     = "${aws_subnet.public.*.id[0]}"
+    subnet_id     = "${aws_subnet.public_whitelisted_ingress.*.id[0]}"
     allocation_id = "${aws_eip.gitlab.id}"
   }
 }

@@ -167,6 +167,100 @@ resource "aws_subnet" "private_with_egress" {
   }
 }
 
+resource "aws_subnet" "public_whitelisted_ingress" {
+  count      = "${length(var.aws_availability_zones)}"
+  vpc_id     = "${aws_vpc.main.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, var.subnets_num_bits, length(var.aws_availability_zones) * 2 + count.index)}"
+
+  availability_zone = "${var.aws_availability_zones[count.index]}"
+
+  tags {
+    Name = "${var.prefix}-public-whitelisted-ingress-${var.aws_availability_zones_short[count.index]}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_route_table_association" "public_whitelisted_ingress" {
+  count          = "${length(var.aws_availability_zones)}"
+  subnet_id      = "${aws_subnet.public_whitelisted_ingress.*.id[count.index]}"
+  route_table_id = "${aws_route_table.public.id}"
+}
+
+resource "aws_network_acl" "public_whitelisted_ingress" {
+  vpc_id     = "${aws_vpc.main.id}"
+  subnet_ids = ["${aws_subnet.public_whitelisted_ingress.*.id}"]
+
+  tags {
+    Name = "${var.prefix}-public-whitelisted-ingress"
+  }
+}
+
+resource "aws_network_acl_rule" "public_whitelisted_ingress_ingress_https" {
+  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
+
+  count       = "${length(var.gitlab_ip_whitelist)}"
+  egress      = false
+  protocol    = "tcp"
+  rule_number = "${count.index + 1}"
+  rule_action = "allow"
+  cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
+  from_port   = 443
+  to_port     = 443
+}
+
+resource "aws_network_acl_rule" "public_whitelisted_ingress_ingress_ssh" {
+  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
+
+  count       = "${length(var.gitlab_ip_whitelist)}"
+  egress      = false
+  protocol    = "tcp"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 2 + count.index + 1}"
+  rule_action = "allow"
+  cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
+  from_port   = 22
+  to_port     = 22
+}
+
+resource "aws_network_acl_rule" "public_whitelisted_ingress_egress_ephemeral" {
+  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
+
+  count       = "${length(var.gitlab_ip_whitelist)}"
+  egress      = true
+  protocol    = "tcp"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 3 + count.index + 1}"
+  rule_action = "allow"
+  cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
+  from_port   = 1024
+  to_port     = 65535
+}
+
+# Allow everything through to rest of VPC
+resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_ingress" {
+  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
+
+  egress      = false
+  protocol    = "tcp"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + count.index + 1}"
+  rule_action = "allow"
+  cidr_block  = "${aws_vpc.main.cidr_block}"
+  from_port   = 0
+  to_port     = 65535
+}
+resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_egress" {
+  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
+
+  egress      = true
+  protocol    = "tcp"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + count.index + 2}"
+  rule_action = "allow"
+  cidr_block  = "${aws_vpc.main.cidr_block}"
+  from_port   = 0
+  to_port     = 65535
+}
+
 resource "aws_subnet" "private_without_egress" {
   count      = "${length(var.aws_availability_zones)}"
   vpc_id     = "${aws_vpc.notebooks.id}"

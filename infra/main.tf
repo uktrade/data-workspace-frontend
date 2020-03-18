@@ -94,6 +94,9 @@ variable s3sync_container_image {}
 variable google_analytics_site_id {}
 variable google_data_studio_connector_pattern {}
 
+variable gitlab_ip_whitelist {
+  type = "list"
+}
 variable gitlab_domain {}
 variable gitlab_bucket {}
 variable gitlab_container_image {}

@@ -313,6 +313,18 @@ resource "aws_security_group" "admin_service" {
   }
 }
 
+resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_service" {
+  description = "egress-http-to-gitlab-service"
+
+  security_group_id = "${aws_security_group.admin_service.id}"
+  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+
+  type        = "egress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "gitlab_service_egress_https_to_ecr_api" {
   description = "egress-https-to-ecr-api"
 
@@ -869,6 +881,18 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_nlb" {
 
   security_group_id = "${aws_security_group.gitlab_service.id}"
   cidr_blocks = ["${aws_eip.gitlab.private_ip}/32"]
+
+  type        = "ingress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "gitlab_service_ingress_http_from_admin_service" {
+  description = "ingress-http-from-admin-service"
+
+  security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id =  "${aws_security_group.admin_service.id}"
 
   type        = "ingress"
   from_port   = "80"
