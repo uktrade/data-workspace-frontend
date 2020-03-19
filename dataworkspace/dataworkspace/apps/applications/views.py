@@ -1,5 +1,6 @@
 import hashlib
 import random
+from urllib.parse import urlsplit
 
 from csp.decorators import csp_exempt
 from django.conf import settings
@@ -181,6 +182,22 @@ def visualisations_html_GET(request):
     else:
         params = (('visibility', 'internal'),)
 
+    # Only used for the message that is displayed if the user has no GitLab user
+    # We can't use settings.GITLAB_URL since that uses the private domain that
+    # is not resolvable on the public internet
+    if not has_gitlab_user:
+        gitlab_url = (
+            urlsplit(
+                gitlab_api_v4('GET', f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}')[
+                    'web_url'
+                ]
+            )
+            ._replace(path='/', query='', fragment='')
+            .geturl()
+        )
+    else:
+        gitlab_url = ''
+
     projects = gitlab_api_v4(
         'GET',
         f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
@@ -246,7 +263,7 @@ def visualisations_html_GET(request):
         request,
         'visualisations.html',
         {
-            'gitlab_url': settings.GITLAB_URL,
+            'gitlab_url': gitlab_url,
             'has_gitlab_user': has_gitlab_user,
             'projects': projects,
             'project_branches': project_branches,
