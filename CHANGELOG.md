@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-03-19
+
+### Changed
+
+- Fix the link to GitLab shown on the visualisations page if the user has not yet visited GitLab
+
 ## 2020-03-18
 
 ### Added
