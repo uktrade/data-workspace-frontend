@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Fix the link to GitLab shown on the visualisations page if the user has not yet visited GitLab
+- Ensure to get RStudio packages from our mirror, not the main Debian repo, to see if this fixes packages not installing
 
 ## 2020-03-18
 
