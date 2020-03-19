@@ -57,6 +57,7 @@ def test_csp_on_files_endpoint_includes_s3(client):
                 ("Data Workspace", "http://dataworkspace.test:8000/"),
                 ("Home", "http://dataworkspace.test:8000/"),
                 ("About", "/about/"),
+                ("Support and feedback", "/support-and-feedback/"),
                 (
                     "Help centre",
                     "https://data-services-help.trade.gov.uk/data-workspace",
@@ -70,6 +71,7 @@ def test_csp_on_files_endpoint_includes_s3(client):
                 ("Home", "http://dataworkspace.test:8000/"),
                 ("Tools", "/tools/"),
                 ("About", "/about/"),
+                ("Support and feedback", "/support-and-feedback/"),
                 (
                     "Help centre",
                     "https://data-services-help.trade.gov.uk/data-workspace",
@@ -100,6 +102,7 @@ def test_header_links(request_client, expected_links):
             [
                 ('Home', 'http://dataworkspace.test:8000/'),
                 ('About', '/about/'),
+                ("Support and feedback", "/support-and-feedback/"),
                 (
                     'Help centre',
                     'https://data-services-help.trade.gov.uk/data-workspace',
@@ -124,6 +127,7 @@ def test_header_links(request_client, expected_links):
                 ('Home', 'http://dataworkspace.test:8000/'),
                 ("Tools", "/tools/"),
                 ('About', '/about/'),
+                ("Support and feedback", "/support-and-feedback/"),
                 (
                     'Help centre',
                     'https://data-services-help.trade.gov.uk/data-workspace',

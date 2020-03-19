@@ -6,7 +6,7 @@
       <li class="govuk-breadcrumbs__list-item">
         <a class="govuk-breadcrumbs__link" href="{% url 'root' %}">Home</a>
       </li>
-      <li class="govuk-breadcrumbs__list-item">Support
+      <li class="govuk-breadcrumbs__list-item">Support and feedback
       </li>
     </ol>
   </div>
@@ -24,7 +24,8 @@
         </p>
         <a class="govuk-button" href="{% url 'root' %}">Go home</a>
       {% else %}
-        <h1 class="govuk-heading-l">Tell us how we can help</h1>
+        <h1 class="govuk-heading-l">Support and feedback</h1>
+        <p class="govuk-body-l">Tell us how we can help.</p>
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <fieldset class="govuk-fieldset">

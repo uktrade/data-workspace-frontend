@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Code snippets to master datasets for users who have access to tools, for getting quickly started working with the data.
+- 'Support and feedback' link to header/footer.
+
+### Changed
+
+- Text on the 'feedback' page to 'Support and feedback' and updated help text.
 
 ### Changed
 

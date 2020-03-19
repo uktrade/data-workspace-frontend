@@ -74,7 +74,9 @@ urlpatterns = [
     ),
     path('files', login_required(file_browser_html_view), name='files'),
     path('healthcheck', healthcheck_view),  # No authentication
-    path('support/', login_required(SupportView.as_view()), name='support'),
+    path(
+        'support-and-feedback/', login_required(SupportView.as_view()), name='support'
+    ),
     path(
         'support/success/<str:ticket_id>',
         login_required(SupportView.as_view()),
