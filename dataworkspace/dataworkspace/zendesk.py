@@ -115,7 +115,7 @@ def create_zendesk_ticket(
     return ticket_audit.ticket.id
 
 
-def create_support_request(user, email, message):
+def create_support_request(user, email, message, tag=None):
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,
         email=settings.ZENDESK_EMAIL,
@@ -126,6 +126,7 @@ def create_support_request(user, email, message):
             subject='Data Workspace Support Request',
             description=message,
             requester=User(email=email, name=user.get_full_name()),
+            tags=[tag] if tag else None,
             custom_fields=[
                 CustomField(
                     id=zendesk_service_field_id, value=zendesk_service_field_value

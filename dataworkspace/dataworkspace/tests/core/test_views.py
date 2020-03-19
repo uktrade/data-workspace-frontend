@@ -36,6 +36,42 @@ class TestSupportView(BaseTestCase):
         )
         mock_create_request.assert_called_once()
 
+    @mock.patch('dataworkspace.apps.core.views.create_support_request')
+    def test_create_tagged_support_request(self, mock_create_request):
+        mock_create_request.return_value = 999
+        response = self._authenticated_post(
+            reverse('support') + '?tag=data-request',
+            data={'email': 'noreply@example.com', 'message': 'A test message'},
+            post_format='multipart',
+        )
+        self.assertContains(
+            response,
+            'Your request has been received. Your reference is: '
+            '<strong>999</strong>.',
+            html=True,
+        )
+        mock_create_request.assert_called_once_with(
+            mock.ANY, 'noreply@example.com', 'A test message', tag='data_request'
+        )
+
+    @mock.patch('dataworkspace.apps.core.views.create_support_request')
+    def test_create_tagged_support_request_unknown_tag(self, mock_create_request):
+        mock_create_request.return_value = 999
+        response = self._authenticated_post(
+            reverse('support') + '?tag=invalid-tag',
+            data={'email': 'noreply@example.com', 'message': 'A test message'},
+            post_format='multipart',
+        )
+        self.assertContains(
+            response,
+            'Your request has been received. Your reference is: '
+            '<strong>999</strong>.',
+            html=True,
+        )
+        mock_create_request.assert_called_once_with(
+            mock.ANY, 'noreply@example.com', 'A test message', tag=None
+        )
+
 
 def test_csp_on_files_endpoint_includes_s3(client):
     response = client.get(reverse('files'))
