@@ -397,6 +397,7 @@ def table_exists(database, schema, table):
 def streaming_query_response(user_email, database, query, filename):
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
     batch_size = 1000
+    query_timeout = 300 * 1000
 
     def yield_db_rows():
         # The csv writer "writes" its output by calling a file-like object
@@ -416,6 +417,13 @@ def streaming_query_response(user_email, database, query, filename):
         ) as cur:  # Named cursor => server-side cursor
 
             conn.set_session(readonly=True)
+
+            # set statements can't be issued in a server-side cursor, so we
+            # need to create a separate one to set a timeout on the current
+            # connection
+            with conn.cursor() as _cur:
+                _cur.execute("SET statement_timeout={0}".format(query_timeout))
+
             cur.itersize = batch_size
             cur.arraysize = batch_size
 
