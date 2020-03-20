@@ -8,7 +8,6 @@ import secrets
 import string
 import csv
 import gevent
-import gevent.queue
 from psycopg2 import connect, sql
 
 import boto3
@@ -397,12 +396,9 @@ def table_exists(database, schema, table):
 
 def streaming_query_response(user_email, database, query, filename):
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
-    cursor_itersize = 1000
-    queue_size = 3
-    queue_timeout = 60 * 2
-    bytes_queue = gevent.queue.Queue(maxsize=queue_size)
+    batch_size = 1000
 
-    def put_db_rows_to_queue():
+    def yield_db_rows():
         # The csv writer "writes" its output by calling a file-like object
         # with a `write` method.
         class PseudoBuffer:
@@ -416,71 +412,45 @@ def streaming_query_response(user_email, database, query, filename):
         with connect(
             database_dsn(settings.DATABASES_DATA[database])
         ) as conn, conn.cursor(
-            name='all_table_data'
+            name='data_download'
         ) as cur:  # Named cursor => server-side cursor
 
             conn.set_session(readonly=True)
-            cur.itersize = cursor_itersize
-            cur.arraysize = cursor_itersize
+            cur.itersize = batch_size
+            cur.arraysize = batch_size
 
-            try:
-                cur.execute(query)
-            except Exception as ex:
-                gevent.get_hub().parent.throw(ex)
+            cur.execute(query)
 
             i = 0
             while True:
-                rows = cur.fetchmany(cursor_itersize)
+                rows = cur.fetchmany(batch_size)
+
                 if i == 0:
                     # Column names are not populated until the first row fetched
-                    bytes_queue.put(
-                        csv_writer.writerow(
-                            [column_desc[0] for column_desc in cur.description]
-                        ),
-                        timeout=queue_timeout,
+                    yield csv_writer.writerow(
+                        [column_desc[0] for column_desc in cur.description]
                     )
+
+                if not rows:
+                    break
+
                 bytes_fetched = ''.join(
                     csv_writer.writerow(row) for row in rows
                 ).encode('utf-8')
-                bytes_queue.put(bytes_fetched, timeout=queue_timeout)
+
+                yield bytes_fetched
+
                 i += len(rows)
-                if not rows:
-                    break
-            bytes_queue.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
-    def yield_bytes_from_queue():
-        while put_db_rows_to_queue_job:
-            try:
-                # There will be a 0.1 second wait after the end of the data
-                # from the db to when the connection is closed. Might be able
-                # to avoid this, but KISS, and minor
-                yield bytes_queue.get(timeout=0.1)
-            except gevent.queue.Empty:
-                pass
-
-        if put_db_rows_to_queue_job.exception:
-            raise put_db_rows_to_queue_job.exception
+        yield csv_writer.writerow(['Number of rows: ' + str(i)])
 
         logger.info(
             'streaming_query_response end: %s %s %s', user_email, database, query
         )
 
-    def handle_exception(job):
-        try:
-            raise job.exception
-        except Exception:
-            logger.exception(
-                'streaming_query_response exception: %s %s %s',
-                user_email,
-                database,
-                query,
-            )
-
-    put_db_rows_to_queue_job = gevent.spawn(put_db_rows_to_queue)
-    put_db_rows_to_queue_job.link_exception(handle_exception)
-
-    response = StreamingHttpResponse(yield_bytes_from_queue(), content_type='text/csv')
+    response = StreamingHttpResponse(yield_db_rows(), content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
     return response
 
 
