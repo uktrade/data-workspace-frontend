@@ -74,6 +74,7 @@
     </div>
     {% endfor %}
 
+    {% if datasets.paginator.count %}
     <nav role="navigation" class="govuk-body">
       Displaying datasets {{ datasets.start_index  }}&ndash;{{ datasets.end_index }} of {{ datasets.paginator.count }}
       <ul class="pagination govuk-list">
@@ -106,6 +107,23 @@
         {% endif %}
       </ul>
     </nav>
+    {% endif %}
+
+    <div {% if datasets.paginator.count %}class="govuk-!-margin-top-9"{% endif %}>
+      <p class="govuk-body">
+        {% if datasets.paginator.count %}
+          If you haven’t found what you’re looking for, please:
+        {% else %}
+          There are no results for your search, please:
+        {% endif %}
+      </p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>check the spelling of your keywords</li>
+        <li>use more general keywords</li>
+        <li>select or deselect different filters</li>
+        <li>request data via our <a href="{% url 'support' %}?tag=data-request">support and feedback form</a></li>
+      </ul>
+    </div>
 
   </div>
 </div>

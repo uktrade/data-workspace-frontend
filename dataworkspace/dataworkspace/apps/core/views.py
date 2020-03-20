@@ -53,6 +53,8 @@ class SupportView(FormView):
     form_class = SupportForm
     template_name = 'core/support.html'
 
+    ZENDESK_TAGS = {"data-request": "data_request"}
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
         ctx['ticket_id'] = self.kwargs.get('ticket_id')
@@ -65,8 +67,10 @@ class SupportView(FormView):
 
     def form_valid(self, form):
         cleaned = form.cleaned_data
+
+        tag = self.ZENDESK_TAGS.get(self.request.GET.get('tag'))
         ticket_id = create_support_request(
-            self.request.user, cleaned['email'], cleaned['message']
+            self.request.user, cleaned['email'], cleaned['message'], tag=tag
         )
         return HttpResponseRedirect(
             reverse('support-success', kwargs={'ticket_id': ticket_id})

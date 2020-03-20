@@ -88,6 +88,15 @@ def test_request_access_form(client, mocker):
     )
 
 
+def test_find_datasets_with_no_results(client):
+    response = client.get(reverse('datasets:find_datasets'), {"q": "search"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == []
+
+    assert b"There are no results for your search" in response.content
+
+
 def test_find_datasets_combines_results(client):
     factories.DataSetFactory.create(published=False, name='Unpublished search dataset')
     ds = factories.DataSetFactory.create(published=True, name='A search dataset')
@@ -114,6 +123,10 @@ def test_find_datasets_combines_results(client):
             'short_description': rds.short_description,
         },
     ]
+
+    assert "If you haven’t found what you’re looking for" in response.content.decode(
+        response.charset
+    )
 
 
 def test_find_datasets_filters_by_query(client):
