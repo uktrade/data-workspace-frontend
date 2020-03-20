@@ -53,7 +53,7 @@ class SupportView(FormView):
     form_class = SupportForm
     template_name = 'core/support.html'
 
-    ZENDESK_TAGS = {'data-request': "data_request"}
+    ZENDESK_TAGS = {"data-request": "data_request"}
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()

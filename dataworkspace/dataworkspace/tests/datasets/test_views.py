@@ -124,7 +124,9 @@ def test_find_datasets_combines_results(client):
         },
     ]
 
-    assert b"If you haven't found what you're looking for" in response.content
+    assert "If you haven’t found what you’re looking for" in response.content.decode(
+        response.charset
+    )
 
 
 def test_find_datasets_filters_by_query(client):
