@@ -856,15 +856,10 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
         async for key in s3_list_keys_relative_to_prefix(logger, s3_context, s3_prefix)
     }
 
+    def get_relative_key(url):
+        return urllib.parse.urlparse(url).path[len(source_base_path) :]
+
     async def crawl(url):
-        relative_key = urllib.parse.urlparse(url).path[len(source_base_path) :]
-
-        if relative_key in existing_relative_keys and (
-            relative_key.endswith('.deb') or relative_key.endswith('.change')
-        ):
-            # The package files have a version in the file name, so never need to be re-uploaded
-            return
-
         code, headers, body = await request(b'GET', url)
         if code != b'200':
             await blackhole(body)
@@ -872,7 +867,7 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
 
         headers_lower = dict((key.lower(), value) for key, value in headers)
         content_type = headers_lower.get(b'content-type', None)
-        target_key = s3_prefix + relative_key
+        target_key = s3_prefix + get_relative_key(url)
 
         if content_type == b'text/html':
             data = await buffered(body)
@@ -884,18 +879,24 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
                 absolute = urllib.parse.urlparse(absolute_str)
                 absolute = absolute._replace(path=urllib.parse.unquote(absolute.path))
                 absolute_str = absolute.geturl()
+                next_relative_key = get_relative_key(absolute_str)
                 to_do = (
                     absolute.netloc == source_base_parsed.netloc
                     and absolute.path[: len(source_base_path)] == source_base_path
                     and absolute_str not in done
+                    and (
+                        next_relative_key not in existing_relative_keys
+                        or (
+                            # Immutable
+                            not next_relative_key.endswith('.deb')
+                            and not next_relative_key.endswith('.change')
+                        )
+                    )
                 )
                 if to_do:
+                    logger.info('On %s adding %s', url, absolute_str)
                     done.add(absolute_str)
                     await queue.put(absolute_str)
-            return
-
-        if relative_key in existing_relative_keys:
-            await blackhole(body)
             return
 
         content_length = headers_lower[b'content-length']
@@ -912,8 +913,6 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
         )
         if code != b'200':
             raise Exception()
-
-        existing_relative_keys.add(relative_key)
 
     async def transfer_task():
         while True:
