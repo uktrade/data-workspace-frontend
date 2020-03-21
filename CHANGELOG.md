@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Update the architecture to include GitLab
 
+## 2020-03-21
+
+### Changed
+
+- Page per visualisation
+
 ## 2020-03-20
 
 ### Changed
