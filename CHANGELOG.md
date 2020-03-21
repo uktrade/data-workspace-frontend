@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Version of packages in RStudio image to latest in current Debian mirror
+- Correct mirrors branch to master
 
 ## 2020-03-19
 
