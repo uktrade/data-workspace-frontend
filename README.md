@@ -165,6 +165,27 @@ While not impossible to leverage NGINX to move some code from the proxy, there w
 - Django gives a lot of benefits for the main application: for example, it is within the skill set of most available developers. Only a small fraction of changes need to involve the proxy.
 
 
+## Avoiding a distributed monolith
+
+The architecture has an aspect of a microservice architecture: lots of parts moving together. However, effort is deliberately made for all custom logic, and state, to be in the main Django application [or the proxy if necessary]. Everything else is ignorant of as much as possible, beyond their minimised and clearly defined role [and even the proxy is ignorant of as much as is reasonable]. Specific examples:
+
+- Tools and visualisations must only be Docker images, and expose an HTTP interface on port 8888. 
+
+- For those that need credentials for database access, this is done by passing environment variable(s) on startup [a standard pattern].
+
+- Tools are not aware that parts of the local filesystem are synced with S3.
+
+- The S3 sync itself, running as a sidecard container on each tool, itself is similarly not aware of anything tool-specific [with the unfortunate exception that git repositories need special treatment].
+
+- Authentication and authorisation for tools and visualisations are handled entirely before requests even reach them.
+
+- For _building_ visualisations, a short, generic, and idempotent build job is in GitLab. It takes in a GitLab project ID, a commit ID, ECR repository name, and a docker tag; and is triggered and monitored by the main Django application. The main Django application does not expose an API for the build job to call into.
+
+- The proxy routes both HTTP and WebSockets, and it does not know ahead of time if any given host/path combination is plain HTTP, or will use WebSockets.
+
+- The proxy does know about spawning an application, but is ignorant of the fact that spawning may itself need to trigger a build of a docker image. [Although the proxy may need to be changed to show more spawning related logs].
+
+
 ## Comparison with JupyterHub
 
 In addition to being able to run any Docker container, not just JupyterLab, Data Workspace has some deliberate architectural features that are different to JupyterHub.
