@@ -44,7 +44,7 @@ RUN \
 	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
 		gdebi-core=0.9.5.7+nmu3 \
 		gfortran=4:8.3.0-1 \
-		git=1:2.20.1-2 \
+		git=1:2.20.1-2+deb10u1 \
 		libgsl-dev=2.5+dfsg-6 \
 		libxml2-dev=2.9.4+dfsg1-7+b3 \
 		lmodern=2.004.5-6 \
@@ -59,10 +59,10 @@ RUN \
 		r-cran-rpostgresql=0.6-2+dfsg-2 \
 		r-cran-xml2=1.2.0-3 \
 		r-recommended=3.6.1-2~bustercran.0 \
-		ssh=1:7.9p1-10+deb10u1 \
+		ssh=1:7.9p1-10+deb10u2 \
 		texlive=2018.20190227-2 \
 		texlive-latex-extra=2018.20190227-2 \
-		git-man=1:2.20.1-2 \
+		git-man=1:2.20.1-2+deb10u1 \
 		man-db=2.8.5-2 \
 		wget=1.20.1-1.1 && \
 	wget -q https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5019-amd64.deb && \
