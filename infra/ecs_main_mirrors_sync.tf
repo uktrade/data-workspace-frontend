@@ -132,7 +132,7 @@ data "template_file" "mirrors_sync_container_definitions_debian" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars {
-    container_image    = "quay.io/uktrade/data-workspace-mirrors-sync:debian-mirrors"
+    container_image    = "quay.io/uktrade/data-workspace-mirrors-sync:master"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
