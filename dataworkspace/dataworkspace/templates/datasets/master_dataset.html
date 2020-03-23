@@ -85,8 +85,8 @@
             <td class="govuk-table__cell">{{ data_link.get_frequency_display }}</td>
             {% if user.is_superuser %}
               <td class="govuk-table__cell">
-                {% if data_link.get_google_data_studio_link and link.data_link.accessible_by_google_data_studio %}
-                  <a href="{{ table.get_google_data_studio_link }}">Google Data Studio</a>
+                {% if data_link.get_google_data_studio_link and data_link.accessible_by_google_data_studio %}
+                  <a href="{{ data_link.get_google_data_studio_link }}">Google Data Studio</a>
                 {% endif %}
               </td>
             {% endif %}
