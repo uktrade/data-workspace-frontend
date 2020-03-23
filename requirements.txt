@@ -15,7 +15,7 @@ zenpy==2.0.19
 redis==3.4.1
 requests==2.23.0
 django-admin-sortable2==0.7.6
-sentry-sdk==0.14.2
+sentry-sdk==0.14.3
 hawk-server-asyncio==0.0.6
 django-waffle==0.20.0
 django-csp==3.6
