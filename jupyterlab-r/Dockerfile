@@ -43,8 +43,8 @@ RUN \
     apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
         build-essential=12.6 \
         gfortran=4:8.3.0-1 \
-        git=1:2.20.1-2 \
-        git-man=1:2.20.1-2 \
+        git=1:2.20.1-2+deb10u1 \
+        git-man=1:2.20.1-2+deb10u1 \
         man-db=2.8.5-2 \
         openssh-client=1:7.9p1-10+deb10u2 \
         texlive-xetex=2018.20190227-2 \
@@ -52,7 +52,7 @@ RUN \
         texlive-fonts-recommended=2018.20190227-2 \
         wget=1.20.1-1.1 \
         r-cran-tidyverse=1.2.1-1 \
-        sudo=1.8.27-1+deb10u1 \
+        sudo=1.8.27-1+deb10u2 \
         ca-certificates && \
     apt-get clean -y && \
         apt-get autoremove -y && \
@@ -62,8 +62,8 @@ RUN \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
     echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
-    wget http://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -O miniconda.sh && \
-    echo "e1045ee415162f944b6aebfe560b8fee  miniconda.sh" | md5sum -c && \
+    wget https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.2-Linux-x86_64.sh -O miniconda.sh && \
+    echo "87e77f097f6ebb5127c77662dfc3165e  miniconda.sh" | md5sum -c && \
     mkdir -p "$CONDA_DIR" && \
     bash miniconda.sh -f -b -p "$CONDA_DIR" && \
     rm miniconda.sh && \
@@ -76,7 +76,7 @@ RUN \
     echo 'always_yes: true' >> /opt/conda/.condarc && \
     echo 'show_channel_urls: true' >> /opt/conda/.condarc && \
     conda install \
-        'conda=4.5.11' \
+        'conda=4.8.2' \
         'font-ttf-dejavu-sans-mono==2.37' \
         'jupyterlab=0.35.5' \
         'nodejs=11.14.0' \
@@ -100,7 +100,7 @@ RUN \
         'xorg-libxrender=0.9.10' && \
     jupyter kernelspec uninstall python3 -f && \
     rm -r -f /opt/conda/lib/python3.7/site-packages/ipykernel && \
-    conda clean -tipsy && \
+    conda clean -tipy && \
     chown -R jovyan $CONDA_DIR  && \
     pip install \
         pip==20.0.2 && \
