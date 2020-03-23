@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Fixed links to branches and commits in visualisations page
+- GitLab load balancer to be in own subnet with NACL
+- Communication from the admin application and GitLab via port 80 on private IP
 
 ## 2020-03-17
 
