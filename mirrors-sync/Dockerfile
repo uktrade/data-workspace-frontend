@@ -12,7 +12,7 @@ RUN \
 	pip3 install pip==18.01 && \
 	pip3 install \
 		beautifulsoup4==4.7.1 \
-		lowhaio==0.0.86 \
+		lowhaio==0.0.87 \
 		lowhaio_redirect==0.0.1
 
 COPY mirrors-sync.py /

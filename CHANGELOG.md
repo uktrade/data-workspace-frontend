@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Version of packages in RStudio image to latest in current Debian mirror
 - Correct mirrors branch to master
+- Fix Debian mirror missing certain files
+- Bump Lowhaio in mirror jobs to avoid error when re-using connections that have closed
 
 ## 2020-03-19
 
