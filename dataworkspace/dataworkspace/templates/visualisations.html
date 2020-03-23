@@ -4,31 +4,6 @@
 
 {% block page_title %}Visualisations - {{ block.super }}{% endblock %}
 
-{% block head %}
-  {{ block.super }}
-  <style>
-    .branch-icon {
-        display: inline-block;
-        height: 18px;
-        width: 18px;
-        position: relative;
-        top: 2px;
-    }
-    .key-link--plain:link,
-    .key-link--plain:visited {
-        text-decoration: none;
-        color: #0b0c0c;
-    }
-    .key-link--plain:hover .underline-on-hover {
-        text-decoration: underline;
-    }
-    .key-link--plain:active .underline-on-hover,
-    .key-link--plain:focus .underline-on-hover {
-        text-decoration: none;
-    }
-  </style>
-{% endblock %}
-
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
@@ -44,48 +19,49 @@
 {% endblock %}
 
 {% block inner_content %}
-    <h1 class="govuk-heading-l">Visualisations</h1>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">Visualisations</h1>
 
-    {% if not has_gitlab_user %}
-    <div class="govuk-inset-text">
-        <p class="govuk-body">It looks like GitLab does not have a user record for you. Please <a href="{{ gitlab_url }}" class="govuk-link">visit GitLab</a>, which will create one automatically. Then return to this page.</p>
-    </div>
-    {% endif %}
-
-    {% if has_gitlab_user and not projects %}
-        <p class="govuk-body">You do not have access to any visualisations in GitLab. If you think you should have access, please <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
-    {% endif %}
-
-    {% for project in projects %}
-        <h2 class="govuk-heading-m">{{ project.name }}</h2>
-
-        {% if is_project_developer|get_key:project.id %}
-        <p class="govuk-body">You have developer privileges on {{ project.name }}.</p>
+        {% if not has_gitlab_user %}
+        <div class="govuk-inset-text">
+            <p class="govuk-body">It looks like GitLab does not have a user record for you. Please <a href="{{ gitlab_url }}" class="govuk-link">visit GitLab</a>, which will create one automatically. Then return to this page.</p>
+        </div>
         {% endif %}
 
-        <dl class="govuk-summary-list">
-        {% for branch in project_branches|get_key:project.id %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    <a class="govuk-link govuk-link--no-visited-state key-link--plain" href="{{ project.web_url }}/tree/{{ branch.name }}">
-                        <!-- Icons provided by Font Awesome https://fontawesome.com/license */ -->
-                        <svg class="branch-icon" focusable="false" data-prefix="fas" data-icon="code-branch" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><title>Branch</title><path fill="currentColor" d="M384 144c0-44.2-35.8-80-80-80s-80 35.8-80 80c0 36.4 24.3 67.1 57.5 76.8-.6 16.1-4.2 28.5-11 36.9-15.4 19.2-49.3 22.4-85.2 25.7-28.2 2.6-57.4 5.4-81.3 16.9v-144c32.5-10.2 56-40.5 56-76.3 0-44.2-35.8-80-80-80S0 35.8 0 80c0 35.8 23.5 66.1 56 76.3v199.3C23.5 365.9 0 396.2 0 432c0 44.2 35.8 80 80 80s80-35.8 80-80c0-34-21.2-63.1-51.2-74.6 3.1-5.2 7.8-9.8 14.9-13.4 16.2-8.2 40.4-10.4 66.1-12.8 42.2-3.9 90-8.4 118.2-43.4 14-17.4 21.1-39.8 21.6-67.9 31.6-10.8 54.4-40.7 54.4-75.9zM80 64c8.8 0 16 7.2 16 16s-7.2 16-16 16-16-7.2-16-16 7.2-16 16-16zm0 384c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16zm224-320c8.8 0 16 7.2 16 16s-7.2 16-16 16-16-7.2-16-16 7.2-16 16-16z"></path></svg>
-                        <span class="underline-on-hover">{{ branch.name }}</span>
-                    </a>
-                </dt>
-                </a>
-                <dd class="govuk-summary-list__value">
-                    <a class="govuk-link govuk-link--no-visited-state" href="{{ project.web_url }}/commit/{{ branch.commit.id }}">{{ branch.commit.title }} ({{ branch.commit.short_id }})</a>
-                </dd>
-                {% with preview_link=project_branches_preview_links|get_key:project.id|get_key:branch.name %}
-                    {% if preview_link %}
-                    <dd class="govuk-summary-list__actions">
-                        <a class="govuk-link govuk-link--no-visited-state" href="{{ preview_link }}">Preview</a>
-                    </dd>
-                    {% endif %}
-                {% endwith %}
-            </div>
+        {% if has_gitlab_user and not projects %}
+            <p class="govuk-body">You do not have access to any visualisations in GitLab. If you think you should have access, please <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
+        {% endif %}
+
+        {% for project in projects %}
+        <section>
+            <h2 class="govuk-heading-m">{{ project.gitlab_project.name }}</h2>
+
+            {% if project.gitlab_project.description %}
+                <p class="govuk-body">{{ project.gitlab_project.description }}</p>
+            {% endif %}
+
+            <ul class="govuk-list">
+                {% if project.manage_link %}
+                <li>
+                    <a class="govuk-link" href="#"><a class="govuk-link govuk-link--no-visited-state" href="{{ project.manage_link }}">Manage<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span></a></a>
+                </li>
+                {% endif %}
+                <li>
+                    <a class="govuk-link govuk-link--no-visited-state" href="{{ project.gitlab_project.web_url }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> source in GitLab</a>
+                </li>
+                {% if project.view_link %}
+                <li>
+                    <a class="govuk-link" href="#"><a class="govuk-link govuk-link--no-visited-state" href="{{ project.view_link }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> production visualisation</a></a>
+                </li>
+                {% endif %}
+            </ul>
+
+            {% if not forloop.last %}
+                <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+            {% endif %}
+        </section>
         {% endfor %}
-        </dl>
-    {% endfor %}
+    </div>
+</div>
 {% endblock %}

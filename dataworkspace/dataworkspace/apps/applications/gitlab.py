@@ -12,12 +12,17 @@ SUCCESS_PIPELINE_STATUSES = ('success',)
 
 
 def gitlab_api_v4(method, path, params=()):
-    return requests.request(
+    return gitlab_api_v4_with_status(method, path, params)[0]
+
+
+def gitlab_api_v4_with_status(method, path, params=()):
+    response = requests.request(
         method,
         f'{settings.GITLAB_URL}api/v4/{path}',
         params=params,
         headers={'PRIVATE-TOKEN': settings.GITLAB_TOKEN},
-    ).json()
+    )
+    return response.json(), response.status_code
 
 
 def gitlab_api_v4_ecr_pipeline_trigger(

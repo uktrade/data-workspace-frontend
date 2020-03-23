@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import random
 from urllib.parse import urlsplit
@@ -5,13 +6,17 @@ from urllib.parse import urlsplit
 from csp.decorators import csp_exempt
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
 )
-from dataworkspace.apps.applications.gitlab import gitlab_api_v4
+from dataworkspace.apps.applications.gitlab import (
+    gitlab_api_v4,
+    gitlab_api_v4_with_status,
+)
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
@@ -198,66 +203,61 @@ def visualisations_html_GET(request):
     else:
         gitlab_url = ''
 
-    projects = gitlab_api_v4(
+    gitlab_projects = gitlab_api_v4(
         'GET',
         f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
         params=(('archived', 'false'),) + params,
     )
 
-    def branch_sort_key(project):
-        # Sort default branch first, the remaining in last commit order
-        def _sort_key(branch):
-            return (
-                branch['name'] == project['default_branch'],
-                branch['commit']['committed_date'],
-                branch['name'],
-            )
-
-        return _sort_key
-
-    project_branches = {
-        project['id']: sorted(
-            gitlab_api_v4('GET', f'/projects/{project["id"]}/repository/branches'),
-            key=branch_sort_key(project),
-            reverse=True,
-        )
-        for project in projects
-    }
-
     application_templates = {
         application_template.gitlab_project_id: application_template
         for application_template in ApplicationTemplate.objects.filter(
-            gitlab_project_id__in=[project['id'] for project in projects]
+            gitlab_project_id__in=[
+                gitlab_project['id'] for gitlab_project in gitlab_projects
+            ]
         )
-    }
-    project_branches_preview_links = {
-        project_id: {
-            branch[
-                'name'
-            ]: f'{request.scheme}://{application_templates[project_id].host_exact}--'
-            + f'{branch["commit"]["short_id"]}.{settings.APPLICATION_ROOT_DOMAIN}/'
-            if project_id in application_templates
-            else None
-            for branch in project_branches
-        }
-        for project_id, project_branches in project_branches.items()
     }
 
     # It looks like the only way to check the current user's access level is
     # to fetch all the users who have access to the project
     developer_access_level = 30
-    is_project_developer = {
-        project['id']: has_gitlab_user
-        and True
-        in (
-            project_user['id'] == users[0]['id']
-            and project_user['access_level'] >= developer_access_level
-            for project_user in gitlab_api_v4(
-                'GET', f'/projects/{project["id"]}/members/all'
+
+    def manage_link(gitlab_project):
+        if gitlab_project['id'] not in application_templates:
+            return None
+
+        is_developer = has_gitlab_user and True in (
+            gitlab_project_user['id'] == users[0]['id']
+            and gitlab_project_user['access_level'] >= developer_access_level
+            for gitlab_project_user in gitlab_api_v4(
+                'GET', f'/projects/{gitlab_project["id"]}/members/all'
             )
         )
-        for project in projects
-    }
+        if is_developer:
+            return reverse(
+                'visualisations:branch',
+                kwargs={
+                    'gitlab_project_id': gitlab_project['id'],
+                    'branch_name': gitlab_project['default_branch'],
+                },
+            )
+        return None
+
+    def view_link(gitlab_project):
+        try:
+            host_exact = application_templates[gitlab_project['id']].host_exact
+        except KeyError:
+            return None
+        return f'{request.scheme}://{host_exact}.{settings.APPLICATION_ROOT_DOMAIN}/'
+
+    projects = [
+        {
+            'gitlab_project': gitlab_project,
+            'manage_link': manage_link(gitlab_project),
+            'view_link': view_link(gitlab_project),
+        }
+        for gitlab_project in gitlab_projects
+    ]
 
     return render(
         request,
@@ -266,9 +266,75 @@ def visualisations_html_GET(request):
             'gitlab_url': gitlab_url,
             'has_gitlab_user': has_gitlab_user,
             'projects': projects,
-            'project_branches': project_branches,
-            'project_branches_preview_links': project_branches_preview_links,
-            'is_project_developer': is_project_developer,
+        },
+        status=200,
+    )
+
+
+def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        return HttpResponseForbidden()
+
+    if not request.method == 'GET':
+        return HttpResponse(status=405)
+
+    return visualisation_branch_html_GET(request, gitlab_project_id, branch_name)
+
+
+def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
+    gitlab_project, status = gitlab_api_v4_with_status(
+        'GET', f'projects/{gitlab_project_id}'
+    )
+    if status == 404:
+        raise Http404
+    if status != 200:
+        raise Exception(gitlab_project)
+
+    # Sort default branch first, the remaining in last commit order
+    def branch_sort_key(branch):
+        return (
+            branch['name'] == gitlab_project['default_branch'],
+            branch['commit']['committed_date'],
+            branch['name'],
+        )
+
+    gitlab_project = gitlab_api_v4('GET', f'/projects/{gitlab_project_id}')
+    branches = sorted(
+        gitlab_api_v4('GET', f'/projects/{gitlab_project_id}/repository/branches'),
+        key=branch_sort_key,
+        reverse=True,
+    )
+    matching_branches = [branch for branch in branches if branch['name'] == branch_name]
+    if len(matching_branches) > 1:
+        raise Exception('Too many matching branches')
+    if not matching_branches:
+        raise Http404
+
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project_id
+    )
+    current_branch = matching_branches[0]
+    latest_commit = current_branch['commit']
+    latest_commit_link = f'{gitlab_project["web_url"]}/commit/{latest_commit["id"]}'
+    latest_commit_preview_link = (
+        f'{request.scheme}://{application_template.host_exact}--{latest_commit["short_id"]}'
+        f'.{settings.APPLICATION_ROOT_DOMAIN}/'
+    )
+    latest_commit_date = datetime.datetime.strptime(
+        latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
+    )
+
+    return render(
+        request,
+        'visualisation_branch.html',
+        {
+            'gitlab_project': gitlab_project,
+            'branches': branches,
+            'current_branch': current_branch,
+            'latest_commit': latest_commit,
+            'latest_commit_link': latest_commit_link,
+            'latest_commit_preview_link': latest_commit_preview_link,
+            'latest_commit_date': latest_commit_date,
         },
         status=200,
     )
