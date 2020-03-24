@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-03-24
+
+### Changed
+
+- Fix the "Skip to main content" link: it would always link to the home page
+
 ## 2020-03-23
 
 - Fix Google Data Studio link
