@@ -282,9 +282,7 @@ FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 SEARCH_RESULTS_DATASETS_PER_PAGE = 7
 
-REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS = int(
-    env.get('REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS', 100)
-)
+REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS = 1000
 
 # We explicitly allow some environments to not have a connection to GitLab
 GITLAB_URL = env.get('GITLAB_URL')
