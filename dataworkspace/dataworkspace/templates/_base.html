@@ -132,11 +132,7 @@
 
     {% block breadcrumbs %}{% endblock %}
 
-    <main class="govuk-main-wrapper {% block main-wrapper-class %}{% endblock %}" id="main-content" role="main">
-      {% include 'partials/messages.html' %}
-
-      {% block inner_content %}{% endblock %}
-    </main>
+    {% block main %}{% endblock %}
   </div>
 
   <footer class="govuk-footer" role="contentinfo">

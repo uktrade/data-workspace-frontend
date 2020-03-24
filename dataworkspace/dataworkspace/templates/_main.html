@@ -1,1 +1,9 @@
 {% extends '_base.html' %}
+
+{% block main %}
+<main class="govuk-main-wrapper {% block main-wrapper-class %}{% endblock %}" id="main-content" role="main">
+  {% include 'partials/messages.html' %}
+
+  {% block inner_content %}{% endblock %}
+</main>
+{% endblock %}
