@@ -75,7 +75,7 @@ RUN \
         'ipython-sql=0.3.9' \
         'ipython=6.5.0' \
         'ipywidgets=7.4.2' \
-        'jupyterlab=0.35.5' \
+        'jupyterlab=1.2.0' \
         'matplotlib=3.0.0' \
         'nltk=3.3.0' \
         'nodejs=11.14.0' \
@@ -122,7 +122,7 @@ RUN \
     jupyter labextension install \
         /jupyterlab_database_access \
         /jupyterlab_template_notebooks/browser \
-        @jupyter-widgets/jupyterlab-manager@0.38 \
+        @jupyter-widgets/jupyterlab-manager@1.1 \
         jupyter-matplotlib@0.3.0 && \
     npm cache clean --force && \
     node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean && \
