@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fix the "Skip to main content" link: it would always link to the home page
 - Update the number of rows shown in the preview panel on a reference dataset to 1000
+- Refactor to add intermediate template in chain to support the visualisations side navigation not being inside the `main` html element
 
 ## 2020-03-23
 
