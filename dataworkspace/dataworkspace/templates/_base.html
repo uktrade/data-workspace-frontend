@@ -132,17 +132,7 @@
 
     {% block breadcrumbs %}{% endblock %}
 
-    <main class="govuk-main-wrapper {% block main-wrapper-class %}{% endblock %}" id="main-content" role="main">
-      {% for message in messages %}
-      <div class="govuk-panel govuk-panel--confirmation govuk-panel--confirmation--left govuk-!-padding-5 govuk-!-margin-bottom-7">
-        <h1 class="govuk-panel__title govuk-!-font-size-27">
-          {{ message }}
-        </h1>
-      </div>
-      {% endfor %}
-
-      {% block inner_content %}{% endblock %}
-    </main>
+    {% block main %}{% endblock %}
   </div>
 
   <footer class="govuk-footer" role="contentinfo">
