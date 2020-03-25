@@ -78,7 +78,7 @@ RUN \
     conda install \
         'conda=4.8.2' \
         'font-ttf-dejavu-sans-mono==2.37' \
-        'jupyterlab=1.2.0' \
+        'jupyterlab=2.0.0' \
         'nodejs=11.14.0' \
         'notebook=5.7.8' \
         'openssl=1.0.2p' \

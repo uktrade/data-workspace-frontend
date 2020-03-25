@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Allow Google Data Studio to fetch from unpublished datasets [they each still have to be individually enabled for Google Data Studio access]
+- Upgrade JupyterLab images to v2.0.0.
+- Fix the custom JupyterLab database-connector plugin to work in v2.0.0.
 
 ## 2020-03-24
 

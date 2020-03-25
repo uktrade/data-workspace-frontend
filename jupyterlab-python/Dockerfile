@@ -71,12 +71,12 @@ RUN \
         'conda=4.8.2' \
         'font-ttf-dejavu-sans-mono==2.37' \
         'gensim=3.5.0' \
-        'ipympl=0.2.1' \
+        'ipympl=0.5.6' \
         'ipython-sql=0.3.9' \
         'ipython=6.5.0' \
-        'ipywidgets=7.4.2' \
-        'jupyterlab=1.2.0' \
-        'matplotlib=3.0.0' \
+        'ipywidgets=7.5.1' \
+        'jupyterlab=2.0.0' \
+        'matplotlib=3.2.1' \
         'nltk=3.3.0' \
         'nodejs=11.14.0' \
         'notebook=5.7.8' \
@@ -122,8 +122,7 @@ RUN \
     jupyter labextension install \
         /jupyterlab_database_access \
         /jupyterlab_template_notebooks/browser \
-        @jupyter-widgets/jupyterlab-manager@1.1 \
-        jupyter-matplotlib@0.3.0 && \
+        @jupyter-widgets/jupyterlab-manager@2.0 && \
     npm cache clean --force && \
     node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean && \
     echo '[global]' > /etc/pip.conf && \
