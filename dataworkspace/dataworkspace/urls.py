@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 
@@ -97,6 +98,11 @@ urlpatterns = [
     ),
     path('admin/', admin.site.urls),
 ]
+
+if settings.DEBUG:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+    urlpatterns += staticfiles_urlpatterns()
 
 handler403 = public_error_403_html_view
 handler404 = public_error_404_html_view
