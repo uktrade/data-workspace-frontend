@@ -1,6 +1,6 @@
 import {
   DisposableDelegate
-} from '@phosphor/disposable';
+} from '@lumino/disposable';
 
 import {
   ToolbarButton
@@ -9,6 +9,8 @@ import {
 import {
   NotebookActions
 } from '@jupyterlab/notebook';
+
+require('./styles.css');
 
 export default {
   activate: (app) => {
@@ -32,13 +34,13 @@ class ButtonExtension {
         }
       });
       model.cells.insert(notebook.activeCellIndex, cell);
-      notebook.activeCellIndex--;
+      notebook.activeCellIndex -= 1;
       notebook.widgets[notebook.activeCellIndex].inputHidden = true;
-      NotebookActions.runAndAdvance(notebook, context.session);
+      NotebookActions.runAndAdvance(notebook, context.sessionContext);
       cell.inputHidden = true;
     };
     const button = new ToolbarButton({
-      iconClassName: 'fa fa-database',
+      iconClass: 'fa fa-database data-workspace-access-database-button',
       onClick: onClick,
       tooltip: 'Connect to databases'
     });

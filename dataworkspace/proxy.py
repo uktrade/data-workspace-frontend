@@ -92,7 +92,7 @@ async def async_main():
             "font-src 'self' data:;"
             "form-action 'self';"
             "frame-ancestors 'self';"
-            "img-src 'self' data:;"
+            "img-src 'self' data: blob:;"
             # Both JupyterLab and RStudio need `unsafe-eval`
             "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
             "style-src 'unsafe-inline' 'self';"
