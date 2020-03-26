@@ -295,8 +295,7 @@ def can_access_table_by_google_data_studio(user, table_id):
     has_source_table_perms = (
         DataSet.objects.live()
         .filter(
-            Q(published=True)
-            & Q(sourcetable=sourcetable)
+            Q(sourcetable=sourcetable)
             & (
                 Q(user_access_type='REQUIRES_AUTHENTICATION')
                 | Q(datasetuserpermission__user=user)
@@ -422,7 +421,7 @@ def streaming_query_response(user_email, database, query, filename):
             # need to create a separate one to set a timeout on the current
             # connection
             with conn.cursor() as _cur:
-                _cur.execute("SET statement_timeout={0}".format(query_timeout))
+                _cur.execute('SET statement_timeout={0}'.format(query_timeout))
 
             cur.itersize = batch_size
             cur.arraysize = batch_size
