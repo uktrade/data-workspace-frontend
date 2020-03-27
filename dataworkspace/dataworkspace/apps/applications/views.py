@@ -282,28 +282,9 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
 
 
 def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
-    gitlab_project, status = gitlab_api_v4_with_status(
-        'GET', f'projects/{gitlab_project_id}'
-    )
-    if status == 404:
-        raise Http404
-    if status != 200:
-        raise Exception(gitlab_project)
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    branches = _visualisation_branches(gitlab_project)
 
-    # Sort default branch first, the remaining in last commit order
-    def branch_sort_key(branch):
-        return (
-            branch['name'] == gitlab_project['default_branch'],
-            branch['commit']['committed_date'],
-            branch['name'],
-        )
-
-    gitlab_project = gitlab_api_v4('GET', f'/projects/{gitlab_project_id}')
-    branches = sorted(
-        gitlab_api_v4('GET', f'/projects/{gitlab_project_id}/repository/branches'),
-        key=branch_sort_key,
-        reverse=True,
-    )
     matching_branches = [branch for branch in branches if branch['name'] == branch_name]
     if len(matching_branches) > 1:
         raise Exception('Too many matching branches')
@@ -329,13 +310,40 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         'visualisation_branch.html',
         gitlab_project,
         branches,
-        {
+        template_specific_context={
             'current_branch': current_branch,
             'latest_commit': latest_commit,
             'latest_commit_link': latest_commit_link,
             'latest_commit_preview_link': latest_commit_preview_link,
             'latest_commit_date': latest_commit_date,
         },
+    )
+
+
+def _visualisation_gitlab_project(gitlab_project_id):
+    gitlab_project, status = gitlab_api_v4_with_status(
+        'GET', f'projects/{gitlab_project_id}'
+    )
+    if status == 404:
+        raise Http404
+    if status != 200:
+        raise Exception(gitlab_project)
+    return gitlab_project
+
+
+def _visualisation_branches(gitlab_project):
+    # Sort default branch first, the remaining in last commit order
+    def branch_sort_key(branch):
+        return (
+            branch['name'] == gitlab_project['default_branch'],
+            branch['commit']['committed_date'],
+            branch['name'],
+        )
+
+    return sorted(
+        gitlab_api_v4('GET', f'/projects/{gitlab_project["id"]}/repository/branches'),
+        key=branch_sort_key,
+        reverse=True,
     )
 
 
