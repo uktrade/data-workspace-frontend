@@ -310,6 +310,7 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         'visualisation_branch.html',
         gitlab_project,
         branches,
+        current_menu_item='branches',
         template_specific_context={
             'current_branch': current_branch,
             'latest_commit': latest_commit,
@@ -348,7 +349,12 @@ def _visualisation_branches(gitlab_project):
 
 
 def _render_visualisation(
-    request, template, gitlab_project, branches, template_specific_context
+    request,
+    template,
+    gitlab_project,
+    branches,
+    current_menu_item,
+    template_specific_context,
 ):
     # For templates that inherit from _visualisation.html. This is factored
     # out, in a way so that any context variables required, but not passed from
@@ -359,6 +365,7 @@ def _render_visualisation(
         {
             'gitlab_project': gitlab_project,
             'branches': branches,
+            'current_menu_item': current_menu_item,
             **template_specific_context,
         },
         status=200,
