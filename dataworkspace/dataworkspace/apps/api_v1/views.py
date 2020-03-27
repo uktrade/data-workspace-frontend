@@ -77,7 +77,11 @@ SCHEMA_DATA_TYPE_PATTERNS = (
         lambda v: v.strftime('%Y%m%d%H%M%S') if v is not None else None,
     ),
     (r'^boolean$', SCHEMA_BOOLEAN, lambda v: v),
-    (r'^(bigint)|(decimal)|(integer)|(numeric)|(real)$', SCHEMA_NUMBER, lambda v: v),
+    (
+        r'^(bigint)|(decimal)|(integer)|(numeric)|(real)|(double precision)$',
+        SCHEMA_NUMBER,
+        lambda v: v,
+    ),
 )
 
 logger = logging.getLogger('app')
