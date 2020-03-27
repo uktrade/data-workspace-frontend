@@ -324,17 +324,34 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
     )
 
-    return render(
+    return _render_visualisation(
         request,
         'visualisation_branch.html',
+        gitlab_project,
+        branches,
         {
-            'gitlab_project': gitlab_project,
-            'branches': branches,
             'current_branch': current_branch,
             'latest_commit': latest_commit,
             'latest_commit_link': latest_commit_link,
             'latest_commit_preview_link': latest_commit_preview_link,
             'latest_commit_date': latest_commit_date,
+        },
+    )
+
+
+def _render_visualisation(
+    request, template, gitlab_project, branches, template_specific_context
+):
+    # For templates that inherit from _visualisation.html. This is factored
+    # out, in a way so that any context variables required, but not passed from
+    # the view have a chance to be caught by linting
+    return render(
+        request,
+        template,
+        {
+            'gitlab_project': gitlab_project,
+            'branches': branches,
+            **template_specific_context,
         },
         status=200,
     )
