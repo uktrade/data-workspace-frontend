@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 from csp.decorators import csp_exempt
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse, Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -317,6 +318,39 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
             'latest_commit_link': latest_commit_link,
             'latest_commit_preview_link': latest_commit_preview_link,
             'latest_commit_date': latest_commit_date,
+        },
+    )
+
+
+def visualisation_users_html_view(request, gitlab_project_id):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        return HttpResponseForbidden()
+
+    if not request.method == 'GET':
+        return HttpResponse(status=405)
+
+    return visualisation_users_html_GET(request, gitlab_project_id)
+
+
+def visualisation_users_html_GET(request, gitlab_project_id):
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    branches = _visualisation_branches(gitlab_project)
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project_id
+    )
+    users = get_user_model().objects.filter(
+        applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project_id
+    )
+
+    return _render_visualisation(
+        request,
+        'visualisation_users.html',
+        gitlab_project,
+        branches,
+        current_menu_item='users',
+        template_specific_context={
+            'application_template': application_template,
+            'users': users,
         },
     )
 
