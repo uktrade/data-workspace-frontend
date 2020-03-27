@@ -349,29 +349,39 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
         )
         self.assertEqual(ref_dataset.major_version, 1)
-        ref_dataset.save_record(
-            None,
-            {
-                'reference_dataset': ref_dataset,
-                field1.column_name: 1,
-                field2.column_name: 'testing...',
-            },
-        )
-        self.assertEqual(ref_dataset.major_version, 1)
-        self.assertEqual(ref_dataset.minor_version, 1)
-        record = ref_dataset.get_record_by_custom_id(1)
-        ref_dataset.save_record(
-            record.id,
-            {
-                'reference_dataset': ref_dataset,
-                field1.column_name: 999,
-                field2.column_name: 'changed',
-            },
-        )
-        self.assertRaises(ObjectDoesNotExist, ref_dataset.get_record_by_custom_id, 1)
-        self.assertEqual(ref_dataset.major_version, 1)
-        self.assertEqual(ref_dataset.minor_version, 2)
-        self.assertIsNotNone(ref_dataset.get_record_by_custom_id(999))
+        with freeze_time('2020-01-01 00:00:00') as frozen_time:
+            ref_dataset.save_record(
+                None,
+                {
+                    'reference_dataset': ref_dataset,
+                    field1.column_name: 1,
+                    field2.column_name: 'testing...',
+                },
+            )
+            self.assertEqual(ref_dataset.major_version, 1)
+            self.assertEqual(ref_dataset.minor_version, 1)
+            record = ref_dataset.get_record_by_custom_id(1)
+            self.assertEqual(
+                record.updated_date, datetime(2020, 1, 1, 0, 0, tzinfo=timezone.utc)
+            )
+            updated_date = datetime(2020, 1, 1, 0, 10, tzinfo=timezone.utc)
+            frozen_time.move_to(updated_date)
+            ref_dataset.save_record(
+                record.id,
+                {
+                    'reference_dataset': ref_dataset,
+                    field1.column_name: 999,
+                    field2.column_name: 'changed',
+                },
+            )
+            record = ref_dataset.get_record_by_custom_id(999)
+            self.assertEqual(record.updated_date, updated_date)
+            self.assertRaises(
+                ObjectDoesNotExist, ref_dataset.get_record_by_custom_id, 1
+            )
+            self.assertEqual(ref_dataset.major_version, 1)
+            self.assertEqual(ref_dataset.minor_version, 2)
+            self.assertIsNotNone(ref_dataset.get_record_by_custom_id(999))
 
     def test_delete_record(self):
         ref_dataset = self._create_reference_dataset(table_name='test_delete_record')
