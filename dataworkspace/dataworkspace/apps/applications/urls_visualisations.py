@@ -9,7 +9,7 @@ from dataworkspace.apps.applications.views import (
 urlpatterns = [
     path('', login_required(visualisations_html_view), name='root'),
     path(
-        '<str:gitlab_project_id>/<str:branch_name>',
+        '<str:gitlab_project_id>/branches/<str:branch_name>',
         login_required(visualisation_branch_html_view),
         name='branch',
     ),
