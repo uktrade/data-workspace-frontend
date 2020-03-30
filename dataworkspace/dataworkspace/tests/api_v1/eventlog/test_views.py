@@ -58,5 +58,7 @@ def test_no_data(unauthenticated_client):
 
 @pytest.mark.parametrize('method', ('delete', 'patch', 'post', 'put'))
 def test_invalid_methods(unauthenticated_client, method):
-    response = getattr(unauthenticated_client, method)(reverse('api-v1:eventlog:events'))
+    response = getattr(unauthenticated_client, method)(
+        reverse('api-v1:eventlog:events')
+    )
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
