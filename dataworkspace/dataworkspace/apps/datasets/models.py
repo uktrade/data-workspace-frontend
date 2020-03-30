@@ -978,6 +978,13 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def get_admin_edit_url(self):
         return reverse('admin:datasets_referencedataset_change', args=(self.id,))
 
+    @staticmethod
+    def get_type_display():
+        """
+        Allow for reference dataset type name display in api responses to match datasets.
+        """
+        return 'Reference Dataset'
+
 
 class ReferenceDatasetRecordBase(models.Model):
     reference_dataset = models.ForeignKey(

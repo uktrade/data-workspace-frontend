@@ -4,7 +4,10 @@ from datetime import datetime
 import factory.fuzzy
 
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+
 from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.eventlog.models import EventLog
 
 
 class UserProfileFactory(factory.django.DjangoModelFactory):
@@ -147,6 +150,54 @@ class EventLogFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'eventlog.EventLog'
+
+
+class RelatedObjectEventFactory(factory.django.DjangoModelFactory):
+    id = factory.Sequence(lambda n: n)
+    user = factory.SubFactory(UserFactory)
+    timestamp = datetime.now()
+    object_id = factory.SelfAttribute('content_object.id')
+    content_type = factory.LazyAttribute(
+        lambda o: ContentType.objects.get_for_model(o.content_object)
+    )
+
+    class Meta:
+        model = 'eventlog.EventLog'
+        exclude = ['content_object']
+        abstract = True
+
+
+class DatasetLinkDownloadEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
+    content_object = factory.SubFactory(DataSetFactory)
+    extra = {
+        'url': 'http://google.com',
+        'name': 'a link',
+        'path': '/datasets/download/link',
+        'format': 'test',
+        'link_type': 1,
+    }
+
+
+class DatasetQueryDownloadEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
+    content_object = factory.SubFactory(DataSetFactory)
+    extra = {
+        'id': 1,
+        'name': 'A test query',
+        'path': '/datasets/0102d134-2d2e-48b5-b8c2-061a6a649fee/query/1/download',
+        'query': 'select * from a_table',
+    }
+
+
+class ReferenceDatasetDownloadEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
+    content_object = factory.SubFactory(ReferenceDatasetFactory)
+    extra = {
+        'path': '/datasets/5ccc3c6a-9f4b-48fa-bba3-89de9b2bc3f0/reference/csv/download',
+        'download_format': 'csv',
+        'reference_dataset_version': '1.1',
+    }
 
 
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
