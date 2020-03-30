@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Added support for `double precision` columns to Google Data Studio integration
 
+### Added
+
+- Visualisation admin page to view users with access
+
 ## 2020-03-26
 
 ### Changed

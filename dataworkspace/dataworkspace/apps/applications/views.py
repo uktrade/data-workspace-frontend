@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 from csp.decorators import csp_exempt
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse, Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -282,28 +283,9 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
 
 
 def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
-    gitlab_project, status = gitlab_api_v4_with_status(
-        'GET', f'projects/{gitlab_project_id}'
-    )
-    if status == 404:
-        raise Http404
-    if status != 200:
-        raise Exception(gitlab_project)
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    branches = _visualisation_branches(gitlab_project)
 
-    # Sort default branch first, the remaining in last commit order
-    def branch_sort_key(branch):
-        return (
-            branch['name'] == gitlab_project['default_branch'],
-            branch['commit']['committed_date'],
-            branch['name'],
-        )
-
-    gitlab_project = gitlab_api_v4('GET', f'/projects/{gitlab_project_id}')
-    branches = sorted(
-        gitlab_api_v4('GET', f'/projects/{gitlab_project_id}/repository/branches'),
-        key=branch_sort_key,
-        reverse=True,
-    )
     matching_branches = [branch for branch in branches if branch['name'] == branch_name]
     if len(matching_branches) > 1:
         raise Exception('Too many matching branches')
@@ -324,17 +306,101 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
     )
 
-    return render(
+    return _render_visualisation(
         request,
         'visualisation_branch.html',
-        {
-            'gitlab_project': gitlab_project,
-            'branches': branches,
+        gitlab_project,
+        branches,
+        current_menu_item='branches',
+        template_specific_context={
             'current_branch': current_branch,
             'latest_commit': latest_commit,
             'latest_commit_link': latest_commit_link,
             'latest_commit_preview_link': latest_commit_preview_link,
             'latest_commit_date': latest_commit_date,
+        },
+    )
+
+
+def visualisation_users_html_view(request, gitlab_project_id):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        return HttpResponseForbidden()
+
+    if not request.method == 'GET':
+        return HttpResponse(status=405)
+
+    return visualisation_users_html_GET(request, gitlab_project_id)
+
+
+def visualisation_users_html_GET(request, gitlab_project_id):
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    branches = _visualisation_branches(gitlab_project)
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project_id
+    )
+    users = get_user_model().objects.filter(
+        applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project_id
+    )
+
+    return _render_visualisation(
+        request,
+        'visualisation_users.html',
+        gitlab_project,
+        branches,
+        current_menu_item='users',
+        template_specific_context={
+            'application_template': application_template,
+            'users': users,
+        },
+    )
+
+
+def _visualisation_gitlab_project(gitlab_project_id):
+    gitlab_project, status = gitlab_api_v4_with_status(
+        'GET', f'projects/{gitlab_project_id}'
+    )
+    if status == 404:
+        raise Http404
+    if status != 200:
+        raise Exception(gitlab_project)
+    return gitlab_project
+
+
+def _visualisation_branches(gitlab_project):
+    # Sort default branch first, the remaining in last commit order
+    def branch_sort_key(branch):
+        return (
+            branch['name'] == gitlab_project['default_branch'],
+            branch['commit']['committed_date'],
+            branch['name'],
+        )
+
+    return sorted(
+        gitlab_api_v4('GET', f'/projects/{gitlab_project["id"]}/repository/branches'),
+        key=branch_sort_key,
+        reverse=True,
+    )
+
+
+def _render_visualisation(
+    request,
+    template,
+    gitlab_project,
+    branches,
+    current_menu_item,
+    template_specific_context,
+):
+    # For templates that inherit from _visualisation.html. This is factored
+    # out, in a way so that any context variables required, but not passed from
+    # the view have a chance to be caught by linting
+    return render(
+        request,
+        template,
+        {
+            'gitlab_project': gitlab_project,
+            'branches': branches,
+            'current_menu_item': current_menu_item,
+            **template_specific_context,
         },
         status=200,
     )
