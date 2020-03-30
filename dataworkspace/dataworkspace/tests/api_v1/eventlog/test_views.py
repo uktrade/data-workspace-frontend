@@ -1,17 +1,11 @@
 import uuid
 
 import pytest
-from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.fields import DateTimeField
 
 from dataworkspace.tests import factories
-
-
-@pytest.fixture
-def api_client():
-    yield Client()
 
 
 def expected_event_log_response(eventlog):
@@ -45,10 +39,10 @@ def expected_event_log_response(eventlog):
         factories.ReferenceDatasetDownloadEventFactory,
     ),
 )
-def test_success(api_client, event_log_factory):
+def test_success(unauthenticated_client, event_log_factory):
     eventlog1 = event_log_factory()
     eventlog2 = event_log_factory()
-    response = api_client.get(reverse('api-v1:eventlog:events'))
+    response = unauthenticated_client.get(reverse('api-v1:eventlog:events'))
     assert response.status_code == status.HTTP_200_OK
     assert response.json()['results'] == [
         expected_event_log_response(eventlog2),
@@ -57,12 +51,12 @@ def test_success(api_client, event_log_factory):
 
 
 @pytest.mark.django_db
-def test_no_data(api_client):
-    response = api_client.get(reverse('api-v1:eventlog:events'))
+def test_no_data(unauthenticated_client):
+    response = unauthenticated_client.get(reverse('api-v1:eventlog:events'))
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.parametrize('method', ('delete', 'patch', 'post', 'put'))
-def test_invalid_methods(api_client, method):
-    response = getattr(api_client, method)(reverse('api-v1:eventlog:events'))
+def test_invalid_methods(unauthenticated_client, method):
+    response = getattr(unauthenticated_client, method)(reverse('api-v1:eventlog:events'))
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
