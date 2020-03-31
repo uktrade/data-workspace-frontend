@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Some of the fixed-length sleeps in the integration tests to polling the healthcheck endpoint until it returns non-error response.
 
+### Added
+
+- A slightly magic /__mirror/ path accessible on the domain of each application that routes to our S3 mirror. Specifically for applications that need map tiles.
+
 ## 2020-03-30
 
 ### Added

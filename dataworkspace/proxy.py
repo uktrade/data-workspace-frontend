@@ -56,6 +56,8 @@ async def async_main():
     basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
     x_forwarded_for_trusted_hops = int(env['X_FORWARDED_FOR_TRUSTED_HOPS'])
     application_ip_whitelist = env['APPLICATION_IP_WHITELIST']
+    mirror_remote_root = env['MIRROR_REMOTE_ROOT']
+    mirror_local_root = '/__mirror/'
 
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
@@ -124,6 +126,13 @@ async def async_main():
             + downstream_request['sso_profile_headers']
         )
 
+    def mirror_headers(downstream_request):
+        return tuple(
+            (key, value)
+            for key, value in downstream_request.headers.items()
+            if key.lower() not in ['host', 'transfer-encoding']
+        )
+
     def application_headers(downstream_request):
         return without_transfer_encoding(downstream_request) + (
             (('x-scheme', downstream_request.headers['x-forwarded-proto']),)
@@ -139,7 +148,14 @@ async def async_main():
         )
 
     def is_app_requested(request):
-        return request.url.host.endswith(f'.{root_domain_no_port}')
+        return request.url.host.endswith(
+            f'.{root_domain_no_port}'
+        ) and not request.url.path.startswith(mirror_local_root)
+
+    def is_mirror_requested(request):
+        return request.url.host.endswith(
+            f'.{root_domain_no_port}'
+        ) and request.url.path.startswith(mirror_local_root)
 
     def is_requesting_credentials(request):
         return (
@@ -203,6 +219,7 @@ async def async_main():
         path = downstream_request.url.path
         query = downstream_request.url.query
         app_requested = is_app_requested(downstream_request)
+        mirror_requested = is_mirror_requested(downstream_request)
 
         # Websocket connections
         # - tend to close unexpectedly, both from the client and app
@@ -213,14 +230,13 @@ async def async_main():
         )
 
         try:
-            return (
-                await handle_application(
+            if app_requested:
+                return await handle_application(
                     is_websocket, downstream_request, method, path, query
                 )
-                if app_requested
-                else await handle_admin(downstream_request, method, path, query)
-            )
-
+            if mirror_requested:
+                return await handle_mirror(downstream_request, method, path)
+            return await handle_admin(downstream_request, method, path, query)
         except Exception as exception:
             logger.exception(
                 'Exception during %s %s %s',
@@ -441,6 +457,18 @@ async def async_main():
             query,
             default_http_timeout,
             (('content-security-policy', csp_application_running(host)),),
+        )
+
+    async def handle_mirror(downstream_request, method, path):
+        mirror_path = path[len(mirror_local_root) :]
+        upstream_url = URL(mirror_remote_root + mirror_path)
+        return await handle_http(
+            downstream_request,
+            method,
+            CIMultiDict(mirror_headers(downstream_request)),
+            upstream_url,
+            {},
+            default_http_timeout,
         )
 
     async def handle_admin(downstream_request, method, path, query):
@@ -931,6 +959,7 @@ async def async_main():
         async def _authenticate_by_ip_whitelist(request, handler):
             ip_whitelist_required = (
                 is_app_requested(request)
+                or is_mirror_requested(request)
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
             )
