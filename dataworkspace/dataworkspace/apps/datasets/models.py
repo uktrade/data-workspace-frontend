@@ -897,7 +897,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             record = self.get_record_model_class().objects.create(**form_data)
         else:
             records = self.get_records().filter(id=internal_id)
-            records.update(**form_data)
+            records.update(**form_data, updated_date=timezone.now())
             record = records.first()
         self.increment_minor_version()
         if sync_externally and self.external_database is not None:
