@@ -21,7 +21,7 @@ def expected_event_log_response(eventlog):
             'type': eventlog.related_object.get_type_display(),
         },
         'timestamp': DateTimeField().to_representation(eventlog.timestamp),
-        'user': eventlog.user.id,
+        'user_id': eventlog.user.id,
         'extra': eventlog.extra,
     }
 
