@@ -189,6 +189,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - A slightly magic /__mirror/ path accessible on the domain of each application that routes to our S3 mirror. Specifically for applications that need map tiles.
 - New API endpoint for listing user accounts for consumption by data flow
+- New API endpoint listing historic application instances at `/api/v1/application-instance/instances`
 
 ## 2020-03-30
 
