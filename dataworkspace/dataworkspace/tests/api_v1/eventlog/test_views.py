@@ -1,5 +1,6 @@
 import uuid
 
+import mock
 import pytest
 from django.urls import reverse
 from rest_framework import status
@@ -20,12 +21,7 @@ def expected_event_log_response(eventlog):
             'type': eventlog.related_object.get_type_display(),
         },
         'timestamp': DateTimeField().to_representation(eventlog.timestamp),
-        'user': {
-            'id': eventlog.user.id,
-            'email': eventlog.user.email,
-            'first_name': eventlog.user.first_name,
-            'last_name': eventlog.user.last_name,
-        },
+        'user': eventlog.user.id,
         'extra': eventlog.extra,
     }
 
@@ -45,9 +41,20 @@ def test_success(unauthenticated_client, event_log_factory):
     response = unauthenticated_client.get(reverse('api-v1:eventlog:events'))
     assert response.status_code == status.HTTP_200_OK
     assert response.json()['results'] == [
-        expected_event_log_response(eventlog2),
         expected_event_log_response(eventlog1),
+        expected_event_log_response(eventlog2),
     ]
+
+
+@pytest.mark.django_db
+@mock.patch(
+    'dataworkspace.apps.api_v1.eventlog.views.EventLogCursorPagination.page_size', 2
+)
+def test_pagination(unauthenticated_client):
+    factories.DatasetLinkDownloadEventFactory.create_batch(3)
+    response = unauthenticated_client.get(reverse('api-v1:eventlog:events'))
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()['next'] is not None
 
 
 @pytest.mark.django_db
