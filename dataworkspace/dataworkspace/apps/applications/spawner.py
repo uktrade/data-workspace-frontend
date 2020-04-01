@@ -343,7 +343,7 @@ class FargateSpawner:
             cluster_name = spawner_options['CLUSTER_NAME']
 
             now = datetime.datetime.now()
-            fifteen_minutes_ago = now - datetime.timedelta(minutes=15)
+            thirty_minutes_ago = now - datetime.timedelta(minutes=30)
             three_minutes_ago = now - datetime.timedelta(minutes=3)
             twenty_seconds_ago = now - datetime.timedelta(seconds=20)
 
@@ -362,7 +362,7 @@ class FargateSpawner:
                 pipeline_status = pipeline['status']
                 if (
                     pipeline_status in RUNNING_PIPELINE_STATUSES
-                    and created_date > fifteen_minutes_ago
+                    and created_date > thirty_minutes_ago
                 ):
                     return 'RUNNING'
                 if pipeline_status not in SUCCESS_PIPELINE_STATUSES:

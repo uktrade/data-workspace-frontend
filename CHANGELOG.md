@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - New API endpoint listing eventlog entries at `/api/v1/eventlog/events`
 
+### Changed
+
+- The timeout for a visualisation build to complete to 30 minutes
+
 ## 2020-03-27
 
 ### Changed
