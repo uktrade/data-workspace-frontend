@@ -19,3 +19,4 @@ sentry-sdk==0.14.3
 hawk-server-asyncio==0.0.6
 django-waffle==0.20.0
 django-csp==3.6
+djangorestframework==3.11.0

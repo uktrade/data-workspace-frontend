@@ -46,4 +46,11 @@ urlpatterns = [
             namespace='reference-dataset',
         ),
     ),
+    path(
+        'eventlog/',
+        include(
+            ('dataworkspace.apps.api_v1.eventlog.urls', 'eventlog'),
+            namespace='eventlog',
+        ),
+    ),
 ]
