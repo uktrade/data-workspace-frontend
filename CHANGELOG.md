@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## Changed
 
 - Some of the fixed-length sleeps in the integration tests to polling the healthcheck endpoint until it returns non-error response.
+- Styles in the visualisation page to better display long branch names
 
 ## 2020-03-30
 
