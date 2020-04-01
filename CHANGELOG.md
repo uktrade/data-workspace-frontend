@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-04-02
+
+## Added
+
+- A tools page for users who don't have access to tools, telling them what it is and how to get access.
+
 ## 2020-04-01
 
 ## Changed

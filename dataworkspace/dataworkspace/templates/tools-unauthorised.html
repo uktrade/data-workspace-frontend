@@ -1,0 +1,50 @@
+{% extends 'tools.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">Tools</h1>
+
+            <p class="govuk-body">Data Workspace offers access to a range of analysis tools that you can use with datasets in the catalogue.</p>
+
+            <ul class="govuk-list govuk-list--bullet">
+                <li>JupyterLab</li>
+                <li>RStudio</li>
+                <li>pgAdmin</li>
+                <li>SPSS/Stata</li>
+            </ul>
+
+            <p class="govuk-body">
+                These are powerful and versatile tools aimed at analysts and data scientists.
+                They require some familiarity with coding languages such as Python, R or SQL.
+                <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/">Find out more</a>
+                about the tools and how to start using them in the Help Centre.
+            </p>
+
+            <p class="govuk-body">
+                Users will need to have SC clearance and complete the
+                <a class="govuk-link" href="https://app.ihasco.co.uk/lgjg02">GDPR Essentials</a> and
+                <a class="govuk-link" href="https://civilservicelearning.civilservice.gov.uk/responsible-information">Responsible for Information</a>
+                online training in order to access tools. Click the button below to request access to a specific tool.
+            </p>
+
+            <p class="govuk-body">We will follow up with you within 5 working days to confirm your eligibility and grant access.</p>
+
+            <div class="govuk-warning-text">
+                <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+                <div class="govuk-warning-text__text">
+                    <strong>
+                      <span class="govuk-warning-text__assistive">Warning</span>
+                      You currently do not have permission to access tools.
+                    </strong>
+                </div>
+            </div>
+
+            <p class="govuk-body">
+              <a class="govuk-button" href="{% url 'support' %}">Request access</a>
+              <a class="govuk-link govuk-!-margin-left-3" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/">Learn more</a>
+            </p>
+        </div>
+    </div>
+{% endblock %}

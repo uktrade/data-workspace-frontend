@@ -110,9 +110,14 @@ def tools_html_GET(request):
         app = application_template.host_exact
         return f'{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
+    has_any_tool_perms = request.user.has_perm(
+        "applications.start_all_applications"
+    ) or request.user.has_perm("applications.access_appstream")
+    view_file = 'tools.html' if has_any_tool_perms else 'tools-unauthorised.html'
+
     return render(
         request,
-        'tools.html',
+        view_file,
         {
             'applications': [
                 {
