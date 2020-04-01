@@ -209,6 +209,16 @@ class ReferenceDatasetDownloadEventFactory(RelatedObjectEventFactory):
     }
 
 
+class DatasetAccessRequestEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_DATASET_ACCESS_REQUEST
+    content_object = factory.SubFactory(DatacutDataSetFactory)
+    extra = {
+        'contact_email': 'test@test.com',
+        'goal': 'Access data',
+        'ticket_reference': 999,
+    }
+
+
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True

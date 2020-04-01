@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.test import Client
 
 from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.factories import (
@@ -77,8 +78,10 @@ def test_request_access_form(client, mocker):
     create_zendesk_ticket = mocker.patch(
         'dataworkspace.apps.datasets.views.create_zendesk_ticket'
     )
+    create_zendesk_ticket.return_value = 999
 
     ds = factories.DataSetFactory.create(published=True)
+    log_count = EventLog.objects.count()
 
     response = client.post(
         reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
@@ -91,6 +94,8 @@ def test_request_access_form(client, mocker):
     create_zendesk_ticket.assert_called_once_with(
         "user@example.com", mock.ANY, "My goal", mock.ANY, ds.name, mock.ANY, None, None
     )
+    assert EventLog.objects.count() == log_count + 1
+    assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_ACCESS_REQUEST
 
 
 def test_find_datasets_with_no_results(client):
