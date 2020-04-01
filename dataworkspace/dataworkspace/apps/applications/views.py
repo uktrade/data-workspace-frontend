@@ -244,19 +244,8 @@ def visualisations_html_GET(request):
             )
         return None
 
-    def view_link(gitlab_project):
-        try:
-            host_exact = application_templates[gitlab_project['id']].host_exact
-        except KeyError:
-            return None
-        return f'{request.scheme}://{host_exact}.{settings.APPLICATION_ROOT_DOMAIN}/'
-
     projects = [
-        {
-            'gitlab_project': gitlab_project,
-            'manage_link': manage_link(gitlab_project),
-            'view_link': view_link(gitlab_project),
-        }
+        {'gitlab_project': gitlab_project, 'manage_link': manage_link(gitlab_project)}
         for gitlab_project in gitlab_projects
     ]
 
@@ -306,6 +295,11 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
     )
 
+    host_exact = application_template.host_exact
+    production_link = (
+        f'{request.scheme}://{host_exact}.{settings.APPLICATION_ROOT_DOMAIN}/'
+    )
+
     return _render_visualisation(
         request,
         'visualisation_branch.html',
@@ -313,6 +307,7 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         branches,
         current_menu_item='branches',
         template_specific_context={
+            'production_link': production_link,
             'current_branch': current_branch,
             'latest_commit': latest_commit,
             'latest_commit_link': latest_commit_link,
