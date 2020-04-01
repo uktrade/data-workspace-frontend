@@ -171,6 +171,7 @@ async def async_main():
             request.url.path.startswith('/api/v1/dataset/')
             or request.url.path.startswith('/api/v1/reference-dataset/')
             or request.url.path.startswith('/api/v1/eventlog/')
+            or request.url.path.startswith('/api/v1/accounts/')
             and request.url.host == root_domain_no_port
         )
 
