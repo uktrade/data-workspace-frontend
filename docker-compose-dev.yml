@@ -1,9 +1,10 @@
-version: "3"
+version: "3.4"
 services:
   data-workspace:
     build:
       context: .
       dockerfile: Dockerfile
+      target: test
     image: data-workspace
     ports:
       - "8000:8000"
