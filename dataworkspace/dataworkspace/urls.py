@@ -104,6 +104,13 @@ if settings.DEBUG:
 
     urlpatterns += staticfiles_urlpatterns()
 
+    try:
+        import debug_toolbar
+    except ImportError:
+        pass
+    else:
+        urlpatterns.append(path('__debug__/', include(debug_toolbar.urls)))
+
 handler403 = public_error_403_html_view
 handler404 = public_error_404_html_view
 handler500 = public_error_500_html_view
