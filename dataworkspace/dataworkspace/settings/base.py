@@ -70,6 +70,15 @@ MIDDLEWARE = [
     'csp.middleware.CSPMiddleware',
 ]
 
+if DEBUG:
+    try:
+        import debug_toolbar  # noqa: F401
+    except ImportError:
+        pass
+    else:
+        INSTALLED_APPS.append('debug_toolbar')
+        MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+
 AUTHENTICATION_BACKENDS = [
     'dataworkspace.apps.accounts.backends.AuthbrokerBackendUsernameIsEmail'
 ]
