@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Explorer{% if query %} - {{ query.title }}{% elif title %} - {{ title }}{% endif %}</title>
+    <link rel="stylesheet" href="{% static 'explorer/bootstrap.min.css' %}" />
+</head>
+
+<body>
+  {% block sql_explorer_content_takeover %}
+    <div id="wrap" class="wrap">
+        {% block sql_explorer_navbar %}
+            <div class="navbar navbar-default navbar-static-top" role="navigation">
+              <div class="container">
+                <div class="navbar-header">
+                  <a class="navbar-brand" href="{% url "explorer_index" %}">SQL Explorer</a>
+                </div>
+                <div class="navbar-collapse collapse">
+                  <ul class="nav navbar-nav">
+                    {% block sql_explorer_navlinks %}{% endblock %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+        {% endblock %}
+        <div class="container">
+          <div class="starter-template">
+          {% block sql_explorer_content %}{% endblock %}
+          </div>
+        </div>
+    </div>
+  {% endblock %}
+  {% block sql_explorer_scripts %}{% endblock %}
+</body>
+
+</html>
