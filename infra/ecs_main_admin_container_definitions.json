@@ -957,6 +957,10 @@
       "value": "${uploads_bucket}"
     },
     {
+      "name": "MIRROR_REMOTE_ROOT",
+      "value": "${mirror_remote_root}"
+    },
+    {
       "name": "ZENDESK_EMAIL",
       "value": "${zendesk_email}"
     },

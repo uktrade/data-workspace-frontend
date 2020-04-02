@@ -92,6 +92,7 @@ data "template_file" "admin_container_definitions" {
     #notebooks_bucket = "${var.appstream_bucket}"
     notebooks_bucket = "${var.notebooks_bucket}"
     uploads_bucket = "${var.uploads_bucket}"
+    mirror_remote_root = "https://s3-${data.aws_region.aws_region.name}.amazonaws.com/${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}/"
 
     appstream_url = "https://${var.appstream_domain}/"
     support_url = "https://${var.support_domain}/"
