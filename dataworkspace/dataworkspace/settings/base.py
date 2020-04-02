@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig',
     'adminsortable2',
     'ckeditor',
+    'explorer',
     'waffle',
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
@@ -66,7 +67,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'waffle.middleware.WaffleMiddleware',
     'dataworkspace.middleware.disable_client_side_caching',
-    'csp.middleware.CSPMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -323,3 +323,6 @@ STATIC_URL = '/__django_static/'
 
 
 CKEDITOR_BASEPATH = STATIC_URL + 'ckeditor/ckeditor/'
+
+EXPLORER_CONNECTIONS = {'default db': 'default', 'datasets db': 'datasets'}
+EXPLORER_DEFAULT_CONNECTION = 'datasets'

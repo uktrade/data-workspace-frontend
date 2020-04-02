@@ -97,6 +97,7 @@ urlpatterns = [
         include(('dataworkspace.apps.dw_admin.urls', 'dw_admin'), namespace='dw-admin'),
     ),
     path('admin/', admin.site.urls),
+    path('explorer/', include('explorer.urls')),
 ]
 
 if settings.DEBUG:

@@ -115,6 +115,12 @@
               Help centre
             </a>
           </li>
+          <li class="govuk-header__navigation-item">
+            <a class="govuk-header__link" href="{% url 'explorer_index' %}">
+              SQL Explorer
+            </a>
+          </li>
+          {% block additional_nav %}{% endblock %}
         </ul>
       </nav>
     </div>
@@ -200,4 +206,5 @@
   <script nonce="{{ request.csp_nonce }}">
     window.GOVUKFrontend.initAll();
   </script>
+  {% block footer %}{% endblock %}
 </body>
