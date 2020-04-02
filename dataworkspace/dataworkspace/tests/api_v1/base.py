@@ -4,6 +4,7 @@ from factory.django import DjangoModelFactory
 from rest_framework import status
 
 
+@pytest.mark.django_db
 class BaseAPIViewTest:
     url: str = None
     factory: DjangoModelFactory = None

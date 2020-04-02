@@ -2,12 +2,9 @@ import logging
 
 from adminsortable2.admin import SortableInlineAdminMixin
 from django.contrib import admin
-from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.utils.encoding import force_text
 from csp.decorators import csp_update
 
 from dataworkspace.apps.applications.models import VisualisationTemplate
@@ -39,6 +36,8 @@ from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryInlineForm,
     VisualisationCatalogueItemForm,
 )
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_permission_change
 
 logger = logging.getLogger('app')
 
@@ -265,42 +264,35 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             form.cleaned_data.get('authorized_users', get_user_model().objects.none())
         )
 
-        user_content_type_id = ContentType.objects.get_for_model(get_user_model()).pk
-
         super().save_model(request, obj, form, change)
 
         for user in authorized_users - current_authorized_users:
             DataSetUserPermission.objects.create(dataset=obj, user=user)
-            LogEntry.objects.log_action(
-                user_id=request.user.pk,
-                content_type_id=user_content_type_id,
-                object_id=user.pk,
-                object_repr=force_text(user),
-                action_flag=CHANGE,
-                change_message=f"Added dataset {obj} permission",
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_GRANTED_DATASET_PERMISSION,
+                {'for_user_id': user.id},
+                f"Added dataset {obj} permission",
             )
 
         for user in current_authorized_users - authorized_users:
             DataSetUserPermission.objects.filter(dataset=obj, user=user).delete()
-            LogEntry.objects.log_action(
-                user_id=request.user.pk,
-                content_type_id=user_content_type_id,
-                object_id=user.pk,
-                object_repr=force_text(user),
-                action_flag=CHANGE,
-                change_message=f"Removed dataset {obj} permission",
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_REVOKED_DATASET_PERMISSION,
+                {'for_user_id': user.id},
+                f"Removed dataset {obj} permission",
             )
 
         if original_user_access_type != obj.user_access_type:
-            LogEntry.objects.log_action(
-                user_id=request.user.pk,
-                content_type_id=ContentType.objects.get_for_model(obj).pk,
-                object_id=obj.id,
-                object_repr=force_text(obj),
-                action_flag=CHANGE,
-                change_message='user_access_type set to {}'.format(
-                    obj.user_access_type
-                ),
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE,
+                {"access_type": obj.user_access_type},
+                f"user_access_type set to {obj.user_access_type}",
             )
 
 

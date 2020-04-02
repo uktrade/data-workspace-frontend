@@ -4,14 +4,12 @@ from itertools import product
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
-from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.models import User, Permission
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
 from django.db.models.functions import Least
-from django.utils.encoding import force_text
+from django.forms import model_to_dict
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -31,6 +29,8 @@ from dataworkspace.apps.applications.utils import (
     MetricsException,
     application_instance_max_cpu,
 )
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_permission_change
 
 
 @admin.register(ApplicationInstance)
@@ -449,19 +449,9 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        content_type = ContentType.objects.get_for_model(obj).pk
-        object_repr = force_text(obj)
-        user_id = request.user.pk
-        object_id = obj.pk
-
-        def log_change(message):
-            LogEntry.objects.log_action(
-                user_id=user_id,
-                content_type_id=content_type,
-                object_id=object_id,
-                object_repr=object_repr,
-                action_flag=CHANGE,
-                change_message=message,
+        def log_change(event_type, dataset, message):
+            log_permission_change(
+                request.user, obj, event_type, model_to_dict(dataset), message
             )
 
         current_master_datasets = set(
@@ -477,12 +467,20 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
             DataSetApplicationTemplatePermission.objects.create(
                 dataset=dataset, application_template=obj
             )
-            log_change('Added dataset {} permission'.format(dataset))
+            log_change(
+                EventLog.TYPE_GRANTED_DATASET_PERMISSION,
+                dataset,
+                'Added dataset {} permission'.format(dataset),
+            )
         for dataset in current_master_datasets - authorized_master_datasets:
             DataSetApplicationTemplatePermission.objects.filter(
                 dataset=dataset, application_template=obj
             ).delete()
-            log_change('Removed dataset {} permission'.format(dataset))
+            log_change(
+                EventLog.TYPE_REVOKED_DATASET_PERMISSION,
+                dataset,
+                'Removed dataset {} permission'.format(dataset),
+            )
 
         cat_item, _ = VisualisationCatalogueItem.objects.update_or_create(
             visualisation_template=obj, defaults={"name": obj.nice_name}

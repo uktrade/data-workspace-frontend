@@ -219,6 +219,36 @@ class DatasetAccessRequestEventFactory(RelatedObjectEventFactory):
     }
 
 
+class DatasetAccessGrantedEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
+    content_object = factory.SubFactory(DatacutDataSetFactory)
+    extra = {
+        'created_by': 1,
+        'updated_by': 1,
+        'deleted': False,
+        'type': 2,
+        'name': 'A dataset',
+        'slug': 'a-dataset',
+        'short_description': 'test',
+        'user_access_type': 'REQUIRES_AUTHORIZATION',
+    }
+
+
+class DatasetAccessRevokedEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
+    content_object = factory.SubFactory(DatacutDataSetFactory)
+    extra = {
+        'created_by': 1,
+        'updated_by': 1,
+        'deleted': False,
+        'type': 2,
+        'name': 'A dataset',
+        'slug': 'a-dataset',
+        'short_description': 'test',
+        'user_access_type': 'REQUIRES_AUTHORIZATION',
+    }
+
+
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
