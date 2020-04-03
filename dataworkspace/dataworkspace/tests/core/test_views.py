@@ -1,8 +1,10 @@
 import mock
+
 import pytest
 from bs4 import BeautifulSoup
 
 from django.urls import reverse
+from django.shortcuts import render
 
 from dataworkspace.tests.common import BaseTestCase, get_response_csp_as_set
 
@@ -85,39 +87,9 @@ def test_csp_on_files_endpoint_includes_s3(client):
 
 
 @pytest.mark.parametrize(
-    "request_client, expected_links",
-    (
-        (
-            "client",
-            [
-                ("Data Workspace", "http://dataworkspace.test:8000/"),
-                ("Home", "http://dataworkspace.test:8000/"),
-                ("About", "/about/"),
-                ("Support and feedback", "/support-and-feedback/"),
-                (
-                    "Help centre",
-                    "https://data-services-help.trade.gov.uk/data-workspace",
-                ),
-            ],
-        ),
-        (
-            "staff_client",
-            [
-                ("Data Workspace", "http://dataworkspace.test:8000/"),
-                ("Home", "http://dataworkspace.test:8000/"),
-                ("Tools", "/tools/"),
-                ("About", "/about/"),
-                ("Support and feedback", "/support-and-feedback/"),
-                (
-                    "Help centre",
-                    "https://data-services-help.trade.gov.uk/data-workspace",
-                ),
-            ],
-        ),
-    ),
-    indirect=["request_client"],
+    "request_client", ('client', 'staff_client'), indirect=["request_client"]
 )
-def test_header_links(request_client, expected_links):
+def test_header_links(request_client):
     response = request_client.get(reverse("root"))
 
     soup = BeautifulSoup(response.content.decode(response.charset))
@@ -127,65 +99,22 @@ def test_header_links(request_client, expected_links):
         (link.get_text(strip=True), link.get('href')) for link in header_links
     ]
 
+    expected_links = [
+        ("Data Workspace", "http://dataworkspace.test:8000/"),
+        ("Home", "http://dataworkspace.test:8000/"),
+        ("Tools", "/tools/"),
+        ("About", "/about/"),
+        ("Support and feedback", "/support-and-feedback/"),
+        ("Help centre", "https://data-services-help.trade.gov.uk/data-workspace"),
+    ]
+
     assert link_labels == expected_links
 
 
 @pytest.mark.parametrize(
-    "request_client, expected_links",
-    (
-        (
-            "client",
-            [
-                ('Home', 'http://dataworkspace.test:8000/'),
-                ('About', '/about/'),
-                ("Support and feedback", "/support-and-feedback/"),
-                (
-                    'Help centre',
-                    'https://data-services-help.trade.gov.uk/data-workspace',
-                ),
-                (
-                    'Privacy Policy',
-                    'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
-                ),
-                (
-                    'Open Government Licence v3.0',
-                    'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
-                ),
-                (
-                    '© Crown copyright',
-                    'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/',
-                ),
-            ],
-        ),
-        (
-            "staff_client",
-            [
-                ('Home', 'http://dataworkspace.test:8000/'),
-                ("Tools", "/tools/"),
-                ('About', '/about/'),
-                ("Support and feedback", "/support-and-feedback/"),
-                (
-                    'Help centre',
-                    'https://data-services-help.trade.gov.uk/data-workspace',
-                ),
-                (
-                    'Privacy Policy',
-                    'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
-                ),
-                (
-                    'Open Government Licence v3.0',
-                    'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
-                ),
-                (
-                    '© Crown copyright',
-                    'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/',
-                ),
-            ],
-        ),
-    ),
-    indirect=["request_client"],
+    "request_client", ("client", "staff_client"), indirect=["request_client"]
 )
-def test_footer_links(request_client, expected_links):
+def test_footer_links(request_client):
     response = request_client.get(reverse("root"))
 
     soup = BeautifulSoup(response.content.decode(response.charset))
@@ -195,4 +124,39 @@ def test_footer_links(request_client, expected_links):
         (link.get_text(strip=True), link.get('href')) for link in footer_links
     ]
 
+    expected_links = [
+        ('Home', 'http://dataworkspace.test:8000/'),
+        ("Tools", "/tools/"),
+        ('About', '/about/'),
+        ("Support and feedback", "/support-and-feedback/"),
+        ('Help centre', 'https://data-services-help.trade.gov.uk/data-workspace'),
+        (
+            'Privacy Policy',
+            'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
+        ),
+        (
+            'Open Government Licence v3.0',
+            'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
+        ),
+        (
+            '© Crown copyright',
+            'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/',
+        ),
+    ]
+
     assert link_labels == expected_links
+
+
+@pytest.mark.parametrize(
+    "request_client, expected_template",
+    (("client", "tools-unauthorised.html"), ("staff_client", "tools.html")),
+    indirect=["request_client"],
+)
+def test_tools_only_shown_for_users_with_permissions(request_client, expected_template):
+    with mock.patch(
+        'dataworkspace.apps.applications.views.render', wraps=render
+    ) as renderer:
+        response = request_client.get(reverse("applications:tools"))
+
+    assert response.status_code == 200
+    assert renderer.call_args[0][1] == expected_template
