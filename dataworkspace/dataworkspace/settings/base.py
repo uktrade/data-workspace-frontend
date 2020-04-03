@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'ckeditor',
     'waffle',
     'rest_framework',
-    'elasticapm.contrib.django',
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
     'dataworkspace.apps.catalogue',
@@ -335,15 +334,3 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
     'PAGE_SIZE': 100,
 }
-
-ELASTIC_APM_SECRET_TOKEN = env.get("ELASTIC_APM_SECRET_TOKEN")
-ELASTIC_APM = (
-    {
-        'SERVICE_NAME': 'data-workspace',
-        'SECRET_TOKEN': ELASTIC_APM_SECRET_TOKEN,
-        'SERVER_URL': 'https://apm.ci.uktrade.io:8200',
-        'ENVIRONMENT': env.get('ENVIRONMENT', 'development'),
-    }
-    if ELASTIC_APM_SECRET_TOKEN
-    else {}
-)
