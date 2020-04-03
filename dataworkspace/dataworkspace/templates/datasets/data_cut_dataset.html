@@ -37,31 +37,30 @@
             <div class="govuk-body">
                 {{ model.description | safe }}
             </div>
+
+            {% if data_links_with_link_toggle and not has_access %}
+                <div class="govuk-warning-text">
+                    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+                    <div class="govuk-warning-text__text">
+                        <strong>
+                            <span class="govuk-warning-text__assistive">Warning</span>
+                            You do not have permission to access these links.
+                        </strong>
+                    </div>
+                </div>
+                {% if model.eligibility_criteria %}
+                  <a class="govuk-button" href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
+                {% else %}
+                  <a class="govuk-button" href="{% url 'datasets:request_access' model.id %}">Request access</a>
+                {% endif %}
+            {% endif %}
         </div>
     </div>
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-two-thirds">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
-
-            {% if data_links_with_link_toggle %}
-              {% if not has_access %}
-                  <div class="govuk-warning-text">
-                      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-                      <div class="govuk-warning-text__text">
-                          <strong>
-                              <span class="govuk-warning-text__assistive">Warning</span>
-                              You do not have permission to access these links.
-                              <br>
-                              {% if model.eligibility_criteria %}
-                                <a class="govuk-link--no-visited-state" href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
-                              {% else %}
-                                <a class="govuk-link--no-visited-state" href="{% url 'datasets:request_access' model.id %}">Request access</a>
-                              {% endif %}
-                          </strong>
-                      </div>
-                  </div>
-              {% elif data_hosted_externally %}
+              {% if data_links_with_link_toggle and has_access and data_hosted_externally %}
                 <div class="govuk-warning-text">
                     <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
                     <div class="govuk-warning-text__text">
@@ -72,7 +71,6 @@
                     </div>
                 </div>
               {% endif %}
-            {% endif %}
         </div>
 
 
