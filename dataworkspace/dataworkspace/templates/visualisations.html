@@ -50,11 +50,6 @@
                 <li>
                     <a class="govuk-link govuk-link--no-visited-state" href="{{ project.gitlab_project.web_url }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> source in GitLab</a>
                 </li>
-                {% if project.view_link %}
-                <li>
-                    <a class="govuk-link" href="#"><a class="govuk-link govuk-link--no-visited-state" href="{{ project.view_link }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> production visualisation</a></a>
-                </li>
-                {% endif %}
             </ul>
 
             {% if not forloop.last %}
