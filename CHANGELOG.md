@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-04-03
 
-## Changed
+### Added
+
+- Instrumentation for Elastic APM
+
+### Changed
 
 - Moved the "no permissions" warning on the datacut page into the top section.
 
