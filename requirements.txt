@@ -20,5 +20,3 @@ hawk-server-asyncio==0.0.6
 django-waffle==0.20.0
 django-csp==3.6
 djangorestframework==3.11.0
-elastic-apm==5.5.2
-psutil==5.7.0
