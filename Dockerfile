@@ -13,7 +13,8 @@ RUN \
 	apk add --no-cache --virtual .build-deps \
 		build-base=0.5-r1 \
 		git=2.22.2-r0 \
-		python3-dev=3.7.5-r1 && \
+		python3-dev=3.7.5-r1 \
+		linux-headers=4.19.36-r0 && \
 	apk add --no-cache \
 		nginx=1.16.1-r2 \
 		openssl=1.1.1d-r2 \
