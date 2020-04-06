@@ -1,4 +1,5 @@
 import logging
+from functools import wraps
 
 from django.contrib.auth import (
     SESSION_KEY,
@@ -14,6 +15,7 @@ logger = logging.getLogger('app')
 
 
 def login_required(func):
+    @wraps(func)
     def _login_required(request, *args, **kwargs):
         user = authenticate(request)
         if user is None:
