@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import json
 import random
 from urllib.parse import urlsplit
 
@@ -22,6 +23,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
 )
+from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.views import public_error_500_html_view
 
@@ -304,6 +306,16 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
     production_link = (
         f'{request.scheme}://{host_exact}.{settings.APPLICATION_ROOT_DOMAIN}/'
     )
+    tags = get_spawner(application_template.spawner).tags_for_tag(
+        json.loads(application_template.spawner_options),
+        application_template.host_exact,
+    )
+    production_commit_id = None
+    for tag in tags:
+        possible_host_exact, _, host_exact_or_commit_id = tag.rpartition('--')
+        if possible_host_exact:
+            production_commit_id = host_exact_or_commit_id
+            break
 
     return _render_visualisation(
         request,
@@ -313,6 +325,7 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         current_menu_item='branches',
         template_specific_context={
             'production_link': production_link,
+            'production_commit_id': production_commit_id,
             'current_branch': current_branch,
             'latest_commit': latest_commit,
             'latest_commit_link': latest_commit_link,
