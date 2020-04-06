@@ -426,6 +426,10 @@ class FargateSpawner:
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
 
+    @staticmethod
+    def tags_for_tag(spawner_options, tag):
+        return _ecr_tags_for_tag(spawner_options['ECR_REPOSITORY_NAME'], tag)
+
 
 def _gitlab_ecr_pipeline_cancel(pipeline_id):
     return gitlab_api_v4(
@@ -447,6 +451,16 @@ def _ecr_tag_exists(repositoryName, tag):
         )
     except client.exceptions.ImageNotFoundException:
         return False
+
+
+def _ecr_tags_for_tag(repositoryName, tag):
+    client = boto3.client('ecr')
+    try:
+        return client.describe_images(
+            repositoryName=repositoryName, imageIds=[{'imageTag': tag}]
+        )['imageDetails'][0]['imageTags']
+    except client.exceptions.ImageNotFoundException:
+        return []
 
 
 def _fargate_task_definition_with_tag(task_family, container_name, tag):

@@ -8,7 +8,9 @@
 
 {% if current_branch.name == gitlab_project.default_branch %}
 <section class="production govuk-!-padding-5 govuk-!-margin-bottom-5">
-    <h2 class="govuk-heading-m govuk-heading-production">Production</h2>
+    <h2 class="govuk-heading-m govuk-heading-production">
+        Production{% if production_commit_id %}: {{ production_commit_id }}{% endif %}
+    </h2>
 
     <ul class="govuk-list govuk-!-margin-bottom-0 govuk-!-font-size-16">
         <li class="govuk-!-margin-bottom-0">
