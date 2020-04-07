@@ -65,6 +65,21 @@
         background: #f3f2f1;
         border: 1px solid #b1b4b6;
     }
+    @media (min-width: 40.0625em) {
+        /* If a browser doesn't support flexbox, the elements will just
+           be stacked, similar to mobile view */
+        .commit-row {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .commit-left {
+            flex-grow: 1;
+            padding-right: 20px;
+        }
+        .commit-right {
+            text-align: center;
+        }
+    }
   </style>
 {% endblock %}
 

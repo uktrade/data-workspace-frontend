@@ -430,6 +430,10 @@ class FargateSpawner:
     def tags_for_tag(spawner_options, tag):
         return _ecr_tags_for_tag(spawner_options['ECR_REPOSITORY_NAME'], tag)
 
+    @staticmethod
+    def retag(spawner_options, existing_tag, new_tag):
+        return _ecr_retag(spawner_options['ECR_REPOSITORY_NAME'], existing_tag, new_tag)
+
 
 def _gitlab_ecr_pipeline_cancel(pipeline_id):
     return gitlab_api_v4(
@@ -461,6 +465,23 @@ def _ecr_tags_for_tag(repositoryName, tag):
         )['imageDetails'][0]['imageTags']
     except client.exceptions.ImageNotFoundException:
         return []
+
+
+def _ecr_retag(repositoryName, existing_tag, new_tag):
+    client = boto3.client('ecr')
+
+    manifest = client.batch_get_image(
+        repositoryName=repositoryName, imageIds=[{'imageTag': existing_tag}]
+    )['images'][0]['imageManifest']
+
+    try:
+        client.put_image(
+            repositoryName=repositoryName, imageTag=new_tag, imageManifest=manifest
+        )
+    except client.exceptions.ImageAlreadyExistsException:
+        # Swallow the exception to support idempotency in the case of
+        # duplicated submissions
+        pass
 
 
 def _fargate_task_definition_with_tag(task_family, container_name, tag):
