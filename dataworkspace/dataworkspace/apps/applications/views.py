@@ -113,8 +113,8 @@ def tools_html_GET(request):
         return f'{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     has_any_tool_perms = request.user.has_perm(
-        "applications.start_all_applications"
-    ) or request.user.has_perm("applications.access_appstream")
+        'applications.start_all_applications'
+    ) or request.user.has_perm('applications.access_appstream')
     view_file = 'tools.html' if has_any_tool_perms else 'tools-unauthorised.html'
 
     return render(
@@ -272,10 +272,13 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     if not request.user.has_perm('applications.develop_visualisations'):
         return HttpResponseForbidden()
 
-    if not request.method == 'GET':
-        return HttpResponse(status=405)
+    if request.method == 'GET':
+        return visualisation_branch_html_GET(request, gitlab_project_id, branch_name)
 
-    return visualisation_branch_html_GET(request, gitlab_project_id, branch_name)
+    if request.method == 'POST':
+        return visualisation_branch_html_POST(request, gitlab_project_id, branch_name)
+
+    return HttpResponse(status=405)
 
 
 def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
@@ -301,6 +304,10 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
     latest_commit_date = datetime.datetime.strptime(
         latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
     )
+    latest_commit_tag_exists = get_spawner(application_template.spawner).tags_for_tag(
+        json.loads(application_template.spawner_options),
+        f'{application_template.host_exact}--{latest_commit["short_id"]}',
+    )
 
     host_exact = application_template.host_exact
     production_link = (
@@ -317,6 +324,22 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
             production_commit_id = host_exact_or_commit_id
             break
 
+    # It might not be good, UI-wise, to force the user to have to preview a
+    # commit before it can be released. However, building a Docker image is
+    # done via the preview link, so this is the quickest/easiest thing for
+    # users to be able to release a new version of the visualisation
+    must_preview_latest_commit_to_release = (
+        current_branch['name'] == gitlab_project['default_branch']
+        and not latest_commit_tag_exists
+        and latest_commit['short_id'] != production_commit_id
+    )
+    can_release_latest_commit = (
+        current_branch['name'] == gitlab_project['default_branch']
+        and latest_commit_tag_exists
+        and latest_commit['short_id'] != production_commit_id
+    )
+    latest_commit_is_released = latest_commit['short_id'] == production_commit_id
+
     return _render_visualisation(
         request,
         'visualisation_branch.html',
@@ -331,7 +354,41 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
             'latest_commit_link': latest_commit_link,
             'latest_commit_preview_link': latest_commit_preview_link,
             'latest_commit_date': latest_commit_date,
+            'latest_commit_tag_exists': latest_commit_tag_exists,
+            'can_release_latest_commit': can_release_latest_commit,
+            'must_preview_latest_commit_to_release': must_preview_latest_commit_to_release,
+            'latest_commit_is_released': latest_commit_is_released,
         },
+    )
+
+
+def visualisation_branch_html_POST(request, gitlab_project_id, branch_name):
+    release_commit = request.POST['release-commit']
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project_id
+    )
+    get_spawner(application_template.spawner).retag(
+        json.loads(application_template.spawner_options),
+        f'{application_template.host_exact}--{release_commit}',
+        application_template.host_exact,
+    )
+
+    try:
+        application_instance = ApplicationInstance.objects.get(
+            public_host=application_template.host_exact,
+            state__in=['RUNNING', 'SPAWNING'],
+        )
+    except ApplicationInstance.DoesNotExist:
+        pass
+    else:
+        stop_spawner_and_application(application_instance)
+
+    messages.success(request, f'Released commit {release_commit} to production')
+
+    return redirect(
+        'visualisations:branch',
+        gitlab_project_id=gitlab_project_id,
+        branch_name=branch_name,
     )
 
 

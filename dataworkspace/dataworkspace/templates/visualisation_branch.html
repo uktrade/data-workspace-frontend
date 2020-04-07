@@ -21,7 +21,33 @@
 {% endif %}
 
 <section class="commit govuk-!-padding-5">
-    <h2 class="govuk-heading-m">Latest commit: {{ latest_commit.short_id }}</h2>
+    <div class="commit-row">
+        <h2 class="commit-left govuk-heading-m">Latest commit: {{ latest_commit.short_id }}</h2>
+        <form method="POST" class="commit-right">
+            {% csrf_token %}
+
+            {% if must_preview_latest_commit_to_release %}
+            <button class="govuk-button govuk-!-margin-bottom-1" data-module="govuk-button" type="submit" disabled="disabled" aria-disabled="true">
+                Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
+            </button>
+            <p class="govuk-body govuk-!-margin-bottom-3 govuk-!-font-size-14">Preview required before release</p>
+            {% endif %}
+
+            {% if can_release_latest_commit %}
+            <input type="hidden" name="release-commit" value="{{ latest_commit.short_id }}">
+            <button class="govuk-button govuk-!-margin-bottom-3" data-module="govuk-button">
+                Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
+            </button>
+            {% endif %}
+
+            {% if latest_commit_is_released %}
+            <button class="govuk-button govuk-button--disabled govuk-!-margin-bottom-1" data-module="govuk-button" disabled="disabled" aria-disabled="true">
+                Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
+            </button>
+            <p class="govuk-body govuk-!-margin-bottom-3 govuk-!-font-size-14">Has been released</p>
+            {% endif %}
+        </form>
+    </div>
 
     <p class="govuk-body">
         {{ latest_commit.title }}<br>

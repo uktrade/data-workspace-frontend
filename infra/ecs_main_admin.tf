@@ -397,6 +397,8 @@ data "aws_iam_policy_document" "admin_run_tasks" {
   statement {
     actions = [
       "ecr:DescribeImages",
+      "ecr:BatchGetImage",
+      "ecr:PutImage",
     ]
 
     resources = [
