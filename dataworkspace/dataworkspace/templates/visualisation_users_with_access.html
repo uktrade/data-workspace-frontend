@@ -11,7 +11,8 @@
 {% endif %}
 
 {% if application_template.user_access_type == 'REQUIRES_AUTHORIZATION' and users %}
-<p class="govuk-body">The following users can view {{ gitlab_project.name }}.</p>
+<p class="govuk-body">The following {{ users|length }} user{% if users|length != 1 %}s{% endif %} can view {{ gitlab_project.name }}.</p>
+
 <ul class="govuk-list govuk-list--bullet">
     {% for user in users %}
     <li>
