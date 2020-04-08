@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Updated text on "user unauthorised to use tools" page to remove the requirement for them to have SC.
 - Fewer exceptions polling Fargate for task stopped time
+- Fewer exceptions when removing database users: specifically when users had privileges on schemas without tables
 
 ### Added
 
