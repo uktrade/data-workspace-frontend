@@ -1,5 +1,7 @@
 {% extends '_visualisation.html' %}
 
+{% block page_title %}Users - {{ block.super }}{% endblock %}
+
 {% block content %}
 <h1 class="govuk-heading-l govuk-!-margin-bottom-4">
     <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
