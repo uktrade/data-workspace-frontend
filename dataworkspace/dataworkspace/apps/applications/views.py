@@ -397,10 +397,10 @@ def visualisation_users_html_view(request, gitlab_project_id):
     if not request.user.has_perm('applications.develop_visualisations'):
         return HttpResponseForbidden()
 
-    if not request.method == 'GET':
-        return HttpResponse(status=405)
+    if request.method == 'GET':
+        return visualisation_users_html_GET(request, gitlab_project_id)
 
-    return visualisation_users_html_GET(request, gitlab_project_id)
+    return HttpResponse(status=405)
 
 
 def visualisation_users_html_GET(request, gitlab_project_id):
