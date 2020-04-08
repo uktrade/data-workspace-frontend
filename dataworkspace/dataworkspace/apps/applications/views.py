@@ -27,6 +27,7 @@ from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.views import public_error_500_html_view
 
+
 TOOL_LOADING_MESSAGES = [
     {
         'title': 'Principle 1 of the Data Protection Act 2018',
