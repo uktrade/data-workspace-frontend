@@ -322,6 +322,9 @@ def populate_created_stopped_fargate():
             except (ValueError, KeyError):
                 continue
 
+            if not task_arn:
+                continue
+
             # To not bombard the ECS API
             gevent.sleep(0.1)
             try:
