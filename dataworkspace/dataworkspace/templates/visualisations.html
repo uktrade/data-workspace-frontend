@@ -30,7 +30,7 @@
         {% endif %}
 
         {% if has_gitlab_user and not projects %}
-            <p class="govuk-body">You do not have access to any visualisations in GitLab. If you think you should have access, please <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
+            <p class="govuk-body">You do not have developer access to any visualisations in GitLab. If you think you should have access, please <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
         {% endif %}
 
         {% for project in projects %}
@@ -42,11 +42,9 @@
             {% endif %}
 
             <ul class="govuk-list">
-                {% if project.manage_link %}
                 <li>
                     <a class="govuk-link" href="#"><a class="govuk-link govuk-link--no-visited-state" href="{{ project.manage_link }}">Manage<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span></a></a>
                 </li>
-                {% endif %}
                 <li>
                     <a class="govuk-link govuk-link--no-visited-state" href="{{ project.gitlab_project.web_url }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> source in GitLab</a>
                 </li>
