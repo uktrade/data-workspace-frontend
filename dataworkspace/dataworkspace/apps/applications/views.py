@@ -422,7 +422,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project_id):
         'visualisation_users_with_access.html',
         gitlab_project,
         branches,
-        current_menu_item='users',
+        current_menu_item='users-with-access',
         template_specific_context={
             'application_template': application_template,
             'users': users,

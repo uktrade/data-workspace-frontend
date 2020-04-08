@@ -1,11 +1,11 @@
 {% extends '_visualisation.html' %}
 
-{% block page_title %}Users - {{ block.super }}{% endblock %}
+{% block page_title %}Users with access - {{ block.super }}{% endblock %}
 
 {% block content %}
 <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
     <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
-    Users
+    Users with access
 </h1>
 
 {% if application_template.user_access_type == 'REQUIRES_AUTHORIZATION' and not users %}

@@ -15,8 +15,8 @@ urlpatterns = [
         name='branch',
     ),
     path(
-        '<str:gitlab_project_id>/users',
+        '<str:gitlab_project_id>/users/with-access',
         login_required(visualisation_users_with_access_html_view),
-        name='users',
+        name='users-with-access',
     ),
 ]
