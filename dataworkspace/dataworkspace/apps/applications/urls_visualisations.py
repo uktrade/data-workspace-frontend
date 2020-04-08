@@ -4,6 +4,7 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.applications.views import (
     visualisations_html_view,
     visualisation_branch_html_view,
+    visualisation_users_give_access_html_view,
     visualisation_users_with_access_html_view,
 )
 
@@ -13,6 +14,11 @@ urlpatterns = [
         '<str:gitlab_project_id>/branches/<str:branch_name>',
         login_required(visualisation_branch_html_view),
         name='branch',
+    ),
+    path(
+        '<str:gitlab_project_id>/users/give-access',
+        login_required(visualisation_users_give_access_html_view),
+        name='users-give-access',
     ),
     path(
         '<str:gitlab_project_id>/users/with-access',

@@ -128,12 +128,17 @@
             {% endfor %}
         </ul>
     </li>
-    <li class="nav-item{% if current_menu_item == 'users-with-access' %} nav-item--current{% endif %}">
-        <a href="{% url 'visualisations:users-with-access' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'users-with-access' or current_menu_item == 'users-with-access' %} nav-item-link--current{% endif %}">
+    <li class="nav-item{% if current_menu_item == 'users-give-access' or current_menu_item == 'users-with-access' %} nav-item--current{% endif %}">
+        <a href="{% url 'visualisations:users-give-access' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'users-give-access' or current_menu_item == 'users-with-access' %} nav-item-link--current{% endif %}">
             Users
         </a>
 
         <ul class="govuk-list subnav govuk-!-font-size-16">
+            <li class="subnav-item">
+                <a href="{% url 'visualisations:users-give-access' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state subnav-item-link list-item-with-prefix{% if current_menu_item == 'users-give-access' %} subnav-item-link--current{% endif %}">
+                    Give access
+                </a>
+            </li>
             <li class="subnav-item">
                 <a href="{% url 'visualisations:users-with-access' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state subnav-item-link list-item-with-prefix{% if current_menu_item == 'users-with-access' %} subnav-item-link--current{% endif %}">
                     With access
