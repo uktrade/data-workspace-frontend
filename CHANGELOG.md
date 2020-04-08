@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The ability for a user to share a visualisation with another user
 
+### Changed
+
+- Only showing visualisations on the Visualisations page that can be developed by the current user, and that are already linked with a Visualisations model
+
 ## 2020-04-07
 
 ### Changed
