@@ -13,13 +13,15 @@
 {% if application_template.user_access_type == 'REQUIRES_AUTHORIZATION' and users %}
 <p class="govuk-body">The following {{ users|length }} user{% if users|length != 1 %}s{% endif %} can view {{ gitlab_project.name }}.</p>
 
-<ul class="govuk-list govuk-list--bullet">
+<dl class="govuk-summary-list">
     {% for user in users %}
-    <li>
-        {{ user.get_full_name }} ({{ user.email }})
-    </li>
+    <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">
+            {{ user.get_full_name }} <span class="visualisation-user-email">{{ user.email }}</span>
+        </dt>
+    </div>
     {% endfor %}
-</ul>
+</dl>
 {% endif %}
 
 {% if application_template.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
