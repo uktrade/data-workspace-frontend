@@ -415,7 +415,7 @@ def visualisation_users_html_GET(request, gitlab_project_id):
 
     return _render_visualisation(
         request,
-        'visualisation_users.html',
+        'visualisation_users_with_access.html',
         gitlab_project,
         branches,
         current_menu_item='users',
