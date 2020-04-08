@@ -384,9 +384,9 @@ def delete_unused_datasets_users():
             logger.info('delete_unused_datasets_users: finding schemas')
             cur.execute(
                 """
-                SELECT DISTINCT schemaname FROM pg_tables
-                WHERE schemaname != 'pg_catalog' and schemaname != 'information_schema'
-                ORDER BY schemaname;
+                SELECT nspname FROM pg_catalog.pg_namespace WHERE
+                nspname != 'pg_catalog' AND nspname != 'information_schema'
+                ORDER BY nspname
             """
             )
             schemas = [result[0] for result in cur.fetchall()]
