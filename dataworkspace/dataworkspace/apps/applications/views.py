@@ -409,8 +409,12 @@ def visualisation_users_html_GET(request, gitlab_project_id):
     application_template = ApplicationTemplate.objects.get(
         gitlab_project_id=gitlab_project_id
     )
-    users = get_user_model().objects.filter(
-        applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project_id
+    users = (
+        get_user_model()
+        .objects.filter(
+            applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project_id
+        )
+        .order_by('id')
     )
 
     return _render_visualisation(
