@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Only showing visualisations on the Visualisations page that can be developed by the current user, and that are already linked with a Visualisations model
 
+- Enforce the requirement that the user must have GitLab developer access to a project to be able to manage it
+
 ## 2020-04-07
 
 ### Changed
