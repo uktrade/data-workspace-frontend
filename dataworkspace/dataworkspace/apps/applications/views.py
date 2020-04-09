@@ -258,17 +258,18 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     if not request.user.has_perm('applications.develop_visualisations'):
         raise PermissionDenied()
 
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
     if request.method == 'GET':
-        return visualisation_branch_html_GET(request, gitlab_project_id, branch_name)
+        return visualisation_branch_html_GET(request, gitlab_project, branch_name)
 
     if request.method == 'POST':
-        return visualisation_branch_html_POST(request, gitlab_project_id, branch_name)
+        return visualisation_branch_html_POST(request, gitlab_project, branch_name)
 
     return HttpResponse(status=405)
 
 
-def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     branches = _visualisation_branches(gitlab_project)
 
     matching_branches = [branch for branch in branches if branch['name'] == branch_name]
@@ -278,7 +279,7 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
         raise Http404
 
     application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project_id
+        gitlab_project_id=gitlab_project['id']
     )
     current_branch = matching_branches[0]
     latest_commit = current_branch['commit']
@@ -348,10 +349,10 @@ def visualisation_branch_html_GET(request, gitlab_project_id, branch_name):
     )
 
 
-def visualisation_branch_html_POST(request, gitlab_project_id, branch_name):
+def visualisation_branch_html_POST(request, gitlab_project, branch_name):
     release_commit = request.POST['release-commit']
     application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project_id
+        gitlab_project_id=gitlab_project['id']
     )
     get_spawner(application_template.spawner).retag(
         json.loads(application_template.spawner_options),
@@ -373,7 +374,7 @@ def visualisation_branch_html_POST(request, gitlab_project_id, branch_name):
 
     return redirect(
         'visualisations:branch',
-        gitlab_project_id=gitlab_project_id,
+        gitlab_project_id=gitlab_project['id'],
         branch_name=branch_name,
     )
 
@@ -382,22 +383,25 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
     if not request.user.has_perm('applications.develop_visualisations'):
         raise PermissionDenied()
 
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
     if request.method == 'GET':
-        return visualisation_users_with_access_html_GET(request, gitlab_project_id)
+        return visualisation_users_with_access_html_GET(request, gitlab_project)
 
     return HttpResponse(status=405)
 
 
-def visualisation_users_with_access_html_GET(request, gitlab_project_id):
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+def visualisation_users_with_access_html_GET(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
     application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project_id
+        gitlab_project_id=gitlab_project['id']
     )
     users = (
         get_user_model()
         .objects.filter(
-            applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project_id
+            applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project[
+                'id'
+            ]
         )
         .order_by('id')
     )
@@ -419,20 +423,21 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
     if not request.user.has_perm('applications.develop_visualisations'):
         raise PermissionDenied()
 
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
     if request.method == 'GET':
-        return visualisation_users_give_access_html_GET(request, gitlab_project_id)
+        return visualisation_users_give_access_html_GET(request, gitlab_project)
 
     if request.method == 'POST':
-        return visualisation_users_give_access_html_POST(request, gitlab_project_id)
+        return visualisation_users_give_access_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
 
 
-def visualisation_users_give_access_html_GET(request, gitlab_project_id):
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+def visualisation_users_give_access_html_GET(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
     application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project_id
+        gitlab_project_id=gitlab_project['id']
     )
 
     return _render_visualisation(
@@ -445,11 +450,10 @@ def visualisation_users_give_access_html_GET(request, gitlab_project_id):
     )
 
 
-def visualisation_users_give_access_html_POST(request, gitlab_project_id):
-    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+def visualisation_users_give_access_html_POST(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
     application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project_id
+        gitlab_project_id=gitlab_project['id']
     )
 
     email_address = request.POST['email-address'].strip()
@@ -509,7 +513,7 @@ def visualisation_users_give_access_html_POST(request, gitlab_project_id):
         f'{user.get_full_name()} now has view access to {gitlab_project["name"]}',
     )
     return redirect(
-        'visualisations:users-give-access', gitlab_project_id=gitlab_project_id
+        'visualisations:users-give-access', gitlab_project_id=gitlab_project['id']
     )
 
 
