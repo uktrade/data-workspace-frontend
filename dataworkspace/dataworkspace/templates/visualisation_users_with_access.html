@@ -21,6 +21,15 @@
         <dt class="govuk-summary-list__key">
             {{ user.get_full_name }} <span class="visualisation-user-email">{{ user.email }}</span>
         </dt>
+        <dd class="govuk-summary-list__actions">
+            <form method="POST" action="{{ request.path }}">
+                {% csrf_token %}
+                <input type="hidden" name="user-id" value="{{ user.id }}">
+                <button class="govuk-button govuk-!-margin-bottom-0 govuk-!-font-size-16 govuk-!-padding-top-1 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2" data-module="govuk-button" type="submit" data-prevent-double-click="true">
+                    Remove access<span class="govuk-visually-hidden"> for {{ user.get_full_name }}</span>
+                </button>
+            </form>
+        </dd>
     </div>
     {% endfor %}
 </dl>
