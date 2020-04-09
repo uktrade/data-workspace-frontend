@@ -9,6 +9,7 @@ logger = logging.getLogger('app')
 ECR_PROJECT_ID = settings.GITLAB_ECR_PROJECT_ID
 RUNNING_PIPELINE_STATUSES = ('running', 'pending')
 SUCCESS_PIPELINE_STATUSES = ('success',)
+DEVELOPER_ACCESS_LEVEL = '30'
 
 
 def gitlab_api_v4(method, path, params=()):

@@ -22,6 +22,7 @@ from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
 )
 from dataworkspace.apps.applications.gitlab import (
+    DEVELOPER_ACCESS_LEVEL,
     gitlab_api_v4,
     gitlab_api_v4_with_status,
 )
@@ -209,13 +210,12 @@ def visualisations_html_GET(request):
     )
 
     def get_projects(gitlab_user):
-        developer_access_level = '30'
         gitlab_projects = gitlab_api_v4(
             'GET',
             f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
             params=(
                 ('archived', 'false'),
-                ('min_access_level', developer_access_level),
+                ('min_access_level', DEVELOPER_ACCESS_LEVEL),
                 ('sudo', gitlab_user['id']),
             ),
         )
