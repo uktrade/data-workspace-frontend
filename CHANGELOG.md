@@ -129,6 +129,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The ablity to remove visualisation view access
 - Catalogue detail page for visualisations
 
+## 2020-04-09
+
+### Added
+
+- New API endpoint listing historic application instances at `/api/v1/application-instance/instances`
+
+### Changes
+- Log access requests and permission changes to the event log
+
 ## 2020-04-08
 
 ### Added
@@ -170,12 +179,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Moved the "no permissions" warning on the datacut page into the top section.
-- Log access requests and permission changes to the event log
-
-## Added
-
-- New API endpoint for listing user accounts for consumption by data flow
-- New API endpoint listing historic application instances at `/api/v1/application-instance/instances`
 
 ## 2020-04-02
 
@@ -194,6 +197,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - A slightly magic /__mirror/ path accessible on the domain of each application that routes to our S3 mirror. Specifically for applications that need map tiles.
+- New API endpoint for listing user accounts for consumption by data flow
 
 ## 2020-03-30
 
