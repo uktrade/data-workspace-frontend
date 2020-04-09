@@ -213,3 +213,20 @@ class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'applications.ApplicationTemplate'
+
+
+class VisualisationTemplateFactory(ApplicationTemplateFactory):
+    application_type = 'VISUALISATION'
+
+    class Meta:
+        model = 'applications.VisualisationTemplate'
+
+
+class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
+    visualisation_template = factory.SubFactory(VisualisationTemplateFactory)
+    name = factory.LazyAttribute(lambda o: o.visualisation_template.name)
+    published = True
+    deleted = False
+
+    class Meta:
+        model = 'datasets.VisualisationCatalogueItem'

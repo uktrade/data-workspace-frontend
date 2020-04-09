@@ -10,6 +10,7 @@ from django.db import transaction
 from django.utils.encoding import force_text
 from csp.decorators import csp_update
 
+from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -22,6 +23,7 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     SourceTag,
     SourceView,
+    VisualisationCatalogueItem,
 )
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
@@ -452,3 +454,55 @@ class SourceTableAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return self.model.objects.filter(dataset__deleted=False)
+
+
+@admin.register(VisualisationCatalogueItem)
+class VisualisationCatalogueItemAdmin(
+    CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
+):
+    list_display = ('name', 'short_description', 'published')
+    search_fields = ['name']
+    fieldsets = [
+        (
+            None,
+            {
+                'fields': [
+                    'published',
+                    'visualisation_template',
+                    'slug',
+                    'short_description',
+                    'description',
+                    'enquiries_contact',
+                    'secondary_enquiries_contact',
+                    'information_asset_owner',
+                    'information_asset_manager',
+                    'licence',
+                    'retention_policy',
+                    'personal_data',
+                    'restrictions_on_usage',
+                ]
+            },
+        )
+    ]
+
+    class Media:
+        js = ('js/min/django_better_admin_arrayfield.min.js', 'data-workspace-admin.js')
+        css = {
+            'all': (
+                'css/min/django_better_admin_arrayfield.min.css',
+                'data-workspace-admin.css',
+            )
+        }
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "visualisation_template":
+            kwargs["queryset"] = VisualisationTemplate.objects.filter(
+                application_type='VISUALISATION'
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    @transaction.atomic
+    def save_model(self, request, obj, form, change):
+        obj.name = obj.visualisation_template.name
+
+        super().save_model(request, obj, form, change)

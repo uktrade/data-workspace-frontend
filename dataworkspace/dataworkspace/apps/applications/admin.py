@@ -24,6 +24,7 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     DataSetApplicationTemplatePermission,
     MasterDataset,
+    VisualisationCatalogueItem,
 )
 
 from dataworkspace.apps.applications.utils import (
@@ -486,5 +487,9 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
                 dataset=dataset, application_template=obj
             ).delete()
             log_change('Removed dataset {} permission'.format(dataset))
+
+        cat_item, _ = VisualisationCatalogueItem.objects.update_or_create(
+            visualisation_template=obj, defaults={"name": obj.name}
+        )
 
         super().save_model(request, obj, form, change)
