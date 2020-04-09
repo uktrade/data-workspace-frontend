@@ -26,7 +26,10 @@ from dataworkspace.apps.datasets.models import (
     MasterDataset,
 )
 
-from dataworkspace.apps.applications.utils import application_instance_max_cpu
+from dataworkspace.apps.applications.utils import (
+    MetricsException,
+    application_instance_max_cpu,
+)
 
 
 @admin.register(ApplicationInstance)
@@ -67,7 +70,7 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
     def max_cpu(self, obj):
         try:
             max_cpu, ts_at_max = application_instance_max_cpu(obj)
-        except ValueError as exception:
+        except MetricsException as exception:
             return exception.args[0] if exception.args else 'Error'
 
         return '{0:.2f}% at {1}'.format(

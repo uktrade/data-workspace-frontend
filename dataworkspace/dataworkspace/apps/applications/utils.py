@@ -28,6 +28,18 @@ from dataworkspace.cel import celery_app
 logger = logging.getLogger('app')
 
 
+class MetricsException(Exception):
+    pass
+
+
+class ExpectedMetricsException(MetricsException):
+    pass
+
+
+class UnexpectedMetricsException(MetricsException):
+    pass
+
+
 def is_8_char_hex(val):
     try:
         int(val, 16)
@@ -195,7 +207,7 @@ def application_instance_max_cpu(application_instance):
     # If we don't have the proxy url yet, we can't have any metrics yet.
     # This is expected and should not be shown as an error
     if application_instance.proxy_url is None:
-        raise ValueError('Unknown')
+        raise ExpectedMetricsException('Unknown')
 
     instance = urllib.parse.urlsplit(application_instance.proxy_url).hostname + ':8889'
     url = f'https://{settings.PROMETHEUS_DOMAIN}/api/v1/query'
@@ -205,17 +217,19 @@ def application_instance_max_cpu(application_instance):
     try:
         response = requests.get(url, params)
     except requests.RequestException:
-        raise ValueError('Error connecting to metrics server')
+        raise UnexpectedMetricsException('Error connecting to metrics server')
 
     response_dict = response.json()
     if response_dict['status'] != 'success':
-        raise ValueError(f'Metrics server return value is {response_dict["status"]}')
+        raise UnexpectedMetricsException(
+            f'Metrics server return value is {response_dict["status"]}'
+        )
 
     try:
         values = response_dict['data']['result'][0]['values']
     except (IndexError, KeyError):
         # The server not having metrics yet should not be reported as an error
-        raise ValueError(f'Unknown')
+        raise ExpectedMetricsException(f'Unknown')
 
     max_cpu = 0.0
     ts_at_max = 0
@@ -249,6 +263,9 @@ def kill_idle_fargate():
         logger.info('kill_idle_fargate: Attempting to find CPU usage of %s', instance)
         try:
             max_cpu, _ = application_instance_max_cpu(instance)
+        except ExpectedMetricsException:
+            logger.info('kill_idle_fargate: Unable to find CPU usage for %s', instance)
+            continue
         except Exception:
             logger.exception(
                 'kill_idle_fargate: Unable to find CPU usage for %s', instance
