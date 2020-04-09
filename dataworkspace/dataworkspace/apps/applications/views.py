@@ -260,6 +260,9 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
+    if not _visualisation_has_developer_access(request.user, gitlab_project):
+        raise PermissionDenied()
+
     if request.method == 'GET':
         return visualisation_branch_html_GET(request, gitlab_project, branch_name)
 
@@ -385,6 +388,9 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
+    if not _visualisation_has_developer_access(request.user, gitlab_project):
+        raise PermissionDenied()
+
     if request.method == 'GET':
         return visualisation_users_with_access_html_GET(request, gitlab_project)
 
@@ -424,6 +430,9 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
+    if not _visualisation_has_developer_access(request.user, gitlab_project):
+        raise PermissionDenied()
 
     if request.method == 'GET':
         return visualisation_users_give_access_html_GET(request, gitlab_project)
@@ -524,8 +533,43 @@ def _visualisation_gitlab_project(gitlab_project_id):
     if status == 404:
         raise Http404
     if status != 200:
-        raise Exception(gitlab_project)
+        raise Exception(
+            f'Unable to find GitLab project {gitlab_project_id}: received {status}'
+        )
+
     return gitlab_project
+
+
+def _visualisation_has_developer_access(user, gitlab_project):
+    gitlab_users, status = gitlab_api_v4_with_status(
+        'GET',
+        f'/users',
+        params=(('extern_uid', user.profile.sso_id), ('provider', 'oauth2_generic')),
+    )
+
+    if status != 200:
+        raise Exception(
+            f'Unable to find GitLab user for {user.profile.sso_id}: received {status}'
+        )
+
+    if len(gitlab_users) > 1:
+        raise Exception(f'Too many GitLab users matching {user.profile.sso_id}')
+
+    if not gitlab_users:
+        return False
+
+    gitlab_user = gitlab_users[0]
+    gitlab_project_users = gitlab_api_v4(
+        'GET',
+        f'/projects/{gitlab_project["id"]}/members/all',
+        params=(('user_ids', str(gitlab_user['id'])),),
+    )
+
+    return True in (
+        gitlab_project_user['id'] == gitlab_user['id']
+        and gitlab_project_user['access_level'] >= int(DEVELOPER_ACCESS_LEVEL)
+        for gitlab_project_user in gitlab_project_users
+    )
 
 
 def _visualisation_branches(gitlab_project):
