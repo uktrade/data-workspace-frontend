@@ -183,7 +183,7 @@ def visualisations_html_view(request):
 
 
 def visualisations_html_GET(request):
-    users = gitlab_api_v4(
+    gitlab_users = gitlab_api_v4(
         'GET',
         f'/users',
         params=(
@@ -191,86 +191,64 @@ def visualisations_html_GET(request):
             ('provider', 'oauth2_generic'),
         ),
     )
-    has_gitlab_user = bool(users)
+    has_gitlab_user = bool(gitlab_users)
 
     # Something has really gone wrong if GitLab has multiple users with the
     # same SSO ID
-    if len(users) > 1:
+    if len(gitlab_users) > 1:
         return HttpResponse(status=500)
 
-    if has_gitlab_user:
-        params = (('sudo', users[0]['id']),)
-    else:
-        params = (('visibility', 'internal'),)
-
-    # Only used for the message that is displayed if the user has no GitLab user
-    # We can't use settings.GITLAB_URL since that uses the private domain that
-    # is not resolvable on the public internet
-    if not has_gitlab_user:
-        gitlab_url = (
-            urlsplit(
-                gitlab_api_v4('GET', f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}')[
-                    'web_url'
-                ]
-            )
-            ._replace(path='/', query='', fragment='')
-            .geturl()
-        )
-    else:
-        gitlab_url = ''
-
-    gitlab_projects = gitlab_api_v4(
-        'GET',
-        f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
-        params=(('archived', 'false'),) + params,
-    )
-
-    application_templates = {
-        application_template.gitlab_project_id: application_template
-        for application_template in ApplicationTemplate.objects.filter(
-            gitlab_project_id__in=[
-                gitlab_project['id'] for gitlab_project in gitlab_projects
+    gitlab_url = (
+        urlsplit(
+            gitlab_api_v4('GET', f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}')[
+                'web_url'
             ]
         )
-    }
+        ._replace(path='/', query='', fragment='')
+        .geturl()
+    )
 
-    # It looks like the only way to check the current user's access level is
-    # to fetch all the users who have access to the project
-    developer_access_level = 30
-
-    def manage_link(gitlab_project):
-        if gitlab_project['id'] not in application_templates:
-            return None
-
-        is_developer = has_gitlab_user and True in (
-            gitlab_project_user['id'] == users[0]['id']
-            and gitlab_project_user['access_level'] >= developer_access_level
-            for gitlab_project_user in gitlab_api_v4(
-                'GET', f'/projects/{gitlab_project["id"]}/members/all'
-            )
+    def get_projects(gitlab_user):
+        developer_access_level = '30'
+        gitlab_projects = gitlab_api_v4(
+            'GET',
+            f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
+            params=(
+                ('archived', 'false'),
+                ('min_access_level', developer_access_level),
+                ('sudo', gitlab_user['id']),
+            ),
         )
-        if is_developer:
-            return reverse(
-                'visualisations:branch',
-                kwargs={
-                    'gitlab_project_id': gitlab_project['id'],
-                    'branch_name': gitlab_project['default_branch'],
-                },
+        application_templates = {
+            application_template.gitlab_project_id: application_template
+            for application_template in ApplicationTemplate.objects.filter(
+                gitlab_project_id__in=[
+                    gitlab_project['id'] for gitlab_project in gitlab_projects
+                ]
             )
-        return None
-
-    projects = [
-        {'gitlab_project': gitlab_project, 'manage_link': manage_link(gitlab_project)}
-        for gitlab_project in gitlab_projects
-    ]
+        }
+        return [
+            {
+                'gitlab_project': gitlab_project,
+                'manage_link': reverse(
+                    'visualisations:branch',
+                    kwargs={
+                        'gitlab_project_id': gitlab_project['id'],
+                        'branch_name': gitlab_project['default_branch'],
+                    },
+                ),
+            }
+            for gitlab_project in gitlab_projects
+            if gitlab_project['id'] in application_templates
+        ]
 
     return render(
         request,
         'visualisations.html',
         {
-            'gitlab_url': gitlab_url,
             'has_gitlab_user': has_gitlab_user,
-            'projects': projects,
+            'gitlab_url': gitlab_url,
+            'projects': get_projects(gitlab_users[0]) if has_gitlab_user else [],
         },
         status=200,
     )
