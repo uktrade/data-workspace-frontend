@@ -53,4 +53,10 @@ urlpatterns = [
             namespace='eventlog',
         ),
     ),
+    path(
+        'account/',
+        include(
+            ('dataworkspace.apps.api_v1.accounts.urls', 'account'), namespace='account'
+        ),
+    ),
 ]
