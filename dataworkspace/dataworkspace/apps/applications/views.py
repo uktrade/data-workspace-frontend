@@ -7,10 +7,16 @@ from urllib.parse import urlsplit
 from csp.decorators import csp_exempt
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.http import HttpResponse, Http404, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.encoding import force_text
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -22,10 +28,12 @@ from dataworkspace.apps.applications.gitlab import (
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
+    ApplicationTemplateUserPermission,
 )
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.views import public_error_500_html_view
+
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -392,36 +400,138 @@ def visualisation_branch_html_POST(request, gitlab_project_id, branch_name):
     )
 
 
-def visualisation_users_html_view(request, gitlab_project_id):
+def visualisation_users_with_access_html_view(request, gitlab_project_id):
     if not request.user.has_perm('applications.develop_visualisations'):
         return HttpResponseForbidden()
 
-    if not request.method == 'GET':
-        return HttpResponse(status=405)
+    if request.method == 'GET':
+        return visualisation_users_with_access_html_GET(request, gitlab_project_id)
 
-    return visualisation_users_html_GET(request, gitlab_project_id)
+    return HttpResponse(status=405)
 
 
-def visualisation_users_html_GET(request, gitlab_project_id):
+def visualisation_users_with_access_html_GET(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
     branches = _visualisation_branches(gitlab_project)
     application_template = ApplicationTemplate.objects.get(
         gitlab_project_id=gitlab_project_id
     )
-    users = get_user_model().objects.filter(
-        applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project_id
+    users = (
+        get_user_model()
+        .objects.filter(
+            applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project_id
+        )
+        .order_by('id')
     )
 
     return _render_visualisation(
         request,
-        'visualisation_users.html',
+        'visualisation_users_with_access.html',
         gitlab_project,
         branches,
-        current_menu_item='users',
+        current_menu_item='users-with-access',
         template_specific_context={
             'application_template': application_template,
             'users': users,
         },
+    )
+
+
+def visualisation_users_give_access_html_view(request, gitlab_project_id):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        return HttpResponseForbidden()
+
+    if request.method == 'GET':
+        return visualisation_users_give_access_html_GET(request, gitlab_project_id)
+
+    if request.method == 'POST':
+        return visualisation_users_give_access_html_POST(request, gitlab_project_id)
+
+    return HttpResponse(status=405)
+
+
+def visualisation_users_give_access_html_GET(request, gitlab_project_id):
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    branches = _visualisation_branches(gitlab_project)
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project_id
+    )
+
+    return _render_visualisation(
+        request,
+        'visualisation_users_give_access.html',
+        gitlab_project,
+        branches,
+        current_menu_item='users-give-access',
+        template_specific_context={'application_template': application_template},
+    )
+
+
+def visualisation_users_give_access_html_POST(request, gitlab_project_id):
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    branches = _visualisation_branches(gitlab_project)
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project_id
+    )
+
+    email_address = request.POST['email-address'].strip()
+
+    def error(email_address_error):
+        return _render_visualisation(
+            request,
+            'visualisation_users_give_access.html',
+            gitlab_project,
+            branches,
+            current_menu_item='users-give-access',
+            template_specific_context={
+                'email_address': email_address,
+                'email_address_error': email_address_error,
+                'application_template': application_template,
+            },
+        )
+
+    if not email_address:
+        return error('Enter the user\'s email address')
+
+    try:
+        EmailValidator()(email_address)
+    except ValidationError:
+        return error(
+            'Enter the user\'s email address in the correct format, like name@example.com'
+        )
+
+    User = get_user_model()
+
+    try:
+        user = User.objects.get(email=email_address)
+    except User.DoesNotExist:
+        return error('The user must have previously visisted Data Workspace')
+
+    content_type_id = ContentType.objects.get_for_model(user).pk
+
+    with transaction.atomic():
+        try:
+            ApplicationTemplateUserPermission.objects.create(
+                user=user, application_template=application_template
+            )
+        except IntegrityError:
+            return error(f'{user.get_full_name()} already has access')
+
+        LogEntry.objects.log_action(
+            user_id=request.user.pk,
+            content_type_id=content_type_id,
+            object_id=user.id,
+            object_repr=force_text(user),
+            action_flag=CHANGE,
+            change_message=f'Added visualisation {application_template} permission',
+        )
+
+    messages.success(
+        request,
+        f'{user.get_full_name()} now has view access to {gitlab_project["name"]}',
+    )
+    return redirect(
+        'visualisations:users-give-access', gitlab_project_id=gitlab_project_id
     )
 
 
