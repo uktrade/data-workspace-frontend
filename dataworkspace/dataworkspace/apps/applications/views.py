@@ -452,7 +452,7 @@ def visualisation_users_give_access_html_POST(request, gitlab_project_id):
         gitlab_project_id=gitlab_project_id
     )
 
-    email_address = request.POST['email-address'].strip()
+    email_address = request.POST['email-address'].strip().lower()
 
     def error(email_address_error):
         return _render_visualisation(

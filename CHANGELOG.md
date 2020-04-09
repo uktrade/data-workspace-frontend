@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - The ability for a user to share a visualisation with another user
+- The ability to give permissions to a visualisation via an email with uppercase letters
 
 ### Changed
 
