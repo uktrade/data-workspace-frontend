@@ -11,9 +11,9 @@ from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import EmailValidator
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import IntegrityError, transaction
-from django.http import HttpResponse, Http404, HttpResponseForbidden
+from django.http import HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_text
@@ -175,7 +175,7 @@ def tools_html_POST(request):
 
 def visualisations_html_view(request):
     if not request.user.has_perm('applications.develop_visualisations'):
-        return HttpResponseForbidden()
+        raise PermissionDenied()
 
     if not request.method == 'GET':
         return HttpResponse(status=405)
@@ -256,7 +256,7 @@ def visualisations_html_GET(request):
 
 def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     if not request.user.has_perm('applications.develop_visualisations'):
-        return HttpResponseForbidden()
+        raise PermissionDenied()
 
     if request.method == 'GET':
         return visualisation_branch_html_GET(request, gitlab_project_id, branch_name)
@@ -380,7 +380,7 @@ def visualisation_branch_html_POST(request, gitlab_project_id, branch_name):
 
 def visualisation_users_with_access_html_view(request, gitlab_project_id):
     if not request.user.has_perm('applications.develop_visualisations'):
-        return HttpResponseForbidden()
+        raise PermissionDenied()
 
     if request.method == 'GET':
         return visualisation_users_with_access_html_GET(request, gitlab_project_id)
@@ -417,7 +417,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project_id):
 
 def visualisation_users_give_access_html_view(request, gitlab_project_id):
     if not request.user.has_perm('applications.develop_visualisations'):
-        return HttpResponseForbidden()
+        raise PermissionDenied()
 
     if request.method == 'GET':
         return visualisation_users_give_access_html_GET(request, gitlab_project_id)
