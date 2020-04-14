@@ -1,4 +1,5 @@
 import base64
+
 import json
 import os
 import urllib.request
@@ -31,6 +32,20 @@ ALLOWED_HOSTS = (
 
 INTERNAL_IPS = ['127.0.0.1'] if DEBUG else []
 
+ELASTIC_APM_URL = env.get("ELASTIC_APM_URL")
+ELASTIC_APM_SECRET_TOKEN = env.get("ELASTIC_APM_SECRET_TOKEN")
+ELASTIC_APM = (
+    {
+        'SERVICE_NAME': 'data-workspace',
+        'SECRET_TOKEN': ELASTIC_APM_SECRET_TOKEN,
+        'SERVER_URL': ELASTIC_APM_URL,
+        'ENVIRONMENT': env.get('ENVIRONMENT', 'development'),
+        # 'DEBUG': True,  # Allow APM to send metrics when Django is in debug mode
+    }
+    if ELASTIC_APM_SECRET_TOKEN
+    else {}
+)
+
 INSTALLED_APPS = [
     'dataworkspace.admin.DataWorkspaceAdminConfig',
     'django.contrib.auth',
@@ -46,7 +61,6 @@ INSTALLED_APPS = [
     'ckeditor',
     'waffle',
     'rest_framework',
-    'elasticapm.contrib.django',
     'dataworkspace.apps.core',
     'dataworkspace.apps.accounts',
     'dataworkspace.apps.catalogue',
@@ -74,6 +88,9 @@ MIDDLEWARE = [
 if DEBUG:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+
+if ELASTIC_APM:
+    INSTALLED_APPS.append('elasticapm.contrib.django')
 
 AUTHENTICATION_BACKENDS = [
     'dataworkspace.apps.accounts.backends.AuthbrokerBackendUsernameIsEmail'
@@ -335,17 +352,3 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
     'PAGE_SIZE': 100,
 }
-
-ELASTIC_APM_URL = env.get("ELASTIC_APM_URL")
-ELASTIC_APM_SECRET_TOKEN = env.get("ELASTIC_APM_SECRET_TOKEN")
-ELASTIC_APM = (
-    {
-        'SERVICE_NAME': 'data-workspace',
-        'SECRET_TOKEN': ELASTIC_APM_SECRET_TOKEN,
-        'SERVER_URL': ELASTIC_APM_URL,
-        'ENVIRONMENT': env.get('ENVIRONMENT', 'development'),
-        # 'DEBUG': True,  # Allow APM to send metrics when Django is in debug mode
-    }
-    if ELASTIC_APM_SECRET_TOKEN
-    else {}
-)
