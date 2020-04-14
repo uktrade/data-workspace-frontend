@@ -118,7 +118,7 @@ def tools_html_GET(request):
     }
 
     def link(application_template):
-        app = application_template.host_exact
+        app = application_template.host_basename
         return f'{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     has_any_tool_perms = request.user.has_perm(
@@ -288,7 +288,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     latest_commit = current_branch['commit']
     latest_commit_link = f'{gitlab_project["web_url"]}/commit/{latest_commit["id"]}'
     latest_commit_preview_link = (
-        f'{request.scheme}://{application_template.host_exact}--{latest_commit["short_id"]}'
+        f'{request.scheme}://{application_template.host_basename}--{latest_commit["short_id"]}'
         f'.{settings.APPLICATION_ROOT_DOMAIN}/'
     )
     latest_commit_date = datetime.datetime.strptime(
@@ -296,22 +296,22 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     )
     latest_commit_tag_exists = get_spawner(application_template.spawner).tags_for_tag(
         json.loads(application_template.spawner_options),
-        f'{application_template.host_exact}--{latest_commit["short_id"]}',
+        f'{application_template.host_basename}--{latest_commit["short_id"]}',
     )
 
-    host_exact = application_template.host_exact
+    host_basename = application_template.host_basename
     production_link = (
-        f'{request.scheme}://{host_exact}.{settings.APPLICATION_ROOT_DOMAIN}/'
+        f'{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/'
     )
     tags = get_spawner(application_template.spawner).tags_for_tag(
         json.loads(application_template.spawner_options),
-        application_template.host_exact,
+        application_template.host_basename,
     )
     production_commit_id = None
     for tag in tags:
-        possible_host_exact, _, host_exact_or_commit_id = tag.rpartition('--')
-        if possible_host_exact:
-            production_commit_id = host_exact_or_commit_id
+        possible_host_basename, _, host_basename_or_commit_id = tag.rpartition('--')
+        if possible_host_basename:
+            production_commit_id = host_basename_or_commit_id
             break
 
     # It might not be good, UI-wise, to force the user to have to preview a
@@ -359,13 +359,13 @@ def visualisation_branch_html_POST(request, gitlab_project, branch_name):
     )
     get_spawner(application_template.spawner).retag(
         json.loads(application_template.spawner_options),
-        f'{application_template.host_exact}--{release_commit}',
-        application_template.host_exact,
+        f'{application_template.host_basename}--{release_commit}',
+        application_template.host_basename,
     )
 
     try:
         application_instance = ApplicationInstance.objects.get(
-            public_host=application_template.host_exact,
+            public_host=application_template.host_basename,
             state__in=['RUNNING', 'SPAWNING'],
         )
     except ApplicationInstance.DoesNotExist:

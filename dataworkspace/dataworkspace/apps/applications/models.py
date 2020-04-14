@@ -21,7 +21,9 @@ class ApplicationTemplate(TimeStampedModel):
 
     # We expect lots of visualisations with fixed hosts, so we use a undex to ensure
     # that lookups from hostname to application templates are fast...
-    host_exact = models.CharField(max_length=128, blank=True, null=False)
+    host_basename = models.CharField(
+        max_length=128, blank=False, null=False, unique=True
+    )
 
     # ... for these, and for tools, we then want to extract information from the hostname,
     # for example the user-id, and use regex to extract this based on the pattern. We
@@ -76,7 +78,7 @@ class ApplicationTemplate(TimeStampedModel):
         indexes = [
             models.Index(fields=['application_type']),
             models.Index(fields=['name']),
-            models.Index(fields=['host_exact']),
+            models.Index(fields=['host_basename']),
         ]
 
     def __str__(self):

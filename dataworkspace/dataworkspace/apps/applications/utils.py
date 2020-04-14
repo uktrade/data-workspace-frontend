@@ -54,28 +54,28 @@ def application_template_tag_user_commit_from_host(public_host):
     # the form <tool-name>-<user-id>, but I suspect is very unlikely
 
     # The value after the rightmost '--', if it's there, is the commit id
-    possible_host_prefix, _, host_prefix_or_commit_id = public_host.rpartition('--')
-    if possible_host_prefix and is_8_char_hex(host_prefix_or_commit_id):
-        host_prefix = possible_host_prefix
-        commit_id = host_prefix_or_commit_id
+    possible_host_basename, _, host_basename_or_commit_id = public_host.rpartition('--')
+    if possible_host_basename and is_8_char_hex(host_basename_or_commit_id):
+        host_basename = possible_host_basename
+        commit_id = host_basename_or_commit_id
     else:
-        host_prefix = public_host
+        host_basename = public_host
         commit_id = None
 
     # The value after the rightmost '-', if it's there, is the user id
-    possible_host_prefix, _, host_prefix_or_user = host_prefix.rpartition('-')
-    if possible_host_prefix and is_8_char_hex(host_prefix_or_user):
-        host_prefix = possible_host_prefix
-        user = host_prefix_or_user
+    possible_host_basename, _, host_basename_or_user = host_basename.rpartition('-')
+    if possible_host_basename and is_8_char_hex(host_basename_or_user):
+        host_basename = possible_host_basename
+        user = host_basename_or_user
     else:
-        # Redundant, but making it explicit that host_prefix is unchanged
-        host_prefix = host_prefix
+        # Redundant, but making it explicit that host_basename is unchanged
+        host_basename = host_basename
         user = None
 
     matching_tools = (
         list(
             ApplicationTemplate.objects.filter(
-                application_type='TOOL', host_exact=host_prefix
+                application_type='TOOL', host_basename=host_basename
             )
         )
         if user
@@ -85,7 +85,7 @@ def application_template_tag_user_commit_from_host(public_host):
     matching_visualisations = (
         list(
             ApplicationTemplate.objects.filter(
-                application_type='VISUALISATION', host_exact=host_prefix
+                application_type='VISUALISATION', host_basename=host_basename
             )
         )
         if not user

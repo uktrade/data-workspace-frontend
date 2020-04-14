@@ -379,7 +379,7 @@ class ToolTemplateAdmin(admin.ModelAdmin):
             {
                 'fields': [
                     'name',
-                    'host_exact',
+                    'host_basename',
                     'host_pattern',
                     'nice_name',
                     'spawner',
@@ -434,7 +434,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
             {
                 'fields': [
                     'name',
-                    'host_exact',
+                    'host_basename',
                     'host_pattern',
                     'nice_name',
                     'spawner',

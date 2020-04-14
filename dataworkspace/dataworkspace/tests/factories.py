@@ -203,7 +203,7 @@ class ReferenceDatasetDownloadEventFactory(RelatedObjectEventFactory):
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
-    host_exact = 'testapplication'
+    host_basename = 'testapplication'
     host_pattern = 'testapplication-<user>'
     nice_name = factory.fuzzy.FuzzyText()
     spawner = 'PROCESS'

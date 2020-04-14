@@ -1641,7 +1641,7 @@ async def create_visualisation_echo(name):
         )
         template = VisualisationTemplate.objects.create(
             name="{name}",
-            host_exact="{name}",
+            host_basename="{name}",
             host_pattern="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
@@ -1672,7 +1672,7 @@ async def create_visualisation_dataset(name):
         )
         template = VisualisationTemplate.objects.create(
             name="{name}",
-            host_exact="{name}",
+            host_basename="{name}",
             host_pattern="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
