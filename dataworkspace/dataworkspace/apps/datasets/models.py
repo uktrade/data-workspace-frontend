@@ -29,7 +29,10 @@ from dataworkspace.apps.core.models import (
     Database,
     DeletableQuerySet,
 )
-from dataworkspace.apps.applications.models import ApplicationTemplate
+from dataworkspace.apps.applications.models import (
+    ApplicationTemplate,
+    VisualisationTemplate,
+)
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.model_utils import (
     external_model_class,
@@ -1351,3 +1354,70 @@ class ReferenceDatasetUploadLogRecord(TimeStampedModel):
 
     def __str__(self):
         return '{}: {}'.format(self.created_date, self.get_status_display())
+
+
+class VisualisationCatalogueItem(DeletableTimestampedUserModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    visualisation_template = models.OneToOneField(
+        VisualisationTemplate, on_delete=models.CASCADE, null=False, blank=False
+    )
+    name = models.CharField(max_length=255, null=False, blank=False)
+    slug = models.SlugField(
+        max_length=50, db_index=True, unique=True, null=False, blank=False
+    )
+    short_description = models.CharField(max_length=255)
+    description = RichTextField(null=True, blank=True)
+    enquiries_contact = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='+',
+    )
+    secondary_enquiries_contact = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='+',
+    )
+    licence = models.CharField(null=False, blank=True, max_length=256)
+    retention_policy = models.TextField(null=True, blank=True)
+    personal_data = models.CharField(null=True, blank=True, max_length=128)
+    restrictions_on_usage = models.TextField(null=True, blank=True)
+    published = models.BooleanField(default=False)
+
+    published_at = models.DateField(null=True, blank=True)
+    updated_at = models.DateField(null=True, blank=True)
+
+    information_asset_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='info_asset_owned_visualisations',
+        null=True,
+        blank=True,
+    )
+    information_asset_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='info_asset_managed_visualisations',
+        null=True,
+        blank=True,
+    )
+
+    def update_published_and_updated_timestamps(self):
+        if not self.published:
+            return
+
+        if not self.published_at:
+            self.published_at = timezone.now()
+
+        self.updated_at = timezone.now()
+
+    @transaction.atomic
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        self.update_published_and_updated_timestamps()
+
+        super().save(force_insert, force_update, using, update_fields)
