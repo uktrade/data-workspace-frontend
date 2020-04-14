@@ -78,6 +78,12 @@ class ApplicationTemplate(TimeStampedModel):
     def __str__(self):
         return self.nice_name
 
+    def user_has_access(self, user):
+        return (
+            self.user_access_type == 'REQUIRES_AUTHENTICATION'
+            or self.applicationtemplateuserpermission_set.filter(user=user).exists()
+        )
+
 
 class ToolTemplate(ApplicationTemplate):
     class Meta:

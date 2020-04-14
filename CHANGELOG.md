@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Theia IDE as a hidden tool for testing
 - A message on the conditions that need to be met before sharing a visualisation
 - The ablity to remove visualisation view access
+- Catalogue detail page for visualisations
 
 ## 2020-04-08
 

@@ -5,7 +5,7 @@
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
 {% block extraGTMDataLayer %}
-<script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "datacut"})</script>
+<script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "visualisation"})</script>
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -29,7 +29,7 @@
 
 {% block content %}
     {% if not model.published %}
-        {% include 'partials/unpublished_banner.html' with type='dataset' %}
+        {% include 'partials/unpublished_banner.html' with type='visualisation' %}
     {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
@@ -38,20 +38,21 @@
                 {{ model.description | safe }}
             </div>
 
-            {% if data_links_with_link_toggle and not has_access %}
+            {% if not has_access %}
                 <div class="govuk-warning-text">
                     <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
                     <div class="govuk-warning-text__text">
                         <strong>
                             <span class="govuk-warning-text__assistive">Warning</span>
-                            You do not have permission to access these links.
+                            You do not have permission to access this data visualisation.
                         </strong>
                     </div>
                 </div>
+                <!-- TODO: Hook this up with the visualisation-request flow -->
                 {% if model.eligibility_criteria %}
-                  <a class="govuk-button" href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
+                  <a class="govuk-button" href="...">Request access</a>
                 {% else %}
-                  <a class="govuk-button" href="{% url 'datasets:request_access' model.id %}">Request access</a>
+                  <a class="govuk-button" href="...">Request access</a>
                 {% endif %}
             {% endif %}
         </div>
@@ -59,64 +60,32 @@
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
-              {% if data_links_with_link_toggle and has_access and data_hosted_externally %}
-                <div class="govuk-warning-text">
-                    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-                    <div class="govuk-warning-text__text">
-                        <strong>
-                            <span class="govuk-warning-text__assistive">Warning</span>
-                            This data set is hosted by an external source. You'll be forwarded to that source when you select it.
-                        </strong>
-                    </div>
-                </div>
-              {% endif %}
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Visualisations</h2>
         </div>
-
 
         <div class="govuk-grid-column-full">
             <table class="govuk-table">
                 <thead>
                 <tr class="govuk-table__row">
-                    <th class="govuk-table__header">Link to the data</th>
+                    <th class="govuk-table__header">Link to the data visualisation</th>
                     <th class="govuk-table__header">Format</th>
-                    <th class="govuk-table__header">Frequency</th>
+                    <th class="govuk-table__header">Date added</th>
                 </tr>
                 </thead>
                 <tbody>
-
-                {% for data_link, can_show_link in data_links_with_link_toggle %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            {% if has_access and can_show_link %}
-                            <a class="govuk-link" href="{{ data_link.get_absolute_url }}">
-                                {{ data_link.name }}
+                            <a class="govuk-link" href="{{ visualisation_link }}">
+                                {{ model.name }}
                             </a>
-                            {% else %}
-                                {{ data_link.name }}
-                            {% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                          {% if data_link.format %}{{ data_link.format }}{% else %}CSV{% endif %}
+                          Web
                         </td>
                         <td class="govuk-table__cell">
-                          {% if data_link.get_frequency_display %}
-                            {{ data_link.get_frequency_display }}
-                          {% else %}
-                            {{ data_link.frequency }}
-                          {% endif %}
+                          {{ model.published_at }}
                         </td>
                     </tr>
-                {% endfor %}
-
-                {% if not data_links_with_link_toggle %}
-                    <tr class="govuk-table__row">
-                        <td colspan="4" class="govuk-table__cell">
-                            No data available
-                        </td>
-                    </tr>
-                {% endif %}
-
                 </tbody>
             </table>
 
@@ -148,6 +117,14 @@
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
 
             <dl class="govuk-summary-list">
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Publish date</dt>
+                    <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
+                </div>
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Updated date</dt>
+                    <dd class="govuk-summary-list__value">{{ model.updated_at }}</dd>
+                </div>
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Licence</dt>
                     <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>

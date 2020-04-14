@@ -24,6 +24,7 @@ def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
         DataSetType.REFERENCE.value: 'datasets.manage_unpublished_reference_datasets',
         DataSetType.MASTER.value: 'datasets.manage_unpublished_master_datasets',
         DataSetType.DATACUT.value: 'datasets.manage_unpublished_datacut_datasets',
+        DataSetType.VISUALISATION.value: 'datasets.manage_unpublished_visualisations',
     }[dataset_type]
 
 

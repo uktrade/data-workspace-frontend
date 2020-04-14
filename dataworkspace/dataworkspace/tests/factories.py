@@ -214,6 +214,14 @@ class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
         model = 'applications.ApplicationTemplate'
 
 
+class ApplicationTemplateUserPermissionFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    application_template = factory.SubFactory(ApplicationTemplateFactory)
+
+    class Meta:
+        model = 'applications.ApplicationTemplateUserPermission'
+
+
 class VisualisationTemplateFactory(ApplicationTemplateFactory):
     application_type = 'VISUALISATION'
 
