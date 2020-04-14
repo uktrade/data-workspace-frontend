@@ -394,6 +394,9 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
     if request.method == 'GET':
         return visualisation_users_with_access_html_GET(request, gitlab_project)
 
+    if request.method == 'POST':
+        return visualisation_users_with_access_html_POST(request, gitlab_project)
+
     return HttpResponse(status=405)
 
 
@@ -422,6 +425,46 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
             'application_template': application_template,
             'users': users,
         },
+    )
+
+
+def visualisation_users_with_access_html_POST(request, gitlab_project):
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project['id']
+    )
+    user_id = request.POST['user-id']
+    user = get_user_model().objects.get(id=user_id)
+
+    content_type_id = ContentType.objects.get_for_model(user).pk
+
+    with transaction.atomic():
+        try:
+            permission = ApplicationTemplateUserPermission.objects.get(
+                user=user, application_template=application_template
+            )
+        except ApplicationTemplateUserPermission.DoesNotExist:
+            # The permission could have been removed by another request. We
+            # could surface an error, but the state is what the user wanted:
+            # the user does not have access.
+            pass
+        else:
+            permission.delete()
+
+            LogEntry.objects.log_action(
+                user_id=request.user.pk,
+                content_type_id=content_type_id,
+                object_id=user.id,
+                object_repr=force_text(user),
+                action_flag=CHANGE,
+                change_message=f'Removed visualisation {application_template} permission',
+            )
+
+    messages.success(
+        request,
+        f'{user.get_full_name()} can no longer view the ‘{gitlab_project["name"]}’ visualisation.',
+    )
+    return redirect(
+        'visualisations:users-with-access', gitlab_project_id=gitlab_project['id']
     )
 
 
