@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-04-14
 
+### Changed
+
+- `host_exact` column for application templates to `host_basename`.
+
+## 2020-04-14
+
 ### Added
 
 - Theia IDE as a hidden tool for testing
