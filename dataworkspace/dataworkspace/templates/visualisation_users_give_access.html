@@ -39,6 +39,15 @@
             You can give other users access to view this visualisation by their email address. For technical reasons, each user must have previously visited Data Workspace.
         </p>
 
+        <p class="govuk-body">You should only give access if:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>you've identified the Information Asset Owner</li>
+            <li>the Information Asset Owner understands this visualisation and underpinning data</li>
+            <li>the Information Asset Owner has confirmed the eligibility criteria for users to access this visualisation</li>
+            <li>the user you want to give access to meets the eligibility criteria</li>
+        </ul>
+
         <div class="govuk-form-group{% if email_address_error %} govuk-form-group--error{% endif %}">
             {% if email_address_error %}
             <span class="govuk-error-message">
