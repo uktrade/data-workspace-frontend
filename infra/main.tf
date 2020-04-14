@@ -51,6 +51,7 @@ variable "pgadmin_container_image" {}
 variable "metabase_container_image" {}
 variable "pgweb_container_image" {}
 variable "remotedesktop_container_image" {}
+variable "theia_container_image" {}
 
 variable "alb_access_logs_bucket" {}
 variable "alb_logs_account" {}
