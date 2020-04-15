@@ -17,7 +17,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.core.exceptions import ValidationError
-from django.db.models import ProtectedError, Count, Q
+from django.db.models import F, ProtectedError, Count, Q
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.text import slugify
 from django.utils import timezone
@@ -110,6 +110,28 @@ class SourceTag(TimeStampedModel):
         return self.name
 
 
+class DatasetReferenceCode(TimeStampedModel):
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        help_text='Short code to identify the source (eg. DH for Data Hub, EW for Export Wins)',
+    )
+    description = models.TextField(null=True, blank=True)
+    counter = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ('code',)
+
+    def __str__(self):
+        return self.code
+
+    def get_next_reference_number(self):
+        self.counter = F('counter') + 1
+        self.save(update_fields=['counter'])
+        self.refresh_from_db()
+        return self.counter
+
+
 class DataSet(DeletableTimestampedUserModel):
     TYPE_MASTER_DATASET = DataSetType.MASTER.value
     TYPE_DATA_CUT = DataSetType.DATACUT.value
@@ -157,12 +179,49 @@ class DataSet(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
+    reference_code = models.ForeignKey(
+        DatasetReferenceCode, null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         db_table = 'app_dataset'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_reference_code = self.reference_code
+
     def __str__(self):
         return self.name
+
+    def related_objects(self):
+        """
+        Returns a list of sources related to this dataset
+        """
+        RELATED_FIELDS = [
+            'sourcetable',
+            'sourceview',
+            'sourcelink',
+            'customdatasetquery',
+        ]
+        related = []
+        for related_field in RELATED_FIELDS:
+            related += [
+                copy.copy(obj) for obj in getattr(self, related_field + '_set').all()
+            ]
+        return related
+
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        # If the model's reference code has changed as part of this update reset the reference
+        # number for any associated sources. This will trigger the source to update it's reference
+        # number inline with the new reference code (if any).
+        super().save(force_insert, force_update, using, update_fields)
+        if self.reference_code != self._original_reference_code:
+            self._original_reference_code = self.reference_code
+            for obj in self.related_objects():
+                obj.reference_number = None
+                obj.save()
 
     def user_has_access(self, user):
         return (
@@ -181,13 +240,6 @@ class DataSet(DeletableTimestampedUserModel):
 
         """
 
-        CLONE_RELATED_FIELDS = [
-            'sourcetable',
-            'sourceview',
-            'sourcelink',
-            'customdatasetquery',
-        ]
-
         clone = copy.copy(self)
 
         clone.pk = None
@@ -197,14 +249,11 @@ class DataSet(DeletableTimestampedUserModel):
         clone.published = False
         clone.save()
 
-        for related_field in CLONE_RELATED_FIELDS:
-            related_objects = [
-                copy.copy(obj) for obj in getattr(self, related_field + '_set').all()
-            ]
-            for obj in related_objects:
-                obj.pk = None
-                obj.dataset = clone
-                obj.save()
+        for obj in self.related_objects():
+            obj.pk = None
+            obj.reference_number = None
+            obj.dataset = clone
+            obj.save()
 
         return clone
 
@@ -303,7 +352,53 @@ class DataCutDatasetUserPermission(DataSetUserPermission):
         proxy = True
 
 
-class BaseSource(TimeStampedModel):
+class ReferenceNumberedDatasetSource(TimeStampedModel):
+    """
+    Abstract model that adds a reference number to a dataset source model.
+    """
+
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    reference_number = models.IntegerField(null=True)
+
+    class Meta:
+        abstract = True
+
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        # If a reference code is set on the dataset, add a reference number to this source
+        # by incrementing the counter on the reference code model
+        if self.reference_number is None and self.dataset.reference_code is not None:
+            self.reference_number = (
+                self.dataset.reference_code.get_next_reference_number()
+            )
+        # If the dataset's reference code was unset, unset this source's reference number
+        elif self.reference_number is not None and self.dataset.reference_code is None:
+            self.reference_number = None
+        super().save(force_insert, force_update, using, update_fields)
+
+    @property
+    def source_reference(self):
+        if (
+            self.dataset.reference_code is not None
+            and self.reference_number is not None
+        ):
+            return ''.join(
+                [
+                    self.dataset.reference_code.code.upper(),
+                    str(self.reference_number).zfill(5),
+                ]
+            )
+        return None
+
+    def get_filename(self):
+        filename = '{}.csv'.format(slugify(self.name))
+        if self.source_reference is not None:
+            return f'{self.source_reference}-{filename}'
+        return filename
+
+
+class BaseSource(ReferenceNumberedDatasetSource):
     FREQ_DAILY = 1
     FREQ_WEEKLY = 2
     FREQ_MONTHLY = 3
@@ -317,7 +412,6 @@ class BaseSource(TimeStampedModel):
         (FREQ_ANNUALLY, 'Annually'),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
     name = models.CharField(
         max_length=1024,
         blank=False,
@@ -380,12 +474,11 @@ class SourceView(BaseSource):
         return True
 
 
-class SourceLink(TimeStampedModel):
+class SourceLink(ReferenceNumberedDatasetSource):
     TYPE_EXTERNAL = 1
     TYPE_LOCAL = 2
     _LINK_TYPES = ((TYPE_EXTERNAL, 'External Link'), (TYPE_LOCAL, 'Local Link'))
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
     link_type = models.IntegerField(choices=_LINK_TYPES, default=TYPE_EXTERNAL)
     name = models.CharField(
         blank=False,
@@ -452,7 +545,7 @@ class SourceLink(TimeStampedModel):
         return True
 
 
-class CustomDatasetQuery(TimeStampedModel):
+class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     FREQ_DAILY = 1
     FREQ_WEEKLY = 2
     FREQ_MONTHLY = 3
@@ -465,7 +558,6 @@ class CustomDatasetQuery(TimeStampedModel):
         (FREQ_QUARTERLY, 'Quarterly'),
         (FREQ_ANNUALLY, 'Annually'),
     )
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
     query = models.TextField()
@@ -483,9 +575,6 @@ class CustomDatasetQuery(TimeStampedModel):
         return reverse(
             'datasets:dataset_query_download', args=(self.dataset.id, self.id)
         )
-
-    def get_filename(self):
-        return '{}.csv'.format(slugify(self.name))
 
     def can_show_link_for_user(self, user):
         if user.is_superuser:

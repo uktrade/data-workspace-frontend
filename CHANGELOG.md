@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fixed api url typo in proxy
 
+### Added
+
+- Optional reference code added to the dataset model.
+- Reference number added to dataset source models.
+- Downloads through data workspace are now prepended with the reference code and reference number above if set.
+
 ## 2020-04-16
 
 ### Added
