@@ -378,7 +378,6 @@ class ToolTemplateAdmin(admin.ModelAdmin):
             None,
             {
                 'fields': [
-                    'name',
                     'host_basename',
                     'nice_name',
                     'spawner',
@@ -432,7 +431,6 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
             None,
             {
                 'fields': [
-                    'name',
                     'host_basename',
                     'nice_name',
                     'spawner',
@@ -487,7 +485,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
             log_change('Removed dataset {} permission'.format(dataset))
 
         cat_item, _ = VisualisationCatalogueItem.objects.update_or_create(
-            visualisation_template=obj, defaults={"name": obj.name}
+            visualisation_template=obj, defaults={"name": obj.nice_name}
         )
 
         super().save_model(request, obj, form, change)

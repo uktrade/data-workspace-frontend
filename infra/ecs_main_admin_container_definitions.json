@@ -56,10 +56,6 @@
       "value": "${notebook_task_role__permissions_boundary_arn}"
     }, 
     {
-      "name": "APPLICATION_TEMPLATES__1__NAME",
-      "value": "jupyterlab"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__1__VISIBLE",
       "value": "False"
     },
@@ -176,10 +172,6 @@
       "value": "${notebooks_bucket}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__2__NAME",
-      "value": "rstudio"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__2__VISIBLE",
       "value": "True"
     },
@@ -276,10 +268,6 @@
       "value": "${notebooks_bucket}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__3__NAME",
-      "value": "pgadmin"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__3__VISIBLE",
       "value": "True"
     },
@@ -362,10 +350,6 @@
     {
       "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__S3_BUCKET",
       "value": "${notebooks_bucket}"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__NAME",
-      "value": "jupyterlabpython"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__VISIBLE",
@@ -492,10 +476,6 @@
       "value": "${notebooks_bucket}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__6__NAME",
-      "value": "jupyterlabr"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__6__VISIBLE",
       "value": "True"
     },
@@ -619,10 +599,6 @@
       "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__S3_BUCKET",
       "value": "${notebooks_bucket}"
     },
- {
-  "name": "APPLICATION_TEMPLATES__7__NAME",
-  "value": "metabase"
-},
 {
   "name": "APPLICATION_TEMPLATES__7__VISIBLE",
   "value": "False"
@@ -706,10 +682,6 @@
 {
   "name": "APPLICATION_TEMPLATES__7__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
-},
- {
-  "name": "APPLICATION_TEMPLATES__8__NAME",
-  "value": "pgweb"
 },
 {
   "name": "APPLICATION_TEMPLATES__8__VISIBLE",
@@ -795,10 +767,6 @@
   "name": "APPLICATION_TEMPLATES__8__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
 },
- {
-  "name": "APPLICATION_TEMPLATES__9__NAME",
-  "value": "remotedesktop"
-},
 {
   "name": "APPLICATION_TEMPLATES__9__VISIBLE",
   "value": "False"
@@ -882,10 +850,6 @@
 {
   "name": "APPLICATION_TEMPLATES__9__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
-},
- {
-  "name": "APPLICATION_TEMPLATES__10__NAME",
-  "value": "theia"
 },
 {
   "name": "APPLICATION_TEMPLATES__10__VISIBLE",

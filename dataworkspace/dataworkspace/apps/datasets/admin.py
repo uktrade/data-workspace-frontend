@@ -503,6 +503,6 @@ class VisualisationCatalogueItemAdmin(
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        obj.name = obj.visualisation_template.name
+        obj.name = obj.visualisation_template.nice_name
 
         super().save_model(request, obj, form, change)

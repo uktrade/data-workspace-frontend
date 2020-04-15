@@ -35,11 +35,10 @@ class Command(BaseCommand):
 
         for desired_application_template in desired_application_templates:
             self.stdout.write(
-                'Checking {}'.format(desired_application_template['NAME'])
+                'Checking {}'.format(desired_application_template['NICE_NAME'])
             )
             try:
                 ApplicationTemplate.objects.create(
-                    name=desired_application_template['NAME'],
                     visible=desired_application_template['VISIBLE'] == 'True',
                     host_basename=desired_application_template['HOST_BASENAME'],
                     nice_name=desired_application_template['NICE_NAME'],
@@ -51,10 +50,9 @@ class Command(BaseCommand):
                 )
             except IntegrityError:
                 template = ApplicationTemplate.objects.get(
-                    name=desired_application_template['NAME']
+                    host_basename=desired_application_template['HOST_BASENAME']
                 )
                 template.visible = desired_application_template['VISIBLE'] == 'True'
-                template.host_basename = desired_application_template['HOST_BASENAME']
                 template.nice_name = desired_application_template['NICE_NAME']
                 template.spawner = desired_application_template['SPAWNER']
                 template.spawner_time = int(
@@ -65,11 +63,11 @@ class Command(BaseCommand):
                 )
                 template.save()
                 self.stdout.write(
-                    'Updated {}'.format(desired_application_template['NAME'])
+                    'Updated {}'.format(desired_application_template['NICE_NAME'])
                 )
             else:
                 self.stdout.write(
-                    'Created {}'.format(desired_application_template['NAME'])
+                    'Created {}'.format(desired_application_template['NICE_NAME'])
                 )
 
         self.stdout.write(

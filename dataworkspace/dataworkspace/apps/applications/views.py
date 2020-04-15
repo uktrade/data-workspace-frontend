@@ -132,13 +132,12 @@ def tools_html_GET(request):
         {
             'applications': [
                 {
-                    'name': application_template.name,
                     'nice_name': application_template.nice_name,
                     'link': link(application_template),
                     'instance': application_instances.get(application_template, None),
                 }
                 for application_template in ApplicationTemplate.objects.all().order_by(
-                    'name'
+                    'nice_name'
                 )
                 for application_link in [link(application_template)]
                 if application_template.visible
