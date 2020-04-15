@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Stopped the setting of host_pattern: it's already not used
 - Squashed migrations to later support removal of `host_pattern`
 - Remove unused `host_pattern`
+- Reduce usage of application "name" so there is less to setup per visualisation
 
 ## 2020-04-14
 
