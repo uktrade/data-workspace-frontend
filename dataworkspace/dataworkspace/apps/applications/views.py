@@ -209,15 +209,21 @@ def visualisations_html_GET(request):
     )
 
     def get_projects(gitlab_user):
-        gitlab_projects = gitlab_api_v4(
+        gitlab_projects_including_non_visualisation = gitlab_api_v4(
             'GET',
-            f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}/projects',
+            f'projects',
             params=(
                 ('archived', 'false'),
                 ('min_access_level', DEVELOPER_ACCESS_LEVEL),
                 ('sudo', gitlab_user['id']),
+                ('per_page', '100'),
             ),
         )
+        gitlab_projects = [
+            gitlab_project
+            for gitlab_project in gitlab_projects_including_non_visualisation
+            if 'visualisation' in [tag.lower() for tag in gitlab_project['tag_list']]
+        ]
         application_templates = {
             application_template.gitlab_project_id: application_template
             for application_template in ApplicationTemplate.objects.filter(
