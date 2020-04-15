@@ -17,6 +17,7 @@ from dataworkspace.apps.applications.models import (
 from dataworkspace.apps.applications.spawner import spawn
 from dataworkspace.apps.applications.utils import (
     api_application_dict,
+    application_options,
     application_api_is_allowed,
     application_template_tag_user_commit_from_host,
     get_api_visible_application_instance_by_public_host,
@@ -191,11 +192,13 @@ def application_api_PUT(request, public_host):
         memory = None
         cpu = None
 
+    spawner_options = json.dumps(application_options(application_template))
+
     application_instance = ApplicationInstance.objects.create(
         owner=request.user,
         application_template=application_template,
         spawner=application_template.spawner,
-        spawner_application_template_options=application_template.spawner_options,
+        spawner_application_template_options=spawner_options,
         spawner_application_instance_id=json.dumps({}),
         public_host=public_host,
         state='SPAWNING',
@@ -220,7 +223,7 @@ def application_api_PUT(request, public_host):
         str(request.user.profile.sso_id),
         tag,
         application_instance.id,
-        application_template.spawner_options,
+        spawner_options,
         credentials,
     )
 
