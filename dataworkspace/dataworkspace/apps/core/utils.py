@@ -41,7 +41,7 @@ def db_role_schema_suffix_for_user(user):
 
 
 def db_role_schema_suffix_for_app(application_template):
-    return 'app_' + application_template.name
+    return 'app_' + application_template.host_basename
 
 
 def new_private_database_credentials(db_role_and_schema_suffix, source_tables, db_user):

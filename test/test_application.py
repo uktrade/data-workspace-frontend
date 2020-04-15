@@ -1585,7 +1585,7 @@ async def give_user_visualisation_perms(name):
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         visualisationtemplate = VisualisationTemplate.objects.get(
-            name="{name}",
+            host_basename="{name}",
         )
         ApplicationTemplateUserPermission.objects.create(
             application_template=visualisationtemplate,
@@ -1640,7 +1640,6 @@ async def create_visualisation_echo(name):
             VisualisationTemplate,
         )
         template = VisualisationTemplate.objects.create(
-            name="{name}",
             host_basename="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
@@ -1670,7 +1669,6 @@ async def create_visualisation_dataset(name):
             VisualisationTemplate,
         )
         template = VisualisationTemplate.objects.create(
-            name="{name}",
             host_basename="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
@@ -1706,7 +1704,7 @@ async def give_visualisation_dataset_perms(name):
             DataSet,
             DataSetApplicationTemplatePermission,
         )
-        application_template = ApplicationTemplate.objects.get(name="{name}")
+        application_template = ApplicationTemplate.objects.get(host_basename="{name}")
         dataset = DataSet.objects.get(
             name="test_dataset",
         )
