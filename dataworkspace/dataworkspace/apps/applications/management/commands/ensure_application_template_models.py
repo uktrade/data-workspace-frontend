@@ -42,7 +42,6 @@ class Command(BaseCommand):
                     name=desired_application_template['NAME'],
                     visible=desired_application_template['VISIBLE'] == 'True',
                     host_basename=desired_application_template['HOST_BASENAME'],
-                    host_pattern=desired_application_template['HOST_PATTERN'],
                     nice_name=desired_application_template['NICE_NAME'],
                     spawner=desired_application_template['SPAWNER'],
                     spawner_time=int(desired_application_template['SPAWNER_TIME']),
@@ -56,7 +55,6 @@ class Command(BaseCommand):
                 )
                 template.visible = desired_application_template['VISIBLE'] == 'True'
                 template.host_basename = desired_application_template['HOST_BASENAME']
-                template.host_pattern = desired_application_template['HOST_PATTERN']
                 template.nice_name = desired_application_template['NICE_NAME']
                 template.spawner = desired_application_template['SPAWNER']
                 template.spawner_time = int(
