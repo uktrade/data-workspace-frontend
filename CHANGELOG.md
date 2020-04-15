@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Version of git to the one that is now available in Alpine
 - Stopped the setting of host_pattern: it's already not used
+- Squashed migrations to later support removal of `host_pattern`
 
 ## 2020-04-14
 
