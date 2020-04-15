@@ -1642,7 +1642,6 @@ async def create_visualisation_echo(name):
         template = VisualisationTemplate.objects.create(
             name="{name}",
             host_basename="{name}",
-            host_pattern="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
             spawner_options='{{"CMD":["python3", "/test/echo_server.py"]}}',
@@ -1673,7 +1672,6 @@ async def create_visualisation_dataset(name):
         template = VisualisationTemplate.objects.create(
             name="{name}",
             host_basename="{name}",
-            host_pattern="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
             spawner_options='{{"CMD":["python3", "/test/dataset_server.py"]}}',
