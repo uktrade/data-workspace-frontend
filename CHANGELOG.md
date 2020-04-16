@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Database credentials to the environment in R Studio, so Shiny apps can be developed that would also access their database credentials from the environment
 
+### Changed
+
+- Allow the GitLab pipeline to take 30 minutes before cancelling it
+
 ## 2020-04-15
 
 ### Changed
