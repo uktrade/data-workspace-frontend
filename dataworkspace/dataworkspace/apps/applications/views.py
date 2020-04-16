@@ -1,4 +1,5 @@
 import datetime
+
 import hashlib
 import random
 from urllib.parse import urlsplit
@@ -20,6 +21,7 @@ from django.utils.encoding import force_text
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
 )
+from dataworkspace.apps.applications.forms import VisualisationsUICatalogueItemForm
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
     gitlab_api_v4,
@@ -34,7 +36,7 @@ from dataworkspace.apps.applications.utils import application_options
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.views import public_error_500_html_view
-
+from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -642,6 +644,7 @@ def _render_visualisation(
     branches,
     current_menu_item,
     template_specific_context,
+    status=200,
 ):
     # For templates that inherit from _visualisation.html. This is factored
     # out, in a way so that any context variables required, but not passed from
@@ -655,5 +658,85 @@ def _render_visualisation(
             'current_menu_item': current_menu_item,
             **template_specific_context,
         },
-        status=200,
+        status=status,
+    )
+
+
+def visualisation_catalogue_item_html_view(request, gitlab_project_id):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        raise PermissionDenied()
+
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
+    if not _visualisation_has_developer_access(request.user, gitlab_project):
+        raise PermissionDenied()
+
+    if request.method == 'GET':
+        return visualisation_catalogue_item_html_GET(request, gitlab_project)
+
+    if request.method == 'POST':
+        return visualisation_catalogue_item_html_POST(request, gitlab_project)
+
+    return HttpResponse(status=405)
+
+
+def visualisation_catalogue_item_html_GET(request, gitlab_project):
+    branches = _visualisation_branches(gitlab_project)
+
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project['id']
+    )
+
+    catalogue_item = None
+    try:
+        catalogue_item = VisualisationCatalogueItem.objects.get(
+            visualisation_template=application_template
+        )
+    except VisualisationCatalogueItem.DoesNotExist:
+        pass
+
+    form = VisualisationsUICatalogueItemForm(instance=catalogue_item)
+
+    return _render_visualisation(
+        request,
+        'visualisation_catalogue_item.html',
+        gitlab_project,
+        branches,
+        current_menu_item='catalogue-item',
+        template_specific_context={'form': form},
+    )
+
+
+def visualisation_catalogue_item_html_POST(request, gitlab_project):
+    application_template = ApplicationTemplate.objects.get(
+        gitlab_project_id=gitlab_project['id']
+    )
+
+    catalogue_item = None
+    try:
+        catalogue_item = VisualisationCatalogueItem.objects.get(
+            visualisation_template=application_template
+        )
+    except VisualisationCatalogueItem.DoesNotExist:
+        pass
+
+    form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
+    if form.is_valid():
+        form.save()
+        return redirect(
+            'visualisations:catalogue-item', gitlab_project_id=gitlab_project['id']
+        )
+
+    form_errors = [
+        (field.id_for_label, field.errors[0]) for field in form if field.errors
+    ]
+
+    return _render_visualisation(
+        request,
+        'visualisation_catalogue_item.html',
+        gitlab_project,
+        _visualisation_branches(gitlab_project),
+        current_menu_item='catalogue-item',
+        template_specific_context={"form": form, "form_errors": form_errors},
+        status=400 if form_errors else 200,
     )

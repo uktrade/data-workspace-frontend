@@ -146,5 +146,10 @@
             </li>
         </ul>
     </li>
+    <li class="nav-item{% if current_menu_item == 'catalogue-item' %} nav-item--current{% endif %}">
+        <a href="{% url 'visualisations:catalogue-item' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'catalogue-item' %} nav-item-link--current{% endif %}">
+            Catalogue item
+        </a>
+    </li>
 </ul>
 {% endblock %}
