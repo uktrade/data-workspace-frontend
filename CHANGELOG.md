@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-04-16
+
+### Added
+
+- Database credentials to the environment in R Studio, so Shiny apps can be developed that would also access their database credentials from the environment
+
 ## 2020-04-15
 
 ### Changed

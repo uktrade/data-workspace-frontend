@@ -6,8 +6,11 @@ mkdir -p /etc/rstudio/connections
 
 while IFS='=' read -r name value ; do
   if [[ $name == *'DATABASE_DSN__'* ]]; then
-    conn_name=$(echo ${name}    | sed -E 's/DATABASE_DSN__(.*)/\1/')
+    # Make available as environment variable
+    echo "${name}='${!name}'" >> /home/rstudio/.Renviron
 
+    # Make available as connection in the UI
+    conn_name=$(echo ${name}    | sed -E 's/DATABASE_DSN__(.*)/\1/')
     db_user=$(echo ${!name}     | sed -E 's/.*user=([a-z0-9_]+).*/\1/')
     db_password=$(echo ${!name} | sed -E 's/.*password=([a-zA-Z0-9_]+).*/\1/')
     db_port=$(echo ${!name}     | sed -E 's/.*port=([0-9]+).*/\1/')
