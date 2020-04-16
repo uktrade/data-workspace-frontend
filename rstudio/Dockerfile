@@ -111,4 +111,4 @@ RUN \
 
 USER rstudio
 
-CMD ["/usr/lib/rstudio-server/bin/rserver"]
+CMD ["/rstudio-start.sh"]
