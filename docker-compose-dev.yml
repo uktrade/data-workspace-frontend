@@ -39,6 +39,8 @@ services:
     image: data-workspace-postgres
     ports:
       - "5432:5432"
+    volumes:
+      - db-data-dev:/var/lib/postgresql/data
   data-workspace-redis:
     build:
       context: redis
@@ -46,3 +48,6 @@ services:
     image: data-workspace-redis
     ports:
       - "6379:6379"
+
+volumes:
+  db-data-dev:
