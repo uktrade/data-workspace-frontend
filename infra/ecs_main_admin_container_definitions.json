@@ -192,10 +192,6 @@
       "value": "120"
     },
     {
-      "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__CMD__1",
-      "value": "/rstudio-start.sh"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__2__SPAWNER_OPTIONS__CLUSTER_NAME",
       "value": "${fargate_spawner__task_custer_name}"
     },

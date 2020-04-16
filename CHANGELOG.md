@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Allow the GitLab pipeline to take 30 minutes before cancelling it
+- Use the RStudio CMD from the Dockerfile to make local development on the container more like production by default
 
 ## 2020-04-15
 
