@@ -935,6 +935,66 @@
   "name": "APPLICATION_TEMPLATES__10__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
 },
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__ECR_REPOSITORY_NAME",
+  "value": "${fargate_spawner__user_provided_ecr_repository__name}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__POLICY_NAME",
+  "value": "${notebook_task_role__policy_name}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME",
+  "value": "${fargate_spawner__task_custer_name}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__DEFINITION_ARN",
+  "value": "${fargate_spawner__user_provided_task_definition_arn}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CONTAINER_NAME",
+  "value": "user-provided"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__PORT",
+  "value": "8888"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__ASSUME_ROLE_POLICY_DOCUMENT_BASE64",
+  "value": "${notebook_task_role__assume_role_policy_document_base64}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__POLICY_DOCUMENT_TEMPLATE_BASE64",
+  "value": "${fargate_spawner__user_provided_task_role__policy_document_template_base64}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__PERMISSIONS_BOUNDARY_ARN",
+  "value": "${notebook_task_role__permissions_boundary_arn}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__SECURITY_GROUPS__1",
+  "value": "${fargate_spawner__task_security_group}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__SUBNETS__1",
+  "value": "${fargate_spawner__task_subnet}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__S3_SYNC",
+  "value": "False"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__S3_HOST",
+  "value": "s3-eu-west-2.amazonaws.com"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__S3_BUCKET",
+  "value": "${notebooks_bucket}"
+},
+{
+  "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__S3_REGION",
+  "value": "eu-west-2"
+},
     {
       "name": "APPLICATION_ROOT_DOMAIN",
       "value": "${root_domain}"

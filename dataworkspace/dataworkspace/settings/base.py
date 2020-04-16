@@ -184,6 +184,7 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # tests don't have to worry about fixtures / editing the database
 APPLICATION_TEMPLATES = env['APPLICATION_TEMPLATES']
 APPLICATION_ROOT_DOMAIN = env['APPLICATION_ROOT_DOMAIN']
+APPLICATION_SPAWNER_OPTIONS = env.get('APPLICATION_SPAWNER_OPTIONS', {})
 
 # CSP Headers
 CSP_DEFAULT_SRC = [APPLICATION_ROOT_DOMAIN]

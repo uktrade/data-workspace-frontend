@@ -1,6 +1,5 @@
 import datetime
 import hashlib
-import json
 import random
 from urllib.parse import urlsplit
 
@@ -31,6 +30,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     ApplicationTemplateUserPermission,
 )
+from dataworkspace.apps.applications.utils import application_options
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.views import public_error_500_html_view
@@ -294,7 +294,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
         latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
     )
     latest_commit_tag_exists = get_spawner(application_template.spawner).tags_for_tag(
-        json.loads(application_template.spawner_options),
+        application_options(application_template),
         f'{application_template.host_basename}--{latest_commit["short_id"]}',
     )
 
@@ -303,8 +303,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
         f'{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/'
     )
     tags = get_spawner(application_template.spawner).tags_for_tag(
-        json.loads(application_template.spawner_options),
-        application_template.host_basename,
+        application_options(application_template), application_template.host_basename
     )
     production_commit_id = None
     for tag in tags:
@@ -357,7 +356,7 @@ def visualisation_branch_html_POST(request, gitlab_project, branch_name):
         gitlab_project_id=gitlab_project['id']
     )
     get_spawner(application_template.spawner).retag(
-        json.loads(application_template.spawner_options),
+        application_options(application_template),
         f'{application_template.host_basename}--{release_commit}',
         application_template.host_basename,
     )

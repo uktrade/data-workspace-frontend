@@ -126,6 +126,7 @@ data "template_file" "admin_container_definitions" {
 
     fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
     fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
+    fargate_spawner__user_provided_ecr_repository__name = "${aws_ecr_repository.user_provided.name}"
 
     zendesk_email = "${var.zendesk_email}"
     zendesk_subdomain = "${var.zendesk_subdomain}"
@@ -233,6 +234,7 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
 
     fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
     fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
+    fargate_spawner__user_provided_ecr_repository__name = "${aws_ecr_repository.user_provided.name}"
 
     zendesk_email = "${var.zendesk_email}"
     zendesk_subdomain = "${var.zendesk_subdomain}"

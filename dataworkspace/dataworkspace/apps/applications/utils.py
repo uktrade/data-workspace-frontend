@@ -106,6 +106,17 @@ def application_template_tag_user_commit_from_host(public_host):
     return (matching[0], tag, user, commit_id)
 
 
+def application_options(application_template):
+    common_spawner_options = settings.APPLICATION_SPAWNER_OPTIONS.get(
+        application_template.spawner, {}
+    ).get(application_template.application_type, {})
+
+    return {
+        **common_spawner_options,
+        **json.loads(application_template.spawner_options),
+    }
+
+
 def api_application_dict(application_instance):
     spawner_state = get_spawner(
         application_instance.application_template.spawner
