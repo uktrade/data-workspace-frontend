@@ -252,7 +252,7 @@ class DatasetAccessRevokedEventFactory(RelatedObjectEventFactory):
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
-    host_basename = 'testapplication'
+    host_basename = factory.fuzzy.FuzzyText()
     nice_name = factory.fuzzy.FuzzyText()
     spawner = 'PROCESS'
     spawner_time = int(datetime.timestamp(datetime.now()))
@@ -263,7 +263,6 @@ class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
         model = 'applications.ApplicationTemplate'
 
 
-<<<<<<< HEAD
 class ApplicationTemplateUserPermissionFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     application_template = factory.SubFactory(ApplicationTemplateFactory)
@@ -299,7 +298,7 @@ class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
         model = 'datasets.VisualisationCatalogueItem'
 
 
-class ApplicationInstanceReportFactory(factory.django.DjangoModelFactory):
+class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     application_template = factory.SubFactory(ApplicationTemplateFactory)
     owner = factory.SubFactory(UserFactory)
@@ -319,5 +318,4 @@ class ApplicationInstanceReportFactory(factory.django.DjangoModelFactory):
     commit_id = factory.fuzzy.FuzzyText(length=8)
 
     class Meta:
-        model = 'applications.ApplicationInstanceReport'
-
+        model = 'applications.ApplicationInstance'

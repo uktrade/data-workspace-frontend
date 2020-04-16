@@ -1,19 +1,22 @@
 from rest_framework import serializers
 
-from dataworkspace.apps.applications.models import ApplicationInstanceReport
+from dataworkspace.apps.applications.models import ApplicationInstance
 
 
-class ApplicationInstanceReportSerializer(serializers.ModelSerializer):
+class ApplicationInstanceSerializer(serializers.ModelSerializer):
     state = serializers.SerializerMethodField()
+    application_template_name = serializers.CharField(
+        source='application_template.name'
+    )
 
     class Meta:
-        model = ApplicationInstanceReport
+        model = ApplicationInstance
         fields = (
             'id',
             'owner_id',
             'public_host',
             'spawner',
-            'spawner_application_template_options',
+            'application_template_name',
             'spawner_application_instance_id',
             'spawner_created_at',
             'spawner_stopped_at',

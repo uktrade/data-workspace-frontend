@@ -5,17 +5,17 @@ from rest_framework.fields import DateTimeField
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
-from dataworkspace.tests.factories import ApplicationInstanceReportFactory
 
 
 @pytest.mark.django_db
 class TestEventLogAPIView(BaseAPIViewTest):
     url = reverse('api-v1:application-instance:instances')
-    factory = factories.ApplicationInstanceReportFactory
-    pagination_class = 'dataworkspace.apps.api_v1.applications.views.ApplicationInstanceReportCursorPagination.page_size'
+    factory = factories.ApplicationInstanceFactory
+    pagination_class = 'dataworkspace.apps.api_v1.applications.views.ApplicationInstanceCursorPagination.page_size'
 
     def expected_response(self, app_instance):
         return {
+            'application_template_name': app_instance.application_template.name,
             'commit_id': app_instance.commit_id,
             'cpu': app_instance.cpu,
             'id': str(app_instance.id),
@@ -27,7 +27,6 @@ class TestEventLogAPIView(BaseAPIViewTest):
             'spawner_application_instance_id': str(
                 app_instance.spawner_application_instance_id
             ),
-            'spawner_application_template_options': app_instance.spawner_application_template_options,
             'spawner_cpu': app_instance.spawner_cpu,
             'spawner_created_at': DateTimeField().to_representation(
                 app_instance.spawner_created_at
@@ -41,8 +40,8 @@ class TestEventLogAPIView(BaseAPIViewTest):
 
     @pytest.mark.django_db
     def test_success(self, unauthenticated_client):
-        instance1 = ApplicationInstanceReportFactory()
-        instance2 = ApplicationInstanceReportFactory()
+        instance1 = factories.ApplicationInstanceFactory()
+        instance2 = factories.ApplicationInstanceFactory()
         response = unauthenticated_client.get(
             reverse('api-v1:application-instance:instances')
         )

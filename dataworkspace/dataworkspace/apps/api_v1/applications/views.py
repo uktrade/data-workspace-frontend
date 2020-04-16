@@ -2,20 +2,20 @@ from rest_framework import viewsets
 from rest_framework.pagination import CursorPagination
 
 from dataworkspace.apps.api_v1.applications.serializers import (
-    ApplicationInstanceReportSerializer,
+    ApplicationInstanceSerializer,
 )
-from dataworkspace.apps.applications.models import ApplicationInstanceReport
+from dataworkspace.apps.applications.models import ApplicationInstance
 
 
-class ApplicationInstanceReportCursorPagination(CursorPagination):
+class ApplicationInstanceCursorPagination(CursorPagination):
     ordering = ('id',)
 
 
-class ApplicationInstanceReportViewSet(viewsets.ModelViewSet):
+class ApplicationInstanceViewSet(viewsets.ModelViewSet):
     """
-    API endpoint to list application instance report items for consumption by data flow.
+    API endpoint to list application instance items for consumption by data flow.
     """
 
-    queryset = ApplicationInstanceReport.objects.all()
-    serializer_class = ApplicationInstanceReportSerializer
-    pagination_class = ApplicationInstanceReportCursorPagination
+    queryset = ApplicationInstance.objects.all()
+    serializer_class = ApplicationInstanceSerializer
+    pagination_class = ApplicationInstanceCursorPagination
