@@ -576,7 +576,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     )
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
-    # easily distinguish between reference datasets, datacuts, and master datasets.
+    # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE.value
 
     class Meta:
@@ -1405,6 +1405,28 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         blank=True,
     )
 
+    # Used as a parallel to DataSet.type, which will help other parts of the codebase
+    # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
+    type = DataSetType.VISUALISATION.value
+
+    class Meta:
+        permissions = [
+            (
+                "manage_unpublished_visualisations",
+                "Manage (create, view, edit) unpublished visualisations",
+            )
+        ]
+
+    def get_admin_edit_url(self):
+        return reverse(
+            'admin:datasets_visualisationcatalogueitem_change', args=(self.id,)
+        )
+
+    def get_absolute_url(self):
+        return '{}#{}'.format(
+            reverse('datasets:dataset_detail', args=(self.id,)), self.slug
+        )
+
     def update_published_and_updated_timestamps(self):
         if not self.published:
             return
@@ -1421,3 +1443,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         self.update_published_and_updated_timestamps()
 
         super().save(force_insert, force_update, using, update_fields)
+
+    def get_visualisation_link(self, request):
+        host_basename = self.visualisation_template.host_basename
+        return f'{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/'
+
+    def user_has_access(self, user):
+        return self.visualisation_template.user_has_access(user)

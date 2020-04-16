@@ -53,6 +53,7 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetField,
     SourceLink,
     SourceView,
+    VisualisationCatalogueItem,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
@@ -186,6 +187,9 @@ class DatasetDetailView(DetailView):
     def _is_reference_dataset(self):
         return isinstance(self.object, ReferenceDataset)
 
+    def _is_visualisation(self):
+        return isinstance(self.object, VisualisationCatalogueItem)
+
     def get_object(self, queryset=None):
         dataset_uuid = self.kwargs['dataset_uuid']
         dataset = None
@@ -195,7 +199,12 @@ class DatasetDetailView(DetailView):
             try:
                 dataset = DataSet.objects.live().get(id=dataset_uuid)
             except DataSet.DoesNotExist:
-                pass
+                try:
+                    dataset = VisualisationCatalogueItem.objects.live().get(
+                        id=dataset_uuid
+                    )
+                except VisualisationCatalogueItem.DoesNotExist:
+                    pass
 
         if dataset:
             perm_codename = dataset_type_to_manage_unpublished_permission_codename(
@@ -228,6 +237,18 @@ class DatasetDetailView(DetailView):
                 }
             )
             return ctx
+
+        elif self._is_visualisation():
+            ctx.update(
+                {
+                    'has_access': self.object.user_has_access(self.request.user),
+                    "visualisation_link": self.object.get_visualisation_link(
+                        self.request
+                    ),
+                }
+            )
+            return ctx
+
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
         source_views = self.object.sourceview_set.all()
         custom_queries = self.object.customdatasetquery_set.all()
@@ -298,6 +319,8 @@ class DatasetDetailView(DetailView):
             return ['datasets/master_dataset.html']
         elif self.object.type == DataSet.TYPE_DATA_CUT:
             return ['datasets/data_cut_dataset.html']
+        elif self._is_visualisation():
+            return ['datasets/visualisation_catalogue_item.html']
 
     def get_preview_limit(self, record_count):
         return min([record_count, settings.REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS])

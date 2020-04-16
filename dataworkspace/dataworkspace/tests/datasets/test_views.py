@@ -7,6 +7,11 @@ from django.test import Client
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
+from dataworkspace.tests.factories import (
+    VisualisationCatalogueItemFactory,
+    UserFactory,
+    ApplicationTemplateUserPermissionFactory,
+)
 
 
 @pytest.mark.parametrize(
@@ -468,3 +473,49 @@ def test_dataset_shows_code_snippets_to_tool_user():
         """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
         in response.content.decode(response.charset)
     )
+
+
+class TestVisualisationsDetailView:
+    def test_get_published_authenticated_visualisation(self, client):
+        vis = VisualisationCatalogueItemFactory()
+
+        response = client.get(vis.get_absolute_url())
+
+        assert response.status_code == 200
+        assert vis.name in response.content.decode(response.charset)
+
+    @pytest.mark.parametrize('has_access', (True, False))
+    @pytest.mark.django_db
+    def test_unauthorised_visualisation(self, has_access):
+        user = UserFactory.create()
+        vis = VisualisationCatalogueItemFactory.create(
+            visualisation_template__user_access_type='REQUIRES_AUTHORIZATION'
+        )
+
+        if has_access:
+            ApplicationTemplateUserPermissionFactory.create(
+                application_template=vis.visualisation_template, user=user
+            )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(vis.get_absolute_url())
+
+        assert response.status_code == 200
+        assert vis.name in response.content.decode(response.charset)
+        assert (
+            "You do not have permission to access this data visualisation."
+            in response.content.decode(response.charset)
+        ) is not has_access
+
+    def test_shows_link_to_visualisation(self, client):
+        vis = VisualisationCatalogueItemFactory(
+            visualisation_template__host_basename='visualisation'
+        )
+
+        response = client.get(vis.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            'http://visualisation.dataworkspace.test:8000/'
+            in response.content.decode(response.charset)
+        )

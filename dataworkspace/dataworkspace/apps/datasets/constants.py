@@ -10,3 +10,4 @@ class DataSetType(enum.Enum):
     REFERENCE = 0
     MASTER = 1
     DATACUT = 2
+    VISUALISATION = 3
