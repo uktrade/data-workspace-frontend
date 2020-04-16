@@ -20,6 +20,7 @@ services:
       - "testvisualisation--58d9e87e.dataworkspace.test:127.0.0.1"
       - "testvisualisation-a.dataworkspace.test:127.0.0.1"
       - "testvisualisation-b.dataworkspace.test:127.0.0.1"
+      - "api.ecr.my-region-1.amazonaws.com:127.0.0.1"
   data-workspace-postgres:
     build:
       context: postgres

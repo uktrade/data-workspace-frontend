@@ -26,11 +26,7 @@ class ApplicationTemplate(TimeStampedModel):
     )
 
     nice_name = models.CharField(
-        verbose_name='application',
-        validators=[RegexValidator(regex=r'^[a-zA-Z0-9\- ]+$')],
-        max_length=128,
-        blank=False,
-        unique=True,
+        verbose_name='application', max_length=128, blank=False, unique=False
     )
     spawner = models.CharField(
         max_length=10,

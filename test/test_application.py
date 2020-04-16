@@ -1283,6 +1283,187 @@ class TestApplication(unittest.TestCase):
             content, 'Mirror path: /some-remote-folder/some/path/in/mirror'
         )
 
+    @async_test
+    async def test_gitlab_application_can_be_managed(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code', 'some-other-code'])
+        tokens = iter(['token-1', 'token-2'])
+        auth_to_me = {
+            'Bearer token-2': {
+                'email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations'
+        ) as response:
+            status = response.status
+        self.assertEqual(status, 403)
+
+        await give_user_visualisation_developer_perms()
+
+        def handle_group(request):
+            return web.json_response(
+                {'web_url': 'https://some.domain.test/'}, status=200
+            )
+
+        users_query = {}
+
+        def handle_users(request):
+            nonlocal users_query
+            users_query = request.query
+            return web.json_response([{'id': 1234}], status=200)
+
+        project = {
+            'id': 3,
+            'name': 'Michal\'s Vis_ualisat-tion---',
+            'tag_list': ['visualisation'],
+            'default_branch': 'my-default-3',
+            'description': 'The vis',
+            'web_url': 'https://some.domain.test/',
+        }
+        projects_query = {}
+
+        def handle_projects(request):
+            nonlocal projects_query
+            projects_query = request.query
+            return web.json_response(
+                [
+                    {
+                        'id': 1,
+                        'name': 'not-a-vis',
+                        'tag_list': ['some-tag'],
+                        'default_branch': 'my-default-1',
+                    },
+                    {
+                        'id': 2,
+                        'name': 'is-a-vis',
+                        'tag_list': ['visualisation'],
+                        'default_branch': 'my-default-2',
+                    },
+                    project,
+                ],
+                status=200,
+            )
+
+        def handle_project(request):
+            return web.json_response(project)
+
+        def handle_members(request):
+            return web.json_response([{'id': 1234, 'access_level': 30}], status=200)
+
+        def handle_branches(request):
+            return web.json_response(
+                [
+                    {
+                        'name': 'my-default-3',
+                        'commit': {
+                            'id': 'some-id',
+                            'short_id': 'abcdef12',
+                            'committed_date': '2015-01-01T01:01:01.000Z',
+                        },
+                    },
+                    {
+                        'name': 'my-feature-3',
+                        'commit': {
+                            'id': 'some-id',
+                            'short_id': 'abcdef12',
+                            'committed_date': '2015-01-01T01:01:01.000Z',
+                        },
+                    },
+                ],
+                status=200,
+            )
+
+        def handle_general_gitlab(request):
+            return web.json_response({})
+
+        gitlab_cleanup = await create_server(
+            8007,
+            [
+                web.get('/api/v4/groups/visualisations', handle_group),
+                web.get('/api/v4//users', handle_users),
+                web.get('/api/v4/projects', handle_projects),
+                web.get('/api/v4//projects/3/members/all', handle_members),
+                web.get('/api/v4/projects/3', handle_project),
+                web.get('/api/v4//projects/3/repository/branches', handle_branches),
+                web.get('/{path:.*}', handle_general_gitlab),
+            ],
+        )
+        self.add_async_cleanup(gitlab_cleanup)
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations'
+        ) as response:
+            status = response.status
+            content = await response.text()
+        self.assertEqual(status, 200)
+
+        self.assertEqual(
+            users_query['extern_uid'], '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2'
+        )
+        self.assertEqual(projects_query['sudo'], '1234')
+        self.assertNotIn('not-a-vis', content)
+        self.assertIn('is-a-vis', content)
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(status, 200)
+        self.assertIn('Give access', content)
+
+        def handle_general_ecr(request):
+            return web.json_response(
+                {
+                    'imageDetails': [
+                        {'imageTags': ['michals-vis-ualisat-tion--abcdef12']}
+                    ]
+                }
+            )
+
+        ecr_cleanup = await create_server(
+            8008, [web.post('/{path:.*}', handle_general_ecr)]
+        )
+        self.add_async_cleanup(ecr_cleanup)
+
+        async with session.request(
+            'GET',
+            'http://dataworkspace.test:8000/visualisations/3/branches/my-default-3',
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(status, 200)
+        self.assertIn('Production: abcdef12', content)
+
+        self.assertIn(
+            'href="http://michals-vis-ualisat-tion.dataworkspace.test:8000/', content
+        )
+        self.assertIn(
+            'href="http://michals-vis-ualisat-tion--abcdef12.dataworkspace.test:8000/',
+            content,
+        )
+
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -1349,6 +1530,17 @@ async def create_sso(is_logged_in, codes, tokens, auth_to_me):
         return number_of_times
 
     return sso_runner.cleanup, get_number_of_times
+
+
+async def create_server(port, routes):
+    app = web.Application()
+    app.add_routes(routes)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+
+    return runner.cleanup
 
 
 async def create_mirror():
@@ -1454,6 +1646,42 @@ async def give_user_app_perms():
         )
         permission = Permission.objects.get(
             codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user.user_permissions.add(permission)
+        """
+    ).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def give_user_visualisation_developer_perms():
+    python_code = textwrap.dedent(
+        """\
+        from django.contrib.auth.models import (
+            Permission,
+        )
+        from django.contrib.auth.models import (
+            User,
+        )
+        from django.contrib.contenttypes.models import (
+            ContentType,
+        )
+        from dataworkspace.apps.applications.models import (
+            ApplicationInstance,
+        )
+        permission = Permission.objects.get(
+            codename='develop_visualisations',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")

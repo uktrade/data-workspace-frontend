@@ -11,6 +11,8 @@ import boto3
 from botocore.exceptions import ClientError
 import gevent
 
+from django.conf import settings
+
 from dataworkspace.cel import celery_app
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.gitlab import (
@@ -446,7 +448,7 @@ def _gitlab_ecr_pipeline_get(pipeline_id):
 
 
 def _ecr_tag_exists(repositoryName, tag):
-    client = boto3.client('ecr')
+    client = _ecr_client()
     try:
         return bool(
             client.describe_images(
@@ -458,7 +460,7 @@ def _ecr_tag_exists(repositoryName, tag):
 
 
 def _ecr_tags_for_tag(repositoryName, tag):
-    client = boto3.client('ecr')
+    client = _ecr_client()
     try:
         return client.describe_images(
             repositoryName=repositoryName, imageIds=[{'imageTag': tag}]
@@ -468,7 +470,7 @@ def _ecr_tags_for_tag(repositoryName, tag):
 
 
 def _ecr_retag(repositoryName, existing_tag, new_tag):
-    client = boto3.client('ecr')
+    client = _ecr_client()
 
     manifest = client.batch_get_image(
         repositoryName=repositoryName, imageIds=[{'imageTag': existing_tag}]
@@ -482,6 +484,10 @@ def _ecr_retag(repositoryName, existing_tag, new_tag):
         # Swallow the exception to support idempotency in the case of
         # duplicated submissions
         pass
+
+
+def _ecr_client():
+    return boto3.client('ecr', endpoint_url=settings.AWS_ECR_ENDPOINT_URL)
 
 
 def _fargate_task_definition_with_tag(task_family, container_name, tag):
