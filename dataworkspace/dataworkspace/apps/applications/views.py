@@ -288,9 +288,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     if not matching_branches:
         raise Http404
 
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     current_branch = matching_branches[0]
     latest_commit = current_branch['commit']
     latest_commit_link = f'{gitlab_project["web_url"]}/commit/{latest_commit["id"]}'
@@ -360,9 +358,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
 
 def visualisation_branch_html_POST(request, gitlab_project, branch_name):
     release_commit = request.POST['release-commit']
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     get_spawner(application_template.spawner).retag(
         application_options(application_template),
         f'{application_template.host_basename}--{release_commit}',
@@ -408,9 +404,7 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
 
 def visualisation_users_with_access_html_GET(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     users = (
         get_user_model()
         .objects.filter(
@@ -435,9 +429,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
 
 
 def visualisation_users_with_access_html_POST(request, gitlab_project):
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     user_id = request.POST['user-id']
     user = get_user_model().objects.get(id=user_id)
 
@@ -494,9 +486,7 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
 
 def visualisation_users_give_access_html_GET(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
 
     return _render_visualisation(
         request,
@@ -510,9 +500,7 @@ def visualisation_users_give_access_html_GET(request, gitlab_project):
 
 def visualisation_users_give_access_html_POST(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
 
     email_address = request.POST['email-address'].strip().lower()
 
@@ -637,6 +625,10 @@ def _visualisation_branches(gitlab_project):
     )
 
 
+def _application_template(gitlab_project):
+    return ApplicationTemplate.objects.get(gitlab_project_id=gitlab_project['id'])
+
+
 def _render_visualisation(
     request,
     template,
@@ -680,12 +672,10 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project_id):
+def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project):
     catalogue_item = None
 
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project_id
-    )
+    application_template = _application_template(gitlab_project)
 
     try:
         catalogue_item = VisualisationCatalogueItem.objects.get(
@@ -699,9 +689,7 @@ def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project_id):
 
 def visualisation_catalogue_item_html_GET(request, gitlab_project):
     form = VisualisationsUICatalogueItemForm(
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(
-            gitlab_project['id']
-        )
+        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     )
 
     return _render_visualisation(
@@ -717,9 +705,7 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
 def visualisation_catalogue_item_html_POST(request, gitlab_project):
     form = VisualisationsUICatalogueItemForm(
         request.POST,
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(
-            gitlab_project['id']
-        ),
+        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project),
     )
     if form.is_valid():
         form.save()
