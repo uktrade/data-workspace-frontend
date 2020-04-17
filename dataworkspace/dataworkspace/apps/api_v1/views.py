@@ -166,20 +166,22 @@ def application_api_PUT(request, public_host):
 
     app_type = application_template.application_type
 
-    (source_tables, db_role_schema_suffix) = (
+    (source_tables, db_role_schema_suffix, db_user) = (
         (
             source_tables_for_user(request.user),
             db_role_schema_suffix_for_user(request.user),
+            postgres_user(request.user.email),
         )
         if app_type == 'TOOL'
         else (
             source_tables_for_app(application_template),
             db_role_schema_suffix_for_app(application_template),
+            postgres_user(application_template.host_basename),
         )
     )
 
     credentials = new_private_database_credentials(
-        db_role_schema_suffix, source_tables, postgres_user(request.user.email)
+        db_role_schema_suffix, source_tables, db_user
     )
 
     if app_type == 'TOOL':
