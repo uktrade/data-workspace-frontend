@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-04-17
+
+### Changed
+
+- Fixed api url typo in proxy
+
 ## 2020-04-16
 
 ### Added
