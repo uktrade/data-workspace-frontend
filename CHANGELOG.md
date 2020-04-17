@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Fixed api url typo in proxy
+- More accurate database user name for visualisations to make debugging easier
 
 ## 2020-04-16
 
