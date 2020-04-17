@@ -140,6 +140,49 @@ def filter_datasets(
     return datasets
 
 
+def filter_visualisations(query, access, source, user=None):
+    search = SearchVector('name', 'short_description', config='english')
+    search_query = SearchQuery(query, config='english')
+
+    if user and user.has_perm(
+        dataset_type_to_manage_unpublished_permission_codename(
+            DataSetType.VISUALISATION.value
+        )
+    ):
+        published_filter = Q()
+    else:
+        published_filter = Q(published=True)
+
+    visualisations = VisualisationCatalogueItem.objects.filter(
+        published_filter
+    ).annotate(search=search, search_rank=SearchRank(search, search_query))
+
+    if query:
+        visualisations = visualisations.filter(search=query)
+
+    if user and access:
+        access_filter = (
+            Q(visualisation_template__user_access_type='REQUIRES_AUTHENTICATION')
+            & (
+                Q(visualisation_template__applicationtemplateuserpermission__user=user)
+                | Q(
+                    visualisation_template__applicationtemplateuserpermission__isnull=True
+                )
+            )
+        ) | Q(
+            visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
+            visualisation_template__applicationtemplateuserpermission__user=user,
+        )
+        visualisations = visualisations.filter(access_filter)
+
+    if source:
+        visualisations = visualisations.filter(
+            visualisation_template__datasetapplicationtemplatepermission__dataset__source_tags__in=source
+        )
+
+    return visualisations
+
+
 @require_GET
 def find_datasets(request):
     form = DatasetSearchForm(request.GET)
@@ -176,6 +219,13 @@ def find_datasets(request):
             ).values(
                 'uuid', 'name', 'slug', 'short_description', 'search_rank', 'purpose'
             )
+        )
+
+    if not use or DataSetType.VISUALISATION.value in use:
+        datasets = datasets.union(
+            filter_visualisations(query, access, source, user=request.user)
+            .annotate(purpose=Value(DataSetType.VISUALISATION.value, IntegerField()))
+            .values('id', 'name', 'slug', 'short_description', 'search_rank', 'purpose')
         )
 
     paginator = Paginator(

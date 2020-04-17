@@ -45,7 +45,8 @@ class DatasetSearchForm(forms.Form):
         choices=[
             (DataSetType.DATACUT.value, 'Download'),
             (DataSetType.MASTER.value, 'Analyse in tools'),
-            (DataSetType.REFERENCE.value, 'Reference'),
+            (DataSetType.REFERENCE.value, 'Use as reference data'),
+            (DataSetType.VISUALISATION.value, 'View data visualisation'),
         ],
         required=False,
         widget=FilterWidget("Purpose", hint_text="Select all that apply."),
