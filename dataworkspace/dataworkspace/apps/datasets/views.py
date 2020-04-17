@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import F, Q
+from django.db.models import IntegerField, F, Q, Value
 from django.forms import model_to_dict
 from django.http import (
     Http404,
@@ -78,7 +78,6 @@ def filter_datasets(
     source,
     use=None,
     user=None,
-    form=None,
 ):
     search = SearchVector('name', 'short_description', config='english')
     search_query = SearchQuery(query, config='english')
@@ -148,28 +147,34 @@ def find_datasets(request):
     if form.is_valid():
         query = form.cleaned_data.get("q")
         access = form.cleaned_data.get("access")
-        use = form.cleaned_data.get("use")
+        use = [int(u) for u in form.cleaned_data.get("use")]
         source = form.cleaned_data.get("source")
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
-    datasets = filter_datasets(
-        DataSet.objects.live(), query, access, source, use, user=request.user, form=form
-    ).values('id', 'name', 'slug', 'short_description', 'search_rank')
+    # Django orders model fields before any additional fields like annotations in generated SQL statement
+    # which means doing a UNION between a model field in one query and an extra field in another results
+    # in different columns getting connected into a single result one (which sometimes leads to a type error
+    # and sometimes succeeds with values ending up in the wrong place). To avoid this, we alias model field
+    # `type` with `.annotate`, making sure it's added to the end of SELECT field list.
+    datasets = (
+        filter_datasets(
+            DataSet.objects.live(), query, access, source, use, user=request.user
+        )
+        .annotate(purpose=F('type'))
+        .values('id', 'name', 'slug', 'short_description', 'search_rank', 'purpose')
+    )
 
     # Include reference datasets if required
-    if not use or str(DataSetType.REFERENCE.value) in use:
+    if not use or DataSetType.REFERENCE.value in use:
         reference_datasets = filter_datasets(
-            ReferenceDataset.objects.live(),
-            query,
-            access,
-            source,
-            user=request.user,
-            form=form,
+            ReferenceDataset.objects.live(), query, access, source, user=request.user
         )
         datasets = datasets.union(
-            reference_datasets.values(
-                'uuid', 'name', 'slug', 'short_description', 'search_rank'
+            reference_datasets.annotate(
+                purpose=Value(DataSetType.REFERENCE.value, IntegerField())
+            ).values(
+                'uuid', 'name', 'slug', 'short_description', 'search_rank', 'purpose'
             )
         )
 
@@ -185,6 +190,7 @@ def find_datasets(request):
             "form": form,
             "query": query,
             "datasets": paginator.get_page(request.GET.get("page")),
+            "purpose": dict(form.fields['use'].choices),
         },
     )
 
