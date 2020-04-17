@@ -9,6 +9,7 @@ import requests
 from psycopg2 import connect, sql
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Q
 
 from dataworkspace.apps.applications.spawner import (
@@ -457,11 +458,19 @@ def delete_unused_datasets_users():
                             'delete_unused_datasets_users: revoking credentials for %s',
                             usename,
                         )
-                        cur.execute(
-                            sql.SQL('REVOKE CONNECT ON DATABASE {} FROM {};').format(
-                                sql.Identifier(database_name), sql.Identifier(usename)
+
+                        # Multiple concurrent GRANT CONNECT on the same database can cause
+                        # "tuple concurrently updated" errors
+                        with cache.lock(f'database-grant-connect-{database_name}'):
+                            cur.execute(
+                                sql.SQL(
+                                    'REVOKE CONNECT ON DATABASE {} FROM {};'
+                                ).format(
+                                    sql.Identifier(database_name),
+                                    sql.Identifier(usename),
+                                )
                             )
-                        )
+
                         cur.execute(
                             sql.SQL(
                                 'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'

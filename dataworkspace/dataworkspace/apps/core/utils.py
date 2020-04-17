@@ -12,6 +12,7 @@ from psycopg2 import connect, sql
 
 import boto3
 
+from django.core.cache import cache
 from django.http import StreamingHttpResponse
 from django.db import connections
 from django.db.models import Q
@@ -74,12 +75,18 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
                 ),
                 [db_password, valid_until],
             )
-            cur.execute(
-                sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
-                    sql.Identifier(database_data['NAME']), sql.Identifier(db_user)
-                )
-            )
 
+        # Multiple concurrent GRANT CONNECT on the same database can cause
+        # "tuple concurrently updated" errors
+        with cache.lock(f'database-grant-connect-{database_data["NAME"]}'):
+            with connections[database_obj.memorable_name].cursor() as cur:
+                cur.execute(
+                    sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
+                        sql.Identifier(database_data['NAME']), sql.Identifier(db_user)
+                    )
+                )
+
+        with connections[database_obj.memorable_name].cursor() as cur:
             # ... create a role (if it doesn't exist)
             cur.execute(
                 sql.SQL(
