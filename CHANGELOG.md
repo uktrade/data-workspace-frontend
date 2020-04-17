@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fixed api url typo in proxy
 - More accurate database user name for visualisations to make debugging easier
+- Attempt to avoid "tuple concurrently updated" errors by wrapping GRANT CONNECT with a lock
 
 ## 2020-04-16
 
