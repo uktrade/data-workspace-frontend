@@ -32,7 +32,7 @@
 </h1>
 
 <!-- TODO: Link up `published` -->
-<p class="govuk-body">These details are visible in the catalogue once the visualisation has been <a class="govuk-link" href="#">published</a>.</p>
+<p class="govuk-body">These details are visible in the catalogue once the visualisation has been published.</p>
 
 <form action="{% url 'visualisations:catalogue-item' gitlab_project_id=gitlab_project.id %}" method="POST">
   {% csrf_token %}
