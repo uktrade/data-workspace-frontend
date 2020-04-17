@@ -4,6 +4,9 @@
 .govuk-panel--confirmation--left {
   text-align:left;
 }
+.govuk-panel--confirmation:focus {
+  outline: 5px solid #fd0;
+}
 .unknown {
   color: #bfc1c3;
 }
