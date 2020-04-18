@@ -174,28 +174,15 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
             '''
             )
 
-            for schema, table in tables:
-                # Skip granting permissions if the table does not exist in the db
-                cur.execute(
-                    sql.SQL(
-                        '''
-                        SELECT count(*)
-                        FROM pg_catalog.pg_tables
-                        WHERE schemaname=%s
-                        AND tablename=%s;
-                        '''
-                    ),
-                    [schema, table],
-                )
-                if cur.fetchone()[0] == 0:
-                    logger.info(
-                        'Not granting permissions to %s %s.%s for %s as table does not exist',
-                        database_obj.memorable_name,
-                        schema,
-                        table,
-                        db_user,
-                    )
-                    continue
+        with connections[database_obj.memorable_name].cursor() as cur:
+            tables_that_exist = [
+                (schema, table)
+                for schema, table in tables
+                if _table_exists(cur, schema, table)
+            ]
+
+        with connections[database_obj.memorable_name].cursor() as cur:
+            for schema, table in tables_that_exist:
                 logger.info(
                     'Granting permissions to %s %s.%s to %s',
                     database_obj.memorable_name,
@@ -384,20 +371,23 @@ def table_exists(database, schema, table):
     with connect(
         database_dsn(settings.DATABASES_DATA[database])
     ) as conn, conn.cursor() as cur:
+        return _table_exists(cur, schema, table)
 
-        cur.execute(
-            """
-            SELECT 1
-            FROM
-                pg_tables
-            WHERE
-                schemaname = %s
-            AND
-                tablename = %s
-        """,
-            (schema, table),
-        )
-        return bool(cur.fetchone())
+
+def _table_exists(cur, schema, table):
+    cur.execute(
+        """
+        SELECT 1
+        FROM
+            pg_tables
+        WHERE
+            schemaname = %s
+        AND
+            tablename = %s
+    """,
+        (schema, table),
+    )
+    return bool(cur.fetchone())
 
 
 def streaming_query_response(user_email, database, query, filename):
