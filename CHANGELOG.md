@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Remove of string normalisation from pre-commit config
 
+## 2020-04-18
+
+### Changed
+
+- More locking to avoid "tuple concurrently updated" errors when GRANTing database privileges
+
 ## 2020-04-17
 
 ### Added
