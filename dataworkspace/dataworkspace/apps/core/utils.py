@@ -181,6 +181,23 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
                 if _table_exists(cur, schema, table)
             ]
 
+        schemas = without_duplicates_preserve_order(
+            schema for schema, _ in tables_that_exist
+        )
+        with connections[database_obj.memorable_name].cursor() as cur:
+            for schema in schemas:
+                logger.info(
+                    'Granting usages on %s %s to %s',
+                    database_obj.memorable_name,
+                    schema,
+                    db_user,
+                )
+                cur.execute(
+                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                        sql.Identifier(schema), sql.Identifier(db_user)
+                    )
+                )
+
         with connections[database_obj.memorable_name].cursor() as cur:
             for schema, table in tables_that_exist:
                 logger.info(
@@ -189,11 +206,6 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
                     schema,
                     table,
                     db_user,
-                )
-                cur.execute(
-                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                        sql.Identifier(schema), sql.Identifier(db_user)
-                    )
                 )
                 tables_sql = sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
                     sql.Identifier(schema),
@@ -543,3 +555,10 @@ def create_s3_role(user_email_address, user_sso_id):
             break
 
     return role_arn, s3_prefix
+
+
+def without_duplicates_preserve_order(seq):
+    # https://stackoverflow.com/a/480227/1319998
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
