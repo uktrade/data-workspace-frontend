@@ -471,13 +471,14 @@ def delete_unused_datasets_users():
                                 )
                             )
 
-                        cur.execute(
-                            sql.SQL(
-                                'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'
-                            ).format(
-                                sql.Identifier(database_name), sql.Identifier(usename)
+                            cur.execute(
+                                sql.SQL(
+                                    'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'
+                                ).format(
+                                    sql.Identifier(database_name),
+                                    sql.Identifier(usename),
+                                )
                             )
-                        )
 
                         for schema in schemas:
                             for schema_revoke in schema_revokes:
