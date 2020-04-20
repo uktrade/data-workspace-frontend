@@ -2,6 +2,7 @@ import datetime
 
 import hashlib
 import random
+import re
 from urllib.parse import urlsplit
 
 from csp.decorators import csp_exempt
@@ -226,14 +227,6 @@ def visualisations_html_GET(request):
             for gitlab_project in gitlab_projects_including_non_visualisation
             if 'visualisation' in [tag.lower() for tag in gitlab_project['tag_list']]
         ]
-        application_templates = {
-            application_template.gitlab_project_id: application_template
-            for application_template in ApplicationTemplate.objects.filter(
-                gitlab_project_id__in=[
-                    gitlab_project['id'] for gitlab_project in gitlab_projects
-                ]
-            )
-        }
         return [
             {
                 'gitlab_project': gitlab_project,
@@ -246,7 +239,6 @@ def visualisations_html_GET(request):
                 ),
             }
             for gitlab_project in gitlab_projects
-            if gitlab_project['id'] in application_templates
         ]
 
     return render(
@@ -288,9 +280,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     if not matching_branches:
         raise Http404
 
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     current_branch = matching_branches[0]
     latest_commit = current_branch['commit']
     latest_commit_link = f'{gitlab_project["web_url"]}/commit/{latest_commit["id"]}'
@@ -360,9 +350,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
 
 def visualisation_branch_html_POST(request, gitlab_project, branch_name):
     release_commit = request.POST['release-commit']
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     get_spawner(application_template.spawner).retag(
         application_options(application_template),
         f'{application_template.host_basename}--{release_commit}',
@@ -408,9 +396,7 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
 
 def visualisation_users_with_access_html_GET(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     users = (
         get_user_model()
         .objects.filter(
@@ -435,9 +421,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
 
 
 def visualisation_users_with_access_html_POST(request, gitlab_project):
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
     user_id = request.POST['user-id']
     user = get_user_model().objects.get(id=user_id)
 
@@ -494,9 +478,7 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
 
 def visualisation_users_give_access_html_GET(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
 
     return _render_visualisation(
         request,
@@ -510,9 +492,7 @@ def visualisation_users_give_access_html_GET(request, gitlab_project):
 
 def visualisation_users_give_access_html_POST(request, gitlab_project):
     branches = _visualisation_branches(gitlab_project)
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
-    )
+    application_template = _application_template(gitlab_project)
 
     email_address = request.POST['email-address'].strip().lower()
 
@@ -637,6 +617,82 @@ def _visualisation_branches(gitlab_project):
     )
 
 
+def _application_template(gitlab_project):
+    try:
+        return ApplicationTemplate.objects.get(gitlab_project_id=gitlab_project['id'])
+    except ApplicationTemplate.DoesNotExist:
+        pass
+
+    # We attempt to find a string similar to the GitLab project name that can
+    # be both a hostname and a path component: lowercase letters, numbers and
+    # hyphens can be in both. To KISS we don't allow characters that require
+    # punycoding / urlencoding, and we use a combination of filtering and
+    # conversion to achieve this. The process is tailored for typical English
+    # projects names: for other languages it will likely not give great
+    # results. However:
+    # - project names _will_ be in English for the foreseeable future
+    # - in many cases people don't even look at the URL
+    # - it can be changed by an admin if it needs to be
+    # - there is a plan to make it changable by the user
+    name_1 = gitlab_project['name']
+    name_2 = name_1.lower()
+    name_3 = re.sub(r'[_\s]', '-', name_2)
+    name_4 = re.sub(r'[^a-z0-9\-]', '', name_3)
+    name_5 = name_4.strip('-')
+    name_6 = re.sub('-+', '-', name_5)
+    path_and_dns_safe_root = name_6
+
+    # Attempt to make ApplicationTemplate.host_basename and
+    # VisualisationCatalogueItem.slug the same by trying several suffixes.
+    # If we can't find a host_basename or slug that is available for both,
+    # fail with an IntegrityError and return a 500 to the user. If there are
+    # really so many projects with such similar names to cause this, suspect
+    # that user frustration + support request is the best option, because
+    # something unexpected is happening that should be addressed
+    max_attempts = 20
+    for i in range(0, max_attempts):
+        if i == 0:
+            suffix = ''
+        else:
+            suffix = '-' + str(i)
+        path_and_dns_safe_name = path_and_dns_safe_root + suffix
+
+        try:
+            with transaction.atomic():
+                visualisation_template = ApplicationTemplate.objects.create(
+                    host_basename=path_and_dns_safe_name,
+                    nice_name=gitlab_project['name'],
+                    spawner='FARGATE',
+                    spawner_time=120,
+                    spawner_options='{}',
+                    application_type='VISUALISATION',
+                    user_access_type='REQUIRES_AUTHORIZATION',
+                    gitlab_project_id=gitlab_project['id'],
+                    visible=False,
+                )
+                VisualisationCatalogueItem.objects.create(
+                    name=gitlab_project['name'],
+                    slug=path_and_dns_safe_name,
+                    short_description=gitlab_project['description'],
+                    visualisation_template=visualisation_template,
+                )
+                return visualisation_template
+        except IntegrityError as integrity_error:
+            if i < max_attempts - 1:
+                continue
+
+            # We could have raised an IntegrityError if a template with
+            # gitlab_project['id'] has been created by a parallel request, in
+            # which case there is no need to fail: we can query again to try
+            # to find it. Only if it again can't be found do we actually fail
+            try:
+                return ApplicationTemplate.objects.get(
+                    gitlab_project_id=gitlab_project['id']
+                )
+            except ApplicationTemplate.DoesNotExist:
+                raise integrity_error
+
+
 def _render_visualisation(
     request,
     template,
@@ -680,12 +736,10 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project_id):
+def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project):
     catalogue_item = None
 
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project_id
-    )
+    application_template = _application_template(gitlab_project)
 
     try:
         catalogue_item = VisualisationCatalogueItem.objects.get(
@@ -699,9 +753,7 @@ def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project_id):
 
 def visualisation_catalogue_item_html_GET(request, gitlab_project):
     form = VisualisationsUICatalogueItemForm(
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(
-            gitlab_project['id']
-        )
+        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     )
 
     return _render_visualisation(
@@ -717,9 +769,7 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
 def visualisation_catalogue_item_html_POST(request, gitlab_project):
     form = VisualisationsUICatalogueItemForm(
         request.POST,
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(
-            gitlab_project['id']
-        ),
+        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project),
     )
     if form.is_valid():
         form.save()
