@@ -125,6 +125,7 @@ class DatasetReferenceCode(TimeStampedModel):
     def __str__(self):
         return self.code
 
+    @transaction.atomic
     def get_next_reference_number(self):
         self.counter = F('counter') + 1
         self.save(update_fields=['counter'])
