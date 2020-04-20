@@ -680,14 +680,13 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def visualisation_catalogue_item_html_GET(request, gitlab_project):
-    branches = _visualisation_branches(gitlab_project)
+def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project_id):
+    catalogue_item = None
 
     application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
+        gitlab_project_id=gitlab_project_id
     )
 
-    catalogue_item = None
     try:
         catalogue_item = VisualisationCatalogueItem.objects.get(
             visualisation_template=application_template
@@ -695,32 +694,33 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
     except VisualisationCatalogueItem.DoesNotExist:
         pass
 
-    form = VisualisationsUICatalogueItemForm(instance=catalogue_item)
+    return catalogue_item
+
+
+def visualisation_catalogue_item_html_GET(request, gitlab_project):
+    form = VisualisationsUICatalogueItemForm(
+        instance=_get_visualisation_catalogue_item_for_gitlab_project(
+            gitlab_project['id']
+        )
+    )
 
     return _render_visualisation(
         request,
         'visualisation_catalogue_item.html',
         gitlab_project,
-        branches,
+        _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
         template_specific_context={'form': form},
     )
 
 
 def visualisation_catalogue_item_html_POST(request, gitlab_project):
-    application_template = ApplicationTemplate.objects.get(
-        gitlab_project_id=gitlab_project['id']
+    form = VisualisationsUICatalogueItemForm(
+        request.POST,
+        instance=_get_visualisation_catalogue_item_for_gitlab_project(
+            gitlab_project['id']
+        ),
     )
-
-    catalogue_item = None
-    try:
-        catalogue_item = VisualisationCatalogueItem.objects.get(
-            visualisation_template=application_template
-        )
-    except VisualisationCatalogueItem.DoesNotExist:
-        pass
-
-    form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
     if form.is_valid():
         form.save()
         return redirect(
