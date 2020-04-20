@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - More locking to avoid "tuple concurrently updated" errors when GRANTing database privileges
+- Use GitLab developer permissions for a visualisation preview, rather than the same permissions as viewing the production visualisation
+
+### Added
+
+- Caching of GitLab developer permissions
 
 ## 2020-04-17
 

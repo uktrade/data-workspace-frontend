@@ -340,6 +340,42 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
+        def handle_users(request):
+            return web.json_response([{'id': 1234}], status=200)
+
+        project = {
+            'id': 3,
+            'name': 'testvisualisation',
+            'tag_list': ['visualisation'],
+            'default_branch': 'my-default-3',
+            'description': 'The vis',
+            'web_url': 'https://some.domain.test/',
+        }
+
+        def handle_project(request):
+            return web.json_response(project)
+
+        access_level = 20
+
+        def handle_members(request):
+            return web.json_response(
+                [{'id': 1234, 'access_level': access_level}], status=200
+            )
+
+        def handle_general_gitlab(request):
+            return web.json_response({})
+
+        gitlab_cleanup = await create_server(
+            8007,
+            [
+                web.get('/api/v4//users', handle_users),
+                web.get('/api/v4//projects/3/members/all', handle_members),
+                web.get('/api/v4/projects/3', handle_project),
+                web.get('/{path:.*}', handle_general_gitlab),
+            ],
+        )
+        self.add_async_cleanup(gitlab_cleanup)
+
         # Ensure the user doesn't have access to the application
         async with session.request(
             'GET', 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
@@ -349,10 +385,7 @@ class TestApplication(unittest.TestCase):
         self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
-        stdout, stderr, code = await give_user_visualisation_perms('testvisualisation')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
-        self.assertEqual(code, 0)
+        access_level = 30
 
         async with session.request(
             'GET', 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
@@ -1366,8 +1399,12 @@ class TestApplication(unittest.TestCase):
         def handle_project(request):
             return web.json_response(project)
 
+        access_level = 30
+
         def handle_members(request):
-            return web.json_response([{'id': 1234, 'access_level': 30}], status=200)
+            return web.json_response(
+                [{'id': 1234, 'access_level': access_level}], status=200
+            )
 
         def handle_branches(request):
             return web.json_response(
@@ -1423,6 +1460,17 @@ class TestApplication(unittest.TestCase):
         self.assertNotIn('not-a-vis', content)
         self.assertIn('is-a-vis', content)
 
+        access_level = 20
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(status, 403)
+        self.assertNotIn('Give access', content)
+
+        access_level = 30
         async with session.request(
             'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
         ) as response:
@@ -1463,6 +1511,17 @@ class TestApplication(unittest.TestCase):
             'href="http://michals-vis-ualisat-tion--abcdef12.dataworkspace.test:8000/',
             content,
         )
+
+        # Check that the access level must have been cached
+        access_level = 20
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(status, 200)
+        self.assertIn('Give access', content)
 
 
 def client_session():
@@ -1877,6 +1936,7 @@ async def create_visualisation_echo(name):
             spawner_options='{{"CMD":["python3", "/test/echo_server.py"]}}',
             spawner_time=60,
             user_access_type="REQUIRES_AUTHORIZATION",
+            gitlab_project_id=3,
         )
         """
     ).encode('ascii')
