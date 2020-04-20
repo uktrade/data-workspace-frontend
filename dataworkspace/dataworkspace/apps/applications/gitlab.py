@@ -96,10 +96,12 @@ def gitlab_has_developer_access(user, gitlab_project_id):
         params=(('user_ids', str(gitlab_user['id'])),),
     )
 
-    has_access = True in (
-        gitlab_project_user['id'] == gitlab_user['id']
-        and gitlab_project_user['access_level'] >= int(DEVELOPER_ACCESS_LEVEL)
-        for gitlab_project_user in gitlab_project_users
+    has_access = any(
+        (
+            gitlab_project_user['id'] == gitlab_user['id']
+            and gitlab_project_user['access_level'] >= int(DEVELOPER_ACCESS_LEVEL)
+            for gitlab_project_user in gitlab_project_users
+        )
     )
     if has_access:
         cache.set(cache_key, True, timeout=60 * 60)
