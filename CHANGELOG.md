@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - More locking to avoid "tuple concurrently updated" errors when GRANTing database privileges
 
+### Added
+
+- Caching of GitLab developer permissions
+
 ## 2020-04-17
 
 ### Added
