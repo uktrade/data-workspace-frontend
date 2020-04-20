@@ -227,19 +227,22 @@ def visualisations_html_GET(request):
             for gitlab_project in gitlab_projects_including_non_visualisation
             if 'visualisation' in [tag.lower() for tag in gitlab_project['tag_list']]
         ]
-        return [
-            {
-                'gitlab_project': gitlab_project,
-                'manage_link': reverse(
-                    'visualisations:branch',
-                    kwargs={
-                        'gitlab_project_id': gitlab_project['id'],
-                        'branch_name': gitlab_project['default_branch'],
-                    },
-                ),
-            }
-            for gitlab_project in gitlab_projects
-        ]
+        return sorted(
+            [
+                {
+                    'gitlab_project': gitlab_project,
+                    'manage_link': reverse(
+                        'visualisations:branch',
+                        kwargs={
+                            'gitlab_project_id': gitlab_project['id'],
+                            'branch_name': gitlab_project['default_branch'],
+                        },
+                    ),
+                }
+                for gitlab_project in gitlab_projects
+            ],
+            key=lambda d: d['gitlab_project']['name'].lower(),
+        )
 
     return render(
         request,
