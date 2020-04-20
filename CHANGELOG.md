@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Remove of string normalisation from pre-commit config
+- Sort visualisations by name
 
 ## 2020-04-18
 
