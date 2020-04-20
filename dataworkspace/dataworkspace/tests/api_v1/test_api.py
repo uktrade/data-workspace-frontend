@@ -13,7 +13,7 @@ class TestApplicationAPI(BaseTestCase):
     def test_start_application_with_invalid_table(self, mock_api_allowed, mock_spawn):
         # Test that any SourceTable objects that don't exist in the db do
         # not break the loading of applications
-        factories.ApplicationTemplateFactory.create()
+        factories.ApplicationTemplateFactory.create(host_basename='testapplication')
         factories.SourceTableFactory.create(
             database=factories.DatabaseFactory.create(memorable_name='my_database'),
             dataset=factories.DataSetFactory.create(

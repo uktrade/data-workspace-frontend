@@ -212,7 +212,7 @@ class ReferenceDatasetDownloadEventFactory(RelatedObjectEventFactory):
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
-    host_basename = 'testapplication'
+    host_basename = factory.fuzzy.FuzzyText()
     nice_name = factory.fuzzy.FuzzyText()
     spawner = 'PROCESS'
     spawner_time = int(datetime.timestamp(datetime.now()))
@@ -221,6 +221,14 @@ class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'applications.ApplicationTemplate'
+
+
+class DataSetApplicationTemplatePermissionFactory(factory.django.DjangoModelFactory):
+    application_template = factory.SubFactory(ApplicationTemplateFactory)
+    dataset = factory.SubFactory(DataSetFactory)
+
+    class Meta:
+        model = 'datasets.DataSetApplicationTemplatePermission'
 
 
 class ApplicationTemplateUserPermissionFactory(factory.django.DjangoModelFactory):
@@ -251,6 +259,7 @@ class VisualisationApprovalFactory(factory.django.DjangoModelFactory):
 class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
     visualisation_template = factory.SubFactory(VisualisationTemplateFactory)
     name = factory.LazyAttribute(lambda o: o.visualisation_template.name)
+    slug = factory.LazyAttribute(lambda o: o.visualisation_template.name.lower())
     published = True
     deleted = False
 
