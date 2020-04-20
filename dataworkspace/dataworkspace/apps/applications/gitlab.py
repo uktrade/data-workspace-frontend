@@ -2,6 +2,7 @@ import logging
 import requests
 
 from django.conf import settings
+from django.core.cache import cache
 
 
 logger = logging.getLogger('app')
@@ -50,6 +51,20 @@ def gitlab_api_v4_ecr_pipeline_trigger(
 
 
 def gitlab_has_developer_access(user, gitlab_project_id):
+    # Having developer access to a project is cached to mitigate slow requests
+    # to GitLab. _Not_ having developer access to not cached to allow granting
+    # of access to have an immediate effect
+    #
+    # This would still mean that once expired, the user would still have a
+    # slower request. This could be avoided by a background job that polls
+    # for permissions changes before they expire. Leaving that until there is
+    # more evidence that a) the semantic behaviour is indeed what we want, and
+    # b) the performance is slow enough to justify that.
+    cache_key = f'gitlab-developer--{gitlab_project_id}--{user.id}'
+    has_access = cache.get(cache_key)
+    if has_access:
+        return True
+
     gitlab_users, status = gitlab_api_v4_with_status(
         'GET',
         f'/users',
@@ -74,8 +89,12 @@ def gitlab_has_developer_access(user, gitlab_project_id):
         params=(('user_ids', str(gitlab_user['id'])),),
     )
 
-    return True in (
+    has_access = True in (
         gitlab_project_user['id'] == gitlab_user['id']
         and gitlab_project_user['access_level'] >= int(DEVELOPER_ACCESS_LEVEL)
         for gitlab_project_user in gitlab_project_users
     )
+    if has_access:
+        cache.set(cache_key, True, timeout=60 * 60)
+
+    return has_access

@@ -1366,8 +1366,12 @@ class TestApplication(unittest.TestCase):
         def handle_project(request):
             return web.json_response(project)
 
+        access_level = 30
+
         def handle_members(request):
-            return web.json_response([{'id': 1234, 'access_level': 30}], status=200)
+            return web.json_response(
+                [{'id': 1234, 'access_level': access_level}], status=200
+            )
 
         def handle_branches(request):
             return web.json_response(
@@ -1423,6 +1427,17 @@ class TestApplication(unittest.TestCase):
         self.assertNotIn('not-a-vis', content)
         self.assertIn('is-a-vis', content)
 
+        access_level = 20
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(status, 403)
+        self.assertNotIn('Give access', content)
+
+        access_level = 30
         async with session.request(
             'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
         ) as response:
@@ -1463,6 +1478,17 @@ class TestApplication(unittest.TestCase):
             'href="http://michals-vis-ualisat-tion--abcdef12.dataworkspace.test:8000/',
             content,
         )
+
+        # Check that the access level must have been cached
+        access_level = 20
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(status, 200)
+        self.assertIn('Give access', content)
 
 
 def client_session():
