@@ -1,0 +1,55 @@
+{% extends '_visualisation.html' %}
+{% load core_filters %}
+
+{% block head %}
+{{ block.super }}
+{{ form.media }}
+{% endblock %}
+
+{% block page_title %}{% if form.errors %}Error: {% endif %}Catalogue item - {{ block.super }}{% endblock %}
+
+{% block content %}
+{% if form_errors %}
+<div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+  <h2 class="govuk-error-summary__title" id="error-summary-title">
+    There is a problem
+  </h2>
+  <div class="govuk-error-summary__body">
+    <ul class="govuk-list govuk-error-summary__list">
+    {% for id_for_label, error in form_errors %}
+        <li>
+          <a href="{{ request.path }}#{{ id_for_label }}">{{ error }}</a>
+        </li>
+    {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+
+<h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+  <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+  Catalogue item
+</h1>
+
+<!-- TODO: Link up `published` -->
+<p class="govuk-body">These details are visible in the catalogue once the visualisation has been published.</p>
+
+<form action="{% url 'visualisations:catalogue-item' gitlab_project_id=gitlab_project.id %}" method="POST">
+  {% csrf_token %}
+
+  {{ form.non_field_errors }}
+
+  {% include "partials/govuk_basic_form_field.html" with field=form.short_description %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.description %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.enquiries_contact %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.secondary_enquiries_contact %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.information_asset_manager %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.information_asset_owner %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.licence %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.retention_policy %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.personal_data %}
+  {% include "partials/govuk_basic_form_field.html" with field=form.restrictions_on_usage %}
+
+  <input type="submit" class="govuk-button" value="Save" />
+</form>
+{% endblock %}

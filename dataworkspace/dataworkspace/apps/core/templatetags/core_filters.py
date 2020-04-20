@@ -1,5 +1,9 @@
+import bleach
+from markdown import Markdown
 from django import template
+
 from django.forms import ChoiceField, Field
+from markupsafe import Markup
 
 register = template.Library()
 
@@ -19,3 +23,16 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
     analytics.
     """
     return ';'.join(sorted(x.data['label'] for x in field if x.data['selected']))
+
+
+@register.filter
+def minimal_markdown(text):
+    md = Markdown()
+    return Markup(
+        bleach.clean(
+            md.convert(text or ''),
+            tags=['p', 'ul', 'ol', 'li'],
+            attributes={},
+            strip=True,
+        )
+    )

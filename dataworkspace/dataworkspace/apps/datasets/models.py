@@ -1366,7 +1366,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         max_length=50, db_index=True, unique=True, null=False, blank=False
     )
     short_description = models.CharField(max_length=255)
-    description = RichTextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

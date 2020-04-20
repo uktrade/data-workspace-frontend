@@ -1,0 +1,11 @@
+<div class="govuk-form-group{% if field.errors %} govuk-form-group--error{% endif %}">
+  <label class="govuk-label" for="{{ field.id_for_label }}">
+    {{ field.label }}
+  </label>
+  {% if field.errors %}
+  <span id="{{ field.id_for_label }}-error" class="govuk-error-message">
+          <span class="govuk-visually-hidden">Error: </span>{{ field.errors.0 }}
+      </span>
+  {% endif %}
+  {{ field }}
+</div>

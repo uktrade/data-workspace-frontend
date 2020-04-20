@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-04-17
 
+### Added
+
+- Page in the "Data Visualisation UI" for editing its entry in the catalogue.
+
 ### Changed
 
 - Fixed api url typo in proxy

@@ -1,6 +1,7 @@
 {% extends '_main.html' %}
 {% load humanize %}
 {% load static %}
+{% load core_filters %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -35,7 +36,7 @@
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">{{ model.name }}</h1>
             <div class="govuk-body">
-                {{ model.description | safe }}
+                {{ model.description | minimal_markdown }}
             </div>
 
             {% if not has_access %}
