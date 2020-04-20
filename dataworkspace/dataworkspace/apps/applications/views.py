@@ -27,6 +27,7 @@ from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
     gitlab_api_v4,
     gitlab_api_v4_with_status,
+    gitlab_has_developer_access,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -567,38 +568,6 @@ def _visualisation_gitlab_project(gitlab_project_id):
         )
 
     return gitlab_project
-
-
-def gitlab_has_developer_access(user, gitlab_project_id):
-    gitlab_users, status = gitlab_api_v4_with_status(
-        'GET',
-        f'/users',
-        params=(('extern_uid', user.profile.sso_id), ('provider', 'oauth2_generic')),
-    )
-
-    if status != 200:
-        raise Exception(
-            f'Unable to find GitLab user for {user.profile.sso_id}: received {status}'
-        )
-
-    if len(gitlab_users) > 1:
-        raise Exception(f'Too many GitLab users matching {user.profile.sso_id}')
-
-    if not gitlab_users:
-        return False
-
-    gitlab_user = gitlab_users[0]
-    gitlab_project_users = gitlab_api_v4(
-        'GET',
-        f'/projects/{gitlab_project_id}/members/all',
-        params=(('user_ids', str(gitlab_user['id'])),),
-    )
-
-    return True in (
-        gitlab_project_user['id'] == gitlab_user['id']
-        and gitlab_project_user['access_level'] >= int(DEVELOPER_ACCESS_LEVEL)
-        for gitlab_project_user in gitlab_project_users
-    )
 
 
 def _visualisation_branches(gitlab_project):
