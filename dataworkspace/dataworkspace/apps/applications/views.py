@@ -259,7 +259,7 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
-    if not _visualisation_has_developer_access(request.user, gitlab_project_id):
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
     if request.method == 'GET':
@@ -382,7 +382,7 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
-    if not _visualisation_has_developer_access(request.user, gitlab_project_id):
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
     if request.method == 'GET':
@@ -464,7 +464,7 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
-    if not _visualisation_has_developer_access(request.user, gitlab_project_id):
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
     if request.method == 'GET':
@@ -569,7 +569,7 @@ def _visualisation_gitlab_project(gitlab_project_id):
     return gitlab_project
 
 
-def _visualisation_has_developer_access(user, gitlab_project_id):
+def gitlab_has_developer_access(user, gitlab_project_id):
     gitlab_users, status = gitlab_api_v4_with_status(
         'GET',
         f'/users',
@@ -724,7 +724,7 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
-    if not _visualisation_has_developer_access(request.user, gitlab_project_id):
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
     if request.method == 'GET':

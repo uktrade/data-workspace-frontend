@@ -21,7 +21,7 @@ class TestDataVisualisationUICataloguePage:
         ) as projects_mock, mock.patch(
             'dataworkspace.apps.applications.views._visualisation_branches'
         ) as branches_mock, mock.patch(
-            'dataworkspace.apps.applications.views._visualisation_has_developer_access'
+            'dataworkspace.apps.applications.views.gitlab_has_developer_access'
         ) as access_mock:
             access_mock.return_value = True
             projects_mock.return_value = {'id': 1, 'default_branch': 'master'}
@@ -60,7 +60,7 @@ class TestDataVisualisationUICataloguePage:
         ) as projects_mock, mock.patch(
             'dataworkspace.apps.applications.views._visualisation_branches'
         ) as branches_mock, mock.patch(
-            'dataworkspace.apps.applications.views._visualisation_has_developer_access'
+            'dataworkspace.apps.applications.views.gitlab_has_developer_access'
         ) as access_mock:
             access_mock.return_value = True
             projects_mock.return_value = {'id': 1, 'default_branch': 'master'}
