@@ -473,16 +473,16 @@ def streaming_query_response(user_email, database, query, filename):
     return response
 
 
-def table_data(user_email, database, schema, table):
+def table_data(user_email, database, schema, table, filename=None):
     # There is no ordering here. We just want a full dump.
     # Also, there are not likely to be updates, so a long-running
     # query shouldn't cause problems with concurrency/locking
     query = sql.SQL('SELECT * FROM {}.{}').format(
         sql.Identifier(schema), sql.Identifier(table)
     )
-    return streaming_query_response(
-        user_email, database, query, F'{schema}_{table}.csv'
-    )
+    if filename is None:
+        filename = F'{schema}_{table}.csv'
+    return streaming_query_response(user_email, database, query, filename)
 
 
 def get_s3_prefix(user_sso_id):

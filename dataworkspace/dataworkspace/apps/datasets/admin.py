@@ -16,6 +16,7 @@ from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
     DataSetUserPermission,
+    DatasetReferenceCode,
     MasterDataset,
     ReferenceDataset,
     ReferenceDatasetField,
@@ -100,7 +101,18 @@ class ManageUnpublishedDatasetsMixin(BaseModelAdmin):
         return native_perms
 
 
-class SourceLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
+class SourceReferenceInlineMixin(ManageUnpublishedDatasetsMixin):
+    readonly_fields = ('source_reference',)
+    exclude = ('reference_number',)
+
+    def source_reference(self, instance):
+        code = instance.source_reference
+        if code is not None:
+            return code
+        return '-'
+
+
+class SourceLinkInline(admin.TabularInline, SourceReferenceInlineMixin):
     template = 'admin/source_link_inline.html'
     form = SourceLinkForm
     model = SourceLink
@@ -110,7 +122,7 @@ class SourceLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     )
 
 
-class SourceTableInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
+class SourceTableInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceTable
     extra = 1
     manage_unpublished_permission_codename = (
@@ -118,7 +130,7 @@ class SourceTableInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     )
 
 
-class SourceViewInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
+class SourceViewInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceView
     extra = 1
     manage_unpublished_permission_codename = (
@@ -126,7 +138,7 @@ class SourceViewInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     )
 
 
-class CustomDatasetQueryInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
+class CustomDatasetQueryInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = CustomDatasetQuery
     form = CustomDatasetQueryInlineForm
     extra = 0
@@ -195,6 +207,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     'name',
                     'slug',
                     'source_tags',
+                    'reference_code',
                     'short_description',
                     'description',
                     'enquiries_contact',
@@ -431,8 +444,16 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
 
 @admin.register(CustomDatasetQuery)
 class CustomDatasetQueryAdmin(admin.ModelAdmin):
-    search_fields = ['name', 'query', 'dataset__name']
+    search_fields = [
+        'name',
+        'query',
+        'dataset__name',
+        'dataset__reference_code__code',
+        'reference_number',
+    ]
     form = CustomDatasetQueryForm
+    exclude = ('reference_number',)
+    readonly_fields = ('source_reference',)
 
     def get_queryset(self, request):
         return self.model.objects.filter(dataset__deleted=False)
@@ -440,8 +461,16 @@ class CustomDatasetQueryAdmin(admin.ModelAdmin):
 
 @admin.register(SourceView)
 class SourceViewAdmin(admin.ModelAdmin):
-    search_fields = ['name', 'view', 'dataset__name']
+    search_fields = [
+        'name',
+        'view',
+        'dataset__name',
+        'dataset__reference_code__code',
+        'reference_number',
+    ]
     form = SourceViewForm
+    exclude = ('reference_number',)
+    readonly_fields = ('source_reference',)
 
     def get_queryset(self, request):
         return self.model.objects.filter(dataset__deleted=False)
@@ -449,8 +478,16 @@ class SourceViewAdmin(admin.ModelAdmin):
 
 @admin.register(SourceTable)
 class SourceTableAdmin(admin.ModelAdmin):
-    search_fields = ['name', 'table', 'dataset__name']
+    search_fields = [
+        'name',
+        'table',
+        'dataset__name',
+        'dataset__reference_code__code',
+        'reference_number',
+    ]
     form = SourceTableForm
+    exclude = ('reference_number',)
+    readonly_fields = ('source_reference',)
 
     def get_queryset(self, request):
         return self.model.objects.filter(dataset__deleted=False)
@@ -506,3 +543,9 @@ class VisualisationCatalogueItemAdmin(
         obj.name = obj.visualisation_template.nice_name
 
         super().save_model(request, obj, form, change)
+
+
+@admin.register(DatasetReferenceCode)
+class DatasetReferenceCodeAdmin(admin.ModelAdmin):
+    search_fields = ['code', 'description']
+    fields = ['code', 'description']

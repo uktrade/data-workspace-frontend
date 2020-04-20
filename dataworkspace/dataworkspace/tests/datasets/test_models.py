@@ -1,3 +1,5 @@
+import pytest
+
 from dataworkspace.tests import factories
 
 
@@ -35,3 +37,72 @@ def test_clone_dataset_copies_related_objects(db):
     assert [obj.dataset for obj in ds.sourceview_set.all()] == [ds]
     assert [obj.dataset for obj in ds.sourcetable_set.all()] == [ds]
     assert [obj.dataset for obj in ds.customdatasetquery_set.all()] == [ds]
+
+
+@pytest.mark.parametrize(
+    'factory',
+    (
+        factories.SourceTableFactory,
+        factories.SourceViewFactory,
+        factories.SourceLinkFactory,
+        factories.CustomDatasetQueryFactory,
+    ),
+)
+def test_dataset_source_reference_code(db, factory):
+    ref_code1 = factories.DatasetReferenceCodeFactory(code='Abc')
+    ref_code2 = factories.DatasetReferenceCodeFactory(code='Def')
+    ds = factories.DataSetFactory(reference_code=ref_code1)
+    source = factory(dataset=ds)
+    assert source.source_reference == f'ABC00001'
+
+    # Change to a new reference code
+    ds.reference_code = ref_code2
+    ds.save()
+    ds.refresh_from_db()
+
+    source.refresh_from_db()
+    assert source.source_reference == f'DEF00001'
+
+    # Unset the reference code
+    ds.reference_code = None
+    ds.save()
+    ds.refresh_from_db()
+
+    source.refresh_from_db()
+    assert source.source_reference is None
+
+    # Ensure numbers are incremented
+    ds.reference_code = ref_code1
+    ds.save()
+    ds.refresh_from_db()
+
+    source.refresh_from_db()
+    assert source.source_reference == f'ABC00002'
+
+    # Delete the reference code
+    ref_code1.delete()
+    ds.refresh_from_db()
+
+    source.refresh_from_db()
+    assert source.source_reference is None
+
+
+@pytest.mark.parametrize(
+    'factory',
+    (
+        factories.SourceTableFactory,
+        factories.SourceViewFactory,
+        factories.SourceLinkFactory,
+        factories.CustomDatasetQueryFactory,
+    ),
+)
+def test_dataset_source_filename(db, factory):
+    ds1 = factories.DataSetFactory(
+        reference_code=factories.DatasetReferenceCodeFactory(code='DW')
+    )
+    source1 = factory(dataset=ds1, name='A test source')
+    assert source1.get_filename() == 'DW00001-a-test-source.csv'
+
+    ds2 = factories.DataSetFactory()
+    source2 = factory(dataset=ds2, name='A test source')
+    assert source2.get_filename() == 'a-test-source.csv'

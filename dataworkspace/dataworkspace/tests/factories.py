@@ -122,6 +122,15 @@ class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
         model = 'datasets.CustomDatasetQuery'
 
 
+class DatasetReferenceCodeFactory(factory.django.DjangoModelFactory):
+    id = factory.Sequence(lambda n: n)
+    code = factory.fuzzy.FuzzyText(length=3)
+    counter = 0
+
+    class Meta:
+        model = 'datasets.DatasetReferenceCode'
+
+
 class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     group = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()

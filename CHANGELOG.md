@@ -29,6 +29,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - More accurate database user name for visualisations to make debugging easier
 - Attempt to avoid "tuple concurrently updated" errors by wrapping GRANT CONNECT with a lock
 
+### Added
+
+- Optional reference code added to the dataset model.
+- Reference number added to dataset source models.
+- Downloads through data workspace are now prepended with the reference code and reference number above if set.
+
 ## 2020-04-16
 
 ### Added

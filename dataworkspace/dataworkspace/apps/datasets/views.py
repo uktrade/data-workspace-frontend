@@ -1,7 +1,6 @@
 import csv
 import io
 import json
-import os
 from collections import namedtuple
 from contextlib import closing
 from itertools import chain
@@ -513,9 +512,9 @@ class SourceLinkDownloadView(DetailView):
         response = StreamingHttpResponse(
             file_object['Body'].iter_chunks(), content_type=file_object['ContentType']
         )
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
-            os.path.split(source_link.url)[-1]
-        )
+        response[
+            'Content-Disposition'
+        ] = f'attachment; filename="{source_link.get_filename()}"'
 
         return response
 
@@ -570,6 +569,7 @@ class SourceViewDownloadView(SourceDownloadMixin, DetailView):
             db_object.database.memorable_name,
             db_object.schema,
             db_object.view,
+            db_object.get_filename(),
         )
 
 
