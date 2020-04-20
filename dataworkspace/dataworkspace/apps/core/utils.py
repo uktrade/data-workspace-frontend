@@ -174,46 +174,48 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
             '''
             )
 
-            for schema, table in tables:
-                # Skip granting permissions if the table does not exist in the db
-                cur.execute(
-                    sql.SQL(
-                        '''
-                        SELECT count(*)
-                        FROM pg_catalog.pg_tables
-                        WHERE schemaname=%s
-                        AND tablename=%s;
-                        '''
-                    ),
-                    [schema, table],
-                )
-                if cur.fetchone()[0] == 0:
+        with connections[database_obj.memorable_name].cursor() as cur:
+            tables_that_exist = [
+                (schema, table)
+                for schema, table in tables
+                if _table_exists(cur, schema, table)
+            ]
+
+        schemas = without_duplicates_preserve_order(
+            schema for schema, _ in tables_that_exist
+        )
+
+        for schema in schemas:
+            with cache.lock(f'database-grant--{database_data["NAME"]}--{schema}'):
+                with connections[database_obj.memorable_name].cursor() as cur:
                     logger.info(
-                        'Not granting permissions to %s %s.%s for %s as table does not exist',
+                        'Granting usages on %s %s to %s',
+                        database_obj.memorable_name,
+                        schema,
+                        db_user,
+                    )
+                    cur.execute(
+                        sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                            sql.Identifier(schema), sql.Identifier(db_user)
+                        )
+                    )
+
+        for schema, table in tables_that_exist:
+            with cache.lock(f'database-grant--{database_data["NAME"]}--{schema}'):
+                with connections[database_obj.memorable_name].cursor() as cur:
+                    logger.info(
+                        'Granting permissions to %s %s.%s to %s',
                         database_obj.memorable_name,
                         schema,
                         table,
                         db_user,
                     )
-                    continue
-                logger.info(
-                    'Granting permissions to %s %s.%s to %s',
-                    database_obj.memorable_name,
-                    schema,
-                    table,
-                    db_user,
-                )
-                cur.execute(
-                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                        sql.Identifier(schema), sql.Identifier(db_user)
+                    tables_sql = sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
+                        sql.Identifier(schema),
+                        sql.Identifier(table),
+                        sql.Identifier(db_user),
                     )
-                )
-                tables_sql = sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
-                    sql.Identifier(schema),
-                    sql.Identifier(table),
-                    sql.Identifier(db_user),
-                )
-                cur.execute(tables_sql)
+                    cur.execute(tables_sql)
 
         return {
             'memorable_name': database_obj.memorable_name,
@@ -384,20 +386,23 @@ def table_exists(database, schema, table):
     with connect(
         database_dsn(settings.DATABASES_DATA[database])
     ) as conn, conn.cursor() as cur:
+        return _table_exists(cur, schema, table)
 
-        cur.execute(
-            """
-            SELECT 1
-            FROM
-                pg_tables
-            WHERE
-                schemaname = %s
-            AND
-                tablename = %s
-        """,
-            (schema, table),
-        )
-        return bool(cur.fetchone())
+
+def _table_exists(cur, schema, table):
+    cur.execute(
+        """
+        SELECT 1
+        FROM
+            pg_tables
+        WHERE
+            schemaname = %s
+        AND
+            tablename = %s
+    """,
+        (schema, table),
+    )
+    return bool(cur.fetchone())
 
 
 def streaming_query_response(user_email, database, query, filename):
@@ -553,3 +558,10 @@ def create_s3_role(user_email_address, user_sso_id):
             break
 
     return role_arn, s3_prefix
+
+
+def without_duplicates_preserve_order(seq):
+    # https://stackoverflow.com/a/480227/1319998
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]

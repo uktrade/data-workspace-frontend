@@ -471,33 +471,37 @@ def delete_unused_datasets_users():
                                 )
                             )
 
-                        cur.execute(
-                            sql.SQL(
-                                'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'
-                            ).format(
-                                sql.Identifier(database_name), sql.Identifier(usename)
+                            cur.execute(
+                                sql.SQL(
+                                    'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'
+                                ).format(
+                                    sql.Identifier(database_name),
+                                    sql.Identifier(usename),
+                                )
                             )
-                        )
 
                         for schema in schemas:
-                            for schema_revoke in schema_revokes:
-                                try:
-                                    cur.execute(
-                                        sql.SQL(schema_revoke).format(
-                                            sql.Identifier(schema),
-                                            sql.Identifier(usename),
+                            with cache.lock(
+                                f'database-grant--{database_name}--{schema}'
+                            ):
+                                for schema_revoke in schema_revokes:
+                                    try:
+                                        cur.execute(
+                                            sql.SQL(schema_revoke).format(
+                                                sql.Identifier(schema),
+                                                sql.Identifier(usename),
+                                            )
                                         )
-                                    )
-                                except Exception:
-                                    # This is likely to happen for private schemas where the current user
-                                    # does not have revoke privileges. We carry on in a best effort
-                                    # to remove the user
-                                    logger.info(
-                                        'delete_unused_datasets_users: Unable to %s %s %s',
-                                        schema_revoke,
-                                        schema,
-                                        usename,
-                                    )
+                                    except Exception:
+                                        # This is likely to happen for private schemas where the current user
+                                        # does not have revoke privileges. We carry on in a best effort
+                                        # to remove the user
+                                        logger.info(
+                                            'delete_unused_datasets_users: Unable to %s %s %s',
+                                            schema_revoke,
+                                            schema,
+                                            usename,
+                                        )
 
                         logger.info(
                             'delete_unused_datasets_users: dropping user %s', usename
