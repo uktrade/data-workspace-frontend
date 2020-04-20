@@ -24,6 +24,7 @@ from dataworkspace.apps.applications.models import (
 )
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
@@ -164,12 +165,14 @@ def application_api_is_allowed(request, public_host):
         application_template,
         _,
         host_user,
-        _,
+        commit_id,
     ) = application_template_tag_user_commit_from_host(public_host)
 
     request_sso_id_hex = hashlib.sha256(
         str(request.user.profile.sso_id).encode('utf-8')
     ).hexdigest()
+
+    is_preview = commit_id is not None
 
     def is_tool_and_correct_user_and_allowed_to_start():
         return (
@@ -180,23 +183,35 @@ def application_api_is_allowed(request, public_host):
 
     def is_visualisation_and_requires_authentication():
         return (
-            application_template.application_type == 'VISUALISATION'
+            not is_preview
+            and application_template.application_type == 'VISUALISATION'
             and application_template.user_access_type == 'REQUIRES_AUTHENTICATION'
         )
 
     def is_visualisation_and_requires_authorisation_and_has_authorisation():
         return (
-            application_template.application_type == 'VISUALISATION'
+            not is_preview
+            and application_template.application_type == 'VISUALISATION'
             and application_template.user_access_type == 'REQUIRES_AUTHORIZATION'
             and request.user.applicationtemplateuserpermission_set.filter(
                 application_template=application_template
             ).exists()
         )
 
+    def is_visualisation_preview_and_has_gitlab_developer():
+        return (
+            is_preview
+            and application_template.application_type == 'VISUALISATION'
+            and gitlab_has_developer_access(
+                request.user, application_template.gitlab_project_id
+            )
+        )
+
     return (
         is_tool_and_correct_user_and_allowed_to_start()
         or is_visualisation_and_requires_authentication()
         or is_visualisation_and_requires_authorisation_and_has_authorisation()
+        or is_visualisation_preview_and_has_gitlab_developer()
     )
 
 

@@ -60,6 +60,13 @@ def gitlab_has_developer_access(user, gitlab_project_id):
     # for permissions changes before they expire. Leaving that until there is
     # more evidence that a) the semantic behaviour is indeed what we want, and
     # b) the performance is slow enough to justify that.
+    #
+    # The caching is suspected to be particularly important for visualisation
+    # previews: they can have multiple HTTP requests that each need to be
+    # checked for authorisation. This includes websocket requests that are
+    # expected to behave in almost real time. Websocket connections often drop
+    # out, so even once the visualisation is loaded, a reconnection, which
+    # would then need another authorisation check, should be speedy.
     cache_key = f'gitlab-developer--{gitlab_project_id}--{user.id}'
     has_access = cache.get(cache_key)
     if has_access:
