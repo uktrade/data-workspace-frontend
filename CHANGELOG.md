@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Apache Superset as a hidden tool for testing
 - Model for application templtae approvals (specifically for visualisations).
 
+### Changed
+
+- Better logging from the proxy that should make it easier to calculate stats on visualisation access
+
 ## 2020-04-20
 
 ### Changed
