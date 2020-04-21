@@ -215,6 +215,12 @@ async def async_main():
 
         return peer_ip, is_private
 
+    def request_scheme(request):
+        return request.headers.get('x-forwarded-proto', request.url.scheme)
+
+    def request_url(request):
+        return str(request.url.with_scheme(request_scheme(request)))
+
     async def handle(downstream_request):
         method = downstream_request.method
         path = downstream_request.url.path
@@ -599,23 +605,26 @@ async def async_main():
 
             request_logger = get_random_context_logger()
             request['logger'] = request_logger
+            url = request_url(request)
 
             request_logger.info(
-                'Receiving (%s) (%s %s HTTP/%s.%s) (%s) (%s)',
-                *(
-                    (request.remote, request.method, request.path_qs)
-                    + request.version
-                    + (
-                        request.headers.get('User-Agent', '-'),
-                        request.headers.get('X-Forwarded-For', '-'),
-                    )
-                ),
+                'Receiving (%s) (%s) (%s) (%s)',
+                request.method,
+                url,
+                request.headers.get('User-Agent', '-'),
+                request.headers.get('X-Forwarded-For', '-'),
             )
 
             response = await handler(request)
 
             request_logger.info(
-                'Responding (%s) (%s)', response.status, response.content_length
+                'Responding (%s) (%s) (%s) (%s) (%s) (%s)',
+                request.method,
+                url,
+                request.headers.get('User-Agent', '-'),
+                request.headers.get('X-Forwarded-For', '-'),
+                response.status,
+                response.content_length,
             )
 
             return response
@@ -703,12 +712,6 @@ async def async_main():
                 f'response_type={response_type}&'
                 f'client_id={sso_client_id}'
             )
-
-        def request_scheme(request):
-            return request.headers.get('x-forwarded-proto', request.url.scheme)
-
-        def request_url(request):
-            return str(request.url.with_scheme(request_scheme(request)))
 
         def get_redirect_uri_callback(scheme):
             return str(
