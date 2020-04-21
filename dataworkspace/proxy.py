@@ -941,7 +941,7 @@ async def async_main():
                 request.method,
                 request.url.host,
                 request.url.port,
-                request.url.path,
+                request.url.path_qs,
                 request.headers['Content-Type'],
                 content,
             )
