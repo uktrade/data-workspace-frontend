@@ -22,7 +22,10 @@ from django.utils.encoding import force_text
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
 )
-from dataworkspace.apps.applications.forms import VisualisationsUICatalogueItemForm
+from dataworkspace.apps.applications.forms import (
+    VisualisationsUICatalogueItemForm,
+    VisualisationApprovalForm,
+)
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
     gitlab_api_v4,
@@ -33,6 +36,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
     ApplicationTemplateUserPermission,
+    VisualisationApproval,
 )
 from dataworkspace.apps.applications.utils import application_options
 from dataworkspace.apps.applications.spawner import get_spawner
@@ -759,6 +763,88 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
         gitlab_project,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
+        template_specific_context={"form": form, "form_errors": form_errors},
+        status=400 if form_errors else 200,
+    )
+
+
+def visualisation_approvals_html_view(request, gitlab_project_id):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        raise PermissionDenied()
+
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        raise PermissionDenied()
+
+    if request.method == 'GET':
+        return visualisation_approvals_html_GET(request, gitlab_project)
+
+    if request.method == 'POST':
+        return visualisation_approvals_html_POST(request, gitlab_project)
+
+    return HttpResponse(status=405)
+
+
+def visualisation_approvals_html_GET(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    approvals = VisualisationApproval.objects.filter(
+        visualisation=application_template, approved=True
+    ).all()
+    already_approved = any(filter(lambda x: x.approver == request.user, approvals))
+    form = VisualisationApprovalForm(
+        already_approved=already_approved,
+        initial={
+            "visualisation": application_template,
+            "approver": request.user,
+            "approved": False,
+        },
+    )
+
+    return _render_visualisation(
+        request,
+        'visualisation_approvals.html',
+        gitlab_project,
+        _visualisation_branches(gitlab_project),
+        current_menu_item='approvals',
+        template_specific_context={
+            'approvals': approvals,
+            'already_approved': already_approved,
+            'form': form,
+        },
+    )
+
+
+def visualisation_approvals_html_POST(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    approvals = VisualisationApproval.objects.filter(
+        visualisation=application_template, approved=True
+    ).all()
+    already_approved = any(filter(lambda a: a.approver == request.user, approvals))
+
+    form = VisualisationApprovalForm(
+        request.POST,
+        already_approved=already_approved,
+        initial={
+            "visualisation": application_template,
+            "approver": request.user,
+            "approved": False,
+        },
+    )
+    if form.is_valid():
+        form.save()
+        return redirect(request.path)
+
+    form_errors = [
+        (field.id_for_label, field.errors[0]) for field in form if field.errors
+    ]
+
+    return _render_visualisation(
+        request,
+        'visualisation_approvals.html',
+        gitlab_project,
+        _visualisation_branches(gitlab_project),
+        current_menu_item='approvals',
         template_specific_context={"form": form, "form_errors": form_errors},
         status=400 if form_errors else 200,
     )

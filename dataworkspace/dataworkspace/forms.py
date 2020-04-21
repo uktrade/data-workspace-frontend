@@ -1,4 +1,4 @@
-from django.forms import ModelForm, Textarea, TextInput, Select
+from django.forms import ModelForm, Textarea, TextInput, Select, CheckboxInput
 
 
 class GOVUKDesignSystemModelForm(ModelForm):
@@ -19,3 +19,5 @@ class GOVUKDesignSystemModelForm(ModelForm):
                 field.widget.attrs.update({"class": "govuk-textarea"})
             elif isinstance(field.widget, Select):
                 field.widget.attrs.update({"class": "govuk-select"})
+            elif isinstance(field.widget, CheckboxInput):
+                field.widget.attrs.update({"class": "govuk-checkboxes__input"})
