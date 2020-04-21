@@ -13,6 +13,8 @@ class EventLog(models.Model):
     TYPE_DATASET_TABLE_DATA_DOWNLOAD = 4
     TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD = 5
     TYPE_DATASET_SOURCE_VIEW_DOWNLOAD = 6
+    TYPE_VISUALISATION_APPROVED = 7
+    TYPE_VISUALISATION_UNAPPROVED = 8
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, 'Dataset source link download'),
         (TYPE_DATASET_SOURCE_TABLE_DOWNLOAD, 'Dataset source table download'),
@@ -20,6 +22,8 @@ class EventLog(models.Model):
         (TYPE_DATASET_TABLE_DATA_DOWNLOAD, 'Table data download'),
         (TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD, 'SQL query download'),
         (TYPE_DATASET_SOURCE_VIEW_DOWNLOAD, 'Dataset source view download'),
+        (TYPE_VISUALISATION_APPROVED, "Visualisation approved"),
+        (TYPE_VISUALISATION_UNAPPROVED, "Visualisation unapproved"),
     )
     user = models.ForeignKey(
         get_user_model(), on_delete=models.DO_NOTHING, related_name='events'

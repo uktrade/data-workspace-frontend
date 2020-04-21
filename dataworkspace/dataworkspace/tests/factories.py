@@ -238,6 +238,16 @@ class VisualisationTemplateFactory(ApplicationTemplateFactory):
         model = 'applications.VisualisationTemplate'
 
 
+class VisualisationApprovalFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    approved = True
+    approver = factory.SubFactory(UserFactory)
+    visualisation = factory.SubFactory(VisualisationTemplateFactory)
+
+    class Meta:
+        model = 'applications.VisualisationApproval'
+
+
 class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
     visualisation_template = factory.SubFactory(VisualisationTemplateFactory)
     name = factory.LazyAttribute(lambda o: o.visualisation_template.name)
