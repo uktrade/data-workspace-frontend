@@ -1,6 +1,7 @@
 import datetime
 
 import hashlib
+import itertools
 import random
 import re
 from urllib.parse import urlsplit
@@ -41,6 +42,7 @@ from dataworkspace.apps.applications.models import (
 from dataworkspace.apps.applications.utils import application_options
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
+from dataworkspace.apps.core.utils import source_tables_for_app
 from dataworkspace.apps.core.views import public_error_500_html_view
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 
@@ -853,4 +855,51 @@ def visualisation_approvals_html_POST(request, gitlab_project):
         current_menu_item='approvals',
         template_specific_context={"form": form, "form_errors": form_errors},
         status=400 if form_errors else 200,
+    )
+
+
+def visualisation_datasets_html_view(request, gitlab_project_id):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        raise PermissionDenied()
+
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        raise PermissionDenied()
+
+    if request.method == 'GET':
+        return visualisation_datasets_html_GET(request, gitlab_project)
+
+    return HttpResponse(status=405)
+
+
+def visualisation_datasets_html_GET(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    source_tables = source_tables_for_app(application_template)
+
+    tables_sorted_by_dataset = sorted(
+        [table for table in source_tables],
+        key=lambda x: (
+            x['dataset']['name'],
+            x['dataset']['id'],
+            x['schema'],
+            x['table'],
+        ),
+    )
+
+    datasets = [
+        (dataset, list(tables))
+        for dataset, tables in itertools.groupby(
+            tables_sorted_by_dataset, lambda x: x['dataset']
+        )
+    ]
+
+    return _render_visualisation(
+        request,
+        'visualisation_datasets.html',
+        gitlab_project,
+        _visualisation_branches(gitlab_project),
+        current_menu_item='datasets',
+        template_specific_context={'datasets': datasets},
+        status=200,
     )

@@ -1,0 +1,37 @@
+{% extends '_visualisation.html' %}
+
+{% block page_title %}Datasets - {{ block.super }}{% endblock %}
+
+{% block content %}
+<h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+    <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+    Datasets
+</h1>
+
+{% if not datasets %}
+<p class="govuk-body">This visualisation does not have access to any datasets.
+{% endif %}
+
+{% if datasets %}
+<p class="govuk-body">This visualisation has SQL access to the following datasets. The tables of each dataset are listed in the format "schema"."table".</p>
+
+<dl class="govuk-summary-list">
+    {% for dataset, tables in datasets %}
+    <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">
+            {{ dataset.name }}
+
+            {% for table in tables %}
+            <span class="visualisation-dataset-schema-table">"{{ table.schema }}"."{{ table.table }}"</span>
+            {% endfor %}
+        </dt>
+
+        <dd class="govuk-summary-list__actions">
+            <a href="{% url 'datasets:dataset_detail' dataset.id %}" class="govuk-link govuk-link--no-visited-state">View catalogue item<span class="govuk-visually-hidden"> for {{ dataset.name }}</span></a>
+        </dd>
+    </div>
+    {% endfor %}
+</dl>
+{% endif %}
+
+{% endblock %}

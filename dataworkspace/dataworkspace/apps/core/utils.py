@@ -349,11 +349,21 @@ def source_tables_for_app(application_template):
         dataset__datasetapplicationtemplatepermission__application_template=application_template,
     )
     source_tables = [
-        {'database': x.database, 'schema': x.schema, 'table': x.table}
+        {
+            'database': x.database,
+            'schema': x.schema,
+            'table': x.table,
+            'dataset': {'id': x.dataset.id, 'name': x.dataset.name},
+        }
         for x in req_authentication_tables.union(req_authorization_tables)
     ]
     reference_dataset_tables = [
-        {'database': x.external_database, 'schema': 'public', 'table': x.table_name}
+        {
+            'database': x.external_database,
+            'schema': 'public',
+            'table': x.table_name,
+            'dataset': {'id': x.uuid, 'name': x.name},
+        }
         for x in ReferenceDataset.objects.live()
         .filter(published=True, deleted=False)
         .exclude(external_database=None)

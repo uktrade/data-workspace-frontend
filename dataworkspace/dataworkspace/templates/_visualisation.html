@@ -84,6 +84,10 @@
         display: block;
         font-weight: normal;
     }
+    .visualisation-dataset-schema-table {
+        display: block;
+        font-weight: normal;
+    }
     .list-item-with-prefix::before {
         content: "—";
         font-weight: normal;
@@ -128,7 +132,7 @@
             {% endfor %}
         </ul>
     </li>
-    <li class="nav-item{% if current_menu_item == 'users-give-access' or current_menu_item == 'users-with-access' %} nav-item--current{% endif %}">
+    <li class="nav-item{% if current_menu_item == 'users-give-access' or current_menu_item == 'users-with-access' %} nav-item--current{% endif %} govuk-!-margin-bottom-6">
         <a href="{% url 'visualisations:users-give-access' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'users-give-access' or current_menu_item == 'users-with-access' %} nav-item-link--current{% endif %}">
             Users
         </a>
@@ -145,6 +149,11 @@
                 </a>
             </li>
         </ul>
+    </li>
+    <li class="nav-item{% if current_menu_item == 'datasets' %} nav-item--current{% endif %} govuk-!-margin-bottom-6">
+        <a href="{% url 'visualisations:datasets' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'datasets' %} nav-item-link--current{% endif %}">
+            Datasets
+        </a>
     </li>
     <li class="nav-item{% if current_menu_item == 'catalogue-item' %} nav-item--current{% endif %} govuk-!-margin-bottom-6">
         <a href="{% url 'visualisations:catalogue-item' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'catalogue-item' %} nav-item-link--current{% endif %}">
