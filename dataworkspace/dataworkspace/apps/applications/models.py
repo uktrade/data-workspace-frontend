@@ -1,10 +1,12 @@
 import uuid
 
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 
 from dataworkspace.apps.core.models import Database, TimeStampedModel
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 
 class ApplicationTemplate(TimeStampedModel):
@@ -108,6 +110,44 @@ class VisualisationTemplate(ApplicationTemplate):
         super(VisualisationTemplate, self).save(
             force_insert, force_update, using, update_fields
         )
+
+
+class VisualisationApproval(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    approved = models.BooleanField(default=True)
+    approver = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
+    visualisation = models.ForeignKey(VisualisationTemplate, on_delete=models.CASCADE)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_approved = self.approved
+
+    @transaction.atomic
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        if self._initial_approved is False and self.approved is True:
+            raise ValueError(
+                "A new record must be created for a new approval - you cannot flip a rescinded approval."
+            )
+        elif self._initial_approved is self.approved and self.modified_date is not None:
+            raise ValueError(
+                "The only change that can be made to an approval is to unapprove it."
+            )
+
+        super().save(force_insert, force_update, using, update_fields)
+
+        if self.approved:
+            log_event(
+                self.approver, EventLog.TYPE_VISUALISATION_APPROVED, related_object=self
+            )
+        else:
+            log_event(
+                self.approver,
+                EventLog.TYPE_VISUALISATION_UNAPPROVED,
+                related_object=self,
+            )
+        self._initial_approved = self.approved
 
 
 class ApplicationInstance(TimeStampedModel):
