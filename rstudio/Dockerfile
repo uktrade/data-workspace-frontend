@@ -92,7 +92,7 @@ RUN \
 	echo '  options(repos = r)' >> /usr/lib/R/etc/Rprofile.site && \
 	echo '})' >> /usr/lib/R/etc/Rprofile.site && \
 	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
-	Rscript -e 'install.packages(c("aws.ec2metadata", "ggraph", "igraph", "RPostgres", text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2", "tidyverse"), clean=TRUE)' && \
+	Rscript -e 'install.packages(c("aws.ec2metadata", "ggraph", "igraph", "RPostgres", "text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2", "tidyverse"), clean=TRUE)' && \
 	Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
 
 COPY rstudio-start.sh /
