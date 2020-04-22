@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
-from django.forms import Textarea, TextInput, ModelChoiceField
+from django.forms import Textarea, TextInput, ModelChoiceField, HiddenInput
 
+from dataworkspace.apps.applications.models import VisualisationApproval
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.forms import GOVUKDesignSystemModelForm
 
@@ -89,3 +91,25 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         for field in self._email_fields:
             if getattr(self.instance, field):
                 self.initial[field] = getattr(self.instance, field).email
+
+
+class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
+    class Meta:
+        model = VisualisationApproval
+        fields = ['approved', 'visualisation', 'approver']
+        widgets = {"visualisation": HiddenInput, "approver": HiddenInput}
+        labels = {"approved": "I have reviewed this visualisation"}
+
+    def __init__(self, *args, already_approved=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._already_approved = already_approved
+
+    def clean_approved(self):
+        if self._already_approved:
+            raise ValidationError("You have already approved this visualisation.")
+        if not self.cleaned_data['approved']:
+            raise ValidationError(
+                "You must confirm that you have reviewed this visualisation"
+            )
+        return self.cleaned_data['approved']

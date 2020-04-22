@@ -1,0 +1,18 @@
+<div class="govuk-form-group{% if field.errors %} govuk-form-group--error{% endif %}">
+  <fieldset class="govuk-fieldset" aria-describedby="{{ field.id_for_label }}-hint">
+    {% if field.errors %}
+    <span id="{{ field.id_for_label }}-error" class="govuk-error-message">
+        <span class="govuk-visually-hidden">Error: </span>{{ field.errors.0 }}
+    </span>
+    {% endif %}
+
+    <div class="govuk-checkboxes">
+      <div class="govuk-checkboxes__item">
+        {{ field }}
+        <label class="govuk-label govuk-checkboxes__label" for="{{ field.id_for_label }}" id="{{ field.id_for_label }}-hint">
+          {{ field.label }}
+        </label>
+      </div>
+    </div>
+  </fieldset>
+</div>
