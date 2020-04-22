@@ -23,7 +23,7 @@ set -e
     parallel --will-cite --line-buffer --jobs 5 --halt now,done=1 ::: \
         "celery worker --app dataworkspace.cel.celery_app --pool gevent --concurrency 150" \
         "celery beat   --app dataworkspace.cel.celery_app --pidfile /home/django/celerybeat.pid -S redbeat.RedBeatScheduler" \
-        "gunicorn dataworkspace.wsgi:application -c gunicorn_config.py ${GUNICORN_ARGS}" \
+        "gunicorn dataworkspace.wsgi:application -c gunicorn_config.py" \
         "PROXY_PORT='8001' UPSTREAM_ROOT='http://localhost:8002' python3 -m proxy" \
         "nginx -p /home/django"
 )
