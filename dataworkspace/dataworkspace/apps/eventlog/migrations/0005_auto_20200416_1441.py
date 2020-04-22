@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('eventlog', '0003_auto_20191009_1107')]
+    dependencies = [('eventlog', '0004_auto_20200421_1010')]
 
     operations = [
         migrations.AlterField(
@@ -19,14 +19,16 @@ class Migration(migrations.Migration):
                     (4, 'Table data download'),
                     (5, 'SQL query download'),
                     (6, 'Dataset source view download'),
-                    (7, 'Dataset access request'),
-                    (8, 'Granted dataset permission'),
-                    (9, 'Revoked dataset permission'),
-                    (10, 'Granted user permission'),
-                    (11, 'Revoked user permission'),
-                    (12, 'Granted visualisation permission'),
-                    (13, 'Revoked visualisation permission'),
-                    (14, 'Set dataset user access type'),
+                    (7, 'Visualisation approved'),
+                    (8, 'Visualisation unapproved'),
+                    (9, 'Dataset access request'),
+                    (10, 'Granted dataset permission'),
+                    (11, 'Revoked dataset permission'),
+                    (12, 'Granted user permission'),
+                    (13, 'Revoked user permission'),
+                    (14, 'Granted visualisation permission'),
+                    (15, 'Revoked visualisation permission'),
+                    (16, 'Set dataset user access type'),
                 ]
             ),
         )
