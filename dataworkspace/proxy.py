@@ -201,11 +201,14 @@ async def async_main():
         )
 
     def get_peer_ip(request):
-        peer_ip = (
-            request.headers['x-forwarded-for']
-            .split(',')[-x_forwarded_for_trusted_hops]
-            .strip()
-        )
+        if x_forwarded_for_trusted_hops > 0 or request.headers.get('x-forwarded-for'):
+            peer_ip = (
+                request.headers['x-forwarded-for']
+                .split(',')[-x_forwarded_for_trusted_hops]
+                .strip()
+            )
+        else:
+            peer_ip = request.transport.get_extra_info("peername")[0]
 
         is_private = True
         try:
