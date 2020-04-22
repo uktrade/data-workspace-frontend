@@ -165,5 +165,10 @@
             Approvals
         </a>
     </li>
+    <li class="nav-item{% if current_menu_item == 'publish' %} nav-item--current{% endif %} govuk-!-margin-bottom-6">
+        <a href="{% url 'visualisations:publish' gitlab_project.id %}" class="govuk-link govuk-link--no-visited-state nav-item-link{% if current_menu_item == 'publish' %} nav-item-link--current{% endif %}">
+            Publish
+        </a>
+    </li>
 </ul>
 {% endblock %}

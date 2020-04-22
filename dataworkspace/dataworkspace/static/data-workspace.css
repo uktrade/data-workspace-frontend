@@ -195,3 +195,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
       top: 15px;  /* The original GDS value */
   }
 }
+
+.app-\!-fill-width {
+    width: 100%
+}

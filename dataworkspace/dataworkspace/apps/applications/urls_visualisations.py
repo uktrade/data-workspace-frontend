@@ -9,6 +9,7 @@ from dataworkspace.apps.applications.views import (
     visualisation_catalogue_item_html_view,
     visualisation_approvals_html_view,
     visualisation_datasets_html_view,
+    visualisation_publish_html_view,
 )
 
 urlpatterns = [
@@ -42,5 +43,10 @@ urlpatterns = [
         '<str:gitlab_project_id>/datasets',
         login_required(visualisation_datasets_html_view),
         name='datasets',
+    ),
+    path(
+        '<str:gitlab_project_id>/publish',
+        login_required(visualisation_publish_html_view),
+        name='publish',
     ),
 ]

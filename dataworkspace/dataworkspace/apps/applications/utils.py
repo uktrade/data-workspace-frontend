@@ -183,16 +183,18 @@ def application_api_is_allowed(request, public_host):
             and request.user.has_perm('applications.start_all_applications')
         )
 
-    def is_visualisation_and_requires_authentication():
+    def is_published_visualisation_and_requires_authentication():
         return (
             not is_preview
+            and application_template.visible is True
             and application_template.application_type == 'VISUALISATION'
             and application_template.user_access_type == 'REQUIRES_AUTHENTICATION'
         )
 
-    def is_visualisation_and_requires_authorisation_and_has_authorisation():
+    def is_published_visualisation_and_requires_authorisation_and_has_authorisation():
         return (
             not is_preview
+            and application_template.visible is True
             and application_template.application_type == 'VISUALISATION'
             and application_template.user_access_type == 'REQUIRES_AUTHORIZATION'
             and request.user.applicationtemplateuserpermission_set.filter(
@@ -211,8 +213,8 @@ def application_api_is_allowed(request, public_host):
 
     return (
         is_tool_and_correct_user_and_allowed_to_start()
-        or is_visualisation_and_requires_authentication()
-        or is_visualisation_and_requires_authorisation_and_has_authorisation()
+        or is_published_visualisation_and_requires_authentication()
+        or is_published_visualisation_and_requires_authorisation_and_has_authorisation()
         or is_visualisation_preview_and_has_gitlab_developer()
     )
 
