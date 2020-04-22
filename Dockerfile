@@ -46,8 +46,6 @@ USER django
 
 COPY test /test
 
-CMD ["/dataworkspace/start.sh"]
-
 
 FROM base AS live
 
