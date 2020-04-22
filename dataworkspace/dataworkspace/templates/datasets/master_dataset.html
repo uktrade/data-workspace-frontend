@@ -81,7 +81,7 @@
         {% for data_link, _ in data_links_with_link_toggle %}
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">{{ data_link.name }}</td>
-            <td class="govuk-table__cell">{{ data_link.schema }}.{{ data_link.table }}</td>
+            <td class="govuk-table__cell">"{{ data_link.schema }}"."{{ data_link.table }}"</td>
             <td class="govuk-table__cell">{{ data_link.get_frequency_display }}</td>
             {% if user.is_superuser %}
               <td class="govuk-table__cell">
