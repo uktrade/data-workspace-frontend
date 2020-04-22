@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Bumped GitLab to latest 12.6
 - Bumped Git and OpenSSL to latest on Alpine 3.10
+- Bumped GitLab to latest 12.7
 
 ## 2020-04-21
 
