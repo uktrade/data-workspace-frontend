@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-04-23
 
+### Added
+
+- Ability to unapprove visualisations.
+
 ### Changed
 
 - Client-side validation of `short_description` for visualisation catalogue items no longer occurs.

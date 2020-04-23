@@ -794,9 +794,11 @@ def visualisation_approvals_html_GET(request, gitlab_project):
     approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-    already_approved = any(filter(lambda x: x.approver == request.user, approvals))
+
+    approval = next(filter(lambda a: a.approver == request.user, approvals), None)
+
     form = VisualisationApprovalForm(
-        already_approved=already_approved,
+        instance=approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
@@ -812,7 +814,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         current_menu_item='approvals',
         template_specific_context={
             'approvals': approvals,
-            'already_approved': already_approved,
+            'already_approved': approval.approved if approval else False,
             'form': form,
         },
     )
@@ -823,11 +825,12 @@ def visualisation_approvals_html_POST(request, gitlab_project):
     approvals = VisualisationApproval.objects.filter(
         visualisation=application_template, approved=True
     ).all()
-    already_approved = any(filter(lambda a: a.approver == request.user, approvals))
+
+    approval = next(filter(lambda a: a.approver == request.user, approvals), None)
 
     form = VisualisationApprovalForm(
         request.POST,
-        already_approved=already_approved,
+        instance=approval,
         initial={
             "visualisation": application_template,
             "approver": request.user,
