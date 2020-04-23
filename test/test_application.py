@@ -452,7 +452,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
-        stdout, stderr, code = await create_visualisation_dataset('testvisualisation-a')
+        stdout, stderr, code = await create_visualisation_dataset(
+            'testvisualisation-a', 3
+        )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -463,6 +465,52 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
+
+        def handle_users(request):
+            return web.json_response([{'id': 1234}], status=200)
+
+        def handle_project_3(request):
+            return web.json_response(
+                {
+                    'id': 3,
+                    'name': 'testvisualisation',
+                    'tag_list': ['visualisation'],
+                    'default_branch': 'master',
+                    'description': 'The vis',
+                    'web_url': 'https://some.domain.test/',
+                }
+            )
+
+        def handle_project_4(request):
+            return web.json_response(
+                {
+                    'id': 4,
+                    'name': 'testvisualisation',
+                    'tag_list': ['visualisation'],
+                    'default_branch': 'master',
+                    'description': 'The vis',
+                    'web_url': 'https://some.domain.test/',
+                }
+            )
+
+        def handle_members(request):
+            return web.json_response([{'id': 1234, 'access_level': 30}], status=200)
+
+        def handle_general_gitlab(request):
+            return web.json_response({})
+
+        gitlab_cleanup = await create_server(
+            8007,
+            [
+                web.get('/api/v4//users', handle_users),
+                web.get('/api/v4//projects/3/members/all', handle_members),
+                web.get('/api/v4/projects/3', handle_project_3),
+                web.get('/api/v4//projects/4/members/all', handle_members),
+                web.get('/api/v4/projects/4', handle_project_4),
+                web.get('/{path:.*}', handle_general_gitlab),
+            ],
+        )
+        self.add_async_cleanup(gitlab_cleanup)
 
         async with session.request(
             'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
@@ -482,7 +530,19 @@ class TestApplication(unittest.TestCase):
         # This application should not have permission to access the database
         self.assertEqual(received_status, 500)
 
-        stdout, stderr, code = await create_visualisation_dataset('testvisualisation-b')
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(403, status)
+
+        await give_user_visualisation_developer_perms()
+
+        stdout, stderr, code = await create_visualisation_dataset(
+            'testvisualisation-b', 4
+        )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -494,12 +554,29 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/4/datasets'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(200, status)
+        self.assertNotIn('test_dataset', content)
+
         stdout, stderr, code = await give_visualisation_dataset_perms(
             'testvisualisation-b'
         )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/4/datasets'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertIn('test_dataset', content)
 
         async with session.request(
             'GET', 'http://testvisualisation-b.dataworkspace.test:8000/'
@@ -1953,7 +2030,7 @@ async def create_visualisation_echo(name):
     return stdout, stderr, code
 
 
-async def create_visualisation_dataset(name):
+async def create_visualisation_dataset(name, gitlab_project_id):
     python_code = textwrap.dedent(
         f"""\
         from dataworkspace.apps.applications.models import (
@@ -1966,6 +2043,7 @@ async def create_visualisation_dataset(name):
             spawner_options='{{"CMD":["python3", "/test/dataset_server.py"]}}',
             spawner_time=60,
             user_access_type="REQUIRES_AUTHORIZATION",
+            gitlab_project_id={gitlab_project_id},
         )
         """
     ).encode('ascii')
