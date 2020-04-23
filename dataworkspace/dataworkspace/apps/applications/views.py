@@ -732,6 +732,9 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
         instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     )
 
+    # We don't want client-side validation on this field, so we remove it - but only for the GET request.
+    form.fields['short_description'].required = False
+
     return _render_visualisation(
         request,
         'visualisation_catalogue_item.html',
