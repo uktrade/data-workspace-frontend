@@ -49,12 +49,10 @@
                         </strong>
                     </div>
                 </div>
-                <!-- TODO: Hook this up with the visualisation-request flow -->
-                {% if model.eligibility_criteria %}
-                  <a class="govuk-button" href="...">Request access</a>
-                {% else %}
-                  <a class="govuk-button" href="...">Request access</a>
-                {% endif %}
+                <form action="{% url "datasets:request_visualisation_access" dataset_uuid=model.id %}" method="post">
+                    {% csrf_token %}
+                    <button data-prevent-double-click="true" type="submit" class="govuk-button">Request access</button>
+                </form>
             {% endif %}
         </div>
     </div>

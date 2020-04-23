@@ -1,7 +1,7 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 
-from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.datasets.constants import DataSetType
 
 
@@ -17,6 +17,24 @@ def find_dataset(dataset_uuid, user):
         raise Http404('No dataset matches the given query.')
 
     return dataset
+
+
+def find_visualisation(visualisation_uuid, user):
+    visualisation = get_object_or_404(
+        VisualisationCatalogueItem.objects.live(), id=visualisation_uuid
+    )
+
+    if user.has_perm(
+        dataset_type_to_manage_unpublished_permission_codename(
+            DataSetType.VISUALISATION.value
+        )
+    ):
+        return visualisation
+
+    if not visualisation.published:
+        raise Http404('No visualisation matches the given query.')
+
+    return visualisation
 
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):

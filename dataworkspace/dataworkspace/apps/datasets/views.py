@@ -13,7 +13,7 @@ from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F, Q
-from django.forms import model_to_dict
+from django.forms import Form, model_to_dict
 from django.http import (
     Http404,
     HttpResponse,
@@ -57,11 +57,16 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
+    find_visualisation,
     get_code_snippets,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-from dataworkspace.zendesk import create_zendesk_ticket
+from dataworkspace.zendesk import (
+    create_zendesk_ticket,
+    create_support_request,
+    get_people_url,
+)
 
 
 def filter_datasets(
@@ -397,6 +402,57 @@ def request_access_success_view(request, dataset_uuid):
     ticket = request.GET['ticket']
 
     dataset = find_dataset(dataset_uuid, request.user)
+
+    return render(
+        request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
+    )
+
+
+@require_http_methods(['POST'])
+def request_visualisation_access_view(request, dataset_uuid):
+    dataset = find_visualisation(dataset_uuid, request.user)
+
+    form = Form(request.POST)  # we use an empty form to verify CSRF token
+    if not form.is_valid():
+        return HttpResponse(status=400)
+
+    dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
+
+    message = f"""
+An access request has been sent to the data visualisation owner and secondary contact to process.
+
+There is no need to action this ticket until a further notification is received.
+
+Data visualisation: {dataset.name} ({dataset_url})
+
+Requestor {request.user.email}
+People finder link: {get_people_url(request.user.get_full_name())}
+
+Data visualisation owner: {dataset.enquiries_contact.email}
+
+Secondary contact: {dataset.secondary_enquiries_contact.email}
+
+If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
+    """
+
+    ticket_reference = create_support_request(
+        request.user,
+        request.user.email,
+        message,
+        subject=f"Data visualisation access request received - {dataset.name}",
+        tag='visualisation-access-request',
+    )
+
+    url = reverse('datasets:request_visualisation_access_success', args=[dataset_uuid])
+    return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
+
+
+@require_GET
+def request_visualisation_access_success_view(request, dataset_uuid):
+    # yes this could cause 400 errors but Todo - replace with session / messages
+    ticket = request.GET['ticket']
+
+    dataset = find_visualisation(dataset_uuid, request.user)
 
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}

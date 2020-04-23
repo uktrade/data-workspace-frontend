@@ -93,6 +93,32 @@ def test_request_access_form(client, mocker):
     )
 
 
+def test_request_visualisation_access(client, mocker):
+    create_zendesk_ticket = mocker.patch(
+        'dataworkspace.apps.datasets.views.create_support_request'
+    )
+
+    ds = factories.VisualisationCatalogueItemFactory.create(published=True)
+
+    response = client.post(
+        reverse(
+            'datasets:request_visualisation_access', kwargs={'dataset_uuid': ds.id}
+        ),
+        data={},
+        follow=True,
+    )
+
+    assert response.status_code == 200
+
+    create_zendesk_ticket.assert_called_once_with(
+        mock.ANY,
+        mock.ANY,
+        mock.ANY,
+        subject=f"Data visualisation access request received - {ds.name}",
+        tag="visualisation-access-request",
+    )
+
+
 def test_find_datasets_with_no_results(client):
     response = client.get(reverse('datasets:find_datasets'), {"q": "search"})
 
