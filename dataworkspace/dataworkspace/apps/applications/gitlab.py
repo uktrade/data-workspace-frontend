@@ -2,8 +2,17 @@ import logging
 import requests
 
 from django.conf import settings
+from django.contrib.admin.models import LogEntry, ADDITION
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.db import transaction
+from django.utils.encoding import force_str
 
+from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.utils import (
+    dataset_type_to_manage_unpublished_permission_codename,
+)
 
 logger = logging.getLogger('app')
 
@@ -18,6 +27,9 @@ def gitlab_api_v4(method, path, params=()):
 
 
 def gitlab_api_v4_with_status(method, path, params=()):
+    if path.startswith('/'):
+        path = path.lstrip('/')
+
     response = requests.request(
         method,
         f'{settings.GITLAB_URL}api/v4/{path}',
@@ -103,7 +115,31 @@ def gitlab_has_developer_access(user, gitlab_project_id):
             for gitlab_project_user in gitlab_project_users
         )
     )
+
     if has_access:
         cache.set(cache_key, True, timeout=60 * 60)
+        _ensure_user_has_manage_unpublish_perm(user)
 
     return has_access
+
+
+def _ensure_user_has_manage_unpublish_perm(user):
+    # Update the django permission controlling whether the user can preview unpublished visualisation catalogue pages.
+    perm_codename = dataset_type_to_manage_unpublished_permission_codename(
+        DataSetType.VISUALISATION.value
+    )
+    app_label, codename = perm_codename.split('.')
+    perm = Permission.objects.get(content_type__app_label=app_label, codename=codename)
+
+    if not user.has_perm(perm_codename):
+        with transaction.atomic():
+            user.user_permissions.add(perm)
+            user.save()
+            LogEntry.objects.log_action(
+                user_id=user.pk,
+                content_type_id=ContentType.objects.get_for_model(user).pk,
+                object_id=user.pk,
+                object_repr=force_str(user),
+                action_flag=ADDITION,
+                change_message=f"Added 'manage unpublished visualisations' permission",
+            )

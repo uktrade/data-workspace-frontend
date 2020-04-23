@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Ability to unapprove visualisations.
+- Automatic granting of permission for data vis creators to manage unpublished visualisations, which will let them view the catalogue page before publication.
 
 ### Changed
 
