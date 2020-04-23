@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Client-side validation of `short_description` for visualisation catalogue items no longer occurs.
 - The ability to see what Datasets a visualisation has access to
+- Show BST times as BST, rather than UTC
 
 ## 2020-04-22
 
