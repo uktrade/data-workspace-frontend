@@ -167,3 +167,46 @@ class TestDataVisualisationUIApprovalPage:
             in response.content.decode(response.charset)
         )
         assert len(VisualisationApproval.objects.all()) == 0
+
+    @pytest.mark.django_db
+    def test_unapprove_visualisation_successfully(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename='develop_visualisations',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(
+            username='visualisation.creator@test.com',
+            is_staff=False,
+            is_superuser=False,
+        )
+        user.user_permissions.add(develop_visualisations_permission)
+        vis_cat_item = factories.VisualisationCatalogueItemFactory.create(
+            published=False, visualisation_template__gitlab_project_id=1
+        )
+        approval = factories.VisualisationApprovalFactory.create(
+            approved=True,
+            approver=user,
+            visualisation=vis_cat_item.visualisation_template,
+        )
+
+        # Login to admin site
+        client = Client(**get_http_sso_data(user))
+        client.post(reverse('admin:index'), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            response = client.post(
+                reverse(
+                    'visualisations:approvals',
+                    args=(vis_cat_item.visualisation_template.gitlab_project_id,),
+                ),
+                {
+                    "approver": user.id,
+                    "visualisation": str(vis_cat_item.visualisation_template.id),
+                },
+                follow=True,
+            )
+
+        approval.refresh_from_db()
+        assert response.status_code == 200
+        assert len(VisualisationApproval.objects.all()) == 1
+        assert approval.approved is False

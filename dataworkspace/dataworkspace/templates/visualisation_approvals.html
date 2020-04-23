@@ -49,7 +49,6 @@
   {% endfor %}
 </ul>
 
-{% if not already_approved %}
 <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
 
 <form method="POST" action="{{ request.path }}" novalidate>
@@ -60,9 +59,17 @@
   {{ form.visualisation }}
   {{ form.approver }}
 
-  {% include "partials/govuk_single_checkbox_field.html" with field=form.approved %}
+  {% if already_approved %}
 
+  {% comment "We render this as a hiddenfield for the unapprove state" %}{% endcomment %}
+  {{ form.approved }}
+  <input type="submit" class="govuk-button" value="Unapprove" />
+
+  {% else %}
+
+  {% include "partials/govuk_single_checkbox_field.html" with field=form.approved %}
   <input type="submit" class="govuk-button" value="Approve" />
+
+  {% endif %}
  </form>
-{% endif %}
 {% endblock %}

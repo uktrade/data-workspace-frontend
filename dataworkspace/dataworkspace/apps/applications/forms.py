@@ -100,15 +100,22 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
         widgets = {"visualisation": HiddenInput, "approver": HiddenInput}
         labels = {"approved": "I have reviewed this visualisation"}
 
-    def __init__(self, *args, already_approved=False, **kwargs):
+    def __init__(self, *args, **kwargs):
+        # If the visualisation has already been approved, we want to render a form that allows the user to unapprove it.
+        if kwargs.get('instance') and kwargs.get('instance').approved:
+            self._initial_approved = True
+            self.Meta.widgets["approved"] = HiddenInput
+            kwargs['initial']['approved'] = False
+        else:
+            self._initial_approved = False
+
         super().__init__(*args, **kwargs)
 
-        self._already_approved = already_approved
+        if self._initial_approved:
+            self.fields['approved'].required = False
 
     def clean_approved(self):
-        if self._already_approved:
-            raise ValidationError("You have already approved this visualisation.")
-        if not self.cleaned_data['approved']:
+        if not self._initial_approved and not self.cleaned_data['approved']:
             raise ValidationError(
                 "You must confirm that you have reviewed this visualisation"
             )
