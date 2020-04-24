@@ -32,7 +32,7 @@
 </h1>
 
 <p class="govuk-body">
-  In order to publish this visualisation, at least two users must approve it.
+  In order to publish this visualisation, at least two users must approve it. One approver must be the creator of the visualisation, and a different approver must have completed a peer review of the visualisation.
 </p>
 
 <p class="govuk-body">
@@ -49,7 +49,13 @@
   {% endfor %}
 </ul>
 
-<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+{% if not already_approved %}
+<p class="govuk-body">
+  By approving that this visualisation is ready to be published, you are confirming that it follows the <a class="govuk-link" href="https://gitlab.data.trade.gov.uk/readme/wiki/-/wikis/Data%20visualisation%20onboarding%20process">onboarding guidance</a>. Please contact the Data Workspace team if you have any questions using the <a class="govuk-link" href="https://data.trade.gov.uk/support-and-feedback/">support and feedback form</a>.
+</p>
+{% endif %}
 
 <form method="POST" action="{{ request.path }}" novalidate>
   {% csrf_token %}
