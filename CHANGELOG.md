@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - A zero-width space after an underscore in the visualisation datasets page to encourage line breaks in more readable places
 - Eligibility criteria to visualisation catalogue items.
+- Eligibility criteria to data vis UI catalogue page.
 
 ### Changed
 

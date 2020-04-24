@@ -50,6 +50,8 @@
   {% include "partials/govuk_basic_form_field.html" with field=form.personal_data %}
   {% include "partials/govuk_basic_form_field.html" with field=form.restrictions_on_usage %}
 
+  {{ form.eligibility_criteria }}
+
   <input type="submit" class="govuk-button" value="Save" />
 </form>
 {% endblock %}
