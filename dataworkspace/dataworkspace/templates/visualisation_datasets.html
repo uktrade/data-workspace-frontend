@@ -1,4 +1,5 @@
 {% extends '_visualisation.html' %}
+{% load core_tags %}
 
 {% block page_title %}Datasets - {{ block.super }}{% endblock %}
 
@@ -22,7 +23,7 @@
             {{ dataset.name }}
 
             {% for table in tables %}
-            <span class="visualisation-dataset-schema-table">"{{ table.schema }}"."{{ table.table }}"</span>
+            <span class="visualisation-dataset-schema-table">"{{ table.schema|zero_width_space_after:'_' }}"."{{ table.table|zero_width_space_after:'_' }}"</span>
             {% endfor %}
         </dt>
 

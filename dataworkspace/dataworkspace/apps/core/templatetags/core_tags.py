@@ -19,6 +19,12 @@ def get_key(dictionary, field):
 
 
 @register.filter
+def zero_width_space_after(string, sub):
+    zero_width_space = u'\u200B'
+    return string.replace(sub, f'{sub}{zero_width_space}')
+
+
+@register.filter
 def add_class(field, class_attr):
     if 'class' in field.field.widget.attrs:
         field.field.widget.attrs['class'] = '{} {}'.format(
