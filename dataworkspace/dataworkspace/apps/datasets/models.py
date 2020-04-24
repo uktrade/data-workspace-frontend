@@ -1494,6 +1494,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
+    eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
