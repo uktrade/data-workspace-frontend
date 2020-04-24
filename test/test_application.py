@@ -368,8 +368,8 @@ class TestApplication(unittest.TestCase):
         gitlab_cleanup = await create_server(
             8007,
             [
-                web.get('/api/v4//users', handle_users),
-                web.get('/api/v4//projects/3/members/all', handle_members),
+                web.get('/api/v4/users', handle_users),
+                web.get('/api/v4/projects/3/members/all', handle_members),
                 web.get('/api/v4/projects/3', handle_project),
                 web.get('/{path:.*}', handle_general_gitlab),
             ],
@@ -502,10 +502,10 @@ class TestApplication(unittest.TestCase):
         gitlab_cleanup = await create_server(
             8007,
             [
-                web.get('/api/v4//users', handle_users),
-                web.get('/api/v4//projects/3/members/all', handle_members),
+                web.get('/api/v4/users', handle_users),
+                web.get('/api/v4/projects/3/members/all', handle_members),
                 web.get('/api/v4/projects/3', handle_project_3),
-                web.get('/api/v4//projects/4/members/all', handle_members),
+                web.get('/api/v4/projects/4/members/all', handle_members),
                 web.get('/api/v4/projects/4', handle_project_4),
                 web.get('/{path:.*}', handle_general_gitlab),
             ],
@@ -1513,11 +1513,11 @@ class TestApplication(unittest.TestCase):
             8007,
             [
                 web.get('/api/v4/groups/visualisations', handle_group),
-                web.get('/api/v4//users', handle_users),
+                web.get('/api/v4/users', handle_users),
                 web.get('/api/v4/projects', handle_projects),
-                web.get('/api/v4//projects/3/members/all', handle_members),
+                web.get('/api/v4/projects/3/members/all', handle_members),
                 web.get('/api/v4/projects/3', handle_project),
-                web.get('/api/v4//projects/3/repository/branches', handle_branches),
+                web.get('/api/v4/projects/3/repository/branches', handle_branches),
                 web.get('/{path:.*}', handle_general_gitlab),
             ],
         )
