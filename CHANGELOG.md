@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - A zero-width space after an underscore in the visualisation datasets page to encourage line breaks in more readable places
 
+### Changed
+
+- Close database connection after each Celery task as attempt to address database connection usage/(leak?)
+
 ## 2020-04-23
 
 ### Added
