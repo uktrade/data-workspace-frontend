@@ -12,6 +12,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Q
 
+from django_db_geventpool.utils import close_connection
+
 from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,
@@ -270,6 +272,7 @@ def application_instance_max_cpu(application_instance):
 
 
 @celery_app.task()
+@close_connection
 def kill_idle_fargate():
     logger.info('kill_idle_fargate: Start')
 
@@ -315,6 +318,7 @@ def kill_idle_fargate():
 
 
 @celery_app.task()
+@close_connection
 def populate_created_stopped_fargate():
     logger.info('populate_created_stopped_fargate: Start')
 
@@ -407,6 +411,7 @@ def populate_created_stopped_fargate():
 
 
 @celery_app.task()
+@close_connection
 def delete_unused_datasets_users():
     logger.info('delete_unused_datasets_users: Start')
 
