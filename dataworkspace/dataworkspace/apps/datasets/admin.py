@@ -37,6 +37,7 @@ from dataworkspace.apps.dw_admin.forms import (
     SourceTableForm,
     SourceViewForm,
     CustomDatasetQueryInlineForm,
+    VisualisationCatalogueItemForm,
 )
 
 logger = logging.getLogger('app')
@@ -497,6 +498,7 @@ class SourceTableAdmin(admin.ModelAdmin):
 class VisualisationCatalogueItemAdmin(
     CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
 ):
+    form = VisualisationCatalogueItemForm
     list_display = ('name', 'short_description', 'published')
     search_fields = ['name']
     fieldsets = [
@@ -517,6 +519,7 @@ class VisualisationCatalogueItemAdmin(
                     'retention_policy',
                     'personal_data',
                     'restrictions_on_usage',
+                    'eligibility_criteria',
                 ]
             },
         )

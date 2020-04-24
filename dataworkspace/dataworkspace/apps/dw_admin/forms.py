@@ -22,6 +22,7 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
     SourceTable,
     MasterDataset,
+    VisualisationCatalogueItem,
 )
 
 
@@ -438,3 +439,13 @@ class SourceTableForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['dataset'].queryset = MasterDataset.objects.live()
+
+
+class VisualisationCatalogueItemForm(forms.ModelForm):
+    eligibility_criteria = DynamicArrayField(
+        base_field=forms.CharField(), required=False
+    )
+
+    class Meta:
+        model = VisualisationCatalogueItem
+        fields = '__all__'
