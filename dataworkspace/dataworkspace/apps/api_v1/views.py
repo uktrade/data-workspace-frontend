@@ -5,6 +5,7 @@ import re
 import boto3
 
 from django.conf import settings
+from django.db import IntegrityError
 from django.http import JsonResponse, StreamingHttpResponse
 
 from psycopg2 import connect, sql
@@ -196,38 +197,43 @@ def application_api_PUT(request, public_host):
 
     spawner_options = json.dumps(application_options(application_template))
 
-    application_instance = ApplicationInstance.objects.create(
-        owner=request.user,
-        application_template=application_template,
-        spawner=application_template.spawner,
-        spawner_application_template_options=spawner_options,
-        spawner_application_instance_id=json.dumps({}),
-        public_host=public_host,
-        state='SPAWNING',
-        single_running_or_spawning_integrity=public_host,
-        cpu=cpu,
-        memory=memory,
-        commit_id=commit_id,
-    )
-
-    # The database users are stored so when the database users are cleaned up,
-    # we know _not_ to delete any users used by running or spawning apps
-    for creds in credentials:
-        ApplicationInstanceDbUsers.objects.create(
-            application_instance=application_instance,
-            db_id=creds['db_id'],
-            db_username=creds['db_user'],
+    try:
+        application_instance = ApplicationInstance.objects.create(
+            owner=request.user,
+            application_template=application_template,
+            spawner=application_template.spawner,
+            spawner_application_template_options=spawner_options,
+            spawner_application_instance_id=json.dumps({}),
+            public_host=public_host,
+            state='SPAWNING',
+            single_running_or_spawning_integrity=public_host,
+            cpu=cpu,
+            memory=memory,
+            commit_id=commit_id,
         )
+    except IntegrityError:
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host
+        )
+    else:
+        # The database users are stored so when the database users are cleaned up,
+        # we know _not_ to delete any users used by running or spawning apps
+        for creds in credentials:
+            ApplicationInstanceDbUsers.objects.create(
+                application_instance=application_instance,
+                db_id=creds['db_id'],
+                db_username=creds['db_user'],
+            )
 
-    spawn.delay(
-        application_template.spawner,
-        request.user.email,
-        str(request.user.profile.sso_id),
-        tag,
-        application_instance.id,
-        spawner_options,
-        credentials,
-    )
+        spawn.delay(
+            application_template.spawner,
+            request.user.email,
+            str(request.user.profile.sso_id),
+            tag,
+            application_instance.id,
+            spawner_options,
+            credentials,
+        )
 
     return JsonResponse(api_application_dict(application_instance), status=200)
 

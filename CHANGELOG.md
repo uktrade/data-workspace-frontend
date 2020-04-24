@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Close database connection after each Celery task as attempt to address database connection usage/(leak?)
+- Smaller chance of parallel starts of the same application surfacing an error
 
 ## 2020-04-23
 
