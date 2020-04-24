@@ -12,6 +12,7 @@ from botocore.exceptions import ClientError
 import gevent
 
 from django.conf import settings
+from django_db_geventpool.utils import close_connection
 
 from dataworkspace.cel import celery_app
 from dataworkspace.apps.applications.models import ApplicationInstance
@@ -32,6 +33,7 @@ def get_spawner(name):
 
 
 @celery_app.task()
+@close_connection
 def spawn(
     name,
     user_email_address,
@@ -52,6 +54,7 @@ def spawn(
 
 
 @celery_app.task()
+@close_connection
 def stop(name, application_instance_id):
     get_spawner(name).stop(application_instance_id)
 
