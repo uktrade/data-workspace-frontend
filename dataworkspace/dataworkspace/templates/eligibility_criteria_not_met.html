@@ -20,9 +20,9 @@
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-l">Sorry, we can't give you access to this dataset.</h1>
+          <h1 class="govuk-heading-l">Sorry, we can't give you access to this {% if is_visualisation %}data visualisation{% else %}dataset{%endif%}.</h1>
             <p class="govuk-body">
-              Unfortunately, you don't meet the initial eligibility criteria to access this dataset.
+              Unfortunately, you don't meet the initial eligibility criteria to access this {% if is_visualisation %}data visualisation{% else %}dataset{%endif%}.
             </p>
             <p class="govuk-body">
               If you think you should be able to access it, <a href="{% url 'support' %}">contact support</a>.

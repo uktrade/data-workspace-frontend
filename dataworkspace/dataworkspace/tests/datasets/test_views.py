@@ -112,10 +112,8 @@ def test_request_visualisation_access(client, user, mocker):
     )
 
     response = client.post(
-        reverse(
-            'datasets:request_visualisation_access', kwargs={'dataset_uuid': ds.id}
-        ),
-        data={},
+        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
+        data={"email": "user@example.com", "goal": "my goal"},
         follow=True,
     )
 
@@ -137,9 +135,10 @@ def test_request_visualisation_access(client, user, mocker):
                 personalisation={
                     "visualisation_name": ds.name,
                     "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
-                    "user_email": user.email,
+                    "user_email": "user@example.com",
                     "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
                     "give_access_url": mock.ANY,
+                    "goal": "my goal",
                 },
             ),
             mock.call(
@@ -148,9 +147,10 @@ def test_request_visualisation_access(client, user, mocker):
                 personalisation={
                     "visualisation_name": ds.name,
                     "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
-                    "user_email": user.email,
+                    "user_email": "user@example.com",
                     "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
                     "give_access_url": mock.ANY,
+                    "goal": "my goal",
                 },
             ),
         ],

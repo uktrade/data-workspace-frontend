@@ -49,10 +49,11 @@
                         </strong>
                     </div>
                 </div>
-                <form action="{% url "datasets:request_visualisation_access" dataset_uuid=model.id %}" method="post">
-                    {% csrf_token %}
-                    <button data-prevent-double-click="true" type="submit" class="govuk-button">Request access</button>
-                </form>
+                {% if model.published and model.eligibility_criteria %}
+                  <a class="govuk-button" href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
+                {% elif model.published %}
+                  <a class="govuk-button" href="{% url 'datasets:request_access' model.id %}">Request access</a>
+                {% endif %}
             {% endif %}
         </div>
     </div>

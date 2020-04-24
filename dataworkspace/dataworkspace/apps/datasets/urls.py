@@ -50,14 +50,4 @@ urlpatterns = [
         login_required(views.request_access_success_view),
         name='request_access_success',
     ),
-    path(
-        '<str:dataset_uuid>/request-visualisation-access',
-        login_required(views.request_visualisation_access_view),
-        name='request_visualisation_access',
-    ),
-    path(
-        '<str:dataset_uuid>/request-visualisation-access-success',
-        login_required(views.request_visualisation_access_success_view),
-        name='request_visualisation_access_success',
-    ),
 ]
