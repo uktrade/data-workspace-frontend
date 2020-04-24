@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - A zero-width space after an underscore in the visualisation datasets page to encourage line breaks in more readable places
 - Eligibility criteria to visualisation catalogue items.
 - Eligibility criteria to data vis UI catalogue page.
+- Create a Zendesk ticket when a user requests access to a visualisation
+- Send an email notification to visualisation contacts on access request
+- Pre-fill user email when giving access by following an email link
+- Send an email to the user when their access request has been granted
 
 ### Changed
 
