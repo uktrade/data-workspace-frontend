@@ -50,6 +50,8 @@ from dataworkspace.apps.datasets.models import (
     DataSetApplicationTemplatePermission,
     VisualisationCatalogueItem,
 )
+from dataworkspace.notify import decrypt_token
+from dataworkspace.zendesk import update_zendesk_ticket
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -481,16 +483,23 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
+    token = request.GET.get("token")
+    token_data = decrypt_token(token.encode('utf-8')) if token else {}
+
     if request.method == 'GET':
-        return visualisation_users_give_access_html_GET(request, gitlab_project)
+        return visualisation_users_give_access_html_GET(
+            request, gitlab_project, token_data
+        )
 
     if request.method == 'POST':
-        return visualisation_users_give_access_html_POST(request, gitlab_project)
+        return visualisation_users_give_access_html_POST(
+            request, gitlab_project, token_data
+        )
 
     return HttpResponse(status=405)
 
 
-def visualisation_users_give_access_html_GET(request, gitlab_project):
+def visualisation_users_give_access_html_GET(request, gitlab_project, token_data):
     branches = _visualisation_branches(gitlab_project)
     application_template = _application_template(gitlab_project)
 
@@ -500,11 +509,14 @@ def visualisation_users_give_access_html_GET(request, gitlab_project):
         gitlab_project,
         branches,
         current_menu_item='users-give-access',
-        template_specific_context={'application_template': application_template},
+        template_specific_context={
+            'application_template': application_template,
+            'email_address': token_data.get("email", ""),
+        },
     )
 
 
-def visualisation_users_give_access_html_POST(request, gitlab_project):
+def visualisation_users_give_access_html_POST(request, gitlab_project, token_data):
     branches = _visualisation_branches(gitlab_project)
     application_template = _application_template(gitlab_project)
 
@@ -558,6 +570,13 @@ def visualisation_users_give_access_html_POST(request, gitlab_project):
             )
     except IntegrityError:
         return error(f'{user.get_full_name()} already has access')
+
+    if email_address == token_data.get("email", "").strip().lower():
+        update_zendesk_ticket(
+            token_data["ticket"],
+            comment=f"Access granted by {request.user.email}",
+            status="solved",
+        )
 
     messages.success(
         request,

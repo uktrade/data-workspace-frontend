@@ -119,6 +119,26 @@ def create_zendesk_ticket(
     return ticket_audit.ticket.id
 
 
+def update_zendesk_ticket(ticket_id, comment=None, status=None):
+    client = Zenpy(
+        subdomain=settings.ZENDESK_SUBDOMAIN,
+        email=settings.ZENDESK_EMAIL,
+        token=settings.ZENDESK_TOKEN,
+    )
+
+    ticket = client.tickets(id=ticket_id)
+
+    if comment:
+        ticket.comment = Comment(body=comment, public=False)
+
+    if status:
+        ticket.status = status
+
+    client.tickets.update(ticket)
+
+    return ticket
+
+
 def create_support_request(user, email, message, tag=None, subject=None):
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,
