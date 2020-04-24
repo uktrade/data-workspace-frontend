@@ -62,6 +62,7 @@ from dataworkspace.apps.datasets.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.notify import generate_token, send_email
 from dataworkspace.zendesk import (
     create_zendesk_ticket,
     create_support_request,
@@ -442,6 +443,31 @@ If access has not been granted to the requestor within 5 working days, this will
         subject=f"Data visualisation access request received - {dataset.name}",
         tag='visualisation-access-request',
     )
+
+    give_access_url = request.build_absolute_uri(
+        reverse(
+            "visualisations:users-give-access",
+            args=[dataset.visualisation_template.gitlab_project_id],
+        )
+    )
+    give_access_token = generate_token(
+        {'email': request.user.email, 'ticket': ticket_reference}
+    ).decode('utf-8')
+
+    for contact in set(
+        [dataset.enquiries_contact.email, dataset.secondary_enquiries_contact.email]
+    ):
+        send_email(
+            settings.NOTIFY_VISUALISATION_ACCESS_REQUEST_TEMPLATE_ID,
+            contact,
+            personalisation={
+                "visualisation_name": dataset.name,
+                "visualisation_url": dataset_url,
+                "user_email": request.user.email,
+                "people_url": get_people_url(request.user.get_full_name()),
+                "give_access_url": f"{give_access_url}?token={give_access_token}",
+            },
+        )
 
     url = reverse('datasets:request_visualisation_access_success', args=[dataset_uuid])
     return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')

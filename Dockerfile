@@ -14,6 +14,8 @@ RUN \
 		build-base=0.5-r1 \
 		git=2.22.4-r0 \
 		python3-dev=3.7.5-r1 \
+		libffi-dev=3.2.1-r6 \
+		openssl-dev=1.1.1g-r0 \
 		linux-headers=4.19.36-r0 && \
 	apk add --no-cache \
 		nginx=1.16.1-r2 \
