@@ -1,0 +1,16 @@
+<div class="govuk-form-group">
+  <fieldset class="govuk-fieldset">
+    <legend class="govuk-fieldset__legend">
+      {{ widget.label }}
+    </legend>
+
+    <ul class="govuk-list govuk-list--bullet">
+      {% for widget in widget.subwidgets %}
+        <li>
+          <label class="govuk-visually-hidden" for="{{ widget.attrs.id }}">{{ widget.label }}</label>
+          {% include widget.template_name %}
+        </li>
+      {% endfor %}
+    </ul>
+  </fieldset>
+</div>

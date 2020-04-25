@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.forms import SplitArrayField, SplitArrayWidget
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
-from django.forms import Textarea, TextInput, ModelChoiceField, HiddenInput
+from django.forms import Textarea, TextInput, ModelChoiceField, HiddenInput, CharField
 
 from dataworkspace.apps.applications.models import VisualisationApproval
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
@@ -12,6 +13,34 @@ class _NiceEmailValidationModelChoiceField(ModelChoiceField):
     def clean(self, value):
         if value:
             EmailValidator(message=self.error_messages['invalid_email'])(value)
+        return super().clean(value)
+
+
+class BulletListSplitArrayWidget(SplitArrayWidget):
+    template_name = "partials/bullet_list_split_array_widget.html"
+
+    def __init__(self, label, input_prefix, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label = label
+        self.input_prefix = input_prefix
+
+    def get_context(self, name, value, attrs=None):
+        context = super().get_context(name, value, attrs)
+
+        context['widget']['label'] = self.label
+
+        for i, _ in enumerate(context['widget']['subwidgets']):
+            context['widget']['subwidgets'][i]['label'] = f"{self.input_prefix} #{i+1}"
+        return context
+
+
+class DWSplitArrayField(SplitArrayField):
+    def clean(self, value):
+        # Remove any blank entries from the middle of the list, then pad the end with blank values. The parent class
+        # errors if there are blank values in between two non-blank values, and we don't care about that. Just get
+        # rid of them and collapse down.
+        value = list(filter(lambda x: x, value))
+        value.extend([''] * (self.size - len(value)))
         return super().clean(value)
 
 
@@ -56,6 +85,19 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             "invalid_choice": "The information asset owner must have previously visited Data Workspace",
         },
     )
+    eligibility_criteria = DWSplitArrayField(
+        CharField(required=False),
+        widget=BulletListSplitArrayWidget(
+            label="Eligibility criteria",
+            input_prefix="Eligibility criterion",
+            widget=TextInput(attrs={"class": "govuk-input"}),
+            size=5,
+        ),
+        required=False,
+        size=5,
+        remove_trailing_nulls=True,
+        label="Eligibility criteria",
+    )
 
     class Meta:
         model = VisualisationCatalogueItem
@@ -70,6 +112,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             'retention_policy',
             'personal_data',
             'restrictions_on_usage',
+            'eligibility_criteria',
         ]
         widgets = {"retention_policy": Textarea, "restrictions_on_usage": Textarea}
 
