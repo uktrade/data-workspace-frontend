@@ -14,7 +14,7 @@ import boto3
 
 from django.core.cache import cache
 from django.http import StreamingHttpResponse
-from django.db import connections
+from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
@@ -503,7 +503,9 @@ def streaming_query_response(user_email, database, query, filename):
             'streaming_query_response end: %s %s %s', user_email, database, query
         )
 
-    response = StreamingHttpResponse(yield_db_rows(), content_type='text/csv')
+    response = StreamingHttpResponseWithoutDjangoDbConnection(
+        yield_db_rows(), content_type='text/csv'
+    )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     return response
@@ -601,3 +603,27 @@ def without_duplicates_preserve_order(seq):
     seen = set()
     seen_add = seen.add
     return [x for x in seq if not (x in seen or seen_add(x))]
+
+
+class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
+    # Causes Django to "close" the database connection of the default database
+    # on start rather than the end of the response. It's "close", since from
+    # Django's point of view its closed, but we we currently use
+    # django-db-geventpool which overrides "close" to replace the connection
+    # into a pool to be reused later
+    #
+    # Note, in unit tests the pytest.mark.django_db decorator wraps each test
+    # in a transaction that's rolled back at the end of the test. The check
+    # against in_atomic_block is to get those tests to pass. This is
+    # unfortunate, since they then don't test what happens in production when
+    # the connection is closed. However some of the integration tests, which
+    # run in a separate process, do test this behaviour. We could mock
+    # close_old_connections in each of those unit tests, but we'll get the
+    # same problem. Opting to change the production code to handle this case,
+    # since it's probably the right thing to not close the connection if in
+    # the middle of a transaction.
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not connection.in_atomic_block:
+            connection.close_if_unusable_or_obsolete()

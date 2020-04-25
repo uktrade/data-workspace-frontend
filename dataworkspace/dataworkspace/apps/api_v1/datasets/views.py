@@ -5,7 +5,10 @@ from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 
-from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.apps.core.utils import (
+    database_dsn,
+    StreamingHttpResponseWithoutDjangoDbConnection,
+)
 from dataworkspace.apps.datasets.model_utils import (
     get_linked_field_identifier_name,
     get_linked_field_display_name,
@@ -75,7 +78,7 @@ def _len_chunk_header(num_chunk_bytes):
     return len('%X\r\n' % num_chunk_bytes)
 
 
-def _get_streaming_http_response(request, primary_key, columns, rows):
+def _get_streaming_http_response(streaming_class, request, primary_key, columns, rows):
 
     # StreamingHttpResponse translates to HTTP/1.1 chunking performed by gunicorn. However,
     # we don't have any visibility on the actual bytes sent as part of the HTTP body, i.e. each
@@ -143,7 +146,7 @@ def _get_streaming_http_response(request, primary_key, columns, rows):
     num_bytes_sent_and_queued = 0
 
     base_url = request.build_absolute_uri().split('?')[0]
-    return StreamingHttpResponse(
+    return streaming_class(
         yield_data(columns, rows, base_url), content_type='application/json', status=200
     )
 
@@ -198,7 +201,13 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
         columns = _get_dataset_columns(connection, source_table)
         rows = _get_dataset_rows(connection, sql, query_args=search_after)
 
-    return _get_streaming_http_response(request, primary_key, columns, rows)
+    return _get_streaming_http_response(
+        StreamingHttpResponseWithoutDjangoDbConnection,
+        request,
+        primary_key,
+        columns,
+        rows,
+    )
 
 
 def reference_dataset_api_view_GET(request, group_slug, reference_slug):
@@ -241,4 +250,6 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
     field_names = ref_dataset.export_field_names
     field_names.sort()
     rows = get_rows(field_names)
-    return _get_streaming_http_response(request, primary_key.name, field_names, rows)
+    return _get_streaming_http_response(
+        StreamingHttpResponse, request, primary_key.name, field_names, rows
+    )

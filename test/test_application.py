@@ -10,6 +10,7 @@ import unittest
 
 import aiohttp
 from aiohttp import web
+import aiopg
 import aioredis
 import mohawk
 
@@ -1296,6 +1297,53 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(rows[1][1], 'test data 1')
         self.assertEqual(rows[2][1], 'test data 2')
         self.assertEqual(rows[20001][0], 'Number of rows: 20000')
+
+        async def fetch_num_connections():
+            pool = await aiopg.create_pool(
+                'dbname=dataworkspace user=postgres password=postgres '
+                'host=data-workspace-postgres'
+            )
+            async with pool.acquire() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(
+                        "SELECT numbackends FROM pg_stat_database WHERE datname='dataworkspace'"
+                    )
+                    return [row[0] for row in await cur.fetchall()][0]
+
+        # We ensure that multiple parallel downloads, that were not initiated
+        # in parallel, do not use another database connection to the main
+        # Django database
+        num_connections_1 = await fetch_num_connections()
+        response_1 = await session.request(
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+        )
+        num_connections_2 = await fetch_num_connections()
+        response_2 = await session.request(
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+        )
+        num_connections_3 = await fetch_num_connections()
+        response_3 = await session.request(
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+        )
+        num_connections_4 = await fetch_num_connections()
+
+        # We should only have two connections: one from the application,
+        # and one from the connection querying the number of connections
+        self.assertEqual(num_connections_1, 2)
+        self.assertEqual(num_connections_2, 2)
+        self.assertEqual(num_connections_3, 2)
+        self.assertEqual(num_connections_4, 2)
+
+        rows_1 = list(csv.reader(io.StringIO(await response_1.text())))
+        rows_2 = list(csv.reader(io.StringIO(await response_2.text())))
+        rows_3 = list(csv.reader(io.StringIO(await response_3.text())))
+
+        self.assertEqual(rows_1[20001][0], 'Number of rows: 20000')
+        self.assertEqual(rows_2[20001][0], 'Number of rows: 20000')
+        self.assertEqual(rows_3[20001][0], 'Number of rows: 20000')
 
     @async_test
     async def test_google_data_studio_download(self):
