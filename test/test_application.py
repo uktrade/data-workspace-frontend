@@ -832,7 +832,7 @@ class TestApplication(unittest.TestCase):
             received_status = response.status
             received_content = await response.json()
 
-        self.assertEqual(received_content, {'data': [1, 2]})
+        self.assertEqual(received_content, {'data': list(range(1, 20001))})
         self.assertEqual(received_status, 200)
 
     @async_test
@@ -1295,7 +1295,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(rows[0], ['id', 'data'])
         self.assertEqual(rows[1][1], 'test data 1')
         self.assertEqual(rows[2][1], 'test data 2')
-        self.assertEqual(rows[3][0], 'Number of rows: 2')
+        self.assertEqual(rows[20001][0], 'Number of rows: 20000')
 
     @async_test
     async def test_google_data_studio_download(self):
@@ -1457,6 +1457,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(content_json['schema'][0]['name'], 'data')
         self.assertEqual(content_json['rows'][0]['values'][0], 'test data 1')
         self.assertEqual(content_json['rows'][1]['values'][0], 'test data 2')
+        self.assertEqual(len(content_json['rows']), 20000)
 
         # Test pagination
         async with session.request(
@@ -1471,7 +1472,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 200)
         content_json_1 = json.loads(content)
-        self.assertEqual(len(content_json_1['rows']), 2)
+        self.assertEqual(len(content_json_1['rows']), 10)
         async with session.request(
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
@@ -1484,7 +1485,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 200)
         content_json_2 = json.loads(content)
-        self.assertEqual(len(content_json_2['rows']), 1)
+        self.assertEqual(len(content_json_2['rows']), 5)
         self.assertEqual(content_json_1['rows'][1:2], content_json_2['rows'][0:1])
 
         # Test $searchAfter

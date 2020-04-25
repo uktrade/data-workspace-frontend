@@ -8,7 +8,7 @@ CREATE DATABASE testdb2;
 CREATE TABLE test_dataset (id int primary key, data text);
 INSERT INTO test_dataset(id, data)
 SELECT i, concat('test data ', i::text)
-FROM generate_series(1, 2) AS t(i);
+FROM generate_series(1, 20000) AS t(i);
 
 \c testdb1;
 CREATE TABLE dataset_1 (id int primary key, data text);
