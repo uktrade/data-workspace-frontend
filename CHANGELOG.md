@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Slightly better handling of concurrent giving of visualisation access
 
+## 2020-04-25
+
+### Changed
+
+- Return database connections to the pool at the start of streaming responses that don't use them, as an attempt to address database connection usage
+
 ## 2020-04-24
 
 ### Added
