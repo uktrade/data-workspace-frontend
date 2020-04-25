@@ -1459,10 +1459,6 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(content_json['rows'][1]['values'][0], 'test data 2')
 
         # Test pagination
-        stdout, stderr, code = await create_many_users()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
-        self.assertEqual(code, 0)
         async with session.request(
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
@@ -2095,33 +2091,6 @@ async def give_user_visualisation_developer_perms():
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
-        """
-    ).encode('ascii')
-    give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
-        env=os.environ,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await give_perm.communicate(python_code)
-    code = await give_perm.wait()
-
-    return stdout, stderr, code
-
-
-async def create_many_users():
-    python_code = textwrap.dedent(
-        """\
-        from django.contrib.auth.models import (
-            User,
-        )
-        for i in range(0, 200):
-            User.objects.create(
-                id=i+100,
-                username='user_' + str(i) + '@example.com',
-                email='user_' + str(i) + '@example.com',
-            )
         """
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
