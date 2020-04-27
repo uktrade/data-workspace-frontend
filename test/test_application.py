@@ -510,6 +510,34 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
+        dataset_id_dataset_1 = '0dea6147-d355-4b6d-a140-0304ef9cfeca'
+        table_id = '39e3fa48-9352-471a-b278-3eca5ba92921'
+        stdout, stderr, code = await create_private_dataset(
+            'test_external_db',
+            'MASTER',
+            dataset_id_dataset_1,
+            'dataset_1',
+            table_id,
+            'dataset_1',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        dataset_id_dataset_2 = 'ccddcf9a-4997-4761-bd5a-06854d0a6483'
+        table_id = '426f6862-9880-4a1f-82a1-8496a5400820'
+        stdout, stderr, code = await create_private_dataset(
+            'test_external_db2',
+            'MASTER',
+            dataset_id_dataset_2,
+            'dataset_2',
+            table_id,
+            'dataset_2',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
         stdout, stderr, code = await create_visualisation_dataset(
             'testvisualisation-a', 3
         )
@@ -570,6 +598,13 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(gitlab_cleanup)
 
+        stdout, stderr, code = await give_visualisation_dataset_perms(
+            'testvisualisation-a', 'dataset_1'
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
         async with session.request(
             'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
         ) as response:
@@ -594,6 +629,27 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(
             content, '500 Internal Server Error\n\nServer got itself in trouble'
         )
+
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_2',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        self.assertEqual(received_status, 500)
+        self.assertEqual(
+            content, '500 Internal Server Error\n\nServer got itself in trouble'
+        )
+
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+        ) as response:
+            received_status = response.status
+            content = await response.json()
+
+        self.assertEqual(content, {'data': [1, 2]})
 
         # Stop the application
         async with session.request(
