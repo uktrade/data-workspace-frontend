@@ -431,6 +431,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
             None,
             {
                 'fields': [
+                    'visible',
                     'host_basename',
                     'nice_name',
                     'spawner',

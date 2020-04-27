@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Close database connection after each Celery task as attempt to address database connection usage/(leak?)
 - Smaller chance of parallel starts of the same application surfacing an error
 - Updated the text on the data vis ui approvals page to be more explicit around the requirements.
+- Publishing page for data vis UI.
 
 ## 2020-04-23
 

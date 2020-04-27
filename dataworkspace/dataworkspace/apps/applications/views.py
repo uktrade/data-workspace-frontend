@@ -18,7 +18,7 @@ from django.db import IntegrityError, transaction
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -146,11 +146,10 @@ def tools_html_GET(request):
                     'link': link(application_template),
                     'instance': application_instances.get(application_template, None),
                 }
-                for application_template in ApplicationTemplate.objects.all().order_by(
-                    'nice_name'
-                )
+                for application_template in ApplicationTemplate.objects.all()
+                .filter(visible=True, application_type='TOOL')
+                .order_by('nice_name')
                 for application_link in [link(application_template)]
-                if application_template.visible
             ],
             'appstream_url': settings.APPSTREAM_URL,
             'your_files_enabled': settings.YOUR_FILES_ENABLED,
@@ -454,7 +453,7 @@ def visualisation_users_with_access_html_POST(request, gitlab_project):
                 user_id=request.user.pk,
                 content_type_id=content_type_id,
                 object_id=user.id,
-                object_repr=force_text(user),
+                object_repr=force_str(user),
                 action_flag=CHANGE,
                 change_message=f'Removed visualisation {application_template} permission',
             )
@@ -551,7 +550,7 @@ def visualisation_users_give_access_html_POST(request, gitlab_project):
             user_id=request.user.pk,
             content_type_id=content_type_id,
             object_id=user.id,
-            object_repr=force_text(user),
+            object_repr=force_str(user),
             action_flag=CHANGE,
             change_message=f'Added visualisation {application_template} permission',
         )
@@ -902,4 +901,215 @@ def visualisation_datasets_html_GET(request, gitlab_project):
         current_menu_item='datasets',
         template_specific_context={'datasets': datasets},
         status=200,
+    )
+
+
+def visualisation_publish_html_view(request, gitlab_project_id):
+    if not request.user.has_perm('applications.develop_visualisations'):
+        raise PermissionDenied()
+
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        raise PermissionDenied()
+
+    if request.method == 'GET':
+        return visualisation_publish_html_GET(request, gitlab_project)
+
+    if request.method == 'POST':
+        return visualisation_publish_html_POST(request, gitlab_project)
+
+    return HttpResponse(status=405)
+
+
+def _visualisation_is_approved(application_template):
+    return (
+        VisualisationApproval.objects.filter(
+            visualisation=application_template, approved=True
+        ).count()
+        >= 2
+    )
+
+
+def _visualisation_is_published(application_template):
+    return application_template.visible
+
+
+def _visualisation_catalogue_item_is_complete(catalogue_item):
+    return all(
+        [
+            catalogue_item.visualisation_template,
+            catalogue_item.name,
+            catalogue_item.slug,
+            catalogue_item.short_description,
+            catalogue_item.description,
+            catalogue_item.enquiries_contact,
+            catalogue_item.secondary_enquiries_contact,
+            catalogue_item.information_asset_owner,
+            catalogue_item.information_asset_manager,
+            catalogue_item.licence,
+            catalogue_item.retention_policy,
+            catalogue_item.restrictions_on_usage,
+            catalogue_item.personal_data,
+        ]
+    )
+
+
+def _render_visualisation_publish_html(
+    request, gitlab_project, catalogue_item=None, errors=None
+):
+    if not catalogue_item:
+        catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
+            gitlab_project
+        )
+    application_template = catalogue_item.visualisation_template
+    visualisation_approved = _visualisation_is_approved(application_template)
+    visualisation_published = _visualisation_is_published(application_template)
+    visualisation_domain = (
+        f"{application_template.host_basename}.{settings.APPLICATION_ROOT_DOMAIN}"
+    )
+    catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
+    return _render_visualisation(
+        request,
+        'visualisation_publish.html',
+        gitlab_project,
+        _visualisation_branches(gitlab_project),
+        current_menu_item='publish',
+        template_specific_context={
+            'visualisation_domain': visualisation_domain,
+            'visualisation_link': f"{request.scheme}://{visualisation_domain}",
+            "catalogue_complete": catalogue_item_complete,
+            "catalogue_published": catalogue_item.published,
+            "visualisation_published": visualisation_published,
+            "approved": visualisation_approved,
+            "errors": errors,
+        },
+    )
+
+
+def visualisation_publish_html_GET(request, gitlab_project):
+    return _render_visualisation_publish_html(request, gitlab_project)
+
+
+@transaction.atomic
+def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, publish):
+    visualisation_approved = _visualisation_is_approved(
+        catalogue_item.visualisation_template
+    )
+    visualisation_published = _visualisation_is_published(
+        catalogue_item.visualisation_template
+    )
+    catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
+    if publish is False or (
+        visualisation_approved and visualisation_published and catalogue_item_complete
+    ):
+        catalogue_item.published = publish
+        catalogue_item.save()
+
+        LogEntry.objects.log_action(
+            user_id=request.user.pk,
+            content_type_id=ContentType.objects.get_for_model(get_user_model()).pk,
+            object_id=catalogue_item.pk,
+            object_repr=force_str(catalogue_item),
+            action_flag=CHANGE,
+            change_message=f"Published {catalogue_item}"
+            if publish
+            else f"Unpublished {catalogue_item}",
+        )
+
+        return redirect(request.path)
+
+    if visualisation_approved is False:
+        error = (
+            reverse("visualisations:approvals", args=(gitlab_project['id'],)),
+            "The visualisation must be approved by two developers before it can be published.",
+        )
+
+    elif visualisation_published is False:
+        error = (
+            request.path,
+            "The visualisation must be published before you can add it to the catalogue.",
+        )
+
+    elif catalogue_item_complete is False:
+        error = (
+            reverse("visualisations:catalogue-item", args=(gitlab_project['id'],)),
+            "You must complete all fields of the catalogue item before it can be published.",
+        )
+
+    else:
+        raise Exception("Cannot publish to catalogue - not sure why")
+
+    return _render_visualisation_publish_html(
+        request, gitlab_project, catalogue_item=catalogue_item, errors=[error]
+    )
+
+
+@transaction.atomic
+def _set_published_on_visualisation(
+    request, gitlab_project, application_template, publish
+):
+    visualisation_approved = _visualisation_is_approved(application_template)
+    if publish is False or visualisation_approved:
+        application_template.visible = publish
+        application_template.save()
+
+        LogEntry.objects.log_action(
+            user_id=request.user.pk,
+            content_type_id=ContentType.objects.get_for_model(get_user_model()).pk,
+            object_id=application_template.pk,
+            object_repr=force_str(application_template),
+            action_flag=CHANGE,
+            change_message=f"Published {application_template}"
+            if publish
+            else f"Unpublished {application_template}",
+        )
+
+        return redirect(request.path)
+
+    if visualisation_approved is False:
+        error = (
+            reverse("visualisations:approvals", args=(gitlab_project['id'],)),
+            "The visualisation must be approved by two developers before it can be published.",
+        )
+
+    else:
+        raise Exception("Cannot publish visualisation - not sure why")
+
+    return _render_visualisation_publish_html(request, gitlab_project, errors=[error])
+
+
+def visualisation_publish_html_POST(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    action = request.POST.get('action', '').lower()
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
+        gitlab_project
+    )
+
+    if action == 'publish-catalogue':
+        return _set_published_on_catalogue_item(
+            request, gitlab_project, catalogue_item, publish=True
+        )
+
+    elif action == 'unpublish-catalogue':
+        return _set_published_on_catalogue_item(
+            request, gitlab_project, catalogue_item, publish=False
+        )
+
+    elif action == 'publish-visualisation':
+        return _set_published_on_visualisation(
+            request, gitlab_project, application_template, publish=True
+        )
+
+    elif action == 'unpublish-visualisation':
+        return _set_published_on_visualisation(
+            request, gitlab_project, application_template, publish=False
+        )
+
+    return HttpResponse(
+        status=400,
+        content=f'Invalid action: {action} is not one of [publish-catalogue|unpublish-catalogue|publish-visualisation]'.encode(
+            'utf8'
+        ),
+        content_type='utf8',
     )

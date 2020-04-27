@@ -19,7 +19,14 @@ class ApplicationTemplate(TimeStampedModel):
         help_text='Used in URLs: only lowercase letters allowed',
         unique=False,
     )
-    visible = models.BooleanField(default=True, null=False)
+    visible = models.BooleanField(
+        default=True,
+        null=False,
+        help_text=(
+            "For tools, whether this appears on the Tools page. "
+            "For visualisations, whether it's accessible at its production URL."
+        ),
+    )
 
     # We expect lots of visualisations with fixed hosts, so we use a undex to ensure
     # that lookups from hostname to application templates are fast...
@@ -104,7 +111,6 @@ class VisualisationTemplate(ApplicationTemplate):
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
-        self.visible = False
         self.application_type = 'VISUALISATION'
 
         super(VisualisationTemplate, self).save(

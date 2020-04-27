@@ -229,7 +229,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
     @async_test
-    async def test_visualisation_shows_content_if_authorized(self):
+    async def test_visualisation_shows_content_if_authorized_and_published(self):
         await flush_database()
         await flush_redis()
 
@@ -277,7 +277,48 @@ class TestApplication(unittest.TestCase):
         self.assertIn('You are not allowed to access this page', content)
         self.assertEqual(response.status, 403)
 
+        # Ensure that the user can't see a visualisation which is published if they don't have authorization
+        stdout, stderr, code = await toggle_visualisation_visibility(
+            'testvisualisation', visible=True
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't have access to the application
+        async with session.request(
+            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('You are not allowed to access this page', content)
+        self.assertEqual(response.status, 403)
+
+        # Ensure that the user can't see a visualisation which is unpublished, even if if they have authorization
         stdout, stderr, code = await give_user_visualisation_perms('testvisualisation')
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+        stdout, stderr, code = await toggle_visualisation_visibility(
+            'testvisualisation', visible=False
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't have access to the application
+        async with session.request(
+            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('You are not allowed to access this page', content)
+        self.assertEqual(response.status, 403)
+
+        # Finally, if the visualisation is published *and* they have authorization, they can see it.
+        stdout, stderr, code = await toggle_visualisation_visibility(
+            'testvisualisation', visible=True
+        )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -2014,7 +2055,34 @@ async def create_visualisation_echo(name):
             spawner_time=60,
             user_access_type="REQUIRES_AUTHORIZATION",
             gitlab_project_id=3,
+            visible=True
         )
+        """
+    ).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def toggle_visualisation_visibility(name, visible=True):
+    python_code = textwrap.dedent(
+        f"""\
+from dataworkspace.apps.applications.models import (
+    VisualisationTemplate,
+)
+template = VisualisationTemplate.objects.get(
+    host_basename="{name}"
+)
+template.visible = {visible}
+template.save()
         """
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
