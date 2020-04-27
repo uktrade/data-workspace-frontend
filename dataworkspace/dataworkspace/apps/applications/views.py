@@ -800,6 +800,7 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
         gitlab_project
     )
+    user_access_type = catalogue_item.visualisation_template.user_access_type
     form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
     template_form = VisualisationsUITemplate(
         request.POST, instance=catalogue_item.visualisation_template
@@ -808,6 +809,23 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
         with transaction.atomic():
             form.save()
             template_form.save()
+            if (
+                user_access_type
+                != catalogue_item.visualisation_template.user_access_type
+            ):
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=ContentType.objects.get_for_model(
+                        get_user_model()
+                    ).pk,
+                    object_id=catalogue_item.visualisation_template.pk,
+                    object_repr=force_str(catalogue_item.visualisation_template),
+                    action_flag=CHANGE,
+                    change_message=(
+                        f"Changed user_access_type on {catalogue_item.visualisation_template} "
+                        f"to: {catalogue_item.visualisation_template.user_access_type}"
+                    ),
+                )
         return redirect(
             'visualisations:catalogue-item', gitlab_project_id=gitlab_project['id']
         )

@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from unittest import mock
 
 import pytest
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import Client
@@ -75,6 +76,7 @@ class TestDataVisualisationUICataloguePage:
     def test_can_set_user_access_type(
         self, staff_client, start_type, post_type, expected_type
     ):
+        log_count = LogEntry.objects.count()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
@@ -98,6 +100,7 @@ class TestDataVisualisationUICataloguePage:
         visualisation.refresh_from_db()
         assert response.status_code == 200
         assert visualisation.visualisation_template.user_access_type == expected_type
+        assert LogEntry.objects.count() == log_count + 1
 
     def test_bad_post_data_no_short_description(self, staff_client):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
