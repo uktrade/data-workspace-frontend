@@ -500,6 +500,7 @@ class TestApplication(unittest.TestCase):
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
         stdout, stderr, code = await create_private_dataset(
             'my_database',
+            'MASTER',
             dataset_id_test_dataset,
             'test_dataset',
             table_id,
@@ -1087,6 +1088,7 @@ class TestApplication(unittest.TestCase):
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
         stdout, stderr, code = await create_private_dataset(
             'my_database',
+            'DATACUT',
             dataset_id_test_dataset,
             'test_dataset',
             table_id,
@@ -1171,7 +1173,12 @@ class TestApplication(unittest.TestCase):
         dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
         stdout, stderr, code = await create_private_dataset(
-            'my_database', dataset_id, 'test_dataset', table_id, 'test_dataset'
+            'my_database',
+            'MASTER',
+            dataset_id,
+            'test_dataset',
+            table_id,
+            'test_dataset',
         )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
@@ -1386,7 +1393,12 @@ class TestApplication(unittest.TestCase):
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
         url = f'http://dataworkspace.test:8000/api/v1/dataset/{dataset_id}/{table_id}'
         stdout, stderr, code = await create_private_dataset(
-            'my_database', dataset_id, 'test_dataset', table_id, 'test_dataset'
+            'my_database',
+            'MASTER',
+            dataset_id,
+            'test_dataset',
+            table_id,
+            'test_dataset',
         )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
@@ -1969,7 +1981,7 @@ async def create_many_users():
 
 
 async def create_private_dataset(
-    database, dataset_id, dataset_name, table_id, table_name
+    database, dataset_type, dataset_id, dataset_name, table_id, table_name
 ):
     python_code = textwrap.dedent(
         f"""\
@@ -1979,6 +1991,7 @@ async def create_private_dataset(
             SourceTable,
             DatasetReferenceCode,
         )
+        from dataworkspace.apps.datasets.constants import DataSetType
         reference_code, _ = DatasetReferenceCode.objects.get_or_create(code='TEST')
         dataset = DataSet.objects.create(
             name="{dataset_name}",
@@ -1988,6 +2001,7 @@ async def create_private_dataset(
             id="{dataset_id}",
             published=True,
             reference_code=reference_code,
+            type=DataSetType.{dataset_type}.value,
         )
         SourceTable.objects.create(
             id="{table_id}",
