@@ -99,8 +99,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('Test Application is loading...', application_content_2)
 
-        # There are forced sleeps in starting a process
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+        )
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -210,7 +211,10 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
 
         self.assertIn('Test Application is loading...', content)
-        await asyncio.sleep(10)
+
+        await until_non_202(
+            session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+        )
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -330,7 +334,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('testvisualisation is loading...', application_content_1)
 
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testvisualisation.dataworkspace.test:8000/'
+        )
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -436,7 +442,9 @@ class TestApplication(unittest.TestCase):
         self.assertIn('testvisualisation [58d9e87e]', application_content_1)
         self.assertIn('is loading...', application_content_1)
 
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
+        )
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -568,7 +576,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('testvisualisation-a is loading...', application_content_1)
 
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testvisualisation-a.dataworkspace.test:8000/'
+        )
 
         async with session.request(
             'GET',
@@ -653,7 +663,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('testvisualisation-b is loading...', application_content_2)
 
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testvisualisation-b.dataworkspace.test:8000/'
+        )
 
         async with session.request(
             'GET',
@@ -722,8 +734,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('Test Application is loading...', application_content_2)
 
-        # There are forced sleeps in starting a process
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+        )
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -1807,6 +1820,16 @@ async def until_succeeds(url):
                 await asyncio.sleep(0.1)
             else:
                 break
+
+
+async def until_non_202(session, url):
+    for _ in range(0, 600):
+        async with session.request('GET', url) as response:
+            if response.status != 202:
+                return
+        await asyncio.sleep(0.1)
+
+    raise Exception()
 
 
 async def flush_database():
