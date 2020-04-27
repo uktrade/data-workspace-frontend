@@ -538,22 +538,21 @@ def visualisation_users_give_access_html_POST(request, gitlab_project):
 
     content_type_id = ContentType.objects.get_for_model(user).pk
 
-    with transaction.atomic():
-        try:
+    try:
+        with transaction.atomic():
             ApplicationTemplateUserPermission.objects.create(
                 user=user, application_template=application_template
             )
-        except IntegrityError:
-            return error(f'{user.get_full_name()} already has access')
-
-        LogEntry.objects.log_action(
-            user_id=request.user.pk,
-            content_type_id=content_type_id,
-            object_id=user.id,
-            object_repr=force_str(user),
-            action_flag=CHANGE,
-            change_message=f'Added visualisation {application_template} permission',
-        )
+            LogEntry.objects.log_action(
+                user_id=request.user.pk,
+                content_type_id=content_type_id,
+                object_id=user.id,
+                object_repr=force_str(user),
+                action_flag=CHANGE,
+                change_message=f'Added visualisation {application_template} permission',
+            )
+    except IntegrityError:
+        return error(f'{user.get_full_name()} already has access')
 
     messages.success(
         request,
