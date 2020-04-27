@@ -61,6 +61,44 @@ class TestDataVisualisationUICataloguePage:
         assert response.status_code == 200
         assert visualisation.short_description == "summary"
 
+    @pytest.mark.parametrize(
+        "start_type, post_type, expected_type",
+        (
+            ("REQUIRES_AUTHORIZATION", "", "REQUIRES_AUTHENTICATION"),
+            (
+                "REQUIRES_AUTHENTICATION",
+                "REQUIRES_AUTHORIZATION",
+                "REQUIRES_AUTHORIZATION",
+            ),
+        ),
+    )
+    def test_can_set_user_access_type(
+        self, staff_client, start_type, post_type, expected_type
+    ):
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            visualisation_template__gitlab_project_id=1,
+            visualisation_template__user_access_type=start_type,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            response = staff_client.post(
+                reverse(
+                    'visualisations:catalogue-item',
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+                {"short_description": "summary", "user_access_type": post_type},
+                follow=True,
+            )
+
+        visualisation.refresh_from_db()
+        assert response.status_code == 200
+        assert visualisation.visualisation_template.user_access_type == expected_type
+
     def test_bad_post_data_no_short_description(self, staff_client):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description='old',

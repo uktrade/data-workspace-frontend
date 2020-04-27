@@ -49,6 +49,7 @@
   {% include "partials/govuk_basic_form_field.html" with field=form.retention_policy %}
   {% include "partials/govuk_basic_form_field.html" with field=form.personal_data %}
   {% include "partials/govuk_basic_form_field.html" with field=form.restrictions_on_usage %}
+  {% include "partials/govuk_single_checkbox_field.html" with field=template_form.user_access_type %}
 
   {{ form.eligibility_criteria }}
 

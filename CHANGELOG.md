@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Automatically lowercase emails in data vis UI catalogue page before searching db.
 
+## 2020-04-27
+
+### Added
+
+- User access type checkbox to data vis UI catalogue page.
+
 ## 2020-04-26
 
 ### Changed

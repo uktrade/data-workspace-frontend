@@ -26,6 +26,7 @@ from dataworkspace.apps.api_v1.views import (
 from dataworkspace.apps.applications.forms import (
     VisualisationsUICatalogueItemForm,
     VisualisationApprovalForm,
+    VisualisationsUITemplate,
 )
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
@@ -766,8 +767,12 @@ def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project):
 
 
 def visualisation_catalogue_item_html_GET(request, gitlab_project):
-    form = VisualisationsUICatalogueItemForm(
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
+        gitlab_project
+    )
+    form = VisualisationsUICatalogueItemForm(instance=catalogue_item)
+    template_form = VisualisationsUITemplate(
+        instance=catalogue_item.visualisation_template
     )
 
     # We don't want client-side validation on this field, so we remove it - but only for the GET request.
@@ -779,23 +784,30 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
         gitlab_project,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
-        template_specific_context={'form': form},
+        template_specific_context={'form': form, 'template_form': template_form},
     )
 
 
 def visualisation_catalogue_item_html_POST(request, gitlab_project):
-    form = VisualisationsUICatalogueItemForm(
-        request.POST,
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project),
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
+        gitlab_project
     )
-    if form.is_valid():
-        form.save()
+    form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
+    template_form = VisualisationsUITemplate(
+        request.POST, instance=catalogue_item.visualisation_template
+    )
+    if form.is_valid() and template_form.is_valid():
+        with transaction.atomic():
+            form.save()
+            template_form.save()
         return redirect(
             'visualisations:catalogue-item', gitlab_project_id=gitlab_project['id']
         )
 
     form_errors = [
         (field.id_for_label, field.errors[0]) for field in form if field.errors
+    ] + [
+        (field.id_for_label, field.errors[0]) for field in template_form if field.errors
     ]
 
     return _render_visualisation(
@@ -804,7 +816,11 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
         gitlab_project,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
-        template_specific_context={"form": form, "form_errors": form_errors},
+        template_specific_context={
+            "form": form,
+            "template_form": template_form,
+            "form_errors": form_errors,
+        },
         status=400 if form_errors else 200,
     )
 
