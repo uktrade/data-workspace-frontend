@@ -84,9 +84,25 @@
         display: block;
         font-weight: normal;
     }
-    .visualisation-dataset-schema-table {
-        display: block;
-        font-weight: normal;
+    .visualisation-dataset__item {
+        border-bottom: 1px solid #b1b4b6;
+    }
+    .visualisation-dataset__label {
+        padding-top: 0;
+        padding-bottom: 0;
+        font-weight: bold;
+    }
+    /* The default GDS styles the labels of disable elements as grey using
+       opacity. However, this looks a bit _too_ disabled in the case of
+       selected but disabled items. So we override to only disable the
+       checkbox, which is made of the :before and :after pseudo elements of
+       the label */
+    .govuk-checkboxes__input:disabled + .visualisation-dataset__label {
+        opacity: 1.0;
+    }
+    .govuk-checkboxes__input:disabled + .visualisation-dataset__label:before,
+    .govuk-checkboxes__input:disabled + .visualisation-dataset__label:after {
+        opacity: 0.5;
     }
     .list-item-with-prefix::before {
         content: "—";

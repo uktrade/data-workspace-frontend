@@ -38,13 +38,18 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     ApplicationTemplateUserPermission,
     VisualisationApproval,
+    VisualisationTemplate,
 )
 from dataworkspace.apps.applications.utils import application_options
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
-from dataworkspace.apps.core.utils import source_tables_for_app
+from dataworkspace.apps.core.utils import source_tables_for_app, source_tables_for_user
 from dataworkspace.apps.core.views import public_error_500_html_view
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import (
+    MasterDataset,
+    DataSetApplicationTemplatePermission,
+    VisualisationCatalogueItem,
+)
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -869,12 +874,175 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     if request.method == 'GET':
         return visualisation_datasets_html_GET(request, gitlab_project)
 
+    if request.method == 'POST':
+        return visualisation_datasets_html_POST(request, gitlab_project)
+
     return HttpResponse(status=405)
 
 
 def visualisation_datasets_html_GET(request, gitlab_project):
     application_template = _application_template(gitlab_project)
-    source_tables = source_tables_for_app(application_template)
+    datasets = _datasets(request.user, application_template)
+
+    return _render_visualisation(
+        request,
+        'visualisation_datasets.html',
+        gitlab_project,
+        _visualisation_branches(gitlab_project),
+        current_menu_item='datasets',
+        template_specific_context={'datasets': datasets},
+        status=200,
+    )
+
+
+def visualisation_datasets_html_POST(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    datasets = _datasets(request.user, application_template)
+
+    # Sets for O(1) lookup, and lists for deterministic looping
+
+    previously_selected_dataset_ids = [
+        str(dataset['id']) for dataset, _ in datasets if dataset['selected']
+    ]
+    previously_selected_dataset_ids_set = set(previously_selected_dataset_ids)
+    selectable_dataset_ids_set = {
+        str(dataset['id']) for dataset, _ in datasets if dataset['selectable']
+    }
+
+    selected_dataset_ids = request.POST.getlist('dataset')
+    selected_dataset_ids_set = set(selected_dataset_ids)
+
+    datasets_ids_to_give_access_to = [
+        dataset_id
+        for dataset_id in selected_dataset_ids
+        if dataset_id in selectable_dataset_ids_set
+        and dataset_id not in previously_selected_dataset_ids_set
+    ]
+    datasets_ids_to_remove_access_from = [
+        dataset_id
+        for dataset_id in previously_selected_dataset_ids
+        if dataset_id in selectable_dataset_ids_set
+        and dataset_id not in selected_dataset_ids_set
+    ]
+
+    visualisation_template_content_type_id = ContentType.objects.get_for_model(
+        VisualisationTemplate, for_concrete_model=False
+    ).pk
+    dataset_content_type_id = ContentType.objects.get_for_model(
+        MasterDataset, for_concrete_model=False
+    ).pk
+
+    # We are happy with parallel requests modifying permissions without error,
+    # so we eat IntegrityError and DoesNotExist.
+    #
+    # We can also assume every dataset is a DataSet and not a ReferenceDataset,
+    # since ReferenceDatasets are not selectable
+
+    for dataset_id in datasets_ids_to_give_access_to:
+        dataset = MasterDataset.objects.get(id=dataset_id)
+
+        try:
+            with transaction.atomic():
+                DataSetApplicationTemplatePermission.objects.create(
+                    dataset=dataset, application_template=application_template
+                )
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=visualisation_template_content_type_id,
+                    object_id=application_template.id,
+                    object_repr=force_str(application_template),
+                    action_flag=CHANGE,
+                    change_message=f'Gave access to dataset {dataset} '
+                    f'({dataset.id}) using the visualisation UI',
+                )
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=dataset_content_type_id,
+                    object_id=dataset.id,
+                    object_repr=force_str(dataset),
+                    action_flag=CHANGE,
+                    change_message=f'Gave access from {application_template} '
+                    f'({application_template.id}) using the visualisation UI',
+                )
+        except IntegrityError:
+            pass
+
+    for dataset_id in datasets_ids_to_remove_access_from:
+        dataset = MasterDataset.objects.get(id=dataset_id)
+
+        try:
+            with transaction.atomic():
+                DataSetApplicationTemplatePermission.objects.get(
+                    dataset=dataset, application_template=application_template
+                ).delete()
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=visualisation_template_content_type_id,
+                    object_id=application_template.id,
+                    object_repr=force_str(application_template),
+                    action_flag=CHANGE,
+                    change_message=f'Removed access to the dataset {dataset} '
+                    f'({dataset.id}) using the visualisation UI',
+                )
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=dataset_content_type_id,
+                    object_id=dataset.id,
+                    object_repr=force_str(dataset),
+                    action_flag=CHANGE,
+                    change_message=f'Removed access from {application_template} '
+                    f'({application_template.id}) using the visualisation UI',
+                )
+        except DataSetApplicationTemplatePermission.DoesNotExist:
+            pass
+
+    messages.success(request, 'Saved datasets access')
+
+    return redirect('visualisations:datasets', gitlab_project_id=gitlab_project['id'])
+
+
+def _datasets(user, application_template):
+    # The interface must:
+    # - show the datasets that the application already has access to,
+    # - show the datasets that the user has access to,
+    # - not duplicate datasets that are both of the above, and
+    # - allow selection or unselection of only the datasets the user has
+    #   access to that are also REQUIRES_AUTHORIZATION.
+    # This means the user won't be able to unselect datasets that the
+    # application already has access to, but the users doesn't. This is
+    # deliberate: if they could unselect such datasets, they wouldn't be able
+    # to reverse the change, which may need urgent contact with support to
+    # restore access
+
+    source_tables_user = source_tables_for_user(user)
+    source_tables_app = source_tables_for_app(application_template)
+
+    selectable_dataset_ids = set(
+        source_table['dataset']['id']
+        for source_table in source_tables_user
+        if source_table['dataset']['user_access_type'] == 'REQUIRES_AUTHORIZATION'
+    )
+
+    selected_dataset_ids = set(
+        source_table['dataset']['id'] for source_table in source_tables_app
+    )
+
+    source_tables_without_select_info = _without_duplicates_preserve_order(
+        source_tables_user + source_tables_app,
+        key=lambda x: (x['dataset']['id'], x['schema'], x['table']),
+    )
+
+    source_tables = [
+        {
+            'dataset': {
+                'selectable': source_table['dataset']['id'] in selectable_dataset_ids,
+                'selected': source_table['dataset']['id'] in selected_dataset_ids,
+                **source_table['dataset'],
+            },
+            **{key: value for key, value in source_table.items() if key != 'dataset'},
+        }
+        for source_table in source_tables_without_select_info
+    ]
 
     tables_sorted_by_dataset = sorted(
         [table for table in source_tables],
@@ -886,22 +1054,12 @@ def visualisation_datasets_html_GET(request, gitlab_project):
         ),
     )
 
-    datasets = [
+    return [
         (dataset, list(tables))
         for dataset, tables in itertools.groupby(
             tables_sorted_by_dataset, lambda x: x['dataset']
         )
     ]
-
-    return _render_visualisation(
-        request,
-        'visualisation_datasets.html',
-        gitlab_project,
-        _visualisation_branches(gitlab_project),
-        current_menu_item='datasets',
-        template_specific_context={'datasets': datasets},
-        status=200,
-    )
 
 
 def visualisation_publish_html_view(request, gitlab_project_id):
@@ -1113,3 +1271,10 @@ def visualisation_publish_html_POST(request, gitlab_project):
         ),
         content_type='utf8',
     )
+
+
+def _without_duplicates_preserve_order(seq, key):
+    # Based on https://stackoverflow.com/a/480227/1319998, but with a key to
+    # base uniqueness on
+    seen = set()
+    return [x for x in seq if not (key(x) in seen or seen.add(key(x)))]

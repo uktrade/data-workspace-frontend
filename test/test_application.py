@@ -3,6 +3,7 @@ import csv
 import io
 import json
 import os
+import re
 import signal
 import textwrap
 import unittest
@@ -598,12 +599,49 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(gitlab_cleanup)
 
-        stdout, stderr, code = await give_visualisation_dataset_perms(
-            'testvisualisation-a', 'dataset_1'
-        )
+        stdout, stderr, code = await give_user_dataset_perms('dataset_1')
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(403, status)
+
+        await give_user_visualisation_developer_perms()
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        self.assertEqual(received_status, 200)
+        csrf_token = re.match(
+            r'.*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*',
+            content,
+            flags=re.DOTALL,
+        )[1]
+
+        # The user only has access dataset_2, not dataset_1: we test that
+        # a user cannot add access to a dataset they don't have access to
+        async with session.request(
+            'POST',
+            'http://dataworkspace.test:8000/visualisations/3/datasets',
+            data=(
+                ('dataset', dataset_id_dataset_2),
+                ('dataset', dataset_id_dataset_1),
+                ('csrfmiddlewaretoken', csrf_token),
+            ),
+        ) as response:
+            received_status = response.status
+            await response.text()
+
+        self.assertEqual(received_status, 200)
 
         async with session.request(
             'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
@@ -632,7 +670,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_2',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
         ) as response:
             received_status = response.status
             content = await response.text()
@@ -665,15 +703,78 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertIn('Sorry, there is a problem with the service', content)
 
+        # Give the visualisation permission to a dataset that the user
+        # doesn't have access to.
+        stdout, stderr, code = await give_visualisation_dataset_perms(
+            'testvisualisation-a', 'dataset_2'
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
         async with session.request(
             'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
         ) as response:
-            status = response.status
+            received_status = response.status
             content = await response.text()
 
-        self.assertEqual(403, status)
+        self.assertEqual(received_status, 200)
+        csrf_token = re.match(
+            r'.*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*',
+            content,
+            flags=re.DOTALL,
+        )[1]
 
-        await give_user_visualisation_developer_perms()
+        # No datasets posted, i.e. attempting to removing access from all datasets
+        async with session.request(
+            'POST',
+            'http://dataworkspace.test:8000/visualisations/3/datasets',
+            data=(('csrfmiddlewaretoken', csrf_token),),
+        ) as response:
+            received_status = response.status
+            await response.text()
+
+        async with session.request(
+            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn('testvisualisation-a is loading...', application_content_1)
+
+        await until_non_202(
+            session, 'http://testvisualisation-a.dataworkspace.test:8000/'
+        )
+
+        # The application does have access to the dataset that the user does
+        # not have access to, even though user tried to remove it
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
+        ) as response:
+            received_status = response.status
+            content = await response.json()
+
+        self.assertEqual(content, {'data': [1, 2]})
+
+        # The application now does not have access to the dataset that the
+        # user removed
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        self.assertEqual(received_status, 500)
+        self.assertEqual(
+            content, '500 Internal Server Error\n\nServer got itself in trouble'
+        )
+
+        # Stop the application
+        async with session.request(
+            'POST', 'http://testvisualisation-a.dataworkspace.test:8000/stop'
+        ) as response:
+            await response.text()
 
         stdout, stderr, code = await create_visualisation_dataset(
             'testvisualisation-b', 4
