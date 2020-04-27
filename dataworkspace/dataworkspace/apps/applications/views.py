@@ -50,7 +50,7 @@ from dataworkspace.apps.datasets.models import (
     DataSetApplicationTemplatePermission,
     VisualisationCatalogueItem,
 )
-from dataworkspace.notify import decrypt_token
+from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
 
 TOOL_LOADING_MESSAGES = [
@@ -576,6 +576,20 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
             token_data["ticket"],
             comment=f"Access granted by {request.user.email}",
             status="solved",
+        )
+
+    catalogue_item = VisualisationCatalogueItem.objects.get(
+        visualisation_template=application_template
+    )
+
+    if catalogue_item.published:
+        send_email(
+            settings.NOTIFY_VISUALISATION_ACCESS_GRANTED_TEMPLATE_ID,
+            email_address,
+            personalisation={
+                "visualisation_name": catalogue_item.name,
+                "enquiries_contact_email": catalogue_item.enquiries_contact.email,
+            },
         )
 
     messages.success(
