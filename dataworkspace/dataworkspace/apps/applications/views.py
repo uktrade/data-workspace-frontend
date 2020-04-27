@@ -347,6 +347,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
         request,
         'visualisation_branch.html',
         gitlab_project,
+        application_template,
         branches,
         current_menu_item='branches',
         template_specific_context={
@@ -428,6 +429,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
         request,
         'visualisation_users_with_access.html',
         gitlab_project,
+        application_template,
         branches,
         current_menu_item='users-with-access',
         template_specific_context={
@@ -508,6 +510,7 @@ def visualisation_users_give_access_html_GET(request, gitlab_project, token_data
         request,
         'visualisation_users_give_access.html',
         gitlab_project,
+        application_template,
         branches,
         current_menu_item='users-give-access',
         template_specific_context={
@@ -528,6 +531,7 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
             request,
             'visualisation_users_give_access.html',
             gitlab_project,
+            application_template,
             branches,
             current_menu_item='users-give-access',
             template_specific_context={
@@ -712,6 +716,7 @@ def _render_visualisation(
     request,
     template,
     gitlab_project,
+    application_template,
     branches,
     current_menu_item,
     template_specific_context,
@@ -725,6 +730,8 @@ def _render_visualisation(
         template,
         {
             'gitlab_project': gitlab_project,
+            'show_users_section': application_template.user_access_type
+            == 'REQUIRES_AUTHORIZATION',
             'branches': branches,
             'current_menu_item': current_menu_item,
             **template_specific_context,
@@ -782,6 +789,7 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
         request,
         'visualisation_catalogue_item.html',
         gitlab_project,
+        catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
         template_specific_context={'form': form, 'template_form': template_form},
@@ -814,6 +822,7 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
         request,
         'visualisation_catalogue_item.html',
         gitlab_project,
+        catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
         template_specific_context={
@@ -864,6 +873,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         request,
         'visualisation_approvals.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='approvals',
         template_specific_context={
@@ -903,6 +913,7 @@ def visualisation_approvals_html_POST(request, gitlab_project):
         request,
         'visualisation_approvals.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='approvals',
         template_specific_context={"form": form, "form_errors": form_errors},
@@ -936,6 +947,7 @@ def visualisation_datasets_html_GET(request, gitlab_project):
         request,
         'visualisation_datasets.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='datasets',
         template_specific_context={'datasets': datasets},
@@ -1179,6 +1191,7 @@ def _render_visualisation_publish_html(
         request,
         'visualisation_publish.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='publish',
         template_specific_context={

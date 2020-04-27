@@ -61,7 +61,7 @@
 
 {% block footer_scripts %}
   {{ block.super }}
-  
+
   <script nonce="{{ request.csp_nonce }}">
     var user_access_type = document.getElementById('{{ template_form.user_access_type.id_for_label }}');
     var eligibility_criteria = document.getElementById('js-eligibility-criteria-wrapper');
