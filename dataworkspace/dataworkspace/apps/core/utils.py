@@ -319,10 +319,12 @@ def can_access_table_by_google_data_studio(user, table_id):
 def source_tables_for_user(user):
     req_authentication_tables = SourceTable.objects.filter(
         dataset__user_access_type='REQUIRES_AUTHENTICATION',
+        dataset__deleted=False,
         **{'dataset__published': True} if not user.is_superuser else {},
     )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
+        dataset__deleted=False,
         dataset__datasetuserpermission__user=user,
         **{'dataset__published': True} if not user.is_superuser else {},
     )
@@ -359,10 +361,13 @@ def source_tables_for_user(user):
 
 def source_tables_for_app(application_template):
     req_authentication_tables = SourceTable.objects.filter(
-        dataset__published=True, dataset__user_access_type='REQUIRES_AUTHENTICATION'
+        dataset__published=True,
+        dataset__deleted=False,
+        dataset__user_access_type='REQUIRES_AUTHENTICATION',
     )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__published=True,
+        dataset__deleted=False,
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__datasetapplicationtemplatepermission__application_template=application_template,
     )
