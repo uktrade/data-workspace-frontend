@@ -24,10 +24,16 @@ def staff_client(staff_user_data):
 
 
 @pytest.fixture
-def user_data(db):
+def user(db):
     user = User.objects.create(
         username='frank.exampleson@test.com', is_staff=False, is_superuser=False
     )
+
+    return user
+
+
+@pytest.fixture
+def user_data(db, user):
 
     return {
         'HTTP_SSO_PROFILE_EMAIL': user.email,

@@ -4,6 +4,7 @@ bleach==3.1.4
 boto3==1.12.46
 celery-redbeat==0.13.0
 celery==4.4.2
+cryptography==2.9.1
 django-admin-sortable2==0.7.6
 django-better-admin-arrayfield==1.0.7
 django-ckeditor==5.9.0
@@ -19,6 +20,7 @@ gunicorn[gevent]==20.0.4
 hawk-server-asyncio==0.0.6
 Markdown==3.2.1
 MarkupSafe==1.1.1
+notifications-python-client==5.5.1
 psutil==5.7.0
 psycogreen==1.0.2
 redis==3.4.1

@@ -93,6 +93,71 @@ def test_request_access_form(client, mocker):
     )
 
 
+def test_request_visualisation_access(client, user, mocker):
+    owner = factories.UserFactory()
+    secondary_contact = factories.UserFactory()
+
+    create_zendesk_ticket = mocker.patch(
+        'dataworkspace.apps.datasets.views.create_support_request'
+    )
+    create_zendesk_ticket.return_value = 123
+
+    send_email = mocker.patch('dataworkspace.apps.datasets.views.send_email')
+
+    ds = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        enquiries_contact=owner,
+        secondary_enquiries_contact=secondary_contact,
+        visualisation_template__gitlab_project_id=321,
+    )
+
+    response = client.post(
+        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
+        data={"email": "user@example.com", "goal": "my goal"},
+        follow=True,
+    )
+
+    assert response.status_code == 200
+
+    create_zendesk_ticket.assert_called_once_with(
+        mock.ANY,
+        mock.ANY,
+        mock.ANY,
+        subject=f"Data visualisation access request received - {ds.name}",
+        tag="visualisation-access-request",
+    )
+
+    send_email.assert_has_calls(
+        [
+            mock.call(
+                mock.ANY,
+                owner.email,
+                personalisation={
+                    "visualisation_name": ds.name,
+                    "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
+                    "user_email": "user@example.com",
+                    "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
+                    "give_access_url": mock.ANY,
+                    "goal": "my goal",
+                },
+            ),
+            mock.call(
+                mock.ANY,
+                secondary_contact.email,
+                personalisation={
+                    "visualisation_name": ds.name,
+                    "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
+                    "user_email": "user@example.com",
+                    "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
+                    "give_access_url": mock.ANY,
+                    "goal": "my goal",
+                },
+            ),
+        ],
+        any_order=True,
+    )
+
+
 def test_find_datasets_with_no_results(client):
     response = client.get(reverse('datasets:find_datasets'), {"q": "search"})
 

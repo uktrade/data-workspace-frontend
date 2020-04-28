@@ -57,11 +57,18 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
+    find_visualisation,
+    find_dataset_or_visualisation,
     get_code_snippets,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-from dataworkspace.zendesk import create_zendesk_ticket
+from dataworkspace.notify import generate_token, send_email
+from dataworkspace.zendesk import (
+    create_zendesk_ticket,
+    create_support_request,
+    get_people_url,
+)
 
 
 def filter_datasets(
@@ -327,7 +334,7 @@ class DatasetDetailView(DetailView):
 
 @require_http_methods(['GET', 'POST'])
 def eligibility_criteria_view(request, dataset_uuid):
-    dataset = find_dataset(dataset_uuid, request.user)
+    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
 
     if request.method == 'POST':
         form = EligibilityCriteriaForm(request.POST)
@@ -348,14 +355,21 @@ def eligibility_criteria_view(request, dataset_uuid):
 
 @require_GET
 def eligibility_criteria_not_met_view(request, dataset_uuid):
-    dataset = find_dataset(dataset_uuid, request.user)
+    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
 
-    return render(request, 'eligibility_criteria_not_met.html', {'dataset': dataset})
+    return render(
+        request,
+        'eligibility_criteria_not_met.html',
+        {
+            'dataset': dataset,
+            'is_visualisation': isinstance(dataset, VisualisationCatalogueItem),
+        },
+    )
 
 
 @require_http_methods(['GET', 'POST'])
 def request_access_view(request, dataset_uuid):
-    dataset = find_dataset(dataset_uuid, request.user)
+    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
 
     if request.method == 'POST':
         form = RequestAccessForm(request.POST)
@@ -370,16 +384,21 @@ def request_access_view(request, dataset_uuid):
 
             dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
 
-            ticket_reference = create_zendesk_ticket(
-                contact_email,
-                request.user,
-                goal,
-                user_url,
-                dataset.name,
-                dataset_url,
-                dataset.information_asset_owner,
-                dataset.information_asset_manager,
-            )
+            if isinstance(dataset, VisualisationCatalogueItem):
+                ticket_reference = _notify_visualisation_access_request(
+                    request, dataset, dataset_url, contact_email, goal
+                )
+            else:
+                ticket_reference = create_zendesk_ticket(
+                    contact_email,
+                    request.user,
+                    goal,
+                    user_url,
+                    dataset.name,
+                    dataset_url,
+                    dataset.information_asset_owner,
+                    dataset.information_asset_manager,
+                )
 
             url = reverse('datasets:request_access_success', args=[dataset_uuid])
             return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
@@ -387,7 +406,11 @@ def request_access_view(request, dataset_uuid):
     return render(
         request,
         'request_access.html',
-        {'dataset': dataset, 'authenticated_user': request.user},
+        {
+            'dataset': dataset,
+            'authenticated_user': request.user,
+            'is_visualisation': isinstance(dataset, VisualisationCatalogueItem),
+        },
     )
 
 
@@ -396,7 +419,80 @@ def request_access_success_view(request, dataset_uuid):
     # yes this could cause 400 errors but Todo - replace with session / messages
     ticket = request.GET['ticket']
 
-    dataset = find_dataset(dataset_uuid, request.user)
+    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
+
+    return render(
+        request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
+    )
+
+
+def _notify_visualisation_access_request(
+    request, dataset, dataset_url, contact_email, goal
+):
+
+    message = f"""
+An access request has been sent to the data visualisation owner and secondary contact to process.
+
+There is no need to action this ticket until a further notification is received.
+
+Data visualisation: {dataset.name} ({dataset_url})
+
+Requestor {request.user.email}
+People finder link: {get_people_url(request.user.get_full_name())}
+
+Requestor’s response to why access is needed:
+{goal}
+
+Data visualisation owner: {dataset.enquiries_contact.email}
+
+Secondary contact: {dataset.secondary_enquiries_contact.email}
+
+If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
+    """
+
+    ticket_reference = create_support_request(
+        request.user,
+        request.user.email,
+        message,
+        subject=f"Data visualisation access request received - {dataset.name}",
+        tag='visualisation-access-request',
+    )
+
+    give_access_url = request.build_absolute_uri(
+        reverse(
+            "visualisations:users-give-access",
+            args=[dataset.visualisation_template.gitlab_project_id],
+        )
+    )
+    give_access_token = generate_token(
+        {'email': request.user.email, 'ticket': ticket_reference}
+    ).decode('utf-8')
+
+    for contact in set(
+        [dataset.enquiries_contact.email, dataset.secondary_enquiries_contact.email]
+    ):
+        send_email(
+            settings.NOTIFY_VISUALISATION_ACCESS_REQUEST_TEMPLATE_ID,
+            contact,
+            personalisation={
+                "visualisation_name": dataset.name,
+                "visualisation_url": dataset_url,
+                "user_email": contact_email,
+                "goal": goal,
+                "people_url": get_people_url(request.user.get_full_name()),
+                "give_access_url": f"{give_access_url}?token={give_access_token}",
+            },
+        )
+
+    return ticket_reference
+
+
+@require_GET
+def request_visualisation_access_success_view(request, dataset_uuid):
+    # yes this could cause 400 errors but Todo - replace with session / messages
+    ticket = request.GET['ticket']
+
+    dataset = find_visualisation(dataset_uuid, request.user)
 
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}

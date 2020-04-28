@@ -16,13 +16,17 @@ def get_username(user):
     return f'{user.first_name} {user.last_name}'
 
 
+def get_people_url(name):
+    return "https://people.trade.gov.uk/search?search_filters[]=people&query={}".format(
+        urllib.parse.quote(name)
+    )
+
+
 def build_ticket_description_text(
     dataset_name, dataset_url, contact_email, user, goal_text
 ):
     username = get_username(user)
-    people_url = "https://people.trade.gov.uk/search?search_filters[]=people&query={}".format(
-        urllib.parse.quote(username)
-    )
+    people_url = get_people_url(username)
     ticket_description = f"""Access request for
 {dataset_name}
 {dataset_url}
@@ -115,7 +119,27 @@ def create_zendesk_ticket(
     return ticket_audit.ticket.id
 
 
-def create_support_request(user, email, message, tag=None):
+def update_zendesk_ticket(ticket_id, comment=None, status=None):
+    client = Zenpy(
+        subdomain=settings.ZENDESK_SUBDOMAIN,
+        email=settings.ZENDESK_EMAIL,
+        token=settings.ZENDESK_TOKEN,
+    )
+
+    ticket = client.tickets(id=ticket_id)
+
+    if comment:
+        ticket.comment = Comment(body=comment, public=False)
+
+    if status:
+        ticket.status = status
+
+    client.tickets.update(ticket)
+
+    return ticket
+
+
+def create_support_request(user, email, message, tag=None, subject=None):
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,
         email=settings.ZENDESK_EMAIL,
@@ -123,7 +147,7 @@ def create_support_request(user, email, message, tag=None):
     )
     ticket_audit = client.tickets.create(
         Ticket(
-            subject='Data Workspace Support Request',
+            subject=subject or 'Data Workspace Support Request',
             description=message,
             requester=User(email=email, name=user.get_full_name()),
             tags=[tag] if tag else None,

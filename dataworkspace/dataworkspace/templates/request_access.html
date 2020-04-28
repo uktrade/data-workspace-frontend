@@ -22,14 +22,14 @@
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">Request access</h1>
             <p class="govuk-body">
-              Complete the form below if you need to access this dataset in order to do your job.
+              Complete the form below if you need to access this {% if is_visualisation %}data visualisation{% else %}dataset{%endif%} in order to do your job.
             </p>
             <p class="govuk-body">
               Access will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection" class="govuk-link--no-visited-state">Data Protection Act</a>.
             </p>
           <br />
             <p class="govuk-body">
-              <span class="govuk-label govuk-!-font-weight-bold">Dataset</span>
+              <span class="govuk-label govuk-!-font-weight-bold">{% if is_visualisation %}Data visualisation{% else %}Dataset{%endif%}</span>
               <a href="{{ dataset.get_absolute_url }}" class="govuk-link--no-visited-state">
                   {{ dataset.name }}
               </a>
@@ -46,7 +46,7 @@
                     </div>
                     <div class="govuk-form-group">
                         <label class="govuk-label govuk-!-font-weight-bold" for="goal">
-                          Why do you need this data?
+                          Why do you need this data{%if is_visualisation %} visualisation{% endif %}?
                         </label>
                         <span class="govuk-hint">
                           For example, I need to create a report for my senior management team to show performance trends and delivery against targets.

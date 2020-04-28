@@ -49,11 +49,10 @@
                         </strong>
                     </div>
                 </div>
-                <!-- TODO: Hook this up with the visualisation-request flow -->
-                {% if model.eligibility_criteria %}
-                  <a class="govuk-button" href="...">Request access</a>
-                {% else %}
-                  <a class="govuk-button" href="...">Request access</a>
+                {% if model.published and model.eligibility_criteria %}
+                  <a class="govuk-button" href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
+                {% elif model.published %}
+                  <a class="govuk-button" href="{% url 'datasets:request_access' model.id %}">Request access</a>
                 {% endif %}
             {% endif %}
         </div>
