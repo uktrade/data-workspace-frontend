@@ -6,7 +6,7 @@ import boto3
 
 from django.conf import settings
 from django.db import IntegrityError
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse
 
 from psycopg2 import connect, sql
 
@@ -25,6 +25,7 @@ from dataworkspace.apps.applications.utils import (
     set_application_stopped,
 )
 from dataworkspace.apps.core.utils import (
+    StreamingHttpResponseWithoutDjangoDbConnection,
     can_access_table_by_google_data_studio,
     database_dsn,
 )
@@ -619,6 +620,6 @@ def table_api_rows_POST(request, table_id):
             logger.exception('Error streaming to Google Data Studio')
             raise
 
-    return StreamingHttpResponse(
+    return StreamingHttpResponseWithoutDjangoDbConnection(
         yield_schema_and_rows_bytes(), content_type='application/json', status=200
     )

@@ -10,6 +10,7 @@ import unittest
 
 import aiohttp
 from aiohttp import web
+import aiopg
 import aioredis
 import mohawk
 
@@ -832,7 +833,7 @@ class TestApplication(unittest.TestCase):
             received_status = response.status
             received_content = await response.json()
 
-        self.assertEqual(received_content, {'data': [1, 2]})
+        self.assertEqual(received_content, {'data': list(range(1, 20001))})
         self.assertEqual(received_status, 200)
 
     @async_test
@@ -1295,7 +1296,54 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(rows[0], ['id', 'data'])
         self.assertEqual(rows[1][1], 'test data 1')
         self.assertEqual(rows[2][1], 'test data 2')
-        self.assertEqual(rows[3][0], 'Number of rows: 2')
+        self.assertEqual(rows[20001][0], 'Number of rows: 20000')
+
+        async def fetch_num_connections():
+            pool = await aiopg.create_pool(
+                'dbname=dataworkspace user=postgres password=postgres '
+                'host=data-workspace-postgres'
+            )
+            async with pool.acquire() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(
+                        "SELECT numbackends FROM pg_stat_database WHERE datname='dataworkspace'"
+                    )
+                    return [row[0] for row in await cur.fetchall()][0]
+
+        # We ensure that multiple parallel downloads, that were not initiated
+        # in parallel, do not use another database connection to the main
+        # Django database
+        num_connections_1 = await fetch_num_connections()
+        response_1 = await session.request(
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+        )
+        num_connections_2 = await fetch_num_connections()
+        response_2 = await session.request(
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+        )
+        num_connections_3 = await fetch_num_connections()
+        response_3 = await session.request(
+            'GET',
+            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+        )
+        num_connections_4 = await fetch_num_connections()
+
+        # We should only have two connections: one from the application,
+        # and one from the connection querying the number of connections
+        self.assertEqual(num_connections_1, 2)
+        self.assertEqual(num_connections_2, 2)
+        self.assertEqual(num_connections_3, 2)
+        self.assertEqual(num_connections_4, 2)
+
+        rows_1 = list(csv.reader(io.StringIO(await response_1.text())))
+        rows_2 = list(csv.reader(io.StringIO(await response_2.text())))
+        rows_3 = list(csv.reader(io.StringIO(await response_3.text())))
+
+        self.assertEqual(rows_1[20001][0], 'Number of rows: 20000')
+        self.assertEqual(rows_2[20001][0], 'Number of rows: 20000')
+        self.assertEqual(rows_3[20001][0], 'Number of rows: 20000')
 
     @async_test
     async def test_google_data_studio_download(self):
@@ -1457,12 +1505,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(content_json['schema'][0]['name'], 'data')
         self.assertEqual(content_json['rows'][0]['values'][0], 'test data 1')
         self.assertEqual(content_json['rows'][1]['values'][0], 'test data 2')
+        self.assertEqual(len(content_json['rows']), 20000)
 
         # Test pagination
-        stdout, stderr, code = await create_many_users()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
-        self.assertEqual(code, 0)
         async with session.request(
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
@@ -1475,7 +1520,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 200)
         content_json_1 = json.loads(content)
-        self.assertEqual(len(content_json_1['rows']), 2)
+        self.assertEqual(len(content_json_1['rows']), 10)
         async with session.request(
             'POST',
             f'http://dataworkspace.test:8000/api/v1/table/{table_id}/rows',
@@ -1488,7 +1533,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 200)
         content_json_2 = json.loads(content)
-        self.assertEqual(len(content_json_2['rows']), 1)
+        self.assertEqual(len(content_json_2['rows']), 5)
         self.assertEqual(content_json_1['rows'][1:2], content_json_2['rows'][0:1])
 
         # Test $searchAfter
@@ -2095,33 +2140,6 @@ async def give_user_visualisation_developer_perms():
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
-        """
-    ).encode('ascii')
-    give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
-        env=os.environ,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await give_perm.communicate(python_code)
-    code = await give_perm.wait()
-
-    return stdout, stderr, code
-
-
-async def create_many_users():
-    python_code = textwrap.dedent(
-        """\
-        from django.contrib.auth.models import (
-            User,
-        )
-        for i in range(0, 200):
-            User.objects.create(
-                id=i+100,
-                username='user_' + str(i) + '@example.com',
-                email='user_' + str(i) + '@example.com',
-            )
         """
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(

@@ -21,7 +21,6 @@ from django.http import (
     HttpResponseNotFound,
     HttpResponseRedirect,
     HttpResponseServerError,
-    StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -32,6 +31,7 @@ from psycopg2 import sql
 from dataworkspace import datasets_db
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.core.utils import (
+    StreamingHttpResponseWithoutDjangoDbConnection,
     streaming_query_response,
     table_data,
     view_exists,
@@ -605,7 +605,7 @@ class SourceLinkDownloadView(DetailView):
             except KeyError:
                 return HttpResponseServerError()
 
-        response = StreamingHttpResponse(
+        response = StreamingHttpResponseWithoutDjangoDbConnection(
             file_object['Body'].iter_chunks(), content_type=file_object['ContentType']
         )
         response[
