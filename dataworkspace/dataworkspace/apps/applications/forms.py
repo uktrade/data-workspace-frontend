@@ -2,9 +2,20 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.forms import SplitArrayField, SplitArrayWidget
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
-from django.forms import Textarea, TextInput, ModelChoiceField, HiddenInput, CharField
+from django.forms import (
+    Textarea,
+    TextInput,
+    ModelChoiceField,
+    HiddenInput,
+    CharField,
+    CheckboxInput,
+    BooleanField,
+)
 
-from dataworkspace.apps.applications.models import VisualisationApproval
+from dataworkspace.apps.applications.models import (
+    VisualisationApproval,
+    VisualisationTemplate,
+)
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.forms import GOVUKDesignSystemModelForm
 
@@ -134,6 +145,36 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         for field in self._email_fields:
             if getattr(self.instance, field):
                 self.initial[field] = getattr(self.instance, field).email
+
+
+class VisualisationsUITemplate(GOVUKDesignSystemModelForm):
+    user_access_type = BooleanField(
+        label='Each user must be individually authorized to access the data',
+        required=False,
+        widget=CheckboxInput(check_test=lambda val: val == 'REQUIRES_AUTHORIZATION'),
+    )
+
+    class Meta:
+        model = VisualisationTemplate
+        fields = ('user_access_type',)
+
+    def __init__(self, *args, **kwargs):
+        kwargs['initial'] = kwargs.get("initial", {})
+        super().__init__(*args, **kwargs)
+        is_instance = 'instance' in kwargs and kwargs['instance']
+
+        self.fields['user_access_type'].initial = (
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
+            if is_instance
+            else True
+        )
+
+    def clean_user_access_type(self):
+        return (
+            'REQUIRES_AUTHORIZATION'
+            if self.cleaned_data['user_access_type']
+            else 'REQUIRES_AUTHENTICATION'
+        )
 
 
 class VisualisationApprovalForm(GOVUKDesignSystemModelForm):

@@ -26,6 +26,7 @@ from dataworkspace.apps.api_v1.views import (
 from dataworkspace.apps.applications.forms import (
     VisualisationsUICatalogueItemForm,
     VisualisationApprovalForm,
+    VisualisationsUITemplate,
 )
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
@@ -346,6 +347,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
         request,
         'visualisation_branch.html',
         gitlab_project,
+        application_template,
         branches,
         current_menu_item='branches',
         template_specific_context={
@@ -427,6 +429,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
         request,
         'visualisation_users_with_access.html',
         gitlab_project,
+        application_template,
         branches,
         current_menu_item='users-with-access',
         template_specific_context={
@@ -507,6 +510,7 @@ def visualisation_users_give_access_html_GET(request, gitlab_project, token_data
         request,
         'visualisation_users_give_access.html',
         gitlab_project,
+        application_template,
         branches,
         current_menu_item='users-give-access',
         template_specific_context={
@@ -527,6 +531,7 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
             request,
             'visualisation_users_give_access.html',
             gitlab_project,
+            application_template,
             branches,
             current_menu_item='users-give-access',
             template_specific_context={
@@ -711,6 +716,7 @@ def _render_visualisation(
     request,
     template,
     gitlab_project,
+    application_template,
     branches,
     current_menu_item,
     template_specific_context,
@@ -724,6 +730,8 @@ def _render_visualisation(
         template,
         {
             'gitlab_project': gitlab_project,
+            'show_users_section': application_template.user_access_type
+            == 'REQUIRES_AUTHORIZATION',
             'branches': branches,
             'current_menu_item': current_menu_item,
             **template_specific_context,
@@ -766,8 +774,12 @@ def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project):
 
 
 def visualisation_catalogue_item_html_GET(request, gitlab_project):
-    form = VisualisationsUICatalogueItemForm(
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
+        gitlab_project
+    )
+    form = VisualisationsUICatalogueItemForm(instance=catalogue_item)
+    template_form = VisualisationsUITemplate(
+        instance=catalogue_item.visualisation_template
     )
 
     # We don't want client-side validation on this field, so we remove it - but only for the GET request.
@@ -777,34 +789,65 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
         request,
         'visualisation_catalogue_item.html',
         gitlab_project,
+        catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
-        template_specific_context={'form': form},
+        template_specific_context={'form': form, 'template_form': template_form},
     )
 
 
 def visualisation_catalogue_item_html_POST(request, gitlab_project):
-    form = VisualisationsUICatalogueItemForm(
-        request.POST,
-        instance=_get_visualisation_catalogue_item_for_gitlab_project(gitlab_project),
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
+        gitlab_project
     )
-    if form.is_valid():
-        form.save()
+    user_access_type = catalogue_item.visualisation_template.user_access_type
+    form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
+    template_form = VisualisationsUITemplate(
+        request.POST, instance=catalogue_item.visualisation_template
+    )
+    if form.is_valid() and template_form.is_valid():
+        with transaction.atomic():
+            form.save()
+            template_form.save()
+            if (
+                user_access_type
+                != catalogue_item.visualisation_template.user_access_type
+            ):
+                LogEntry.objects.log_action(
+                    user_id=request.user.pk,
+                    content_type_id=ContentType.objects.get_for_model(
+                        get_user_model()
+                    ).pk,
+                    object_id=catalogue_item.visualisation_template.pk,
+                    object_repr=force_str(catalogue_item.visualisation_template),
+                    action_flag=CHANGE,
+                    change_message=(
+                        f"Changed user_access_type on {catalogue_item.visualisation_template} "
+                        f"to: {catalogue_item.visualisation_template.user_access_type}"
+                    ),
+                )
         return redirect(
             'visualisations:catalogue-item', gitlab_project_id=gitlab_project['id']
         )
 
     form_errors = [
         (field.id_for_label, field.errors[0]) for field in form if field.errors
+    ] + [
+        (field.id_for_label, field.errors[0]) for field in template_form if field.errors
     ]
 
     return _render_visualisation(
         request,
         'visualisation_catalogue_item.html',
         gitlab_project,
+        catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
-        template_specific_context={"form": form, "form_errors": form_errors},
+        template_specific_context={
+            "form": form,
+            "template_form": template_form,
+            "form_errors": form_errors,
+        },
         status=400 if form_errors else 200,
     )
 
@@ -848,6 +891,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
         request,
         'visualisation_approvals.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='approvals',
         template_specific_context={
@@ -887,6 +931,7 @@ def visualisation_approvals_html_POST(request, gitlab_project):
         request,
         'visualisation_approvals.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='approvals',
         template_specific_context={"form": form, "form_errors": form_errors},
@@ -920,6 +965,7 @@ def visualisation_datasets_html_GET(request, gitlab_project):
         request,
         'visualisation_datasets.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='datasets',
         template_specific_context={'datasets': datasets},
@@ -1163,6 +1209,7 @@ def _render_visualisation_publish_html(
         request,
         'visualisation_publish.html',
         gitlab_project,
+        application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='publish',
         template_specific_context={
