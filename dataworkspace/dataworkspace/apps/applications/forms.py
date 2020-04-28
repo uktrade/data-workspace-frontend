@@ -12,8 +12,8 @@ from dataworkspace.forms import GOVUKDesignSystemModelForm
 class _NiceEmailValidationModelChoiceField(ModelChoiceField):
     def clean(self, value):
         if value:
-            EmailValidator(message=self.error_messages['invalid_email'])(value)
-        return super().clean(value)
+            EmailValidator(message=self.error_messages['invalid_email'])(value.lower())
+        return super().clean(value.lower() if value else value)
 
 
 class BulletListSplitArrayWidget(SplitArrayWidget):
