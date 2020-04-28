@@ -52,7 +52,7 @@
   <div class="govuk-grid-column-one-third">
     <form method="POST" action="{{ request.path }}">
       {% csrf_token %}
-      <button type="submit" class="govuk-button app-!-fill-width{% if not visualisation_published and not approved %} govuk-button--disabled{% endif %}" name="action" value="{% if visualisation_published %}unpublish-visualisation{% else %}publish-visualisation{% endif %}" aria-labelledby="visualisation-explanation">
+      <button type="submit" class="govuk-button app-!-fill-width{% if not visualisation_published and not approved %} govuk-button--disabled{% endif %}" name="action" value="{% if visualisation_published %}unpublish-visualisation{% else %}publish-visualisation{% endif %}" aria-labelledby="visualisation-explanation"{% if not visualisation_published and not approved %} disabled{% endif %}>
         {% if visualisation_published %}
           Unpublish visualisation
         {% else %}
@@ -85,7 +85,7 @@
     <form method="POST" action="{{ request.path }}">
       {% csrf_token %}
 
-      <button type="submit" class="govuk-button app-!-fill-width{% if not approved or not visualisation_published or not catalogue_complete %} govuk-button--disabled{% endif %}" name="action" value="{% if catalogue_published %}unpublish-catalogue{% else %}publish-catalogue{% endif %}" aria-labelledby="catalogue-explanation">
+      <button type="submit" class="govuk-button app-!-fill-width{% if not approved or not visualisation_published or not catalogue_complete %} govuk-button--disabled{% endif %}" name="action" value="{% if catalogue_published %}unpublish-catalogue{% else %}publish-catalogue{% endif %}" aria-labelledby="catalogue-explanation"{% if not approved or not visualisation_published or not catalogue_complete %} disabled{% endif %}>
         {% if catalogue_published %}
           Unpublish catalogue item
         {% else %}
