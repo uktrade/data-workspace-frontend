@@ -327,11 +327,29 @@ def source_tables_for_user(user):
         **{'dataset__published': True} if not user.is_superuser else {},
     )
     source_tables = [
-        {'database': x.database, 'schema': x.schema, 'table': x.table}
+        {
+            'database': x.database,
+            'schema': x.schema,
+            'table': x.table,
+            'dataset': {
+                'id': x.dataset.id,
+                'name': x.dataset.name,
+                'user_access_type': x.dataset.user_access_type,
+            },
+        }
         for x in req_authentication_tables.union(req_authorization_tables)
     ]
     reference_dataset_tables = [
-        {'database': x.external_database, 'schema': 'public', 'table': x.table_name}
+        {
+            'database': x.external_database,
+            'schema': 'public',
+            'table': x.table_name,
+            'dataset': {
+                'id': x.uuid,
+                'name': x.name,
+                'user_access_type': 'REQUIRES_AUTHENTICATION',
+            },
+        }
         for x in ReferenceDataset.objects.live()
         .filter(deleted=False, **{'published': True} if not user.is_superuser else {})
         .exclude(external_database=None)
@@ -353,7 +371,11 @@ def source_tables_for_app(application_template):
             'database': x.database,
             'schema': x.schema,
             'table': x.table,
-            'dataset': {'id': x.dataset.id, 'name': x.dataset.name},
+            'dataset': {
+                'id': x.dataset.id,
+                'name': x.dataset.name,
+                'user_access_type': x.dataset.user_access_type,
+            },
         }
         for x in req_authentication_tables.union(req_authorization_tables)
     ]
@@ -362,7 +384,11 @@ def source_tables_for_app(application_template):
             'database': x.external_database,
             'schema': 'public',
             'table': x.table_name,
-            'dataset': {'id': x.uuid, 'name': x.name},
+            'dataset': {
+                'id': x.uuid,
+                'name': x.name,
+                'user_access_type': 'REQUIRES_AUTHENTICATION',
+            },
         }
         for x in ReferenceDataset.objects.live()
         .filter(published=True, deleted=False)

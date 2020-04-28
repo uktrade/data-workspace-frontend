@@ -3,6 +3,7 @@ import csv
 import io
 import json
 import os
+import re
 import signal
 import textwrap
 import unittest
@@ -99,8 +100,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('Test Application is loading...', application_content_2)
 
-        # There are forced sleeps in starting a process
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+        )
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -210,7 +212,10 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
 
         self.assertIn('Test Application is loading...', content)
-        await asyncio.sleep(10)
+
+        await until_non_202(
+            session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+        )
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -330,7 +335,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('testvisualisation is loading...', application_content_1)
 
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testvisualisation.dataworkspace.test:8000/'
+        )
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -436,7 +443,9 @@ class TestApplication(unittest.TestCase):
         self.assertIn('testvisualisation [58d9e87e]', application_content_1)
         self.assertIn('is loading...', application_content_1)
 
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
+        )
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
@@ -488,7 +497,44 @@ class TestApplication(unittest.TestCase):
         ) as response:
             await response.text()
 
-        stdout, stderr, code = await create_private_dataset()
+        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'MASTER',
+            dataset_id_test_dataset,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        dataset_id_dataset_1 = '0dea6147-d355-4b6d-a140-0304ef9cfeca'
+        table_id = '39e3fa48-9352-471a-b278-3eca5ba92921'
+        stdout, stderr, code = await create_private_dataset(
+            'test_external_db',
+            'MASTER',
+            dataset_id_dataset_1,
+            'dataset_1',
+            table_id,
+            'dataset_1',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        dataset_id_dataset_2 = 'ccddcf9a-4997-4761-bd5a-06854d0a6483'
+        table_id = '426f6862-9880-4a1f-82a1-8496a5400820'
+        stdout, stderr, code = await create_private_dataset(
+            'test_external_db2',
+            'MASTER',
+            dataset_id_dataset_2,
+            'dataset_2',
+            table_id,
+            'dataset_2',
+        )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -553,23 +599,10 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(gitlab_cleanup)
 
-        async with session.request(
-            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
-        ) as response:
-            application_content_1 = await response.text()
-
-        self.assertIn('testvisualisation-a is loading...', application_content_1)
-
-        await asyncio.sleep(10)
-
-        async with session.request(
-            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/http'
-        ) as response:
-            received_status = response.status
-            await response.text()
-
-        # This application should not have permission to access the database
-        self.assertEqual(received_status, 500)
+        stdout, stderr, code = await give_user_dataset_perms('dataset_1')
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
 
         async with session.request(
             'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
@@ -580,6 +613,168 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(403, status)
 
         await give_user_visualisation_developer_perms()
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        self.assertEqual(received_status, 200)
+        csrf_token = re.match(
+            r'.*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*',
+            content,
+            flags=re.DOTALL,
+        )[1]
+
+        # The user only has access dataset_2, not dataset_1: we test that
+        # a user cannot add access to a dataset they don't have access to
+        async with session.request(
+            'POST',
+            'http://dataworkspace.test:8000/visualisations/3/datasets',
+            data=(
+                ('dataset', dataset_id_dataset_2),
+                ('dataset', dataset_id_dataset_1),
+                ('csrfmiddlewaretoken', csrf_token),
+            ),
+        ) as response:
+            received_status = response.status
+            await response.text()
+
+        self.assertEqual(received_status, 200)
+
+        async with session.request(
+            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn('testvisualisation-a is loading...', application_content_1)
+
+        await until_non_202(
+            session, 'http://testvisualisation-a.dataworkspace.test:8000/'
+        )
+
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/my_database/test_dataset',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        # This application should not have permission to access the database,
+        # and we get a simple 500 page from the visualisation in this case
+        self.assertEqual(received_status, 500)
+        self.assertEqual(
+            content, '500 Internal Server Error\n\nServer got itself in trouble'
+        )
+
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        self.assertEqual(received_status, 500)
+        self.assertEqual(
+            content, '500 Internal Server Error\n\nServer got itself in trouble'
+        )
+
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+        ) as response:
+            received_status = response.status
+            content = await response.json()
+
+        self.assertEqual(content, {'data': [1, 2]})
+
+        # Stop the application
+        async with session.request(
+            'POST', 'http://testvisualisation-a.dataworkspace.test:8000/stop'
+        ) as response:
+            await response.text()
+
+        # The first request after an application stopped unexpectedly should
+        # be an error
+        async with session.request(
+            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
+        ) as response:
+            content = await response.text()
+        self.assertIn('Sorry, there is a problem with the service', content)
+
+        # Give the visualisation permission to a dataset that the user
+        # doesn't have access to.
+        stdout, stderr, code = await give_visualisation_dataset_perms(
+            'testvisualisation-a', 'dataset_2'
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        self.assertEqual(received_status, 200)
+        csrf_token = re.match(
+            r'.*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*',
+            content,
+            flags=re.DOTALL,
+        )[1]
+
+        # No datasets posted, i.e. attempting to removing access from all datasets
+        async with session.request(
+            'POST',
+            'http://dataworkspace.test:8000/visualisations/3/datasets',
+            data=(('csrfmiddlewaretoken', csrf_token),),
+        ) as response:
+            received_status = response.status
+            await response.text()
+
+        async with session.request(
+            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn('testvisualisation-a is loading...', application_content_1)
+
+        await until_non_202(
+            session, 'http://testvisualisation-a.dataworkspace.test:8000/'
+        )
+
+        # The application does have access to the dataset that the user does
+        # not have access to, even though user tried to remove it
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
+        ) as response:
+            received_status = response.status
+            content = await response.json()
+
+        self.assertEqual(content, {'data': [1, 2]})
+
+        # The application now does not have access to the dataset that the
+        # user removed
+        async with session.request(
+            'GET',
+            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+
+        self.assertEqual(received_status, 500)
+        self.assertEqual(
+            content, '500 Internal Server Error\n\nServer got itself in trouble'
+        )
+
+        # Stop the application
+        async with session.request(
+            'POST', 'http://testvisualisation-a.dataworkspace.test:8000/stop'
+        ) as response:
+            await response.text()
 
         stdout, stderr, code = await create_visualisation_dataset(
             'testvisualisation-b', 4
@@ -605,7 +800,7 @@ class TestApplication(unittest.TestCase):
         self.assertNotIn('test_dataset', content)
 
         stdout, stderr, code = await give_visualisation_dataset_perms(
-            'testvisualisation-b'
+            'testvisualisation-b', 'test_dataset'
         )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
@@ -626,10 +821,13 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('testvisualisation-b is loading...', application_content_2)
 
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testvisualisation-b.dataworkspace.test:8000/'
+        )
 
         async with session.request(
-            'GET', 'http://testvisualisation-b.dataworkspace.test:8000/http'
+            'GET',
+            f'http://testvisualisation-b.dataworkspace.test:8000/my_database/test_dataset',
         ) as response:
             received_status = response.status
             received_content = await response.json()
@@ -694,8 +892,9 @@ class TestApplication(unittest.TestCase):
 
         self.assertIn('Test Application is loading...', application_content_2)
 
-        # There are forced sleeps in starting a process
-        await asyncio.sleep(10)
+        await until_non_202(
+            session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+        )
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
@@ -1042,14 +1241,22 @@ class TestApplication(unittest.TestCase):
 
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
 
-        stdout, stderr, code = await create_private_dataset()
+        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'DATACUT',
+            dataset_id_test_dataset,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
+            'GET', f'http://dataworkspace.test:8000/datasets/{dataset_id_test_dataset}'
         ) as response:
             content = await response.text()
 
@@ -1065,7 +1272,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertEqual(content, '')
 
-        stdout, stderr, code = await give_user_dataset_perms()
+        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -1120,8 +1327,16 @@ class TestApplication(unittest.TestCase):
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
 
         # Check that with no token there is no access
+        dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
-        stdout, stderr, code = await create_private_dataset()
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'MASTER',
+            dataset_id,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -1194,7 +1409,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 403)
         self.assertEqual('{}', content)
 
-        stdout, stderr, code = await give_user_dataset_perms()
+        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -1334,7 +1549,14 @@ class TestApplication(unittest.TestCase):
         dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
         url = f'http://dataworkspace.test:8000/api/v1/dataset/{dataset_id}/{table_id}'
-        stdout, stderr, code = await create_private_dataset()
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'MASTER',
+            dataset_id,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
         self.assertEqual(stdout, b'')
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
@@ -1769,6 +1991,16 @@ async def until_succeeds(url):
                 break
 
 
+async def until_non_202(session, url):
+    for _ in range(0, 600):
+        async with session.request('GET', url) as response:
+            if response.status != 202:
+                return
+        await asyncio.sleep(0.1)
+
+    raise Exception()
+
+
 async def flush_database():
     await (  # noqa
         await asyncio.create_subprocess_shell(
@@ -1905,31 +2137,35 @@ async def create_many_users():
     return stdout, stderr, code
 
 
-async def create_private_dataset():
+async def create_private_dataset(
+    database, dataset_type, dataset_id, dataset_name, table_id, table_name
+):
     python_code = textwrap.dedent(
-        """\
+        f"""\
         from dataworkspace.apps.core.models import Database
         from dataworkspace.apps.datasets.models import (
             DataSet,
             SourceTable,
             DatasetReferenceCode,
         )
+        from dataworkspace.apps.datasets.constants import DataSetType
         reference_code, _ = DatasetReferenceCode.objects.get_or_create(code='TEST')
         dataset = DataSet.objects.create(
-            name="test_dataset",
+            name="{dataset_name}",
             description="test_desc",
             short_description="test_short_desc",
-            slug="test_slug_s",
-            id="70ce6fdd-1791-4806-bbe0-4cf880a9cc37",
+            slug="{dataset_name}",
+            id="{dataset_id}",
             published=True,
             reference_code=reference_code,
+            type=DataSetType.{dataset_type}.value,
         )
         SourceTable.objects.create(
-            id="5a2ee5dd-f025-4939-b0a1-bb85ab7504d7",
+            id="{table_id}",
             dataset=dataset,
-            database=Database.objects.get(memorable_name="my_database"),
+            database=Database.objects.get(memorable_name="{database}"),
             schema="public",
-            table="test_dataset",
+            table="{table_name}",
         )
         """
     ).encode('ascii')
@@ -1947,9 +2183,9 @@ async def create_private_dataset():
     return stdout, stderr, code
 
 
-async def give_user_dataset_perms():
+async def give_user_dataset_perms(name):
     python_code = textwrap.dedent(
-        """\
+        f"""\
         from django.contrib.auth.models import (
             User,
         )
@@ -1959,7 +2195,7 @@ async def give_user_dataset_perms():
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         dataset = DataSet.objects.get(
-            name="test_dataset",
+            name="{name}",
         )
         DataSetUserPermission.objects.create(
             dataset=dataset,
@@ -2128,7 +2364,7 @@ async def create_visualisation_dataset(name, gitlab_project_id):
     return stdout, stderr, code
 
 
-async def give_visualisation_dataset_perms(name):
+async def give_visualisation_dataset_perms(vis_name, dataset_name):
     python_code = textwrap.dedent(
         f"""\
         from django.contrib.auth.models import (
@@ -2141,9 +2377,9 @@ async def give_visualisation_dataset_perms(name):
             DataSet,
             DataSetApplicationTemplatePermission,
         )
-        application_template = ApplicationTemplate.objects.get(host_basename="{name}")
+        application_template = ApplicationTemplate.objects.get(host_basename="{vis_name}")
         dataset = DataSet.objects.get(
-            name="test_dataset",
+            name="{dataset_name}",
         )
         DataSetApplicationTemplatePermission.objects.create(
             application_template=application_template,
