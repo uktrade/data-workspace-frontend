@@ -834,9 +834,10 @@ async def async_main():
                 )
 
                 request['logger'].info(
-                    'SSO-authenticated: %s %s',
+                    'SSO-authenticated: %s %s %s',
                     me_profile['email'],
                     me_profile['user_id'],
+                    request_url(request),
                 )
 
                 return await handler(request)
