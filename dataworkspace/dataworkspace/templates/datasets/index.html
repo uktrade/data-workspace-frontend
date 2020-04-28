@@ -2,6 +2,7 @@
 {% load humanize %}
 {% load static %}
 {% load core_filters %}
+{% load core_tags %}
 {% load datasets_tags %}
 
 {% block head %}
@@ -38,7 +39,7 @@
   <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-xl">Welcome to Data Workspace</h1>
     <p class="govuk-body-l">
-      Data Workspace is where DIT staff and partners can access, analyse and securely share data relevant to DIT.
+      Data Workspace is where DIT staff and partners can access, analyse and securely share data and data visualisations relevant to DIT.
     </p>
   </div>
 
@@ -71,6 +72,9 @@
         <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}</a>
       </h2>
       <p class="govuk-body">{{ dataset.short_description }}</p>
+      <p class="govuk-body">
+        <span class="govuk-!-font-weight-bold">Purpose:</span> {{ purpose|get_key:dataset.purpose}}
+      </p>
     </div>
     {% endfor %}
 

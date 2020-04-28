@@ -173,6 +173,9 @@ def test_find_datasets_combines_results(client):
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A search reference dataset'
     )
+    vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A search visualisation'
+    )
 
     response = client.get(reverse('datasets:find_datasets'), {"q": "search"})
 
@@ -184,6 +187,7 @@ def test_find_datasets_combines_results(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'purpose': ds.type,
         },
         {
             'id': rds.uuid,
@@ -191,6 +195,15 @@ def test_find_datasets_combines_results(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'purpose': DataSetType.REFERENCE.value,
+        },
+        {
+            'id': vis.id,
+            'name': vis.name,
+            'slug': vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': vis.short_description,
+            'purpose': DataSetType.VISUALISATION.value,
         },
     ]
 
@@ -202,10 +215,16 @@ def test_find_datasets_combines_results(client):
 def test_find_datasets_filters_by_query(client):
     factories.DataSetFactory.create(published=True, name='A dataset')
     factories.ReferenceDatasetFactory.create(published=True, name='A reference dataset')
+    factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A visualisation'
+    )
 
     ds = factories.DataSetFactory.create(published=True, name='A new dataset')
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
+    )
+    vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A new visualisation'
     )
 
     response = client.get(reverse('datasets:find_datasets'), {"q": "new"})
@@ -218,6 +237,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'purpose': ds.type,
         },
         {
             'id': rds.uuid,
@@ -225,6 +245,15 @@ def test_find_datasets_filters_by_query(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'purpose': DataSetType.REFERENCE.value,
+        },
+        {
+            'id': vis.id,
+            'name': vis.name,
+            'slug': vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': vis.short_description,
+            'purpose': DataSetType.VISUALISATION.value,
         },
     ]
 
@@ -246,6 +275,7 @@ def test_find_datasets_filters_by_use(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'purpose': ds.type,
         },
         {
             'id': rds.uuid,
@@ -253,6 +283,40 @@ def test_find_datasets_filters_by_use(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'purpose': DataSetType.REFERENCE.value,
+        },
+    ]
+
+
+def test_find_datasets_filters_visualisations_by_use(client):
+    factories.DataSetFactory.create(published=True, type=1, name='A dataset')
+    ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
+    factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+    vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A new visualisation'
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"use": [2, 3]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds.id,
+            'name': ds.name,
+            'slug': ds.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds.short_description,
+            'purpose': ds.type,
+        },
+        {
+            'id': vis.id,
+            'name': vis.name,
+            'slug': vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': vis.short_description,
+            'purpose': DataSetType.VISUALISATION.value,
         },
     ]
 
@@ -262,6 +326,14 @@ def test_find_datasets_filters_by_source(client):
     _ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
     _ds.source_tags.set([factories.SourceTagFactory()])
 
+    _vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A visualisation'
+    )
+
+    factories.DataSetApplicationTemplatePermissionFactory(
+        application_template=_vis.visualisation_template, dataset=_ds
+    )
+
     ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
     ds.source_tags.set([source, factories.SourceTagFactory()])
 
@@ -269,6 +341,14 @@ def test_find_datasets_filters_by_source(client):
         published=True, name='A new reference dataset'
     )
     rds.source_tags.set([source])
+
+    vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A new visualisation'
+    )
+
+    factories.DataSetApplicationTemplatePermissionFactory(
+        application_template=vis.visualisation_template, dataset=ds
+    )
 
     response = client.get(reverse('datasets:find_datasets'), {"source": [source.id]})
 
@@ -280,6 +360,7 @@ def test_find_datasets_filters_by_source(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'purpose': ds.type,
         },
         {
             'id': rds.uuid,
@@ -287,6 +368,15 @@ def test_find_datasets_filters_by_source(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'purpose': DataSetType.REFERENCE.value,
+        },
+        {
+            'id': vis.id,
+            'name': vis.name,
+            'slug': vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': vis.short_description,
+            'purpose': DataSetType.VISUALISATION.value,
         },
     ]
 
@@ -309,6 +399,7 @@ def test_find_datasets_filters_by_access():
         name='Master - access granted',
         user_access_type='REQUIRES_AUTHORIZATION',
     )
+
     factories.DataSetUserPermissionFactory.create(
         user=user, dataset=access_granted_master
     )
@@ -336,6 +427,33 @@ def test_find_datasets_filters_by_access():
         published=True, name='Reference - public'
     )
 
+    access_vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation',
+        visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.ApplicationTemplateUserPermissionFactory(
+        user=user, application_template=access_vis.visualisation_template
+    )
+    factories.ApplicationTemplateUserPermissionFactory(
+        user=user2, application_template=access_vis.visualisation_template
+    )
+
+    no_access_vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - hidden',
+        visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.ApplicationTemplateUserPermissionFactory(
+        user=user2, application_template=no_access_vis.visualisation_template
+    )
+
+    public_vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - public',
+        visualisation_template__user_access_type='REQUIRES_AUTHENTICATION',
+    )
+
     response = client.get(reverse('datasets:find_datasets'), {"access": "yes"})
 
     assert response.status_code == 200
@@ -346,6 +464,7 @@ def test_find_datasets_filters_by_access():
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'purpose': access_granted_master.type,
         },
         {
             'id': public_master.id,
@@ -353,6 +472,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_master.slug,
             'search_rank': mock.ANY,
             'short_description': public_master.short_description,
+            'purpose': public_master.type,
         },
         {
             'id': public_reference.uuid,
@@ -360,6 +480,23 @@ def test_find_datasets_filters_by_access():
             'slug': public_reference.slug,
             'search_rank': mock.ANY,
             'short_description': public_reference.short_description,
+            'purpose': DataSetType.REFERENCE.value,
+        },
+        {
+            'id': access_vis.id,
+            'name': access_vis.name,
+            'slug': access_vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': access_vis.short_description,
+            'purpose': DataSetType.VISUALISATION.value,
+        },
+        {
+            'id': public_vis.id,
+            'name': public_vis.name,
+            'slug': public_vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': public_vis.short_description,
+            'purpose': DataSetType.VISUALISATION.value,
         },
     ]
 
@@ -399,6 +536,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'purpose': access_granted_master.type,
         }
     ]
 
@@ -409,6 +547,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
         (['manage_unpublished_master_datasets'], {"Master dataset"}),
         (['manage_unpublished_datacut_datasets'], {"Datacut dataset"}),
         (['manage_unpublished_reference_datasets'], {"Reference dataset"}),
+        (['manage_unpublished_visualisations'], {"Visualisation"}),
         (
             [
                 'manage_unpublished_master_datasets',
@@ -438,6 +577,18 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             ],
             {"Master dataset", "Datacut dataset", "Reference dataset"},
         ),
+        (
+            ['manage_unpublished_master_datasets', 'manage_unpublished_visualisations'],
+            {"Master dataset", "Visualisation"},
+        ),
+        (
+            [
+                'manage_unpublished_master_datasets',
+                'manage_unpublished_reference_datasets',
+                'manage_unpublished_visualisations',
+            ],
+            {"Master dataset", "Reference dataset", "Visualisation"},
+        ),
     ),
 )
 @pytest.mark.django_db
@@ -458,6 +609,10 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
         published=False, type=DataSetType.DATACUT.value, name='Datacut dataset'
     )
     factories.ReferenceDatasetFactory.create(published=False, name='Reference dataset')
+
+    factories.VisualisationCatalogueItemFactory.create(
+        published=False, name='Visualisation'
+    )
 
     response = client.get(reverse('datasets:find_datasets'))
 
