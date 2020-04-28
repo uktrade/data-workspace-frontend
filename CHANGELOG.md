@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Automatically lowercase emails in data vis UI catalogue page before searching db.
+- Don't show in the visualisation UI or give visualisation/tools access to deleted datasets
 
 ## 2020-04-26
 
