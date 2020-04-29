@@ -42,6 +42,7 @@ def spawn(
     application_instance_id,
     spawner_options,
     db_credentials,
+    app_schema,
 ):
     get_spawner(name).spawn(
         user_email_address,
@@ -50,6 +51,7 @@ def spawn(
         application_instance_id,
         spawner_options,
         db_credentials,
+        app_schema,
     )
 
 
@@ -67,7 +69,9 @@ class ProcessSpawner:
     '''
 
     @staticmethod
-    def spawn(_, __, ___, application_instance_id, spawner_options, db_credentials):
+    def spawn(
+        _, __, ___, application_instance_id, spawner_options, db_credentials, ____
+    ):
 
         try:
             gevent.sleep(1)
@@ -167,6 +171,7 @@ class FargateSpawner:
         application_instance_id,
         spawner_options,
         db_credentials,
+        app_schema,
     ):
 
         try:
@@ -195,6 +200,8 @@ class FargateSpawner:
                 f'user={database["db_user"]} password={database["db_password"]}'
                 for database in db_credentials
             }
+
+            schema_env = {'APP_SCHEMA': app_schema}
 
             logger.info('Starting %s', cmd)
 
@@ -283,7 +290,7 @@ class FargateSpawner:
                         security_groups,
                         subnets,
                         cmd,
-                        {**s3_env, **database_env, **env},
+                        {**s3_env, **database_env, **schema_env, **env},
                         s3_sync,
                     )
                 except ClientError:
