@@ -53,6 +53,7 @@ variable "pgweb_container_image" {}
 variable "remotedesktop_container_image" {}
 variable "theia_container_image" {}
 variable "superset_container_image" {}
+variable "dataexplorer_container_image" {}
 
 variable "alb_access_logs_bucket" {}
 variable "alb_logs_account" {}
