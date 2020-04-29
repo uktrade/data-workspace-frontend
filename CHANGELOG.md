@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Data explorer as a hidden tool
+- Pass the name of the schema an app can write to via an environment variable
 
 ## 2020-04-28
 

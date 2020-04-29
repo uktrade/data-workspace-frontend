@@ -22,6 +22,8 @@ from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDa
 
 logger = logging.getLogger('app')
 
+USER_SCHEMA_STEM = '_user_'
+
 
 def database_dsn(database_data):
     return (
@@ -58,10 +60,9 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
         # - temporary database users, each of which are GRANTed the role
 
         db_password = postgres_password()
-        stem = '_user_'
         # These must be the same so the below trigger can use a table's schema_name to set its role
-        db_role = f'{stem}{db_role_and_schema_suffix}'
-        db_schema = f'{stem}{db_role_and_schema_suffix}'
+        db_role = f'{USER_SCHEMA_STEM}{db_role_and_schema_suffix}'
+        db_schema = f'{USER_SCHEMA_STEM}{db_role_and_schema_suffix}'
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (
@@ -156,7 +157,7 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
                 END;
                 $$;
             '''.format(
-                        str(len(stem)), stem
+                        str(len(USER_SCHEMA_STEM)), USER_SCHEMA_STEM
                     )
                 )
             )

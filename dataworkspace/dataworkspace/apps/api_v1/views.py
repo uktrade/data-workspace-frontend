@@ -25,6 +25,7 @@ from dataworkspace.apps.applications.utils import (
     set_application_stopped,
 )
 from dataworkspace.apps.core.utils import (
+    USER_SCHEMA_STEM,
     StreamingHttpResponseWithoutDjangoDbConnection,
     can_access_table_by_google_data_studio,
     database_dsn,
@@ -226,6 +227,8 @@ def application_api_PUT(request, public_host):
                 db_username=creds['db_user'],
             )
 
+        app_schema = f'{USER_SCHEMA_STEM}{db_role_schema_suffix}'
+
         spawn.delay(
             application_template.spawner,
             request.user.email,
@@ -234,6 +237,7 @@ def application_api_PUT(request, public_host):
             application_instance.id,
             spawner_options,
             credentials,
+            app_schema,
         )
 
     return JsonResponse(api_application_dict(application_instance), status=200)
@@ -542,7 +546,7 @@ def table_api_rows_POST(request, table_id):
 
     # https://developers.google.com/apps-script/guides/services/quotas#current_limitations
     # URL Fetch response size: 50mb, and a bit of a buffer for http headers and $searchAfter
-    num_bytes_max = 49990000
+    num_bytes_max = 49_990_000
 
     # StreamingHttpResponse translates to HTTP/1.1 chunking performed by gunicorn. However,
     # we don't have any visibility on the actual bytes sent as part of the HTTP body, i.e. each
