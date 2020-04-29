@@ -27,6 +27,14 @@ class ApplicationTemplate(TimeStampedModel):
             "For visualisations, whether it's accessible at its production URL."
         ),
     )
+    wrap = models.CharField(
+        max_length=128,
+        choices=(
+            ('NONE', 'No wrapping'),
+            ('FULL_HEIGHT_IFRAME', 'Wrapped in full height iframe'),
+        ),
+        default='NONE',
+    )
 
     # We expect lots of visualisations with fixed hosts, so we use a undex to ensure
     # that lookups from hostname to application templates are fast...

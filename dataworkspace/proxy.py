@@ -48,6 +48,7 @@ async def async_main():
     admin_root = env['UPSTREAM_ROOT']
     hawk_senders = env['HAWK_SENDERS']
     sso_base_url = env['AUTHBROKER_URL']
+    sso_host = URL(sso_base_url).host
     sso_client_id = env['AUTHBROKER_CLIENT_ID']
     sso_client_secret = env['AUTHBROKER_CLIENT_SECRET']
     redis_url = env['REDIS_URL']
@@ -83,9 +84,22 @@ async def async_main():
         f"connect-src {root_domain} 'self';"
     )
 
+    # A running wrapped application on <my-application>.<root_domain>  has an
+    # iframe that directly routes to the app on <my-application>--8888.<root_domain>
+    def csp_application_running_wrapped(direct_host):
+        return csp_common + (
+            f"default-src 'none';"
+            f'base-uri {root_domain};'
+            f"form-action 'none';"
+            f"frame-ancestors 'none';"
+            f'frame-src {direct_host} {sso_host};'
+            f'img-src {root_domain};'
+            f"style-src 'unsafe-inline';"
+        )
+
     # A running application should only connect to self: this is where we have the most
     # concern because we run the least-trusted code
-    def csp_application_running_direct(host):
+    def csp_application_running_direct(host, public_host):
         return csp_common + (
             "default-src 'self';"
             "base-uri 'self';"
@@ -93,7 +107,7 @@ async def async_main():
             f"connect-src 'self' wss://{host};"
             "font-src 'self' data:;"
             "form-action 'self';"
-            "frame-ancestors 'self';"
+            f"frame-ancestors 'self' {public_host}.{root_domain};"
             "img-src 'self' data: blob:;"
             # Both JupyterLab and RStudio need `unsafe-eval`
             "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
@@ -367,6 +381,19 @@ async def async_main():
                 query,
                 host_html_path,
                 host_api_url,
+                public_host,
+            )
+
+        if (
+            application['state'] == 'RUNNING'
+            and application['wrap'] != 'NONE'
+            and not port_override
+        ):
+            return await handle_application_http_running_wrapped(
+                downstream_request,
+                application_upstream(application['proxy_url'], path, port_override),
+                host_html_path,
+                public_host,
             )
 
         return await handle_application_http_running_direct(
@@ -374,6 +401,7 @@ async def async_main():
             method,
             application_upstream(application['proxy_url'], path, port_override),
             query,
+            public_host,
         )
 
     async def handle_application_websocket(
@@ -396,7 +424,13 @@ async def async_main():
         )
 
     async def handle_application_http_spawning(
-        downstream_request, method, upstream_url, query, host_html_path, host_api_url
+        downstream_request,
+        method,
+        upstream_url,
+        query,
+        host_html_path,
+        host_api_url,
+        public_host,
     ):
         host = downstream_request.headers['host']
         try:
@@ -410,7 +444,12 @@ async def async_main():
                 spawning_http_timeout,
                 # Although the application is spawning, if the response makes it back to the client,
                 # we know the application is running, so we return the _running_ CSP headers
-                (('content-security-policy', csp_application_running_direct(host)),),
+                (
+                    (
+                        'content-security-policy',
+                        csp_application_running_direct(host, public_host),
+                    ),
+                ),
             )
 
         except Exception:
@@ -443,8 +482,28 @@ async def async_main():
 
             return response
 
+    async def handle_application_http_running_wrapped(
+        downstream_request, upstream_url, host_html_path, public_host
+    ):
+        upstream = URL(upstream_url)
+        direct_host = f'{public_host}--{upstream.port}.{root_domain}'
+        return await handle_http(
+            downstream_request,
+            'GET',
+            CIMultiDict(admin_headers(downstream_request)),
+            admin_root + host_html_path + '/running',
+            {},
+            default_http_timeout,
+            (
+                (
+                    'content-security-policy',
+                    csp_application_running_wrapped(direct_host),
+                ),
+            ),
+        )
+
     async def handle_application_http_running_direct(
-        downstream_request, method, upstream_url, query
+        downstream_request, method, upstream_url, query, public_host
     ):
         host = downstream_request.headers['host']
         return await handle_http(
@@ -454,7 +513,12 @@ async def async_main():
             upstream_url,
             query,
             default_http_timeout,
-            (('content-security-policy', csp_application_running_direct(host)),),
+            (
+                (
+                    'content-security-policy',
+                    csp_application_running_direct(host, public_host),
+                ),
+            ),
         )
 
     async def handle_mirror(downstream_request, method, path):
