@@ -354,12 +354,13 @@ async def async_main():
                 (('content-security-policy', csp_application_spawning),),
             )
 
-        return (
-            await handle_application_websocket(
+        if is_websocket:
+            return await handle_application_websocket(
                 downstream_request, application['proxy_url'], path, query, port_override
             )
-            if is_websocket
-            else await handle_application_http_spawning(
+
+        if application['state'] == 'SPAWNING':
+            return await handle_application_http_spawning(
                 downstream_request,
                 method,
                 application_upstream(application['proxy_url'], path, port_override),
@@ -367,14 +368,13 @@ async def async_main():
                 host_html_path,
                 host_api_url,
             )
-            if application['state'] == 'SPAWNING'
-            else await handle_application_http_running(
-                downstream_request,
-                method,
-                application_upstream(application['proxy_url'], path, port_override),
-                query,
-                host_api_url,
-            )
+
+        return await handle_application_http_running(
+            downstream_request,
+            method,
+            application_upstream(application['proxy_url'], path, port_override),
+            query,
+            host_api_url,
         )
 
     async def handle_application_websocket(
