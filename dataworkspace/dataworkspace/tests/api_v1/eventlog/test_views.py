@@ -39,6 +39,9 @@ class TestEventLogAPIView(BaseAPIViewTest):
             factories.DatasetLinkDownloadEventFactory,
             factories.DatasetQueryDownloadEventFactory,
             factories.ReferenceDatasetDownloadEventFactory,
+            factories.DatasetAccessRequestEventFactory,
+            factories.DatasetAccessGrantedEventFactory,
+            factories.DatasetAccessRevokedEventFactory,
         ),
     )
     def test_success(self, unauthenticated_client, event_log_factory):

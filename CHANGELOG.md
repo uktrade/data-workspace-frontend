@@ -175,6 +175,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The ablity to remove visualisation view access
 - Catalogue detail page for visualisations
 
+## 2020-04-09
+
+### Added
+
+- New API endpoint listing historic application instances at `/api/v1/application-instance/instances`
+
+### Changes
+- Log access requests and permission changes to the event log
+
 ## 2020-04-08
 
 ### Added

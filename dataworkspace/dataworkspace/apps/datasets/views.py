@@ -456,6 +456,17 @@ def request_access_view(request, dataset_uuid):
                     dataset.information_asset_manager,
                 )
 
+            log_event(
+                request.user,
+                EventLog.TYPE_DATASET_ACCESS_REQUEST,
+                dataset,
+                extra={
+                    'contact_email': contact_email,
+                    'goal': goal,
+                    'ticket_reference': ticket_reference,
+                },
+            )
+
             url = reverse('datasets:request_access_success', args=[dataset_uuid])
             return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
 

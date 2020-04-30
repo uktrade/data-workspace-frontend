@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import factory.fuzzy
 
@@ -209,6 +209,46 @@ class ReferenceDatasetDownloadEventFactory(RelatedObjectEventFactory):
     }
 
 
+class DatasetAccessRequestEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_DATASET_ACCESS_REQUEST
+    content_object = factory.SubFactory(DatacutDataSetFactory)
+    extra = {
+        'contact_email': 'test@test.com',
+        'goal': 'Access data',
+        'ticket_reference': 999,
+    }
+
+
+class DatasetAccessGrantedEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
+    content_object = factory.SubFactory(DatacutDataSetFactory)
+    extra = {
+        'created_by': 1,
+        'updated_by': 1,
+        'deleted': False,
+        'type': 2,
+        'name': 'A dataset',
+        'slug': 'a-dataset',
+        'short_description': 'test',
+        'user_access_type': 'REQUIRES_AUTHORIZATION',
+    }
+
+
+class DatasetAccessRevokedEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
+    content_object = factory.SubFactory(DatacutDataSetFactory)
+    extra = {
+        'created_by': 1,
+        'updated_by': 1,
+        'deleted': False,
+        'type': 2,
+        'name': 'A dataset',
+        'slug': 'a-dataset',
+        'short_description': 'test',
+        'user_access_type': 'REQUIRES_AUTHORIZATION',
+    }
+
+
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
@@ -265,3 +305,26 @@ class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'datasets.VisualisationCatalogueItem'
+
+
+class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    application_template = factory.SubFactory(ApplicationTemplateFactory)
+    owner = factory.SubFactory(UserFactory)
+    public_host = 'https://analysisworkspace.dev.uktrade.io/'
+    spawner = factory.fuzzy.FuzzyText()
+    spawner_application_template_options = '{}'
+    spawner_application_instance_id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    spawner_created_at = datetime.now() - timedelta(minutes=5)
+    spawner_stopped_at = datetime.now()
+    spawner_cpu = factory.fuzzy.FuzzyChoice(['256', '1024', '2048', '4096'])
+    spawner_memory = factory.fuzzy.FuzzyChoice(['512', '8192', '16384', '30720'])
+    state = factory.fuzzy.FuzzyChoice(['SPAWNING', 'RUNNING', 'STOPPED'])
+    proxy_url = 'https://analysisworkspace.dev.uktrade.io/'
+    cpu = factory.fuzzy.FuzzyChoice(['256', '1024', '2048', '4096'])
+    memory = factory.fuzzy.FuzzyChoice(['512', '8192', '16384', '30720'])
+    single_running_or_spawning_integrity = factory.fuzzy.FuzzyText()
+    commit_id = factory.fuzzy.FuzzyText(length=8)
+
+    class Meta:
+        model = 'applications.ApplicationInstance'

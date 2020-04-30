@@ -1,13 +1,12 @@
 from django import forms
 from django.contrib import admin
-from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.utils.encoding import force_text
+from django.forms import model_to_dict
 
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -20,6 +19,8 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplateUserPermission,
     ApplicationInstance,
 )
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_permission_change
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -212,21 +213,11 @@ class AppUserAdmin(UserAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        content_type = ContentType.objects.get_for_model(obj).pk
-        object_repr = force_text(obj)
-        user_id = request.user.pk
-        object_id = obj.pk
-
         obj.username = form.cleaned_data['email']
 
-        def log_change(message):
-            LogEntry.objects.log_action(
-                user_id=user_id,
-                content_type_id=content_type,
-                object_id=object_id,
-                object_repr=object_repr,
-                action_flag=CHANGE,
-                change_message=message,
+        def log_change(event_type, permission, message):
+            log_permission_change(
+                request.user, obj, event_type, {'permission': permission}, message
             )
 
         start_all_applications_permission = Permission.objects.get(
@@ -248,13 +239,21 @@ class AppUserAdmin(UserAdmin):
                 and start_all_applications_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(start_all_applications_permission)
-                log_change('Added can_start_all_applications permission')
+                log_change(
+                    EventLog.TYPE_GRANTED_USER_PERMISSION,
+                    'can_start_all_applications',
+                    'Added can_start_all_applications permission',
+                )
             elif (
                 not form.cleaned_data['can_start_all_applications']
                 and start_all_applications_permission in obj.user_permissions.all()
             ):
                 obj.user_permissions.remove(start_all_applications_permission)
-                log_change('Removed can_start_all_applications permission')
+                log_change(
+                    EventLog.TYPE_REVOKED_USER_PERMISSION,
+                    'can_start_all_applications',
+                    'Removed can_start_all_applications permission',
+                )
 
         if 'can_develop_visualisations' in form.cleaned_data:
             if (
@@ -262,13 +261,21 @@ class AppUserAdmin(UserAdmin):
                 and develop_visualisations_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(develop_visualisations_permission)
-                log_change('Added can_develop_visualisations permission')
+                log_change(
+                    EventLog.TYPE_GRANTED_USER_PERMISSION,
+                    'can_develop_visualisations',
+                    'Added can_develop_visualisations permission',
+                )
             elif (
                 not form.cleaned_data['can_develop_visualisations']
                 and develop_visualisations_permission in obj.user_permissions.all()
             ):
                 obj.user_permissions.remove(develop_visualisations_permission)
-                log_change('Removed can_develop_visualisations permission')
+                log_change(
+                    EventLog.TYPE_REVOKED_USER_PERMISSION,
+                    'can_develop_visualisations',
+                    'Removed can_develop_visualisations permission',
+                )
 
         if 'can_access_appstream' in form.cleaned_data:
             if (
@@ -276,13 +283,21 @@ class AppUserAdmin(UserAdmin):
                 and access_appstream_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(access_appstream_permission)
-                log_change('Added can_access_appstream permission')
+                log_change(
+                    EventLog.TYPE_GRANTED_USER_PERMISSION,
+                    'can_access_appstream',
+                    'Added can_access_appstream permission',
+                )
             elif (
                 not form.cleaned_data['can_access_appstream']
                 and access_appstream_permission in obj.user_permissions.all()
             ):
                 obj.user_permissions.remove(access_appstream_permission)
-                log_change('Removed can_access_appstream permission')
+                log_change(
+                    EventLog.TYPE_REVOKED_USER_PERMISSION,
+                    'can_access_appstream',
+                    'Removed can_access_appstream permission',
+                )
 
         current_datasets = set(
             DataSet.objects.live().filter(datasetuserpermission__user=obj)
@@ -299,10 +314,23 @@ class AppUserAdmin(UserAdmin):
 
         for dataset in authorized_datasets - current_datasets:
             DataSetUserPermission.objects.create(dataset=dataset, user=obj)
-            log_change('Added dataset {} permission'.format(dataset))
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_GRANTED_DATASET_PERMISSION,
+                model_to_dict(dataset),
+                f"Added dataset {dataset} permission",
+            )
+
         for dataset in current_datasets - authorized_datasets:
             DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
-            log_change('Removed dataset {} permission'.format(dataset))
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_REVOKED_DATASET_PERMISSION,
+                model_to_dict(dataset),
+                f"Removed dataset {dataset} permission",
+            )
 
         if 'authorized_visualisations' in form.cleaned_data:
             current_visualisations = ApplicationTemplate.objects.filter(
@@ -314,8 +342,12 @@ class AppUserAdmin(UserAdmin):
                     ApplicationTemplateUserPermission.objects.create(
                         application_template=application_template, user=obj
                     )
-                    log_change(
-                        'Added application {} permission'.format(application_template)
+                    log_permission_change(
+                        request.user,
+                        obj,
+                        EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
+                        model_to_dict(application_template),
+                        f"Added application {application_template} permission",
                     )
             for application_template in current_visualisations:
                 if (
@@ -325,8 +357,12 @@ class AppUserAdmin(UserAdmin):
                     ApplicationTemplateUserPermission.objects.filter(
                         application_template=application_template, user=obj
                     ).delete()
-                    log_change(
-                        'Removed application {} permission'.format(application_template)
+                    log_permission_change(
+                        request.user,
+                        obj,
+                        EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
+                        model_to_dict(application_template),
+                        f"Removed application {application_template} permission",
                     )
 
         super().save_model(request, obj, form, change)

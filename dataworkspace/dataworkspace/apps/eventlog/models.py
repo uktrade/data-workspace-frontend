@@ -15,6 +15,15 @@ class EventLog(models.Model):
     TYPE_DATASET_SOURCE_VIEW_DOWNLOAD = 6
     TYPE_VISUALISATION_APPROVED = 7
     TYPE_VISUALISATION_UNAPPROVED = 8
+    TYPE_DATASET_ACCESS_REQUEST = 9
+    TYPE_GRANTED_DATASET_PERMISSION = 10
+    TYPE_REVOKED_DATASET_PERMISSION = 11
+    TYPE_GRANTED_USER_PERMISSION = 12
+    TYPE_REVOKED_USER_PERMISSION = 13
+    TYPE_GRANTED_VISUALISATION_PERMISSION = 14
+    TYPE_REVOKED_VISUALISATION_PERMISSION = 15
+    TYPE_SET_DATASET_USER_ACCESS_TYPE = 16
+
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, 'Dataset source link download'),
         (TYPE_DATASET_SOURCE_TABLE_DOWNLOAD, 'Dataset source table download'),
@@ -24,6 +33,14 @@ class EventLog(models.Model):
         (TYPE_DATASET_SOURCE_VIEW_DOWNLOAD, 'Dataset source view download'),
         (TYPE_VISUALISATION_APPROVED, "Visualisation approved"),
         (TYPE_VISUALISATION_UNAPPROVED, "Visualisation unapproved"),
+        (TYPE_DATASET_ACCESS_REQUEST, 'Dataset access request'),
+        (TYPE_GRANTED_DATASET_PERMISSION, 'Granted dataset permission'),
+        (TYPE_REVOKED_DATASET_PERMISSION, 'Revoked dataset permission'),
+        (TYPE_GRANTED_USER_PERMISSION, 'Granted user permission'),
+        (TYPE_REVOKED_USER_PERMISSION, 'Revoked user permission'),
+        (TYPE_GRANTED_VISUALISATION_PERMISSION, 'Granted visualisation permission'),
+        (TYPE_REVOKED_VISUALISATION_PERMISSION, 'Revoked visualisation permission'),
+        (TYPE_SET_DATASET_USER_ACCESS_TYPE, 'Set dataset user access type'),
     )
     user = models.ForeignKey(
         get_user_model(), on_delete=models.DO_NOTHING, related_name='events'
