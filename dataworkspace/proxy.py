@@ -374,7 +374,6 @@ async def async_main():
             method,
             application_upstream(application['proxy_url'], path, port_override),
             query,
-            host_api_url,
         )
 
     async def handle_application_websocket(
@@ -445,7 +444,7 @@ async def async_main():
             return response
 
     async def handle_application_http_running_direct(
-        downstream_request, method, upstream_url, query, _
+        downstream_request, method, upstream_url, query
     ):
         host = downstream_request.headers['host']
         return await handle_http(
