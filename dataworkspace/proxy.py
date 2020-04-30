@@ -85,7 +85,7 @@ async def async_main():
 
     # A running application should only connect to self: this is where we have the most
     # concern because we run the least-trusted code
-    def csp_application_running(host):
+    def csp_application_running_direct(host):
         return csp_common + (
             "default-src 'self';"
             "base-uri 'self';"
@@ -411,7 +411,7 @@ async def async_main():
                 spawning_http_timeout,
                 # Although the application is spawning, if the response makes it back to the client,
                 # we know the application is running, so we return the _running_ CSP headers
-                (('content-security-policy', csp_application_running(host)),),
+                (('content-security-policy', csp_application_running_direct(host)),),
             )
 
         except Exception:
@@ -455,7 +455,7 @@ async def async_main():
             upstream_url,
             query,
             default_http_timeout,
-            (('content-security-policy', csp_application_running(host)),),
+            (('content-security-policy', csp_application_running_direct(host)),),
         )
 
     async def handle_mirror(downstream_request, method, path):
