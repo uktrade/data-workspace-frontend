@@ -447,15 +447,6 @@ async def async_main():
     async def handle_application_http_running(
         downstream_request, method, upstream_url, query, _
     ):
-        # For the time being, we don't attempt to delete if an application has failed
-        # Since initial attempts were too sensistive, and would delete the application
-        # when it was still running
-        # try:
-        #     return await handle_http(downstream_request, method, headers, upstream_url, query, default_http_timeout)
-        # except (aiohttp.client_exceptions.ClientConnectionError, asyncio.TimeoutError):
-        # async with client_session.request('DELETE', host_api_url, headers=headers) as delete_response:
-        #     await delete_response.read()
-        #     raise
         host = downstream_request.headers['host']
         return await handle_http(
             downstream_request,
