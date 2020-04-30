@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The command in the sample environment for local development to make working on the spawning system a bit easier
 
+### Added
+
+- The ability to optionally wrap a visualisation in an iframe, towards adding a header
+
 ## 2020-04-29
 
 ### Added
