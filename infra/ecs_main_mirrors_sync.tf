@@ -34,6 +34,7 @@ data "template_file" "mirrors_sync_container_definitions_conda" {
     mirror_pypi = "False"
     mirror_debian = "False"
     mirror_nltk = "False"
+    mirror_openstreetmap = "False"
   }
 }
 
@@ -73,6 +74,7 @@ data "template_file" "mirrors_sync_container_definitions_cran" {
     mirror_pypi = "False"
     mirror_debian = "False"
     mirror_nltk = "False"
+    mirror_openstreetmap = "False"
   }
 }
 
@@ -112,6 +114,7 @@ data "template_file" "mirrors_sync_container_definitions_pypi" {
     mirror_pypi = "True"
     mirror_debian = "False"
     mirror_nltk = "False"
+    mirror_openstreetmap = "False"
   }
 }
 
@@ -151,6 +154,7 @@ data "template_file" "mirrors_sync_container_definitions_debian" {
     mirror_pypi = "False"
     mirror_debian = "True"
     mirror_nltk = "False"
+    mirror_openstreetmap = "False"
   }
 }
 
@@ -190,6 +194,47 @@ data "template_file" "mirrors_sync_container_definitions_nltk" {
     mirror_pypi = "False"
     mirror_debian = "False"
     mirror_nltk = "True"
+    mirror_openstreetmap = "False"
+  }
+}
+
+resource "aws_ecs_task_definition" "mirrors_sync_openstreetmap" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  family                = "jupyterhub-mirrors-sync-openstreetmap"
+  container_definitions = "${data.template_file.mirrors_sync_container_definitions_openstreetmap.rendered}"
+  execution_role_arn    = "${aws_iam_role.mirrors_sync_task_execution.arn}"
+  task_role_arn         = "${aws_iam_role.mirrors_sync_task.arn}"
+  network_mode          = "awsvpc"
+  cpu                   = "${local.mirrors_sync_container_cpu}"
+  memory                = "${local.mirrors_sync_container_memory}"
+  requires_compatibilities = ["FARGATE"]
+}
+
+data "template_file" "mirrors_sync_container_definitions_openstreetmap" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
+
+  vars {
+    container_image    = "quay.io/uktrade/data-workspace-mirrors-sync:master"
+    container_name     = "${local.mirrors_sync_container_name}"
+    container_cpu      = "${local.mirrors_sync_container_cpu}"
+    container_memory   = "${local.mirrors_sync_container_memory}"
+
+    log_group  = "${aws_cloudwatch_log_group.mirrors_sync.name}"
+    log_region = "${data.aws_region.aws_region.name}"
+
+    mirrors_bucket_region = "${data.aws_region.aws_region.name}"
+    mirrors_bucket_host = "s3-${data.aws_region.aws_region.name}.amazonaws.com"
+    mirrors_bucket_name = "${var.mirrors_bucket_name}"
+
+    mirror_anaconda_r = "False"
+    mirror_anaconda_conda_forge = "False"
+    mirror_anaconda_conda_anaconda = "False"
+    mirror_cran = "False"
+    mirror_pypi = "False"
+    mirror_debian = "False"
+    mirror_nltk = "False"
+    mirror_openstreetmap = "True"
   }
 }
 

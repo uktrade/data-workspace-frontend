@@ -53,6 +53,10 @@
     {
         "name": "MIRROR_NLTK",
         "value": "${mirror_nltk}"
+    },
+    {
+        "name": "MIRROR_OPENSTREETMAP",
+        "value": "${mirror_openstreetmap}"
     }]
   }
 ]

@@ -173,6 +173,28 @@ async def s3_request_full(
         return code, await buffered(body)
 
 
+async def s3_request_full_headers(
+    logger, context, method, path, query, api_pre_auth_headers, payload, payload_hash
+):
+
+    with logged(
+        logger,
+        'Request: %s %s %s %s %s',
+        [method, context.bucket.host, path, query, api_pre_auth_headers],
+    ):
+        code, headers, body = await _s3_request(
+            logger,
+            context,
+            method,
+            path,
+            query,
+            api_pre_auth_headers,
+            payload,
+            payload_hash,
+        )
+        return code, headers, await buffered(body)
+
+
 async def s3_list_keys_relative_to_prefix(logger, context, prefix):
     async def _list(extra_query_items=()):
         query = (
@@ -310,7 +332,7 @@ def get_ecs_role_credentials(url):
 
 async def async_main(logger):
     # Suspect that S3 has a very small keep-alive value
-    request_non_redirectable, close_pool = Pool(keep_alive_timeout=4)
+    request_non_redirectable, close_pool = Pool(keep_alive_timeout=4, socket_timeout=60)
     request = redirectable(request_non_redirectable)
 
     credentials = get_ecs_role_credentials(
@@ -363,6 +385,15 @@ async def async_main(logger):
 
     if os.environ['MIRROR_NLTK'] == 'True':
         await nltk_mirror(logger, request, s3_context, 'nltk/')
+
+    if os.environ['MIRROR_OPENSTREETMAP'] == 'True':
+        await single_file(
+            logger,
+            request,
+            s3_context,
+            'https://download.bbbike.org/osm/planet/planet-latest.osm.pbf',
+            'openstreetmap/planet-latest.osm.pbf',
+        )
 
     await close_pool()
     await asyncio.sleep(0)
@@ -1025,6 +1056,122 @@ async def nltk_mirror(logger, request, s3_context, s3_prefix):
     )
     if code != b'200':
         raise Exception()
+
+
+async def single_file(logger, request, s3_context, source_file, target_key):
+    # Start multipart upload
+    _, body = await s3_request_full(
+        logger,
+        s3_context,
+        b'POST',
+        '/' + target_key,
+        (('uploads', ''),),
+        ((b'content-length', b'0'),),
+        empty_async_iterator,
+        s3_hash(b''),
+    )
+    upload_id = re.search(b'<UploadId>(.*)</UploadId>', body)[1].decode('utf-8')
+
+    # Start request getting the file
+    code, headers, downstream_body = await request(b'GET', source_file)
+    if code != b'200':
+        await blackhole(body)
+        raise Exception(f'{code} {source_file}')
+
+    headers_lower = dict((key.lower(), value) for key, value in headers)
+    content_length_total = int(headers_lower[b'content-length'])
+
+    max_single_put_bytes = 100_000_000
+
+    def gen_part_numbers_lengths(total_length, max_part_length):
+        offset = 0
+        part_number = 0
+        while offset < total_length:
+            part_number += 1
+            pre_offset = offset
+            offset = min(offset + max_part_length, total_length)
+            yield str(part_number), offset - pre_offset
+
+    def gen_body(body, number_lengths):
+        body_chunk = b''
+        part_offset = 0
+
+        for part_number, part_length in number_lengths:
+
+            async def part_body():
+                nonlocal body_chunk
+                nonlocal part_offset
+
+                # Yield any bytes leftover from previous part
+                part_offset = len(body_chunk)
+                if body_chunk:
+                    yield body_chunk
+
+                while part_offset < part_length:
+                    body_chunk = await body.__anext__()
+
+                    remaining = part_length - part_offset
+                    to_yield, body_chunk = (
+                        body_chunk[:remaining],
+                        body_chunk[remaining:],
+                    )
+                    part_offset += len(to_yield)
+
+                    yield to_yield
+
+            yield part_number, part_length, part_body
+
+    async def upload_returning_part_number_etag(number_lengths_body):
+        for part_number, part_length, part_body in number_lengths_body:
+            query = (('partNumber', part_number), ('uploadId', upload_id))
+            code, headers, response_body = await s3_request_full_headers(
+                logger,
+                s3_context,
+                b'PUT',
+                '/' + target_key,
+                query,
+                ((b'content-length', str(part_length).encode('ascii')),),
+                part_body,
+                'UNSIGNED-PAYLOAD',
+            )
+            if code != b'200':
+                raise Exception(response_body)
+
+            headers_lower = dict((key.lower(), value) for key, value in headers)
+            part_etag = headers_lower[b'etag'].decode('ascii')
+            yield part_number, part_etag
+
+    part_number_lengths = gen_part_numbers_lengths(
+        content_length_total, max_single_put_bytes
+    )
+    part_number_lengths_body = gen_body(downstream_body, part_number_lengths)
+    part_number_etags = upload_returning_part_number_etag(part_number_lengths_body)
+
+    payload = (
+        '<CompleteMultipartUpload>'
+        + ''.join(
+            [
+                f'<Part><PartNumber>{part_number}</PartNumber><ETag>{part_etag}</ETag></Part>'
+                async for part_number, part_etag in part_number_etags
+            ]
+        )
+        + '</CompleteMultipartUpload>'
+    ).encode('utf-8')
+    payload_hash = s3_hash(payload)
+
+    # Complete multipart upload
+    code, body = await s3_request_full(
+        logger,
+        s3_context,
+        b'POST',
+        '/' + target_key,
+        (('uploadId', upload_id),),
+        ((b'content-length', str(len(payload)).encode('ascii')),),
+        streamed(payload),
+        payload_hash,
+    )
+    if code != b'200':
+        raise Exception(body)
 
 
 def main():

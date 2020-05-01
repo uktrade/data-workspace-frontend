@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.11
 
 ENV \
 	LC_ALL=en_US.UTF-8 \
@@ -7,7 +7,7 @@ ENV \
 
 RUN \
 	apk add --no-cache \
-		python3=3.6.9-r1 && \
+		python3=3.8.2-r0 && \
 	python3 -m ensurepip && \
 	pip3 install pip==18.01 && \
 	pip3 install \
