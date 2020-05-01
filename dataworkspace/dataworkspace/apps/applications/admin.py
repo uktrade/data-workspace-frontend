@@ -6,10 +6,10 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.models import User, Permission
+from django.core import serializers
 from django.db import transaction
 from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
 from django.db.models.functions import Least
-from django.forms import model_to_dict
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -452,7 +452,11 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         def log_change(event_type, dataset, message):
             log_permission_change(
-                request.user, obj, event_type, model_to_dict(dataset), message
+                request.user,
+                obj,
+                event_type,
+                serializers.serialize('python', [dataset])[0],
+                message,
             )
 
         current_master_datasets = set(

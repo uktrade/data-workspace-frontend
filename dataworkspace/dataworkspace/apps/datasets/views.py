@@ -10,10 +10,10 @@ import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.core import serializers
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import IntegerField, F, Q, Value
-from django.forms import model_to_dict
 from django.http import (
     Http404,
     HttpResponse,
@@ -651,7 +651,10 @@ class SourceLinkDownloadView(DetailView):
             request.user,
             EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
             source_link.dataset,
-            extra={'path': request.get_full_path(), **model_to_dict(source_link)},
+            extra={
+                'path': request.get_full_path(),
+                **serializers.serialize('python', [source_link])[0],
+            },
         )
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])
@@ -709,7 +712,10 @@ class SourceDownloadMixin:
             request.user,
             self.event_log_type,
             db_object.dataset,
-            extra={'path': request.get_full_path(), **model_to_dict(db_object)},
+            extra={
+                'path': request.get_full_path(),
+                **serializers.serialize('python', [db_object])[0],
+            },
         )
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])
@@ -756,7 +762,10 @@ class CustomDatasetQueryDownloadView(DetailView):
             request.user,
             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
             query.dataset,
-            extra={'path': request.get_full_path(), **model_to_dict(query)},
+            extra={
+                'path': request.get_full_path(),
+                **serializers.serialize('python', [query])[0],
+            },
         )
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])

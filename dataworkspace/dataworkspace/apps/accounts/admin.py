@@ -5,8 +5,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core import serializers
 from django.db import transaction
-from django.forms import model_to_dict
 
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -318,7 +318,7 @@ class AppUserAdmin(UserAdmin):
                 request.user,
                 obj,
                 EventLog.TYPE_GRANTED_DATASET_PERMISSION,
-                model_to_dict(dataset),
+                serializers.serialize('python', [dataset])[0],
                 f"Added dataset {dataset} permission",
             )
 
@@ -328,7 +328,7 @@ class AppUserAdmin(UserAdmin):
                 request.user,
                 obj,
                 EventLog.TYPE_REVOKED_DATASET_PERMISSION,
-                model_to_dict(dataset),
+                serializers.serialize('python', [dataset])[0],
                 f"Removed dataset {dataset} permission",
             )
 
@@ -346,7 +346,7 @@ class AppUserAdmin(UserAdmin):
                         request.user,
                         obj,
                         EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
-                        model_to_dict(application_template),
+                        serializers.serialize('python', [application_template])[0],
                         f"Added application {application_template} permission",
                     )
             for application_template in current_visualisations:
@@ -361,7 +361,7 @@ class AppUserAdmin(UserAdmin):
                         request.user,
                         obj,
                         EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
-                        model_to_dict(application_template),
+                        serializers.serialize('python', [application_template])[0],
                         f"Removed application {application_template} permission",
                     )
 
