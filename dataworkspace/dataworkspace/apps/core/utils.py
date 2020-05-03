@@ -79,7 +79,9 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
 
         # Multiple concurrent GRANT CONNECT on the same database can cause
         # "tuple concurrently updated" errors
-        with cache.lock(f'database-grant-connect-{database_data["NAME"]}'):
+        with cache.lock(
+            f'database-grant-connect-{database_data["NAME"]}--v2', blocking_timeout=3
+        ):
             with connections[database_obj.memorable_name].cursor() as cur:
                 cur.execute(
                     sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
@@ -187,7 +189,10 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
         )
 
         for schema in schemas:
-            with cache.lock(f'database-grant--{database_data["NAME"]}--{schema}'):
+            with cache.lock(
+                f'database-grant--{database_data["NAME"]}--{schema}--v2',
+                blocking_timeout=3,
+            ):
                 with connections[database_obj.memorable_name].cursor() as cur:
                     logger.info(
                         'Granting usages on %s %s to %s',
@@ -202,7 +207,10 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
                     )
 
         for schema, table in tables_that_exist:
-            with cache.lock(f'database-grant--{database_data["NAME"]}--{schema}'):
+            with cache.lock(
+                f'database-grant--{database_data["NAME"]}--{schema}--v2',
+                blocking_timeout=3,
+            ):
                 with connections[database_obj.memorable_name].cursor() as cur:
                     logger.info(
                         'Granting permissions to %s %s.%s to %s',
