@@ -38,6 +38,10 @@ RUN \
     apt-get install -y nodejs
 
 RUN \
+	update-alternatives --install /usr/bin/python python /usr/bin/python3 2 && \
+	update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+
+RUN \
     echo '[global]' > /etc/pip.conf && \
     echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf
 
@@ -49,6 +53,7 @@ ENV \
 	PATH="/root/.yarn/bin:/root/node_modules/.bin:$PATH"
 
 COPY package.json /root
+COPY yarn.lock /root
 
 RUN \
 	yarn install && \
