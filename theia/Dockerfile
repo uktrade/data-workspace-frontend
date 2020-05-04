@@ -35,7 +35,9 @@ RUN \
 		python3-pip \
 		sudo && \
 	curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
-    apt-get install -y nodejs
+    apt-get install -y nodejs && \
+    rm /etc/apt/sources.list.d/nodesource.list && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN \
 	update-alternatives --install /usr/bin/python python /usr/bin/python3 2 && \
