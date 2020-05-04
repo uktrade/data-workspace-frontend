@@ -627,4 +627,5 @@ def _fargate_task_run(
                 'subnets': subnets,
             }
         },
+        platformVersion='1.4.0',
     )

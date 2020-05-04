@@ -133,6 +133,8 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
   }
 
   # For Fargate to start tasks
+  # When fully moved over to Fargate 1.4.0, suspect can restrict to more
+  # specific execution roles
   statement {
     principals {
       type = "AWS"
@@ -140,6 +142,8 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
     }
 
     actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer"
     ]
