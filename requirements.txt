@@ -6,7 +6,7 @@ celery-redbeat==0.13.0
 celery==4.4.2
 cryptography==2.9.2
 django-admin-sortable2==0.7.6
-django-better-admin-arrayfield==1.0.7
+django-better-admin-arrayfield==1.1.0
 django-ckeditor==5.9.0
 django-csp==3.6
 django-db-geventpool==3.2.1
