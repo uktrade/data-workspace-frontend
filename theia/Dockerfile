@@ -49,6 +49,7 @@ ENV \
 	PATH="/root/.yarn/bin:/root/node_modules/.bin:$PATH"
 
 COPY package.json /root
+COPY yarn.lock /root
 
 RUN \
 	yarn install && \
