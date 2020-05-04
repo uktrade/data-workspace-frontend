@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-05-04
+
+### Changed
+
+- Fix Theia missing menu on new builds by locking dependencies
+
 ## 2020-05-01
 
 ### Changed
