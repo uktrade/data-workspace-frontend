@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix Theia missing menu on new builds by locking dependencies
 - Default to Python 3 in Theia
 - Fewer errors when running apt-get update in Theia
+- Allow popups in wrapped visualisations
 
 ## 2020-05-01
 
