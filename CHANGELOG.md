@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Fix Theia missing menu on new builds by locking dependencies
+- Default to Python 3 in Theia
 
 ## 2020-05-01
 
