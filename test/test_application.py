@@ -356,6 +356,40 @@ class TestApplication(unittest.TestCase):
         )
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
+        stdout, stderr, code = await set_visualisation_wrap(
+            'testvisualisation', 'FULL_HEIGHT_IFRAME'
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET',
+            'http://testvisualisation.dataworkspace.test:8000/',
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.text()
+
+        self.assertIn(
+            '<iframe src="http://testvisualisation--8888.dataworkspace.test:8000/"',
+            received_content,
+        )
+
+        async with session.request(
+            'GET',
+            'http://testvisualisation--8888.dataworkspace.test:8000/http',
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content['method'], 'GET')
+        self.assertEqual(
+            received_content['headers']['from-downstream'], 'downstream-header-value'
+        )
+        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+
     @async_test
     async def test_visualisation_commit_shows_content_if_authorized(self):
         await flush_database()
@@ -452,6 +486,21 @@ class TestApplication(unittest.TestCase):
         async with session.request(
             'GET',
             'http://testvisualisation--58d9e87e.dataworkspace.test:8000/http',
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content['method'], 'GET')
+        self.assertEqual(
+            received_content['headers']['from-downstream'], 'downstream-header-value'
+        )
+        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+
+        async with session.request(
+            'GET',
+            'http://testvisualisation--58d9e87e--8888.dataworkspace.test:8000/http',
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
@@ -2337,6 +2386,32 @@ template = VisualisationTemplate.objects.get(
 )
 template.visible = {visible}
 template.save()
+        """
+    ).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def set_visualisation_wrap(name, wrap):
+    python_code = textwrap.dedent(
+        f"""\
+        from dataworkspace.apps.applications.models import (
+            VisualisationTemplate,
+        )
+        template = VisualisationTemplate.objects.get(
+            host_basename="{name}"
+        )
+        template.wrap = "{wrap}"
+        template.save()
         """
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(

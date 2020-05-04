@@ -112,6 +112,33 @@ def application_spawning_html_GET(request, public_host):
     return render(request, 'spawning.html', context, status=202)
 
 
+@csp_exempt
+def application_running_html_view(request, public_host):
+    return (
+        application_running_html_GET(request, public_host)
+        if request.method == 'GET'
+        else HttpResponse(status=405)
+    )
+
+
+def application_running_html_GET(request, public_host):
+    try:
+        application_instance = get_api_visible_application_instance_by_public_host(
+            public_host
+        )
+    except ApplicationInstance.DoesNotExist:
+        return public_error_500_html_view(request)
+
+    port = urlsplit(application_instance.proxy_url).port
+    context = {
+        'visualisation_src': f'{request.scheme}://{application_instance.public_host}--{port}.'
+        f'{settings.APPLICATION_ROOT_DOMAIN}/',
+        'nice_name': application_instance.application_template.nice_name,
+    }
+
+    return render(request, 'running.html', context, status=200)
+
+
 def tools_html_view(request):
     return (
         tools_html_POST(request)
