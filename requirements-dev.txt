@@ -14,4 +14,4 @@ pytest-cov==2.8.1
 pytest-mock==3.1.0
 pytest-django==3.8.0
 django-debug-toolbar==2.2
-requests-mock==1.7.0
+requests-mock==1.8.0
