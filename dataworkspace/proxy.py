@@ -112,6 +112,7 @@ async def async_main():
             # Both JupyterLab and RStudio need `unsafe-eval`
             "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
             "style-src 'unsafe-inline' 'self';"
+            "worker-src 'self' blob:;"
         )
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
