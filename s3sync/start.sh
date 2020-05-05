@@ -20,4 +20,4 @@ mobius3 \
     --credentials-source ecs-container-endpoint \
     --exclude-remote '(.*(/|^)\.checkpoints/)|(.*(/|^)bigdata/.*)' \
     --exclude-local '(.*(/|^)\.__mobius3_flush__.*)|(.*(/|^)bigdata/.*)' \
-    --upload-on-create '^.*/\.git/objects/pack/.+\.((pack)|(m?idx))$'
+    --upload-on-create '^.*/\.git/.*$'
