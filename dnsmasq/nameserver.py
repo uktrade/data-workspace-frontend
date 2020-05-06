@@ -5,7 +5,7 @@ import re
 import signal
 import sys
 
-from aiodnsresolver import Resolver
+from aiodnsresolver import Resolver, IPv4AddressExpiresAt, TYPES
 from dnsrewriteproxy import DnsProxy
 
 
@@ -20,12 +20,34 @@ async def async_main():
     logger.setLevel(logging.INFO)
     logger.addHandler(stdout_handler)
 
+    hosts = {
+        # ECS seem to make these DNS queries. A query for localhost is
+        # particularly odd, since it would typically be hard coded in
+        # /etc/hosts
+        b'localhost': {TYPES.A: IPv4AddressExpiresAt('127.0.0.1', expires_at=0)},
+        b'1.amazon.pool.ntp.org': {
+            TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)
+        },
+        b'2.amazon.pool.ntp.org': {
+            TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)
+        },
+        b'3.amazon.pool.ntp.org': {
+            TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)
+        },
+    }
+
     def get_resolver():
         async def get_nameservers(_, __):
             for _ in range(0, 5):
                 yield (1.0, (nameserver, 53))
 
-        return Resolver(get_nameservers=get_nameservers)
+        async def get_host(_, fqdn, qtype):
+            try:
+                return hosts[qtype][fqdn]
+            except KeyError:
+                return None
+
+        return Resolver(get_nameservers=get_nameservers, get_host=get_host)
 
     start = DnsProxy(
         rules=(
@@ -37,6 +59,10 @@ async def async_main():
             (r'^(.+)\.' + public_zone + '$', r'\1.' + private_zone),
             # ... And amazon domains should remain as they are, e.g. S3, CloudWatch
             (r'(.+\.amazonaws\.com)$', r'\1'),
+            (r'^(localhost)$', r'\1'),
+            (r'^(1\.amazon\.pool\.ntp\.org)$', r'\1'),
+            (r'^(2\.amazon\.pool\.ntp\.org)$', r'\1'),
+            (r'^(3\.amazon\.pool\.ntp\.org)$', r'\1'),
         ),
         get_resolver=get_resolver,
     )

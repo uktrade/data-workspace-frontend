@@ -142,6 +142,8 @@ data "template_file" "admin_container_definitions" {
   
     google_analytics_site_id = "${var.google_analytics_site_id}"
     google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
+
+    superset_root = "http://${aws_lb.superset_multiuser.dns_name}/"
   }
 }
 
@@ -252,6 +254,8 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
 
     google_analytics_site_id = "${var.google_analytics_site_id}"
     google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
+
+    superset_root = "${aws_lb.superset_multiuser.dns_name}"
   }
 }
 

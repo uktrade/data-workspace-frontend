@@ -60,6 +60,18 @@ resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_gitlab_runner" {
   protocol    = "udp"
 }
 
+resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_superset_multiuser_service" {
+  description = "ingress-dns-udp-superset-multiuser-service"
+
+  security_group_id = "${aws_security_group.dnsmasq.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+
+  type        = "ingress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
+}
+
 resource "aws_security_group" "sentryproxy_service" {
   name        = "${var.prefix}-sentryproxy"
   description = "${var.prefix}-sentryproxy"
@@ -129,6 +141,18 @@ resource "aws_security_group_rule" "registry_alb_ingress_https_from_notebooks" {
 
   security_group_id = "${aws_security_group.registry_alb.id}"
   source_security_group_id = "${aws_security_group.notebooks.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "registry_alb_ingress_https_from_superset_multiuser_service" {
+  description = "ingress-https-from-superset"
+
+  security_group_id = "${aws_security_group.registry_alb.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
 
   type        = "ingress"
   from_port   = "443"
@@ -311,6 +335,18 @@ resource "aws_security_group" "admin_service" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_security_group_rule" "admin_service_egress_http_to_superset_lb" {
+  description = "egress-http-to-gitlab-service"
+
+  security_group_id = "${aws_security_group.admin_service.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
+
+  type        = "egress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
 }
 
 resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_service" {
@@ -1123,5 +1159,143 @@ resource "aws_security_group_rule" "gitlab_runner_egress_https" {
   type        = "egress"
   from_port   = "443"
   to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group" "superset_multiuser_db" {
+  name        = "${var.prefix}-superset-multiuser-db"
+  description = "${var.prefix}-superset-multiuser-db"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags {
+    Name = "${var.prefix}-superset-multiuser-db"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "superset_multiuser_db_ingress_postgres_superset_service" {
+  description = "ingress-postgress-superset-service"
+
+  security_group_id = "${aws_security_group.superset_multiuser_db.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+
+  type        = "ingress"
+  from_port   = "5432"
+  to_port     = "5432"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group" "superset_multiuser_service" {
+  name        = "${var.prefix}-superset-multiuser-service"
+  description = "${var.prefix}-superset-multiuser-service"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags {
+    Name = "${var.prefix}-superset-multiuser-service"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "superset_service_ingress_http_superset_lb" {
+  description = "ingress-superset-lb"
+
+  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
+
+  type        = "ingress"
+  from_port   = "8000"
+  to_port     = "8000"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "superset_service_egress_postgres_superset_db" {
+  description = "egress-postgress-superset-db"
+
+  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_db.id}"
+
+  type        = "egress"
+  from_port   = "5432"
+  to_port     = "5432"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "superset_multiuser_service_egress_https_registry_alb" {
+  description = "egress-https-to-registry"
+
+  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.registry_alb.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "superset_multiuser_service_egress_https_to_cloudwatch" {
+  description = "egress-https-to-cloudwatch"
+
+  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.cloudwatch.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to_dnsmasq" {
+  description = "egress-dns-to-dnsmasq"
+
+  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.dnsmasq.id}"
+
+  type        = "egress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
+}
+
+resource "aws_security_group" "superset_multiuser_lb" {
+  name        = "${var.prefix}-superset-multiuser-lb"
+  description = "${var.prefix}-superset-multiuser-lb"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags {
+    Name = "${var.prefix}-superset-multiuser-lb"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "superset_lb_ingress_http_admin_service" {
+  description = "ingress-http-admin-service"
+
+  security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
+  source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type        = "ingress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "superset_lb_egress_http_superset_service" {
+  description = "egress-http-superset-service"
+
+  security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+
+  type        = "egress"
+  from_port   = "8000"
+  to_port     = "8000"
   protocol    = "tcp"
 }

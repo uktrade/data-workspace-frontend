@@ -113,6 +113,10 @@ variable gitlab_sso_domain {}
 variable gitlab_key {}
 variable gitlab_runner_key {}
 
+variable superset_multiuser_admin_users {}
+variable superset_multiuser_db_instance_class {}
+variable superset_multiuser_container_image {}
+
 locals {
   registry_container_name    = "jupyterhub-registry"
   registry_container_port    = "5000"
@@ -172,4 +176,7 @@ locals {
 
   gitlab_container_memory = 8192
   gitlab_container_cpu    = 4096
+
+  superset_multiuser_container_memory = 8192
+  superset_multiuser_container_cpu    = 1024
 }
