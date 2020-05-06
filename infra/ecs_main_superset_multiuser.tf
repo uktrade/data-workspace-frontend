@@ -134,7 +134,7 @@ data "aws_iam_policy_document" "superset_multiuser_task_ecs_tasks_assume_role" {
 }
 
 resource "aws_lb" "superset_multiuser" {
-  name               = "${var.prefix}-superset-multiuser"
+  name               = "${var.prefix}-superset"
   load_balancer_type = "application"
   internal           = true
   security_groups    = ["${aws_security_group.superset_multiuser_lb.id}"]
