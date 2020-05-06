@@ -266,18 +266,6 @@ class FargateSpawner:
                 else definition_arn
             )
 
-            # If memory or cpu are given, create a new task definition.
-            cpu = application_instance.cpu
-            memory = application_instance.memory
-            cpu_or_mem = cpu is not None or memory is not None
-            definition_arn_with_cpu_memory_image = (
-                _fargate_task_definition_with_cpu_memory(
-                    definition_arn_with_image, cpu, memory
-                )
-                if cpu_or_mem
-                else definition_arn_with_image
-            )
-
             for i in range(0, 10):
                 # Sometimes there is an error assuming the new role: both IAM  and ECS are
                 # eventually consistent
@@ -286,9 +274,11 @@ class FargateSpawner:
                         role_arn,
                         cluster_name,
                         container_name,
-                        definition_arn_with_cpu_memory_image,
+                        definition_arn_with_image,
                         security_groups,
                         subnets,
+                        application_instance.cpu,
+                        application_instance.memory,
                         cmd,
                         {**s3_env, **database_env, **schema_env, **env},
                         s3_sync,
@@ -535,41 +525,6 @@ def _fargate_task_definition_with_tag(task_family, container_name, tag):
     return register_tag_response['taskDefinition']['taskDefinitionArn']
 
 
-def _fargate_task_definition_with_cpu_memory(task_family, cpu, memory):
-    client = boto3.client('ecs')
-    describe_task_response = client.describe_task_definition(taskDefinition=task_family)
-    if cpu is not None:
-        describe_task_response['taskDefinition']['cpu'] = cpu
-    if memory is not None:
-        describe_task_response['taskDefinition']['memory'] = memory
-    describe_task_response['taskDefinition']['family'] = (
-        task_family
-        + (f'-{cpu}' if cpu is not None else '')
-        + (f'-{memory}' if memory is not None else '')
-    )
-
-    register_tag_response = client.register_task_definition(
-        **{
-            key: value
-            for key, value in describe_task_response['taskDefinition'].items()
-            if key
-            in [
-                'family',
-                'taskRoleArn',
-                'executionRoleArn',
-                'networkMode',
-                'containerDefinitions',
-                'volumes',
-                'placementConstraints',
-                'requiresCompatibilities',
-                'cpu',
-                'memory',
-            ]
-        }
-    )
-    return register_tag_response['taskDefinition']['taskDefinitionArn']
-
-
 def _fargate_task_ip(cluster_name, arn):
     described_task = _fargate_task_describe(cluster_name, arn)
 
@@ -626,6 +581,8 @@ def _fargate_task_run(
     definition_arn,
     security_groups,
     subnets,
+    cpu,
+    memory,
     command_and_args,
     env,
     s3_sync,
@@ -637,6 +594,8 @@ def _fargate_task_run(
         taskDefinition=definition_arn,
         overrides={
             'taskRoleArn': role_arn,
+            **({'cpu': cpu} if cpu else {}),
+            **({'memory': memory} if memory else {}),
             'containerOverrides': [
                 {
                     **({'command': command_and_args} if command_and_args else {}),
