@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fix issue where proxy was denying access to accounts api endpoint
 - Version of Fargate on Docker pull-through cache to allow for more space
+- Avoid creating a new task definition if cpu/memory are specified
 
 ### Added
 
