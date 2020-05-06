@@ -5,6 +5,8 @@ resource "aws_ecs_service" "registry" {
   desired_count   = 3
   launch_type     = "FARGATE"
 
+  platform_version = "1.4.0"
+
   network_configuration {
     subnets         = ["${aws_subnet.private_with_egress.*.id}"]
     security_groups = ["${aws_security_group.registry_service.id}"]
