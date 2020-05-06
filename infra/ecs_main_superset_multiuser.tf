@@ -192,7 +192,7 @@ resource "aws_rds_cluster" "superset_multiuser" {
 
 resource "aws_rds_cluster_instance" "superset_multiuser" {
   count              = 1
-  identifier_prefix  = "${var.prefix}-superset-multiuser"
+  identifier_prefix  = "${var.prefix}-superset"
   cluster_identifier = "${aws_rds_cluster.superset_multiuser.id}"
   engine             = "${aws_rds_cluster.superset_multiuser.engine}"
   engine_version     = "${aws_rds_cluster.superset_multiuser.engine_version}"
