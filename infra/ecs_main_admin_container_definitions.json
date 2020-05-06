@@ -1164,6 +1164,10 @@
       "value": "${root_domain}"
     },
     {
+      "name": "SUPERSET_ROOT",
+      "value": "${superset_root}"
+    },
+    {
       "name": "APPSTREAM_URL",
       "value": "${appstream_url}"
     },

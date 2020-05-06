@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix issue where proxy was denying access to accounts api endpoint
 - Version of Fargate on Docker pull-through cache to allow for more space
 
+### Added
+
+- Multiuser instance of Superset behind the proxy for testing
+
 ## 2020-05-05
 
 ### Changed
