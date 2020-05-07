@@ -551,6 +551,7 @@ async def async_main():
 
     async def handle_superset(downstream_request, method, path, query):
         upstream_url = URL(superset_root).with_path(path)
+        host = downstream_request.headers['host']
         return await handle_http(
             downstream_request,
             method,
@@ -558,6 +559,12 @@ async def async_main():
             upstream_url,
             query,
             default_http_timeout,
+            (
+                (
+                    'content-security-policy',
+                    csp_application_running_direct(host, 'superset'),
+                ),
+            ),
         )
 
     async def handle_admin(downstream_request, method, path, query):
