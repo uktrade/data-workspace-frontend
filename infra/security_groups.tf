@@ -344,8 +344,8 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_superset_lb" {
   source_security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
 
   type        = "egress"
-  from_port   = "80"
-  to_port     = "80"
+  from_port   = "443"
+  to_port     = "443"
   protocol    = "tcp"
 }
 
@@ -1283,8 +1283,8 @@ resource "aws_security_group_rule" "superset_lb_ingress_http_admin_service" {
   source_security_group_id = "${aws_security_group.admin_service.id}"
 
   type        = "ingress"
-  from_port   = "80"
-  to_port     = "80"
+  from_port   = "443"
+  to_port     = "443"
   protocol    = "tcp"
 }
 

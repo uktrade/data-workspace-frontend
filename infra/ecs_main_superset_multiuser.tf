@@ -20,7 +20,7 @@ resource "aws_ecs_service" "superset_multiuser" {
   }
 
   depends_on = [
-    "aws_lb_listener.superset_multiuser_80",
+    "aws_lb_listener.superset_multiuser_443",
   ]
 }
 
@@ -141,10 +141,13 @@ resource "aws_lb" "superset_multiuser" {
   subnets            = ["${aws_subnet.private_without_egress.*.id}"]
 }
 
-resource "aws_lb_listener" "superset_multiuser_80" {
+resource "aws_lb_listener" "superset_multiuser_443" {
   load_balancer_arn = "${aws_lb.superset_multiuser.arn}"
-  port              = "80"
-  protocol          = "HTTP"
+  port              = "443"
+  protocol          = "HTTPS"
+
+  ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  certificate_arn = "${aws_acm_certificate_validation.superset_multiuser_internal.certificate_arn}"
 
   default_action {
     target_group_arn = "${aws_lb_target_group.superset_multiuser_8000.arn}"

@@ -158,6 +158,35 @@ resource "aws_route53_record" "gitlab" {
   }
 }
 
+resource "aws_route53_record" "superset_multiuser_internal" {
+  provider = "aws.route53"
+  zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
+  name    = "${var.superset_internal_domain}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_lb.superset_multiuser.dns_name}"
+    zone_id                = "${aws_lb.superset_multiuser.zone_id}"
+    evaluate_target_health = false
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_acm_certificate" "superset_multiuser_internal" {
+  domain_name       = "${aws_route53_record.superset_multiuser_internal.name}"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_acm_certificate_validation" "superset_multiuser_internal" {
+  certificate_arn = "${aws_acm_certificate.superset_multiuser_internal.arn}"
+}
 
 # resource "aws_route53_record" "jupyterhub" {
 #   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"

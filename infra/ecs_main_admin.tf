@@ -143,7 +143,7 @@ data "template_file" "admin_container_definitions" {
     google_analytics_site_id = "${var.google_analytics_site_id}"
     google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
 
-    superset_root = "http://${aws_lb.superset_multiuser.dns_name}/"
+    superset_root = "https://${var.superset_internal_domain}/"
   }
 }
 
