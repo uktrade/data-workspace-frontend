@@ -1053,6 +1053,7 @@ async def async_main():
         async def _authenticate_by_ip_whitelist(request, handler):
             ip_whitelist_required = (
                 is_app_requested(request)
+                or is_superset_requested(request)
                 or is_mirror_requested(request)
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
