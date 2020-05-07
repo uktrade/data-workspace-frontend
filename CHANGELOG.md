@@ -6,9 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-05-07
 
+### Changed
+
 - Multiuser Supserset to use CSP
 - Fix redirects returned by Superset to maintain HTTPS
 - Put Superset behind the VPN
+- Made s3sync Fargate 1.4.0 compatible
 
 ## 2020-05-06
 
