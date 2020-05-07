@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2020-05-07
 
 - Multiuser Supserset to use CSP
+- Fix redirects returned by Superset to maintain HTTPS
 
 ## 2020-05-06
 
