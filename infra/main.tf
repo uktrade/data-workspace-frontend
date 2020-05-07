@@ -116,6 +116,7 @@ variable gitlab_runner_key {}
 variable superset_multiuser_admin_users {}
 variable superset_multiuser_db_instance_class {}
 variable superset_multiuser_container_image {}
+variable superset_internal_domain {}
 
 locals {
   registry_container_name    = "jupyterhub-registry"
