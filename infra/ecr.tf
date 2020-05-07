@@ -140,6 +140,8 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
     }
 
     actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer"
     ]

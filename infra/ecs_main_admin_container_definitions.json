@@ -932,6 +932,10 @@
   "value": "${notebooks_bucket}"
 },
 {
+  "name": "APPLICATION_TEMPLATES__10__SPAWNER_OPTIONS__PLATFORM_VERSION",
+  "value": "1.4.0"
+},
+{
   "name": "APPLICATION_TEMPLATES__11__VISIBLE",
   "value": "False"
 },

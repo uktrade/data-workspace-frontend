@@ -68,6 +68,7 @@ RUN \
 RUN \
 	addgroup --system --gid 4356 theia && \
 	adduser --disabled-password --gecos '' --ingroup theia --uid 4357 theia && \
+	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
 	echo "theia ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers
 
 RUN \
@@ -76,16 +77,8 @@ RUN \
 	touch /root/yarn-error.log && \
 	chown theia:theia /root/yarn-error.log
 
-USER theia
-
 ENV \
 	SHELL=/bin/bash
 
-CMD \
-	[ \
-		"yarn", "theia", "start", "/home/theia", \
-		"--plugins=local-dir:/root/plugins", \
-		"--hostname=0.0.0.0", \
-		"--port=8888", \
-		"--cache-folder=/tmp/.yarn-cache" \
-	]
+COPY start.sh /
+CMD ["/start.sh"]

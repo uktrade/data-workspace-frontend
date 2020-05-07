@@ -194,6 +194,8 @@ class FargateSpawner:
             s3_host = options['S3_HOST']
             s3_bucket = options['S3_BUCKET']
 
+            platform_version = options.get('PLATFORM_VERSION', '1.3.0')
+
             database_env = {
                 f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
                 f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
@@ -282,6 +284,7 @@ class FargateSpawner:
                         cmd,
                         {**s3_env, **database_env, **schema_env, **env},
                         s3_sync,
+                        platform_version,
                     )
                 except ClientError:
                     gevent.sleep(3)
@@ -586,6 +589,7 @@ def _fargate_task_run(
     command_and_args,
     env,
     s3_sync,
+    platform_version,
 ):
     client = boto3.client('ecs')
 
@@ -627,4 +631,5 @@ def _fargate_task_run(
                 'subnets': subnets,
             }
         },
+        platformVersion=platform_version,
     )
