@@ -6,7 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-05-07
 
+### Changed
+
 - Multiuser Supserset to use CSP
+
+### Removed
+
+- 'Release to production' button from data vis UI branches page
 
 ## 2020-05-06
 
