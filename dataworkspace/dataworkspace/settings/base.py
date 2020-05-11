@@ -13,6 +13,7 @@ env = normalise_environment(os.environ)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+ENVIRONMENT = env.get("ENVIRONMENT", "Dev")
 SECRET_KEY = env['SECRET_KEY']
 DEBUG = 'dataworkspace.test' in env['ALLOWED_HOSTS']
 
@@ -361,3 +362,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
     'PAGE_SIZE': 100,
 }
+
+QUICKSIGHT_USER_REGION = env['QUICKSIGHT_USER_REGION']
+QUICKSIGHT_VPC_ARN = env['QUICKSIGHT_VPC_ARN']
+QUICKSIGHT_DATASOURCE_USER_ARN = env['QUICKSIGHT_DATASOURCE_USER_ARN']

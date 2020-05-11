@@ -530,6 +530,17 @@ data "aws_iam_policy_document" "admin_run_tasks" {
       ]
     }
   }
+
+  statement {
+    actions = [
+      "quicksight:*",
+    ]
+
+    resources = [
+      # ECS doesn't provide more-specific permission for RegisterTaskDefinition
+      "arn:aws:quicksight::${data.aws_caller_identity.aws_caller_identity.account_id}:*",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "admin_admin_store_db_creds_in_s3_task" {
