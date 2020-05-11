@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Ability to run certain tasks and visualisations on Fargate 1.4.0
+- Task queue with limited concurrency to reduce chance of TimeoutError and NetworkError when uploading large number of files
 
 ## 2020-05-07
 
