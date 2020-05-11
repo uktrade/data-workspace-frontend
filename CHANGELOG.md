@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2010-05-11
+
+### Added
+
+- Ability to run certain tasks and visualisations on Fargate 1.4.0
+
 ## 2020-05-07
+
+### Changed
 
 - Multiuser Supserset to use CSP
 - Fix redirects returned by Superset to maintain HTTPS
