@@ -251,7 +251,44 @@ angular.module('aws-js-s3-explorer').controller('AddFolderController', (s3, $sco
 });
 
 angular.module('aws-js-s3-explorer').controller('UploadController', (s3, $scope, $rootScope) => {
+    function queue(concurrency) {
+        var running = 0;
+        const tasks = [];
+
+        return async function run(task) {
+            tasks.push(task);
+            if (running >= concurrency) return;
+
+            ++running;
+            while (tasks.length) {
+                try {
+                    await tasks.shift()();
+                } catch(err) {
+                    console.error(err);
+                }
+            }
+            --running;
+        }
+    }
+
     $scope.$on('modal::open::upload', (e, args) => {
+        // If we start all uploads at once, the browser attempts to start at
+        // least one connection per file. This means:
+        // - later S3 uploads will timeout, since they won't even start since
+        //   earlier uploads take all the browser connections;
+        // - or, in higher number of files, later uploads to fail immediately
+        //   with a network error, since the browser limits how many
+        //   connections can be queued.
+        // So we
+        // - make sure that any file that has its upload initiated would be
+        //   able to use at least one connection;
+        // - try make sure that in most situations maxConnections connections
+        //   will be used. To get maxConnections used in all situations
+        //   would be more complicated: KISS
+        const maxConnections = 4;
+        const concurrentFiles = Math.min(maxConnections, args.files.length);
+        const connectionsPerFile = Math.floor(maxConnections / concurrentFiles);
+
         var folder = args.currentPrefix.substring(args.originalPrefix.length);
         $scope.model = {
             bucket: args.bucket,
@@ -261,6 +298,8 @@ angular.module('aws-js-s3-explorer').controller('UploadController', (s3, $scope,
             remaining: args.files.length,
             uploading: false,
             aborted: false,
+            queue: queue(concurrentFiles),
+            connectionsPerFile: connectionsPerFile,
             uploads: []
         };
     });
@@ -278,7 +317,7 @@ angular.module('aws-js-s3-explorer').controller('UploadController', (s3, $scope,
     $scope.uploadFiles = () => {
         $scope.model.uploading = true;
 
-        $scope.model.files.forEach(async (file) => {
+        $scope.model.files.forEach((file) => {
             // If things are horribly slow and the user is quick, we could have opened a "new"
             // model from the point of view of the user, but still in the process of the abort
             // of the old, and so we ensure to only modify the original model
@@ -297,33 +336,31 @@ angular.module('aws-js-s3-explorer').controller('UploadController', (s3, $scope,
                     file.progress = pct;
                 });
             };
-
-            // Slight hack to yield the event loop to not start a long list of uploads all at once
-            await new Promise((resolve) => window.setTimeout(resolve));
-
-            try {
-                if (!model.aborted) {
-                    let upload = s3.upload(params);
-                    model.uploads.push(upload);
-                    await upload
-                        .on('httpUploadProgress', onProgress)
-                        .promise();
+            model.queue(async () => {
+                try {
+                    if (!model.aborted) {
+                        let upload = s3.upload(params, {queueSize: model.connectionsPerFile});
+                        model.uploads.push(upload);
+                        await upload
+                            .on('httpUploadProgress', onProgress)
+                            .promise();
+                    }
+                } catch(err) {
+                    if (!model.aborted) {
+                        console.error(err);
+                        $scope.$apply(() => {
+                            file.error = err.code || err.message || err;
+                        });
+                    }
+                } finally {
+                    --model.remaining;
                 }
-            } catch(err) {
-                if (!model.aborted) {
-                    console.error(err);
-                    $scope.$apply(() => {
-                        file.error = err.code || err.message || err;
-                    });
-                }
-            } finally {
-                --model.remaining;
-            }
 
-            if (model.remaining == 0) {
-                $scope.$apply();
-                $rootScope.$broadcast('reload-object-list');
-            }
+                if (model.remaining == 0) {
+                    $scope.$apply();
+                    $rootScope.$broadcast('reload-object-list');
+                }
+            });
         });
     };
 });
