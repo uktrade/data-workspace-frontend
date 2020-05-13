@@ -18,7 +18,7 @@ elastic-apm==5.5.2
 gevent==1.4.0
 gunicorn[gevent]==20.0.4
 hawk-server-asyncio==0.0.6
-Markdown==3.2.1
+Markdown==3.2.2
 MarkupSafe==1.1.1
 notifications-python-client==5.5.1
 psutil==5.7.0
