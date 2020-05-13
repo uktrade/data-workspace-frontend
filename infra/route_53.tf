@@ -188,6 +188,36 @@ resource "aws_acm_certificate_validation" "superset_multiuser_internal" {
   certificate_arn = "${aws_acm_certificate.superset_multiuser_internal.arn}"
 }
 
+resource "aws_route53_record" "metabase_multiuser_internal" {
+  provider = "aws.route53"
+  zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
+  name    = "${var.metabase_internal_domain}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_lb.metabase_multiuser.dns_name}"
+    zone_id                = "${aws_lb.metabase_multiuser.zone_id}"
+    evaluate_target_health = false
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_acm_certificate" "metabase_multiuser_internal" {
+  domain_name       = "${aws_route53_record.metabase_multiuser_internal.name}"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_acm_certificate_validation" "metabase_multiuser_internal" {
+  certificate_arn = "${aws_acm_certificate.metabase_multiuser_internal.arn}"
+}
+
 # resource "aws_route53_record" "jupyterhub" {
 #   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
 #   name    = "${var.jupyterhub_domain}."

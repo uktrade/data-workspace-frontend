@@ -1,0 +1,52 @@
+[
+  {
+    "environment": [{
+      "name": "MB_DB_TYPE",
+      "value": "postgres"
+    },{
+      "name": "MB_DB_HOST",
+      "value": "${db_host}"
+    },{
+      "name": "MB_DB_DBNAME",
+      "value": "${db_name}"
+    },{
+      "name": "MB_DB_PASS",
+      "value": "${db_password}"
+    },{
+      "name": "MB_DB_PORT",
+      "value": "${db_port}"
+    },{
+      "name": "MB_DB_USER",
+      "value": "${db_user}"
+    },{
+      "name": "MB_ENCRYPTION_SECRET_KEY",
+      "value": "${secret_key}"
+    },{
+      "name": "PROXY_DOMAIN",
+      "value": "${proxy_domain}"
+    },{
+      "name": "PROXY_CACHED_BODY",
+      "value": "${proxy_cached_body}"
+    }],
+    "essential": true,
+    "image": "${container_image}",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${log_region}",
+        "awslogs-stream-prefix": "${container_name}"
+      }
+    },
+    "networkMode": "awsvpc",
+    "memoryReservation": ${memory},
+    "cpu": ${cpu},
+    "mountPoints" : [],
+    "name": "${container_name}",
+    "portMappings": [{
+        "containerPort": 8000,
+        "hostPort": 8000,
+        "protocol": "tcp"
+    }]
+  }
+]

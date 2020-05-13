@@ -47,6 +47,7 @@ async def async_main():
     port = int(env['PROXY_PORT'])
     admin_root = env['UPSTREAM_ROOT']
     superset_root = env['SUPERSET_ROOT']
+    metabase_root = env['METABASE_ROOT']
     hawk_senders = env['HAWK_SENDERS']
     sso_base_url = env['AUTHBROKER_URL']
     sso_host = URL(sso_base_url).host
@@ -162,6 +163,9 @@ async def async_main():
             + downstream_request['sso_profile_headers']
         )
 
+    def metabase_headers(downstream_request):
+        return without_transfer_encoding(downstream_request)
+
     def is_service_discovery(request):
         return (
             request.url.path == '/api/v1/application'
@@ -172,11 +176,22 @@ async def async_main():
     def is_superset_requested(request):
         return request.url.host == f'superset.{root_domain_no_port}'
 
+    def is_metabase_requested(request):
+        return request.url.host == f'metabase.{root_domain_no_port}'
+
+    def is_metabase_manifest_requested(request):
+        # Workaround of https://github.com/metabase/metabase/pull/12524
+        return (
+            is_metabase_requested(request)
+            and request.url.path == '/app/assets/img/site.webmanifest'
+        )
+
     def is_app_requested(request):
         return (
             request.url.host.endswith(f'.{root_domain_no_port}')
             and not request.url.path.startswith(mirror_local_root)
             and not is_superset_requested(request)
+            and not is_metabase_requested(request)
         )
 
     def is_mirror_requested(request):
@@ -226,6 +241,7 @@ async def async_main():
             and not is_service_discovery(request)
             and not is_table_requested(request)
             and not is_dataset_requested(request)
+            and not is_metabase_manifest_requested(request)
         )
 
     def get_peer_ip(request):
@@ -256,6 +272,7 @@ async def async_main():
         app_requested = is_app_requested(downstream_request)
         mirror_requested = is_mirror_requested(downstream_request)
         superset_requested = is_superset_requested(downstream_request)
+        metabase_requested = is_metabase_requested(downstream_request)
 
         # Websocket connections
         # - tend to close unexpectedly, both from the client and app
@@ -274,6 +291,8 @@ async def async_main():
                 return await handle_mirror(downstream_request, method, path)
             if superset_requested:
                 return await handle_superset(downstream_request, method, path, query)
+            if metabase_requested:
+                return await handle_metabase(downstream_request, method, path, query)
             return await handle_admin(downstream_request, method, path, query)
         except Exception as exception:
             logger.exception(
@@ -563,6 +582,24 @@ async def async_main():
                 (
                     'content-security-policy',
                     csp_application_running_direct(host, 'superset'),
+                ),
+            ),
+        )
+
+    async def handle_metabase(downstream_request, method, path, query):
+        upstream_url = URL(metabase_root).with_path(path)
+        host = downstream_request.headers['host']
+        return await handle_http(
+            downstream_request,
+            method,
+            CIMultiDict(metabase_headers(downstream_request)),
+            upstream_url,
+            query,
+            default_http_timeout,
+            (
+                (
+                    'content-security-policy',
+                    csp_application_running_direct(host, 'metabase'),
                 ),
             ),
         )
@@ -1054,6 +1091,7 @@ async def async_main():
             ip_whitelist_required = (
                 is_app_requested(request)
                 or is_superset_requested(request)
+                or is_metabase_requested(request)
                 or is_mirror_requested(request)
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
