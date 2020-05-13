@@ -203,8 +203,9 @@ class Command(BaseCommand):
     ):
         self.stdout.write(f"-> Creating quicksight dataset for: {sourcetable}")
 
+        sourcetable_id = self._make_sourcetable_id(sourcetable)
         physical_table = {
-            self._make_sourcetable_id(sourcetable): {
+            sourcetable_id: {
                 "RelationalTable": {
                     "DataSourceArn": datasource['DataSource']['Arn'],
                     "InputColumns": self._format_input_columns(db_config, sourcetable),
@@ -214,13 +215,13 @@ class Command(BaseCommand):
             }
         }
         logical_table = {
-            self._make_sourcetable_id(sourcetable): {
+            sourcetable_id: {
                 "Alias": sourcetable.name,
-                "Source": {"PhysicalTableId": self._make_sourcetable_id(sourcetable)},
+                "Source": {"PhysicalTableId": sourcetable_id},
             }
         }
 
-        if physical_table['RelationalTable']['InputColumns'] == []:
+        if physical_table[sourcetable_id]['RelationalTable']['InputColumns'] == []:
             self.stdout.write(f"--> No columns found for dataset {sourcetable}")
             return False
 
