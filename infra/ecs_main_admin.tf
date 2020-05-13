@@ -538,7 +538,7 @@ data "aws_iam_policy_document" "admin_run_tasks" {
 
     resources = [
       # ECS doesn't provide more-specific permission for RegisterTaskDefinition
-      "arn:aws:quicksight::${data.aws_caller_identity.aws_caller_identity.account_id}:*",
+      "*",
     ]
   }
 }
