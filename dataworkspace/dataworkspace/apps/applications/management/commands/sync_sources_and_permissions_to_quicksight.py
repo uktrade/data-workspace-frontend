@@ -220,6 +220,10 @@ class Command(BaseCommand):
             }
         }
 
+        if physical_table['RelationalTable']['InputColumns'] == []:
+            self.stdout.write(f"--> No columns found for dataset {sourcetable}")
+            return False
+
         self.stdout.write(f"--> Physical table: {str(physical_table)}")
         self.stdout.write(f"--> Logical table: {str(logical_table)}")
 
@@ -249,6 +253,7 @@ class Command(BaseCommand):
             self.stdout.write(f'--> {e}')
 
         self.stdout.write("-> Done.")
+        return True
 
     def _create_datasource(self, data_client, account_id, db_name, db_config):
         data_source_id = f'data-workspace-{settings.ENVIRONMENT}'
@@ -315,21 +320,21 @@ class Command(BaseCommand):
         for dataset in MasterDataset.objects.live().filter(published=True):
             for source_table in dataset.sourcetable_set.all():
                 try:
-                    self._create_dataset(
+                    if self._create_dataset(
                         data_client,
                         account_id,
                         db_config,
                         datasource,
                         dataset,
                         source_table,
-                    )
-                    self._sync_permissions_to_dataset(
-                        data_client,
-                        account_id,
-                        quicksight_user_list,
-                        dataset,
-                        source_table,
-                    )
+                    ):
+                        self._sync_permissions_to_dataset(
+                            data_client,
+                            account_id,
+                            quicksight_user_list,
+                            dataset,
+                            source_table,
+                        )
                 except data_client.exceptions.ClientError as e:
                     self.stdout.write(f'--> {e}')
 
