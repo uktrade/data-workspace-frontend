@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-05-12
+
+### Added
+
+- Rudimentary (manual) sync of master datasets + permissions from Data Workspace to QuickSight.
+
 ## 2010-05-11
 
 ### Added

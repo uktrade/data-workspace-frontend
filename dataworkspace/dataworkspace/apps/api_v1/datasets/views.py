@@ -1,5 +1,6 @@
 import json
 
+
 import psycopg2
 from django.conf import settings
 from django.http import StreamingHttpResponse
