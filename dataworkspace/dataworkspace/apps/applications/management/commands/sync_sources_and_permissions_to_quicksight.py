@@ -67,20 +67,20 @@ class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def _make_dataset_id(self, dataset):
-        return f"{settings.ENVIRONMENT.upper()}-{str(dataset.id)}"
+    def _make_sourcetable_id(self, sourcetable):
+        return f"{settings.ENVIRONMENT.upper()}-{str(sourcetable.id)}"
 
-    def _get_dataset_columns(self, connection, source_table):
+    def _get_dataset_columns(self, connection, sourcetable):
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = %s and table_name = %s",
-                [source_table.schema, source_table.table],
+                [sourcetable.schema, sourcetable.table],
             )
             return cursor.fetchall()
 
-    def _format_input_columns(self, db_config, source_table):
+    def _format_input_columns(self, db_config, sourcetable):
         with psycopg2.connect(database_dsn(db_config)) as connection:
-            columns = self._get_dataset_columns(connection, source_table)
+            columns = self._get_dataset_columns(connection, sourcetable)
 
         return [
             {"Name": column_name, "Type": QUICKSIGHT_COLUMN_TYPES_MAP[data_type]}
@@ -114,8 +114,8 @@ class Command(BaseCommand):
 
         return principals_needing_access
 
-    def _grant_permissions_to_dataset(
-        self, data_client, account_id, dataset, principals
+    def _grant_permissions_to_sourcetable(
+        self, data_client, account_id, sourcetable, principals
     ):
         grant_arns = [
             {
@@ -130,12 +130,12 @@ class Command(BaseCommand):
         if grant_arns:
             data_client.update_data_set_permissions(
                 AwsAccountId=account_id,
-                DataSetId=self._make_dataset_id(dataset),
+                DataSetId=self._make_sourcetable_id(sourcetable),
                 GrantPermissions=grant_arns,
             )
 
-    def _revoke_permissions_to_dataset(
-        self, data_client, account_id, dataset, principals
+    def _revoke_permissions_to_sourcetable(
+        self, data_client, account_id, sourcetable, principals
     ):
         revoke_arns = [
             {"Principal": principal, "Actions": QS_DATASET_ALL_PERMS}
@@ -145,13 +145,15 @@ class Command(BaseCommand):
         if revoke_arns:
             data_client.update_data_set_permissions(
                 AwsAccountId=account_id,
-                DataSetId=self._make_dataset_id(dataset),
+                DataSetId=self._make_sourcetable_id(sourcetable),
                 RevokePermissions=revoke_arns,
             )
 
-    def _sync_permissions_to_dataset(self, data_client, account_id, qs_users, dataset):
+    def _sync_permissions_to_dataset(
+        self, data_client, account_id, qs_users, dataset, sourcetable
+    ):
         data_set_permissions = data_client.describe_data_set_permissions(
-            AwsAccountId=account_id, DataSetId=self._make_dataset_id(dataset)
+            AwsAccountId=account_id, DataSetId=self._make_sourcetable_id(sourcetable)
         )['Permissions']
         self.stdout.write(
             f"-> Current principals with access: {[u['Principal'] for u in data_set_permissions]}"
@@ -167,22 +169,23 @@ class Command(BaseCommand):
             set(user['Principal'] for user in data_set_permissions)
         )
         self.stdout.write(f"-> Adding principals: {principals_to_grant_access}")
-        self._grant_permissions_to_dataset(
-            data_client, account_id, dataset, principals_to_grant_access
+        self._grant_permissions_to_sourcetable(
+            data_client, account_id, sourcetable, principals_to_grant_access
         )
 
         principals_to_revoke_access = set(
             user['Principal'] for user in data_set_permissions
         ).difference(all_principals_needing_access)
         self.stdout.write(f"-> Removing principals: {principals_to_revoke_access}")
-        self._revoke_permissions_to_dataset(
-            data_client, account_id, dataset, principals_to_revoke_access
+        self._revoke_permissions_to_sourcetable(
+            data_client, account_id, sourcetable, principals_to_revoke_access
         )
 
         final_data_source_principals = set(
             user['Principal']
             for user in data_client.describe_data_set_permissions(
-                AwsAccountId=account_id, DataSetId=self._make_dataset_id(dataset)
+                AwsAccountId=account_id,
+                DataSetId=self._make_sourcetable_id(sourcetable),
             )['Permissions']
         )
 
@@ -190,48 +193,50 @@ class Command(BaseCommand):
             final_data_source_principals
         ):
             self.stderr.write(
-                "-> Error syncing permissions for dataset.\n"
+                "-> Error syncing permissions for sourcetable.\n"
                 f"  Incorrectly DO have access: {final_data_source_principals - all_principals_needing_access}\n"
                 f"  Incorrectly DO NOT have access: {all_principals_needing_access - final_data_source_principals}"
             )
 
-    def _create_dataset(self, data_client, account_id, db_config, datasource, dataset):
-        self.stdout.write(f"-> Creating dataset: {dataset}")
-        sourcetables = dataset.sourcetable_set.all()
-        physical_tables = {
-            str(source_table.id): {
+    def _create_dataset(
+        self, data_client, account_id, db_config, datasource, dataset, sourcetable
+    ):
+        self.stdout.write(f"-> Creating quicksight dataset for: {sourcetable}")
+
+        physical_table = {
+            self._make_sourcetable_id(sourcetable): {
                 "RelationalTable": {
                     "DataSourceArn": datasource['DataSource']['Arn'],
-                    "InputColumns": self._format_input_columns(db_config, source_table),
-                    "Name": source_table.table,
-                    "Schema": source_table.schema,
+                    "InputColumns": self._format_input_columns(db_config, sourcetable),
+                    "Name": sourcetable.table,
+                    "Schema": sourcetable.schema,
                 }
             }
-            for source_table in sourcetables
         }
-        logical_tables = {
-            str(source_table.id): {
-                "Alias": source_table.name,
-                "Source": {"PhysicalTableId": str(source_table.id)},
+        logical_table = {
+            self._make_sourcetable_id(sourcetable): {
+                "Alias": sourcetable.name,
+                "Source": {"PhysicalTableId": self._make_sourcetable_id(sourcetable)},
             }
-            for source_table in sourcetables
         }
 
-        self.stdout.write(f"--> Physical tables: {str(physical_tables)}")
-        self.stdout.write(f"--> Logical tables: {str(logical_tables)}")
+        self.stdout.write(f"--> Physical table: {str(physical_table)}")
+        self.stdout.write(f"--> Logical table: {str(logical_table)}")
 
         try:
-            dataset_name = dataset.name
+            sourcetable_name = f"{sourcetable.schema}.{sourcetable.table}"
             if settings.ENVIRONMENT != "Production":
-                dataset_name = f"{settings.ENVIRONMENT.upper()} - {dataset_name}"
+                sourcetable_name = (
+                    f"{settings.ENVIRONMENT.upper()} - {sourcetable_name}"
+                )
 
             qs_dataset = data_client.create_data_set(
                 AwsAccountId=account_id,
-                DataSetId=self._make_dataset_id(dataset),
-                Name=dataset_name,
+                DataSetId=self._make_sourcetable_id(sourcetable),
+                Name=sourcetable_name,
                 ImportMode='DIRECT_QUERY',
-                PhysicalTableMap=physical_tables,
-                LogicalTableMap=logical_tables,
+                PhysicalTableMap=physical_table,
+                LogicalTableMap=logical_table,
                 Permissions=[
                     {
                         "Principal": settings.QUICKSIGHT_DATASOURCE_USER_ARN,
@@ -241,12 +246,9 @@ class Command(BaseCommand):
             )
             self.stdout.write(str(qs_dataset))
         except data_client.exceptions.ResourceExistsException as e:
-            self.stdout.write(str(e))
+            self.stdout.write(f'--> {e}')
 
         self.stdout.write("-> Done.")
-        return data_client.describe_data_set(
-            AwsAccountId=account_id, DataSetId=self._make_dataset_id(dataset)
-        )
 
     def _create_datasource(self, data_client, account_id, db_name, db_config):
         data_source_id = f'data-workspace-{settings.ENVIRONMENT}'
@@ -283,7 +285,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(str(qs_datasource))
         except data_client.exceptions.ResourceExistsException as e:
-            self.stdout.write(str(e))
+            self.stdout.write(f'--> {e}')
 
         return data_client.describe_data_source(
             AwsAccountId=account_id, DataSourceId=data_source_id
@@ -311,12 +313,25 @@ class Command(BaseCommand):
         datasource = self._create_datasource(data_client, account_id, db, db_config)
 
         for dataset in MasterDataset.objects.live().filter(published=True):
-            self._create_dataset(
-                data_client, account_id, db_config, datasource, dataset
-            )
-            self._sync_permissions_to_dataset(
-                data_client, account_id, quicksight_user_list, dataset
-            )
+            for source_table in dataset.sourcetable_set.all():
+                try:
+                    self._create_dataset(
+                        data_client,
+                        account_id,
+                        db_config,
+                        datasource,
+                        dataset,
+                        source_table,
+                    )
+                    self._sync_permissions_to_dataset(
+                        data_client,
+                        account_id,
+                        quicksight_user_list,
+                        dataset,
+                        source_table,
+                    )
+                except data_client.exceptions.ClientError as e:
+                    self.stdout.write(f'--> {e}')
 
         self.stdout.write(
             self.style.SUCCESS('sync_sources_and_permissions_to_quicksight finished')
