@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-05-13
+
+### Added
+
+- Initial multi-user Metabase, behind the VPN and SSO (although needs an additional sign in with username/password)
+
 ## 2020-05-12
 
 ### Added
