@@ -73,7 +73,7 @@ class Command(BaseCommand):
     def _get_dataset_columns(self, connection, source_table):
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = %s, table_name = %s",
+                "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = %s and table_name = %s",
                 [source_table.schema, source_table.table],
             )
             return cursor.fetchall()
