@@ -1168,6 +1168,10 @@
       "value": "${superset_root}"
     },
     {
+      "name": "METABASE_ROOT",
+      "value": "${metabase_root}"
+    },
+    {
       "name": "APPSTREAM_URL",
       "value": "${appstream_url}"
     },

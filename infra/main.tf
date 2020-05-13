@@ -118,6 +118,12 @@ variable superset_multiuser_db_instance_class {}
 variable superset_multiuser_container_image {}
 variable superset_internal_domain {}
 
+variable metabase_multiuser_db_instance_class {}
+variable metabase_multiuser_container_image {}
+variable metabase_internal_domain {}
+variable metabase_proxy_domain {}
+variable metabase_proxy_cached_body {}
+
 locals {
   registry_container_name    = "jupyterhub-registry"
   registry_container_port    = "5000"
@@ -180,4 +186,7 @@ locals {
 
   superset_multiuser_container_memory = 8192
   superset_multiuser_container_cpu    = 1024
+
+  metabase_multiuser_container_memory = 8192
+  metabase_multiuser_container_cpu    = 1024
 }

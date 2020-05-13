@@ -144,6 +144,7 @@ data "template_file" "admin_container_definitions" {
     google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
 
     superset_root = "https://${var.superset_internal_domain}/"
+    metabase_root = "https://${var.metabase_internal_domain}/"
   }
 }
 
@@ -256,6 +257,7 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
     google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
 
     superset_root = "${aws_lb.superset_multiuser.dns_name}"
+    metabase_root = "https://${var.metabase_internal_domain}/"
   }
 }
 
