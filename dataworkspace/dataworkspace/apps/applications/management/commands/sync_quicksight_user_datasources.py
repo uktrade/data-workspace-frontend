@@ -48,11 +48,10 @@ class Command(BaseCommand):
             if self.ENVIRONMENT != "production":
                 data_source_name = f"{self.ENVIRONMENT.upper()} - {data_source_name}"
 
-            data_source_params = dict(
+            create_and_update_params = dict(
                 AwsAccountId=account_id,
                 DataSourceId=data_source_id,
                 Name=data_source_name,
-                Type='AURORA_POSTGRESQL',
                 DataSourceParameters={
                     "AuroraPostgreSqlParameters": {
                         "Host": cred['db_host'],
@@ -66,12 +65,6 @@ class Command(BaseCommand):
                         "Password": cred['db_password'],
                     }
                 },
-                Permissions=[
-                    {
-                        'Principal': quicksight_user['Arn'],
-                        'Actions': QS_DATASOURCE_PERMS,
-                    }
-                ],
                 VpcConnectionProperties={
                     "VpcConnectionArn": settings.QUICKSIGHT_VPC_ARN
                 },
@@ -80,13 +73,22 @@ class Command(BaseCommand):
             self.stdout.write(f"-> Creating data source: {data_source_id}")
 
             try:
-                data_client.create_data_source(**data_source_params)
+                data_client.create_data_source(
+                    **create_and_update_params,
+                    Type='AURORA_POSTGRESQL',
+                    Permissions=[
+                        {
+                            'Principal': quicksight_user['Arn'],
+                            'Actions': QS_DATASOURCE_PERMS,
+                        }
+                    ],
+                )
                 self.stdout.write(f"-> Created: {data_source_id}")
             except data_client.exceptions.ResourceExistsException:
                 self.stdout.write(
                     f"-> Data source already exists: {data_source_id}. Updating ..."
                 )
-                data_client.update_data_source(**data_source_params)
+                data_client.update_data_source(**create_and_update_params)
                 self.stdout.write(f"-> Updated data source: {data_source_id}")
 
     def handle(self, *args, **options):

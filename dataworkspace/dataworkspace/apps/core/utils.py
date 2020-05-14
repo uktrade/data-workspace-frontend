@@ -10,7 +10,6 @@ import csv
 
 import django
 import gevent
-import psycopg2
 from psycopg2 import connect, sql
 
 import boto3
@@ -87,9 +86,8 @@ def new_private_database_credentials(
                     [db_password, valid_until],
                 )
         except django.db.utils.ProgrammingError as e:
-            if (
-                isinstance(e.__cause__, psycopg2.errors.DuplicateObject)
-                and allow_existing_user
+            if allow_existing_user and 'already exists' in str(
+                e
             ):  # The user already exists?
                 with connections[database_obj.memorable_name].cursor() as cur:
                     cur.execute(
