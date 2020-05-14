@@ -427,7 +427,7 @@ def delete_unused_datasets_users():
             cur.execute(
                 """
                 SELECT usename FROM pg_catalog.pg_user
-                WHERE valuntil != 'infinity' AND usename LIKE 'user_%'
+                WHERE valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_quicksight'
                 ORDER BY usename;
             """
             )

@@ -7,7 +7,10 @@ import re
 import secrets
 import string
 import csv
+
+import django
 import gevent
+import psycopg2
 from psycopg2 import connect, sql
 
 import boto3
@@ -39,6 +42,10 @@ def postgres_user(stem):
     return 'user_' + re.sub('[^a-z0-9]', '_', stem.lower()) + '_' + unique_enough
 
 
+def persistent_postgres_user(stem, suffix='persistent'):
+    return 'user_' + re.sub('[^a-z0-9]', '_', stem.lower()) + '_' + suffix
+
+
 def db_role_schema_suffix_for_user(user):
     return hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest()[:8]
 
@@ -47,7 +54,9 @@ def db_role_schema_suffix_for_app(application_template):
     return 'app_' + application_template.host_basename
 
 
-def new_private_database_credentials(db_role_and_schema_suffix, source_tables, db_user):
+def new_private_database_credentials(
+    db_role_and_schema_suffix, source_tables, db_user, allow_existing_user=False
+):
     password_alphabet = string.ascii_letters + string.digits
 
     def postgres_password():
@@ -68,14 +77,29 @@ def new_private_database_credentials(db_role_and_schema_suffix, source_tables, d
         valid_until = (
             datetime.datetime.now() + datetime.timedelta(days=31)
         ).isoformat()
-        with connections[database_obj.memorable_name].cursor() as cur:
-            # Create a user...
-            cur.execute(
-                sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s;').format(
-                    sql.Identifier(db_user)
-                ),
-                [db_password, valid_until],
-            )
+
+        try:
+            with connections[database_obj.memorable_name].cursor() as cur:
+                cur.execute(
+                    sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s').format(
+                        sql.Identifier(db_user)
+                    ),
+                    [db_password, valid_until],
+                )
+        except django.db.utils.ProgrammingError as e:
+            if (
+                isinstance(e.__cause__, psycopg2.errors.DuplicateObject)
+                and allow_existing_user
+            ):  # The user already exists?
+                with connections[database_obj.memorable_name].cursor() as cur:
+                    cur.execute(
+                        sql.SQL('ALTER USER {} WITH PASSWORD %s VALID UNTIL %s').format(
+                            sql.Identifier(db_user)
+                        ),
+                        [db_password, valid_until],
+                    )
+            else:
+                raise
 
         # Multiple concurrent GRANT CONNECT on the same database can cause
         # "tuple concurrently updated" errors

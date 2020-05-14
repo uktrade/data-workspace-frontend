@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - The ability to run Metabase locally
+- New sync model for QuickSight, creating a datasource per user with custom permissions.
 
 ## 2020-05-13
 
