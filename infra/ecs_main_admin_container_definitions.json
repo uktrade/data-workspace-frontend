@@ -1172,6 +1172,22 @@
       "value": "${metabase_root}"
     },
     {
+      "name": "METABASE_USER_SECRET_PASSWORD_KEY",
+      "value": "${metabase_user_secret_password_key}"
+    },
+    {
+      "name": "METABASE_LOGIN_USERS__1",
+      "value": "${metabase_login_users__1}"
+    },
+    {
+      "name": "METABASE_BOT_USER_EMAIL",
+      "value": "${metabase_bot_user_email}"
+    },
+    {
+      "name": "METABASE_BOT_USER_PASSWORD",
+      "value": "${metabase_bot_user_password}"
+    },
+    {
       "name": "APPSTREAM_URL",
       "value": "${appstream_url}"
     },

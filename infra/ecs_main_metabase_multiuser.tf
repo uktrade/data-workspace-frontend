@@ -250,3 +250,8 @@ resource "random_string" "metabase_multiuser_secret_key" {
   length = 64
   special = false
 }
+
+resource "random_string" "metabase_multiuser_user_secret_password_key" {
+  length = 64
+  special = false
+}
