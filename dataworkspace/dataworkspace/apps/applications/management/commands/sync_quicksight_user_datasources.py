@@ -133,9 +133,6 @@ class Command(BaseCommand):
                 allow_existing_user=True,
             )
 
-            for cred in creds:
-                cred['db_host'] = settings.DATABASES_DATA['aws']['HOST']
-
             self._create_datasources_for_user(
                 data_client, account_id, quicksight_user, creds
             )
