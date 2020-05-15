@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The ability to run Metabase locally
 - New sync model for QuickSight, creating a datasource per user with custom permissions.
+- The ability for the proxy to transparently create and login Metabase users
 
 ## 2020-05-13
 

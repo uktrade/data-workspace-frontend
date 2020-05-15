@@ -124,6 +124,10 @@ variable metabase_internal_domain {}
 variable metabase_proxy_domain {}
 variable metabase_proxy_cached_body {}
 
+variable metabase_login_users__1 {}
+variable metabase_bot_user_email {}
+variable metabase_bot_user_password {}
+
 locals {
   registry_container_name    = "jupyterhub-registry"
   registry_container_port    = "5000"

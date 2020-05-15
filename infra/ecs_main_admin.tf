@@ -145,6 +145,11 @@ data "template_file" "admin_container_definitions" {
 
     superset_root = "https://${var.superset_internal_domain}/"
     metabase_root = "https://${var.metabase_internal_domain}/"
+
+    metabase_user_secret_password_key = "${random_string.metabase_multiuser_user_secret_password_key.result}"
+    metabase_login_users__1 = "${var.metabase_login_users__1}"
+    metabase_bot_user_email = "${var.metabase_bot_user_email}"
+    metabase_bot_user_password = "${var.metabase_bot_user_password}"
   }
 }
 
@@ -258,6 +263,11 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
 
     superset_root = "${aws_lb.superset_multiuser.dns_name}"
     metabase_root = "https://${var.metabase_internal_domain}/"
+
+    metabase_user_secret_password_key = "${random_string.metabase_multiuser_user_secret_password_key.result}"
+    metabase_login_users__1 = "${var.metabase_login_users__1}"
+    metabase_bot_user_email = "${var.metabase_bot_user_email}"
+    metabase_bot_user_password = "${var.metabase_bot_user_password}"
   }
 }
 

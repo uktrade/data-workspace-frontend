@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import hashlib
 import hmac
 import ipaddress
 import json
@@ -48,6 +49,11 @@ async def async_main():
     admin_root = env['UPSTREAM_ROOT']
     superset_root = env['SUPERSET_ROOT']
     metabase_root = env['METABASE_ROOT']
+    metabase_user_password_key = env['METABASE_USER_SECRET_PASSWORD_KEY']
+    metabase_login_users = env['METABASE_LOGIN_USERS']
+    metabase_bot_user_email = env['METABASE_BOT_USER_EMAIL']
+    metabase_bot_user_password = env['METABASE_BOT_USER_PASSWORD']
+    metabase_session_expiry = 60 * 60 * 24
     hawk_senders = env['HAWK_SENDERS']
     sso_base_url = env['AUTHBROKER_URL']
     sso_host = URL(sso_base_url).host
@@ -589,20 +595,145 @@ async def async_main():
     async def handle_metabase(downstream_request, method, path, query):
         upstream_url = URL(metabase_root).with_path(path)
         host = downstream_request.headers['host']
-        return await handle_http(
-            downstream_request,
-            method,
-            CIMultiDict(metabase_headers(downstream_request)),
-            upstream_url,
-            query,
-            default_http_timeout,
-            (
+
+        async def request(headers=()):
+            return await handle_http(
+                downstream_request,
+                method,
+                CIMultiDict(headers + metabase_headers(downstream_request)),
+                upstream_url,
+                query,
+                default_http_timeout,
                 (
-                    'content-security-policy',
-                    csp_application_running_direct(host, 'metabase'),
+                    (
+                        'content-security-policy',
+                        csp_application_running_direct(host, 'metabase'),
+                    ),
                 ),
-            ),
+            )
+
+        async def metabase_api_request(method, path, data, headers=()):
+            async with client_session.request(
+                method,
+                f'{metabase_root}{path}',
+                data=json.dumps(data).encode('utf-8'),
+                headers=CIMultiDict(
+                    headers
+                    + (
+                        ('accept-encoding', 'identity'),
+                        ('content-type', 'application/json'),
+                    )
+                ),
+            ) as response:
+                return response.status, await response.json()
+
+        async def set_redis_str(key, value_str):
+            with await redis_pool as conn:
+                await conn.execute(
+                    'SET', key, value_str.encode('utf-8'), 'EX', metabase_session_expiry
+                )
+
+        async def get_redis_str(key):
+            with await redis_pool as conn:
+                value_bytes = await conn.execute('GET', key)
+
+            return (
+                value_bytes.decode('utf-8') if value_bytes is not None else value_bytes
+            )
+
+        # Always allow the manifest, since cookies are not sent with this request
+        if is_metabase_manifest_requested(downstream_request):
+            return await request()
+
+        # We allow some users through who have to login with a password
+        # Used in initial setup, e.g. to create the bot user
+        sso_profile = dict(downstream_request['sso_profile_headers'])
+        email = sso_profile['sso-profile-email']
+        if email in metabase_login_users:
+            return await request()
+
+        # Find the session id for the current user
+        sso_user_id = sso_profile['sso-profile-user-id']
+        session_id_redis_key = f'metabase-session-{sso_user_id}'
+        session_id = await get_redis_str(session_id_redis_key)
+
+        # If have the session id, make the request. If the Metabase has
+        # expired it, this can expose a 401 to the user, so it's important
+        # that we expire tokens from Redis before Metabase does. We don't
+        # attempt to get another token transparently and retry the request,
+        # since we would have already forwarded the bytes of the request body,
+        # so we won't be able to send them again [and have streaming uploads].
+        if session_id:
+            return await request((('x-metabase-session', session_id),))
+
+        # Each Metabase user needs a password, but because Metabase is behind
+        # SSO, there isn't particularly a need to have any sort of unique
+        # password. But just in case "somehow" Metabase is exposed to the
+        # world, we do make it a bit hard to login
+        password = base64.b64encode(
+            hmac.new(
+                metabase_user_password_key.encode('utf-8'),
+                sso_user_id.encode('utf-8'),
+                hashlib.sha256,
+            ).digest()
+        ).decode('utf-8')
+
+        # Attempt to login as the user...
+        login_status, login_response = await metabase_api_request(
+            'POST', 'api/session/', {'username': email, 'password': password}
         )
+
+        # ... and if logged in, save the token and make the request as this user
+        if login_status == 200:
+            session_id = login_response['id']
+            await set_redis_str(session_id_redis_key, session_id)
+            return await request((('x-metabase-session', session_id),))
+
+        # ... and if we can't login, we attempt to make a new user to log them in
+
+        # Get the bot user session id
+        bot_session_id_redis_key = 'metabase-bot-session'
+        bot_session_id = await get_redis_str(bot_session_id_redis_key)
+
+        # ... if no bot user session id, login as the bot user
+        if not bot_session_id:
+            _, login_response = await metabase_api_request(
+                'POST',
+                'api/session/',
+                {
+                    'username': metabase_bot_user_email,
+                    'password': metabase_bot_user_password,
+                },
+            )
+            bot_session_id = login_response['id']
+            await set_redis_str(bot_session_id_redis_key, bot_session_id)
+
+        # ... create the user
+        status, response = await metabase_api_request(
+            'POST',
+            'api/user/',
+            {
+                'email': email,
+                'first_name': sso_profile['sso-profile-first-name'],
+                'last_name': sso_profile['sso-profile-last-name'],
+                'password': password,
+            },
+            (('x-metabase-session', bot_session_id),),
+        )
+        if status != 200:
+            raise Exception(response)
+
+        # ... login as the user
+        login_status, login_response = await metabase_api_request(
+            'POST', 'api/session/', {'username': email, 'password': password}
+        )
+        session_id = login_response['id']
+
+        # ... save the session id to avoid having to re-login next time
+        await set_redis_str(session_id_redis_key, session_id)
+
+        # ... and make the request as the user
+        return await request((('x-metabase-session', session_id),))
 
     async def handle_admin(downstream_request, method, path, query):
         upstream_url = URL(admin_root).with_path(path)
