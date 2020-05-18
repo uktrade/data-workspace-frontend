@@ -179,6 +179,25 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
       "${aws_s3_bucket.notebooks.arn}/__S3_PREFIX__*",
     ]
   }
+
+  statement {
+    actions = [
+      "elasticfilesystem:ClientMount",
+      "elasticfilesystem:ClientWrite",
+    ]
+
+    condition {
+      test = "StringEquals"
+      variable = "elasticfilesystem:AccessPointArn"
+      values = [
+        "arn:aws:elasticfilesystem:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:access-point/__ACCESS_POINT_ID__"
+      ]
+    }
+
+    resources = [
+      "${aws_efs_file_system.notebooks.arn}",
+    ]
+  }
 }
 
 resource "aws_vpc_endpoint" "s3" {
@@ -281,6 +300,17 @@ data "aws_iam_policy_document" "jupyterhub_notebook_task_boundary" {
 
     resources = [
       "${aws_s3_bucket.notebooks.arn}/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "elasticfilesystem:ClientMount",
+      "elasticfilesystem:ClientWrite",
+    ]
+
+    resources = [
+      "${aws_efs_file_system.notebooks.arn}",
     ]
   }
 }

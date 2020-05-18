@@ -42,6 +42,7 @@ def spawn(
     name,
     user_email_address,
     user_sso_id,
+    user_efs_access_point_id,
     tag,
     application_instance_id,
     spawner_options,
@@ -51,6 +52,7 @@ def spawn(
     get_spawner(name).spawn(
         user_email_address,
         user_sso_id,
+        user_efs_access_point_id,
         tag,
         application_instance_id,
         spawner_options,
@@ -74,7 +76,14 @@ class ProcessSpawner:
 
     @staticmethod
     def spawn(
-        _, __, ___, application_instance_id, spawner_options, db_credentials, ____
+        _,
+        __,
+        ___,
+        ____,
+        application_instance_id,
+        spawner_options,
+        db_credentials,
+        _____,
     ):
 
         try:
@@ -171,6 +180,7 @@ class FargateSpawner:
     def spawn(
         user_email_address,
         user_sso_id,
+        user_efs_access_point_id,
         tag,
         application_instance_id,
         spawner_options,
@@ -212,7 +222,7 @@ class FargateSpawner:
             logger.info('Starting %s', cmd)
 
             role_arn, s3_prefix = create_file_access_role(
-                user_email_address, user_sso_id
+                user_email_address, user_sso_id, user_efs_access_point_id
             )
 
             s3_env = {
@@ -271,7 +281,13 @@ class FargateSpawner:
             # number, but we choose the short hashed version of the SSO ID to help debugging
             task_family_suffix = stable_identification_suffix(user_sso_id, short=True)
             definition_arn_with_image = _fargate_new_task_definition(
-                definition_arn, container_name, tag, task_family_suffix
+                role_arn,
+                definition_arn,
+                container_name,
+                tag,
+                task_family_suffix,
+                settings.EFS_ID,
+                user_efs_access_point_id,
             )
 
             for i in range(0, 10):
@@ -501,7 +517,15 @@ def _ecr_client():
     return boto3.client('ecr', endpoint_url=settings.AWS_ECR_ENDPOINT_URL)
 
 
-def _fargate_new_task_definition(task_family, container_name, tag, task_family_suffix):
+def _fargate_new_task_definition(
+    role_arn,
+    task_family,
+    container_name,
+    tag,
+    task_family_suffix,
+    efs_filesystem_id,
+    efs_access_point_id,
+):
     client = boto3.client('ecs')
     describe_task_response = client.describe_task_definition(taskDefinition=task_family)
     container = [
@@ -516,14 +540,30 @@ def _fargate_new_task_definition(task_family, container_name, tag, task_family_s
         task_family + ('-' + tag if tag else '') + '-' + task_family_suffix
     )
 
+    if efs_access_point_id:
+        volume = next(
+            volume
+            for volume in describe_task_response['taskDefinition']['volumes']
+            if volume['name'] == 'home_directory'
+        )
+        del volume['host']
+        volume['efsVolumeConfiguration'] = {
+            'fileSystemId': efs_filesystem_id,
+            'transitEncryption': 'ENABLED',
+            'authorizationConfig': {
+                'accessPointId': efs_access_point_id,
+                'iam': 'ENABLED',
+            },
+        }
+
     register_tag_response = client.register_task_definition(
+        taskRoleArn=role_arn,
         **{
             key: value
             for key, value in describe_task_response['taskDefinition'].items()
             if key
             in [
                 'family',
-                'taskRoleArn',
                 'executionRoleArn',
                 'networkMode',
                 'containerDefinitions',
@@ -533,7 +573,7 @@ def _fargate_new_task_definition(task_family, container_name, tag, task_family_s
                 'cpu',
                 'memory',
             ]
-        }
+        },
     )
     return register_tag_response['taskDefinition']['taskDefinitionArn']
 

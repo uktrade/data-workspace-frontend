@@ -1,8 +1,9 @@
 #!/bin/sh
 
-set -e
-
+# When on EFS, we expect to not be able to change ownership, and we don't need to
 chown -R s3sync:s3sync /home/s3sync/data
+
+set -e
 
 # Path-style even though it's deprecated. The bucket names have dots in, and
 # at the time of writing the host-style certs returned by AWS are wildcards

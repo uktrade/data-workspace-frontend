@@ -1,8 +1,9 @@
 #!/bin/sh
 
-set -e
-
+# When on EFS, we expect to not be able to change ownership, and we don't need to
 chown -R jovyan:jovyan /home/jovyan
+
+set -e
 
 sudo -E -H -u jovyan /opt/conda/bin/jupyter \
 	lab \

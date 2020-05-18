@@ -238,6 +238,7 @@ def application_api_PUT(request, public_host):
             application_template.spawner,
             request.user.email,
             str(request.user.profile.sso_id),
+            request.user.profile.home_directory_efs_access_point_id,
             tag,
             application_instance.id,
             spawner_options,
@@ -291,7 +292,9 @@ def aws_credentials_api_view(request):
 def aws_credentials_api_GET(request):
     client = boto3.client('sts')
     role_arn, _ = create_file_access_role(
-        request.user.email, str(request.user.profile.sso_id)
+        request.user.email,
+        str(request.user.profile.sso_id),
+        request.user.profile.home_directory_efs_access_point_id,
     )
 
     # Creating new credentials unfortunately sometimes fails
