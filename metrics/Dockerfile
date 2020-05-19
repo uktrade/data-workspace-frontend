@@ -7,10 +7,12 @@ ENV \
 
 RUN \
 	apk add --no-cache \
-		python3=3.6.8-r0 && \
+	    build-base=0.5-r1 \
+	    python3-dev=3.6.9-r1 \
+		python3=3.6.9-r1 && \
 	python3 -m ensurepip && \
 	pip3 install \
-		aiohttp==3.5.4
+		aiohttp==3.6.2
 
 COPY metrics.py /
 
