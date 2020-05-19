@@ -714,6 +714,7 @@ def _application_template(gitlab_project):
                     application_type='VISUALISATION',
                     user_access_type='REQUIRES_AUTHORIZATION',
                     gitlab_project_id=gitlab_project['id'],
+                    wrap='FULL_HEIGHT_IFRAME',
                     visible=False,
                 )
                 VisualisationCatalogueItem.objects.create(
