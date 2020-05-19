@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - New visualisations are wrapped in an iframe by default
+- The metrics sidecar container to be Fargate 1.4.0 compatible
 
 ### Added
 
