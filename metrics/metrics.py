@@ -18,17 +18,23 @@ async def async_main(logger, port, url):
                 app_container_metrics = [
                     container_metrics
                     for _, container_metrics in task_metrics.items()
+                    # Fargate 1.3.0
                     if '-metrics-' not in container_metrics['name']
                     and '-internalecspause-' not in container_metrics['name']
                     and '-s3sync-' not in container_metrics['name']
+                    # Fargate 1.4.0
+                    and container_metrics['name'] != 'metrics'
+                    and container_metrics['name'] != 's3sync'
+                    and container_metrics['name'] != 'aws-fargate-supervisor'
                 ][0]
 
+                # precpu_stats added and used in Fargate 1.3.0. However, these are empty in
+                # Fargate 1.4.0, so moving over to cpu_stats
                 prometheus_format_metrics = textwrap.dedent(
                     f'''\
                     memory_stats__usage {app_container_metrics['memory_stats']['usage']}
-                    precpu_stats__cpu_usage__total_usage {app_container_metrics['precpu_stats']['cpu_usage']['total_usage']}
-                    precpu_stats__precpu_stats__system_cpu_usage {app_container_metrics['precpu_stats']['system_cpu_usage']}
-                    precpu_stats__precpu_stats__online_cpus {app_container_metrics['precpu_stats']['online_cpus']}'''
+                    cpu_stats__cpu_usage__total_usage {app_container_metrics['cpu_stats']['cpu_usage']['total_usage']}
+                    precpu_stats__cpu_usage__total_usage {app_container_metrics['cpu_stats']['cpu_usage']['total_usage']}'''
                 )
                 return web.Response(text=prometheus_format_metrics)
 
