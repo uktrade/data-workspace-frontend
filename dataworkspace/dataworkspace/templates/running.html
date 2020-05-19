@@ -112,9 +112,13 @@
     }
   </style>
   {% endif %}
+
+  {% include 'partials/gtm_head.html' %}
 </head>
 
 <body class="vis__body">
+  {% include 'partials/gtm_body.html' %}
+
   {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
   <header class="govuk-header" role="banner">
     <div class="govuk-header__container govuk-width-container">
