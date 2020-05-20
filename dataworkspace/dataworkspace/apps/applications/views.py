@@ -134,6 +134,7 @@ def application_running_html_GET(request, public_host):
         'visualisation_src': f'{request.scheme}://{application_instance.public_host}--{port}.'
         f'{settings.APPLICATION_ROOT_DOMAIN}/',
         'nice_name': application_instance.application_template.nice_name,
+        'wrap': application_instance.application_template.wrap,
     }
 
     return render(request, 'running.html', context, status=200)

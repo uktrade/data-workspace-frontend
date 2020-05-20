@@ -32,6 +32,10 @@ class ApplicationTemplate(TimeStampedModel):
         choices=(
             ('NONE', 'No wrapping'),
             ('FULL_HEIGHT_IFRAME', 'Wrapped in full height iframe'),
+            (
+                'IFRAME_WITH_VISUALISATIONS_HEADER',
+                'Wrapped in iframe with visualisations header',
+            ),
         ),
         default='NONE',
     )

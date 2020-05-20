@@ -102,7 +102,8 @@ async def async_main():
             f"frame-ancestors 'none';"
             f'frame-src {direct_host} {sso_host};'
             f'img-src {root_domain};'
-            f"style-src 'unsafe-inline';"
+            f'font-src {root_domain} data:;'
+            f"style-src 'unsafe-inline' {root_domain};"
         )
 
     # A running application should only connect to self: this is where we have the most
