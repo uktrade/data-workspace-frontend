@@ -100,9 +100,10 @@ async def async_main():
             f'base-uri {root_domain};'
             f"form-action 'none';"
             f"frame-ancestors 'none';"
-            f'frame-src {direct_host} {sso_host};'
-            f'img-src {root_domain};'
+            f'frame-src {direct_host} {sso_host} https://www.googletagmanager.com;'
+            f'img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com;'
             f'font-src {root_domain} data:;'
+            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com;"
             f"style-src 'unsafe-inline' {root_domain};"
         )
 

@@ -14,7 +14,6 @@ def common(request):
 
     return {
         'root_href': f'{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/',
-        'google_analytics_site_id': settings.GOOGLE_ANALYTICS_SITE_ID,
         'can_see_visualisations_tab': can_see_visualisations_tab,
         'gtm_container_id': settings.GTM_CONTAINER_ID,
         'gtm_container_environment_params': settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
