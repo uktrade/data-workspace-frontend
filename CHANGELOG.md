@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Option for visualisations to have a visible header
+- GTM on the page wrapping visualisations
 
 ## 2020-05-14
 
