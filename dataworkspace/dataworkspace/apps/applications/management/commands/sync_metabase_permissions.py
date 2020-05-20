@@ -176,7 +176,7 @@ class Command(BaseCommand):
             else:
                 # Give table permissions to 'All users' instead of dataset group
                 graph["groups"]["1"] = deepupdate(
-                    graph["groups"]["1"], table_permissions
+                    graph["groups"].get("1", {}), table_permissions
                 )
 
         return metabase.update_group_permissions(graph)
