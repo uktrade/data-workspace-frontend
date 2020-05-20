@@ -20,6 +20,8 @@
   <link rel="apple-touch-icon" sizes="152x152" href="{% get_static_prefix %}assets/images/govuk-apple-touch-icon-152x152.png">
   <link rel="apple-touch-icon" href="{% get_static_prefix %}assets/images/govuk-apple-touch-icon.png">
 
+  {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
+  <link rel="stylesheet" href="{% get_static_prefix %}govuk-frontend-including-fonts-3.3.0-v1.min.css">
   <style>
     .vis-template {
       height: 100%;
@@ -30,14 +32,104 @@
       background-color: #ffffff;
     }
     .vis {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Horizontal styles of header */
+    .govuk-width-container {
+      max-width: none;
+    }
+    @media (min-width: 40.0625em) {
+      .govuk-header__container {
+        margin: 0 30px;
+      }
+    }
+
+    /* Vertical styles of header, and that it + the iframe are 100% height */
+    .govuk-header {
+      height: 39px;
+      overflow: hidden;
+      /* Not strictly part of the design, but gives a bit of separation between
+         the header and the visualisation, especially on those with non-white
+         backgrounds and when scrolling down */
+      border-bottom: 1px solid white;
+    }
+    .govuk-header__container {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 10px;
+    }
+    .vis {
+      height: calc(100% - 40px);
+    }
+    @media (min-width: 40.0625em) {
+      .govuk-header {
+        height: 49px;
+      }
+      .vis {
+        height: calc(100% - 50px);
+      }
+    }
+
+    /* Not show the tagline at all when it would wrap to the next line */
+    .vis-header__tagline {
+      display: none;
+    }
+    @media (min-width: 50em) {
+      .vis-header__tagline {
+        display: block;
+        float: right;
+        font-weight: normal;
+        font-size: 19px;
+        font-size: 1.1875rem;
+        line-height: 32px;
+      }
+    }
+    .vis-header__tagline__link {
+      text-decoration: underline;
+    }
+  </style>
+  {% endif %}
+
+  {% if wrap == 'FULL_HEIGHT_IFRAME' %}
+  <style>
+    .vis-template {
+      height: 100%;
+    }
+    .vis__body {
+      margin: 0;
+      height: 100%;
+      background-color: #ffffff;
+    }
+    .vis {
+      display: block;
       width: 100%;
       height: 100%;
       border: none;
     }
   </style>
+  {% endif %}
 </head>
 
 <body class="vis__body">
+  {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
+  <header class="govuk-header" role="banner">
+    <div class="govuk-header__container govuk-width-container">
+      <div class="govuk-header__logotype">
+        <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name">
+          Data Workspace Visualisations
+        </a>
+      </div>
+      <div class="govuk-header__link--service-name vis-header__tagline">
+        Created by tools and data on <a href="{{ root_href }}" class="govuk-header__link vis-header__tagline__link">Data Workspace</a>
+      </div>
+    </div>
+  </header>
+  {% endif %}
+
   <iframe src="{{ visualisation_src }}" sandbox="allow-forms allow-presentation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" class="vis">
 </body>
 
