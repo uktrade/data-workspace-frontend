@@ -132,8 +132,6 @@ COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 ENTRYPOINT ["tini", "-g", "--"]
 
-USER jovyan
-
 WORKDIR /home/jovyan
 
 # The ipython history database does not play well with mobius3, surfacing
@@ -141,10 +139,11 @@ WORKDIR /home/jovyan
 # it where mobius3 does not sync
 ENV IPYTHONDIR=/tmp/ipython
 
-CMD ["/opt/conda/bin/jupyter", \
-    "lab", \
-    "--config=/etc/jupyter/jupyter_notebook_config.py", \
-    "--NotebookApp.token=''", \
-    "--NotebookApp.ip='0.0.0.0'", \
-    "--NotebookApp.allow_remote_access=True", \
-    "--NotebookApp.port=8888"]
+ENV \
+    JUPYTER_CONFIG_DIR=/home/jovyan/.jupyterlab_python \
+    JUPYTER_DATA_DIR=/tmp/jupyterlab_python \
+    JUPYTER_RUNTIME_DIR=/tmp/jupyterlab_python/runtime
+
+COPY start.sh /
+
+CMD ["/start.sh"]

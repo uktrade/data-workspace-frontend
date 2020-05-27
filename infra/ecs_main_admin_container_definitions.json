@@ -368,34 +368,6 @@
       "value": "120"
     },
     {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CMD__1",
-      "value": "jupyter"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CMD__2",
-      "value": "lab"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CMD__3",
-      "value": "--config=/etc/jupyter/jupyter_notebook_config.py"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CMD__4",
-      "value": "--NotebookApp.token=''"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CMD__5",
-      "value": "--NotebookApp.ip='0.0.0.0'"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CMD__6",
-      "value": "--NotebookApp.allow_remote_access=True"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CMD__7",
-      "value": "--NotebookApp.port=8888"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CLUSTER_NAME",
       "value": "${fargate_spawner__task_custer_name}"
     },
@@ -414,18 +386,6 @@
     {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__SUBNETS__1",
       "value": "${fargate_spawner__task_subnet}"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ENV__JUPYTER_CONFIG_DIR",
-      "value": "/home/jovyan/.jupyterlab_python"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ENV__JUPYTER_DATA_DIR",
-      "value": "/tmp/jupyterlab_python"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ENV__JUPYTER_RUNTIME_DIR",
-      "value": "/tmp/jupyterlab_python/runtime"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__PORT",
