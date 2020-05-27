@@ -141,10 +141,6 @@ WORKDIR /home/jovyan
 # it where mobius3 does not sync
 ENV IPYTHONDIR=/tmp/ipython
 
-CMD ["/opt/conda/bin/jupyter", \
-    "lab", \
-    "--config=/etc/jupyter/jupyter_notebook_config.py", \
-    "--NotebookApp.token=''", \
-    "--NotebookApp.ip='0.0.0.0'", \
-    "--NotebookApp.allow_remote_access=True", \
-    "--NotebookApp.port=8888"]
+COPY start.sh /
+
+CMD ["/start.sh"]
