@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-05-27
+
+### Changed
+
+- The s3sync sidecar container to be Fargate 1.4.0 compatible
+
 ## 2020-05-19
 
 ### Changed
