@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - The s3sync sidecar container to be Fargate 1.4.0 compatible
+- Added ability to export datacut queries to CSV from admin listing
 
 ## 2020-05-19
 

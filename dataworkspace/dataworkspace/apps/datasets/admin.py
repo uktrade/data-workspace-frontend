@@ -1,4 +1,6 @@
+import csv
 import logging
+from datetime import datetime
 
 from adminsortable2.admin import SortableInlineAdminMixin
 from django.contrib import admin
@@ -6,6 +8,8 @@ from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from csp.decorators import csp_update
+from django.http import HttpResponse
+from django.urls import reverse
 
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
@@ -447,9 +451,37 @@ class CustomDatasetQueryAdmin(admin.ModelAdmin):
     form = CustomDatasetQueryForm
     exclude = ('reference_number',)
     readonly_fields = ('source_reference',)
+    actions = ['export_queries']
 
     def get_queryset(self, request):
         return self.model.objects.filter(dataset__deleted=False)
+
+    def export_queries(self, request, queryset):
+        field_names = ['dataset_name', 'query_name', 'query_admin_url', 'query']
+        response = HttpResponse(content_type='text/csv')
+        response[
+            'Content-Disposition'
+        ] = 'attachment; filename=dataset-queries-{}.csv'.format(
+            datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        )
+        writer = csv.DictWriter(response, field_names, quoting=csv.QUOTE_NONNUMERIC)
+        writer.writeheader()
+        for query in queryset:
+            writer.writerow(
+                {
+                    'dataset_name': query.dataset.name,
+                    'query_name': query.name,
+                    'query_admin_url': request.build_absolute_uri(
+                        reverse(
+                            'admin:datasets_customdatasetquery_change', args=(query.id,)
+                        )
+                    ),
+                    'query': query.query,
+                }
+            )
+        return response
+
+    export_queries.short_description = 'Export Selected'
 
 
 @admin.register(SourceView)
