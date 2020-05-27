@@ -132,8 +132,6 @@ COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 ENTRYPOINT ["tini", "-g", "--"]
 
-USER jovyan
-
 WORKDIR /home/jovyan
 
 # The ipython history database does not play well with mobius3, surfacing
