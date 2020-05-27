@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added ability to export datacut queries to CSV from admin listing
 - The JupyterLab Python container to be Fargate 1.4.0 compatible
 - The sudoers file in JupyterLab Python to preserve PATH
+- JupyterLab Python on Fargate 1.4.0
 
 ## 2020-05-19
 
