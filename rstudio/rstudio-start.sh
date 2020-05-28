@@ -4,6 +4,8 @@ set -e
 
 mkdir -p /etc/rstudio/connections
 
+rm -f /home/rstudio/.Renviron
+
 while IFS='=' read -r name value ; do
   if [[ $name == *'DATABASE_DSN__'* ]]; then
     # Make available as environment variable
