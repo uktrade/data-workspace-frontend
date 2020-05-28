@@ -143,7 +143,8 @@ ENV IPYTHONDIR=/tmp/ipython
 ENV \
     JUPYTER_CONFIG_DIR=/home/jovyan/.jupyterlab_python \
     JUPYTER_DATA_DIR=/tmp/jupyterlab_python \
-    JUPYTER_RUNTIME_DIR=/tmp/jupyterlab_python/runtime
+    JUPYTER_RUNTIME_DIR=/tmp/jupyterlab_python/runtime \
+    PS1="\w\\$ \[$(tput sgr0)\]"
 
 COPY start.sh /
 

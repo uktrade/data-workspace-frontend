@@ -368,6 +368,10 @@
       "value": "120"
     },
     {
+      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__PLATFORM_VERSION",
+      "value": "1.4.0"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__CLUSTER_NAME",
       "value": "${fargate_spawner__task_custer_name}"
     },
