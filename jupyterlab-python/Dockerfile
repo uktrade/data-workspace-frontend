@@ -143,8 +143,14 @@ ENV IPYTHONDIR=/tmp/ipython
 ENV \
     JUPYTER_CONFIG_DIR=/home/jovyan/.jupyterlab_python \
     JUPYTER_DATA_DIR=/tmp/jupyterlab_python \
-    JUPYTER_RUNTIME_DIR=/tmp/jupyterlab_python/runtime \
-    PS1="\w\\$ \[$(tput sgr0)\]"
+    JUPYTER_RUNTIME_DIR=/tmp/jupyterlab_python/runtime
+
+# The home directory in Data Workspace is a volume that is empty by default,
+# so there is no ~/.bashrc. We delete the one here to make testing locally
+# more like production
+RUN \
+    echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
+    rm /home/jovyan/.bashrc
 
 COPY start.sh /
 
