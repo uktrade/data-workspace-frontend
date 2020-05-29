@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Updated `get_filename` for source links to support arbitrary file extensions, rather than imposing `.csv` on everything.
 
+### Added
+
+- The `allow-downloads` value in the `sandbox` attribute for wrapped visualisations
+
 ## 2020-05-28
 
 ### Changed
