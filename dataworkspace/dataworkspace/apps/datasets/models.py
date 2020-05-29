@@ -1,4 +1,5 @@
 import copy
+import os
 import uuid
 
 from typing import Optional, List
@@ -392,8 +393,8 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
             )
         return None
 
-    def get_filename(self):
-        filename = '{}.csv'.format(slugify(self.name))
+    def get_filename(self, extension='.csv'):
+        filename = slugify(self.name) + extension
         if self.source_reference is not None:
             return f'{self.source_reference}-{filename}'
         return filename
@@ -544,6 +545,14 @@ class SourceLink(ReferenceNumberedDatasetSource):
 
     def can_show_link_for_user(self, user):
         return True
+
+    def get_filename(self):
+        if self.link_type == self.TYPE_LOCAL:
+            native_extension = os.path.splitext(self.url)[1]
+            extension = native_extension if native_extension else '.csv'
+            return super().get_filename(extension=extension)
+
+        return super().get_filename()
 
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):

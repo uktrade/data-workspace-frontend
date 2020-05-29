@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-05-29
+
+### Changed
+
+- Updated `get_filename` for source links to support arbitrary file extensions, rather than imposing `.csv` on everything.
+
 ## 2020-05-28
 
 ### Changed
