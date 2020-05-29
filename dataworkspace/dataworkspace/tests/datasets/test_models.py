@@ -1,5 +1,6 @@
 import pytest
 
+from dataworkspace.apps.datasets.models import SourceLink
 from dataworkspace.tests import factories
 
 
@@ -92,7 +93,6 @@ def test_dataset_source_reference_code(db, factory):
     (
         factories.SourceTableFactory,
         factories.SourceViewFactory,
-        factories.SourceLinkFactory,
         factories.CustomDatasetQueryFactory,
     ),
 )
@@ -106,3 +106,34 @@ def test_dataset_source_filename(db, factory):
     ds2 = factories.DataSetFactory()
     source2 = factory(dataset=ds2, name='A test source')
     assert source2.get_filename() == 'a-test-source.csv'
+
+
+def test_source_link_filename(db):
+    ds1 = factories.DataSetFactory(
+        reference_code=factories.DatasetReferenceCodeFactory(code='DW')
+    )
+    source1 = factories.SourceLinkFactory(
+        dataset=ds1,
+        name='A test source',
+        url="s3://csv-pipelines/my-data.csv.zip",
+        link_type=SourceLink.TYPE_LOCAL,
+    )
+    assert source1.get_filename() == 'DW00001-a-test-source.zip'
+
+    ds2 = factories.DataSetFactory()
+    source2 = factories.SourceLinkFactory(
+        dataset=ds2,
+        name='A test source',
+        url="s3://csv-pipelines/my-data.csv",
+        link_type=SourceLink.TYPE_LOCAL,
+    )
+    assert source2.get_filename() == 'a-test-source.csv'
+
+    ds3 = factories.DataSetFactory()
+    source3 = factories.SourceLinkFactory(
+        dataset=ds3,
+        name='A test source',
+        url="http://www.google.com/index.html",
+        link_type=SourceLink.TYPE_EXTERNAL,
+    )
+    assert source3.get_filename() == 'a-test-source.csv'
