@@ -3,6 +3,7 @@
 set -e
 
 mkdir -p /etc/rstudio/connections
+chown -R rstudio:rstudio /home/rstudio
 
 rm -f /home/rstudio/.Renviron
 
@@ -27,4 +28,5 @@ done < <(env)
 echo "S3_PREFIX='${S3_PREFIX}'" >> /home/rstudio/.Renviron
 echo "AWS_DEFAULT_REGION='${AWS_DEFAULT_REGION}'" >> /home/rstudio/.Renviron
 echo "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI='${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI}'" >> /home/rstudio/.Renviron
-/usr/lib/rstudio-server/bin/rserver
+
+sudo -E -H -u rstudio /usr/lib/rstudio-server/bin/rserver
