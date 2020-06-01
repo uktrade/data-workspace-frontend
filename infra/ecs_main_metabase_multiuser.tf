@@ -5,8 +5,7 @@ resource "aws_ecs_service" "metabase_multiuser" {
   desired_count   = 2
   launch_type     = "FARGATE"
   deployment_maximum_percent = 200
-  # We need to write to /etc/hosts, which is not writable in 1.4.0
-  platform_version = "1.3.0"
+  platform_version = "1.4.0"
   health_check_grace_period_seconds = "120"
 
   network_configuration {
