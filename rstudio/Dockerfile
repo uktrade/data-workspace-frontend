@@ -103,13 +103,12 @@ ENV \
 RUN \
 	addgroup --system --gid 4356 rstudio && \
 	adduser --disabled-password --gecos '' --ingroup rstudio --uid 4357 rstudio && \
-	mkdir -p /etc/rstudio/connections && \
-	chown rstudio /etc/rstudio/connections && \
 	chown -R rstudio:rstudio /usr/local/lib/R/site-library && \
 	# Avoids errors when installing Java
 	mkdir -p /usr/share/man/man1mkdir -p /usr/share/man/man1 && \
-	echo "rstudio ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get,/usr/bin/R" >> /etc/sudoers
-
-USER rstudio
+	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
+	echo "rstudio ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get,/usr/bin/R" >> /etc/sudoers && \
+	echo 'PS1="\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /etc/bash.bashrc && \
+	rm /home/rstudio/.bashrc
 
 CMD ["/rstudio-start.sh"]

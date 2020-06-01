@@ -3,13 +3,17 @@
 set -e
 
 mkdir -p /etc/rstudio/connections
+chown -R rstudio:rstudio /home/rstudio
 
+# A previous version of this script wrote environment variables to this file,
+# which was synced between container starts. Deleting to ensure we don't
+# incorrectly use old values
 rm -f /home/rstudio/.Renviron
 
 while IFS='=' read -r name value ; do
   if [[ $name == *'DATABASE_DSN__'* ]]; then
     # Make available as environment variable
-    echo "${name}='${!name}'" >> /home/rstudio/.Renviron
+    echo "${name}='${!name}'" >> /etc/R/Renviron.site
 
     # Make available as connection in the UI
     conn_name=$(echo ${name}    | sed -E 's/DATABASE_DSN__(.*)/\1/')
@@ -24,7 +28,8 @@ while IFS='=' read -r name value ; do
   fi
 done < <(env)
 
-echo "S3_PREFIX='${S3_PREFIX}'" >> /home/rstudio/.Renviron
-echo "AWS_DEFAULT_REGION='${AWS_DEFAULT_REGION}'" >> /home/rstudio/.Renviron
-echo "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI='${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI}'" >> /home/rstudio/.Renviron
-/usr/lib/rstudio-server/bin/rserver
+echo "S3_PREFIX='${S3_PREFIX}'" >> /etc/R/Renviron.site
+echo "AWS_DEFAULT_REGION='${AWS_DEFAULT_REGION}'" >> /etc/R/Renviron.site
+echo "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI='${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI}'" >> /etc/R/Renviron.site
+
+sudo -E -H -u rstudio /usr/lib/rstudio-server/bin/rserver
