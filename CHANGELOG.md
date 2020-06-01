@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bumped to latest Alpine Python
 - Bump Fargate to 1.4.0 for Metabase
 - The prompt in RStudio to be shorter: not include the user and hostname
+- RStudio to be Fargate 1.4.0 compatible
 
 ## 2020-05-29
 
