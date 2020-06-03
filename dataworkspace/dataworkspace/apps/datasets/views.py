@@ -8,6 +8,7 @@ from typing import Union
 
 import boto3
 from botocore.exceptions import ClientError
+from csp.decorators import csp_update
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
@@ -564,6 +565,26 @@ def request_visualisation_access_success_view(request, dataset_uuid):
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
     )
+
+
+@require_GET
+@csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
+def get_quicksight_dashboard(request, dashboard_id):
+    account_id = boto3.client('sts').get_caller_identity().get('Account')
+    dashboard_name = boto3.client('quicksight').describe_dashboard(
+        AwsAccountId=account_id, DashboardId=dashboard_id, AliasName='$PUBLISHED'
+    )['Dashboard']['Name']
+    dashboard_url = boto3.client('quicksight').get_dashboard_embed_url(
+        AwsAccountId=account_id, DashboardId=dashboard_id, IdentityType='IAM'
+    )['EmbedUrl']
+
+    context = {
+        'visualisation_src': dashboard_url,
+        'nice_name': dashboard_name,
+        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
+    }
+
+    return render(request, 'running.html', context, status=200)
 
 
 class ReferenceDatasetDownloadView(DetailView):
