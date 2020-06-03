@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bump RStudio to run on Fargate 1.4.0
 - Bump pgAdmin to run on Fargate 1.4.0
 - Short terminal prompt in JupyterLab R
+- JupyterLab R Fargate 1.4.0 compatible
 
 ## 2020-06-01
 
