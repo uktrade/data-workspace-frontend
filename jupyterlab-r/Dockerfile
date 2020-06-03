@@ -61,6 +61,7 @@ RUN \
         rm -rf /var/lib/apt/lists/* && \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
+    echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
     echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
     wget https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.2-Linux-x86_64.sh -O miniconda.sh && \
     echo "87e77f097f6ebb5127c77662dfc3165e  miniconda.sh" | md5sum -c && \
@@ -140,8 +141,6 @@ RUN \
 COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 ENTRYPOINT ["tini", "-g", "--"]
-
-USER jovyan
 
 WORKDIR /home/jovyan
 
