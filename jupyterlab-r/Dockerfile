@@ -150,6 +150,11 @@ WORKDIR /home/jovyan
 # it where mobius3 does not sync
 ENV IPYTHONDIR=/tmp/ipython
 
+ENV \
+    JUPYTER_CONFIG_DIR=/home/jovyan/.jupyterlab_python \
+    JUPYTER_DATA_DIR=/tmp/jupyterlab_python \
+    JUPYTER_RUNTIME_DIR=/tmp/jupyterlab_python/runtime
+
 COPY start.sh /start.sh
 
 CMD ["/start.sh"]
