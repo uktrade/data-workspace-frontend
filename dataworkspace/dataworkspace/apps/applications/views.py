@@ -4,9 +4,11 @@ import hashlib
 import itertools
 import random
 import re
+import time
 from urllib.parse import urlsplit
 
-from csp.decorators import csp_exempt
+import jwt
+from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
@@ -1185,6 +1187,25 @@ def visualisation_publish_html_view(request, gitlab_project_id):
         return visualisation_publish_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
+
+
+@csp_update(FRAME_SRC=settings.METABASE_SITE_URL)
+def metabase_visualisation_embed_view(request, dashboard_id):
+    payload = {
+        "resource": {"dashboard": dashboard_id},
+        "params": {},
+        "exp": round(time.time()) + 600,
+    }
+    token = jwt.encode(payload, settings.METABASE_SECRET_KEY, algorithm="HS256")
+
+    return render(
+        request,
+        "running.html",
+        {
+            "visualisation_src": f"//{settings.METABASE_SITE_URL.rstrip('/')}/embed/dashboard/{token.decode('utf8')}#bordered=false&titled=false",
+            "wrap": "IFRAME_WITH_VISUALISATIONS_HEADER",
+        },
+    )
 
 
 def _visualisation_is_approved(application_template):
