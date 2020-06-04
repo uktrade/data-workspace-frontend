@@ -83,12 +83,12 @@ async def async_main():
     csp_application_spawning = csp_common + (
         f'default-src {root_domain};'
         f'base-uri {root_domain};'
-        f'font-src {root_domain} data:;'
+        f'font-src {root_domain} data:  https://fonts.gstatic.com;'
         f'form-action {root_domain} *.{root_domain};'
         f'frame-ancestors {root_domain};'
-        f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com;'
+        f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'
         f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"
-        f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com;"
+        f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
         f"connect-src {root_domain} 'self';"
     )
 
@@ -101,10 +101,10 @@ async def async_main():
             f"form-action 'none';"
             f"frame-ancestors 'none';"
             f'frame-src {direct_host} {sso_host} https://www.googletagmanager.com;'
-            f'img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com;'
-            f'font-src {root_domain} data:;'
+            f'img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'
+            f"font-src {root_domain} data: https://fonts.gstatic.com;"
             f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"
-            f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com;"
+            f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
         )
 
     # A running application should only connect to self: this is where we have the most
