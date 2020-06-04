@@ -117,7 +117,7 @@ async def async_main():
             f"connect-src 'self' wss://{host};"
             "font-src 'self' data:;"
             "form-action 'self';"
-            f"frame-ancestors 'self' {public_host}.{root_domain};"
+            f"frame-ancestors 'self' {root_domain} {public_host}.{root_domain};"
             "img-src 'self' data: blob:;"
             # Both JupyterLab and RStudio need `unsafe-eval`
             "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
