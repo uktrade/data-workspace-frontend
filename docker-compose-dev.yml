@@ -48,6 +48,11 @@ services:
     image: data-workspace-redis
     ports:
       - "6379:6379"
+  data-workspace-metabase:
+    image: metabase/metabase
+    ports:
+      - "3000:3000"
+
 
 volumes:
   db-data-dev:
