@@ -1196,7 +1196,9 @@ def metabase_visualisation_embed_view(request, dashboard_id):
         "params": {},
         "exp": round(time.time()) + 600,
     }
-    token = jwt.encode(payload, settings.METABASE_SECRET_KEY, algorithm="HS256")
+    token = jwt.encode(
+        payload, settings.METABASE_EMBEDDING_SECRET_KEY, algorithm="HS256"
+    )
 
     return render(
         request,
