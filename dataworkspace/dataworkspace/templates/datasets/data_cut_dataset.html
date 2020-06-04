@@ -4,6 +4,21 @@
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
+{% block head %}
+  {{ block.super }}
+
+  {% if visualisation_src %}
+  <style>
+    .vis {
+      display: block;
+      width: 100%;
+      height: 40em;
+      border: none;
+    }
+  </style>
+  {% endif %}
+{% endblock %}
+
 {% block extraGTMDataLayer %}
 <script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "datacut"})</script>
 {% endblock %}
@@ -125,6 +140,11 @@
             {% endif %}
         </div>
     </div>
+
+    {% if visualisation_src %}
+    <h2 class="govuk-heading-l govuk-!-margin-top-8">Visualisation</h2>
+      <iframe src="{{ visualisation_src }}" sandbox="allow-forms allow-presentation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads" class="vis" ></iframe>
+    {% endif %}
 
     {% if fields %}
     <details class="govuk-details" data-module="govuk-details">
