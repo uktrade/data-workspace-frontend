@@ -1,4 +1,5 @@
 import boto3
+from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 
@@ -101,7 +102,10 @@ def get_quicksight_dashboard_name_url(dashboard_id):
         AwsAccountId=account_id, DashboardId=dashboard_id, AliasName='$PUBLISHED'
     )['Dashboard']['Name']
     dashboard_url = boto3.client('quicksight').get_dashboard_embed_url(
-        AwsAccountId=account_id, DashboardId=dashboard_id, IdentityType='IAM'
+        AwsAccountId=account_id,
+        DashboardId=dashboard_id,
+        IdentityType='QUICKSIGHT',
+        UserArn=settings.QUICKSIGHT_DATASOURCE_USER_ARN,
     )['EmbedUrl']
 
     return dashboard_name, dashboard_url
