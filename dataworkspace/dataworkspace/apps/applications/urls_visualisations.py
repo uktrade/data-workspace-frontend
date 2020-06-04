@@ -13,6 +13,7 @@ from dataworkspace.apps.applications.views import (
     visualisation_datasets_html_view,
     visualisation_publish_html_view,
 )
+from dataworkspace.apps.datasets.views import get_quicksight_dashboard
 
 urlpatterns = [
     path('', login_required(visualisations_html_view), name='root'),
@@ -20,6 +21,11 @@ urlpatterns = [
         'metabase/<int:dashboard_id>',
         login_required(metabase_visualisation_embed_view),
         name='metabase_visualisation_embed',
+    ),
+    path(
+        'quicksight/<str:dashboard_id>',
+        login_required(get_quicksight_dashboard),
+        name='get-quicksight-dashboard',
     ),
     path(
         '<str:gitlab_project_id>/branches/<str:branch_name>',

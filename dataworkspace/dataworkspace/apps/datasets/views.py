@@ -8,6 +8,7 @@ from typing import Union
 
 import boto3
 from botocore.exceptions import ClientError
+from csp.decorators import csp_update
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
@@ -60,6 +61,7 @@ from dataworkspace.apps.datasets.utils import (
     find_visualisation,
     find_dataset_or_visualisation,
     get_code_snippets,
+    get_quicksight_dashboard_name_url,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -281,6 +283,10 @@ class DatasetDetailView(DetailView):
 
         return dataset
 
+    @csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
         ctx['model'] = self.object
@@ -360,6 +366,14 @@ class DatasetDetailView(DetailView):
             for data_link in data_links
         ]
 
+        quicksight_dashboard_id = self.request.GET.get("quicksight_dashboard_id", None)
+        if quicksight_dashboard_id:
+            _, dashboard_url = get_quicksight_dashboard_name_url(
+                quicksight_dashboard_id
+            )
+        else:
+            _, dashboard_url = None, None
+
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
@@ -370,6 +384,7 @@ class DatasetDetailView(DetailView):
                     for source_link in self.object.sourcelink_set.all()
                 ),
                 'code_snippets': get_code_snippets(self.object),
+                'visualisation_src': dashboard_url,
             }
         )
         return ctx
@@ -564,6 +579,20 @@ def request_visualisation_access_success_view(request, dataset_uuid):
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
     )
+
+
+@require_GET
+@csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
+def get_quicksight_dashboard(request, dashboard_id):
+    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(dashboard_id)
+
+    context = {
+        'visualisation_src': dashboard_url,
+        'nice_name': dashboard_name,
+        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
+    }
+
+    return render(request, 'running.html', context, status=200)
 
 
 class ReferenceDatasetDownloadView(DetailView):
