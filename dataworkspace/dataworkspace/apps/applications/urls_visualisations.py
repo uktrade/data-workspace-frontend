@@ -1,7 +1,9 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
+
 from dataworkspace.apps.applications.views import (
+    metabase_visualisation_embed_view,
     visualisations_html_view,
     visualisation_branch_html_view,
     visualisation_users_give_access_html_view,
@@ -14,6 +16,11 @@ from dataworkspace.apps.applications.views import (
 
 urlpatterns = [
     path('', login_required(visualisations_html_view), name='root'),
+    path(
+        'metabase/<int:dashboard_id>',
+        login_required(metabase_visualisation_embed_view),
+        name='metabase_visualisation_embed',
+    ),
     path(
         '<str:gitlab_project_id>/branches/<str:branch_name>',
         login_required(visualisation_branch_html_view),
