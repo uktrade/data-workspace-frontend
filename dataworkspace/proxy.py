@@ -87,8 +87,8 @@ async def async_main():
         f'form-action {root_domain} *.{root_domain};'
         f'frame-ancestors {root_domain};'
         f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com;'
-        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com;"
-        f"style-src 'unsafe-inline' {root_domain};"
+        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"
+        f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com;"
         f"connect-src {root_domain} 'self';"
     )
 
@@ -103,8 +103,8 @@ async def async_main():
             f'frame-src {direct_host} {sso_host} https://www.googletagmanager.com;'
             f'img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com;'
             f'font-src {root_domain} data:;'
-            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com;"
-            f"style-src 'unsafe-inline' {root_domain};"
+            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"
+            f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com;"
         )
 
     # A running application should only connect to self: this is where we have the most
