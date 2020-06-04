@@ -61,6 +61,7 @@ RUN \
         rm -rf /var/lib/apt/lists/* && \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
+    echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
     echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
     wget https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.2-Linux-x86_64.sh -O miniconda.sh && \
     echo "87e77f097f6ebb5127c77662dfc3165e  miniconda.sh" | md5sum -c && \
@@ -141,8 +142,6 @@ COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 ENTRYPOINT ["tini", "-g", "--"]
 
-USER jovyan
-
 WORKDIR /home/jovyan
 
 # The ipython history database does not play well with mobius3, surfacing
@@ -150,10 +149,18 @@ WORKDIR /home/jovyan
 # it where mobius3 does not sync
 ENV IPYTHONDIR=/tmp/ipython
 
-CMD ["/opt/conda/bin/jupyter", \
-    "lab", \
-    "--config=/etc/jupyter/jupyter_notebook_config.py", \
-    "--NotebookApp.token=''", \
-    "--NotebookApp.ip='0.0.0.0'", \
-    "--NotebookApp.allow_remote_access=True", \
-    "--NotebookApp.port=8888"]
+ENV \
+    JUPYTER_CONFIG_DIR=/home/jovyan/.jupyterlab_python \
+    JUPYTER_DATA_DIR=/tmp/jupyterlab_python \
+    JUPYTER_RUNTIME_DIR=/tmp/jupyterlab_python/runtime
+
+# The home directory in Data Workspace is a volume that is empty by default,
+# so there is no ~/.bashrc. We delete the one here to make testing locally
+# more like production
+RUN \
+    echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
+    rm /home/jovyan/.bashrc
+
+COPY start.sh /start.sh
+
+CMD ["/start.sh"]
