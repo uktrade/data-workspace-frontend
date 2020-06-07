@@ -15,7 +15,7 @@ django-waffle==0.20.0
 django==3.0.6
 djangorestframework==3.11.0
 elastic-apm==5.6.0
-gevent==1.4.0
+gevent==20.6.0
 gunicorn[gevent]==20.0.4
 hawk-server-asyncio==0.0.6
 Markdown==3.2.2
