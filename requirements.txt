@@ -27,4 +27,4 @@ redis==3.5.2
 pyjwt==1.7.1
 requests==2.23.0
 sentry-sdk==0.14.4
-zenpy==2.0.19
+zenpy==2.0.20
