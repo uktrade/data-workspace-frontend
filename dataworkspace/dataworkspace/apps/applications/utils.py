@@ -261,7 +261,7 @@ def application_instance_max_cpu(application_instance):
         values = response_dict['data']['result'][0]['values']
     except (IndexError, KeyError):
         # The server not having metrics yet should not be reported as an error
-        raise ExpectedMetricsException(f'Unknown')
+        raise ExpectedMetricsException('Unknown')
 
     max_cpu = 0.0
     ts_at_max = 0
