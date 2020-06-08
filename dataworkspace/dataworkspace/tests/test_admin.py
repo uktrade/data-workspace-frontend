@@ -2498,6 +2498,7 @@ class TestDatasetAdminPytest:
         ),
         indirect=['request_client'],
     )
+    @pytest.mark.django_db
     def test_sql_queries_can_only_be_reviewed_by_superusers(
         self, request_client, expected_response_code, can_review
     ):
@@ -2554,6 +2555,7 @@ class TestDatasetAdminPytest:
         ),
         indirect=['request_client'],
     )
+    @pytest.mark.django_db
     def test_datacut_can_only_be_published_by_superuser(
         self, request_client, expected_response_code, should_publish
     ):
