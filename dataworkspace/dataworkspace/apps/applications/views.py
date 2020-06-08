@@ -232,7 +232,7 @@ def visualisations_html_view(request):
 def visualisations_html_GET(request):
     gitlab_users = gitlab_api_v4(
         'GET',
-        f'/users',
+        '/users',
         params=(
             ('extern_uid', request.user.profile.sso_id),
             ('provider', 'oauth2_generic'),
@@ -258,7 +258,7 @@ def visualisations_html_GET(request):
     def get_projects(gitlab_user):
         gitlab_projects_including_non_visualisation = gitlab_api_v4(
             'GET',
-            f'projects',
+            'projects',
             params=(
                 ('archived', 'false'),
                 ('min_access_level', DEVELOPER_ACCESS_LEVEL),

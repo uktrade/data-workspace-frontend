@@ -706,7 +706,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            f'http://testvisualisation-a.dataworkspace.test:8000/my_database/test_dataset',
+            'http://testvisualisation-a.dataworkspace.test:8000/my_database/test_dataset',
         ) as response:
             received_status = response.status
             content = await response.text()
@@ -720,7 +720,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
+            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
         ) as response:
             received_status = response.status
             content = await response.text()
@@ -732,7 +732,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
         ) as response:
             received_status = response.status
             content = await response.json()
@@ -799,7 +799,7 @@ class TestApplication(unittest.TestCase):
         # not have access to, even though user tried to remove it
         async with session.request(
             'GET',
-            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
+            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
         ) as response:
             received_status = response.status
             content = await response.json()
@@ -810,7 +810,7 @@ class TestApplication(unittest.TestCase):
         # user removed
         async with session.request(
             'GET',
-            f'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
         ) as response:
             received_status = response.status
             content = await response.text()
@@ -877,7 +877,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            f'http://testvisualisation-b.dataworkspace.test:8000/my_database/test_dataset',
+            'http://testvisualisation-b.dataworkspace.test:8000/my_database/test_dataset',
         ) as response:
             received_status = response.status
             received_content = await response.json()

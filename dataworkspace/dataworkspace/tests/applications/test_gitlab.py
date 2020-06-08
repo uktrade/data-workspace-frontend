@@ -37,7 +37,7 @@ class TestGitlabHasDeveloperAccess:
                 json=[{"id": 1}],
             )
             rmock.get(
-                f'http://127.0.0.1:8007/api/v4/projects/1/members/all?user_ids=1',
+                'http://127.0.0.1:8007/api/v4/projects/1/members/all?user_ids=1',
                 json=[{"id": 1, "access_level": 50}],
             )
             has_access = gitlab_has_developer_access(

@@ -86,7 +86,7 @@ def gitlab_has_developer_access(user, gitlab_project_id):
 
     gitlab_users, status = gitlab_api_v4_with_status(
         'GET',
-        f'/users',
+        '/users',
         params=(('extern_uid', user.profile.sso_id), ('provider', 'oauth2_generic')),
     )
 
@@ -141,5 +141,5 @@ def _ensure_user_has_manage_unpublish_perm(user):
                 object_id=user.pk,
                 object_repr=force_str(user),
                 action_flag=ADDITION,
-                change_message=f"Added 'manage unpublished visualisations' permission",
+                change_message="Added 'manage unpublished visualisations' permission",
             )

@@ -54,7 +54,7 @@ def test_dataset_source_reference_code(db, factory):
     ref_code2 = factories.DatasetReferenceCodeFactory(code='Def')
     ds = factories.DataSetFactory(reference_code=ref_code1)
     source = factory(dataset=ds)
-    assert source.source_reference == f'ABC00001'
+    assert source.source_reference == 'ABC00001'
 
     # Change to a new reference code
     ds.reference_code = ref_code2
@@ -62,7 +62,7 @@ def test_dataset_source_reference_code(db, factory):
     ds.refresh_from_db()
 
     source.refresh_from_db()
-    assert source.source_reference == f'DEF00001'
+    assert source.source_reference == 'DEF00001'
 
     # Unset the reference code
     ds.reference_code = None
@@ -78,7 +78,7 @@ def test_dataset_source_reference_code(db, factory):
     ds.refresh_from_db()
 
     source.refresh_from_db()
-    assert source.source_reference == f'ABC00002'
+    assert source.source_reference == 'ABC00002'
 
     # Delete the reference code
     ref_code1.delete()
