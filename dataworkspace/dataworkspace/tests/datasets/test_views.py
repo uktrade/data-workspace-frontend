@@ -11,7 +11,7 @@ from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,
-    ApplicationTemplateUserPermissionFactory,
+    VisualisationUserPermissionFactory,
 )
 
 
@@ -437,20 +437,16 @@ def test_find_datasets_filters_by_access():
         name='Visualisation',
         visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
     )
-    factories.ApplicationTemplateUserPermissionFactory(
-        user=user, application_template=access_vis.visualisation_template
-    )
-    factories.ApplicationTemplateUserPermissionFactory(
-        user=user2, application_template=access_vis.visualisation_template
-    )
+    factories.VisualisationUserPermissionFactory(user=user, visualisation=access_vis)
+    factories.VisualisationUserPermissionFactory(user=user2, visualisation=access_vis)
 
     no_access_vis = factories.VisualisationCatalogueItemFactory.create(
         published=True,
         name='Visualisation - hidden',
         visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
     )
-    factories.ApplicationTemplateUserPermissionFactory(
-        user=user2, application_template=no_access_vis.visualisation_template
+    factories.VisualisationUserPermissionFactory(
+        user=user2, visualisation=no_access_vis
     )
 
     public_vis = factories.VisualisationCatalogueItemFactory.create(
@@ -714,13 +710,11 @@ class TestVisualisationsDetailView:
     def test_unauthorised_visualisation(self, has_access):
         user = UserFactory.create()
         vis = VisualisationCatalogueItemFactory.create(
-            visualisation_template__user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type='REQUIRES_AUTHORIZATION'
         )
 
         if has_access:
-            ApplicationTemplateUserPermissionFactory.create(
-                application_template=vis.visualisation_template, user=user
-            )
+            VisualisationUserPermissionFactory.create(visualisation=vis, user=user)
 
         client = Client(**get_http_sso_data(user))
         response = client.get(vis.get_absolute_url())

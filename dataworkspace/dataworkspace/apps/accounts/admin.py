@@ -13,12 +13,10 @@ from dataworkspace.apps.datasets.models import (
     DataSetUserPermission,
     MasterDataset,
     DataCutDataset,
+    VisualisationCatalogueItem,
+    VisualisationUserPermission,
 )
-from dataworkspace.apps.applications.models import (
-    ApplicationTemplate,
-    ApplicationTemplateUserPermission,
-    ApplicationInstance,
-)
+from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 
@@ -111,17 +109,12 @@ class AppUserEditForm(forms.ModelForm):
         )
         self.fields[
             'authorized_visualisations'
-        ].queryset = ApplicationTemplate.objects.filter(
-            application_type='VISUALISATION'
-        ).order_by(
-            'name', 'id'
+        ].initial = VisualisationCatalogueItem.objects.live().filter(
+            visualisationuserpermission__user=instance
         )
         self.fields[
             'authorized_visualisations'
-        ].initial = ApplicationTemplate.objects.filter(
-            application_type='VISUALISATION',
-            applicationtemplateuserpermission__user=instance,
-        )
+        ].queryset = VisualisationCatalogueItem.objects.live().order_by('name', 'id')
 
 
 admin.site.unregister(get_user_model())
@@ -333,36 +326,41 @@ class AppUserAdmin(UserAdmin):
             )
 
         if 'authorized_visualisations' in form.cleaned_data:
-            current_visualisations = ApplicationTemplate.objects.filter(
-                application_type='VISUALISATION',
-                applicationtemplateuserpermission__user=obj,
+            current_visualisations = VisualisationCatalogueItem.objects.filter(
+                visualisationuserpermission__user=obj
             )
-            for application_template in form.cleaned_data['authorized_visualisations']:
-                if application_template not in current_visualisations.all():
-                    ApplicationTemplateUserPermission.objects.create(
-                        application_template=application_template, user=obj
+            for visualisation_catalogue_item in form.cleaned_data[
+                'authorized_visualisations'
+            ]:
+                if visualisation_catalogue_item not in current_visualisations.all():
+                    VisualisationUserPermission.objects.create(
+                        visualisation=visualisation_catalogue_item, user=obj
                     )
                     log_permission_change(
                         request.user,
                         obj,
                         EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
-                        serializers.serialize('python', [application_template])[0],
-                        f"Added application {application_template} permission",
+                        serializers.serialize('python', [visualisation_catalogue_item])[
+                            0
+                        ],
+                        f"Added application {visualisation_catalogue_item} permission",
                     )
-            for application_template in current_visualisations:
+            for visualisation_catalogue_item in current_visualisations:
                 if (
-                    application_template
+                    visualisation_catalogue_item
                     not in form.cleaned_data['authorized_visualisations']
                 ):
-                    ApplicationTemplateUserPermission.objects.filter(
-                        application_template=application_template, user=obj
+                    VisualisationUserPermission.objects.filter(
+                        visualisation=visualisation_catalogue_item, user=obj
                     ).delete()
                     log_permission_change(
                         request.user,
                         obj,
                         EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
-                        serializers.serialize('python', [application_template])[0],
-                        f"Removed application {application_template} permission",
+                        serializers.serialize('python', [visualisation_catalogue_item])[
+                            0
+                        ],
+                        f"Removed application {visualisation_catalogue_item} permission",
                     )
 
         super().save_model(request, obj, form, change)

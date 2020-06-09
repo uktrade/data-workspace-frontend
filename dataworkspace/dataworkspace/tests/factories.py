@@ -307,6 +307,14 @@ class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
         model = 'datasets.VisualisationCatalogueItem'
 
 
+class VisualisationUserPermissionFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    visualisation = factory.SubFactory(VisualisationCatalogueItemFactory)
+
+    class Meta:
+        model = 'datasets.VisualisationUserPermission'
+
+
 class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     application_template = factory.SubFactory(ApplicationTemplateFactory)

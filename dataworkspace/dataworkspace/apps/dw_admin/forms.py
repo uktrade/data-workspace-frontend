@@ -445,7 +445,35 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )
+    requires_authorization = forms.BooleanField(
+        label='Each user must be individually authorized to access the data',
+        required=False,
+    )
+    authorized_users = forms.ModelMultipleChoiceField(
+        required=False,
+        widget=FilteredSelectMultiple('users', False),
+        queryset=get_user_model().objects.filter().order_by('email'),
+    )
 
     class Meta:
         model = VisualisationCatalogueItem
         fields = '__all__'
+        widgets = {'type': forms.HiddenInput()}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        is_instance = 'instance' in kwargs and kwargs['instance']
+
+        self.fields['requires_authorization'].initial = (
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
+            if is_instance
+            else True
+        )
+
+        self.fields['authorized_users'].initial = (
+            get_user_model().objects.filter(
+                visualisationuserpermission__visualisation=kwargs['instance']
+            )
+            if is_instance
+            else get_user_model().objects.none()
+        )

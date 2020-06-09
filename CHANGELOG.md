@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Neater alignment of buttons and dropdowns on Tools page
+- Move visualisation permissions from application template to catalogue item.
 
 ## 2020-06-08
 

@@ -39,7 +39,6 @@ from dataworkspace.apps.applications.gitlab import (
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
-    ApplicationTemplateUserPermission,
     VisualisationApproval,
     VisualisationTemplate,
 )
@@ -52,6 +51,7 @@ from dataworkspace.apps.datasets.models import (
     MasterDataset,
     DataSetApplicationTemplatePermission,
     VisualisationCatalogueItem,
+    VisualisationUserPermission,
 )
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
@@ -448,7 +448,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
     users = (
         get_user_model()
         .objects.filter(
-            applicationtemplateuserpermission__application_template__gitlab_project_id=gitlab_project[
+            visualisationuserpermission__visualisation__visualisation_template__gitlab_project_id=gitlab_project[
                 'id'
             ]
         )
@@ -471,6 +471,9 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
 
 def visualisation_users_with_access_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
+    visualisation_catalogue_item = VisualisationCatalogueItem.objects.get(
+        visualisation_template=application_template
+    )
     user_id = request.POST['user-id']
     user = get_user_model().objects.get(id=user_id)
 
@@ -478,10 +481,10 @@ def visualisation_users_with_access_html_POST(request, gitlab_project):
 
     with transaction.atomic():
         try:
-            permission = ApplicationTemplateUserPermission.objects.get(
-                user=user, application_template=application_template
+            permission = VisualisationUserPermission.objects.get(
+                user=user, visualisation=visualisation_catalogue_item
             )
-        except ApplicationTemplateUserPermission.DoesNotExist:
+        except VisualisationUserPermission.DoesNotExist:
             # The permission could have been removed by another request. We
             # could surface an error, but the state is what the user wanted:
             # the user does not have access.
@@ -553,6 +556,9 @@ def visualisation_users_give_access_html_GET(request, gitlab_project, token_data
 def visualisation_users_give_access_html_POST(request, gitlab_project, token_data):
     branches = _visualisation_branches(gitlab_project)
     application_template = _application_template(gitlab_project)
+    visualisation_catalogue_item = VisualisationCatalogueItem.objects.get(
+        visualisation_template=application_template
+    )
 
     email_address = request.POST['email-address'].strip().lower()
 
@@ -586,14 +592,14 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
     try:
         user = User.objects.get(email=email_address)
     except User.DoesNotExist:
-        return error('The user must have previously visisted Data Workspace')
+        return error('The user must have previously visited Data Workspace')
 
     content_type_id = ContentType.objects.get_for_model(user).pk
 
     try:
         with transaction.atomic():
-            ApplicationTemplateUserPermission.objects.create(
-                user=user, application_template=application_template
+            VisualisationUserPermission.objects.create(
+                user=user, visualisation=visualisation_catalogue_item
             )
             LogEntry.objects.log_action(
                 user_id=request.user.pk,
