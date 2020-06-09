@@ -433,9 +433,7 @@ def test_find_datasets_filters_by_access():
     )
 
     access_vis = factories.VisualisationCatalogueItemFactory.create(
-        published=True,
-        name='Visualisation',
-        visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
+        published=True, name='Visualisation', user_access_type='REQUIRES_AUTHORIZATION'
     )
     factories.VisualisationUserPermissionFactory(user=user, visualisation=access_vis)
     factories.VisualisationUserPermissionFactory(user=user2, visualisation=access_vis)
@@ -443,7 +441,7 @@ def test_find_datasets_filters_by_access():
     no_access_vis = factories.VisualisationCatalogueItemFactory.create(
         published=True,
         name='Visualisation - hidden',
-        visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type='REQUIRES_AUTHORIZATION',
     )
     factories.VisualisationUserPermissionFactory(
         user=user2, visualisation=no_access_vis
@@ -452,7 +450,7 @@ def test_find_datasets_filters_by_access():
     public_vis = factories.VisualisationCatalogueItemFactory.create(
         published=True,
         name='Visualisation - public',
-        visualisation_template__user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type='REQUIRES_AUTHENTICATION',
     )
 
     response = client.get(reverse('datasets:find_datasets'), {"access": "yes"})

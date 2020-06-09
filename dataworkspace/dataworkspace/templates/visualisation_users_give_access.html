@@ -30,11 +30,11 @@
             </h1>
         </legend>
 
-        {% if application_template.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
+        {% if catalogue_item.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
         <p class="govuk-body">All logged in users can view {{ gitlab_project.name }}.</p>
         {% endif %}
 
-        {% if application_template.user_access_type == 'REQUIRES_AUTHORIZATION' %}
+        {% if catalogue_item.user_access_type == 'REQUIRES_AUTHORIZATION' %}
         <p class="govuk-body">
             You can give other users access to view this visualisation by their email address. For technical reasons, each user must have previously visited Data Workspace.
         </p>
