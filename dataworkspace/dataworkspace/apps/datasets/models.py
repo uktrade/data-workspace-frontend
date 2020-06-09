@@ -1504,6 +1504,14 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         blank=True,
     )
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
+    user_access_type = models.CharField(
+        max_length=64,
+        choices=(
+            ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
+            ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
+        ),
+        default='REQUIRES_AUTHENTICATION',
+    )
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
@@ -1549,4 +1557,21 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return f'{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
     def user_has_access(self, user):
-        return self.visualisation_template.user_has_access(user)
+        return (
+            self.user_access_type == 'REQUIRES_AUTHENTICATION'
+            or self.visualisationuserpermission_set.filter(user=user).exists()
+        )
+
+    def __str__(self):
+        return self.name
+
+
+class VisualisationUserPermission(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    visualisation = models.ForeignKey(
+        VisualisationCatalogueItem, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        db_table = 'app_visualisationuserpermission'
+        unique_together = ('user', 'visualisation')

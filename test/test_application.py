@@ -2290,17 +2290,15 @@ async def give_user_visualisation_perms(name):
         from django.contrib.auth.models import (
             User,
         )
-        from dataworkspace.apps.applications.models import (
-            VisualisationTemplate,
-            ApplicationTemplateUserPermission,
-        )
+        from dataworkspace.apps.applications.models import VisualisationTemplate
+        from dataworkspace.apps.datasets.models import VisualisationUserPermission, VisualisationCatalogueItem
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         visualisationtemplate = VisualisationTemplate.objects.get(
             host_basename="{name}",
         )
-        ApplicationTemplateUserPermission.objects.create(
-            application_template=visualisationtemplate,
+        VisualisationUserPermission.objects.create(
             user=user,
+            visualisation=VisualisationCatalogueItem.objects.get(visualisation_template=visualisationtemplate),
         )
         """
     ).encode('ascii')
@@ -2350,15 +2348,21 @@ async def create_visualisation_echo(name):
         from dataworkspace.apps.applications.models import (
             VisualisationTemplate,
         )
+        from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
         template = VisualisationTemplate.objects.create(
             host_basename="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
             spawner_options='{{"CMD":["python3", "/test/echo_server.py"]}}',
             spawner_time=60,
-            user_access_type="REQUIRES_AUTHORIZATION",
             gitlab_project_id=3,
             visible=True
+        )
+        VisualisationCatalogueItem.objects.create(
+            name="Test {name}",
+            user_access_type="REQUIRES_AUTHORIZATION",
+            slug="{name}",
+            visualisation_template=template
         )
         """
     ).encode('ascii')
@@ -2433,14 +2437,20 @@ async def create_visualisation_dataset(name, gitlab_project_id):
         from dataworkspace.apps.applications.models import (
             VisualisationTemplate,
         )
+        from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
         template = VisualisationTemplate.objects.create(
             host_basename="{name}",
             nice_name="Test {name}",
             spawner="PROCESS",
             spawner_options='{{"CMD":["python3", "/test/dataset_server.py"]}}',
             spawner_time=60,
-            user_access_type="REQUIRES_AUTHORIZATION",
             gitlab_project_id={gitlab_project_id},
+        )
+        VisualisationCatalogueItem.objects.create(
+            name="Test {name}",
+            user_access_type="REQUIRES_AUTHORIZATION",
+            slug="{name}",
+            visualisation_template=template
         )
         """
     ).encode('ascii')

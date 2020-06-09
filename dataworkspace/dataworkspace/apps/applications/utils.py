@@ -27,6 +27,7 @@ from dataworkspace.apps.applications.models import (
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
+from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
@@ -171,6 +172,12 @@ def application_api_is_allowed(request, public_host):
         commit_id,
     ) = application_template_tag_user_commit_from_host(public_host)
 
+    visualisation_catalogue_item = None
+    if application_template.application_type == 'VISUALISATION':
+        visualisation_catalogue_item = VisualisationCatalogueItem.objects.get(
+            visualisation_template=application_template
+        )
+
     request_sso_id_hex = hashlib.sha256(
         str(request.user.profile.sso_id).encode('utf-8')
     ).hexdigest()
@@ -188,25 +195,27 @@ def application_api_is_allowed(request, public_host):
         return (
             not is_preview
             and application_template.visible is True
-            and application_template.application_type == 'VISUALISATION'
-            and application_template.user_access_type == 'REQUIRES_AUTHENTICATION'
+            and visualisation_catalogue_item
+            and visualisation_catalogue_item.user_access_type
+            == 'REQUIRES_AUTHENTICATION'
         )
 
     def is_published_visualisation_and_requires_authorisation_and_has_authorisation():
         return (
             not is_preview
             and application_template.visible is True
-            and application_template.application_type == 'VISUALISATION'
-            and application_template.user_access_type == 'REQUIRES_AUTHORIZATION'
-            and request.user.applicationtemplateuserpermission_set.filter(
-                application_template=application_template
+            and visualisation_catalogue_item
+            and visualisation_catalogue_item.user_access_type
+            == 'REQUIRES_AUTHORIZATION'
+            and request.user.visualisationuserpermission_set.filter(
+                visualisation=visualisation_catalogue_item
             ).exists()
         )
 
     def is_visualisation_preview_and_has_gitlab_developer():
         return (
             is_preview
-            and application_template.application_type == 'VISUALISATION'
+            and visualisation_catalogue_item
             and gitlab_has_developer_access(
                 request.user, application_template.gitlab_project_id
             )

@@ -26,6 +26,7 @@ from dataworkspace.apps.datasets.models import (
     SourceTag,
     SourceView,
     VisualisationCatalogueItem,
+    VisualisationUserPermission,
 )
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
@@ -543,10 +544,19 @@ class VisualisationCatalogueItemAdmin(
                     'retention_policy',
                     'personal_data',
                     'restrictions_on_usage',
-                    'eligibility_criteria',
                 ]
             },
-        )
+        ),
+        (
+            'Permissions',
+            {
+                'fields': [
+                    'requires_authorization',
+                    'eligibility_criteria',
+                    'authorized_users',
+                ]
+            },
+        ),
     ]
 
     class Media:
@@ -569,7 +579,55 @@ class VisualisationCatalogueItemAdmin(
     def save_model(self, request, obj, form, change):
         obj.name = obj.visualisation_template.nice_name
 
+        original_user_access_type = obj.user_access_type
+        obj.user_access_type = (
+            'REQUIRES_AUTHORIZATION'
+            if form.cleaned_data['requires_authorization']
+            else 'REQUIRES_AUTHENTICATION'
+        )
+
+        current_authorized_users = set(
+            get_user_model().objects.filter(
+                visualisationuserpermission__visualisation=obj
+            )
+        )
+
+        authorized_users = set(
+            form.cleaned_data.get('authorized_users', get_user_model().objects.none())
+        )
+
         super().save_model(request, obj, form, change)
+
+        for user in authorized_users - current_authorized_users:
+            VisualisationUserPermission.objects.create(visualisation=obj, user=user)
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
+                {'for_user_id': user.id},
+                f"Added visualisation {obj} permission",
+            )
+
+        for user in current_authorized_users - authorized_users:
+            VisualisationUserPermission.objects.filter(
+                visualisation=obj, user=user
+            ).delete()
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
+                {'for_user_id': user.id},
+                f"Removed visualisation {obj} permission",
+            )
+
+        if original_user_access_type != obj.user_access_type:
+            log_permission_change(
+                request.user,
+                obj,
+                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE,
+                {"access_type": obj.user_access_type},
+                f"user_access_type set to {obj.user_access_type}",
+            )
 
 
 @admin.register(DatasetReferenceCode)

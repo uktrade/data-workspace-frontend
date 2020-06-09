@@ -164,16 +164,14 @@ def filter_visualisations(query, access, source, user=None):
 
     if user and access:
         access_filter = (
-            Q(visualisation_template__user_access_type='REQUIRES_AUTHENTICATION')
+            Q(user_access_type='REQUIRES_AUTHENTICATION')
             & (
-                Q(visualisation_template__applicationtemplateuserpermission__user=user)
-                | Q(
-                    visualisation_template__applicationtemplateuserpermission__isnull=True
-                )
+                Q(visualisationuserpermission__user=user)
+                | Q(visualisationuserpermission__isnull=True)
             )
         ) | Q(
-            visualisation_template__user_access_type='REQUIRES_AUTHORIZATION',
-            visualisation_template__applicationtemplateuserpermission__user=user,
+            user_access_type='REQUIRES_AUTHORIZATION',
+            visualisationuserpermission__user=user,
         )
         visualisations = visualisations.filter(access_filter)
 
