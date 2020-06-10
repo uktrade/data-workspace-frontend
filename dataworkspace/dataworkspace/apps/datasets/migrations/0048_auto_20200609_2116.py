@@ -2,10 +2,12 @@
 
 from django.db import migrations
 
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
-
 
 def copy_permissions(apps, schema_editor):
+    VisualisationCatalogueItem = apps.get_model(
+        'datasets', 'VisualisationCatalogueItem'
+    )
+
     visualisations = VisualisationCatalogueItem.objects.all()
     for visualisation in visualisations:
         visualisation.user_access_type = (
