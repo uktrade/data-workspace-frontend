@@ -70,14 +70,6 @@ class ApplicationTemplate(TimeStampedModel):
         ),
         default='TOOL',
     )
-    user_access_type = models.CharField(
-        max_length=64,
-        choices=(
-            ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
-            ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
-        ),
-        default='REQUIRES_AUTHENTICATION',
-    )
     gitlab_project_id = models.IntegerField(
         null=True,
         unique=True,
@@ -257,17 +249,6 @@ class ApplicationInstanceDbUsers(TimeStampedModel):
 
     class Meta:
         indexes = [models.Index(fields=['db_username'])]
-
-
-class ApplicationTemplateUserPermission(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    application_template = models.ForeignKey(
-        ApplicationTemplate, on_delete=models.CASCADE
-    )
-
-    class Meta:
-        db_table = 'app_applicationtemplateuserpermission'
-        unique_together = ('user', 'application_template')
 
 
 class ApplicationInstanceReport(ApplicationInstance):

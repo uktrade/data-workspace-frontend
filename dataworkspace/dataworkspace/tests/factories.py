@@ -271,14 +271,6 @@ class DataSetApplicationTemplatePermissionFactory(factory.django.DjangoModelFact
         model = 'datasets.DataSetApplicationTemplatePermission'
 
 
-class ApplicationTemplateUserPermissionFactory(factory.django.DjangoModelFactory):
-    user = factory.SubFactory(UserFactory)
-    application_template = factory.SubFactory(ApplicationTemplateFactory)
-
-    class Meta:
-        model = 'applications.ApplicationTemplateUserPermission'
-
-
 class VisualisationTemplateFactory(ApplicationTemplateFactory):
     application_type = 'VISUALISATION'
 
