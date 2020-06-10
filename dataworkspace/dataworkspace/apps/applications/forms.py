@@ -96,6 +96,11 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             "invalid_choice": "The information asset owner must have previously visited Data Workspace",
         },
     )
+    user_access_type = BooleanField(
+        label='Each user must be individually authorized to access the data',
+        required=False,
+        widget=CheckboxInput(check_test=lambda val: val == 'REQUIRES_AUTHORIZATION'),
+    )
     eligibility_criteria = DWSplitArrayField(
         CharField(required=False),
         widget=BulletListSplitArrayWidget(
@@ -123,12 +128,15 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             'retention_policy',
             'personal_data',
             'restrictions_on_usage',
+            'user_access_type',
             'eligibility_criteria',
         ]
         widgets = {"retention_policy": Textarea, "restrictions_on_usage": Textarea}
 
     def __init__(self, *args, **kwargs):
+        kwargs['initial'] = kwargs.get("initial", {})
         super().__init__(*args, **kwargs)
+        is_instance = 'instance' in kwargs and kwargs['instance']
 
         self.fields['short_description'].error_messages[
             'required'
@@ -145,6 +153,19 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         for field in self._email_fields:
             if getattr(self.instance, field):
                 self.initial[field] = getattr(self.instance, field).email
+
+        self.fields['user_access_type'].initial = (
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
+            if is_instance
+            else True
+        )
+
+    def clean_user_access_type(self):
+        return (
+            'REQUIRES_AUTHORIZATION'
+            if self.cleaned_data['user_access_type']
+            else 'REQUIRES_AUTHENTICATION'
+        )
 
 
 class VisualisationsUITemplate(GOVUKDesignSystemModelForm):

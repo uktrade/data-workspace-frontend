@@ -80,8 +80,8 @@ class TestDataVisualisationUICataloguePage:
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
+            user_access_type=start_type,
             visualisation_template__gitlab_project_id=1,
-            visualisation_template__user_access_type=start_type,
         )
 
         # Login to admin site
@@ -99,7 +99,7 @@ class TestDataVisualisationUICataloguePage:
 
         visualisation.refresh_from_db()
         assert response.status_code == 200
-        assert visualisation.visualisation_template.user_access_type == expected_type
+        assert visualisation.user_access_type == expected_type
         assert LogEntry.objects.count() == log_count + 1
 
     def test_bad_post_data_no_short_description(self, staff_client):

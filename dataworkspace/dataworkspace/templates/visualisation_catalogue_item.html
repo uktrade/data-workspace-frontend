@@ -49,7 +49,7 @@
   {% include "partials/govuk_basic_form_field.html" with field=form.retention_policy %}
   {% include "partials/govuk_basic_form_field.html" with field=form.personal_data %}
   {% include "partials/govuk_basic_form_field.html" with field=form.restrictions_on_usage %}
-  {% include "partials/govuk_single_checkbox_field.html" with field=template_form.user_access_type %}
+  {% include "partials/govuk_single_checkbox_field.html" with field=form.user_access_type %}
 
   <div id="js-eligibility-criteria-wrapper">
     {{ form.eligibility_criteria }}
@@ -63,7 +63,7 @@
   {{ block.super }}
 
   <script nonce="{{ request.csp_nonce }}">
-    var user_access_type = document.getElementById('{{ template_form.user_access_type.id_for_label }}');
+    var user_access_type = document.getElementById('{{ form.user_access_type.id_for_label }}');
     var eligibility_criteria = document.getElementById('js-eligibility-criteria-wrapper');
 
     user_access_type.addEventListener('change', function (e) {

@@ -8,11 +8,11 @@
     Users with access
 </h1>
 
-{% if application_template.user_access_type == 'REQUIRES_AUTHORIZATION' and not users %}
+{% if catalogue_item.user_access_type == 'REQUIRES_AUTHORIZATION' and not users %}
 <p class="govuk-body">No users can view {{ gitlab_project.name }}</p>
 {% endif %}
 
-{% if application_template.user_access_type == 'REQUIRES_AUTHORIZATION' and users %}
+{% if catalogue_item.user_access_type == 'REQUIRES_AUTHORIZATION' and users %}
 <p class="govuk-body">The following {{ users|length }} user{% if users|length != 1 %}s{% endif %} can view {{ gitlab_project.name }}.</p>
 
 <dl class="govuk-summary-list">
@@ -35,7 +35,7 @@
 </dl>
 {% endif %}
 
-{% if application_template.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
+{% if catalogue_item.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
 <p class="govuk-body">All logged in users can view {{ gitlab_project.name }}</p>
 {% endif %}
 

@@ -28,7 +28,6 @@ from dataworkspace.apps.api_v1.views import (
 from dataworkspace.apps.applications.forms import (
     VisualisationsUICatalogueItemForm,
     VisualisationApprovalForm,
-    VisualisationsUITemplate,
 )
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
@@ -762,12 +761,16 @@ def _render_visualisation(
     # For templates that inherit from _visualisation.html. This is factored
     # out, in a way so that any context variables required, but not passed from
     # the view have a chance to be caught by linting
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
+        gitlab_project
+    )
     return render(
         request,
         template,
         {
             'gitlab_project': gitlab_project,
-            'show_users_section': application_template.user_access_type
+            'catalogue_item': catalogue_item,
+            'show_users_section': catalogue_item.user_access_type
             == 'REQUIRES_AUTHORIZATION',
             'branches': branches,
             'current_menu_item': current_menu_item,
@@ -815,9 +818,6 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
         gitlab_project
     )
     form = VisualisationsUICatalogueItemForm(instance=catalogue_item)
-    template_form = VisualisationsUITemplate(
-        instance=catalogue_item.visualisation_template
-    )
 
     # We don't want client-side validation on this field, so we remove it - but only for the GET request.
     form.fields['short_description'].required = False
@@ -829,7 +829,7 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
         catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
-        template_specific_context={'form': form, 'template_form': template_form},
+        template_specific_context={'form': form},
     )
 
 
@@ -837,19 +837,12 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
         gitlab_project
     )
-    user_access_type = catalogue_item.visualisation_template.user_access_type
+    user_access_type = catalogue_item.user_access_type
     form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
-    template_form = VisualisationsUITemplate(
-        request.POST, instance=catalogue_item.visualisation_template
-    )
-    if form.is_valid() and template_form.is_valid():
+    if form.is_valid():
         with transaction.atomic():
             form.save()
-            template_form.save()
-            if (
-                user_access_type
-                != catalogue_item.visualisation_template.user_access_type
-            ):
+            if user_access_type != catalogue_item.user_access_type:
                 LogEntry.objects.log_action(
                     user_id=request.user.pk,
                     content_type_id=ContentType.objects.get_for_model(
@@ -860,7 +853,7 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
                     action_flag=CHANGE,
                     change_message=(
                         f"Changed user_access_type on {catalogue_item.visualisation_template} "
-                        f"to: {catalogue_item.visualisation_template.user_access_type}"
+                        f"to: {catalogue_item.user_access_type}"
                     ),
                 )
         return redirect(
@@ -869,8 +862,6 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
 
     form_errors = [
         (field.id_for_label, field.errors[0]) for field in form if field.errors
-    ] + [
-        (field.id_for_label, field.errors[0]) for field in template_form if field.errors
     ]
 
     return _render_visualisation(
@@ -880,11 +871,7 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
         catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
         current_menu_item='catalogue-item',
-        template_specific_context={
-            "form": form,
-            "template_form": template_form,
-            "form_errors": form_errors,
-        },
+        template_specific_context={"form": form, "form_errors": form_errors},
         status=400 if form_errors else 200,
     )
 
