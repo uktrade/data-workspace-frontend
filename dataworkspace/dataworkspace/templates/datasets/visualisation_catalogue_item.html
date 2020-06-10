@@ -73,19 +73,21 @@
                 </tr>
                 </thead>
                 <tbody>
+                    {% for visualisation_link in visualisation_links %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
-                            <a class="govuk-link" href="{{ visualisation_link }}">
-                                {{ model.name }}
+                            <a class="govuk-link" href="{{ visualisation_link.get_absolute_url }}">
+                                {{ visualisation_link.name }}
                             </a>
                         </td>
                         <td class="govuk-table__cell">
                           Web
                         </td>
                         <td class="govuk-table__cell">
-                          {{ model.published_at }}
+                          {{ visualisation_link.modified_date }}
                         </td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
 

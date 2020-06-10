@@ -290,8 +290,12 @@ class VisualisationApprovalFactory(factory.django.DjangoModelFactory):
 
 class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
     visualisation_template = factory.SubFactory(VisualisationTemplateFactory)
-    name = factory.LazyAttribute(lambda o: o.visualisation_template.name)
-    slug = factory.LazyAttribute(lambda o: o.visualisation_template.name.lower())
+    name = factory.LazyAttribute(
+        lambda o: o.visualisation_template.name
+        if o.visualisation_template
+        else factory.fuzzy.FuzzyText().fuzz()
+    )
+    slug = factory.LazyAttribute(lambda o: o.name.lower())
     published = True
     deleted = False
 
@@ -305,6 +309,14 @@ class VisualisationUserPermissionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'datasets.VisualisationUserPermission'
+
+
+class VisualisationLinkFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    visualisation_catalogue_item = factory.SubFactory(VisualisationCatalogueItemFactory)
+
+    class Meta:
+        model = 'datasets.VisualisationLink'
 
 
 class ApplicationInstanceFactory(factory.django.DjangoModelFactory):

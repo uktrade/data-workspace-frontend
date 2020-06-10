@@ -1,4 +1,5 @@
 import csv
+import uuid
 
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -23,6 +24,7 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     MasterDataset,
     VisualisationCatalogueItem,
+    VisualisationLink,
 )
 
 
@@ -477,3 +479,29 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
             if is_instance
             else get_user_model().objects.none()
         )
+
+
+class VisualisationLinkForm(forms.ModelForm):
+    class Meta:
+        fields = ('visualisation_type', 'name', 'identifier')
+        model = VisualisationLink
+
+    def clean_identifier(self):
+        cleaned = self.cleaned_data
+        identifier = cleaned.get('identifier')
+
+        visualisation_type = cleaned.get('visualisation_type', None)
+        if not visualisation_type:
+            return identifier
+
+        if visualisation_type == 'METABASE':
+            if identifier and not identifier.isnumeric():
+                raise ValidationError('Metabase identifiers must be numeric.')
+
+        elif visualisation_type == 'QUICKSIGHT':
+            try:
+                uuid.UUID(identifier)
+            except ValueError:
+                raise ValidationError("Quicksight identifiers must be a UUID.")
+
+        return identifier

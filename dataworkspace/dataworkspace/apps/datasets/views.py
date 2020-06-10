@@ -308,7 +308,7 @@ class DatasetDetailView(DetailView):
             ctx.update(
                 {
                     'has_access': self.object.user_has_access(self.request.user),
-                    "visualisation_link": self.object.get_visualisation_link(
+                    "visualisation_links": self.object.get_visualisation_links(
                         self.request
                     ),
                 }
@@ -453,7 +453,10 @@ def request_access_view(request, dataset_uuid):
 
             dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
 
-            if isinstance(dataset, VisualisationCatalogueItem):
+            if (
+                isinstance(dataset, VisualisationCatalogueItem)
+                and dataset.visualisation_template
+            ):
                 ticket_reference = _notify_visualisation_access_request(
                     request, dataset, dataset_url, contact_email, goal
                 )

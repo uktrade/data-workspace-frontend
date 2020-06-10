@@ -12,6 +12,7 @@ from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,
     VisualisationUserPermissionFactory,
+    VisualisationLinkFactory,
 )
 
 
@@ -98,7 +99,7 @@ def test_request_access_form(client, mocker):
     assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_ACCESS_REQUEST
 
 
-def test_request_visualisation_access(client, user, mocker):
+def test_request_gitlab_visualisation_access(client, user, mocker):
     owner = factories.UserFactory()
     secondary_contact = factories.UserFactory()
 
@@ -160,6 +161,41 @@ def test_request_visualisation_access(client, user, mocker):
             ),
         ],
         any_order=True,
+    )
+
+
+def test_request_non_gitlab_visualisation_access(client, user, mocker):
+    owner = factories.UserFactory()
+    secondary_contact = factories.UserFactory()
+    create_zendesk_ticket = mocker.patch(
+        'dataworkspace.apps.datasets.views.create_zendesk_ticket'
+    )
+    create_zendesk_ticket.return_value = 999
+
+    ds = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        enquiries_contact=owner,
+        secondary_enquiries_contact=secondary_contact,
+        user_access_type='REQUIRES_AUTHORIZATION',
+        visualisation_template=None,
+    )
+    VisualisationLinkFactory.create(
+        visualisation_type='DATASTUDIO',
+        visualisation_catalogue_item=ds,
+        name='Visualisation datastudio',
+        identifier='https://www.data.studio.test',
+    )
+
+    response = client.post(
+        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
+        data={"email": "user@example.com", "goal": "My goal"},
+        follow=True,
+    )
+
+    assert response.status_code == 200
+
+    create_zendesk_ticket.assert_called_once_with(
+        "user@example.com", mock.ANY, "My goal", mock.ANY, ds.name, mock.ANY, None, None
     )
 
 
@@ -724,15 +760,34 @@ class TestVisualisationsDetailView:
             in response.content.decode(response.charset)
         ) is not has_access
 
-    def test_shows_link_to_visualisation(self, client):
-        vis = VisualisationCatalogueItemFactory(
+    def test_shows_links_to_visualisations(self, client):
+        vis = VisualisationCatalogueItemFactory.create(
             visualisation_template__host_basename='visualisation'
+        )
+        VisualisationLinkFactory.create(
+            visualisation_type='DATASTUDIO',
+            visualisation_catalogue_item=vis,
+            name='Visualisation datastudio',
+            identifier='https://www.data.studio.test',
+        )
+        VisualisationLinkFactory.create(
+            visualisation_type='QUICKSIGHT',
+            visualisation_catalogue_item=vis,
+            name='Visualisation quicksight',
+            identifier='5d75e131-20f4-48f8-b0eb-f4ebf36434f4',
+        )
+        VisualisationLinkFactory.create(
+            visualisation_type='METABASE',
+            visualisation_catalogue_item=vis,
+            name='Visualisation metabase',
+            identifier='123456789',
         )
 
         response = client.get(vis.get_absolute_url())
+        body = response.content.decode(response.charset)
 
         assert response.status_code == 200
-        assert (
-            'http://visualisation.dataworkspace.test:8000/'
-            in response.content.decode(response.charset)
-        )
+        assert 'http://visualisation.dataworkspace.test:8000/' in body
+        assert 'https://www.data.studio.test' in body
+        assert '/visualisations/quicksight/5d75e131-20f4-48f8-b0eb-f4ebf36434f4' in body
+        assert '/visualisations/metabase/123456789' in body

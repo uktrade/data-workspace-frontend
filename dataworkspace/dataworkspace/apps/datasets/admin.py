@@ -27,6 +27,7 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
     VisualisationCatalogueItem,
     VisualisationUserPermission,
+    VisualisationLink,
 )
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
@@ -40,6 +41,7 @@ from dataworkspace.apps.dw_admin.forms import (
     SourceViewForm,
     CustomDatasetQueryInlineForm,
     VisualisationCatalogueItemForm,
+    VisualisationLinkForm,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
@@ -519,6 +521,15 @@ class SourceTableAdmin(admin.ModelAdmin):
         return self.model.objects.filter(dataset__deleted=False)
 
 
+class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
+    form = VisualisationLinkForm
+    model = VisualisationLink
+    extra = 1
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_visualisations'
+    )
+
+
 @admin.register(VisualisationCatalogueItem)
 class VisualisationCatalogueItemAdmin(
     CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
@@ -532,7 +543,7 @@ class VisualisationCatalogueItemAdmin(
             {
                 'fields': [
                     'published',
-                    'visualisation_template',
+                    'name',
                     'slug',
                     'short_description',
                     'description',
@@ -557,7 +568,9 @@ class VisualisationCatalogueItemAdmin(
                 ]
             },
         ),
+        ('GitLab visualisation', {'fields': ['visualisation_template']}),
     ]
+    inlines = [VisualisationLinkInline]
 
     class Media:
         js = ('js/min/django_better_admin_arrayfield.min.js', 'data-workspace-admin.js')
@@ -577,7 +590,8 @@ class VisualisationCatalogueItemAdmin(
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        obj.name = obj.visualisation_template.nice_name
+        if obj.visualisation_template and not obj.name:
+            obj.name = obj.visualisation_template.nice_name
 
         original_user_access_type = obj.user_access_type
         obj.user_access_type = (

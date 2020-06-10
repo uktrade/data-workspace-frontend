@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
@@ -105,6 +106,11 @@ class VisualisationTemplate(ApplicationTemplate):
     class Meta:
         proxy = True
         verbose_name = 'Visualisation'
+
+    def get_absolute_url(self):
+        host_basename = self.host_basename
+        root_domain = settings.APPLICATION_ROOT_DOMAIN
+        return f'//{host_basename}.{root_domain}/'
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
