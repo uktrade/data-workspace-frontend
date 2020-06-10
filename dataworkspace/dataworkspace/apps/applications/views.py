@@ -720,7 +720,6 @@ def _application_template(gitlab_project):
                     spawner_time=120,
                     spawner_options='{}',
                     application_type='VISUALISATION',
-                    user_access_type='REQUIRES_AUTHORIZATION',
                     gitlab_project_id=gitlab_project['id'],
                     wrap='FULL_HEIGHT_IFRAME',
                     visible=False,
@@ -730,6 +729,7 @@ def _application_template(gitlab_project):
                     slug=path_and_dns_safe_name,
                     short_description=gitlab_project['description'],
                     visualisation_template=visualisation_template,
+                    user_access_type='REQUIRES_AUTHORIZATION',
                 )
                 return visualisation_template
         except IntegrityError as integrity_error:

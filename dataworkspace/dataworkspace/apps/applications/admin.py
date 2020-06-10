@@ -438,7 +438,6 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
                     'spawner_time',
                     'spawner_options',
                     'wrap',
-                    'user_access_type',
                     'gitlab_project_id',
                     'authorized_master_datasets',
                 ]
