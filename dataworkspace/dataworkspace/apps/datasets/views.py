@@ -31,6 +31,7 @@ from django.views.generic import DetailView
 from psycopg2 import sql
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.applications.utils import get_quicksight_dashboard_name_url
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -62,7 +63,6 @@ from dataworkspace.apps.datasets.utils import (
     find_visualisation,
     find_dataset_or_visualisation,
     get_code_snippets,
-    get_quicksight_dashboard_name_url,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event

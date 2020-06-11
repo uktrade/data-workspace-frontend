@@ -42,7 +42,10 @@ from dataworkspace.apps.applications.models import (
     VisualisationApproval,
     VisualisationTemplate,
 )
-from dataworkspace.apps.applications.utils import application_options
+from dataworkspace.apps.applications.utils import (
+    application_options,
+    get_quicksight_dashboard_name_url,
+)
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import source_tables_for_app, source_tables_for_user
@@ -54,7 +57,6 @@ from dataworkspace.apps.datasets.models import (
     VisualisationUserPermission,
     VisualisationLink,
 )
-from dataworkspace.apps.datasets.utils import get_quicksight_dashboard_name_url
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
 

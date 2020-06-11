@@ -4,6 +4,7 @@ import json
 import logging
 import urllib.parse
 
+import boto3
 import gevent
 import requests
 from psycopg2 import connect, sql
@@ -556,3 +557,18 @@ def delete_unused_datasets_users():
                         )
 
     logger.info('delete_unused_datasets_users: End')
+
+
+def get_quicksight_dashboard_name_url(dashboard_id):
+    account_id = boto3.client('sts').get_caller_identity().get('Account')
+    dashboard_name = boto3.client('quicksight').describe_dashboard(
+        AwsAccountId=account_id, DashboardId=dashboard_id, AliasName='$PUBLISHED'
+    )['Dashboard']['Name']
+    dashboard_url = boto3.client('quicksight').get_dashboard_embed_url(
+        AwsAccountId=account_id,
+        DashboardId=dashboard_id,
+        IdentityType='QUICKSIGHT',
+        UserArn=settings.QUICKSIGHT_DATASOURCE_USER_ARN,
+    )['EmbedUrl']
+
+    return dashboard_name, dashboard_url
