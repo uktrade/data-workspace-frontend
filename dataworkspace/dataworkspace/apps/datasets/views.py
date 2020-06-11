@@ -1,4 +1,5 @@
 import csv
+
 import io
 import json
 from collections import namedtuple
@@ -580,20 +581,6 @@ def request_visualisation_access_success_view(request, dataset_uuid):
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
     )
-
-
-@require_GET
-@csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
-def get_quicksight_dashboard(request, dashboard_id):
-    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(dashboard_id)
-
-    context = {
-        'visualisation_src': dashboard_url,
-        'nice_name': dashboard_name,
-        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
-    }
-
-    return render(request, 'running.html', context, status=200)
 
 
 class ReferenceDatasetDownloadView(DetailView):

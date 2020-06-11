@@ -3,29 +3,21 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 
 from dataworkspace.apps.applications.views import (
-    metabase_visualisation_embed_view,
+    visualisation_link_html_view,
     visualisations_html_view,
-    visualisation_branch_html_view,
     visualisation_users_give_access_html_view,
     visualisation_users_with_access_html_view,
     visualisation_catalogue_item_html_view,
     visualisation_approvals_html_view,
     visualisation_datasets_html_view,
     visualisation_publish_html_view,
+    visualisation_branch_html_view,
 )
-from dataworkspace.apps.datasets.views import get_quicksight_dashboard
 
 urlpatterns = [
     path('', login_required(visualisations_html_view), name='root'),
     path(
-        'metabase/<int:dashboard_id>',
-        login_required(metabase_visualisation_embed_view),
-        name='metabase_visualisation_embed',
-    ),
-    path(
-        'quicksight/<str:dashboard_id>',
-        login_required(get_quicksight_dashboard),
-        name='get-quicksight-dashboard',
+        'link/<str:link_id>', login_required(visualisation_link_html_view), name='link'
     ),
     path(
         '<str:gitlab_project_id>/branches/<str:branch_name>',

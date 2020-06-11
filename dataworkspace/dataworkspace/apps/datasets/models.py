@@ -1627,19 +1627,4 @@ class VisualisationLink(TimeStampedModel):
         db_table = 'app_visualisationlink'
 
     def get_absolute_url(self):
-        if self.visualisation_type == 'DATASTUDIO':
-            return self.identifier
-        elif self.visualisation_type == 'QUICKSIGHT':
-            return reverse(
-                'visualisations:get-quicksight-dashboard',
-                kwargs={"dashboard_id": self.identifier},
-            )
-        elif self.visualisation_type == 'METABASE':
-            return reverse(
-                'visualisations:metabase_visualisation_embed',
-                kwargs={"dashboard_id": int(self.identifier)},
-            )
-
-        raise NotImplementedError(
-            f"Unknown visualisation type: {self.visualisation_type}"
-        )
+        return reverse('visualisations:link', kwargs={"link_id": self.id})
