@@ -66,6 +66,16 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
         ("[link](https://www.unsafe.evil)", "<p>link</p>", "Links are not allowed"),
         ("<script>alert(1);</script>", "alert(1);", "Script tags should be stripped"),
         ("<img src=\"foo\"/>", "<p></p>", "Img tags should be stripped"),
+        (
+            "**some bold text**",
+            "<p><strong>some bold text</strong></p>",
+            "Surrounding with ** should create strong text",
+        ),
+        (
+            "title  \nwith a line break",
+            "<p>title<br>\nwith a line break</p>",
+            "Ending a line with two spaces should insert a line break",
+        ),
     ),
 )
 def test_minimal_markdown(input, expected_output, error_message):
