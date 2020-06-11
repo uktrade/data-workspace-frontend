@@ -224,7 +224,7 @@ def tools_html_POST(request):
 
 
 @csp_update(FRAME_SRC=settings.METABASE_SITE_URL)
-def _get_embedded_metabase_dashboard(request, dashboard_id):
+def _get_embedded_metabase_dashboard(request, dashboard_id: int):
     payload = {
         "resource": {"dashboard": dashboard_id},
         "params": {},
@@ -271,7 +271,7 @@ def visualisation_link_html_view(request, link_id):
 
     identifier = visualisation_link.identifier
     if visualisation_link.visualisation_type == 'METABASE':
-        return _get_embedded_metabase_dashboard(request, identifier)
+        return _get_embedded_metabase_dashboard(request, int(identifier))
     elif visualisation_link.visualisation_type == 'QUICKSIGHT':
         return _get_embedded_quicksight_dashboard(request, identifier)
     elif visualisation_link.visualisation_type == 'DATASTUDIO':

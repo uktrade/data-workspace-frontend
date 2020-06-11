@@ -880,7 +880,9 @@ class TestVisualisationLinkView:
             user_access_type='REQUIRES_AUTHORIZATION'
         )
         link = VisualisationLinkFactory.create(
-            visualisation_type='METABASE', visualisation_catalogue_item=vis
+            visualisation_type='METABASE',
+            identifier='123',
+            visualisation_catalogue_item=vis,
         )
 
         client = Client(**get_http_sso_data(user))
