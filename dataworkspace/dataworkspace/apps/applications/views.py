@@ -21,6 +21,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
+from django.views.decorators.http import require_GET
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -41,7 +42,10 @@ from dataworkspace.apps.applications.models import (
     VisualisationApproval,
     VisualisationTemplate,
 )
-from dataworkspace.apps.applications.utils import application_options
+from dataworkspace.apps.applications.utils import (
+    application_options,
+    get_quicksight_dashboard_name_url,
+)
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import source_tables_for_app, source_tables_for_user
@@ -51,6 +55,7 @@ from dataworkspace.apps.datasets.models import (
     DataSetApplicationTemplatePermission,
     VisualisationCatalogueItem,
     VisualisationUserPermission,
+    VisualisationLink,
 )
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
@@ -216,6 +221,68 @@ def tools_html_POST(request):
             request, 'Stopped ' + application_instance.application_template.nice_name
         )
     return redirect(redirect_target)
+
+
+@csp_update(FRAME_SRC=settings.METABASE_SITE_URL)
+def _get_embedded_metabase_dashboard(request, dashboard_id):
+    payload = {
+        "resource": {"dashboard": dashboard_id},
+        "params": {},
+        "exp": round(time.time()) + 600,
+    }
+    token = jwt.encode(
+        payload, settings.METABASE_EMBEDDING_SECRET_KEY, algorithm="HS256"
+    )
+
+    return render(
+        request,
+        "running.html",
+        {
+            "visualisation_src": f"//{settings.METABASE_SITE_URL.rstrip('/')}/embed/dashboard/{token.decode('utf8')}#bordered=false&titled=false",
+            "wrap": "IFRAME_WITH_VISUALISATIONS_HEADER",
+        },
+    )
+
+
+@csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
+def _get_embedded_quicksight_dashboard(request, dashboard_id):
+    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(dashboard_id)
+
+    context = {
+        'visualisation_src': dashboard_url,
+        'nice_name': dashboard_name,
+        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
+    }
+
+    return render(request, 'running.html', context, status=200)
+
+
+@require_GET
+def visualisation_link_html_view(request, link_id):
+    try:
+        visualisation_link = VisualisationLink.objects.get(id=link_id)
+    except VisualisationLink.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if not visualisation_link.visualisation_catalogue_item.user_has_access(
+        request.user
+    ):
+        return HttpResponse(status=403)
+
+    identifier = visualisation_link.identifier
+    if visualisation_link.visualisation_type == 'METABASE':
+        return _get_embedded_metabase_dashboard(request, identifier)
+    elif visualisation_link.visualisation_type == 'QUICKSIGHT':
+        return _get_embedded_quicksight_dashboard(request, identifier)
+    elif visualisation_link.visualisation_type == 'DATASTUDIO':
+        return redirect(identifier)
+
+    return HttpResponse(
+        status=500,
+        content=f'Unsupported visualisation type: {visualisation_link.visualisation_type}'.encode(
+            'utf8'
+        ),
+    )
 
 
 def visualisations_html_view(request):
@@ -1180,27 +1247,6 @@ def visualisation_publish_html_view(request, gitlab_project_id):
         return visualisation_publish_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
-
-
-@csp_update(FRAME_SRC=settings.METABASE_SITE_URL)
-def metabase_visualisation_embed_view(request, dashboard_id):
-    payload = {
-        "resource": {"dashboard": dashboard_id},
-        "params": {},
-        "exp": round(time.time()) + 600,
-    }
-    token = jwt.encode(
-        payload, settings.METABASE_EMBEDDING_SECRET_KEY, algorithm="HS256"
-    )
-
-    return render(
-        request,
-        "running.html",
-        {
-            "visualisation_src": f"//{settings.METABASE_SITE_URL.rstrip('/')}/embed/dashboard/{token.decode('utf8')}#bordered=false&titled=false",
-            "wrap": "IFRAME_WITH_VISUALISATIONS_HEADER",
-        },
-    )
 
 
 def _visualisation_is_approved(application_template):

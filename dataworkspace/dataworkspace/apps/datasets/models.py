@@ -1,6 +1,8 @@
 import copy
 import os
 import uuid
+from dataclasses import dataclass
+from datetime import datetime
 
 from typing import Optional, List
 
@@ -1458,7 +1460,7 @@ class ReferenceDatasetUploadLogRecord(TimeStampedModel):
 class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_template = models.OneToOneField(
-        VisualisationTemplate, on_delete=models.CASCADE, null=False, blank=False
+        VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True
     )
     name = models.CharField(max_length=255, null=False, blank=False)
     slug = models.SlugField(
@@ -1552,9 +1554,27 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
         super().save(force_insert, force_update, using, update_fields)
 
-    def get_visualisation_link(self, request):
-        host_basename = self.visualisation_template.host_basename
-        return f'{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/'
+    def get_visualisation_links(self, request):
+        @dataclass
+        class _Link:
+            name: str
+            get_absolute_url: str
+            modified_date: datetime
+
+        links = []
+
+        if self.visualisation_template:
+            links.append(
+                _Link(
+                    name=self.visualisation_template.nice_name,
+                    get_absolute_url=self.visualisation_template.get_absolute_url(),
+                    modified_date=self.visualisation_template.modified_date,
+                )
+            )
+
+        links += self.visualisationlink_set.all()
+
+        return links
 
     def user_has_access(self, user):
         return (
@@ -1575,3 +1595,36 @@ class VisualisationUserPermission(models.Model):
     class Meta:
         db_table = 'app_visualisationuserpermission'
         unique_together = ('user', 'visualisation')
+
+
+class VisualisationLink(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    visualisation_type = models.CharField(
+        max_length=64,
+        choices=(
+            ('DATASTUDIO', 'Google Data Studio'),
+            ('QUICKSIGHT', 'AWS QuickSight'),
+            ('METABASE', 'Metabase'),
+        ),
+        null=False,
+        blank=False,
+    )
+    name = models.CharField(
+        blank=False,
+        null=False,
+        max_length=128,
+        help_text='Used as the displayed text in the download link',
+    )
+    identifier = models.CharField(
+        max_length=256,
+        help_text='For Google Data Studio, the dashboard URL. For QuickSight and Metabase, the dashboard ID.',
+    )
+    visualisation_catalogue_item = models.ForeignKey(
+        VisualisationCatalogueItem, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        db_table = 'app_visualisationlink'
+
+    def get_absolute_url(self):
+        return reverse('visualisations:link', kwargs={"link_id": self.id})

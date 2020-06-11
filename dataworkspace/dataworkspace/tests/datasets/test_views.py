@@ -12,6 +12,7 @@ from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,
     VisualisationUserPermissionFactory,
+    VisualisationLinkFactory,
 )
 
 
@@ -98,7 +99,7 @@ def test_request_access_form(client, mocker):
     assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_ACCESS_REQUEST
 
 
-def test_request_visualisation_access(client, user, mocker):
+def test_request_gitlab_visualisation_access(client, user, mocker):
     owner = factories.UserFactory()
     secondary_contact = factories.UserFactory()
 
@@ -160,6 +161,41 @@ def test_request_visualisation_access(client, user, mocker):
             ),
         ],
         any_order=True,
+    )
+
+
+def test_request_non_gitlab_visualisation_access(client, user, mocker):
+    owner = factories.UserFactory()
+    secondary_contact = factories.UserFactory()
+    create_zendesk_ticket = mocker.patch(
+        'dataworkspace.apps.datasets.views.create_zendesk_ticket'
+    )
+    create_zendesk_ticket.return_value = 999
+
+    ds = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        enquiries_contact=owner,
+        secondary_enquiries_contact=secondary_contact,
+        user_access_type='REQUIRES_AUTHORIZATION',
+        visualisation_template=None,
+    )
+    VisualisationLinkFactory.create(
+        visualisation_type='DATASTUDIO',
+        visualisation_catalogue_item=ds,
+        name='Visualisation datastudio',
+        identifier='https://www.data.studio.test',
+    )
+
+    response = client.post(
+        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
+        data={"email": "user@example.com", "goal": "My goal"},
+        follow=True,
+    )
+
+    assert response.status_code == 200
+
+    create_zendesk_ticket.assert_called_once_with(
+        "user@example.com", mock.ANY, "My goal", mock.ANY, ds.name, mock.ANY, None, None
     )
 
 
@@ -724,15 +760,147 @@ class TestVisualisationsDetailView:
             in response.content.decode(response.charset)
         ) is not has_access
 
-    def test_shows_link_to_visualisation(self, client):
-        vis = VisualisationCatalogueItemFactory(
+    def test_shows_links_to_visualisations(self, client):
+        vis = VisualisationCatalogueItemFactory.create(
             visualisation_template__host_basename='visualisation'
+        )
+        link1 = VisualisationLinkFactory.create(
+            visualisation_type='DATASTUDIO',
+            visualisation_catalogue_item=vis,
+            name='Visualisation datastudio',
+            identifier='https://www.data.studio.test',
+        )
+        link2 = VisualisationLinkFactory.create(
+            visualisation_type='QUICKSIGHT',
+            visualisation_catalogue_item=vis,
+            name='Visualisation quicksight',
+            identifier='5d75e131-20f4-48f8-b0eb-f4ebf36434f4',
+        )
+        link3 = VisualisationLinkFactory.create(
+            visualisation_type='METABASE',
+            visualisation_catalogue_item=vis,
+            name='Visualisation metabase',
+            identifier='123456789',
         )
 
         response = client.get(vis.get_absolute_url())
+        body = response.content.decode(response.charset)
+
+        assert response.status_code == 200
+        assert '//visualisation.dataworkspace.test:8000/' in body
+        assert f'/visualisations/link/{link1.id}' in body
+        assert f'/visualisations/link/{link2.id}' in body
+        assert f'/visualisations/link/{link3.id}' in body
+
+
+class TestVisualisationLinkView:
+    @pytest.mark.django_db
+    def test_metabase_link(self, mocker):
+        user = UserFactory.create()
+        vis = VisualisationCatalogueItemFactory.create(
+            user_access_type='REQUIRES_AUTHENTICATION'
+        )
+        link = VisualisationLinkFactory.create(
+            visualisation_type='METABASE',
+            identifier='123456789',
+            visualisation_catalogue_item=vis,
+        )
+
+        jwt_encode = mocker.patch('dataworkspace.apps.applications.views.jwt.encode')
+        jwt_encode.return_value = b'my-token'
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(link.get_absolute_url())
 
         assert response.status_code == 200
         assert (
-            'http://visualisation.dataworkspace.test:8000/'
+            '//metabase.dataworkspace.test:8000/embed/dashboard/my-token#bordered=false&amp;titled=false'
             in response.content.decode(response.charset)
         )
+        assert (
+            'frame-src metabase.dataworkspace.test'
+            in response['content-security-policy']
+        )
+
+    @pytest.mark.django_db
+    def test_quicksight_link(self, mocker):
+        user = UserFactory.create()
+        vis = VisualisationCatalogueItemFactory.create(
+            user_access_type='REQUIRES_AUTHENTICATION'
+        )
+        link = VisualisationLinkFactory.create(
+            visualisation_type='QUICKSIGHT',
+            identifier='5d75e131-20f4-48f8-b0eb-f4ebf36434f4',
+            visualisation_catalogue_item=vis,
+        )
+
+        quicksight = mocker.patch(
+            'dataworkspace.apps.applications.views.get_quicksight_dashboard_name_url'
+        )
+        quicksight.return_value = (
+            'my-dashboard',
+            'https://my.dashboard.quicksight.amazonaws.com',
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(link.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            'https://my.dashboard.quicksight.amazonaws.com'
+            in response.content.decode(response.charset)
+        )
+        assert (
+            'frame-src https://eu-west-2.quicksight.aws.amazon.com'
+            in response['content-security-policy']
+        )
+
+    @pytest.mark.django_db
+    def test_datastudio_link(self):
+        user = UserFactory.create()
+        vis = VisualisationCatalogueItemFactory.create(
+            user_access_type='REQUIRES_AUTHENTICATION'
+        )
+        link = VisualisationLinkFactory.create(
+            visualisation_type='DATASTUDIO',
+            identifier='https://www.data.studio',
+            visualisation_catalogue_item=vis,
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(link.get_absolute_url())
+
+        assert response.status_code == 302
+        assert response['location'] == 'https://www.data.studio'
+
+    @pytest.mark.django_db
+    def test_user_needs_access_via_catalogue_item(self):
+        user = UserFactory.create()
+        vis = VisualisationCatalogueItemFactory.create(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        link = VisualisationLinkFactory.create(
+            visualisation_type='METABASE', visualisation_catalogue_item=vis
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(link.get_absolute_url())
+        assert response.status_code == 403
+
+        VisualisationUserPermissionFactory.create(visualisation=vis, user=user)
+
+        response = client.get(link.get_absolute_url())
+        assert response.status_code == 200
+
+    @pytest.mark.django_db
+    def test_invalid_link_404s(self):
+        user = UserFactory.create()
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(
+            reverse(
+                'visualisations:link',
+                kwargs={"link_id": "2af5890a-bbcc-4e7d-8b2d-2a63139b3e4f"},
+            )
+        )
+        assert response.status_code == 404

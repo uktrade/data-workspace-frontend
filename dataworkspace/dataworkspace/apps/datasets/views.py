@@ -1,4 +1,5 @@
 import csv
+
 import io
 import json
 from collections import namedtuple
@@ -30,6 +31,7 @@ from django.views.generic import DetailView
 from psycopg2 import sql
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.applications.utils import get_quicksight_dashboard_name_url
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -61,7 +63,6 @@ from dataworkspace.apps.datasets.utils import (
     find_visualisation,
     find_dataset_or_visualisation,
     get_code_snippets,
-    get_quicksight_dashboard_name_url,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -308,7 +309,7 @@ class DatasetDetailView(DetailView):
             ctx.update(
                 {
                     'has_access': self.object.user_has_access(self.request.user),
-                    "visualisation_link": self.object.get_visualisation_link(
+                    "visualisation_links": self.object.get_visualisation_links(
                         self.request
                     ),
                 }
@@ -453,7 +454,10 @@ def request_access_view(request, dataset_uuid):
 
             dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
 
-            if isinstance(dataset, VisualisationCatalogueItem):
+            if (
+                isinstance(dataset, VisualisationCatalogueItem)
+                and dataset.visualisation_template
+            ):
                 ticket_reference = _notify_visualisation_access_request(
                     request, dataset, dataset_url, contact_email, goal
                 )
@@ -577,20 +581,6 @@ def request_visualisation_access_success_view(request, dataset_uuid):
     return render(
         request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
     )
-
-
-@require_GET
-@csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
-def get_quicksight_dashboard(request, dashboard_id):
-    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(dashboard_id)
-
-    context = {
-        'visualisation_src': dashboard_url,
-        'nice_name': dashboard_name,
-        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
-    }
-
-    return render(request, 'running.html', context, status=200)
 
 
 class ReferenceDatasetDownloadView(DetailView):
