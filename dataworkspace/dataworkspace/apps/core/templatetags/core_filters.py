@@ -31,7 +31,7 @@ def minimal_markdown(text):
     return Markup(
         bleach.clean(
             md.convert(text or ''),
-            tags=['p', 'ul', 'ol', 'li'],
+            tags=['p', 'ul', 'ol', 'li', 'strong', 'br'],
             attributes={},
             strip=True,
         )
