@@ -150,6 +150,8 @@ data "template_file" "admin_container_definitions" {
     metabase_login_users__1 = "${var.metabase_login_users__1}"
     metabase_bot_user_email = "${var.metabase_bot_user_email}"
     metabase_bot_user_password = "${var.metabase_bot_user_password}"
+
+    admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
   }
 }
 
@@ -329,6 +331,54 @@ data "aws_iam_policy_document" "admin_task_execution" {
       "${aws_cloudwatch_log_group.admin.arn}",
     ]
   }
+}
+
+resource "aws_iam_role" "admin_dashboard_embedding" {
+  name = "${var.prefix}-quicksight-embedding"
+  path = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.admin_dashboard_embedding}"
+}
+
+resource "aws_iam_policy" "admin_dashboard_embedding" {
+  name        = "${var.prefix}-quicksight-dashboard-embedding"
+  path        = "/"
+  policy       = "${data.aws_iam_policy_document.admin_dashboard_embedding.json}"
+}
+
+data "aws_iam_policy_document" "admin_dashboard_embedding" {
+  statement {
+    actions = ["quicksight:RegisterUser"]
+    resources = ["*"]
+  }
+  statement {
+    actions = ["quicksight:CreateGroupMembership"]
+    resources = ["*"]
+  }
+  statement {
+    actions = ["quicksight:DescribeDashboard"]
+    resources = ["*"]
+  }
+  statement {
+    actions = ["quicksight:GetDashboardEmbedUrl"]
+    resources = ["arn:aws:quicksight:*:${data.aws_caller_identity.aws_caller_identity.account_id}:dashboard/*"]
+  }
+  statement {
+    actions = ["quicksight:GetAuthCode"]
+    resources = ["arn:aws:quicksight:*:${data.aws_caller_identity.aws_caller_identity.account_id}:user/default/${aws_iam_role.admin_dashboard_embedding.name}/*"]
+  }
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type = "AWS"
+      identifiers = ["${aws_iam_role.admin_task.arn}"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "admin_dashboard_embedding" {
+  role       = "${aws_iam_role.admin_task.name}"
+  policy_arn = "${aws_iam_policy.admin_dashboard_embedding.arn}"
 }
 
 resource "aws_iam_role" "admin_task" {

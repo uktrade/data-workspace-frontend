@@ -368,7 +368,7 @@ class DatasetDetailView(DetailView):
         quicksight_dashboard_id = self.request.GET.get("quicksight_dashboard_id", None)
         if quicksight_dashboard_id:
             _, dashboard_url = get_quicksight_dashboard_name_url(
-                quicksight_dashboard_id
+                quicksight_dashboard_id, self.request.user
             )
         else:
             _, dashboard_url = None, None

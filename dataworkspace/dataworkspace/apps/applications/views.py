@@ -246,7 +246,9 @@ def _get_embedded_metabase_dashboard(request, dashboard_id):
 
 @csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
 def _get_embedded_quicksight_dashboard(request, dashboard_id):
-    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(dashboard_id)
+    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(
+        dashboard_id, request.user
+    )
 
     context = {
         'visualisation_src': dashboard_url,
