@@ -110,6 +110,12 @@ class Command(BaseCommand):
         for quicksight_user in quicksight_user_list:
             user_arn = quicksight_user['Arn']
             user_email = quicksight_user['Email']
+            user_role = quicksight_user['Role']
+
+            if user_role != 'AUTHOR' and user_role != 'ADMIN':
+                self.stdout.write(f"Skipping {user_email} with role {user_role}.")
+                continue
+
             dw_user = get_user_model().objects.filter(email=user_email).first()
             if not dw_user:
                 self.stdout.write(
