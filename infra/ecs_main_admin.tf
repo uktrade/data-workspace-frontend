@@ -382,7 +382,7 @@ data "aws_iam_policy_document" "admin_dashboard_embedding_assume_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "admin_dashboard_embedding" {
-  role       = "${aws_iam_role.admin_task.name}"
+  role       = "${aws_iam_role.admin_dashboard_embedding.name}"
   policy_arn = "${aws_iam_policy.admin_dashboard_embedding.arn}"
 }
 
