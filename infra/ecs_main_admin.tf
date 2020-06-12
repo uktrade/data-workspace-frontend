@@ -608,6 +608,16 @@ data "aws_iam_policy_document" "admin_run_tasks" {
       "*",
     ]
   }
+
+  statement {
+    actions = [
+      "sts:AssumeRole",
+    ]
+
+    resources = [
+      "${aws_iam_role.admin_dashboard_embedding.arn}"
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "admin_admin_store_db_creds_in_s3_task" {
