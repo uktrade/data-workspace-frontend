@@ -270,6 +270,8 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
     metabase_login_users__1 = "${var.metabase_login_users__1}"
     metabase_bot_user_email = "${var.metabase_bot_user_email}"
     metabase_bot_user_password = "${var.metabase_bot_user_password}"
+
+    admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
   }
 }
 
@@ -336,7 +338,7 @@ data "aws_iam_policy_document" "admin_task_execution" {
 resource "aws_iam_role" "admin_dashboard_embedding" {
   name = "${var.prefix}-quicksight-embedding"
   path = "/"
-  assume_role_policy = "${data.aws_iam_policy_document.admin_dashboard_embedding}"
+  assume_role_policy = "${data.aws_iam_policy_document.admin_dashboard_embedding_assume_role.json}"
 }
 
 resource "aws_iam_policy" "admin_dashboard_embedding" {
@@ -364,8 +366,11 @@ data "aws_iam_policy_document" "admin_dashboard_embedding" {
   }
   statement {
     actions = ["quicksight:GetAuthCode"]
-    resources = ["arn:aws:quicksight:*:${data.aws_caller_identity.aws_caller_identity.account_id}:user/default/${aws_iam_role.admin_dashboard_embedding.name}/*"]
+    resources = ["arn:aws:quicksight:*:${data.aws_caller_identity.aws_caller_identity.account_id}:user/default/${var.prefix}-quicksight-embedding/*"]
   }
+}
+
+data "aws_iam_policy_document" "admin_dashboard_embedding_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
 
