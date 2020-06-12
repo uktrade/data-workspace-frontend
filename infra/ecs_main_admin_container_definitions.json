@@ -1186,7 +1186,7 @@
     },
     {
       "name": "QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN",
-      "value": "${admin_dashboard_embedding_role_arn},"
+      "value": "${admin_dashboard_embedding_role_arn}"
     },
     {
       "name": "PROMETHEUS_DOMAIN",
