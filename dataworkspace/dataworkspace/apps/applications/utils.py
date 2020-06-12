@@ -582,7 +582,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     qs_dashboard_client = session.client('quicksight')
 
     try:
-        user = qs_user_client.register_user(
+        qs_user_client.register_user(
             AwsAccountId=account_id,
             Namespace='default',
             IdentityType='IAM',
