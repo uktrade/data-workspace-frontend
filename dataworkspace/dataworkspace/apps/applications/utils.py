@@ -559,16 +559,56 @@ def delete_unused_datasets_users():
     logger.info('delete_unused_datasets_users: End')
 
 
-def get_quicksight_dashboard_name_url(dashboard_id):
-    account_id = boto3.client('sts').get_caller_identity().get('Account')
-    dashboard_name = boto3.client('quicksight').describe_dashboard(
+def get_quicksight_dashboard_name_url(dashboard_id, user):
+    user_region = settings.QUICKSIGHT_USER_REGION
+    embed_role_arn = settings.QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN
+    embed_role_name = embed_role_arn.rsplit('/', 1)[1]
+
+    sts = boto3.client('sts')
+    account_id = sts.get_caller_identity().get('Account')
+
+    role_credentials = sts.assume_role(
+        RoleArn=embed_role_arn, RoleSessionName=user.email
+    )['Credentials']
+
+    session = boto3.Session(
+        aws_access_key_id=role_credentials['AccessKeyId'],
+        aws_secret_access_key=role_credentials['SecretAccessKey'],
+        aws_session_token=role_credentials['SessionToken'],
+    )
+
+    # QuickSight manages users in a separate region to our data/dashboards.
+    qs_user_client = session.client('quicksight', region_name=user_region)
+    qs_dashboard_client = session.client('quicksight')
+
+    try:
+        user = qs_user_client.register_user(
+            AwsAccountId=account_id,
+            Namespace='default',
+            IdentityType='IAM',
+            IamArn=embed_role_arn,
+            UserRole='READER',
+            SessionName=user.email,
+            Email=user.email,
+        )
+    except qs_user_client.exceptions.ResourceExistsException:
+        pass
+
+    qs_user_client.create_group_membership(
+        AwsAccountId=account_id,
+        Namespace='default',
+        GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
+        MemberName=f'{embed_role_name}/{user.email}',
+    )
+
+    dashboard_name = qs_dashboard_client.describe_dashboard(
         AwsAccountId=account_id, DashboardId=dashboard_id, AliasName='$PUBLISHED'
     )['Dashboard']['Name']
-    dashboard_url = boto3.client('quicksight').get_dashboard_embed_url(
+    dashboard_url = qs_dashboard_client.get_dashboard_embed_url(
         AwsAccountId=account_id,
         DashboardId=dashboard_id,
         IdentityType='QUICKSIGHT',
-        UserArn=settings.QUICKSIGHT_DATASOURCE_USER_ARN,
+        UserArn=f'arn:aws:quicksight:{user_region}:{account_id}:user/default/{embed_role_name}/{user.email}',
     )['EmbedUrl']
 
     return dashboard_name, dashboard_url

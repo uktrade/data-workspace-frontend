@@ -1185,6 +1185,10 @@
       "value": "${zendesk_service_field_value}"
     },
     {
+      "name": "QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN",
+      "value": "${admin_dashboard_embedding_role_arn},"
+    },
+    {
       "name": "PROMETHEUS_DOMAIN",
       "value": "${prometheus_domain}"
     },
