@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Enabled support for redirects in Django admin.
 
+### Changed
+
+- Bump redis lock keys for deleting unused dataset users - it got stuck again. Also adds a timeout so that these keys should automatically expire, reducing the chance of them getting stuck.
+
 ## 2020-06-11
 
 ### Changed
