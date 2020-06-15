@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Enabled support for redirects in Django admin.
 
+### Changed
+
+- The value of the server header to not reveal it's nginx
+
 ## 2020-06-11
 
 ### Changed
