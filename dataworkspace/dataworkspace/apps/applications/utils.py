@@ -6,6 +6,7 @@ import urllib.parse
 
 import boto3
 import gevent
+import redis
 import requests
 from psycopg2 import connect, sql
 
@@ -494,10 +495,8 @@ def delete_unused_datasets_users():
 
                         # Multiple concurrent GRANT CONNECT on the same database can cause
                         # "tuple concurrently updated" errors
-                        with cache.lock(
-                            f'database-grant-connect-{database_name}--v3',
-                            blocking_timeout=3,
-                        ):
+                        lock_name = f'database-grant-connect-{database_name}--v3'
+                        with cache.lock(lock_name, blocking_timeout=3):
                             cur.execute(
                                 sql.SQL(
                                     'REVOKE CONNECT ON DATABASE {} FROM {};'
@@ -517,10 +516,8 @@ def delete_unused_datasets_users():
                             )
 
                         for schema in schemas:
-                            with cache.lock(
-                                f'database-grant--{database_name}--{schema}--v3',
-                                blocking_timeout=3,
-                            ):
+                            lock_name = f'database-grant--{database_name}--{schema}--v3'
+                            with cache.lock(lock_name, blocking_timeout=3):
                                 for schema_revoke in schema_revokes:
                                     try:
                                         cur.execute(
@@ -546,6 +543,9 @@ def delete_unused_datasets_users():
                         cur.execute(
                             sql.SQL('DROP USER {};').format(sql.Identifier(usename))
                         )
+                    except redis.exceptions.LockError:
+                        logger.exception('LOCK: Unable to acquire %s', lock_name)
+
                     except Exception:
                         logger.exception(
                             'delete_unused_datasets_users: Failed deleting %s', usename
