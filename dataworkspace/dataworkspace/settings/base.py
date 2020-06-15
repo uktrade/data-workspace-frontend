@@ -47,6 +47,10 @@ ELASTIC_APM = (
     else {}
 )
 
+# Used by `django.contrib.sites`, which enables `django.contrib.redirects`
+# https://docs.djangoproject.com/en/3.0/ref/settings/#site-id
+SITE_ID = 1
+
 INSTALLED_APPS = [
     'dataworkspace.admin.DataWorkspaceAdminConfig',
     'django.contrib.auth',
@@ -56,6 +60,8 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sites',
+    'django.contrib.redirects',
     'django.forms',
     'django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig',
     'adminsortable2',
@@ -84,6 +90,7 @@ MIDDLEWARE = [
     'waffle.middleware.WaffleMiddleware',
     'dataworkspace.middleware.disable_client_side_caching',
     'csp.middleware.CSPMiddleware',
+    'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
 ]
 
 if DEBUG:
