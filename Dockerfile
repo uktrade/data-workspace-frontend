@@ -19,6 +19,7 @@ RUN \
 		linux-headers=4.19.36-r0 && \
 	apk add --no-cache \
 		nginx=1.16.1-r2 \
+		nginx-mod-http-headers-more=1.16.1-r2 \
 		openssl=1.1.1g-r0 \
 		parallel=20190522-r0 \
 		py3-psycopg2=2.7.7-r1 \
