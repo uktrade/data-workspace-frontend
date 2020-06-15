@@ -29,6 +29,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("auth", "__latest__"),
+        ("sites", "0001_initial"),
         ("datasets", "0038_add_permissions_and_customdatasetquery_defaults"),
     ]
 
