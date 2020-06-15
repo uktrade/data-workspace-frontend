@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Log which lock we fail to obtain when trying to clean up users.
+- Bump redis lock keys - it's possible got stuck on one lock when deleting users. Also adds a timeout so that these keys should automatically expire, reducing the chance of them getting stuck.
 
 ## 2020-06-17
 

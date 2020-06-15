@@ -102,7 +102,9 @@ def new_private_database_credentials(
         # Multiple concurrent GRANT CONNECT on the same database can cause
         # "tuple concurrently updated" errors
         with cache.lock(
-            f'database-grant-connect-{database_data["NAME"]}--v3', blocking_timeout=3
+            f'database-grant-connect-{database_data["NAME"]}--v4',
+            blocking_timeout=3,
+            timeout=180,
         ):
             with connections[database_obj.memorable_name].cursor() as cur:
                 cur.execute(
@@ -212,8 +214,9 @@ def new_private_database_credentials(
 
         for schema in schemas:
             with cache.lock(
-                f'database-grant--{database_data["NAME"]}--{schema}--v3',
+                f'database-grant--{database_data["NAME"]}--{schema}--v4',
                 blocking_timeout=3,
+                timeout=180,
             ):
                 with connections[database_obj.memorable_name].cursor() as cur:
                     logger.info(
@@ -230,8 +233,9 @@ def new_private_database_credentials(
 
         for schema, table in tables_that_exist:
             with cache.lock(
-                f'database-grant--{database_data["NAME"]}--{schema}--v3',
+                f'database-grant--{database_data["NAME"]}--{schema}--v4',
                 blocking_timeout=3,
+                timeout=180,
             ):
                 with connections[database_obj.memorable_name].cursor() as cur:
                     logger.info(
