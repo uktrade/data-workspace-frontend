@@ -1196,7 +1196,7 @@ async def async_main():
 
             content = await request.read()
 
-            is_authenticated, error_message, creds = await authenticate_hawk_header(
+            error_message, creds = await authenticate_hawk_header(
                 lookup_credentials,
                 seen_nonce,
                 15,
@@ -1208,7 +1208,7 @@ async def async_main():
                 request.headers['Content-Type'],
                 content,
             )
-            if not is_authenticated:
+            if error_message is not None:
                 request['logger'].info('Hawk unauthenticated: %s', error_message)
                 return web.Response(status=401)
 
