@@ -2,6 +2,7 @@
 '''
 
 import datetime
+import hashlib
 import json
 import logging
 import os
@@ -261,11 +262,13 @@ class FargateSpawner:
                     _gitlab_ecr_pipeline_cancel(pipeline_id)
                     raise Exception('Pipeline {} took too long'.format(pipeline))
 
-            # Tag is given, create a new task definition
-            definition_arn_with_image = (
-                _fargate_task_definition_with_tag(definition_arn, container_name, tag)
-                if tag
-                else definition_arn
+            # It doesn't really matter what the suffix is: it could even be a random
+            # number, but we choose the short hashed version of the SSO ID to help debugging
+            task_family_suffix = hashlib.sha256(
+                user_sso_id.encode('utf-8')
+            ).hexdigest()[:8]
+            definition_arn_with_image = _fargate_new_task_definition(
+                definition_arn, container_name, tag, task_family_suffix
             )
 
             for i in range(0, 10):
@@ -493,7 +496,7 @@ def _ecr_client():
     return boto3.client('ecr', endpoint_url=settings.AWS_ECR_ENDPOINT_URL)
 
 
-def _fargate_task_definition_with_tag(task_family, container_name, tag):
+def _fargate_new_task_definition(task_family, container_name, tag, task_family_suffix):
     client = boto3.client('ecs')
     describe_task_response = client.describe_task_definition(taskDefinition=task_family)
     container = [
@@ -503,8 +506,10 @@ def _fargate_task_definition_with_tag(task_family, container_name, tag):
         ]
         if container['name'] == container_name
     ][0]
-    container['image'] += ':' + tag
-    describe_task_response['taskDefinition']['family'] = task_family + '-' + tag
+    container['image'] += (':' + tag) if tag else ''
+    describe_task_response['taskDefinition']['family'] = (
+        task_family + ('-' + tag if tag else '') + '-' + task_family_suffix
+    )
 
     register_tag_response = client.register_task_definition(
         **{

@@ -30,6 +30,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Removed user access controls from visualisation templates.
 
+### Changed
+
+- Create a new task defintion per tool launch, to support per-user mount points in EFS
+
 ## 2020-06-09
 
 ### Changed
