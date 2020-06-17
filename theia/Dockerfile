@@ -74,18 +74,15 @@ RUN \
 	mkdir /tmp/.yarn-cache && \
 	chown theia:theia /tmp/.yarn-cache && \
 	touch /root/yarn-error.log && \
-	chown theia:theia /root/yarn-error.log
+	chown theia:theia /root/yarn-error.log && \
+	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
+	echo "rstudio ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get,/usr/bin/R" >> /etc/sudoers && \
+	echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
+	rm /home/theia/.bashrc
 
-USER theia
+COPY start.sh /start.sh
 
 ENV \
 	SHELL=/bin/bash
 
-CMD \
-	[ \
-		"yarn", "theia", "start", "/home/theia", \
-		"--plugins=local-dir:/root/plugins", \
-		"--hostname=0.0.0.0", \
-		"--port=8888", \
-		"--cache-folder=/tmp/.yarn-cache" \
-	]
+CMD ["/start.sh"]
