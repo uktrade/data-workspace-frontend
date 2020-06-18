@@ -56,7 +56,6 @@ ENV \
 
 COPY package.json /root
 COPY yarn.lock /root
-COPY vscode-postgres-1.1.11.vsix /root/plugins/vscode-postgres-1.1.11.vsix
 
 RUN \
 	yarn install && \
@@ -81,6 +80,7 @@ RUN \
 	echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
 	rm /home/theia/.bashrc
 
+COPY vscode-postgres-1.1.11.vsix /root/plugins/vscode-postgres-1.1.11.vsix
 COPY start.sh /start.sh
 
 ENV \
