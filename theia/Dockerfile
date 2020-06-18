@@ -56,6 +56,7 @@ ENV \
 
 COPY package.json /root
 COPY yarn.lock /root
+COPY vscode-postgres-1.1.11.vsix /root/plugins/vscode-postgres-1.1.11.vsix
 
 RUN \
 	yarn install && \
