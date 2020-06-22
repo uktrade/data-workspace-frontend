@@ -45,6 +45,7 @@ RUN \
 		gdebi-core=0.9.5.7+nmu3 \
 		gfortran=4:8.3.0-1 \
 		git=1:2.20.1-2+deb10u3 \
+		libgit2-dev=0.27.7+dfsg.1-0.2 \
 		libgsl-dev=2.5+dfsg-6 \
 		libxml2-dev=2.9.4+dfsg1-7+b3 \
 		libpq-dev=11.7-0+deb10u1 \
