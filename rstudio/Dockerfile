@@ -1,6 +1,14 @@
 FROM debian:buster-20200607-slim
 
+# Allow man pages to be installed: slim has hacks to exclude them, so we
+# hack the hacks https://unix.stackexchange.com/a/480460/361685
 RUN \
+    sed -i '/path-exclude \/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/docker && \
+    sed -i '/path-exclude \/usr\/share\/groff/d' /etc/dpkg/dpkg.cfg.d/docker
+
+RUN \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
 		locales=2.28-10 && \
@@ -17,12 +25,6 @@ ENV \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8
 
-# Allow man pages to be installed: slim has hacks to exclude them, so we
-# hack the hacks https://unix.stackexchange.com/a/480460/361685
-RUN \
-    sed -i '/path-exclude \/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/docker && \
-    sed -i '/path-exclude \/usr\/share\/groff/d' /etc/dpkg/dpkg.cfg.d/docker
-
 COPY exploretiva /exploretiva
 
 RUN \
@@ -31,8 +33,6 @@ RUN \
 		ca-certificates \
 		dirmngr \
 		gnupg2 && \
-	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
-	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
 	until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
 	apt-get clean -y && \

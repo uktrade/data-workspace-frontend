@@ -25,26 +25,6 @@ resource "aws_s3_bucket_policy" "mirrors" {
 
 data "aws_iam_policy_document" "mirrors" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  statement {
-    effect = "Deny"
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-    actions = [
-      "s3:*",
-    ]
-    resources = [
-      "arn:aws:s3:::${aws_s3_bucket.mirrors.id}/*",
-    ]
-    condition {
-      test = "Bool"
-      variable = "aws:SecureTransport"
-      values = [
-        "false"
-      ]
-    }
-  }
 
   # We are happy with public GET
   statement {
