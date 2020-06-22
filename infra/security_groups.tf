@@ -582,6 +582,18 @@ resource "aws_security_group_rule" "notebooks_egress_https_to_everywhere" {
   protocol  = "tcp"
 }
 
+resource "aws_security_group_rule" "notebooks_egress_http_to_everywhere" {
+  description = "egress-http-to-everywhere"
+
+  security_group_id = "${aws_security_group.notebooks.id}"
+  cidr_blocks       = ["0.0.0.0/0"]
+
+  type      = "egress"
+  from_port = "80"
+  to_port   = "80"
+  protocol  = "tcp"
+}
+
 resource "aws_security_group_rule" "notebooks_egress_ssh_to_gitlab_service" {
   description = "ingress-ssh-from-nlb"
 
