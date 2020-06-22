@@ -873,7 +873,7 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
             raise Exception(f'{code} {url}')
 
         headers_lower = dict((key.lower(), value) for key, value in headers)
-        content_type = headers_lower.get(b'content-type', None)
+        content_type = headers_lower.get(b'content-type', b'')
         target_key = s3_prefix + get_relative_key(url)
 
         if content_type.startswith(b'text/html'):
