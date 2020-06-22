@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster-20200607-slim
 
 RUN \
 	apt-get update && \
