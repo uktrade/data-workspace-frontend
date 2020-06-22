@@ -357,6 +357,13 @@ async def async_main(logger):
             logger,
             request,
             s3_context,
+            'https://cloudfront.debian.net/debian-security/',
+            'debian-security/',
+        )
+        await debian_mirror(
+            logger,
+            request,
+            s3_context,
             'https://cloudfront.debian.net/debian/',
             'debian/',
         )
@@ -869,7 +876,7 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
         content_type = headers_lower.get(b'content-type', None)
         target_key = s3_prefix + get_relative_key(url)
 
-        if content_type == b'text/html':
+        if content_type.startswith(b'text/html'):
             data = await buffered(body)
             soup = BeautifulSoup(data, 'html.parser')
             links = soup.find_all('a')
