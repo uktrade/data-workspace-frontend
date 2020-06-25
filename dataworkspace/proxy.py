@@ -194,6 +194,9 @@ async def async_main():
             and request.url.path == '/app/assets/img/site.webmanifest'
         )
 
+    def is_metabase_embed_requested(request):
+        return is_metabase_requested(request) and request.url.path.startswith('/embed/')
+
     def is_app_requested(request):
         return (
             request.url.host.endswith(f'.{root_domain_no_port}')
@@ -1224,7 +1227,10 @@ async def async_main():
             ip_whitelist_required = (
                 is_app_requested(request)
                 or is_superset_requested(request)
-                or is_metabase_requested(request)
+                or (
+                    is_metabase_requested(request)
+                    and not is_metabase_embed_requested(request)
+                )
                 or is_mirror_requested(request)
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
