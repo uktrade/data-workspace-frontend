@@ -25,6 +25,6 @@ psutil==5.7.0
 psycogreen==1.0.2
 redis==3.5.3
 pyjwt==1.7.1
-requests==2.23.0
+requests==2.24.0
 sentry-sdk==0.15.1
 zenpy==2.0.20
