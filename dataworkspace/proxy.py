@@ -931,6 +931,7 @@ async def async_main():
 
             request['sso_profile_headers'] = (
                 ('sso-profile-email', me_profile['email']),
+                ('sso-profile-contact-email', me_profile['contact_email']),
                 (
                     'sso-profile-related-emails',
                     ','.join(me_profile.get('related_emails', [])),
@@ -1090,6 +1091,10 @@ async def async_main():
             async def handler_with_sso_headers():
                 request['sso_profile_headers'] = (
                     ('sso-profile-email', me_profile['email']),
+                    # The default value of '' should be able to be removed after the cached
+                    # profile in Redis without contact_email has expired, i.e. 60 seconds after
+                    # deployment of this change
+                    ('sso-profile-contact-email', me_profile.get('contact_email', '')),
                     (
                         'sso-profile-related-emails',
                         ','.join(me_profile.get('related_emails', [])),
@@ -1126,6 +1131,7 @@ async def async_main():
             me_profile = {
                 'email': me_profile_full['email'],
                 'related_emails': me_profile_full['related_emails'],
+                'contact_email': me_profile_full['contact_email'],
                 'user_id': me_profile_full['user_id'],
                 'first_name': me_profile_full['first_name'],
                 'last_name': me_profile_full['last_name'],

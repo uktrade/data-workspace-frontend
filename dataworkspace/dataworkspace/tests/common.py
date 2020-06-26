@@ -25,6 +25,7 @@ class BaseTestCaseMixin:
 
         self.user_data = {
             'HTTP_SSO_PROFILE_EMAIL': self.user.email,
+            'HTTP_SSO_PROFILE_CONTACT_EMAIL': self.user.email,
             'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
             'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
             'HTTP_SSO_PROFILE_LAST_NAME': 'Bob',
@@ -92,6 +93,7 @@ def get_response_csp_as_set(response):
 def get_http_sso_data(user):
     return {
         'HTTP_SSO_PROFILE_EMAIL': user.email,
+        'HTTP_SSO_PROFILE_CONTACT_EMAIL': user.email,
         'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
         'HTTP_SSO_PROFILE_USER_ID': uuid.uuid4(),
         'HTTP_SSO_PROFILE_LAST_NAME': user.last_name,

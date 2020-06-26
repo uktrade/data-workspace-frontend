@@ -11,6 +11,7 @@ def staff_user_data(db):
 
     return {
         'HTTP_SSO_PROFILE_EMAIL': user.email,
+        'HTTP_SSO_PROFILE_CONTACT_EMAIL': user.email,
         'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
         'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
         'HTTP_SSO_PROFILE_LAST_NAME': 'Testerson',
@@ -37,6 +38,7 @@ def user_data(db, user):
 
     return {
         'HTTP_SSO_PROFILE_EMAIL': user.email,
+        'HTTP_SSO_PROFILE_CONTACT_EMAIL': user.email,
         'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
         'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d69',
         'HTTP_SSO_PROFILE_LAST_NAME': 'Exampleson',
@@ -65,6 +67,7 @@ def sme_user(db):
 def sme_user_data(db, sme_user):
     return {
         'HTTP_SSO_PROFILE_EMAIL': sme_user.email,
+        'HTTP_SSO_PROFILE_CONTACT_EMAIL': sme_user.email,
         'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
         'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d70',
         'HTTP_SSO_PROFILE_LAST_NAME': 'Sampledóttir',
