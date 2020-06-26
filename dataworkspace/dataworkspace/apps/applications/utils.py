@@ -427,6 +427,18 @@ def populate_created_stopped_fargate():
 @celery_app.task()
 @close_connection
 def delete_unused_datasets_users():
+    try:
+        with cache.lock(
+            "delete_unused_datasets_users", blocking_timeout=0, timeout=1800
+        ):
+            _do_delete_unused_datasets_users()
+    except redis.exceptions.LockError:
+        logger.info(
+            "delete_unused_datasets_users: Unable to grab lock - running on another instance?"
+        )
+
+
+def _do_delete_unused_datasets_users():
     logger.info('delete_unused_datasets_users: Start')
 
     for memorable_name, database_data in settings.DATABASES_DATA.items():

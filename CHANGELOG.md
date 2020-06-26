@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Log which lock we fail to obtain when trying to clean up users.
 - Bump redis lock keys - it's possible got stuck on one lock when deleting users. Also adds a timeout so that these keys should automatically expire, reducing the chance of them getting stuck.
+- Lock the 'delete unused users' task so only one instance runs it at a time.
 
 ## 2020-06-17
 
