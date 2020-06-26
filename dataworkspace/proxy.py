@@ -195,7 +195,11 @@ async def async_main():
         )
 
     def is_metabase_embed_requested(request):
-        return is_metabase_requested(request) and request.url.path.startswith('/embed/')
+        return is_metabase_requested(request) and (
+            request.url.path.startswith('/embed/')
+            or request.url.path.startswith('/api/embed/')
+            or request.url.path.startswith('/app/dist/')
+        )
 
     def is_app_requested(request):
         return (
