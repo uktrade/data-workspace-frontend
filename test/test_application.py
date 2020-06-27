@@ -49,6 +49,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -251,6 +252,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -407,6 +409,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -530,6 +533,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -902,6 +906,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -1072,6 +1077,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-1': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -1242,6 +1248,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -1280,6 +1287,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -1412,6 +1420,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -1628,6 +1637,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -1725,6 +1735,7 @@ class TestApplication(unittest.TestCase):
             # No token-1
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
@@ -1767,6 +1778,7 @@ class TestApplication(unittest.TestCase):
         auth_to_me = {
             'Bearer token-2': {
                 'email': 'test@test.com',
+                'contact_email': 'test@test.com',
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',

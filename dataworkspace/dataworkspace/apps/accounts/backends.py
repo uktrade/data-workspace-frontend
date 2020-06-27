@@ -11,6 +11,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
             email = request.META['HTTP_SSO_PROFILE_EMAIL']
+            contact_email = request.META['HTTP_SSO_PROFILE_CONTACT_EMAIL']
             related_emails = request.META['HTTP_SSO_PROFILE_RELATED_EMAILS'].split(',')
             user_id = request.META['HTTP_SSO_PROFILE_USER_ID']
             last_name = request.META['HTTP_SSO_PROFILE_LAST_NAME']
@@ -21,6 +22,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
         # This allows a user to be created by email address before they
         # have logged in
 
+        primary_email = contact_email if contact_email else email
         changed = False
         User = get_user_model()
 
@@ -28,8 +30,10 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
             user = User.objects.get(profile__sso_id=user_id)
         except User.DoesNotExist:
             user, _ = User.objects.get_or_create(
-                email__in=[email] + related_emails,
-                defaults={'email': email, 'username': email},
+                email__in=[email]
+                + ([contact_email] if contact_email else [])
+                + related_emails,
+                defaults={'email': primary_email, 'username': primary_email},
             )
 
             # Save is required to create a profile object
@@ -44,13 +48,13 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
 
         changed = False
 
-        if user.username != user.email:
+        if user.username != primary_email:
             changed = True
-            user.username = user.email
+            user.username = primary_email
 
-        if user.email != email:
+        if user.email != primary_email:
             changed = True
-            user.email = email
+            user.email = primary_email
 
         if user.first_name != first_name:
             changed = True
