@@ -1357,9 +1357,10 @@ async def async_main():
 
 def main():
     if os.environ.get('SENTRY_DSN') is not None:
-        sentry_sdk.init(
-            os.environ['SENTRY_DSN'], integrations=[AioHttpIntegration()], debug=True
-        )
+        sentry_kwargs = {"integrations": [AioHttpIntegration()]}
+        if os.environ.get('CONTAINER_TAG'):
+            sentry_kwargs['release'] = os.environ.get('CONTAINER_TAG')
+        sentry_sdk.init(os.environ['SENTRY_DSN'], **sentry_kwargs)
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(async_main())

@@ -67,6 +67,7 @@ data "template_file" "admin_container_definitions" {
 
   vars {
     container_image   = "${var.admin_container_image}:${data.external.admin_current_tag.result.tag}"
+    container_tag     = "${data.external.admin_current_tag.result.tag}"
     container_name    = "${local.admin_container_name}"
     container_command = "[\"/dataworkspace/start.sh\"]"
     container_port    = "${local.admin_container_port}"
@@ -187,6 +188,7 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
 
   vars {
     container_image   = "${var.admin_container_image}:${data.external.admin_current_tag.result.tag}"
+    container_tag     = "${data.external.admin_current_tag.result.tag}"
     container_name    = "${local.admin_container_name}"
     container_command = "[\"django-admin\", \"store_db_creds_in_s3\"]"
     container_port    = "${local.admin_container_port}"

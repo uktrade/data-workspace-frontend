@@ -290,7 +290,10 @@ S3_ROLE_PREFIX = env['S3_ROLE_PREFIX']
 YOUR_FILES_ENABLED = env.get('YOUR_FILES_ENABLED', 'False') == 'True'
 
 if env.get('SENTRY_DSN') is not None:
-    sentry_sdk.init(env['SENTRY_DSN'], integrations=[DjangoIntegration()])
+    sentry_kwargs = {"integrations": [DjangoIntegration()]}
+    if env.get('CONTAINER_TAG'):
+        sentry_kwargs['release'] = env.get('CONTAINER_TAG')
+    sentry_sdk.init(env['SENTRY_DSN'], **sentry_kwargs)
 
 
 CKEDITOR_CONFIGS = {

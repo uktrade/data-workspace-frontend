@@ -4,6 +4,10 @@
     "cpu": ${container_cpu},
     "environment": [
     {
+      "name": "CONTAINER_TAG",
+      "value": "${container_tag}"
+    },
+    {
       "name": "ADMIN_DB__HOST",
       "value": "${admin_db__host}"
     },

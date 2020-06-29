@@ -53,6 +53,12 @@ pipeline {
           ).trim()
           currentBuild.displayName = "#${env.BUILD_ID} - PR #${pullRequestNumber}"
         }
+        script {
+          withCredentials([string(credentialsId: 'SENTRY_PROJECT_RELEASES', variable: 'SENTRY_AUTH_TOKEN')]) {
+            sh "docker run --rm -v $(pwd):/work -e SENTRY_AUTH_TOKEN -e SENTRY_ORG -e SENTRY_URL getsentry/sentry-cli:1 releases new -p data-workspace \"${params.GIT_COMMIT}\""
+            sh "docker run --rm -v $(pwd):/work -e SENTRY_AUTH_TOKEN -e SENTRY_ORG -e SENTRY_URL getsentry/sentry-cli:1 releases set-commits --auto \"${params.GIT_COMMIT}\""
+          }
+        }
         lock("data-workspace-build-admin") {
           container(name: 'builder', shell: '/busybox/sh') {
             withEnv(['PATH+EXTRA=/busybox:/kaniko']) {
@@ -61,6 +67,11 @@ pipeline {
                 /kaniko/executor --dockerfile ${env.WORKSPACE}/Dockerfile -c ${env.WORKSPACE} --destination=quay.io/uktrade/data-workspace:${params.GIT_COMMIT}
                 """
             }
+          }
+        }
+        script {
+          withCredentials([string(credentialsId: 'SENTRY_PROJECT_RELEASES', variable: 'SENTRY_AUTH_TOKEN')]) {
+            sh "docker run --rm -v $(pwd):/work -e SENTRY_AUTH_TOKEN -e SENTRY_ORG -e SENTRY_URL getsentry/sentry-cli:1 releases finalize \"${params.GIT_COMMIT}\""
           }
         }
       }
