@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Visualisation header text to be more in keeping with design
 
+### Added
+
+- Ability for the theia user in Theia to run apt-get via sudo, in line with other tools.
+
 ## 2020-06-26
 
 ### Changed
