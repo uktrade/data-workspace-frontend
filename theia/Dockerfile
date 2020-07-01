@@ -67,8 +67,7 @@ RUN \
 
 RUN \
 	addgroup --system --gid 4356 theia && \
-	adduser --disabled-password --gecos '' --ingroup theia --uid 4357 theia && \
-	echo "theia ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers
+	adduser --disabled-password --gecos '' --ingroup theia --uid 4357 theia
 
 RUN \
 	mkdir /tmp/.yarn-cache && \
@@ -76,7 +75,7 @@ RUN \
 	touch /root/yarn-error.log && \
 	chown theia:theia /root/yarn-error.log && \
 	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
-	echo "rstudio ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get,/usr/bin/R" >> /etc/sudoers && \
+	echo "theia ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
 	echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
 	rm /home/theia/.bashrc
 
