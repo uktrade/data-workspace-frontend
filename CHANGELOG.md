@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-07-01
+
+### Changed
+
+- Visualisation header text to be more in keeping with design
+
 ## 2020-06-26
 
 ### Changed
