@@ -20,7 +20,7 @@ urlpatterns = [
         'link/<str:link_id>', login_required(visualisation_link_html_view), name='link'
     ),
     path(
-        '<str:gitlab_project_id>/branches/<str:branch_name>',
+        '<str:gitlab_project_id>/branches/<path:branch_name>',
         login_required(visualisation_branch_html_view),
         name='branch',
     ),
