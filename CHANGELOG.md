@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Visualisation header text to be more in keeping with design
+- Allow forward slash in GitLab branch names
 
 ## 2020-06-26
 
