@@ -1864,7 +1864,7 @@ class TestApplication(unittest.TestCase):
                         },
                     },
                     {
-                        'name': 'my-feature-3',
+                        'name': 'feature/my-feature-3',
                         'commit': {
                             'id': 'some-id',
                             'short_id': 'abcdef12',
