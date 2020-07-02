@@ -28,6 +28,7 @@ while IFS='=' read -r name value ; do
   fi
 done < <(env)
 
+echo "APP_SCHEMA='${APP_SCHEMA}'" >> /etc/R/Renviron.site
 echo "S3_PREFIX='${S3_PREFIX}'" >> /etc/R/Renviron.site
 echo "AWS_DEFAULT_REGION='${AWS_DEFAULT_REGION}'" >> /etc/R/Renviron.site
 echo "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI='${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI}'" >> /etc/R/Renviron.site

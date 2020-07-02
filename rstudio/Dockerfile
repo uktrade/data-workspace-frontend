@@ -10,8 +10,8 @@ RUN \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian-security/ buster/updates main" >> /etc/apt/sources.list && \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
-	apt-get update && \
-	apt-get install -y --no-install-recommends \
+	apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 && \
+	apt-get install -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 -y --no-install-recommends \
 		locales=2.28-10 && \
 	echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
 	locale-gen en_US.utf8 && \
@@ -29,8 +29,8 @@ ENV \
 COPY exploretiva /exploretiva
 
 RUN \
-	apt-get update && \
-	apt-get install -y --no-install-recommends \
+	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
+	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
 		ca-certificates \
 		dirmngr \
 		gnupg2 && \
