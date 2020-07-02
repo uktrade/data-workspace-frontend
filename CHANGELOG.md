@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-07-02
+
+### Added
+
+- The APP_SCHEMA environment variable to RStudio, so it can access the current user's schema
+
 ## 2020-07-01
 
 ### Changed
