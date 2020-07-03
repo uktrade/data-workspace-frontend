@@ -83,6 +83,9 @@ COPY vscode-postgres-1.1.11.vsix /root/plugins/vscode-postgres-1.1.11.vsix
 COPY start.sh /start.sh
 
 ENV \
+	# Theia by default puts webviews on a subdomain, requests to which I think are intercepted by
+	# a service worker. This doesn't work with the locked down DW CSP
+	THEIA_WEBVIEW_EXTERNAL_ENDPOINT={{hostname}} \
 	SHELL=/bin/bash
 
 CMD ["/start.sh"]
