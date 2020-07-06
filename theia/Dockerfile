@@ -65,6 +65,11 @@ RUN \
 	find /root -type d -exec chmod 755 {} + && \
 	chmod -R +r /root
 
+COPY requirements.txt /root
+
+RUN \
+	pip3 install -r requirements.txt
+
 RUN \
 	addgroup --system --gid 4356 theia && \
 	adduser --disabled-password --gecos '' --ingroup theia --uid 4357 theia
@@ -79,7 +84,7 @@ RUN \
 	echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
 	rm /home/theia/.bashrc
 
-COPY vscode-postgres-1.1.11.vsix /root/plugins/vscode-postgres-1.1.11.vsix
+COPY vscode_postgres.theia /root/plugins/vscode_postgres.theia
 COPY start.sh /start.sh
 
 ENV \
