@@ -9,4 +9,4 @@ updates:
   open-pull-requests-limit: 10
   reviewers:
   - uktrade/data-workspace
-  rebase-strategy: disabled
+  rebase-strategy: auto
