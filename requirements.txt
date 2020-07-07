@@ -12,7 +12,7 @@ django-csp==3.6
 django-db-geventpool==3.2.1
 django-redis==4.12.1
 django-waffle==1.0.0
-django==3.0.7
+django==3.0.8
 djangorestframework==3.11.0
 elastic-apm==5.7.0
 gevent==1.4.0
