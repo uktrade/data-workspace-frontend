@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-08-03
+
+### Changed
+
+- Bumped to latest Theia
+- Make Theia visible via hard-coded config (so visible in all envs)
+
 ## 2020-07-03
 
 ### Changed
