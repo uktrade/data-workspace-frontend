@@ -325,7 +325,7 @@ resource "aws_rds_cluster" "gitlab" {
 }
 
 resource "aws_rds_cluster_instance" "gitlab" {
-  count              = 2
+  count              = 1
   identifier_prefix  = "${var.prefix}-gitlab"
   cluster_identifier = "${aws_rds_cluster.gitlab.id}"
   engine             = "${aws_rds_cluster.gitlab.engine}"
