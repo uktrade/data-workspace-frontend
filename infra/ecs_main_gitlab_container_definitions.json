@@ -21,8 +21,8 @@
       }
     },
     "networkMode": "awsvpc",
-    "memoryReservation": 7896,
-    "cpu": 2048,
+    "memoryReservation": ${memory},
+    "cpu": ${cpu},
     "mountPoints" : [{
        "containerPath" : "/var/opt/gitlab",
        "sourceVolume" : "data-gitlab"

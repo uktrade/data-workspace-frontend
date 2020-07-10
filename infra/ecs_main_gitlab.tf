@@ -58,8 +58,8 @@ resource "aws_ecs_task_definition" "gitlab" {
   execution_role_arn       = "${aws_iam_role.gitlab_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.gitlab_task.arn}"
   network_mode             = "awsvpc"
-  cpu                      = "${local.gitlab_container_cpu}"
-  memory                   = "${local.gitlab_container_memory}"
+  memory                   = "${var.gitlab_memory}"
+  cpu                      = "${var.gitlab_cpu}"
   requires_compatibilities = ["EC2"]
 
   volume {
@@ -82,6 +82,9 @@ data "template_file" "gitlab_container_definitions" {
     container_name    = "gitlab"
     log_group         = "${aws_cloudwatch_log_group.gitlab.name}"
     log_region        = "${data.aws_region.aws_region.name}"
+
+    memory = "${var.gitlab_memory}"
+    cpu = "${var.gitlab_cpu}"
 
     gitlab_omnibus_config = "${jsonencode("${data.template_file.gitlab_container_definitions_gitlab_omnibus_config.rendered}")}"
     bucket                = "${aws_s3_bucket.gitlab.id}"
@@ -413,7 +416,7 @@ resource "aws_iam_instance_profile" "gitlab_ec2" {
 
 resource "aws_instance" "gitlab" {
   ami           = "ami-0749bd3fac17dc2cc"
-  instance_type = "t3a.xlarge"
+  instance_type = "${var.gitlab_instance_type}"
   iam_instance_profile = "${aws_iam_instance_profile.gitlab_ec2.id}"
   availability_zone = "${var.aws_availability_zones[0]}"
 
@@ -508,7 +511,7 @@ resource "aws_launch_configuration" "gitlab_runner" {
   # handy since it has everything docker installed, and cuts down on the
   # types of infrastructure
   image_id        = "ami-0749bd3fac17dc2cc"
-  instance_type   = "t3a.medium"
+  instance_type   = "${var.gitlab_runner_instance_type}"
   iam_instance_profile = "${aws_iam_instance_profile.gitlab_runner.name}"
   security_groups = ["${aws_security_group.gitlab_runner.id}"]
   key_name        = "${var.gitlab_runner_key}"
