@@ -103,6 +103,10 @@ variable gitlab_ip_whitelist {
 variable gitlab_domain {}
 variable gitlab_bucket {}
 variable gitlab_container_image {}
+variable gitlab_instance_type {}
+variable gitlab_memory {}
+variable gitlab_cpu {}
+variable gitlab_runner_instance_type {}
 variable gitlab_db_instance_class {}
 variable gitlab_runner_visualisations_deployment_project_token {}
 
@@ -184,9 +188,6 @@ locals {
   prometheus_alb_port = "443"
   prometheus_container_memory     = 512
   prometheus_container_cpu        = 256
-
-  gitlab_container_memory = 8192
-  gitlab_container_cpu    = 4096
 
   superset_multiuser_container_memory = 8192
   superset_multiuser_container_cpu    = 1024
