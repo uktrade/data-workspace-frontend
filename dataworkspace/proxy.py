@@ -10,6 +10,7 @@ import random
 import secrets
 import sys
 import string
+import uuid
 import urllib
 
 import aiohttp
@@ -65,6 +66,7 @@ async def async_main():
     basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
     x_forwarded_for_trusted_hops = int(env['X_FORWARDED_FOR_TRUSTED_HOPS'])
     application_ip_whitelist = env['APPLICATION_IP_WHITELIST']
+    ga_tracking_id = env.get('GA_TRACKING_ID')
     mirror_remote_root = env['MIRROR_REMOTE_ROOT']
     mirror_local_root = '/__mirror/'
 
@@ -530,6 +532,8 @@ async def async_main():
 
             asyncio.ensure_future(set_application_running())
 
+            await send_to_google_analytics(downstream_request)
+
             return response
 
     async def handle_application_http_running_wrapped(
@@ -556,6 +560,9 @@ async def async_main():
         downstream_request, method, upstream_url, query, public_host
     ):
         host = downstream_request.headers['host']
+
+        await send_to_google_analytics(downstream_request)
+
         return await handle_http(
             downstream_request,
             method,
@@ -814,6 +821,51 @@ async def async_main():
             upstream_task.cancel()
 
         return downstream_ws
+
+    async def send_to_google_analytics(downstream_request):
+        # Not perfect, but a good enough guide for usage
+        _, extension = os.path.splitext(downstream_request.url.path)
+        send_to_google = ga_tracking_id and extension in {
+            '',
+            '.doc',
+            '.docx',
+            '.html',
+            '.pdf',
+            '.ppt',
+            '.pptx',
+            '.xlsx',
+            '.xlsx',
+        }
+
+        if not send_to_google:
+            return
+
+        async def _send():
+            logger.info("Sending to Google Analytics %s...", downstream_request.url)
+            peer_ip, _ = get_peer_ip(downstream_request)
+
+            response = await client_session.request(
+                'POST',
+                'https://www.google-analytics.com/collect',
+                data={
+                    'v': '1',
+                    'tid': ga_tracking_id,
+                    'cid': str(uuid.uuid4()),
+                    't': 'pageview',
+                    'uip': peer_ip,
+                    'dh': downstream_request.url.host,
+                    'dp': downstream_request.url.path_qs,
+                    'ds': 'data-workspace-server',
+                    'dr': downstream_request.headers.get('referer', ''),
+                    'ua': downstream_request.headers.get('user-agent', ''),
+                },
+                timeout=default_http_timeout,
+            )
+            logger.info(
+                "Sending to Google Analytics %s... %s", downstream_request.url, response
+            )
+
+        asyncio.create_task(_send())
 
     async def handle_http(
         downstream_request,
