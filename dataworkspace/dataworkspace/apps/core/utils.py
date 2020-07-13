@@ -667,3 +667,7 @@ class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
 
         if not connection.in_atomic_block:
             connection.close_if_unusable_or_obsolete()
+
+
+def stable_identification_suffix(identifier):
+    return hashlib.sha256(identifier.encode('utf-8')).hexdigest()[:8]

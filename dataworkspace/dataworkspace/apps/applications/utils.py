@@ -3,11 +3,14 @@ import hashlib
 import json
 import logging
 import urllib.parse
+from typing import Dict, List
 
 import boto3
+import botocore
 import gevent
 import redis
 import requests
+from django.contrib.auth import get_user_model
 from psycopg2 import connect, sql
 
 from django.conf import settings
@@ -27,7 +30,13 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
 )
 from dataworkspace.apps.core.models import Database
-from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.apps.core.utils import (
+    database_dsn,
+    stable_identification_suffix,
+    source_tables_for_user,
+    new_private_database_credentials,
+    persistent_postgres_user,
+)
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.cel import celery_app
@@ -624,3 +633,187 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     )['EmbedUrl']
 
     return dashboard_name, dashboard_url
+
+
+def create_update_delete_quicksight_user_data_sources(
+    data_client, account_id, quicksight_user, creds
+):
+    env = settings.ENVIRONMENT.lower()
+    qs_datasource_perms = [
+        'quicksight:DescribeDataSource',
+        'quicksight:DescribeDataSourcePermissions',
+        'quicksight:PassDataSource',
+    ]
+
+    def _get_data_source_id(db_name):
+        return (
+            "data-workspace-"
+            + env
+            + "-"
+            + db_name
+            + "-"
+            + stable_identification_suffix(quicksight_user['Arn'])
+        )
+
+    authorized_data_source_ids = set()
+
+    # Create/update any data sources the user has access to
+    for cred in creds:
+        db_name = cred['memorable_name']
+        data_source_id = _get_data_source_id(db_name)
+        data_source_name = f"Data Workspace - {db_name}"
+        if env != "production":
+            data_source_name = f"{env.upper()} - {data_source_name}"
+
+        create_and_update_params = dict(
+            AwsAccountId=account_id,
+            DataSourceId=data_source_id,
+            Name=data_source_name,
+            DataSourceParameters={
+                "AuroraPostgreSqlParameters": {
+                    "Host": cred['db_host'],
+                    "Port": int(cred['db_port']),
+                    "Database": cred['db_name'],
+                }
+            },
+            Credentials={
+                "CredentialPair": {
+                    "Username": cred['db_user'],
+                    "Password": cred['db_password'],
+                }
+            },
+            VpcConnectionProperties={"VpcConnectionArn": settings.QUICKSIGHT_VPC_ARN},
+        )
+
+        logger.info(f"-> Creating data source: {data_source_id}")
+
+        try:
+            data_client.create_data_source(
+                **create_and_update_params,
+                Type='AURORA_POSTGRESQL',
+                Permissions=[
+                    {
+                        'Principal': quicksight_user['Arn'],
+                        'Actions': qs_datasource_perms,
+                    }
+                ],
+            )
+            logger.info(f"-> Created: {data_source_id}")
+
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceExistsException':
+                logger.info(
+                    f"-> Data source already exists: {data_source_id}. Updating ..."
+                )
+                data_client.update_data_source(**create_and_update_params)
+                logger.info(f"-> Updated data source: {data_source_id}")
+
+            else:
+                raise e
+
+        authorized_data_source_ids.add(data_source_id)
+
+    # Delete any data sources the user no longer has access to
+    all_data_source_ids = {
+        _get_data_source_id(db_name) for db_name in settings.DATABASES_DATA.keys()
+    }
+    unauthorized_data_source_ids = all_data_source_ids - {
+        _get_data_source_id(cred['memorable_name']) for cred in creds
+    }
+    logger.info(all_data_source_ids)
+    logger.info(unauthorized_data_source_ids)
+    for unauthorized_data_source_id in unauthorized_data_source_ids:
+        logger.info(f"-> Deleting data source: {unauthorized_data_source_id}")
+        try:
+            data_client.delete_data_source(
+                AwsAccountId=account_id, DataSourceId=unauthorized_data_source_id
+            )
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                pass
+
+            else:
+                raise e
+
+
+@celery_app.task()
+def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
+    try:
+        # Lightly enforce that only instance is running the task at a time. The job normally takes just a few minutes.
+        with cache.lock(
+            "sync-quicksight-permissions", blocking_timeout=360, timeout=3600
+        ):
+            logger.info(
+                f'sync_quicksight_user_datasources({user_sso_ids_to_update}) started'
+            )
+
+            # QuickSight manages users in a single specific regions
+            user_client = boto3.client(
+                'quicksight', region_name=settings.QUICKSIGHT_USER_REGION
+            )
+            # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
+            data_client = boto3.client('quicksight')
+
+            account_id = boto3.client('sts').get_caller_identity().get('Account')
+
+            quicksight_user_list: List[Dict[str, str]]
+            if len(user_sso_ids_to_update) > 0:
+                quicksight_user_list = [
+                    user_client.describe_user(
+                        AwsAccountId=account_id,
+                        Namespace='default',
+                        # \/ This is the format of the user name created by DIT SSO \/
+                        UserName=f'quicksight_federation/{user_sso_id}',
+                    )['User']
+                    for user_sso_id in user_sso_ids_to_update
+                ]
+
+            else:
+                quicksight_user_list: List[Dict[str, str]] = user_client.list_users(
+                    AwsAccountId=account_id, Namespace='default'
+                )['UserList']
+
+            for quicksight_user in quicksight_user_list:
+                user_arn = quicksight_user['Arn']
+                user_email = quicksight_user['Email']
+                user_role = quicksight_user['Role']
+
+                if user_role != 'AUTHOR' and user_role != 'ADMIN':
+                    logger.info(f"Skipping {user_email} with role {user_role}.")
+                    continue
+
+                dw_user = get_user_model().objects.filter(email=user_email).first()
+                if not dw_user:
+                    logger.info(
+                        f"Skipping {user_email} - cannot match with Data Workspace user."
+                    )
+                    continue
+                else:
+                    # We technically ignore the case for where a single email has multiple matches on DW, but I'm not
+                    # sure this is a case that can happen - and if it can, we don't care while prototyping.
+                    logger.info(f"Syncing QuickSight resources for {dw_user}")
+
+                source_tables = source_tables_for_user(dw_user)
+                db_role_schema_suffix = stable_identification_suffix(user_arn)
+
+                # This creates a DB user for each of our datasets DBs. These users are intended to be long-lived,
+                # so they might already exist. If this is the case, we still generate a new password, as at the moment
+                # these user accounts only last for 31 days by default - so we need to update the password to keep them
+                # from expiring.
+                creds = new_private_database_credentials(
+                    db_role_schema_suffix,
+                    source_tables,
+                    persistent_postgres_user(user_email, suffix='quicksight'),
+                    allow_existing_user=True,
+                )
+
+                create_update_delete_quicksight_user_data_sources(
+                    data_client, account_id, quicksight_user, creds
+                )
+
+            logger.info(
+                f'sync_quicksight_user_datasources({user_sso_ids_to_update}) finished'
+            )
+
+    except redis.exceptions.LockError:
+        pass

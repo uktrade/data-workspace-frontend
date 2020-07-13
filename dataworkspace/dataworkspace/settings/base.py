@@ -5,6 +5,7 @@ import os
 import urllib.request
 
 import sentry_sdk
+from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from dataworkspace.utils import normalise_environment
@@ -256,6 +257,11 @@ CELERY_BEAT_SCHEDULE = {
     'delete-unused-datasets-users': {
         'task': 'dataworkspace.apps.applications.utils.delete_unused_datasets_users',
         'schedule': 60 * 10,
+        'args': (),
+    },
+    'full-quicksight-permissions-sync': {
+        'task': 'dataworkspace.apps.applications.utils.sync_quicksight_permissions',
+        'schedule': crontab(minute=17, hour=1),
         'args': (),
     },
 }
