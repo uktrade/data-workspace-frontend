@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-07-14
+
+### Changed
+
+- The link to the 'Responsible for Information' e-learning course frm a `civilservicelearning.civilservice.gov.uk` URL to a `learn.civilservice.gov.uk` one.
+
 ## 2020-07-13
 
 ### Added
