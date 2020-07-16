@@ -579,6 +579,12 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
             linked_reference_dataset=linked_to_dataset,
         )
+        auto_id_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='auto id',
+            column_name='auto_id',
+            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
+        )
 
         # Add id and name fields to the linked to dataset
         ReferenceDatasetField.objects.create(
@@ -688,6 +694,17 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             if x.link is not None
         ]
         self.assertEqual(linked_names, list(reversed(sorted(linked_names))))
+
+        # Test sorting by auto id field
+        ref_dataset.sort_direction = ref_dataset.SORT_DIR_ASC
+        ref_dataset.sort_field = auto_id_field
+        ref_dataset.save()
+        ids = [x.auto_id for x in ref_dataset.get_records()]
+        self.assertEqual(ids, list(sorted(ids)))
+        ref_dataset.sort_direction = ref_dataset.SORT_DIR_DESC
+        ref_dataset.save()
+        ids = [x.auto_id for x in ref_dataset.get_records()]
+        self.assertEqual(ids, list(reversed(sorted(ids))))
 
 
 class TestSourceLinkModel(BaseTestCase):

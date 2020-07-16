@@ -909,6 +909,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     field.column_name,
                     field.linked_reference_dataset.display_name_field.column_name,
                 )
+            elif field.data_type == field.DATA_TYPE_AUTO_ID:
+                order = 'id'
         return [''.join([prefix, order])]
 
     def get_record_model_class(self) -> object:

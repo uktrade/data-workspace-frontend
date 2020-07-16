@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-07-16
+
+### Changed
+
+- Fix issue where sorting a reference dataset by auto id cause an error due to a missing column
+
 ## 2020-07-14
 
 ### Changed
