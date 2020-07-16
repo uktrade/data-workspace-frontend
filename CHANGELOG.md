@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fix issue where sorting a reference dataset by auto id cause an error due to a missing column
 
+### Added
+
+- More packages in Theia so it's more useful from the get-go
+
 ## 2020-07-14
 
 ### Changed
