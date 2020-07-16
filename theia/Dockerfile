@@ -68,6 +68,8 @@ RUN \
 COPY requirements.txt /root
 
 RUN \
+	python3 -m pip install pip --upgrade && \
+	pip3 install setuptools==49.2.0 --upgrade && \
 	pip3 install -r requirements.txt
 
 RUN \

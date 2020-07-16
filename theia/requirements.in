@@ -1,1 +1,4 @@
-pylint==2.5.3
+numpy
+pandas
+pylint==2.5.2
+tensorflow
