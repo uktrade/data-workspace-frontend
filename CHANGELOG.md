@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - More packages in Theia so it's more useful from the get-go
+- Sentry integration to the proxy.
 
 ## 2020-07-14
 
