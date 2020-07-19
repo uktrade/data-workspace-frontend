@@ -13,7 +13,7 @@ RUN \
 	apk add --no-cache --virtual .build-deps \
 		build-base=0.5-r1 \
 		git=2.22.4-r0 \
-		python3-dev=3.7.7-r0 \
+		python3-dev=3.7.7-r1 \
 		libffi-dev=3.2.1-r6 \
 		openssl-dev=1.1.1g-r0 \
 		linux-headers=4.19.36-r0 && \
@@ -23,7 +23,7 @@ RUN \
 		openssl=1.1.1g-r0 \
 		parallel=20190522-r0 \
 		py3-psycopg2=2.7.7-r1 \
-		python3=3.7.7-r0 && \
+		python3=3.7.7-r1 && \
 	rm /etc/nginx/conf.d/default.conf && \
 	rm /etc/nginx/nginx.conf && \
 	python3 -m ensurepip && \
