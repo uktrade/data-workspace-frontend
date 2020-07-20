@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Launch DNS resolver in a single fixed subnet: will be the same subnet as the upcoming EFS mount target
+- Add GTM initial events block to base template for injecting data before GTM startup (fix)
 
 ## 2020-07-19
 

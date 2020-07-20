@@ -1,12 +1,4 @@
 {% if not debug and gtm_container_id %}
-    <!-- Google Tag Manager's "Data Layer" -->
-    <script nonce="{{ request.csp_nonce }}">
-      window.dataLayer = window.dataLayer || [];
-    </script>
-    {% block extraGTMDataLayer %}
-    {% endblock %}
-    <!-- End Google Tag Manager's "Data Layer" -->
-
     <!-- Google Tag Manager -->
     <script nonce="{{ request.csp_nonce }}">
     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

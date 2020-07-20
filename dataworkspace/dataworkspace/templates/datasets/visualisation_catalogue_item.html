@@ -5,8 +5,11 @@
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
-{% block extraGTMDataLayer %}
-<script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "visualisation"})</script>
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}">
+    dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "visualisation"})
+  </script>
 {% endblock %}
 
 {% block breadcrumbs %}
