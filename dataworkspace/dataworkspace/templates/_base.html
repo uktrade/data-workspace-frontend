@@ -21,6 +21,14 @@
   <link rel="stylesheet" href="{% get_static_prefix %}govuk-frontend-including-fonts-3.3.0-v1.min.css">
   <link rel="stylesheet" href="{% get_static_prefix %}data-workspace.css">
 
+  {% if not debug and gtm_container_id %}
+    {% block initialGTMDataLayer %}
+      <script nonce="{{ request.csp_nonce }}">
+        window.dataLayer = window.dataLayer || [];
+      </script>
+    {% endblock %}
+  {% endif %}
+
   {% include 'partials/gtm_head.html' %}
 
   {% block head %}{% endblock %}

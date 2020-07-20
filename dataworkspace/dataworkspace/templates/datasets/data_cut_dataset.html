@@ -19,8 +19,9 @@
   {% endif %}
 {% endblock %}
 
-{% block extraGTMDataLayer %}
-<script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "datacut"})</script>
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "datacut"})</script>
 {% endblock %}
 
 {% block breadcrumbs %}

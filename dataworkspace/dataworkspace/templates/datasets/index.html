@@ -12,21 +12,22 @@
     <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}search.js"></script>
 {% endblock %}
 
-{% block extraGTMDataLayer %}
-<script nonce="{{ request.csp_nonce }}">
-  dataLayer.push(
-    {
-      "event": "filter",
-      "searchTerms": "{{ query }}",
-      "resultsReturned": {{ datasets.paginator.count }},
-      {% for field in form %}
-        {% if field.field|is_choice_field %}
-      "filterData{{ field.name | title }}": "{{ field | get_choice_field_data_for_gtm }}"{% if not forloop.last %},{% endif %}
-        {% endif %}
-      {% endfor %}
-    }
-  )
-</script>
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}">
+    dataLayer.push(
+      {
+        "event": "filter",
+        "searchTerms": "{{ query }}",
+        "resultsReturned": {{ datasets.paginator.count }},
+        {% for field in form %}
+          {% if field.field|is_choice_field %}
+        "filterData{{ field.name | title }}": "{{ field | get_choice_field_data_for_gtm }}"{% if not forloop.last %},{% endif %}
+          {% endif %}
+        {% endfor %}
+      }
+    )
+  </script>
 {% endblock %}
 
 {% block page_title %}Search - {{ block.super }}{% endblock %}

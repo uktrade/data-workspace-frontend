@@ -137,6 +137,20 @@ class TestDatasetViews:
         response = client.get(ds.get_absolute_url())
         assert response.status_code == 404
 
+    @override_settings(DEBUG=False, GTM_CONTAINER_ID="test")
+    @pytest.mark.parametrize(
+        'factory',
+        [
+            factories.MasterDataSetFactory,
+            factories.DatacutDataSetFactory,
+            factories.ReferenceDatasetFactory,
+        ],
+    )
+    def test_renders_gtm_push(self, client, factory):
+        ds = factory.create(published=True, deleted=False)
+        response = client.get(ds.get_absolute_url())
+        assert "dataLayer.push({" in response.content.decode(response.charset)
+
     @pytest.mark.parametrize(
         'request_client,published',
         [('client', True), ('staff_client', True), ('staff_client', False)],
