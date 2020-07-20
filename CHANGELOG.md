@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-07-20
+
+### Changed
+
+- Launch DNS resolver in a single fixed subnet: will be the same subnet as the upcoming EFS mount target
+
 ## 2020-07-19
 
 ### Changed
