@@ -6,7 +6,7 @@ resource "aws_ecs_service" "dnsmasq" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    subnets         = ["${aws_subnet.private_with_egress.*.id[0]}"]
     security_groups = ["${aws_security_group.dnsmasq.id}"]
   }
 }
