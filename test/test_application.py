@@ -1062,6 +1062,9 @@ class TestApplication(unittest.TestCase):
         await flush_database()
         await flush_redis()
 
+        cleanup_sentry, sentry_requests = await create_sentry()
+        self.add_async_cleanup(cleanup_sentry)
+
         session, cleanup_session = client_session()
         self.add_async_cleanup(cleanup_session)
 
@@ -1135,6 +1138,8 @@ class TestApplication(unittest.TestCase):
                 'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
                 'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
                 'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
+                "SENTRY_DSN": "http://foobar@localhost:8009/123",
+                "SENTRY_ENVIRONMENT": "Test",
             }
         )
         self.add_async_cleanup(cleanup_application)
@@ -1209,6 +1214,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(response.status, 200)
 
         # ... but not allowed to get to the application
+        assert len(sentry_requests) == 0
         async with session.request(
             'GET',
             'http://testapplication-23b40dd9.dataworkspace.test:8000/healthcheck',
@@ -1219,6 +1225,10 @@ class TestApplication(unittest.TestCase):
         # In production, hitting this URL without X-Forwarded-For should not
         # be possible, so a 500 is most appropriate
         self.assertEqual(response.status, 500)
+
+        # Check that sentry is reporting on 500s - the short sleep gives the lib enough time to fire it off.
+        await asyncio.sleep(1)
+        assert len(sentry_requests) == 1
 
         async with session.request(
             'GET',
@@ -1969,6 +1979,24 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn('Give access', content)
 
+    @async_test
+    async def test_sentry_dsn_does_not_stop_proxy_from_becoming_healthy(self):
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_sentry, sentry_requests = await create_sentry()
+        self.add_async_cleanup(cleanup_sentry)
+
+        cleanup_application = await create_application(
+            env=lambda: {
+                "SENTRY_DSN": "http://foobar@localhost:8009/123",
+                "SENTRY_ENVIRONMENT": "Test",
+            }
+        )
+        self.add_async_cleanup(cleanup_application)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -2060,6 +2088,24 @@ async def create_mirror():
     await mirror_site.start()
 
     return mirror_runner.cleanup
+
+
+async def create_sentry():
+    sentry_requests = []
+
+    async def handle(request):
+        nonlocal sentry_requests
+        sentry_requests.append(request)
+        return web.Response(text='OK', status=200)
+
+    sentry_app = web.Application()
+    sentry_app.add_routes([web.post('/{path:.*}', handle)])
+    sentry_runner = web.AppRunner(sentry_app)
+    await sentry_runner.setup()
+    sentry_site = web.TCPSite(sentry_runner, '0.0.0.0', 8009)
+    await sentry_site.start()
+
+    return sentry_runner.cleanup, sentry_requests
 
 
 # Run the application proper in a way that is as possible to production

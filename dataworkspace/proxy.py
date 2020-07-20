@@ -14,11 +14,13 @@ import uuid
 import urllib
 
 import aiohttp
+import sentry_sdk
 from aiohttp import web
 
 import aioredis
 from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yarl import URL
 
 from dataworkspace.utils import normalise_environment
@@ -1354,6 +1356,11 @@ async def async_main():
 
 
 def main():
+    if os.environ.get('SENTRY_DSN') is not None:
+        sentry_sdk.init(
+            os.environ['SENTRY_DSN'], integrations=[AioHttpIntegration()], debug=True
+        )
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(async_main())
 
