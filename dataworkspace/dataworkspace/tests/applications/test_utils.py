@@ -151,9 +151,6 @@ class TestSyncQuickSightPermissions:
             )
         ]
         mock_sts_client = mock.Mock()
-        mock_user_client.foo = 1
-        mock_data_client.foo = 2
-        mock_sts_client.foo = 3
         mock_boto3_client.side_effect = [
             mock_user_client,
             mock_data_client,
@@ -230,3 +227,58 @@ class TestSyncQuickSightPermissions:
                 DataSourceId='data-workspace-dev-test_external_db2-88f3887d',
             ),
         ]
+
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
+    @mock.patch('dataworkspace.apps.applications.utils.cache')
+    def test_missing_user_handled_gracefully(self, mock_cache, mock_boto3_client):
+        # Arrange
+        user = UserFactory.create(username='fake@email.com')
+        user2 = UserFactory.create(username='fake2@email.com')
+        SourceTableFactory(
+            dataset=MasterDataSetFactory.create(
+                user_access_type='REQUIRES_AUTHENTICATION'
+            )
+        )
+
+        mock_user_client = mock.Mock()
+        mock_user_client.describe_user.side_effect = [
+            botocore.exceptions.ClientError(
+                {
+                    "Error": {
+                        "Code": "ResourceNotFoundException",
+                        "Message": "User not found",
+                    }
+                },
+                'DescribeUser',
+            ),
+            {"User": {"Arn": "Arn", "Email": "fake2@email.com", "Role": "AUTHOR"}},
+        ]
+        mock_data_client = mock.Mock()
+        mock_sts_client = mock.Mock()
+        mock_boto3_client.side_effect = [
+            mock_user_client,
+            mock_data_client,
+            mock_sts_client,
+        ]
+
+        # Act
+        sync_quicksight_permissions(
+            user_sso_ids_to_update=[str(user.profile.sso_id), str(user2.profile.sso_id)]
+        )
+
+        # Assert
+        assert mock_user_client.describe_user.call_args_list == [
+            mock.call(
+                AwsAccountId=mock.ANY,
+                Namespace='default',
+                UserName=f'quicksight_federation/{user.profile.sso_id}',
+            ),
+            mock.call(
+                AwsAccountId=mock.ANY,
+                Namespace='default',
+                UserName=f'quicksight_federation/{user2.profile.sso_id}',
+            ),
+        ]
+        assert len(mock_data_client.create_data_source.call_args_list) == 1
+        assert len(mock_data_client.update_data_source.call_args_list) == 0
