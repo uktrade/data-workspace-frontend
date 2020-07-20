@@ -2838,3 +2838,93 @@ class TestDatasetAdminPytest:
             CustomDatasetQuery.objects.get(id=sql.id).reviewed
             == expected_reviewed_status
         )
+
+    @mock.patch("dataworkspace.apps.datasets.admin.sync_quicksight_permissions")
+    @pytest.mark.django_db
+    def test_master_dataset_permission_changes_calls_sync_job(
+        self, mock_sync, staff_client
+    ):
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='AUTHENTICATION'
+        )
+        source_table = factories.SourceTableFactory(
+            name='my-source', table='my_table', dataset=dataset,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '1',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-id': source_table.id,
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': source_table.name,
+                'sourcetable_set-0-database': str(source_table.database.id),
+                'sourcetable_set-0-schema': source_table.schema,
+                'sourcetable_set-0-frequency': source_table.frequency,
+                'sourcetable_set-0-table': source_table.table,
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert mock_sync.delay.call_args_list == [mock.call()]
+
+    @mock.patch("dataworkspace.apps.datasets.admin.sync_quicksight_permissions")
+    @pytest.mark.django_db
+    def test_master_dataset_authorized_user_changes_calls_sync_job(
+        self, mock_sync, staff_client
+    ):
+        user = factories.UserFactory()
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='AUTHORIZATION'
+        )
+        source_table = factories.SourceTableFactory(
+            name='my-source', table='my_table', dataset=dataset,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'authorized_users': str(user.id),
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '1',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-id': source_table.id,
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': source_table.name,
+                'sourcetable_set-0-database': str(source_table.database.id),
+                'sourcetable_set-0-schema': source_table.schema,
+                'sourcetable_set-0-frequency': source_table.frequency,
+                'sourcetable_set-0-table': source_table.table,
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert mock_sync.delay.call_args_list == [
+            mock.call(user_sso_ids_to_update=(str(user.profile.sso_id),))
+        ]

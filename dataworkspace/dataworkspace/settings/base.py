@@ -5,6 +5,7 @@ import os
 import urllib.request
 
 import sentry_sdk
+from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from dataworkspace.utils import normalise_environment
@@ -258,6 +259,11 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': 60 * 10,
         'args': (),
     },
+    'full-quicksight-permissions-sync': {
+        'task': 'dataworkspace.apps.applications.utils.sync_quicksight_permissions',
+        'schedule': crontab(minute=17, hour=1),
+        'args': (),
+    },
 }
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
 
@@ -371,7 +377,6 @@ REST_FRAMEWORK = {
 
 QUICKSIGHT_USER_REGION = env['QUICKSIGHT_USER_REGION']
 QUICKSIGHT_VPC_ARN = env['QUICKSIGHT_VPC_ARN']
-QUICKSIGHT_DATASOURCE_USER_ARN = env['QUICKSIGHT_DATASOURCE_USER_ARN']
 QUICKSIGHT_DASHBOARD_HOST = 'https://eu-west-2.quicksight.aws.amazon.com'  # For proof-of-concept: plan to remove this.
 QUICKSIGHT_DASHBOARD_GROUP = "DataWorkspace"
 QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN = env['QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN']

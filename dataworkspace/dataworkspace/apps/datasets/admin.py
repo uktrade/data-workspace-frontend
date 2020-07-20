@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import VisualisationTemplate
+from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -273,6 +274,8 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
         super().save_model(request, obj, form, change)
 
+        changed_user_sso_ids = set()
+
         for user in authorized_users - current_authorized_users:
             DataSetUserPermission.objects.create(dataset=obj, user=user)
             log_permission_change(
@@ -282,6 +285,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 {'for_user_id': user.id},
                 f"Added dataset {obj} permission",
             )
+            changed_user_sso_ids.add(str(user.profile.sso_id))
 
         for user in current_authorized_users - authorized_users:
             DataSetUserPermission.objects.filter(dataset=obj, user=user).delete()
@@ -292,6 +296,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 {'for_user_id': user.id},
                 f"Removed dataset {obj} permission",
             )
+            changed_user_sso_ids.add(str(user.profile.sso_id))
 
         if original_user_access_type != obj.user_access_type:
             log_permission_change(
@@ -301,6 +306,14 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 {"access_type": obj.user_access_type},
                 f"user_access_type set to {obj.user_access_type}",
             )
+
+        if isinstance(self, MasterDatasetAdmin):
+            if changed_user_sso_ids:
+                sync_quicksight_permissions.delay(
+                    user_sso_ids_to_update=tuple(changed_user_sso_ids)
+                )
+            elif original_user_access_type != obj.user_access_type:
+                sync_quicksight_permissions.delay()
 
 
 @admin.register(MasterDataset)
