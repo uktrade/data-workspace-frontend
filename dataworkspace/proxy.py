@@ -817,8 +817,12 @@ async def async_main():
             await downstream_ws.prepare(downstream_request)
             downstream_connection.set_result(downstream_ws)
 
-            async for msg in downstream_ws:
-                await proxy_msg(msg, upstream_ws)
+            try:
+                async for msg in downstream_ws:
+                    await proxy_msg(msg, upstream_ws)
+            except asyncio.CancelledError:
+                pass
+
         finally:
             upstream_task.cancel()
 
