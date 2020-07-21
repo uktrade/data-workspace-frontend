@@ -1,4 +1,5 @@
 from django import forms
+
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
@@ -8,6 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.db import transaction
 
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     DataSetUserPermission,
@@ -17,6 +19,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationUserPermission,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 
@@ -305,6 +308,7 @@ class AppUserAdmin(UserAdmin):
             )
         )
 
+        update_quicksight_permissions = False
         for dataset in authorized_datasets - current_datasets:
             DataSetUserPermission.objects.create(dataset=dataset, user=obj)
             log_permission_change(
@@ -314,6 +318,8 @@ class AppUserAdmin(UserAdmin):
                 serializers.serialize('python', [dataset])[0],
                 f"Added dataset {dataset} permission",
             )
+            if dataset.type == DataSetType.MASTER.value:
+                update_quicksight_permissions = True
 
         for dataset in current_datasets - authorized_datasets:
             DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
@@ -324,6 +330,8 @@ class AppUserAdmin(UserAdmin):
                 serializers.serialize('python', [dataset])[0],
                 f"Removed dataset {dataset} permission",
             )
+            if dataset.type == DataSetType.MASTER.value:
+                update_quicksight_permissions = True
 
         if 'authorized_visualisations' in form.cleaned_data:
             current_visualisations = VisualisationCatalogueItem.objects.filter(
@@ -362,6 +370,11 @@ class AppUserAdmin(UserAdmin):
                         ],
                         f"Removed application {visualisation_catalogue_item} permission",
                     )
+
+        if update_quicksight_permissions:
+            sync_quicksight_permissions.delay(
+                user_sso_ids_to_update=(str(obj.profile.sso_id),)
+            )
 
         super().save_model(request, obj, form, change)
 
