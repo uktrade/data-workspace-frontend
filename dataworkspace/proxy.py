@@ -922,10 +922,11 @@ async def async_main():
                 await downstream_response.prepare(downstream_request)
                 async for chunk in upstream_response.content.iter_any():
                     await downstream_response.write(chunk)
+
+            return downstream_response
+
         except asyncio.CancelledError:
             pass
-
-        return downstream_response
 
     def server_logger():
         @web.middleware
