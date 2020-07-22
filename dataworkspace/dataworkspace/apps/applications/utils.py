@@ -35,7 +35,7 @@ from dataworkspace.apps.core.utils import (
     stable_identification_suffix,
     source_tables_for_user,
     new_private_database_credentials,
-    persistent_postgres_user,
+    postgres_user,
 )
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
@@ -459,7 +459,10 @@ def _do_delete_unused_datasets_users():
             cur.execute(
                 """
                 SELECT usename FROM pg_catalog.pg_user
-                WHERE valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_quicksight'
+                WHERE
+                (valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_qs' AND usename NOT LIKE '%_quicksight')
+                OR
+                (valuntil != 'infinity' AND valuntil < now() AND usename LIKE 'user_%' AND usename LIKE '%_qs')
                 ORDER BY usename;
             """
             )
@@ -812,8 +815,10 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                 creds = new_private_database_credentials(
                     db_role_schema_suffix,
                     source_tables,
-                    persistent_postgres_user(user_email, suffix='quicksight'),
-                    allow_existing_user=True,
+                    postgres_user(user_email, suffix='qs'),
+                    valid_for=datetime.timedelta(
+                        days=7
+                    ),  # We refresh these creds every night, so they don't need to last long at all.
                 )
 
                 create_update_delete_quicksight_user_data_sources(

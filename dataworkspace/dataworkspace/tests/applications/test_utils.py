@@ -48,9 +48,10 @@ class TestDeleteUnusedDatasetsUsers:
 
 class TestSyncQuickSightPermissions:
     @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
     @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
     @mock.patch('dataworkspace.apps.applications.utils.cache')
-    def test_create_new_data_source(self, mock_cache, mock_boto3_client):
+    def test_create_new_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
         UserFactory.create(username='fake@email.com')
         SourceTableFactory(
@@ -70,6 +71,7 @@ class TestSyncQuickSightPermissions:
             mock_data_client,
             mock_sts_client,
         ]
+        mock_creds.return_value = [mock.Mock()]
 
         # Act
         sync_quicksight_permissions()
@@ -88,10 +90,7 @@ class TestSyncQuickSightPermissions:
                     }
                 },
                 Credentials={
-                    'CredentialPair': {
-                        'Username': 'user_fake_email_com_quicksight',
-                        'Password': mock.ANY,
-                    }
+                    'CredentialPair': {'Username': mock.ANY, 'Password': mock.ANY}
                 },
                 VpcConnectionProperties={'VpcConnectionArn': mock.ANY},
                 Type='AURORA_POSTGRESQL',
@@ -123,9 +122,12 @@ class TestSyncQuickSightPermissions:
         ]
 
     @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
     @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
     @mock.patch('dataworkspace.apps.applications.utils.cache')
-    def test_update_existing_data_source(self, mock_cache, mock_boto3_client):
+    def test_update_existing_data_source(
+        self, mock_cache, mock_boto3_client, mock_creds
+    ):
         # Arrange
         UserFactory.create(username='fake@email.com')
         SourceTableFactory(
@@ -174,10 +176,7 @@ class TestSyncQuickSightPermissions:
                     }
                 },
                 Credentials={
-                    'CredentialPair': {
-                        'Username': 'user_fake_email_com_quicksight',
-                        'Password': mock.ANY,
-                    }
+                    'CredentialPair': {'Username': mock.ANY, 'Password': mock.ANY}
                 },
                 VpcConnectionProperties={'VpcConnectionArn': mock.ANY},
                 Type='AURORA_POSTGRESQL',
@@ -206,10 +205,7 @@ class TestSyncQuickSightPermissions:
                     }
                 },
                 Credentials={
-                    'CredentialPair': {
-                        'Username': 'user_fake_email_com_quicksight',
-                        'Password': mock.ANY,
-                    }
+                    'CredentialPair': {'Username': mock.ANY, 'Password': mock.ANY}
                 },
                 VpcConnectionProperties={'VpcConnectionArn': mock.ANY},
             )
@@ -229,9 +225,12 @@ class TestSyncQuickSightPermissions:
         ]
 
     @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
     @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
     @mock.patch('dataworkspace.apps.applications.utils.cache')
-    def test_missing_user_handled_gracefully(self, mock_cache, mock_boto3_client):
+    def test_missing_user_handled_gracefully(
+        self, mock_cache, mock_boto3_client, mock_creds
+    ):
         # Arrange
         user = UserFactory.create(username='fake@email.com')
         user2 = UserFactory.create(username='fake2@email.com')
