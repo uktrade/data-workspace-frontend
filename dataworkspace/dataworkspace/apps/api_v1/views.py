@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import re
@@ -184,7 +185,10 @@ def application_api_PUT(request, public_host):
     )
 
     credentials = new_private_database_credentials(
-        db_role_schema_suffix, source_tables, db_user
+        db_role_schema_suffix,
+        source_tables,
+        db_user,
+        valid_for=datetime.timedelta(days=31),
     )
 
     if app_type == 'TOOL':

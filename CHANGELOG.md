@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-07-22
+
+### Changed
+
+- Quicksight users will now be immutable with a random slug to prevent overlaps, similar to application credentials. They will last 7 days and be deleted when they expire.
+
 ## 2020-07-21
 
 ### Changed
