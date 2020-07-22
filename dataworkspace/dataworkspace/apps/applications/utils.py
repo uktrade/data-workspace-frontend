@@ -460,7 +460,7 @@ def _do_delete_unused_datasets_users():
                 """
                 SELECT usename FROM pg_catalog.pg_user
                 WHERE
-                (valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_qs')
+                (valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_qs' AND usename NOT LIKE '%_quicksight')
                 OR
                 (valuntil != 'infinity' AND valuntil < now() AND usename LIKE 'user_%' AND usename LIKE '%_qs')
                 ORDER BY usename;
