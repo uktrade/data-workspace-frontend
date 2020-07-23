@@ -33,13 +33,13 @@ RUN \
 
 FROM base AS test
 
-COPY requirements-dev.txt requirements-dev.txt
 RUN apk add --no-cache \
         gcc \
         musl-dev \
         postgresql-dev \
         python3-dev
 
+COPY requirements-dev.txt requirements-dev.txt
 RUN pip3 install -r requirements-dev.txt
 
 COPY dataworkspace /dataworkspace

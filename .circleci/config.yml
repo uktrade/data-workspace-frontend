@@ -1,29 +1,101 @@
 version: 2
 
+restore-docker-cache: &restore-docker-cache
+  restore_cache:
+    keys:
+      - v1-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+      - v1-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}
+      - v1-docker-{{ checksum "Dockerfile" }}
+      - v1-docker
+
+save-docker-cache: &save-docker-cache
+  save_cache:
+    key: v1-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+    paths:
+      - "caches"
+
+load-docker-layers: &load-docker-layers
+  run:
+    name: Load docker layers
+    command: |
+      set +o pipefail
+      if [ -f caches/data-workspace-test-latest.tar.gz ]; then docker images; gunzip -c caches/data-workspace-test-latest.tar.gz | docker load; docker images; fi
+
+prepare-docker-cache: &prepare-docker-cache
+  run:
+    name: Prepare cache (docker layers and dockerfile/pip reqs)
+    command: |
+      mkdir -p caches
+      if sha256sum --check --status caches/checksums; then
+        # None of these files have changed, so the Docker layers _probably_ haven't changed either.
+        # Saving them is quite slow, so in this case let's not bother.
+       echo ''
+      else
+        docker-compose -f docker-compose-test.yml build data-workspace-test  | grep "\-\-\->" | grep -v "Using cache" | cut -f 3 -d " " > /tmp/layers.txt
+        docker save $(cat /tmp/layers.txt) | gzip > caches/data-workspace-test-latest.tar.gz
+        sha256sum Dockerfile requirements.txt requirements-dev.txt > caches/checksums
+      fi
+
 jobs:
-  docker-test:
+  docker-test-unit:
     docker:
       - image: circleci/python:3.7
     steps:
       - checkout
       - setup_remote_docker
+      - <<: *restore-docker-cache
+      - <<: *load-docker-layers
+      - run:
+          name: Build docker containers
+          command: make docker-build
+      - <<: *prepare-docker-cache
+      - <<: *save-docker-cache
       - run:
           name: Run test
           command: |
             touch .envs/dev.env
-            make docker-test
-  check-linting:
+            make docker-test-unit
+
+  docker-test-integration:
     docker:
       - image: circleci/python:3.7
     steps:
       - checkout
       - setup_remote_docker
+      - <<: *restore-docker-cache
+      - <<: *load-docker-layers
+      - run:
+          name: Build docker containers
+          command: make docker-build
+      - <<: *prepare-docker-cache
+      - <<: *save-docker-cache
+      - run:
+          name: Run test
+          command: |
+            touch .envs/dev.env
+            make docker-test-integration
+
+  check-linting:
+    docker:
+      - image: circleci/python:3.7
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+            - v1-python-{{ checksum "requirements.txt" }}
+            - v1-python
       - run:
           name: Install requirements
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements-dev.txt
+      - save_cache:
+          key: v1-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+          paths:
+            - "venv"
       - run:
           name: Run static checks
           command: |
@@ -34,5 +106,7 @@ workflows:
   version: 2
   build:
     jobs:
-      - docker-test
+      - docker-test-unit
+      - docker-test-integration
       - check-linting
+
