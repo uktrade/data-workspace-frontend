@@ -371,12 +371,12 @@ class AppUserAdmin(UserAdmin):
                         f"Removed application {visualisation_catalogue_item} permission",
                     )
 
+        super().save_model(request, obj, form, change)
+
         if update_quicksight_permissions:
             sync_quicksight_permissions.delay(
                 user_sso_ids_to_update=(str(obj.profile.sso_id),)
-            )
-
-        super().save_model(request, obj, form, change)
+            )g
 
     def sso_id(self, instance):
         return instance.profile.sso_id
