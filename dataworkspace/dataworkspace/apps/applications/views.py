@@ -173,9 +173,11 @@ def tools_html_GET(request):
         app = application_template.host_basename
         return f'{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
-    has_any_tool_perms = request.user.has_perm(
-        'applications.start_all_applications'
-    ) or request.user.has_perm('applications.access_appstream')
+    has_any_tool_perms = (
+        request.user.has_perm('applications.start_all_applications')
+        or request.user.has_perm('applications.access_appstream')
+        or request.user.has_perm('applications.access_quicksight')
+    )
     view_file = 'tools.html' if has_any_tool_perms else 'tools-unauthorised.html'
 
     return render(
@@ -194,6 +196,7 @@ def tools_html_GET(request):
                 for application_link in [link(application_template)]
             ],
             'appstream_url': settings.APPSTREAM_URL,
+            'quicksight_url': settings.QUICKSIGHT_SSO_URL,
             'your_files_enabled': settings.YOUR_FILES_ENABLED,
         },
     )

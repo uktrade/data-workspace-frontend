@@ -52,6 +52,11 @@ class AppUserEditForm(forms.ModelForm):
     can_access_appstream = forms.BooleanField(
         label='Can access AppStream', help_text='For SPSS and STATA', required=False
     )
+    can_access_quicksight = forms.BooleanField(
+        label='Can access QuickSight',
+        help_text='Note: the user must also be given separate access to AWS QuickSight via DIT SSO',
+        required=False,
+    )
     authorized_master_datasets = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('master datasets', False),
@@ -97,6 +102,11 @@ class AppUserEditForm(forms.ModelForm):
 
         self.fields['can_access_appstream'].initial = instance.user_permissions.filter(
             codename='access_appstream',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+
+        self.fields['can_access_quicksight'].initial = instance.user_permissions.filter(
+            codename='access_quicksight',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
@@ -161,6 +171,28 @@ class AppStreamFilter(admin.SimpleListFilter):
         return queryset
 
 
+class QuickSightfilter(admin.SimpleListFilter):
+    title = 'QuickSight access'
+    parameter_name = 'can_access_quicksight'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Can access AWS QuickSight'),
+            ('no', 'Cannot access AWS QuickSight'),
+        )
+
+    def queryset(self, request, queryset):
+        perm = Permission.objects.get(
+            codename='access_quicksight',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        if self.value() == 'yes':
+            return queryset.filter(user_permissions=perm)
+        if self.value() == 'no':
+            return queryset.exclude(user_permissions=perm)
+        return queryset
+
+
 @admin.register(get_user_model())
 class AppUserAdmin(UserAdmin):
     add_form_template = 'admin/change_form.html'
@@ -175,6 +207,7 @@ class AppUserAdmin(UserAdmin):
         'groups',
         LocalToolsFilter,
         AppStreamFilter,
+        QuickSightfilter,
     )
     form = AppUserEditForm
     fieldsets = [
@@ -186,6 +219,7 @@ class AppUserAdmin(UserAdmin):
                     'can_start_all_applications',
                     'can_develop_visualisations',
                     'can_access_appstream',
+                    'can_access_quicksight',
                     'is_staff',
                     'is_superuser',
                 ]
@@ -226,6 +260,10 @@ class AppUserAdmin(UserAdmin):
         )
         access_appstream_permission = Permission.objects.get(
             codename='access_appstream',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        access_quicksight_permission = Permission.objects.get(
+            codename='access_quicksight',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
 
@@ -293,6 +331,28 @@ class AppUserAdmin(UserAdmin):
                     EventLog.TYPE_REVOKED_USER_PERMISSION,
                     'can_access_appstream',
                     'Removed can_access_appstream permission',
+                )
+
+        if 'can_access_quicksight' in form.cleaned_data:
+            if (
+                form.cleaned_data['can_access_quicksight']
+                and access_quicksight_permission not in obj.user_permissions.all()
+            ):
+                obj.user_permissions.add(access_quicksight_permission)
+                log_change(
+                    EventLog.TYPE_GRANTED_USER_PERMISSION,
+                    'can_access_quicksight',
+                    'Added can_access_quicksight permission',
+                )
+            elif (
+                not form.cleaned_data['can_access_quicksight']
+                and access_quicksight_permission in obj.user_permissions.all()
+            ):
+                obj.user_permissions.remove(access_quicksight_permission)
+                log_change(
+                    EventLog.TYPE_REVOKED_USER_PERMISSION,
+                    'can_access_quicksight',
+                    'Removed can_access_quicksight permission',
                 )
 
         current_datasets = set(

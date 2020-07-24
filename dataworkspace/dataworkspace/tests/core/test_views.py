@@ -2,11 +2,19 @@ import mock
 
 import pytest
 from bs4 import BeautifulSoup
+from django.contrib.auth.models import Permission
+from django.test import override_settings, Client
 
 from django.urls import reverse
 from django.shortcuts import render
+from waffle.models import Switch
 
-from dataworkspace.tests.common import BaseTestCase, get_response_csp_as_set
+from dataworkspace.tests.common import (
+    BaseTestCase,
+    get_response_csp_as_set,
+    get_http_sso_data,
+)
+from dataworkspace.tests.factories import UserFactory
 
 
 class TestSupportView(BaseTestCase):
@@ -160,3 +168,34 @@ def test_tools_only_shown_for_users_with_permissions(request_client, expected_te
 
     assert response.status_code == 200
     assert renderer.call_args[0][1] == expected_template
+
+
+@pytest.mark.parametrize(
+    "has_quicksight_access, expected_href, expected_text",
+    (
+        (True, "https://quicksight", "Launch AWS QuickSight"),
+        (False, "/support-and-feedback/", "Request access"),
+    ),
+)
+@override_settings(QUICKSIGHT_SSO_URL='https://quicksight')
+@pytest.mark.django_db
+def test_quicksight_link_only_shown_to_user_with_permission(
+    has_quicksight_access, expected_href, expected_text
+):
+    user = UserFactory.create(is_staff=False, is_superuser=False)
+    perm = Permission.objects.get(codename='start_all_applications')
+    user.user_permissions.add(perm)
+    if has_quicksight_access:
+        perm = Permission.objects.get(codename='access_quicksight')
+        user.user_permissions.add(perm)
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    switch = Switch(name='enable_quicksight_button', active=True)
+    switch.save()
+
+    response = client.get(reverse("applications:tools"))
+
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    quicksight_link = soup.find('a', href=True, text=expected_text)
+    assert quicksight_link.get('href') == expected_href
