@@ -1,5 +1,6 @@
 {% extends '_main.html' %}
 {% load static %}
+{% load waffle_tags %}
 
 {% block page_title %}Tools - {{ block.super }}{% endblock %}
 
@@ -111,5 +112,19 @@
                 </dd>
             </div>
         {% endif %}
+        {% switch "enable_quicksight_button" %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    AWS QuickSight
+                </dt>
+                <dd class="govuk-summary-list__actions">
+                  {% if perms.applications.access_quicksight %}
+                    <a class="govuk-button tool-launch-button" href="{{ quicksight_url }}">Launch AWS QuickSight</a>
+                  {% else %}
+                    <a class="govuk-button tool-launch-button" href="{% url 'support' %}">Request access</a>
+                  {% endif %}
+                </dd>
+            </div>
+        {% endswitch %}
     </dl>
 {% endblock %}

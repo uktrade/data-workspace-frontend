@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-07-24
+
+### Added
+
+- Link to launch AWS QuickSight on tools page (with new permissions checks and feature flag).
+
 ## 2020-07-22
 
 ### Changed
