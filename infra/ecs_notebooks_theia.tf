@@ -56,6 +56,7 @@ data "template_file" "theia_container_definitions" {
     log_region = "${data.aws_region.aws_region.name}"
 
     sentry_dsn = "${var.sentry_dsn}"
+    sentry_environment = "${var.sentry_environment}"
 
     metrics_container_image = "${var.metrics_container_image}:master"
     s3sync_container_image = "${var.s3sync_container_image}:master"

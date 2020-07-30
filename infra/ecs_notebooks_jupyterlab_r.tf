@@ -57,6 +57,7 @@ data "template_file" "jupyterlabr_container_definitions" {
     log_region = "${data.aws_region.aws_region.name}"
 
     sentry_dsn = "${var.sentry_dsn}"
+    sentry_environment = "${var.sentry_environment}"
 
     metrics_container_image = "${var.metrics_container_image}:${data.external.jupyterlabr_metrics_current_tag.result.tag}"
     s3sync_container_image = "${var.s3sync_container_image}:${data.external.jupyterlabr_s3sync_current_tag.result.tag}"

@@ -68,6 +68,7 @@ variable "mirrors_sync_container_image" {}
 variable "mirrors_data_bucket_name" {}
 
 variable "sentry_dsn" {}
+variable "sentry_environment" {}
 
 variable "notebook_task_role_prefix" {}
 variable "notebook_task_role_policy_name" {}

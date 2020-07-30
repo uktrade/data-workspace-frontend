@@ -16,7 +16,13 @@
         "awslogs-stream-prefix": "${container_name}"
       }
     },
-    "environment": [],
+    "environment": [{
+      "name": "SENTRY_DSN",
+      "value": "${sentry_dsn}"
+    },{
+      "name": "SENTRY_ENVIRONMENT",
+      "value": "${sentry_environment}"
+    }],
     "mountPoints": [{
       "sourceVolume": "home_directory",
       "containerPath": "${home_directory}"
