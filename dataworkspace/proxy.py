@@ -817,11 +817,8 @@ async def async_main():
             await downstream_ws.prepare(downstream_request)
             downstream_connection.set_result(downstream_ws)
 
-            try:
-                async for msg in downstream_ws:
-                    await proxy_msg(msg, upstream_ws)
-            except asyncio.CancelledError:
-                pass
+            async for msg in downstream_ws:
+                await proxy_msg(msg, upstream_ws)
 
         finally:
             upstream_task.cancel()
@@ -898,35 +895,30 @@ async def async_main():
             downstream_request.content
         # fmt: on
 
-        try:
-            async with client_session.request(
-                upstream_method,
-                str(upstream_url),
-                params=upstream_query,
-                headers=upstream_headers,
-                data=data,
-                allow_redirects=False,
-                timeout=timeout,
-            ) as upstream_response:
+        async with client_session.request(
+            upstream_method,
+            str(upstream_url),
+            params=upstream_query,
+            headers=upstream_headers,
+            data=data,
+            allow_redirects=False,
+            timeout=timeout,
+        ) as upstream_response:
 
-                _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
-                downstream_response = await with_session_cookie(
-                    web.StreamResponse(
-                        status=upstream_response.status,
-                        headers=CIMultiDict(
-                            without_transfer_encoding(upstream_response)
-                            + response_headers
-                        ),
-                    )
+            _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
+            downstream_response = await with_session_cookie(
+                web.StreamResponse(
+                    status=upstream_response.status,
+                    headers=CIMultiDict(
+                        without_transfer_encoding(upstream_response) + response_headers
+                    ),
                 )
-                await downstream_response.prepare(downstream_request)
-                async for chunk in upstream_response.content.iter_any():
-                    await downstream_response.write(chunk)
+            )
+            await downstream_response.prepare(downstream_request)
+            async for chunk in upstream_response.content.iter_any():
+                await downstream_response.write(chunk)
 
-            return downstream_response
-
-        except asyncio.CancelledError:
-            pass
+        return downstream_response
 
     def server_logger():
         @web.middleware
