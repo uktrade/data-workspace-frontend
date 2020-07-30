@@ -247,7 +247,7 @@ class FargateSpawner:
                     update_fields=['spawner_application_instance_id']
                 )
 
-                for _ in range(0, 600):
+                for _ in range(0, 900):
                     gevent.sleep(3)
                     pipeline = _gitlab_ecr_pipeline_get(pipeline_id)
                     logger.info('Fetched pipeline %s', pipeline)

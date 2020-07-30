@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Bump mobius3 to version that better supports EFS
+- GitLab pipelines to build e.g. visualisastions now have 45 minutes to complete, up from 30.
 
 ## 2020-07-24
 
