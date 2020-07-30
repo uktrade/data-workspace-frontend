@@ -796,7 +796,11 @@ async def async_main():
                     upstream_connection.set_exception(exception)
                 raise
             finally:
-                await downstream_ws.close()
+                try:
+                    await downstream_ws.close()
+                except UnboundLocalError:
+                    # If we didn't get to the line that creates `downstream_ws`
+                    pass
 
         # This is slightly convoluted, but aiohttp documents that reading
         # from websockets should be done in the same task as the websocket was
