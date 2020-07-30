@@ -18,6 +18,7 @@ import sentry_sdk
 from aiohttp import web
 
 import aioredis
+from elasticapm.contrib.aiohttp import ElasticAPM
 from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -1356,6 +1357,23 @@ async def async_main():
                 ]
             ]
         )
+
+        elastic_apm_url = env.get("ELASTIC_APM_URL")
+        elastic_apm_secret_token = env.get("ELASTIC_APM_SECRET_TOKEN")
+        elastic_apm = (
+            {
+                'SERVICE_NAME': 'data-workspace',
+                'SECRET_TOKEN': elastic_apm_secret_token,
+                'SERVER_URL': elastic_apm_url,
+                'ENVIRONMENT': env.get('ENVIRONMENT', 'development'),
+            }
+            if elastic_apm_secret_token
+            else {}
+        )
+
+        app['ELASTIC_APM'] = elastic_apm
+
+        ElasticAPM(app)
 
         runner = web.AppRunner(app)
         await runner.setup()
