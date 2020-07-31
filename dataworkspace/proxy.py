@@ -14,7 +14,6 @@ import uuid
 import urllib
 
 import aiohttp
-import sentry_sdk
 from aiohttp import web
 
 import aioredis
@@ -1379,10 +1378,9 @@ async def async_main():
 
 
 def main():
-    if os.environ.get('SENTRY_DSN') is not None:
-        sentry_sdk.init(
-            os.environ['SENTRY_DSN'], integrations=[AioHttpIntegration()], debug=True
-        )
+    from sentry import init_sentry
+
+    init_sentry(integration=AioHttpIntegration())
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(async_main())
