@@ -1,6 +1,6 @@
 {% load core_tags %}
 <div class="govuk-form-group{% if field.errors %} govuk-form-group--error{% endif %}">
-  <label class="govuk-label" for="{{ field.id }}">
+  <label class="govuk-label" for="{{ field.id_for_label }}">
     {{ field.label }}
   </label>
   {% if field.help_text %}
