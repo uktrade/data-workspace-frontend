@@ -4,11 +4,13 @@ import json
 import os
 import urllib.request
 
-import sentry_sdk
 from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
 
+import sentry
 from dataworkspace.utils import normalise_environment
+
+sentry.init_sentry(integration=DjangoIntegration())
 
 env = normalise_environment(os.environ)
 
@@ -288,9 +290,6 @@ S3_PERMISSIONS_BOUNDARY_ARN = env['S3_PERMISSIONS_BOUNDARY_ARN']
 S3_ROLE_PREFIX = env['S3_ROLE_PREFIX']
 
 YOUR_FILES_ENABLED = env.get('YOUR_FILES_ENABLED', 'False') == 'True'
-
-if env.get('SENTRY_DSN') is not None:
-    sentry_sdk.init(env['SENTRY_DSN'], integrations=[DjangoIntegration()])
 
 
 CKEDITOR_CONFIGS = {
