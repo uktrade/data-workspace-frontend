@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Sentry setup to be centralised, and start to group certain errors so they're easier to handle.
+- Open help centre link in a new tab.
 
 ## 2020-07-30
 

@@ -103,9 +103,7 @@ def test_header_links(request_client):
     soup = BeautifulSoup(response.content.decode(response.charset))
     header_links = soup.find("header").find_all("a")
 
-    link_labels = [
-        (link.get_text(strip=True), link.get('href')) for link in header_links
-    ]
+    link_labels = [(link.get_text().strip(), link.get('href')) for link in header_links]
 
     expected_links = [
         ("Data Workspace", "http://dataworkspace.test:8000/"),
@@ -113,7 +111,10 @@ def test_header_links(request_client):
         ("Tools", "/tools/"),
         ("About", "/about/"),
         ("Support and feedback", "/support-and-feedback/"),
-        ("Help centre", "https://data-services-help.trade.gov.uk/data-workspace"),
+        (
+            "Help centre (opens in a new tab)",
+            "https://data-services-help.trade.gov.uk/data-workspace",
+        ),
     ]
 
     assert link_labels == expected_links
@@ -128,16 +129,17 @@ def test_footer_links(request_client):
     soup = BeautifulSoup(response.content.decode(response.charset))
     footer_links = soup.find("footer").find_all("a")
 
-    link_labels = [
-        (link.get_text(strip=True), link.get('href')) for link in footer_links
-    ]
+    link_labels = [(link.get_text().strip(), link.get('href')) for link in footer_links]
 
     expected_links = [
         ('Home', 'http://dataworkspace.test:8000/'),
         ("Tools", "/tools/"),
         ('About', '/about/'),
         ("Support and feedback", "/support-and-feedback/"),
-        ('Help centre', 'https://data-services-help.trade.gov.uk/data-workspace'),
+        (
+            'Help centre (opens in a new tab)',
+            'https://data-services-help.trade.gov.uk/data-workspace',
+        ),
         (
             'Privacy Policy',
             'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
