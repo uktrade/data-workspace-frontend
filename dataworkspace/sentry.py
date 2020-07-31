@@ -2,6 +2,7 @@ import os
 from asyncio import CancelledError
 
 import sentry_sdk
+from aiohttp import ServerDisconnectedError
 
 
 def before_send(event, hint):
@@ -15,6 +16,8 @@ def before_send(event, hint):
         event['fingerprint'] = ['cancelled-error', '{{ module }}']
     elif isinstance(exception, ConnectionResetError):
         event['fingerprint'] = ['connection-reset-error', '{{ module }}']
+    elif isinstance(exception, ServerDisconnectedError):
+        event['fingerprint'] = ['server-disconnected-error', '{{ module }}']
 
     return event
 
