@@ -15,7 +15,7 @@ cp .envs/sample.env .envs/dev.env
 and edit `dev.env`, specifically replacing `AUTHBROKER_*`. Start the application by
 
 ```bash
-docker-compose up --build
+docker-compose -f docker-compose-dev.yml up --build
 ```
 
 With the default environment, you will need the below in your `/etc/hosts` file.
