@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import re
+import time
 
 import boto3
 
@@ -304,6 +305,8 @@ def aws_credentials_api_GET(request):
             if i == max_attempts - 1:
                 raise
         else:
+            # To try compensating for eventual consistency
+            time.sleep(5)
             break
 
     return JsonResponse(
