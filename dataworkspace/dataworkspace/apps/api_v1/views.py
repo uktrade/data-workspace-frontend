@@ -2,9 +2,9 @@ import datetime
 import json
 import logging
 import re
-import time
 
 import boto3
+import gevent
 
 from django.conf import settings
 from django.db import IntegrityError
@@ -306,7 +306,7 @@ def aws_credentials_api_GET(request):
                 raise
         else:
             # To try compensating for eventual consistency
-            time.sleep(5)
+            gevent.sleep(1)
             break
 
     return JsonResponse(
