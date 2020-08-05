@@ -4,6 +4,7 @@ import logging
 import re
 
 import boto3
+import gevent
 
 from django.conf import settings
 from django.db import IntegrityError
@@ -304,6 +305,8 @@ def aws_credentials_api_GET(request):
             if i == max_attempts - 1:
                 raise
         else:
+            # To try compensating for eventual consistency
+            gevent.sleep(1)
             break
 
     return JsonResponse(
