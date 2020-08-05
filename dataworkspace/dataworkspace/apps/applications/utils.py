@@ -176,12 +176,15 @@ def get_api_visible_application_instance_by_public_host(public_host):
 
 
 def application_api_is_allowed(request, public_host):
-    (
-        application_template,
-        _,
-        host_user,
-        commit_id,
-    ) = application_template_tag_user_commit_from_host(public_host)
+    try:
+        (
+            application_template,
+            _,
+            host_user,
+            commit_id,
+        ) = application_template_tag_user_commit_from_host(public_host)
+    except ApplicationTemplate.DoesNotExist:
+        return False
 
     visualisation_catalogue_item = None
     if application_template.application_type == 'VISUALISATION':
