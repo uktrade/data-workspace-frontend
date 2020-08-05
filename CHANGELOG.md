@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-08-05
+
+### Added
+
+- '6-monthly' and 'ad hoc' frequencies to datasets.
+
 ## 2020-07-31
 
 ### Changed
