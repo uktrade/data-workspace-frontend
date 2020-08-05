@@ -62,7 +62,14 @@ class TestSyncQuickSightPermissions:
 
         mock_user_client = mock.Mock()
         mock_user_client.list_users.return_value = {
-            "UserList": [{"Arn": "Arn", "Email": "fake@email.com", "Role": "AUTHOR"}]
+            "UserList": [
+                {
+                    "Arn": "Arn",
+                    "Email": "fake@email.com",
+                    "Role": "AUTHOR",
+                    "UserName": "user/fake@email.com",
+                }
+            ]
         }
         mock_data_client = mock.Mock()
         mock_sts_client = mock.Mock()
@@ -77,6 +84,16 @@ class TestSyncQuickSightPermissions:
         sync_quicksight_permissions()
 
         # Assert
+        assert mock_user_client.update_user.call_args_list == [
+            mock.call(
+                AwsAccountId=mock.ANY,
+                Namespace='default',
+                Role='AUTHOR',
+                CustomPermissionsName='author-custom-permissions',
+                UserName='user/fake@email.com',
+                Email='fake@email.com',
+            )
+        ]
         assert mock_data_client.create_data_source.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
@@ -138,7 +155,14 @@ class TestSyncQuickSightPermissions:
 
         mock_user_client = mock.Mock()
         mock_user_client.list_users.return_value = {
-            "UserList": [{"Arn": "Arn", "Email": "fake@email.com", "Role": "AUTHOR"}]
+            "UserList": [
+                {
+                    "Arn": "Arn",
+                    "Email": "fake@email.com",
+                    "Role": "AUTHOR",
+                    "UserName": "user/fake@email.com",
+                }
+            ]
         }
         mock_data_client = mock.Mock()
         mock_data_client.create_data_source.side_effect = [
@@ -163,6 +187,16 @@ class TestSyncQuickSightPermissions:
         sync_quicksight_permissions()
 
         # Assert
+        assert mock_user_client.update_user.call_args_list == [
+            mock.call(
+                AwsAccountId=mock.ANY,
+                Namespace='default',
+                Role='AUTHOR',
+                CustomPermissionsName='author-custom-permissions',
+                UserName='user/fake@email.com',
+                Email='fake@email.com',
+            )
+        ]
         assert mock_data_client.create_data_source.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
@@ -251,7 +285,14 @@ class TestSyncQuickSightPermissions:
                 },
                 'DescribeUser',
             ),
-            {"User": {"Arn": "Arn", "Email": "fake2@email.com", "Role": "AUTHOR"}},
+            {
+                "User": {
+                    "Arn": "Arn",
+                    "Email": "fake2@email.com",
+                    "Role": "ADMIN",
+                    "UserName": "user/fake2@email.com",
+                }
+            },
         ]
         mock_data_client = mock.Mock()
         mock_sts_client = mock.Mock()
@@ -267,6 +308,16 @@ class TestSyncQuickSightPermissions:
         )
 
         # Assert
+        assert mock_user_client.update_user.call_args_list == [
+            mock.call(
+                AwsAccountId=mock.ANY,
+                Namespace='default',
+                Role='ADMIN',
+                UnapplyCustomPermissions=True,
+                UserName='user/fake2@email.com',
+                Email='fake2@email.com',
+            )
+        ]
         assert mock_user_client.describe_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,

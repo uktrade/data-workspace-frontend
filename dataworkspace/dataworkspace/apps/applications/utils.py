@@ -789,10 +789,30 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                 user_arn = quicksight_user['Arn']
                 user_email = quicksight_user['Email']
                 user_role = quicksight_user['Role']
+                user_username = quicksight_user['UserName']
 
                 if user_role != 'AUTHOR' and user_role != 'ADMIN':
                     logger.info(f"Skipping {user_email} with role {user_role}.")
                     continue
+
+                if user_role == "ADMIN":
+                    user_client.update_user(
+                        AwsAccountId=account_id,
+                        Namespace='default',
+                        Role=user_role,
+                        UnapplyCustomPermissions=True,
+                        UserName=user_username,
+                        Email=user_email,
+                    )
+                else:
+                    user_client.update_user(
+                        AwsAccountId=account_id,
+                        Namespace="default",
+                        Role=user_role,
+                        CustomPermissionsName=settings.QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS,
+                        UserName=user_username,
+                        Email=user_email,
+                    )
 
                 dw_user = get_user_model().objects.filter(email=user_email).first()
                 if not dw_user:
