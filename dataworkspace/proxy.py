@@ -314,23 +314,21 @@ async def async_main():
                 return await handle_metabase(downstream_request, method, path, query)
             return await handle_admin(downstream_request, method, path, query)
         except Exception as exception:
-            logger.exception(
-                'Exception during %s %s %s',
-                downstream_request.method,
-                downstream_request.url,
-                type(exception),
-            )
+            user_exception = isinstance(exception, UserException)
+            if not user_exception or (user_exception and exception.args[1] == 500):
+                logger.exception(
+                    'Exception during %s %s %s',
+                    downstream_request.method,
+                    downstream_request.url,
+                    type(exception),
+                )
 
             if is_websocket:
                 raise
 
-            params = (
-                {'message': exception.args[0]}
-                if isinstance(exception, UserException)
-                else {}
-            )
+            params = {'message': exception.args[0]} if user_exception else {}
 
-            status = exception.args[1] if isinstance(exception, UserException) else 500
+            status = exception.args[1] if user_exception else 500
 
             return await handle_http(
                 downstream_request,
