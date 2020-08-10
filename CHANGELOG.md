@@ -10,6 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Two new fields to the application template (tool) model: application summary and application help link, to enable upcoming changes to the tools page.
 
+### Changed
+
+- The tools page to include a high-level summary of the features of a tool.
+
+### Removed
+
+- The "unauthorised to use tools" page.
+
 ## 2020-08-05
 
 ### Added

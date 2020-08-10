@@ -1,5 +1,6 @@
 import datetime
 
+
 import hashlib
 import itertools
 import random
@@ -173,27 +174,21 @@ def tools_html_GET(request):
         app = application_template.host_basename
         return f'{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
 
-    has_any_tool_perms = (
-        request.user.has_perm('applications.start_all_applications')
-        or request.user.has_perm('applications.access_appstream')
-        or request.user.has_perm('applications.access_quicksight')
-    )
-    view_file = 'tools.html' if has_any_tool_perms else 'tools-unauthorised.html'
-
     return render(
         request,
-        view_file,
+        'tools.html',
         {
             'applications': [
                 {
                     'nice_name': application_template.nice_name,
                     'link': link(application_template),
                     'instance': application_instances.get(application_template, None),
+                    'summary': application_template.application_summary,
+                    'help_link': application_template.application_help_link,
                 }
                 for application_template in ApplicationTemplate.objects.all()
                 .filter(visible=True, application_type='TOOL')
                 .order_by('nice_name')
-                for application_link in [link(application_template)]
             ],
             'appstream_url': settings.APPSTREAM_URL,
             'quicksight_url': settings.QUICKSIGHT_SSO_URL,
