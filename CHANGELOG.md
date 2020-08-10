@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Remove unnecessary utf8 BOM write from csv downloads
+
+## 2020-08-05
+
+### Added
+
 - '6-monthly' and 'ad hoc' frequencies to datasets.
 
 ## 2020-07-31
