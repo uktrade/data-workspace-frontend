@@ -76,6 +76,20 @@ class ApplicationTemplate(TimeStampedModel):
         unique=True,
         help_text='The ID of the corresponding project in GitLab',
     )
+    application_summary = models.CharField(
+        max_length=255,
+        null=False,
+        blank=True,
+        unique=False,
+        help_text="A few sentences describing the high-level features of this tool.",
+    )
+    application_help_link = models.URLField(
+        max_length=1024,
+        null=False,
+        blank=True,
+        unique=False,
+        help_text='A link to a Help Centre article that explains how to use this tool.',
+    )
 
     class Meta:
         db_table = 'app_applicationtemplate'

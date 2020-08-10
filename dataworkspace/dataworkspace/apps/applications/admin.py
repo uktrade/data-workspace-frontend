@@ -10,6 +10,7 @@ from django.core import serializers
 from django.db import transaction
 from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
 from django.db.models.functions import Least
+from django.forms import Textarea
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -366,6 +367,7 @@ class ToolTemplateEditForm(forms.ModelForm):
     class Meta:
         model = ApplicationTemplate
         fields = '__all__'
+        widgets = {"application_summary": Textarea, "spawner_options": Textarea}
 
 
 @admin.register(ToolTemplate)
@@ -380,6 +382,8 @@ class ToolTemplateAdmin(admin.ModelAdmin):
                 'fields': [
                     'host_basename',
                     'nice_name',
+                    'application_summary',
+                    'application_help_link',
                     'spawner',
                     'spawner_time',
                     'spawner_options',
