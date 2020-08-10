@@ -367,7 +367,7 @@ class ToolTemplateEditForm(forms.ModelForm):
     class Meta:
         model = ApplicationTemplate
         fields = '__all__'
-        widgets = {"application_summary": Textarea}
+        widgets = {"application_summary": Textarea, "spawner_options": Textarea}
 
 
 @admin.register(ToolTemplate)
