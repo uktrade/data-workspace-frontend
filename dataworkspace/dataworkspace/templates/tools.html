@@ -6,36 +6,36 @@
 
 {% block head %}
     {{ block.super }}
-    <style>
-        .tool-launch-button {
-            display: inline-block;
-            min-width: 12.8em;
-        }
-        .tool-stop-button {
-            display: inline-block;
-        }
-        .govuk-summary-list__key {
-            vertical-align: middle;
-        }
-        @media (min-width: 40.0625em) {
-            .inline-form-group {
-                display: inline-block;
-                margin-bottom: 0;
-            }
-        }
-        @media (min-width: 40.0625em) {
-            .tool-launch-button,
-            .tool-stop-button {
-                margin-bottom: 0;
-            }
-            .govuk-summary-list__key {
-                width: 20%;
-            }
-            .govuk-summary-list__actions {
-                width: 80%;
-            }
-        }
-    </style>
+{#    <style>#}
+{#        .tool-launch-button {#}
+{#            display: inline-block;#}
+{#            min-width: 12.8em;#}
+{#        }#}
+{#        .tool-stop-button {#}
+{#            display: inline-block;#}
+{#        }#}
+{#        .govuk-summary-list__key {#}
+{#            vertical-align: middle;#}
+{#        }#}
+{#        @media (min-width: 40.0625em) {#}
+{#            .inline-form-group {#}
+{#                display: inline-block;#}
+{#                margin-bottom: 0;#}
+{#            }#}
+{#        }#}
+{#        @media (min-width: 40.0625em) {#}
+{#            .tool-launch-button,#}
+{#            .tool-stop-button {#}
+{#                margin-bottom: 0;#}
+{#            }#}
+{#            .govuk-summary-list__key {#}
+{#                width: 20%;#}
+{#            }#}
+{#            .govuk-summary-list__actions {#}
+{#                width: 80%;#}
+{#            }#}
+{#        }#}
+{#    </style>#}
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -53,78 +53,61 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="govuk-heading-l">Tools</h1>
+    <h1 class="govuk-heading-xl">Tools</h1>
 
-    <p class="govuk-body">The department is charged for the CPU and memory allocated to each tool. Please choose only the CPU and memory you need.</p>
+    <div class="govuk-grid-row govuk-!-margin-bottom-6">
+      <div class="govuk-grid-column-two-thirds">
+        <p class="govuk-body">
+          Data Workspace offers access to a range of analysis tools that you can use with datasets in the catalogue.
+        </p>
 
-    <dl class="govuk-summary-list govuk-summary-list">
-        {% if perms.applications.start_all_applications %}
-            {% for application in applications %}
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">
-                        {{ application.nice_name }}
-                    </dt>
-                    <dd class="govuk-summary-list__actions">
-                        {% if application.instance %}
-                            <form action="{% url 'applications:tools' %}" method="POST" style="display: inline">
-                                {% csrf_token %}
-                                <input type="hidden" name="redirect_target" value="applications:tools">
-                                <button class="govuk-button govuk-button--secondary tool-stop-button"
-                                        name="public_host" value="{{ application.instance.public_host }}"
-                                        type="submit">Stop
-                                </button>
-                            </form>
-                        {% endif %}
-                        <form action="{{ application.link }}" method="GET" style="display: inline-block">
-                            {% if not application.instance %}
-                                <div class="govuk-form-group inline-form-group">
-                                  <select class="govuk-select" id="sort" name="__memory_cpu">
-                                    <option value="512_256">Small: 0.25 CPU, 0.5GB of memory</option>
-                                    <option value="8192_1024" selected>Default: 1 CPU, 8GB of memory</option>
-                                    <option value="16384_2048">Large: 2 CPU, 16GB of memory</option>
-                                    <option value="30720_4096">Extra large: 4 CPU, 30GB of memory</option>
-                                  </select>
-                                </div>
-                            {% endif %}
-                            <button class="govuk-button tool-launch-button">Launch {{ application.nice_name }}</button>
-                        </form>
-                    </dd>
-                </div>
-            {% endfor %}
-            {% if your_files_enabled %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    Your files
-                </dt>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-button tool-launch-button" href="{% url 'files' %}">Launch your files</a>
-                </dd>
-            </div>
-            {% endif %}
-        {% endif %}
-        {% if appstream_url != "https:///" and perms.applications.access_appstream %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    SPSS / STATA
-                </dt>
-                <dd class="govuk-summary-list__actions">
-                    <a class="govuk-button tool-launch-button" href="{{ appstream_url }}">Launch SPSS / STATA</a>
-                </dd>
-            </div>
-        {% endif %}
-        {% switch "enable_quicksight_button" %}
-            <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">
-                    AWS QuickSight
-                </dt>
-                <dd class="govuk-summary-list__actions">
-                  {% if perms.applications.access_quicksight %}
-                    <a class="govuk-button tool-launch-button" href="{{ quicksight_url }}">Launch AWS QuickSight</a>
-                  {% else %}
-                    <a class="govuk-button tool-launch-button" href="{% url 'support' %}">Request access</a>
-                  {% endif %}
-                </dd>
-            </div>
-        {% endswitch %}
-    </dl>
+        <p class="govuk-body">
+          These are powerful and versatile tools aimed at analysts and data scientists.
+          They require some familiarity with coding languages such as Python, R or SQL.
+          Find out more about the tools and how to start using them in
+          <a class="govuk-link" href="https://data-services-help.trade.gov.uk">the Help Centre.</a>
+        </p>
+      </div>
+    </div>
+
+    {% for application in applications %}
+      {% include 'partials/tool_section.html' with application_name=application.nice_name application_summary=application.summary application_help_link=application.help_link instance=application.instance application_url=application.link customisable_instance=True has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
+    {% endfor %}
+
+    {% if your_files_enabled %}
+      {% url 'files' as files_url %}
+      {% with application_summary='Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use "Your files" to upload files to this folder, and download files from this folder.' %}
+        {% include 'partials/tool_section.html' with application_name="Your files" application_summary=application_summary application_help_link=None instance=None application_url=files_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
+      {% endwith %}
+    {% endif %}
+
+    {% if appstream_url != "https:///" and perms.applications.access_appstream %}
+      {% with spss_stata_url='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/' %}
+        {% with spss_state_help_link='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/' %}
+          {% with application_summary='SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.' %}
+            {% include 'partials/tool_section.html' with application_name="SPSS / STATA" application_summary=application_summary application_help_link=spss_state_help_link instance=None application_url=spss_stata_url customisable_instance=False has_access=True trailing_horizontal_rule=True %}
+          {% endwith %}
+        {% endwith %}
+      {% endwith %}
+    {% endif %}
+
+    {% with application_summary='QuickSight is a visualisations tool supplied by Amazon Web Services (AWS). Use it to create and share dashboards using data from Data Workspace.' %}
+      {% include 'partials/tool_section.html' with application_name="AWS QuickSight" application_summary=application_summary application_help_link=None instance=None application_url=quicksight_url customisable_instance=False has_access=perms.applications.access_quicksight trailing_horizontal_rule=False %}
+    {% endwith %}
+
+    <div class="govuk-grid-row govuk-!-margin-top-9">
+      <div class="govuk-grid-column-two-thirds">
+        <h2 class="govuk-heading-l">Access requirements and request workflow</h2>
+        <p class="govuk-body">
+          Users will need to have completed the
+          <a class="govuk-link" href="https://app.ihasco.co.uk/lgjg02" target="_blank" rel="noopener noreferrer">GDPR Essentials</a> and
+          <a class="govuk-link" href="https://learn.civilservice.gov.uk/courses/-20CQRZLS4qIPaCW8rF58g" target="_blank" rel="noopener noreferrer">Responsible for Information</a>
+          online training before they can access tools. You can find more information in the article
+          <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-workspace-basics/how-do-i-request-access-tool/" target="_blank" rel="noopener noreferrer">How do I request access to a tool</a>.
+        </p>
+        <p class="govuk-body">
+          We will action your request within 5 working days.
+        </p>
+      </div>
+    </div>
 {% endblock %}
