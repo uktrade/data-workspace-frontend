@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-08-12
+
+### Changed
+
+- Specified sizes on SVGs in the Your Files page to make it more reasonable without CSS
+
 ## 2020-08-10
 
 ### Added
