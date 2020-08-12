@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Specified sizes on SVGs in the Your Files page to make it more reasonable without CSS
+- The modals of the Your Files page to not have the HTML in the DOM until they're needed, to make the page more reasonable without CSS
 
 ## 2020-08-10
 
