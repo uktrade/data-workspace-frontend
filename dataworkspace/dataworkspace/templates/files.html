@@ -46,7 +46,7 @@ Modified by the Department for International Trade
     <!-- Icons provided by Font Awesome https://fontawesome.com/license -->
     <div ng-app="aws-js-s3-explorer">
         <div modal="add-folder" class="modal" ng-controller="AddFolderController" tabindex="-1" role="dialog" aria-labelledby="add-folder-title" aria-hidden="true" ng-cloak>
-            <form class="modal-dialog" name="add_folder_form" ng-submit="addFolder()">
+            <form class="modal-dialog" name="add_folder_form" ng-submit="addFolder()" ng-if="modalVisible">
                 <div class="modal-header">
                     <h2 class="modal-title govuk-heading-m" id="add-folder-title">New folder</h2>
                 </div>
@@ -70,7 +70,7 @@ Modified by the Department for International Trade
         </div>
 
         <div modal="trash" class="modal" ng-controller="TrashController" tabindex="-1" role="dialog" aria-labelledby="trash-title" aria-hidden="true" ng-cloak>
-            <div class="modal-dialog modal-xl">
+            <div class="modal-dialog modal-xl" ng-if="modalVisible">
                 <div class="modal-header">
                     <h2 class="modal-title govuk-heading-m" id="trash-title">Confirm delete of {{ model.count }} file{{ ((model.count > 1) ? 's' : '') }} </h2>
                 </div>
@@ -125,7 +125,7 @@ Modified by the Department for International Trade
         </div>
 
         <div modal="error" class="modal" ng-controller="ErrorController" tabindex="-1" role="dialog" aria-labelledby="error-title" aria-hidden="true" ng-cloak>
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg" ng-if="modalVisible">
                 <div class="modal-header">
                     <h2 class="modal-title govuk-heading-m" id="error-title">Error {{ error.code ? '(' + error.code + ')' : '' }}</h2>
                 </div>
@@ -153,7 +153,7 @@ Modified by the Department for International Trade
         </div>
 
         <div modal="upload" class="modal" ng-controller="UploadController" tabindex="-1" role="dialog" aria-labelledby="upload-title" aria-hidden="true" ng-cloak>
-            <div class="modal-dialog modal-xl">
+            <div class="modal-dialog modal-xl" ng-if="modalVisible">
                 <div class="modal-header">
                     <h2 class="modal-title govuk-heading-m" id="upload-title">Upload to {{ model.folder }}</h2>
                 </div>
