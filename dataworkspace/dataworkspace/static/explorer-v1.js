@@ -480,21 +480,31 @@ angular.module('aws-js-s3-explorer').directive('modal', () => {
     backdrop.className = 'modal-backdrop';
     document.body.appendChild(backdrop);
 
+    // Without CSS, we don't get transitionend events
+    var cssEnabled = window.getComputedStyle(backdrop).getPropertyValue('visibility') == 'hidden';
+
     return {
         link: function(scope, element, attrs) {
             var name = attrs.modal;
-            element[0].addEventListener('click', close);
-            element[0].firstElementChild.addEventListener('click', (event) => {
+            element[0].addEventListener('click', (event) => {
                 event.stopPropagation();
+                // Don't close if clicking anywhere inside the modal, e.g. on a button
+                if (event.target == element[0]) {
+                    close();
+                }
             });
             function open() {
+                scope.modalVisible = true;
                 backdrop.classList.remove('modal-backdrop-out');
                 backdrop.classList.add('modal-backdrop-in');
                 element[0].classList.remove('modal-out');
                 element[0].classList.add('modal-in');
                 element[0].removeAttribute('aria-hidden');
-                element[0].addEventListener('transitionend', broadcastOpenEnd);
+                element[0].removeEventListener('transitionend', onCloseEnd);
+                element[0].addEventListener('transitionend', onOpenEnd);
                 document.addEventListener('keydown', closeIfEscape);
+
+                if (!cssEnabled) broadcastOpenEnd();
             }
             function close() {
                 backdrop.classList.remove('modal-backdrop-in');
@@ -503,18 +513,34 @@ angular.module('aws-js-s3-explorer').directive('modal', () => {
                 element[0].classList.add('modal-out');
                 element[0].setAttribute('aria-hidden', 'true');
                 document.removeEventListener('keydown', closeIfEscape);
-                element[0].removeEventListener('transitionend', broadcastOpenEnd);
+                element[0].removeEventListener('transitionend', onOpenEnd);
+                element[0].addEventListener('transitionend', onCloseEnd);
+
+                if (!cssEnabled) hideHtml();
             }
             function closeIfEscape(event) {
                 if (event.key === 'Escape') {
                     close();
                 }
             }
-            function broadcastOpenEnd(e) {
-                // A bit brittle WRT the transitions, but KISS
+
+            // A bit brittle WRT the transitions, but KISS
+            function onCloseEnd(e) {
                 if (e.propertyName == 'top') {
-                    scope.$broadcast('modal::open-end::' + name)
+                    hideHtml();
+                    scope.$digest();
                 }
+            }
+            function hideHtml() {
+                scope.modalVisible = false;
+            }
+            function onOpenEnd(e) {
+                if (e.propertyName == 'top') {
+                    broadcastOpenEnd();
+                }
+            }
+            function broadcastOpenEnd() {
+              scope.$broadcast('modal::open-end::' + name);
             }
             scope.$on('modal::open::' + name, open);
             scope.$on('modal::close::' + name, close);
