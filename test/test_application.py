@@ -61,6 +61,8 @@ class TestApplication(unittest.TestCase):
 
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
 
+        _, _, _ = await make_all_tools_visible()
+
         # Ensure the user doesn't see the application link since they don't
         # have permission
         async with session.request(
@@ -2123,6 +2125,28 @@ async def create_application(env=lambda: {}):
             pass
 
     return _cleanup_application
+
+
+async def make_all_tools_visible():
+    python_code = textwrap.dedent(
+        """\
+        from dataworkspace.apps.applications.models import (
+            ApplicationTemplate,
+        )
+        ApplicationTemplate.objects.all().update(visible=True)
+        """
+    ).encode('ascii')
+    make_visible = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await make_visible.communicate(python_code)
+    code = await make_visible.wait()
+
+    return stdout, stderr, code
 
 
 async def until_succeeds(url):
