@@ -957,7 +957,7 @@
 },
 {
   "name": "APPLICATION_TEMPLATES__12__VISIBLE",
-  "value": "False"
+  "value": "True"
 },
 {
   "name": "APPLICATION_TEMPLATES__12__HOST_BASENAME",
