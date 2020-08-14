@@ -568,6 +568,9 @@ def _do_delete_unused_datasets_users():
                             'delete_unused_datasets_users: dropping user %s', usename
                         )
                         cur.execute(
+                            sql.SQL('DROP OWNED BY {};').format(sql.Identifier(usename))
+                        )
+                        cur.execute(
                             sql.SQL('DROP USER {};').format(sql.Identifier(usename))
                         )
                     except redis.exceptions.LockError:
