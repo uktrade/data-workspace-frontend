@@ -1,5 +1,6 @@
 import json
 
+
 from django.db import IntegrityError
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -39,7 +40,7 @@ class Command(BaseCommand):
             )
             try:
                 ApplicationTemplate.objects.create(
-                    visible=desired_application_template['VISIBLE'] == 'True',
+                    visible=False,
                     host_basename=desired_application_template['HOST_BASENAME'],
                     nice_name=desired_application_template['NICE_NAME'],
                     spawner=desired_application_template['SPAWNER'],
@@ -52,7 +53,6 @@ class Command(BaseCommand):
                 template = ApplicationTemplate.objects.get(
                     host_basename=desired_application_template['HOST_BASENAME']
                 )
-                template.visible = desired_application_template['VISIBLE'] == 'True'
                 template.nice_name = desired_application_template['NICE_NAME']
                 template.spawner = desired_application_template['SPAWNER']
                 template.spawner_time = int(

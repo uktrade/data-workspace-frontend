@@ -56,10 +56,6 @@
       "value": "${notebook_task_role__permissions_boundary_arn}"
     }, 
     {
-      "name": "APPLICATION_TEMPLATES__1__VISIBLE",
-      "value": "False"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__1__HOST_BASENAME",
       "value": "jupyterlab"
     },
@@ -172,10 +168,6 @@
       "value": "${notebooks_bucket}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__2__VISIBLE",
-      "value": "True"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__2__HOST_BASENAME",
       "value": "rstudio"
     },
@@ -268,10 +260,6 @@
       "value": "${notebooks_bucket}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__3__VISIBLE",
-      "value": "True"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__3__HOST_BASENAME",
       "value": "pgadmin"
     },
@@ -354,10 +342,6 @@
     {
       "name": "APPLICATION_TEMPLATES__3__SPAWNER_OPTIONS__S3_BUCKET",
       "value": "${notebooks_bucket}"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__5__VISIBLE",
-      "value": "True"
     },
     {
       "name": "APPLICATION_TEMPLATES__5__HOST_BASENAME",
@@ -444,10 +428,6 @@
       "value": "${notebooks_bucket}"
     },
     {
-      "name": "APPLICATION_TEMPLATES__6__VISIBLE",
-      "value": "True"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__6__HOST_BASENAME",
       "value": "jupyterlabr"
     },
@@ -532,10 +512,6 @@
       "value": "${notebooks_bucket}"
     },
 {
-  "name": "APPLICATION_TEMPLATES__7__VISIBLE",
-  "value": "False"
-},
-{
   "name": "APPLICATION_TEMPLATES__7__HOST_BASENAME",
   "value": "metabase"
 },
@@ -614,10 +590,6 @@
 {
   "name": "APPLICATION_TEMPLATES__7__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
-},
-{
-  "name": "APPLICATION_TEMPLATES__8__VISIBLE",
-  "value": "False"
 },
 {
   "name": "APPLICATION_TEMPLATES__8__HOST_BASENAME",
@@ -700,10 +672,6 @@
   "value": "${notebooks_bucket}"
 },
 {
-  "name": "APPLICATION_TEMPLATES__9__VISIBLE",
-  "value": "False"
-},
-{
   "name": "APPLICATION_TEMPLATES__9__HOST_BASENAME",
   "value": "remotedesktop"
 },
@@ -782,10 +750,6 @@
 {
   "name": "APPLICATION_TEMPLATES__9__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
-},
-{
-  "name": "APPLICATION_TEMPLATES__10__VISIBLE",
-  "value": "True"
 },
 {
   "name": "APPLICATION_TEMPLATES__10__HOST_BASENAME",
@@ -872,10 +836,6 @@
   "value": "${notebooks_bucket}"
 },
 {
-  "name": "APPLICATION_TEMPLATES__11__VISIBLE",
-  "value": "False"
-},
-{
   "name": "APPLICATION_TEMPLATES__11__HOST_BASENAME",
   "value": "superset"
 },
@@ -954,10 +914,6 @@
 {
   "name": "APPLICATION_TEMPLATES__11__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
-},
-{
-  "name": "APPLICATION_TEMPLATES__12__VISIBLE",
-  "value": "True"
 },
 {
   "name": "APPLICATION_TEMPLATES__12__HOST_BASENAME",
