@@ -310,7 +310,7 @@ close(conn)</pre></code>
     <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}explorer-v1.js"></script>
     <script nonce="{{ request.csp_nonce }}">
 {% verbatim %}
-    angular.module('aws-js-s3-explorer').factory('Config', () => {
+    angular.module('aws-js-s3-explorer').factory('Config', function() {
         return {
             region: 'eu-west-2',
             bucket: '{% endverbatim %}{{ bucket }}{% verbatim %}',
