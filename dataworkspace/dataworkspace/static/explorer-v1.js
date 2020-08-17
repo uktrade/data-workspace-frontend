@@ -380,12 +380,21 @@ angular.module('aws-js-s3-explorer').controller('UploadController', (s3, $scope,
 });
 
 angular.module('aws-js-s3-explorer').controller('ErrorController', ($scope) => {
+    // Not using Object.entries for IE11 support
+    function objEntries(obj) {
+        var ownProps = Object.keys(obj);
+        var i = ownProps.length;
+        var resArray = new Array(i);
+        while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+        return resArray;
+    }
+
     $scope.$on('error', (e, args) => {
         const { params, err } = args;
 
         const message = err && 'message' in err ? err.message : '';
         const code = err && 'code' in err ? err.code : '';
-        const errors = Object.entries(err || {}).map(([key, value]) => ({ key, value }));
+        const errors = objEntries(err || {}).map(([key, value]) => ({ key, value }));
 
         $scope.error = { params, message, code, errors };
         $scope.$broadcast('modal::open::error');
