@@ -575,7 +575,7 @@ angular.module('aws-js-s3-explorer').directive('modal', () => {
     };
 });
 
-angular.module('aws-js-s3-explorer').directive('onFileChange', () => {
+angular.module('aws-js-s3-explorer').directive('onFileChange', ($timeout) => {
     return {
         scope: {
             onFileChange: '&'
@@ -590,7 +590,10 @@ angular.module('aws-js-s3-explorer').directive('onFileChange', () => {
                     file.relativePath = file.name;
                     files.push(file);
                 }
-                scope.$apply(() => {
+                // In IE11, we seem to be in a digest, but in Chrome/FF, we're not. So we trigger
+                // the callback in a $timeout to safely jump out of a digest if we're in one, and
+                // into another. The change happens on a click, so short delay here is fine
+                $timeout(function () {
                     scope.onFileChange({files: files});
                 });
             });
