@@ -85,6 +85,10 @@ angular.module('aws-js-s3-explorer').run(($rootScope) => {
 });
 
 angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $rootScope, $scope) => {
+    function startsWith(string, search) {
+        return string.substring(0, search.length) === search;
+    }
+
     var originalPrefix = Config.prefix;
     var currentPrefix = Config.prefix;
 
@@ -188,7 +192,7 @@ angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $
                     return object.Key != prefix;
                 });
                 $scope.initialising = false;
-                $scope.inBigdata = currentPrefix.startsWith(originalPrefix + Config.bigdataPrefix);
+                $scope.inBigdata = startsWith(currentPrefix, originalPrefix + Config.bigdataPrefix);
             });
         } catch (err) {
             $scope.$apply(() => {
