@@ -17,6 +17,20 @@
 angular.module('aws-js-s3-explorer', []);
 
 angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
+    function fetchJSON(url) {
+        return new Promise((resolve, reject) => {
+          function resolveJSON() {
+            resolve(JSON.parse(oReq.responseText));
+          }
+
+          var oReq = new XMLHttpRequest();
+          oReq.addEventListener('load', resolveJSON);
+          oReq.addEventListener('error', reject);
+          oReq.open('GET', url);
+          oReq.send();
+        });
+      }
+
     class Credentials extends AWS.Credentials {
         constructor() {
             super();
@@ -25,7 +39,7 @@ angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
 
         async refresh(callback) {
             try {
-                var response = await (await fetch(Config.credentialsUrl)).json();
+                var response = await fetchJSON(Config.credentialsUrl);
             } catch(err) {
                 callback(err);
                 return
