@@ -5,10 +5,8 @@ import hashlib
 import itertools
 import random
 import re
-import time
 from urllib.parse import urlsplit
 
-import jwt
 from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
 from django.contrib import messages
@@ -221,27 +219,6 @@ def tools_html_POST(request):
     return redirect(redirect_target)
 
 
-@csp_update(FRAME_SRC=settings.METABASE_SITE_URL)
-def _get_embedded_metabase_dashboard(request, dashboard_id: int):
-    payload = {
-        "resource": {"dashboard": dashboard_id},
-        "params": {},
-        "exp": round(time.time()) + 600,
-    }
-    token = jwt.encode(
-        payload, settings.METABASE_EMBEDDING_SECRET_KEY, algorithm="HS256"
-    )
-
-    return render(
-        request,
-        "running.html",
-        {
-            "visualisation_src": f"//{settings.METABASE_SITE_URL.rstrip('/')}/embed/dashboard/{token.decode('utf8')}#bordered=false&titled=false",
-            "wrap": "IFRAME_WITH_VISUALISATIONS_HEADER",
-        },
-    )
-
-
 @csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
 def _get_embedded_quicksight_dashboard(request, dashboard_id):
     dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(
@@ -270,9 +247,7 @@ def visualisation_link_html_view(request, link_id):
         return HttpResponse(status=403)
 
     identifier = visualisation_link.identifier
-    if visualisation_link.visualisation_type == 'METABASE':
-        return _get_embedded_metabase_dashboard(request, int(identifier))
-    elif visualisation_link.visualisation_type == 'QUICKSIGHT':
+    if visualisation_link.visualisation_type == 'QUICKSIGHT':
         return _get_embedded_quicksight_dashboard(request, identifier)
     elif visualisation_link.visualisation_type == 'DATASTUDIO':
         return redirect(identifier)

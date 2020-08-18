@@ -60,18 +60,6 @@ resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_gitlab_runner" {
   protocol    = "udp"
 }
 
-resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_metabase_multiuser_service" {
-  description = "ingress-dns-udp-metabase-multiuser-service"
-
-  security_group_id = "${aws_security_group.dnsmasq.id}"
-  source_security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
-}
-
 resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_superset_multiuser_service" {
   description = "ingress-dns-udp-superset-multiuser-service"
 
@@ -153,18 +141,6 @@ resource "aws_security_group_rule" "registry_alb_ingress_https_from_notebooks" {
 
   security_group_id = "${aws_security_group.registry_alb.id}"
   source_security_group_id = "${aws_security_group.notebooks.id}"
-
-  type        = "ingress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "registry_alb_ingress_https_from_metabase_multiuser_service" {
-  description = "ingress-https-from-metabase"
-
-  security_group_id = "${aws_security_group.registry_alb.id}"
-  source_security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
 
   type        = "ingress"
   from_port   = "443"
@@ -366,18 +342,6 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_superset_lb" {
 
   security_group_id = "${aws_security_group.admin_service.id}"
   source_security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "admin_service_egress_http_to_metabase_lb" {
-  description = "egress-http-to-gitlab-service"
-
-  security_group_id = "${aws_security_group.admin_service.id}"
-  source_security_group_id = "${aws_security_group.metabase_multiuser_lb.id}"
 
   type        = "egress"
   from_port   = "443"
@@ -1222,32 +1186,6 @@ resource "aws_security_group_rule" "gitlab_runner_egress_https" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group" "metabase_multiuser_db" {
-  name        = "${var.prefix}-metabase-multiuser-db"
-  description = "${var.prefix}-metabase-multiuser-db"
-  vpc_id      = "${aws_vpc.notebooks.id}"
-
-  tags {
-    Name = "${var.prefix}-metabase-multiuser-db"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_security_group_rule" "metabase_multiuser_db_ingress_postgres_metabase_service" {
-  description = "ingress-postgress-metabase-service"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_db.id}"
-  source_security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-
-  type        = "ingress"
-  from_port   = "5432"
-  to_port     = "5432"
-  protocol    = "tcp"
-}
-
 resource "aws_security_group" "superset_multiuser_db" {
   name        = "${var.prefix}-superset-multiuser-db"
   description = "${var.prefix}-superset-multiuser-db"
@@ -1272,80 +1210,6 @@ resource "aws_security_group_rule" "superset_multiuser_db_ingress_postgres_super
   from_port   = "5432"
   to_port     = "5432"
   protocol    = "tcp"
-}
-
-resource "aws_security_group" "metabase_multiuser_service" {
-  name        = "${var.prefix}-metabase-multiuser-service"
-  description = "${var.prefix}-metabase-multiuser-service"
-  vpc_id      = "${aws_vpc.notebooks.id}"
-
-  tags {
-    Name = "${var.prefix}-metabase-multiuser-service"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_security_group_rule" "metabase_service_ingress_http_metabase_lb" {
-  description = "ingress-metabase-lb"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.metabase_multiuser_lb.id}"
-
-  type        = "ingress"
-  from_port   = "8000"
-  to_port     = "8000"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "metabase_service_egress_postgres_metabase_db" {
-  description = "egress-postgress-metabase-db"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.metabase_multiuser_db.id}"
-
-  type        = "egress"
-  from_port   = "5432"
-  to_port     = "5432"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "metabase_multiuser_service_egress_https_registry_alb" {
-  description = "egress-https-to-registry"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.registry_alb.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "metabase_multiuser_service_egress_https_to_cloudwatch" {
-  description = "egress-https-to-cloudwatch"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.cloudwatch.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "metabase_multiuser_service_egress_dns_udp_to_dnsmasq" {
-  description = "egress-dns-to-dnsmasq"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.dnsmasq.id}"
-
-  type        = "egress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
 }
 
 resource "aws_security_group" "superset_multiuser_service" {
@@ -1420,44 +1284,6 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to
   from_port   = "53"
   to_port     = "53"
   protocol    = "udp"
-}
-
-resource "aws_security_group" "metabase_multiuser_lb" {
-  name        = "${var.prefix}-metabase-multiuser-lb"
-  description = "${var.prefix}-metabase-multiuser-lb"
-  vpc_id      = "${aws_vpc.notebooks.id}"
-
-  tags {
-    Name = "${var.prefix}-metabase-multiuser-lb"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_security_group_rule" "metabase_lb_ingress_http_admin_service" {
-  description = "ingress-http-admin-service"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_lb.id}"
-  source_security_group_id = "${aws_security_group.admin_service.id}"
-
-  type        = "ingress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "metabase_lb_egress_http_metabase_service" {
-  description = "egress-http-metabase-service"
-
-  security_group_id = "${aws_security_group.metabase_multiuser_lb.id}"
-  source_security_group_id = "${aws_security_group.metabase_multiuser_service.id}"
-
-  type        = "egress"
-  from_port   = "8000"
-  to_port     = "8000"
-  protocol    = "tcp"
 }
 
 resource "aws_security_group" "superset_multiuser_lb" {

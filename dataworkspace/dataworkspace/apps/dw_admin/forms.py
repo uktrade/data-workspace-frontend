@@ -494,11 +494,7 @@ class VisualisationLinkForm(forms.ModelForm):
         if not visualisation_type:
             return identifier
 
-        if visualisation_type == 'METABASE':
-            if identifier and not identifier.isnumeric():
-                raise ValidationError('Metabase identifiers must be numeric.')
-
-        elif visualisation_type == 'QUICKSIGHT':
+        if visualisation_type == 'QUICKSIGHT':
             try:
                 uuid.UUID(identifier)
             except ValueError:
