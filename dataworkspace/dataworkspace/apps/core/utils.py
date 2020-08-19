@@ -46,7 +46,7 @@ def postgres_user(stem, suffix=''):
 
 
 def db_role_schema_suffix_for_user(user):
-    return hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest()[:8]
+    return stable_identification_suffix(str(user.profile.sso_id), short=True)
 
 
 def db_role_schema_suffix_for_app(application_template):
@@ -270,7 +270,7 @@ def write_credentials_to_bucket(user, creds):
         s3_client = boto3.client('s3')
         s3_prefix = (
             'user/federated/'
-            + hashlib.sha256(str(user.profile.sso_id).encode('utf-8')).hexdigest()
+            + stable_identification_suffix(str(user.profile.sso_id), short=False)
             + '/'
         )
 
@@ -548,9 +548,7 @@ def table_data(user_email, database, schema, table, filename=None):
 
 def get_s3_prefix(user_sso_id):
     return (
-        'user/federated/'
-        + hashlib.sha256(user_sso_id.encode('utf-8')).hexdigest()
-        + '/'
+        'user/federated/' + stable_identification_suffix(user_sso_id, short=False) + '/'
     )
 
 
@@ -652,5 +650,8 @@ class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
             connection.close_if_unusable_or_obsolete()
 
 
-def stable_identification_suffix(identifier):
-    return hashlib.sha256(identifier.encode('utf-8')).hexdigest()[:8]
+def stable_identification_suffix(identifier, short):
+    digest = hashlib.sha256(identifier.encode('utf-8')).hexdigest()
+    if short:
+        return digest[:8]
+    return digest

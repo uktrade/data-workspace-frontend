@@ -3,7 +3,6 @@
 
 import datetime
 
-import hashlib
 import json
 import logging
 import os
@@ -25,7 +24,7 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4,
     gitlab_api_v4_ecr_pipeline_trigger,
 )
-from dataworkspace.apps.core.utils import create_s3_role
+from dataworkspace.apps.core.utils import create_s3_role, stable_identification_suffix
 
 logger = logging.getLogger('app')
 
@@ -265,9 +264,7 @@ class FargateSpawner:
 
             # It doesn't really matter what the suffix is: it could even be a random
             # number, but we choose the short hashed version of the SSO ID to help debugging
-            task_family_suffix = hashlib.sha256(
-                user_sso_id.encode('utf-8')
-            ).hexdigest()[:8]
+            task_family_suffix = stable_identification_suffix(user_sso_id, short=True)
             definition_arn_with_image = _fargate_new_task_definition(
                 definition_arn, container_name, tag, task_family_suffix
             )

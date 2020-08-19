@@ -1,5 +1,4 @@
 import datetime
-import hashlib
 import json
 import logging
 import urllib.parse
@@ -150,10 +149,9 @@ def api_application_dict(application_instance):
         application_instance.state if spawner_state == 'RUNNING' else spawner_state
     )
 
-    sso_id_hex = hashlib.sha256(
-        str(application_instance.owner.profile.sso_id).encode('utf-8')
-    ).hexdigest()
-    sso_id_hex_short = sso_id_hex[:8]
+    sso_id_hex_short = stable_identification_suffix(
+        str(application_instance.owner.profile.sso_id), short=True
+    )
 
     return {
         'proxy_url': application_instance.proxy_url,
@@ -192,16 +190,15 @@ def application_api_is_allowed(request, public_host):
             visualisation_template=application_template
         )
 
-    request_sso_id_hex = hashlib.sha256(
-        str(request.user.profile.sso_id).encode('utf-8')
-    ).hexdigest()
-
+    request_sso_id_hex_short = stable_identification_suffix(
+        str(request.user.profile.sso_id), short=True
+    )
     is_preview = commit_id is not None
 
     def is_tool_and_correct_user_and_allowed_to_start():
         return (
             application_template.application_type == 'TOOL'
-            and host_user == request_sso_id_hex[:8]
+            and host_user == request_sso_id_hex_short
             and request.user.has_perm('applications.start_all_applications')
         )
 
@@ -658,7 +655,7 @@ def create_update_delete_quicksight_user_data_sources(
             + "-"
             + db_name
             + "-"
-            + stable_identification_suffix(quicksight_user['Arn'])
+            + stable_identification_suffix(quicksight_user['Arn'], short=True)
         )
 
     authorized_data_source_ids = set()
@@ -829,7 +826,9 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                     logger.info(f"Syncing QuickSight resources for {dw_user}")
 
                 source_tables = source_tables_for_user(dw_user)
-                db_role_schema_suffix = stable_identification_suffix(user_arn)
+                db_role_schema_suffix = stable_identification_suffix(
+                    user_arn, short=True
+                )
 
                 # This creates a DB user for each of our datasets DBs. These users are intended to be long-lived,
                 # so they might already exist. If this is the case, we still generate a new password, as at the moment

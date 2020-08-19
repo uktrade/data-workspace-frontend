@@ -1,7 +1,6 @@
 import datetime
 
 
-import hashlib
 import itertools
 import random
 import re
@@ -49,7 +48,11 @@ from dataworkspace.apps.applications.utils import (
 )
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
-from dataworkspace.apps.core.utils import source_tables_for_app, source_tables_for_user
+from dataworkspace.apps.core.utils import (
+    source_tables_for_app,
+    source_tables_for_user,
+    stable_identification_suffix,
+)
 from dataworkspace.apps.core.views import public_error_500_html_view
 from dataworkspace.apps.datasets.models import (
     MasterDataset,
@@ -158,10 +161,9 @@ def tools_html_view(request):
 
 
 def tools_html_GET(request):
-    sso_id_hex = hashlib.sha256(
-        str(request.user.profile.sso_id).encode('utf-8')
-    ).hexdigest()
-    sso_id_hex_short = sso_id_hex[:8]
+    sso_id_hex_short = stable_identification_suffix(
+        str(request.user.profile.sso_id), short=True
+    )
 
     application_instances = {
         application_instance.application_template: application_instance
