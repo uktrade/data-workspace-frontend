@@ -817,7 +817,7 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
 
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                        pass  # Can be raised if the user has been deactivated/"deleted"
+                        continue  # Can be raised if the user has been deactivated/"deleted"
                     else:
                         raise e
 
