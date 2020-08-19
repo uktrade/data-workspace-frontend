@@ -17,6 +17,20 @@
 angular.module('aws-js-s3-explorer', []);
 
 angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
+    function fetchJSON(url) {
+        return new Promise((resolve, reject) => {
+          function resolveJSON() {
+            resolve(JSON.parse(oReq.responseText));
+          }
+
+          var oReq = new XMLHttpRequest();
+          oReq.addEventListener('load', resolveJSON);
+          oReq.addEventListener('error', reject);
+          oReq.open('GET', url);
+          oReq.send();
+        });
+      }
+
     class Credentials extends AWS.Credentials {
         constructor() {
             super();
@@ -25,7 +39,7 @@ angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
 
         async refresh(callback) {
             try {
-                var response = await (await fetch(Config.credentialsUrl)).json();
+                var response = await fetchJSON(Config.credentialsUrl);
             } catch(err) {
                 callback(err);
                 return
@@ -71,6 +85,10 @@ angular.module('aws-js-s3-explorer').run(($rootScope) => {
 });
 
 angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $rootScope, $scope) => {
+    function startsWith(string, search) {
+        return string.substring(0, search.length) === search;
+    }
+
     var originalPrefix = Config.prefix;
     var currentPrefix = Config.prefix;
 
@@ -174,7 +192,7 @@ angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $
                     return object.Key != prefix;
                 });
                 $scope.initialising = false;
-                $scope.inBigdata = currentPrefix.startsWith(originalPrefix + Config.bigdataPrefix);
+                $scope.inBigdata = startsWith(currentPrefix, originalPrefix + Config.bigdataPrefix);
             });
         } catch (err) {
             $scope.$apply(() => {
@@ -366,12 +384,21 @@ angular.module('aws-js-s3-explorer').controller('UploadController', (s3, $scope,
 });
 
 angular.module('aws-js-s3-explorer').controller('ErrorController', ($scope) => {
+    // Not using Object.entries for IE11 support
+    function objEntries(obj) {
+        var ownProps = Object.keys(obj);
+        var i = ownProps.length;
+        var resArray = new Array(i);
+        while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+        return resArray;
+    }
+
     $scope.$on('error', (e, args) => {
         const { params, err } = args;
 
         const message = err && 'message' in err ? err.message : '';
         const code = err && 'code' in err ? err.code : '';
-        const errors = Object.entries(err || {}).map(([key, value]) => ({ key, value }));
+        const errors = objEntries(err || {}).map(([key, value]) => ({ key, value }));
 
         $scope.error = { params, message, code, errors };
         $scope.$broadcast('modal::open::error');
@@ -548,7 +575,7 @@ angular.module('aws-js-s3-explorer').directive('modal', () => {
     };
 });
 
-angular.module('aws-js-s3-explorer').directive('onFileChange', () => {
+angular.module('aws-js-s3-explorer').directive('onFileChange', ($timeout) => {
     return {
         scope: {
             onFileChange: '&'
@@ -563,7 +590,10 @@ angular.module('aws-js-s3-explorer').directive('onFileChange', () => {
                     file.relativePath = file.name;
                     files.push(file);
                 }
-                scope.$apply(() => {
+                // In IE11, we seem to be in a digest, but in Chrome/FF, we're not. So we trigger
+                // the callback in a $timeout to safely jump out of a digest if we're in one, and
+                // into another. The change happens on a click, so short delay here is fine
+                $timeout(function () {
                     scope.onFileChange({files: files});
                 });
             });
