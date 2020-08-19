@@ -795,24 +795,31 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                     logger.info(f"Skipping {user_email} with role {user_role}.")
                     continue
 
-                if user_role == "ADMIN":
-                    user_client.update_user(
-                        AwsAccountId=account_id,
-                        Namespace='default',
-                        Role=user_role,
-                        UnapplyCustomPermissions=True,
-                        UserName=user_username,
-                        Email=user_email,
-                    )
-                else:
-                    user_client.update_user(
-                        AwsAccountId=account_id,
-                        Namespace="default",
-                        Role=user_role,
-                        CustomPermissionsName=settings.QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS,
-                        UserName=user_username,
-                        Email=user_email,
-                    )
+                try:
+                    if user_role == "ADMIN":
+                        user_client.update_user(
+                            AwsAccountId=account_id,
+                            Namespace='default',
+                            Role=user_role,
+                            UnapplyCustomPermissions=True,
+                            UserName=user_username,
+                            Email=user_email,
+                        )
+                    else:
+                        user_client.update_user(
+                            AwsAccountId=account_id,
+                            Namespace="default",
+                            Role=user_role,
+                            CustomPermissionsName=settings.QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS,
+                            UserName=user_username,
+                            Email=user_email,
+                        )
+
+                except botocore.exceptions.ClientError as e:
+                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                        pass  # Can be raised if the user has been deactivated/"deleted"
+                    else:
+                        raise e
 
                 dw_user = get_user_model().objects.filter(email=user_email).first()
                 if not dw_user:
