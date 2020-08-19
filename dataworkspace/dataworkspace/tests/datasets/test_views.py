@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import mock
 import pytest
 from django.contrib.auth.models import User, Permission
@@ -776,12 +778,6 @@ class TestVisualisationsDetailView:
             name='Visualisation quicksight',
             identifier='5d75e131-20f4-48f8-b0eb-f4ebf36434f4',
         )
-        link3 = VisualisationLinkFactory.create(
-            visualisation_type='METABASE',
-            visualisation_catalogue_item=vis,
-            name='Visualisation metabase',
-            identifier='123456789',
-        )
 
         response = client.get(vis.get_absolute_url())
         body = response.content.decode(response.charset)
@@ -790,38 +786,9 @@ class TestVisualisationsDetailView:
         assert '//visualisation.dataworkspace.test:8000/' in body
         assert f'/visualisations/link/{link1.id}' in body
         assert f'/visualisations/link/{link2.id}' in body
-        assert f'/visualisations/link/{link3.id}' in body
 
 
 class TestVisualisationLinkView:
-    @pytest.mark.django_db
-    def test_metabase_link(self, mocker):
-        user = UserFactory.create()
-        vis = VisualisationCatalogueItemFactory.create(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
-        link = VisualisationLinkFactory.create(
-            visualisation_type='METABASE',
-            identifier='123456789',
-            visualisation_catalogue_item=vis,
-        )
-
-        jwt_encode = mocker.patch('dataworkspace.apps.applications.views.jwt.encode')
-        jwt_encode.return_value = b'my-token'
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(link.get_absolute_url())
-
-        assert response.status_code == 200
-        assert (
-            '//metabase.dataworkspace.test:8000/embed/dashboard/my-token#bordered=false&amp;titled=false'
-            in response.content.decode(response.charset)
-        )
-        assert (
-            'frame-src metabase.dataworkspace.test'
-            in response['content-security-policy']
-        )
-
     @pytest.mark.django_db
     def test_quicksight_link(self, mocker):
         user = UserFactory.create()
@@ -874,15 +841,22 @@ class TestVisualisationLinkView:
         assert response['location'] == 'https://www.data.studio'
 
     @pytest.mark.django_db
-    def test_user_needs_access_via_catalogue_item(self):
+    def test_user_needs_access_via_catalogue_item(self, mocker):
         user = UserFactory.create()
         vis = VisualisationCatalogueItemFactory.create(
             user_access_type='REQUIRES_AUTHORIZATION'
         )
         link = VisualisationLinkFactory.create(
-            visualisation_type='METABASE',
-            identifier='123',
+            visualisation_type='QUICKSIGHT',
+            identifier=str(uuid4()),
             visualisation_catalogue_item=vis,
+        )
+        quicksight = mocker.patch(
+            'dataworkspace.apps.applications.views.get_quicksight_dashboard_name_url'
+        )
+        quicksight.return_value = (
+            'my-dashboard',
+            'https://my.dashboard.quicksight.amazonaws.com',
         )
 
         client = Client(**get_http_sso_data(user))

@@ -27,7 +27,7 @@ With the default environment, you will need the below in your `/etc/hosts` file.
 And the application will be visible at http://dataworkspace.test:8000. This is to be able to properly test cookies that are shared with subdomains. To run tool and visualisation-related code, you will need subdomains in your `/etc/hosts` file, such as 
 
 ```
-127.0.0.1       metabase.dataworkspace.test
+127.0.0.1       visualisation-a.dataworkspace.test
 ```
 
 

@@ -119,7 +119,6 @@ data "template_file" "admin_container_definitions" {
     fargate_spawner__jupyterlabr_task_definition_arn   = "${aws_ecs_task_definition.jupyterlabr.family}"
     fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}"
     fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}"
-    fargate_spawner__metabase_task_definition_arn  = "${aws_ecs_task_definition.metabase.family}"
     fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
     fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
     fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
@@ -144,12 +143,6 @@ data "template_file" "admin_container_definitions" {
     google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
 
     superset_root = "https://${var.superset_internal_domain}/"
-    metabase_root = "https://${var.metabase_internal_domain}/"
-
-    metabase_user_secret_password_key = "${random_string.metabase_multiuser_user_secret_password_key.result}"
-    metabase_login_users__1 = "${var.metabase_login_users__1}"
-    metabase_bot_user_email = "${var.metabase_bot_user_email}"
-    metabase_bot_user_password = "${var.metabase_bot_user_password}"
 
     admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
   }
@@ -239,7 +232,6 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
     fargate_spawner__jupyterlabr_task_definition_arn   = "${aws_ecs_task_definition.jupyterlabr.family}"
     fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}:${aws_ecs_task_definition.rstudio.revision}"
     fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}:${aws_ecs_task_definition.pgadmin.revision}"
-    fargate_spawner__metabase_task_definition_arn  = "${aws_ecs_task_definition.metabase.family}"
     fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
     fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
     fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
@@ -264,12 +256,6 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
     google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
 
     superset_root = "${aws_lb.superset_multiuser.dns_name}"
-    metabase_root = "https://${var.metabase_internal_domain}/"
-
-    metabase_user_secret_password_key = "${random_string.metabase_multiuser_user_secret_password_key.result}"
-    metabase_login_users__1 = "${var.metabase_login_users__1}"
-    metabase_bot_user_email = "${var.metabase_bot_user_email}"
-    metabase_bot_user_password = "${var.metabase_bot_user_password}"
 
     admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
   }
@@ -463,8 +449,6 @@ data "aws_iam_policy_document" "admin_run_tasks" {
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.rstudio.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgadmin.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgadmin.family}-*",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.metabase.family}",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.metabase.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgweb.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgweb.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.remotedesktop.family}",

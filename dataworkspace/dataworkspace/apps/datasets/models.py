@@ -1610,7 +1610,6 @@ class VisualisationLink(TimeStampedModel):
         choices=(
             ('DATASTUDIO', 'Google Data Studio'),
             ('QUICKSIGHT', 'AWS QuickSight'),
-            ('METABASE', 'Metabase'),
         ),
         null=False,
         blank=False,
@@ -1623,7 +1622,7 @@ class VisualisationLink(TimeStampedModel):
     )
     identifier = models.CharField(
         max_length=256,
-        help_text='For Google Data Studio, the dashboard URL. For QuickSight and Metabase, the dashboard ID.',
+        help_text='For Google Data Studio, the dashboard URL. For QuickSight, the dashboard ID.',
     )
     visualisation_catalogue_item = models.ForeignKey(
         VisualisationCatalogueItem, on_delete=models.CASCADE

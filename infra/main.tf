@@ -48,7 +48,6 @@ variable "jupyterlab_python_container_image" {}
 variable "jupyterlab_r_container_image" {}
 variable "rstudio_container_image" {}
 variable "pgadmin_container_image" {}
-variable "metabase_container_image" {}
 variable "pgweb_container_image" {}
 variable "remotedesktop_container_image" {}
 variable "theia_container_image" {}
@@ -123,16 +122,6 @@ variable superset_multiuser_db_instance_class {}
 variable superset_multiuser_container_image {}
 variable superset_internal_domain {}
 
-variable metabase_multiuser_db_instance_class {}
-variable metabase_multiuser_container_image {}
-variable metabase_internal_domain {}
-variable metabase_proxy_domain {}
-variable metabase_proxy_cached_body {}
-
-variable metabase_login_users__1 {}
-variable metabase_bot_user_email {}
-variable metabase_bot_user_password {}
-
 locals {
   registry_container_name    = "jupyterhub-registry"
   registry_container_port    = "5000"
@@ -192,7 +181,4 @@ locals {
 
   superset_multiuser_container_memory = 8192
   superset_multiuser_container_cpu    = 1024
-
-  metabase_multiuser_container_memory = 8192
-  metabase_multiuser_container_cpu    = 1024
 }
