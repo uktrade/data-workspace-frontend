@@ -36,8 +36,9 @@ from dataworkspace.apps.eventlog.utils import log_permission_change
 
 @admin.register(ApplicationInstance)
 class ApplicationInstanceAdmin(admin.ModelAdmin):
-
-    list_display = ('owner', 'public_host', 'created_date')
+    list_display = ('owner', 'public_host', 'created_date', 'state')
+    list_filter = ('state',)
+    ordering = ('-created_date',)
     fieldsets = [
         (
             None,
@@ -64,10 +65,6 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(state__in=['SPAWNING', 'RUNNING'])
 
     def max_cpu(self, obj):
         try:
