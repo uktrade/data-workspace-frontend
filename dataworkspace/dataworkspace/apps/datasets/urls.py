@@ -26,6 +26,11 @@ urlpatterns = [
         name='dataset_query_download',
     ),
     path(
+        '<str:dataset_uuid>/query/<int:query_id>/preview',
+        login_required(views.CustomDatasetQueryPreviewView.as_view()),
+        name='dataset_query_preview',
+    ),
+    path(
         '<str:dataset_uuid>/reference/<str:format>/download',
         login_required(views.ReferenceDatasetDownloadView.as_view()),
         name='reference_dataset_download',

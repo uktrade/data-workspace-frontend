@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2020-08-20
 
+### Added
+
+- Datacut preview page
+
+## 2020-08-20
+
 ### Changed
 
 - Number of search results from 7 to 15.

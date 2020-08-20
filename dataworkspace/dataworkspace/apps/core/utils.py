@@ -2,12 +2,14 @@ import datetime
 import hashlib
 import itertools
 import logging
+import random
 import re
 import secrets
 import string
 import csv
 
 import gevent
+import psycopg2
 from psycopg2 import connect, sql
 
 import boto3
@@ -532,6 +534,34 @@ def streaming_query_response(user_email, database, query, filename):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     return response
+
+
+def get_random_data_sample(database, query, sample_size):
+    query_timeout = 300 * 1000
+    batch_size = sample_size * 100
+
+    with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor(
+        name='data_preview'
+    ) as cur:  # Named cursor => server-side cursor
+
+        conn.set_session(readonly=True)
+
+        # set statements can't be issued in a server-side cursor, so we
+        # need to create a separate one to set a timeout on the current
+        # connection
+        with conn.cursor() as _cur:
+            _cur.execute('SET statement_timeout={0}'.format(query_timeout))
+
+            try:
+                cur.execute(query)
+            except psycopg2.Error:
+                logger.error("Failed to get sample data", exc_info=True)
+                return []
+
+        rows = cur.fetchmany(batch_size)
+        sample = random.sample(rows, min(sample_size, len(rows)))
+
+        return sample
 
 
 def table_data(user_email, database, schema, table, filename=None):

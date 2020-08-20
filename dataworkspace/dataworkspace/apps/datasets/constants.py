@@ -11,3 +11,10 @@ class DataSetType(enum.Enum):
     MASTER = 1
     DATACUT = 2
     VISUALISATION = 3
+
+
+class DataLinkType(enum.Enum):
+    SOURCE_LINK = 0
+    SOURCE_TABLE = 1
+    SOURCE_VIEW = 2
+    CUSTOM_QUERY = 3

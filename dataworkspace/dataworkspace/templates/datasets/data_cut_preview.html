@@ -1,0 +1,101 @@
+{% extends '_main.html' %}
+{% load static core_tags %}
+
+{% block page_title %}Preview {{ query.name }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+         <a class="govuk-breadcrumbs__link" href=
+                 "{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}
+        </a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        Preview {{ query.name }}
+      </li>
+    </ol>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+          <h1 class="govuk-heading-xl">Preview {{ query.name }}</h1>
+          <div class="govuk-body">
+              See data fields and example data below.
+          </div>
+      </div>
+  </div>
+
+  {% if fields %}
+  <details class="govuk-details" data-module="govuk-details">
+    <summary class="govuk-details__summary">
+      <span class="govuk-details__summary-text">
+        Data fields
+      </span>
+    </summary>
+    <div class="govuk-details__text">
+      <ul class="govuk-list govuk-list--bullet">
+        {% for field in fields %}
+        <li>{{ field  }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </details>
+  {% endif %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">
+        Sample Data
+      </h2>
+      {% if fields %}
+      <p class="govuk-body">
+        Showing {% if record_count < preview_limit %}all {% else %}<strong>{{ preview_limit }}</strong> random {% endif %}rows from data.
+      </p>
+      <div class="scrollable-table">
+        <table class="govuk-table govuk-!-font-size-16">
+          <thead>
+            <tr class="govuk-table__row">
+              {% for field in fields %}
+                  <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
+                    {{ field }}
+                  </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in records %}
+              <tr class="govuk-table__row">
+                {% for field in fields %}
+                  {% with record|get_key:field as value %}
+                      <td class="govuk-table__cell">
+                        {{ value|not_set_if_none }}
+                      </td>
+                  {% endwith %}
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr class="govuk-table__row">
+                <td colspan="{{ query.field_names|length }}">
+                  This dataset doesn't have any data yet.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a class="govuk-button" href="{% url "datasets:dataset_query_download" dataset_uuid=dataset.id query_id=query.id %}">
+        Download Data
+      </a>
+      {% else %}
+      <p class="govuk-body">No data available</p>
+      {% endif %}
+    </div>
+  </div>
+
+{% endblock %}

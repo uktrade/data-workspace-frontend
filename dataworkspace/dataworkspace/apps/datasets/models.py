@@ -36,7 +36,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.datasets.model_utils import (
     external_model_class,
     has_circular_link,
@@ -465,6 +465,10 @@ class SourceTable(BaseSource):
     def can_show_link_for_user(self, user):
         return False
 
+    @property
+    def type(self):
+        return DataLinkType.SOURCE_TABLE.value
+
 
 class SourceView(BaseSource):
     view = models.CharField(
@@ -480,6 +484,10 @@ class SourceView(BaseSource):
 
     def can_show_link_for_user(self, user):
         return True
+
+    @property
+    def type(self):
+        return DataLinkType.SOURCE_VIEW.value
 
 
 class SourceLink(ReferenceNumberedDatasetSource):
@@ -560,6 +568,10 @@ class SourceLink(ReferenceNumberedDatasetSource):
 
         return super().get_filename()
 
+    @property
+    def type(self):
+        return DataLinkType.SOURCE_LINK.value
+
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     FREQ_DAILY = 1
@@ -597,6 +609,10 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
             return True
 
         return self.reviewed
+
+    @property
+    def type(self):
+        return DataLinkType.CUSTOM_QUERY.value
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
