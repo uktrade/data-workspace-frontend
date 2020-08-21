@@ -93,6 +93,60 @@ def test_query_data_cut_fields(client, dataset_db):
     assert response.context["fields"] == ['customid', 'customname']
 
 
+def test_query_data_cut_preview(client, dataset_db):
+    ds = factories.DataSetFactory.create(
+        user_access_type='REQUIRES_AUTHENTICATION', published=True,
+    )
+    cut1 = factories.CustomDatasetQueryFactory(
+        dataset=ds,
+        database=dataset_db,
+        query="SELECT id customid, name customname FROM dataset_test",
+        reviewed=True,
+    )
+    cut2 = factories.CustomDatasetQueryFactory(
+        dataset=ds,
+        database=dataset_db,
+        query="SELECT id customid, name customname FROM dataset_test",
+        reviewed=False,
+    )
+
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+
+    # reviewed query should have a preview link
+    assert (
+        f'href="/datasets/{ds.id}/query/{cut1.id}/preview"' in response.rendered_content
+    )
+    assert 'Preview' in response.rendered_content
+
+    # non reviewed query shouldn't have a preview link
+    assert (
+        f'href="/datasets/{ds.id}/query/{cut2.id}/preview"'
+        not in response.rendered_content
+    )
+    assert 'No preview available' in response.rendered_content
+
+
+def test_query_data_cut_preview_staff_user(staff_client, dataset_db):
+    ds = factories.DataSetFactory.create(
+        user_access_type='REQUIRES_AUTHENTICATION', published=True,
+    )
+    cut = factories.CustomDatasetQueryFactory(
+        dataset=ds,
+        database=dataset_db,
+        query="SELECT id customid, name customname FROM dataset_test",
+        reviewed=False,
+    )
+    response = staff_client.get(ds.get_absolute_url())
+
+    # non reviewed query should have a preview link
+    assert (
+        f'href="/datasets/{ds.id}/query/{cut.id}/preview"' in response.rendered_content
+    )
+    assert 'Preview' in response.rendered_content
+
+
 def test_link_data_cut_doesnt_have_fields(client):
     ds = factories.DataSetFactory.create(published=True)
     factories.SourceLinkFactory(dataset=ds)
@@ -101,6 +155,18 @@ def test_link_data_cut_doesnt_have_fields(client):
 
     assert response.status_code == 200
     assert response.context["fields"] is None
+
+
+def test_link_data_cut_doesnt_have_preview(client):
+    ds = factories.DataSetFactory(
+        user_access_type='REQUIRES_AUTHENTICATION', published=True
+    )
+    factories.SourceLinkFactory(dataset=ds)
+
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert 'No preview available' in response.rendered_content
 
 
 class TestDatasetViews:
@@ -785,3 +851,114 @@ class TestCustomQueryDownloadView:
 
         response = request_client.get(query.get_absolute_url())
         assert response.status_code == status
+
+
+class TestCustomQueryPreviewView:
+    def test_preview_forbidden_datacut(self, client, dataset_db):
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
+        query = factories.CustomDatasetQueryFactory(
+            dataset=dataset, database=dataset_db, query='SELECT * FROM a_table',
+        )
+        response = client.get(
+            reverse(
+                'datasets:dataset_query_preview',
+                kwargs={'dataset_uuid': dataset.id, 'query_id': query.id},
+            )
+        )
+        assert response.status_code == 403
+
+    def test_preview_invalid_datacut(self, client, dataset_db):
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
+        query = factories.CustomDatasetQueryFactory(
+            dataset=dataset, database=dataset_db, query='SELECT * FROM invalid_table',
+        )
+        response = client.get(
+            reverse(
+                'datasets:dataset_query_preview',
+                kwargs={'dataset_uuid': dataset.id, 'query_id': query.id},
+            )
+        )
+        response_content = response.content.decode(response.charset)
+        assert 'Data Fields' not in response_content
+        assert 'No data available' in response_content
+        assert 'Download' not in response_content
+
+    @override_settings(DATACUT_DATASET_PREVIEW_NUM_OF_ROWS=20)
+    def test_preview_valid_datacut(self, client, dataset_db):
+        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
+
+        # Check if sample data shown correctly
+        query1 = factories.CustomDatasetQueryFactory(
+            dataset=dataset, database=dataset_db, query='SELECT 1 as a, 2 as b',
+        )
+        response = client.get(
+            reverse(
+                'datasets:dataset_query_preview',
+                kwargs={'dataset_uuid': dataset.id, 'query_id': query1.id},
+            )
+        )
+        response_content = response.content.decode(response.charset)
+        html = ''.join([s.strip() for s in response_content.splitlines() if s.strip()])
+        assert response.status_code == 200
+        assert '<li>a</li><li>b</li>' in html  # check fields
+        assert (
+            '<thead>'
+            '<tr class="govuk-table__row">'
+            '<th class="govuk-table__header ref-data-col-">a</th>'
+            '<th class="govuk-table__header ref-data-col-">b</th>'
+            '</tr>'
+            '</thead>'
+            '<tbody>'
+            '<tr class="govuk-table__row">'
+            '<td class="govuk-table__cell">1</td>'
+            '<td class="govuk-table__cell">2</td>'
+            '</tr>'
+            '</tbody>'
+        ) in html  # check sample data
+        assert 'Showing all rows from data.' in html
+        assert 'Download' in html  # check download button available
+
+        # Check if sample limited to 20 random rows if more data available
+        preview_rows = settings.DATACUT_DATASET_PREVIEW_NUM_OF_ROWS
+        query2 = factories.CustomDatasetQueryFactory(
+            dataset=dataset,
+            database=dataset_db,
+            query=f'SELECT * FROM generate_series(1, {preview_rows * 2}) as a;',
+        )
+
+        response = client.get(
+            reverse(
+                'datasets:dataset_query_preview',
+                kwargs={'dataset_uuid': dataset.id, 'query_id': query2.id},
+            )
+        )
+        response_content = response.content.decode(response.charset)
+        assert (
+            f'Showing <strong>{preview_rows}</strong> random rows from data.'
+            in response_content
+        )
+
+    def _preview_unreviewed_datacut(self, client, dataset_db):
+
+        dataset = factories.DataSetFactory(
+            user_access_type='REQUIRES_AUTHENTICATION', published=True
+        )
+        sql = 'SELECT 1 as a, 2 as b'
+        query = factories.CustomDatasetQueryFactory(
+            dataset=dataset, database=dataset_db, query=sql, reviewed=False
+        )
+        return client.get(
+            reverse(
+                'datasets:dataset_query_preview',
+                kwargs={'dataset_uuid': dataset.id, 'query_id': query.id},
+            )
+        )
+
+    def test_staff_user_can_preview_unreviewed_datacut(self, staff_client, dataset_db):
+        assert (
+            self._preview_unreviewed_datacut(staff_client, dataset_db).status_code
+            == 200
+        )
+
+    def test_normal_user_cannot_preview_unreviewed_datacut(self, client, dataset_db):
+        assert self._preview_unreviewed_datacut(client, dataset_db).status_code == 403

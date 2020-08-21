@@ -34,12 +34,13 @@ from .models import SourceTag
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.applications.utils import get_quicksight_dashboard_name_url
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     streaming_query_response,
     table_data,
     view_exists,
+    get_random_data_sample,
 )
 from dataworkspace.apps.datasets.forms import (
     DatasetSearchForm,
@@ -422,6 +423,7 @@ class DatasetDetailView(DetailView):
                 ),
                 'code_snippets': get_code_snippets(self.object),
                 'visualisation_src': dashboard_url,
+                'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY.value,
             }
         )
         return ctx
@@ -830,4 +832,48 @@ class CustomDatasetQueryDownloadView(DetailView):
             query.database.memorable_name,
             sql.SQL(query.query),
             query.get_filename(),
+        )
+
+
+class CustomDatasetQueryPreviewView(DetailView):
+    model = CustomDatasetQuery
+
+    def get(self, request, *args, **kwargs):
+        dataset = find_dataset(self.kwargs.get('dataset_uuid'), request.user)
+
+        if not dataset.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+
+        query = get_object_or_404(
+            self.model, id=self.kwargs.get('query_id'), dataset=dataset
+        )
+
+        if not query.reviewed and not request.user.is_superuser:
+            return HttpResponseForbidden()
+
+        database = query.database.memorable_name
+
+        columns = datasets_db.get_columns(database, query=query.query,)
+
+        records = []
+        sample_size = settings.DATACUT_DATASET_PREVIEW_NUM_OF_ROWS
+        if columns:
+            rows = get_random_data_sample(database, sql.SQL(query.query), sample_size)
+            for row in rows:
+                record_data = {}
+                for i, column in enumerate(columns):
+                    record_data[column] = row[i]
+                records.append(record_data)
+
+        return render(
+            request,
+            'datasets/data_cut_preview.html',
+            {
+                'dataset': dataset,
+                'query': query,
+                'fields': columns,
+                'records': records,
+                'preview_limit': sample_size,
+                'record_count': len(records),
+            },
         )
