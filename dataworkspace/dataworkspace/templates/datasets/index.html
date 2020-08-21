@@ -62,7 +62,9 @@
     <h2 class="govuk-heading-l">Filters</h2>
     {{ form.access }}
     {{ form.use }}
-    {{ form.source }}
+    {% if form.source.field.choices %}
+      {{ form.source }}
+    {% endif %}
   </div>
   <div id="live-search-wrapper" class="govuk-grid-column-two-thirds">
     <p class="govuk-body"><span id="search-results-count">{{ datasets.paginator.count }}</span> results</p>

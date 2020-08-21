@@ -230,6 +230,7 @@ def test_find_datasets_combines_results(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': ds.type,
         },
         {
@@ -238,6 +239,7 @@ def test_find_datasets_combines_results(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
         },
         {
@@ -246,6 +248,7 @@ def test_find_datasets_combines_results(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
         },
     ]
@@ -280,6 +283,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': ds.type,
         },
         {
@@ -288,6 +292,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
         },
         {
@@ -296,6 +301,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
         },
     ]
@@ -318,6 +324,7 @@ def test_find_datasets_filters_by_use(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': ds.type,
         },
         {
@@ -326,6 +333,7 @@ def test_find_datasets_filters_by_use(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
         },
     ]
@@ -351,6 +359,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': ds.type,
         },
         {
@@ -359,6 +368,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
         },
     ]
@@ -366,6 +376,9 @@ def test_find_datasets_filters_visualisations_by_use(client):
 
 def test_find_datasets_filters_by_source(client):
     source = factories.SourceTagFactory()
+    # Create another SourceTag that won't be associated to a dataset
+    factories.SourceTagFactory()
+
     _ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
     _ds.source_tags.set([factories.SourceTagFactory()])
 
@@ -403,6 +416,7 @@ def test_find_datasets_filters_by_source(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_ids': [source.id],
             'purpose': ds.type,
         },
         {
@@ -411,6 +425,7 @@ def test_find_datasets_filters_by_source(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
         },
         {
@@ -419,9 +434,14 @@ def test_find_datasets_filters_by_source(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'source_tag_ids': [],
             'purpose': DataSetType.VISUALISATION.value,
         },
     ]
+
+    # only one filter should be shown as the second SourceTag isn't associated to a dataset
+    assert len(list(response.context["form"].fields['source'].choices)) == 1
+    assert list(response.context["form"].fields['source'].choices)[0][0] == source.id
 
 
 @pytest.mark.django_db
@@ -501,6 +521,7 @@ def test_find_datasets_filters_by_access():
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
         },
         {
@@ -509,6 +530,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_master.slug,
             'search_rank': mock.ANY,
             'short_description': public_master.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': public_master.type,
         },
         {
@@ -517,6 +539,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_reference.slug,
             'search_rank': mock.ANY,
             'short_description': public_reference.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
         },
         {
@@ -525,6 +548,7 @@ def test_find_datasets_filters_by_access():
             'slug': access_vis.slug,
             'search_rank': mock.ANY,
             'short_description': access_vis.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
         },
         {
@@ -533,6 +557,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_vis.slug,
             'search_rank': mock.ANY,
             'short_description': public_vis.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
         },
     ]
@@ -573,6 +598,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
         }
     ]

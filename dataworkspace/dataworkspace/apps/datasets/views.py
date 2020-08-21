@@ -11,11 +11,12 @@ import boto3
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from django.conf import settings
+from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import IntegerField, F, Q, Value
+from django.db.models import CharField, F, IntegerField, Q, Value
 from django.http import (
     Http404,
     HttpResponse,
@@ -29,6 +30,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView
 from psycopg2 import sql
+from .models import SourceTag
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.applications.utils import get_quicksight_dashboard_name_url
@@ -205,8 +207,17 @@ def find_datasets(request):
         filter_datasets(
             DataSet.objects.live(), query, access, source, use, user=request.user
         )
+        .annotate(source_tag_ids=ArrayAgg('source_tags'))
         .annotate(purpose=F('type'))
-        .values('id', 'name', 'slug', 'short_description', 'search_rank', 'purpose')
+        .values(
+            'id',
+            'name',
+            'slug',
+            'short_description',
+            'search_rank',
+            'source_tag_ids',
+            'purpose',
+        )
     )
 
     # Include reference datasets if required
@@ -215,19 +226,46 @@ def find_datasets(request):
             ReferenceDataset.objects.live(), query, access, source, user=request.user
         )
         datasets = datasets.union(
-            reference_datasets.annotate(
-                purpose=Value(DataSetType.REFERENCE.value, IntegerField())
-            ).values(
-                'uuid', 'name', 'slug', 'short_description', 'search_rank', 'purpose'
+            reference_datasets.annotate(source_tag_ids=ArrayAgg('source_tags'))
+            .annotate(purpose=Value(DataSetType.REFERENCE.value, IntegerField()))
+            .values(
+                'uuid',
+                'name',
+                'slug',
+                'short_description',
+                'search_rank',
+                'source_tag_ids',
+                'purpose',
             )
         )
 
     if not use or DataSetType.VISUALISATION.value in use:
         datasets = datasets.union(
             filter_visualisations(query, access, source, user=request.user)
+            .annotate(source_tag_ids=Value("{}", CharField()))
             .annotate(purpose=Value(DataSetType.VISUALISATION.value, IntegerField()))
-            .values('id', 'name', 'slug', 'short_description', 'search_rank', 'purpose')
+            .values(
+                'id',
+                'name',
+                'slug',
+                'short_description',
+                'search_rank',
+                'source_tag_ids',
+                'purpose',
+            )
         )
+
+    # Only display SourceTag filters that are associated with the dataset results
+    source_tags_to_show = set(
+        [
+            source_tag_id
+            for dataset in datasets
+            for source_tag_id in dataset['source_tag_ids']
+        ]
+    )
+    form.fields['source'].queryset = SourceTag.objects.order_by('name').filter(
+        id__in=source_tags_to_show
+    )
 
     paginator = Paginator(
         datasets.order_by('-search_rank', 'name'),
