@@ -1188,7 +1188,8 @@ async def async_main():
 
         app['ELASTIC_APM'] = elastic_apm
 
-        ElasticAPM(app)
+        if elastic_apm:
+            ElasticAPM(app)
 
         runner = web.AppRunner(app)
         await runner.setup()
