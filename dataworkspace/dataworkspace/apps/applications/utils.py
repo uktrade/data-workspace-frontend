@@ -740,14 +740,17 @@ def create_update_delete_quicksight_user_data_sources(
 
 
 @celery_app.task()
-def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
+def sync_quicksight_permissions(
+    user_sso_ids_to_update=tuple(), poll_for_user_creation=False
+):
     try:
         # Lightly enforce that only instance is running the task at a time. The job normally takes just a few minutes.
         with cache.lock(
             "sync-quicksight-permissions", blocking_timeout=360, timeout=3600
         ):
             logger.info(
-                f'sync_quicksight_user_datasources({user_sso_ids_to_update}) started'
+                f'sync_quicksight_user_datasources({user_sso_ids_to_update}, '
+                f'poll_for_user_creation={poll_for_user_creation}) started'
             )
 
             # QuickSight manages users in a single specific regions
@@ -764,21 +767,36 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                 quicksight_user_list = []
 
                 for user_sso_id in user_sso_ids_to_update:
-                    try:
-                        quicksight_user_list.append(
-                            user_client.describe_user(
-                                AwsAccountId=account_id,
-                                Namespace='default',
-                                # \/ This is the format of the user name created by DIT SSO \/
-                                UserName=f'quicksight_federation/{user_sso_id}',
-                            )['User']
-                        )
+                    # Poll for the user for 5 minutes
+                    attempts = (5 * 60) if poll_for_user_creation else 1
+                    for _ in range(attempts):
+                        attempts -= 1
 
-                    except botocore.exceptions.ClientError as e:
-                        if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                            pass  # If the user isn't an author on QuickSight, just move on.
-                        else:
-                            raise e
+                        try:
+                            quicksight_user_list.append(
+                                user_client.describe_user(
+                                    AwsAccountId=account_id,
+                                    Namespace='default',
+                                    # \/ This is the format of the user name created by DIT SSO \/
+                                    UserName=f'quicksight_federation/{user_sso_id}',
+                                )['User']
+                            )
+                            break
+
+                        except botocore.exceptions.ClientError as e:
+                            if (
+                                e.response['Error']['Code']
+                                == 'ResourceNotFoundException'
+                            ):
+                                if attempts > 0:
+                                    gevent.sleep(1)
+                                elif poll_for_user_creation:
+                                    logger.exception(
+                                        "Did not find user with sso id `%s` after 5 minutes",
+                                        user_sso_id,
+                                    )
+                            else:
+                                raise e
 
             else:
                 quicksight_user_list: List[Dict[str, str]] = user_client.list_users(
@@ -855,7 +873,8 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                 )
 
             logger.info(
-                f'sync_quicksight_user_datasources({user_sso_ids_to_update}) finished'
+                f'sync_quicksight_user_datasources({user_sso_ids_to_update}, '
+                f'poll_for_user_creation={poll_for_user_creation}) finished'
             )
 
     except redis.exceptions.LockError:

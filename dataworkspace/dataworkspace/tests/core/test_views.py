@@ -158,7 +158,7 @@ def test_footer_links(request_client):
 @pytest.mark.parametrize(
     "has_quicksight_access, expected_href, expected_text",
     (
-        (True, "https://quicksight", "Open AWS QuickSight"),
+        (True, "/tools/quicksight/redirect", "Open AWS QuickSight"),
         (False, "/support-and-feedback/", "Request access to AWS QuickSight"),
     ),
 )
