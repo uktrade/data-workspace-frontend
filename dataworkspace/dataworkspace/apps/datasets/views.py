@@ -85,8 +85,10 @@ def filter_datasets(
     use=None,
     user=None,
 ):
-    search = SearchVector('name', weight='A', config='english') + SearchVector(
-        'short_description', weight='B', config='english'
+    search = (
+        SearchVector('name', weight='A', config='english')
+        + SearchVector('short_description', weight='B', config='english')
+        + SearchVector('source_tags__name', weight='B', config='english')
     )
     search_query = SearchQuery(query, config='english')
 
