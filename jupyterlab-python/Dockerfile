@@ -42,8 +42,8 @@ RUN \
     apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
     apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
         build-essential=12.6 \
-        git=1:2.20.1-2+deb10u1 \
-        git-man=1:2.20.1-2+deb10u1 \
+        git=1:2.20.1-2+deb10u3 \
+        git-man=1:2.20.1-2+deb10u3 \
         man-db=2.8.5-2 \
         openssh-client=1:7.9p1-10+deb10u2 \
         texlive-xetex=2018.20190227-2 \
