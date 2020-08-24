@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add weighting to dataset search
 - Allow for searching of datasets by source tag name
 
+### Changed
+
+- Datacut preview page design updates
+
 ## 2020-08-20
 
 ### Added
