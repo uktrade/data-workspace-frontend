@@ -129,7 +129,7 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
             reference_dataset.save_record(
                 self.kwargs.get('record_id'), form.form.cleaned_data
             )
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             form.form.add_error(None, e)
             return self.form_invalid(form)
         return super().form_valid(form)
@@ -173,7 +173,7 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         instance = self._get_reference_dataset()
         try:
             instance.delete_record(form.cleaned_data['id'])
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             form.add_error(None, e)
             return self.form_invalid(form)
         return super().form_valid(form)
@@ -263,7 +263,7 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
                     reference_dataset.save_record(
                         record_id, form_data, sync_externally=False
                     )
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-except
                     log_row.status = ReferenceDatasetUploadLogRecord.STATUS_FAILURE
                     log_row.errors = [{'Error': str(e)}]
                 else:
@@ -323,7 +323,7 @@ class SourceLinkUploadView(
     def get_form(self, form_class=None):
         form = self.get_form_class()(**self.get_form_kwargs())
         return helpers.AdminForm(
-            form, list([(None, {'fields': [x for x in form.fields.keys()]})]), {}
+            form, list([(None, {'fields': list(form.fields.keys())})]), {}
         )
 
     def post(self, request, *args, **kwargs):

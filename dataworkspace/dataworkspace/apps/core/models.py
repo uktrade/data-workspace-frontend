@@ -30,7 +30,7 @@ class DeletableModel(models.Model):
     class Meta:
         abstract = True
 
-    def delete(self, **kwargs):
+    def delete(self, **kwargs):  # pylint: disable=arguments-differ
         """
         Override delete method to allow for "soft" deleting.
         If `force` is True delete from the database, otherwise set model.deleted = True

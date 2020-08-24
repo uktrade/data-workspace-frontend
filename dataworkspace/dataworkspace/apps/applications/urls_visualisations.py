@@ -14,6 +14,7 @@ from dataworkspace.apps.applications.views import (
     visualisation_branch_html_view,
 )
 
+
 urlpatterns = [
     path('', login_required(visualisations_html_view), name='root'),
     path(

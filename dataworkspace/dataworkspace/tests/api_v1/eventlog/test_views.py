@@ -23,7 +23,7 @@ class TestEventLogAPIView(BaseAPIViewTest):
             'id': eventlog.id,
             'related_object': {
                 'id': str(eventlog.related_object.id)
-                if type(eventlog.related_object.id) == uuid.UUID
+                if isinstance(eventlog.related_object.id, uuid.UUID)
                 else eventlog.related_object.id,
                 'name': eventlog.related_object.name,
                 'type': eventlog.related_object.get_type_display(),

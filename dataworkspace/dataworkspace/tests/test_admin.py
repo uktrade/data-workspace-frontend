@@ -3,11 +3,13 @@ import mock
 
 from botocore.exceptions import ClientError
 
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.test import Client
+import pytest
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
@@ -21,7 +23,6 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
-import pytest
 
 
 class TestCustomAdminSite(BaseAdminTestCase):
@@ -2620,7 +2621,7 @@ class TestDatasetAdminPytest:
         self, manage_unpublished_permission, admin_change_view, DatasetFactory
     ):
         dataset = DatasetFactory(published=True)
-        user = User.objects.create(is_staff=True)
+        user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename=manage_unpublished_permission)
         user.user_permissions.add(perm)
         user.save()
@@ -2650,7 +2651,7 @@ class TestDatasetAdminPytest:
         dataset = factories.DataSetFactory.create(
             published=False, name='original', type=DataSet.TYPE_MASTER_DATASET
         )
-        user = User.objects.create(is_staff=True)
+        user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename='manage_unpublished_master_datasets')
         user.user_permissions.add(perm)
         user.save()
@@ -2688,7 +2689,7 @@ class TestDatasetAdminPytest:
         dataset = factories.DataSetFactory.create(
             published=False, name='original', type=DataSet.TYPE_DATA_CUT
         )
-        user = User.objects.create(is_staff=True)
+        user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename='manage_unpublished_datacut_datasets')
         user.user_permissions.add(perm)
         user.save()
@@ -2746,7 +2747,7 @@ class TestDatasetAdminPytest:
             description='field 1 description',
         )
 
-        user = User.objects.create(is_staff=True)
+        user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename='manage_unpublished_reference_datasets')
         user.user_permissions.add(perm)
         user.save()

@@ -99,7 +99,7 @@ class ProcessSpawner:
             gevent.sleep(1)
             application_instance.proxy_url = 'http://localhost:8888/'
             application_instance.save(update_fields=['proxy_url'])
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception('PROCESS %s %s', application_instance_id, spawner_options)
             if proc:
                 os.kill(int(proc.pid), 9)
@@ -132,7 +132,7 @@ class ProcessSpawner:
                 else process_status()
             )
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception('PROCESS %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
 
@@ -328,7 +328,7 @@ class FargateSpawner:
                 gevent.sleep(3)
 
             raise Exception('Spawner timed out before finding ip address')
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception(
                 'Spawning %s %s %s',
                 pipeline_id,
@@ -341,7 +341,9 @@ class FargateSpawner:
                 _gitlab_ecr_pipeline_cancel(pipeline_id)
 
     @staticmethod
-    def state(spawner_options, created_date, spawner_application_id, proxy_url):
+    def state(  # pylint: disable=too-many-return-statements
+        spawner_options, created_date, spawner_application_id, proxy_url
+    ):
         try:
             logger.info(spawner_options)
             spawner_options = json.loads(spawner_options)
@@ -403,7 +405,7 @@ class FargateSpawner:
             # ... and the spawner is stopped not if it's not
             return 'STOPPED'
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception('FARGATE %s %s', spawner_application_id_parsed, proxy_url)
             return 'STOPPED'
 
@@ -427,7 +429,7 @@ class FargateSpawner:
                     application_instance.spawner_stopped_at = task['stoppedAt']
                     application_instance.save(update_fields=['spawner_stopped_at'])
                     break
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 pass
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
@@ -572,7 +574,7 @@ def _fargate_task_stop(cluster_name, task_arn):
     for _ in range(0, 6):
         try:
             client.stop_task(cluster=cluster_name, task=task_arn)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
         else:

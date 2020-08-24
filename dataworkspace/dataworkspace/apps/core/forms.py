@@ -20,7 +20,8 @@ class SupportForm(forms.Form):
         help_text=(
             mark_safe(
                 """
-<p class="govuk-hint">Please use this form to give us feedback, report a technical issue or request data that is not available on Data Workspace.</p>
+<p class="govuk-hint">Please use this form to give us feedback, report a technical issue or request data that is not
+available on Data Workspace.</p>
 <p class="govuk-hint">If you had a technical issue, briefly explain:</p>
 <ul class="govuk-list govuk-list--bullet govuk-hint">
   <li>what you did</li>

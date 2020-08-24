@@ -5,7 +5,8 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core import serializers
 from django.db import transaction
 from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
@@ -226,7 +227,8 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
 
         perm = list(Permission.objects.filter(codename='start_all_applications'))
         users = (
-            User.objects.filter(
+            get_user_model()
+            .objects.filter(
                 Q(groups__permissions__in=perm)
                 | Q(user_permissions__in=perm)
                 | Q(is_superuser=True)
@@ -488,7 +490,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
                 'Removed dataset {} permission'.format(dataset),
             )
 
-        cat_item, _ = VisualisationCatalogueItem.objects.update_or_create(
+        _, _ = VisualisationCatalogueItem.objects.update_or_create(
             visualisation_template=obj, defaults={"name": obj.nice_name}
         )
 

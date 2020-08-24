@@ -2,7 +2,6 @@ import logging
 
 import psycopg2
 from django.conf import settings
-from psycopg2 import sql
 
 from dataworkspace.apps.core.utils import database_dsn
 
@@ -11,9 +10,11 @@ logger = logging.getLogger('app')
 
 def get_columns(database_name, schema=None, table=None, query=None):
     if table is not None and schema is not None:
-        source = sql.SQL("{}.{}").format(sql.Identifier(schema), sql.Identifier(table))
+        source = psycopg2.sql.SQL("{}.{}").format(
+            psycopg2.sql.Identifier(schema), psycopg2.sql.Identifier(table)
+        )
     elif query is not None:
-        source = sql.SQL("({}) AS custom_query".format(query.rstrip(";")))
+        source = psycopg2.sql.SQL("({}) AS custom_query".format(query.rstrip(";")))
     else:
         raise ValueError("Either table or query are required")
 
@@ -22,7 +23,7 @@ def get_columns(database_name, schema=None, table=None, query=None):
     ) as connection:
         try:
             return query_columns(connection, source)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.error("Failed to get dataset fields", exc_info=True)
             return []
 

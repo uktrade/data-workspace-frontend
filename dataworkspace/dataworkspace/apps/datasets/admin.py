@@ -3,11 +3,11 @@ import logging
 from datetime import datetime
 
 from adminsortable2.admin import SortableInlineAdminMixin
+from csp.decorators import csp_update
 from django.contrib import admin
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from csp.decorators import csp_update
 from django.http import HttpResponse
 from django.urls import reverse
 

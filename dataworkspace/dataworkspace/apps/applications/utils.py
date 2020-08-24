@@ -6,17 +6,15 @@ from typing import Dict, List
 
 import boto3
 import botocore
-import gevent
-import redis
-import requests
-from django.contrib.auth import get_user_model
-from psycopg2 import connect, sql
-
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db.models import Q
-
 from django_db_geventpool.utils import close_connection
+import gevent
+from psycopg2 import connect, sql
+import requests
+import redis
 
 from dataworkspace.apps.applications.spawner import (
     get_spawner,
@@ -83,8 +81,6 @@ def application_template_tag_user_commit_from_host(public_host):
         host_basename = possible_host_basename
         user = host_basename_or_user
     else:
-        # Redundant, but making it explicit that host_basename is unchanged
-        host_basename = host_basename
         user = None
 
     matching_tools = (
@@ -319,7 +315,7 @@ def kill_idle_fargate():
         except ExpectedMetricsException:
             logger.info('kill_idle_fargate: Unable to find CPU usage for %s', instance)
             continue
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception(
                 'kill_idle_fargate: Unable to find CPU usage for %s', instance
             )
@@ -332,7 +328,7 @@ def kill_idle_fargate():
 
         try:
             stop_spawner_and_application(instance)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception('kill_idle_fargate: Unable to stop %s', instance)
 
         logger.info('kill_idle_fargate: Stopped application %s', instance)
@@ -400,7 +396,7 @@ def populate_created_stopped_fargate():
             gevent.sleep(0.1)
             try:
                 task = _fargate_task_describe(cluster_name, task_arn)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 logger.exception('populate_created_stopped_fargate %s', instance)
                 gevent.sleep(10)
                 continue
@@ -460,7 +456,8 @@ def _do_delete_unused_datasets_users():
                 """
                 SELECT usename FROM pg_catalog.pg_user
                 WHERE
-                (valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_qs' AND usename NOT LIKE '%_quicksight')
+                (valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_qs'
+                 AND usename NOT LIKE '%_quicksight')
                 OR
                 (valuntil != 'infinity' AND valuntil < now() AND usename LIKE 'user_%' AND usename LIKE '%_qs')
                 ORDER BY usename;
@@ -550,7 +547,7 @@ def _do_delete_unused_datasets_users():
                                                 sql.Identifier(usename),
                                             )
                                         )
-                                    except Exception:
+                                    except Exception:  # pylint: disable=broad-except
                                         # This is likely to happen for private schemas where the current user
                                         # does not have revoke privileges. We carry on in a best effort
                                         # to remove the user
@@ -570,7 +567,7 @@ def _do_delete_unused_datasets_users():
                     except redis.exceptions.LockError:
                         logger.exception('LOCK: Unable to acquire %s', lock_name)
 
-                    except Exception:
+                    except Exception:  # pylint: disable=broad-except
                         logger.exception(
                             'delete_unused_datasets_users: Failed deleting %s', usename
                         )
@@ -688,7 +685,7 @@ def create_update_delete_quicksight_user_data_sources(
             VpcConnectionProperties={"VpcConnectionArn": settings.QUICKSIGHT_VPC_ARN},
         )
 
-        logger.info(f"-> Creating data source: {data_source_id}")
+        logger.info("-> Creating data source: %s", data_source_id)
 
         try:
             data_client.create_data_source(
@@ -701,15 +698,15 @@ def create_update_delete_quicksight_user_data_sources(
                     }
                 ],
             )
-            logger.info(f"-> Created: {data_source_id}")
+            logger.info("-> Created: %s", data_source_id)
 
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == 'ResourceExistsException':
                 logger.info(
-                    f"-> Data source already exists: {data_source_id}. Updating ..."
+                    "-> Data source already exists: %s. Updating ...", data_source_id
                 )
                 data_client.update_data_source(**create_and_update_params)
-                logger.info(f"-> Updated data source: {data_source_id}")
+                logger.info("-> Updated data source: %s", data_source_id)
 
             else:
                 raise e
@@ -726,7 +723,7 @@ def create_update_delete_quicksight_user_data_sources(
     logger.info(all_data_source_ids)
     logger.info(unauthorized_data_source_ids)
     for unauthorized_data_source_id in unauthorized_data_source_ids:
-        logger.info(f"-> Deleting data source: {unauthorized_data_source_id}")
+        logger.info("-> Deleting data source: %s", unauthorized_data_source_id)
         try:
             data_client.delete_data_source(
                 AwsAccountId=account_id, DataSourceId=unauthorized_data_source_id
@@ -744,8 +741,9 @@ def sync_quicksight_permissions(
     user_sso_ids_to_update=tuple(), poll_for_user_creation=False
 ):
     logger.info(
-        f'sync_quicksight_user_datasources({user_sso_ids_to_update}, '
-        f'poll_for_user_creation={poll_for_user_creation}) started'
+        'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) started',
+        user_sso_ids_to_update,
+        poll_for_user_creation,
     )
 
     # QuickSight manages users in a single specific regions
@@ -801,8 +799,8 @@ def sync_quicksight_permissions(
         user_role = quicksight_user['Role']
         user_username = quicksight_user['UserName']
 
-        if user_role != 'AUTHOR' and user_role != 'ADMIN':
-            logger.info(f"Skipping {user_email} with role {user_role}.")
+        if user_role not in {"AUTHOR", "ADMIN"}:
+            logger.info("Skipping %s with role %s.", user_email, user_role)
             continue
 
         try:
@@ -835,19 +833,20 @@ def sync_quicksight_permissions(
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'ResourceNotFoundException':
                         continue  # Can be raised if the user has been deactivated/"deleted"
-                    else:
-                        raise e
+
+                    raise e
 
                 dw_user = get_user_model().objects.filter(email=user_email).first()
                 if not dw_user:
                     logger.info(
-                        f"Skipping {user_email} - cannot match with Data Workspace user."
+                        "Skipping %s - cannot match with Data Workspace user.",
+                        user_email,
                     )
                     continue
-                else:
-                    # We technically ignore the case for where a single email has multiple matches on DW, but I'm not
-                    # sure this is a case that can happen - and if it can, we don't care while prototyping.
-                    logger.info(f"Syncing QuickSight resources for {dw_user}")
+
+                # We technically ignore the case for where a single email has multiple matches on DW, but I'm not
+                # sure this is a case that can happen - and if it can, we don't care while prototyping.
+                logger.info("Syncing QuickSight resources for %s", dw_user)
 
                 source_tables = source_tables_for_user(dw_user)
                 db_role_schema_suffix = stable_identification_suffix(
@@ -877,6 +876,7 @@ def sync_quicksight_permissions(
             )
 
     logger.info(
-        f'sync_quicksight_user_datasources({user_sso_ids_to_update}, '
-        f'poll_for_user_creation={poll_for_user_creation}) finished'
+        'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) finished',
+        user_sso_ids_to_update,
+        poll_for_user_creation,
     )

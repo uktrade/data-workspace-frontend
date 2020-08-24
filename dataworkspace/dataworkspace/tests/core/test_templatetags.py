@@ -1,10 +1,10 @@
 from django.forms import Form, ChoiceField, MultipleChoiceField
+import pytest
+
 from dataworkspace.apps.core.templatetags.core_filters import (
     get_choice_field_data_for_gtm,
     minimal_markdown,
 )
-
-import pytest
 
 
 class _ExampleForm(Form):
@@ -35,7 +35,7 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
 
 
 @pytest.mark.parametrize(
-    "input, expected_output, error_message",
+    "input_, expected_output, error_message",
     (
         ("foo", "<p>foo</p>", "Text should be wrapped in paragraph tags"),
         (
@@ -78,5 +78,5 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
         ),
     ),
 )
-def test_minimal_markdown(input, expected_output, error_message):
-    assert minimal_markdown(input) == expected_output, error_message
+def test_minimal_markdown(input_, expected_output, error_message):
+    assert minimal_markdown(input_) == expected_output, error_message

@@ -1983,10 +1983,10 @@ class TestApplication(unittest.TestCase):
 
     @async_test
     async def test_sentry_dsn_does_not_stop_proxy_from_becoming_healthy(self):
-        session, cleanup_session = client_session()
+        _, cleanup_session = client_session()
         self.add_async_cleanup(cleanup_session)
 
-        cleanup_sentry, sentry_requests = await create_sentry()
+        cleanup_sentry, _ = await create_sentry()
         self.add_async_cleanup(cleanup_sentry)
 
         cleanup_application = await create_application(

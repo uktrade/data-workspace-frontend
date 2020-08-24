@@ -3,7 +3,8 @@ from unittest import mock
 
 import pytest
 from django.contrib.admin.models import LogEntry
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import Client, override_settings
 from django.urls import reverse
@@ -257,7 +258,7 @@ class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db
     @override_settings(QUICKSIGHT_SSO_URL='https://sso.quicksight')
     def test_view_redirects_to_quicksight_sso_url(self):
-        user = User.objects.create(is_staff=True, is_superuser=True)
+        user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
         # Login to admin site
         client = Client(**get_http_sso_data(user))
@@ -272,7 +273,7 @@ class TestQuickSightPollAndRedirect:
 
     @pytest.mark.django_db
     def test_view_starts_celery_polling_job(self):
-        user = User.objects.create(is_staff=True, is_superuser=True)
+        user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
         # Login to admin site
         client = Client(**get_http_sso_data(user))
