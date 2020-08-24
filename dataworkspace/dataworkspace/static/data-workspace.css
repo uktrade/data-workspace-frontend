@@ -1,6 +1,9 @@
 @import 'app-tabs.css';
 @import 'app-copy.css';
 
+.govuk-footer__inline-list--spaced{
+  padding-bottom: 70px;
+}
 .govuk-panel--confirmation--left {
   text-align:left;
 }
