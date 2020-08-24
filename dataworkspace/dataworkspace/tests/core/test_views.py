@@ -181,3 +181,19 @@ def test_quicksight_link_only_shown_to_user_with_permission(
     soup = BeautifulSoup(response.content.decode(response.charset))
     quicksight_link = soup.find('a', href=True, text=expected_text)
     assert quicksight_link.get('href') == expected_href
+
+
+@override_settings(APPSTREAM_URL='https://appstream')
+@pytest.mark.django_db
+def test_tools_page_shows_appstream_url():
+    user = UserFactory.create(is_staff=False, is_superuser=False)
+    perm = Permission.objects.get(codename='access_appstream')
+    user.user_permissions.add(perm)
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    response = client.get(reverse("applications:tools"))
+
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    quicksight_link = soup.find('a', href=True, text="Open SPSS / STATA")
+    assert quicksight_link.get('href') == "https://appstream"
