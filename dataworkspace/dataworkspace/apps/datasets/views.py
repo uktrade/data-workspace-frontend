@@ -85,7 +85,9 @@ def filter_datasets(
     use=None,
     user=None,
 ):
-    search = SearchVector('name', 'short_description', config='english')
+    search = SearchVector('name', weight='A', config='english') + SearchVector(
+        'short_description', weight='B', config='english'
+    )
     search_query = SearchQuery(query, config='english')
 
     dataset_filter = Q(published=True)
@@ -135,7 +137,7 @@ def filter_datasets(
         datasets = datasets.filter(access_filter)
 
     if query:
-        datasets = datasets.filter(search=query)
+        datasets = datasets.filter(search=search_query)
 
     if source:
         datasets = datasets.filter(source_tags__in=source)
@@ -147,7 +149,9 @@ def filter_datasets(
 
 
 def filter_visualisations(query, access, source, user=None):
-    search = SearchVector('name', 'short_description', config='english')
+    search = SearchVector('name', weight='A', config='english') + SearchVector(
+        'short_description', weight='B', config='english'
+    )
     search_query = SearchQuery(query, config='english')
 
     if user and user.has_perm(
@@ -164,7 +168,7 @@ def filter_visualisations(query, access, source, user=None):
     ).annotate(search=search, search_rank=SearchRank(search, search_query))
 
     if query:
-        visualisations = visualisations.filter(search=query)
+        visualisations = visualisations.filter(search=search_query)
 
     if user and access:
         access_filter = (
@@ -853,7 +857,7 @@ class CustomDatasetQueryPreviewView(DetailView):
 
         database = query.database.memorable_name
 
-        columns = datasets_db.get_columns(database, query=query.query,)
+        columns = datasets_db.get_columns(database, query=query.query)
 
         records = []
         sample_size = settings.DATACUT_DATASET_PREVIEW_NUM_OF_ROWS
