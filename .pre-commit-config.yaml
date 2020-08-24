@@ -13,38 +13,10 @@ repos:
     - id: check-case-conflict
     - id: debug-statements
     - id: end-of-file-fixer
-# We run pylint from local env, to ensure modules can be found
 - repo: local
   hooks:
     - id: pylint
       name: pylint
-      entry: env PYTHONPATH=app python3 -m pylint.__main__
+      entry: env PYTHONPATH=app python3 -m pylint.__main__ --rcfile .pylintrc
       language: system
       types: [python]
-      args:
-        - --load-plugins
-        - pylint_django
-        - --disable=bad-continuation
-        - --disable=broad-except
-        - --disable=consider-using-ternary
-        - --disable=duplicate-code
-        - --disable=http-response-with-content-type-json
-        - --disable=invalid-name
-        - --disable=missing-docstring
-        - --disable=no-self-use
-        - --disable=protected-access
-        - --disable=too-few-public-methods
-        - --disable=too-many-arguments
-        - --disable=too-many-branches
-        - --disable=too-many-instance-attributes
-        - --disable=too-many-lines
-        - --disable=too-many-locals
-        - --disable=too-many-public-methods
-        - --disable=too-many-statements
-        - --disable=too-many-ancestors
-        - --include-naming-hint=yes
-        - --max-args=10
-        - --max-line-length=120
-        - --max-locals=25
-        - --max-returns=10
-        - --max-returns=10
