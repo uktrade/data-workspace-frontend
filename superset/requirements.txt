@@ -4,25 +4,32 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
+aiohttp==3.6.2            # via slackclient
 alembic==1.4.2            # via flask-migrate
 amqp==2.5.2               # via kombu
-apache-superset==0.36.0
-apispec[yaml]==1.3.3      # via flask-appbuilder
-attrs==19.3.0             # via jsonschema
+apache-superset==0.37.0   # via -r superset/requirements.in
+apispec[yaml]==3.3.1      # via flask-appbuilder
+async-timeout==3.0.1      # via aiohttp
+attrs==19.3.0             # via aiohttp, jsonschema
 babel==2.8.0              # via flask-babel
 backoff==1.10.0           # via apache-superset
 billiard==3.6.3.0         # via celery
 bleach==3.1.4             # via apache-superset
+cachelib==0.1.1           # via apache-superset
 celery==4.4.2             # via apache-superset
 cffi==1.14.0              # via cryptography
+chardet==3.0.4            # via aiohttp
 click==7.1.1              # via apache-superset, flask, flask-appbuilder
 colorama==0.4.3           # via apache-superset, flask-appbuilder
 contextlib2==0.6.0.post1  # via apache-superset
 croniter==0.3.31          # via apache-superset
 cryptography==2.9         # via apache-superset
+dataclasses==0.6          # via apache-superset
 decorator==4.4.2          # via retry
 defusedxml==0.6.0         # via python3-openid
-flask-appbuilder==2.3.2   # via apache-superset
+dnspython==2.0.0          # via email-validator
+email-validator==1.1.1    # via flask-appbuilder
+flask-appbuilder==3.0.1   # via apache-superset
 flask-babel==1.0.0        # via flask-appbuilder
 flask-caching==1.8.0      # via apache-superset
 flask-compress==1.4.0     # via apache-superset
@@ -38,9 +45,9 @@ geographiclib==1.50       # via geopy
 geopy==1.21.0             # via apache-superset
 gevent==1.5.0             # via gunicorn
 greenlet==0.4.15          # via gevent
-gunicorn[gevent]==20.0.4
+gunicorn[gevent]==20.0.4  # via -r superset/requirements.in, apache-superset
 humanize==2.3.0           # via apache-superset
-importlib-metadata==1.6.0  # via jsonschema, kombu
+idna==2.10                # via email-validator, yarl
 isodate==0.6.0            # via apache-superset
 itsdangerous==1.1.0       # via flask, flask-wtf
 jinja2==2.11.2            # via flask, flask-babel
@@ -51,17 +58,18 @@ markdown==3.2.1           # via apache-superset
 markupsafe==1.1.1         # via jinja2, mako
 marshmallow-enum==1.5.1   # via flask-appbuilder
 marshmallow-sqlalchemy==0.22.3  # via flask-appbuilder
-marshmallow==2.21.0       # via flask-appbuilder, marshmallow-enum, marshmallow-sqlalchemy
-msgpack==0.6.2            # via apache-superset
+marshmallow==3.7.1        # via flask-appbuilder, marshmallow-enum, marshmallow-sqlalchemy
+msgpack==1.0.0            # via apache-superset
+multidict==4.7.6          # via aiohttp, yarl
 numpy==1.18.3             # via pandas, pyarrow
-pandas==0.25.3            # via apache-superset
+pandas==1.0.5             # via apache-superset
 parsedatetime==2.5        # via apache-superset
 pathlib2==2.3.5           # via apache-superset
 polyline==1.4.0           # via apache-superset
 prison==0.1.3             # via flask-appbuilder
-psycopg2-binary==2.8.5
+psycopg2-binary==2.8.5    # via -r superset/requirements.in
 py==1.8.1                 # via retry
-pyarrow==0.16.0           # via apache-superset
+pyarrow==0.17.1           # via apache-superset
 pycparser==2.20           # via cffi
 pyjwt==1.7.1              # via flask-appbuilder, flask-jwt-extended
 pyrsistent==0.16.0        # via jsonschema
@@ -75,14 +83,15 @@ pyyaml==5.3.1             # via apache-superset, apispec
 retry==0.9.2              # via apache-superset
 selenium==3.141.0         # via apache-superset
 simplejson==3.17.0        # via apache-superset
-six==1.14.0               # via bleach, cryptography, flask-jwt-extended, flask-talisman, isodate, jsonschema, pathlib2, polyline, prison, pyarrow, pyrsistent, python-dateutil, sqlalchemy-utils, wtforms-json
-sqlalchemy-utils==0.36.3  # via apache-superset, flask-appbuilder
+six==1.14.0               # via bleach, cryptography, flask-jwt-extended, flask-talisman, isodate, jsonschema, pathlib2, polyline, prison, pyrsistent, python-dateutil, sqlalchemy-utils, wtforms-json
+slackclient==2.5.0        # via apache-superset
+sqlalchemy-utils==0.36.8  # via apache-superset, flask-appbuilder
 sqlalchemy==1.3.16        # via alembic, apache-superset, flask-sqlalchemy, marshmallow-sqlalchemy, sqlalchemy-utils
-sqlparse==0.3.1           # via apache-superset
+sqlparse==0.3.0           # via apache-superset
 urllib3==1.25.9           # via selenium
 vine==1.3.0               # via amqp, celery
 webencodings==0.5.1       # via bleach
 werkzeug==1.0.1           # via flask, flask-jwt-extended
 wtforms-json==0.3.3       # via apache-superset
 wtforms==2.2.1            # via flask-wtf, wtforms-json
-zipp==3.1.0               # via importlib-metadata
+yarl==1.5.1               # via aiohttp
