@@ -21,7 +21,7 @@ hawk-server-asyncio==0.0.13
 Markdown==3.2.2
 MarkupSafe==1.1.1
 notifications-python-client==5.7.0
-psutil==5.7.0
+psutil==5.7.2
 psycogreen==1.0.2
 redis==3.5.3
 pyjwt==1.7.1
