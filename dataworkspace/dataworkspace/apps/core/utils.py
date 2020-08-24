@@ -582,7 +582,7 @@ def get_s3_prefix(user_sso_id):
     )
 
 
-def create_s3_role(user_email_address, user_sso_id):
+def create_file_access_role(user_email_address, user_sso_id):
     iam_client = boto3.client('iam')
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT

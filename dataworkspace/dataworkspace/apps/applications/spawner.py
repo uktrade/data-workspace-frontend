@@ -24,7 +24,10 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4,
     gitlab_api_v4_ecr_pipeline_trigger,
 )
-from dataworkspace.apps.core.utils import create_s3_role, stable_identification_suffix
+from dataworkspace.apps.core.utils import (
+    create_file_access_role,
+    stable_identification_suffix,
+)
 
 logger = logging.getLogger('app')
 
@@ -208,7 +211,9 @@ class FargateSpawner:
 
             logger.info('Starting %s', cmd)
 
-            role_arn, s3_prefix = create_s3_role(user_email_address, user_sso_id)
+            role_arn, s3_prefix = create_file_access_role(
+                user_email_address, user_sso_id
+            )
 
             s3_env = {
                 'S3_PREFIX': s3_prefix,

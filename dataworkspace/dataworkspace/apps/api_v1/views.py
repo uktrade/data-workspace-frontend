@@ -34,7 +34,7 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.core.utils import (
-    create_s3_role,
+    create_file_access_role,
     db_role_schema_suffix_for_app,
     db_role_schema_suffix_for_user,
     new_private_database_credentials,
@@ -290,7 +290,9 @@ def aws_credentials_api_view(request):
 
 def aws_credentials_api_GET(request):
     client = boto3.client('sts')
-    role_arn, _ = create_s3_role(request.user.email, str(request.user.profile.sso_id))
+    role_arn, _ = create_file_access_role(
+        request.user.email, str(request.user.profile.sso_id)
+    )
 
     # Creating new credentials unfortunately sometimes fails
     max_attempts = 3
