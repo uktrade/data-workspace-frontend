@@ -82,11 +82,9 @@
     {% endif %}
 
     {% if appstream_url != "https:///" and perms.applications.access_appstream %}
-      {% with spss_stata_url='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/' %}
-        {% with spss_state_help_link='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/' %}
-          {% with application_summary='SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.' %}
-            {% include 'partials/tool_section.html' with application_name="SPSS / STATA" application_summary=application_summary application_help_link=spss_state_help_link instance=None application_url=spss_stata_url customisable_instance=False has_access=True trailing_horizontal_rule=True %}
-          {% endwith %}
+      {% with spss_state_help_link='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/' %}
+        {% with application_summary='SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.' %}
+          {% include 'partials/tool_section.html' with application_name="SPSS / STATA" application_summary=application_summary application_help_link=spss_state_help_link instance=None application_url=appstream_url customisable_instance=False has_access=True trailing_horizontal_rule=True %}
         {% endwith %}
       {% endwith %}
     {% endif %}
