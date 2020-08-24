@@ -43,6 +43,7 @@ from dataworkspace.apps.applications.models import (
 from dataworkspace.apps.applications.utils import (
     application_options,
     get_quicksight_dashboard_name_url,
+    sync_quicksight_permissions,
 )
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
@@ -191,7 +192,7 @@ def tools_html_GET(request):
                 .order_by('nice_name')
             ],
             'appstream_url': settings.APPSTREAM_URL,
-            'quicksight_url': settings.QUICKSIGHT_SSO_URL,
+            'quicksight_url': reverse('applications:quicksight_redirect'),
             'your_files_enabled': settings.YOUR_FILES_ENABLED,
         },
     )
@@ -234,6 +235,19 @@ def _get_embedded_quicksight_dashboard(request, dashboard_id):
     }
 
     return render(request, 'running.html', context, status=200)
+
+
+@require_GET
+def quicksight_start_polling_sync_and_redirect(request):
+    if not request.user.has_perm('applications.access_quicksight'):
+        return HttpResponse(status=403)
+
+    sync_quicksight_permissions.delay(
+        user_sso_ids_to_update=(request.user.profile.sso_id,),
+        poll_for_user_creation=True,
+    )
+
+    return redirect(settings.QUICKSIGHT_SSO_URL)
 
 
 @require_GET

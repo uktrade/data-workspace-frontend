@@ -740,61 +740,78 @@ def create_update_delete_quicksight_user_data_sources(
 
 
 @celery_app.task()
-def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
-    try:
-        # Lightly enforce that only instance is running the task at a time. The job normally takes just a few minutes.
-        with cache.lock(
-            "sync-quicksight-permissions", blocking_timeout=360, timeout=3600
-        ):
-            logger.info(
-                f'sync_quicksight_user_datasources({user_sso_ids_to_update}) started'
-            )
+def sync_quicksight_permissions(
+    user_sso_ids_to_update=tuple(), poll_for_user_creation=False
+):
+    logger.info(
+        f'sync_quicksight_user_datasources({user_sso_ids_to_update}, '
+        f'poll_for_user_creation={poll_for_user_creation}) started'
+    )
 
-            # QuickSight manages users in a single specific regions
-            user_client = boto3.client(
-                'quicksight', region_name=settings.QUICKSIGHT_USER_REGION
-            )
-            # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
-            data_client = boto3.client('quicksight')
+    # QuickSight manages users in a single specific regions
+    user_client = boto3.client(
+        'quicksight', region_name=settings.QUICKSIGHT_USER_REGION
+    )
+    # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
+    data_client = boto3.client('quicksight')
 
-            account_id = boto3.client('sts').get_caller_identity().get('Account')
+    account_id = boto3.client('sts').get_caller_identity().get('Account')
 
-            quicksight_user_list: List[Dict[str, str]]
-            if len(user_sso_ids_to_update) > 0:
-                quicksight_user_list = []
+    quicksight_user_list: List[Dict[str, str]]
+    if len(user_sso_ids_to_update) > 0:
+        quicksight_user_list = []
 
-                for user_sso_id in user_sso_ids_to_update:
-                    try:
-                        quicksight_user_list.append(
-                            user_client.describe_user(
-                                AwsAccountId=account_id,
-                                Namespace='default',
-                                # \/ This is the format of the user name created by DIT SSO \/
-                                UserName=f'quicksight_federation/{user_sso_id}',
-                            )['User']
-                        )
+        for user_sso_id in user_sso_ids_to_update:
+            # Poll for the user for 5 minutes
+            attempts = (5 * 60) if poll_for_user_creation else 1
+            for _ in range(attempts):
+                attempts -= 1
 
-                    except botocore.exceptions.ClientError as e:
-                        if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                            pass  # If the user isn't an author on QuickSight, just move on.
-                        else:
-                            raise e
+                try:
+                    quicksight_user_list.append(
+                        user_client.describe_user(
+                            AwsAccountId=account_id,
+                            Namespace='default',
+                            # \/ This is the format of the user name created by DIT SSO \/
+                            UserName=f'quicksight_federation/{user_sso_id}',
+                        )['User']
+                    )
+                    break
 
-            else:
-                quicksight_user_list: List[Dict[str, str]] = user_client.list_users(
-                    AwsAccountId=account_id, Namespace='default'
-                )['UserList']
+                except botocore.exceptions.ClientError as e:
+                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                        if attempts > 0:
+                            gevent.sleep(1)
+                        elif poll_for_user_creation:
+                            logger.exception(
+                                "Did not find user with sso id `%s` after 5 minutes",
+                                user_sso_id,
+                            )
+                    else:
+                        raise e
 
-            for quicksight_user in quicksight_user_list:
-                user_arn = quicksight_user['Arn']
-                user_email = quicksight_user['Email']
-                user_role = quicksight_user['Role']
-                user_username = quicksight_user['UserName']
+    else:
+        quicksight_user_list: List[Dict[str, str]] = user_client.list_users(
+            AwsAccountId=account_id, Namespace='default'
+        )['UserList']
 
-                if user_role != 'AUTHOR' and user_role != 'ADMIN':
-                    logger.info(f"Skipping {user_email} with role {user_role}.")
-                    continue
+    for quicksight_user in quicksight_user_list:
+        user_arn = quicksight_user['Arn']
+        user_email = quicksight_user['Email']
+        user_role = quicksight_user['Role']
+        user_username = quicksight_user['UserName']
 
+        if user_role != 'AUTHOR' and user_role != 'ADMIN':
+            logger.info(f"Skipping {user_email} with role {user_role}.")
+            continue
+
+        try:
+            # Lightly enforce that only instance can edit permissions for a user at a time.
+            with cache.lock(
+                f"sync-quicksight-permissions-{user_arn}",
+                blocking_timeout=60,
+                timeout=360,
+            ):
                 try:
                     if user_role == "ADMIN":
                         user_client.update_user(
@@ -854,9 +871,12 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                     data_client, account_id, quicksight_user, creds
                 )
 
-            logger.info(
-                f'sync_quicksight_user_datasources({user_sso_ids_to_update}) finished'
+        except redis.exceptions.LockError:
+            logger.exception(
+                "Unable to sync permissions for %s", quicksight_user['Arn']
             )
 
-    except redis.exceptions.LockError:
-        pass
+    logger.info(
+        f'sync_quicksight_user_datasources({user_sso_ids_to_update}, '
+        f'poll_for_user_creation={poll_for_user_creation}) finished'
+    )

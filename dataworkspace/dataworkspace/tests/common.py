@@ -95,7 +95,7 @@ def get_http_sso_data(user):
         'HTTP_SSO_PROFILE_EMAIL': user.email,
         'HTTP_SSO_PROFILE_CONTACT_EMAIL': user.email,
         'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
-        'HTTP_SSO_PROFILE_USER_ID': uuid.uuid4(),
+        'HTTP_SSO_PROFILE_USER_ID': user.profile.sso_id,
         'HTTP_SSO_PROFILE_LAST_NAME': user.last_name,
         'HTTP_SSO_PROFILE_FIRST_NAME': user.first_name,
     }

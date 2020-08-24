@@ -9,8 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Datacut preview page
-
-## 2020-08-20
+- A background polling job when redirecting to QuickSight to setup and sync users.
 
 ### Changed
 
