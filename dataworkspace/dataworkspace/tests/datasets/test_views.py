@@ -414,7 +414,7 @@ def test_find_datasets_filters_by_source(client):
             'id': ds.id,
             'name': ds.name,
             'slug': ds.slug,
-            'search_rank': mock.ANY,
+            'search_rank': 0.0,
             'short_description': ds.short_description,
             'source_tag_ids': [source.id],
             'purpose': ds.type,
@@ -423,7 +423,7 @@ def test_find_datasets_filters_by_source(client):
             'id': rds.uuid,
             'name': rds.name,
             'slug': rds.slug,
-            'search_rank': mock.ANY,
+            'search_rank': 0.0,
             'short_description': rds.short_description,
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
@@ -432,7 +432,7 @@ def test_find_datasets_filters_by_source(client):
             'id': vis.id,
             'name': vis.name,
             'slug': vis.slug,
-            'search_rank': mock.ANY,
+            'search_rank': 0.0,
             'short_description': vis.short_description,
             'source_tag_ids': [],
             'purpose': DataSetType.VISUALISATION.value,
@@ -906,3 +906,42 @@ class TestVisualisationLinkView:
             )
         )
         assert response.status_code == 404
+
+
+def test_find_datasets_search_by_source_name(client):
+    source = factories.SourceTagFactory(name='source1')
+
+    ds1 = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
+    ds1.source_tags.set([source, factories.SourceTagFactory()])
+
+    ds2 = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
+    ds2.source_tags.set([factories.SourceTagFactory(name='source2')])
+
+    rds = factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+    rds.source_tags.set([source])
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "source1"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds1.id,
+            'name': ds1.name,
+            'slug': ds1.slug,
+            'search_rank': 0.243171,
+            'short_description': ds1.short_description,
+            'source_tag_ids': [source.id],
+            'purpose': ds1.type,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': 0.243171,
+            'short_description': rds.short_description,
+            'source_tag_ids': [source.id],
+            'purpose': DataSetType.REFERENCE.value,
+        },
+    ]

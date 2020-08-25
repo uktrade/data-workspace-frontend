@@ -214,7 +214,7 @@ def find_datasets(request):
         filter_datasets(
             DataSet.objects.live(), query, access, source, use, user=request.user
         )
-        .annotate(source_tag_ids=ArrayAgg('source_tags'))
+        .annotate(source_tag_ids=ArrayAgg('source_tags', distinct=True))
         .annotate(purpose=F('type'))
         .values(
             'id',
