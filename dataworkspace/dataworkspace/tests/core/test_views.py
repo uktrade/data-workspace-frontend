@@ -139,6 +139,10 @@ def test_footer_links(request_client):
             'https://data-services-help.trade.gov.uk/data-workspace',
         ),
         (
+            'Accessibility statement',
+            'https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-workspace-basics/data-workspace-accessibility-statement/',
+        ),
+        (
             'Privacy Policy',
             'https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy',
         ),
