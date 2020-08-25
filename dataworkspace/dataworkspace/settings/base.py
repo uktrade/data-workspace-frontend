@@ -384,7 +384,10 @@ QUICKSIGHT_VPC_ARN = env['QUICKSIGHT_VPC_ARN']
 QUICKSIGHT_DASHBOARD_HOST = 'https://eu-west-2.quicksight.aws.amazon.com'  # For proof-of-concept: plan to remove this.
 QUICKSIGHT_DASHBOARD_GROUP = "DataWorkspace"
 QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN = env['QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN']
-QUICKSIGHT_SSO_URL = "https://sso.trade.gov.uk/idp/sso/init?sp=aws-quicksight&RelayState=https://quicksight.aws.amazon.com"
+QUICKSIGHT_SSO_URL = (
+    "https://sso.trade.gov.uk/idp/sso/init?sp=aws-quicksight"
+    "&RelayState=https://quicksight.aws.amazon.com"
+)
 QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS = 'author-custom-permissions'
 
 WAFFLE_CREATE_MISSING_SWITCHES = True

@@ -21,11 +21,20 @@ docker-test: docker-test-integration docker-test-unit
 docker-clean:
 	docker-compose -f docker-compose-test.yml -p data-workspace-test down -v
 
+.PHONY: check-flake8
+check-flake8:
+	flake8 .
+
+.PHONY: check-black
+check-black:
+	black --exclude=venv --skip-string-normalization --check .
+
+.PHONY: check-pylint
+check-pylint:
+	 env PYTHONPATH=app python3 -m pylint.__main__ --rcfile .pylintrc dataworkspace/dataworkspace test
 
 .PHONY: check
-check:
-	flake8 .
-	black --exclude=venv --skip-string-normalization --check .
+check: check-flake8 check-black check-pylint
 
 
 .PHONY: format

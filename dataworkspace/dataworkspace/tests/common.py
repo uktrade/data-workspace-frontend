@@ -1,6 +1,7 @@
 import uuid
 
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import TransactionTestCase, TestCase
 from django.urls import reverse
@@ -11,7 +12,7 @@ from dataworkspace.apps.datasets.models import ReferenceDataset
 
 class BaseTestCaseMixin:
     def setUp(self):
-        self.user = User.objects.create(
+        self.user = get_user_model().objects.create(
             username='bob.testerson@test.com', is_staff=True, is_superuser=True
         )
         self.user.user_permissions.add(
@@ -72,8 +73,6 @@ class BaseTransactionTestCase(BaseTestCaseMixin, TransactionTestCase):
     Tests that create then try to amend this structure can result in the following error:
     `ALTER TABLE "table_name" because it has pending trigger events` using the TransactionTestCase solves this issue.
     """
-
-    pass
 
 
 class BaseAdminTestCase(BaseTestCase):

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import mock
 
 from django.conf import settings
@@ -15,8 +16,6 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseTestCase, BaseTransactionTestCase
-
-from datetime import datetime, timezone
 
 
 class BaseModelsTests(BaseTestCase):
@@ -1323,7 +1322,7 @@ class TestExternalModels(BaseModelsTests):
         mock_conn.__getitem__.return_value.schema_editor.side_effect = Exception('Fail')
         try:
             self._create_reference_dataset(table_name='test_create_external_error')
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             pass
         self.assertFalse(self._table_exists('test_create_external_error'))
         self.assertFalse(

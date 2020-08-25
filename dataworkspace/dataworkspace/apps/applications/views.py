@@ -1205,7 +1205,7 @@ def _datasets(user, application_template):
     ]
 
     tables_sorted_by_dataset = sorted(
-        [table for table in source_tables],
+        source_tables,
         key=lambda x: (
             x['dataset']['name'],
             x['dataset']['id'],
@@ -1427,8 +1427,11 @@ def visualisation_publish_html_POST(request, gitlab_project):
 
     return HttpResponse(
         status=400,
-        content=f'Invalid action: {action} is not one of [publish-catalogue|unpublish-catalogue|publish-visualisation]'.encode(
-            'utf8'
+        content=(
+            f'Invalid action: {action} is not one of '
+            '[publish-catalogue|unpublish-catalogue|publish-visualisation]'.encode(
+                'utf8'
+            )
         ),
         content_type='utf8',
     )

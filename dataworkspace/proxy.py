@@ -22,6 +22,7 @@ from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yarl import URL
+from sentry import init_sentry
 
 from dataworkspace.utils import normalise_environment
 from proxy_session import SESSION_KEY, redis_session_middleware
@@ -84,8 +85,8 @@ async def async_main():
         f'font-src {root_domain} data:  https://fonts.gstatic.com;'
         f'form-action {root_domain} *.{root_domain};'
         f'frame-ancestors {root_domain};'
-        f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'
-        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"
+        f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'  # pylint: disable=line-too-long
+        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"  # pylint: disable=line-too-long
         f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
         f"connect-src {root_domain} 'self';"
     )
@@ -99,9 +100,9 @@ async def async_main():
             f"form-action 'none';"
             f"frame-ancestors 'none';"
             f'frame-src {direct_host} {sso_host} https://www.googletagmanager.com;'
-            f'img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'
+            f'img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'  # pylint: disable=line-too-long
             f"font-src {root_domain} data: https://fonts.gstatic.com;"
-            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"
+            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"  # pylint: disable=line-too-long
             f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
         )
 
@@ -1199,8 +1200,6 @@ async def async_main():
 
 
 def main():
-    from sentry import init_sentry
-
     init_sentry(integration=AioHttpIntegration())
 
     loop = asyncio.get_event_loop()

@@ -1,13 +1,20 @@
 from django import forms
-from .models import SourceTag
+
 from dataworkspace.apps.datasets.constants import DataSetType
+from .models import SourceTag
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
     template_name = 'datasets/filter.html'
     option_template_name = "datasets/filter_option.html"
 
-    def __init__(self, group_label, hint_text=None, *args, **kwargs):
+    def __init__(
+        self,
+        group_label,
+        hint_text=None,
+        *args,
+        **kwargs  # pylint: disable=keyword-arg-before-vararg
+    ):
         super().__init__(*args, **kwargs)
         self._group_label = group_label
         self._hint_text = hint_text
@@ -27,7 +34,7 @@ class RequestAccessForm(forms.Form):
 class EligibilityCriteriaForm(forms.Form):
     meet_criteria = forms.TypedChoiceField(
         widget=forms.RadioSelect,
-        coerce=lambda x: True if x == 'yes' else False,
+        coerce=lambda x: x == 'yes',
         choices=(('no', 'No'), ('yes', 'Yes')),
     )
 

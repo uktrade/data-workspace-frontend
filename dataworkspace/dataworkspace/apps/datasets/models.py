@@ -396,7 +396,7 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
         return None
 
     def get_filename(self, extension='.csv'):
-        filename = slugify(self.name) + extension
+        filename = slugify(self.name) + extension  # pylint: disable=no-member
         if self.source_reference is not None:
             return f'{self.source_reference}-{filename}'
         return filename
@@ -560,7 +560,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def can_show_link_for_user(self, user):
         return True
 
-    def get_filename(self):
+    def get_filename(self):  # pylint: disable=arguments-differ
         if self.link_type == self.TYPE_LOCAL:
             native_extension = os.path.splitext(self.url)[1]
             extension = native_extension if native_extension else '.csv'
@@ -799,7 +799,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self._original_sort_order = self.record_sort_order
 
     @transaction.atomic
-    def delete(self, **kwargs):
+    def delete(self, **kwargs):  # pylint: disable=arguments-differ
         # Do not allow deletion if this dataset is referenced by other datasets
         linking_fields = ReferenceDatasetField.objects.filter(
             linked_reference_dataset=self

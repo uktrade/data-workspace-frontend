@@ -40,8 +40,8 @@ def find_visualisation(visualisation_uuid, user):
 def find_dataset_or_visualisation(model_id, user):
     if DataSet.objects.filter(pk=model_id):
         return find_dataset(model_id, user)
-    else:
-        return find_visualisation(model_id, user)
+
+    return find_visualisation(model_id, user)
 
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):

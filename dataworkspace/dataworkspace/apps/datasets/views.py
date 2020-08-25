@@ -1,10 +1,9 @@
-import csv
-
-import io
-import json
 from collections import namedtuple
 from contextlib import closing
+import csv
+import io
 from itertools import chain
+import json
 from typing import Union
 
 import boto3
@@ -30,7 +29,6 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView
 from psycopg2 import sql
-from .models import SourceTag
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.applications.utils import get_quicksight_dashboard_name_url
@@ -75,6 +73,7 @@ from dataworkspace.zendesk import (
     create_support_request,
     get_people_url,
 )
+from .models import SourceTag
 
 
 def filter_datasets(
@@ -263,13 +262,11 @@ def find_datasets(request):
         )
 
     # Only display SourceTag filters that are associated with the dataset results
-    source_tags_to_show = set(
-        [
-            source_tag_id
-            for dataset in datasets
-            for source_tag_id in dataset['source_tag_ids']
-        ]
-    )
+    source_tags_to_show = {
+        source_tag_id
+        for dataset in datasets
+        for source_tag_id in dataset['source_tag_ids']
+    }
     form.fields['source'].queryset = SourceTag.objects.order_by('name').filter(
         id__in=source_tags_to_show
     )
@@ -443,6 +440,8 @@ class DatasetDetailView(DetailView):
             return ['datasets/data_cut_dataset.html']
         elif self._is_visualisation():
             return ['datasets/visualisation_catalogue_item.html']
+
+        raise RuntimeError(f"Unknown template for {self}")
 
     def get_preview_limit(self, record_count):
         return min([record_count, settings.REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS])

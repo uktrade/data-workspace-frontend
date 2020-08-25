@@ -1,11 +1,12 @@
-import pytest
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import Client, TestCase
+import pytest
 
 
 @pytest.fixture
 def staff_user_data(db):
-    user = User.objects.create(
+    user = get_user_model().objects.create(
         username='bob.testerson@test.com', is_staff=True, is_superuser=True
     )
 
@@ -26,7 +27,7 @@ def staff_client(staff_user_data):
 
 @pytest.fixture
 def user(db):
-    user = User.objects.create(
+    user = get_user_model().objects.create(
         username='frank.exampleson@test.com', is_staff=False, is_superuser=False
     )
 
@@ -54,7 +55,7 @@ def client(user_data):
 @pytest.fixture
 def sme_user(db):
     sme_group = Group.objects.get(name="Subject Matter Experts")
-    user = User.objects.create(
+    user = get_user_model().objects.create(
         username='jane.sampledóttir@test.com', is_staff=True, is_superuser=False
     )
     sme_group.user_set.add(user)

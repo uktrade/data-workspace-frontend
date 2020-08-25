@@ -54,10 +54,16 @@ def build_private_comment_text(
     asset_manager_text = 'None'
 
     if information_asset_owner:
-        asset_owner_text = f'{information_asset_owner.first_name} {information_asset_owner.last_name} <{information_asset_owner.email}>'
+        asset_owner_text = (
+            f'{information_asset_owner.first_name} {information_asset_owner.last_name} '
+            f'<{information_asset_owner.email}>'
+        )
 
     if information_asset_manager:
-        asset_owner_text = f'{information_asset_manager.first_name} {information_asset_manager.last_name} <{information_asset_manager.email}>'
+        asset_owner_text = (
+            f'{information_asset_manager.first_name} {information_asset_manager.last_name} '
+            f'<{information_asset_manager.email}>'
+        )
 
     private_comment = f"""
 

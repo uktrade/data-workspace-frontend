@@ -301,7 +301,7 @@ def aws_credentials_api_GET(request):
                 RoleSessionName='s3_access_' + str(request.user.profile.sso_id),
                 DurationSeconds=60 * 60,
             )['Credentials']
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             if i == max_attempts - 1:
                 raise
         else:

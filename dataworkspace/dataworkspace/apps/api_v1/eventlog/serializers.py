@@ -33,6 +33,8 @@ class EventLogRelatedObjectField(serializers.RelatedField):
         if isinstance(value, ReferenceDataset):
             return EventLogReferenceDatasetSerializer(value).data
 
+        raise RuntimeError(f"Unknown dataset to serialize: {self}")
+
 
 class EventLogSerializer(serializers.ModelSerializer):
     related_object = EventLogRelatedObjectField(read_only=True)

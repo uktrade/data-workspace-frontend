@@ -152,7 +152,8 @@ def test_footer_links(request_client):
         ),
         (
             '© Crown copyright',
-            'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/',
+            'https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/'
+            'uk-government-licensing-framework/crown-copyright/',
         ),
     ]
 

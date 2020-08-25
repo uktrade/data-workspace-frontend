@@ -343,6 +343,9 @@ class BaseDatasetForm(forms.ModelForm):
         queryset=get_user_model().objects.filter().order_by('email'),
     )
 
+    # Invalid dataset type - must be overridden by the subclass.
+    dataset_type = -1
+
     class Meta:
         model = DataSet
         fields = '__all__'

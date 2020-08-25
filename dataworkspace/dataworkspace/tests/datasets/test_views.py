@@ -2,7 +2,9 @@ from uuid import uuid4
 
 import mock
 import pytest
-from django.contrib.auth.models import User, Permission
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.test import Client
 
@@ -658,7 +660,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
 def test_find_datasets_includes_unpublished_results_based_on_permissions(
     permissions, result_dataset_names
 ):
-    user = User.objects.create(is_staff=True)
+    user = get_user_model().objects.create(is_staff=True)
     perms = Permission.objects.filter(codename__in=permissions).all()
     user.user_permissions.add(*perms)
     user.save()
@@ -711,7 +713,7 @@ def test_request_access_success_content(client):
 @pytest.mark.django_db
 def test_dataset_shows_external_link_warning(source_urls, show_warning):
     ds = factories.DataSetFactory.create(published=True)
-    user = User.objects.create()
+    user = get_user_model().objects.create()
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
 
     for source_url in source_urls:
@@ -730,7 +732,7 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
 @pytest.mark.django_db
 def test_dataset_shows_code_snippets_to_tool_user():
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
-    user = User.objects.create(is_superuser=False)
+    user = get_user_model().objects.create(is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.SourceTableFactory.create(
         dataset=ds, schema="public", table="MY_LOVELY_TABLE"

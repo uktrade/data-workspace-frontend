@@ -1,8 +1,8 @@
 import botocore
+from django.core.cache import cache
 import mock
 import pytest
 import redis
-from django.core.cache import cache
 
 from dataworkspace.apps.applications.utils import (
     delete_unused_datasets_users,
@@ -17,8 +17,9 @@ from dataworkspace.tests.factories import (
 
 class TestDeleteUnusedDatasetsUsers:
     def setup_method(self):
-        print('setup')
-        self.lock = cache.lock("delete_unused_datasets_users", blocking_timeout=0)
+        self.lock = cache.lock(  # pylint: disable=attribute-defined-outside-init
+            "delete_unused_datasets_users", blocking_timeout=0
+        )
 
     def teardown_method(self):
         try:
