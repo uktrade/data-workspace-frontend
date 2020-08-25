@@ -945,3 +945,56 @@ def test_find_datasets_search_by_source_name(client):
             'purpose': DataSetType.REFERENCE.value,
         },
     ]
+
+
+def test_find_datasets_name_weighting(client):
+    ds1 = factories.DataSetFactory.create(
+        published=True, type=1, name='A dataset with a keyword'
+    )
+    ds2 = factories.DataSetFactory.create(
+        published=True,
+        type=2,
+        name='A dataset',
+        short_description='Keyword appears in short description',
+    )
+    factories.DataSetFactory.create(
+        published=True, type=1, name='Does not appear in search'
+    )
+    ds4 = factories.DataSetFactory.create(
+        published=True,
+        type=2,
+        name='Another dataset but the keyword appears twice, keyword.',
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "keyword"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds4.id,
+            'name': ds4.name,
+            'slug': ds4.slug,
+            'search_rank': 0.759909,
+            'short_description': ds4.short_description,
+            'source_tag_ids': mock.ANY,
+            'purpose': ds4.type,
+        },
+        {
+            'id': ds1.id,
+            'name': ds1.name,
+            'slug': ds1.slug,
+            'search_rank': 0.607927,
+            'short_description': ds1.short_description,
+            'source_tag_ids': mock.ANY,
+            'purpose': ds1.type,
+        },
+        {
+            'id': ds2.id,
+            'name': ds2.name,
+            'slug': ds2.slug,
+            'search_rank': 0.243171,
+            'short_description': ds2.short_description,
+            'source_tag_ids': mock.ANY,
+            'purpose': ds2.type,
+        },
+    ]
