@@ -880,5 +880,7 @@ class CustomDatasetQueryPreviewView(DetailView):
                 'records': records,
                 'preview_limit': sample_size,
                 'record_count': len(records),
+                'fixed_table_height_limit': 10,
+                'truncate_limit': 100,
             },
         )

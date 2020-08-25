@@ -15,6 +15,9 @@
   overflow-x: auto;
   max-height: 560px;
 }
+.fixed-table-height {
+  max-height: 100% !important;
+}
 .scrollable-table table thead th {
   padding: 15px;
   background-color: #dee0e2;

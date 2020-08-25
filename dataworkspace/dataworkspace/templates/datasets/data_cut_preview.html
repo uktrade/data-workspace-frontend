@@ -3,32 +3,21 @@
 
 {% block page_title %}Preview {{ query.name }} - {{ block.super }}{% endblock %}
 
-{% block breadcrumbs %}
-  <div class="govuk-breadcrumbs">
-    <ol class="govuk-breadcrumbs__list">
-      <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link" href="/">Home</a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item">
-         <a class="govuk-breadcrumbs__link" href=
-                 "{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}
-        </a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item">
-        Preview {{ query.name }}
-      </li>
-    </ol>
-  </div>
+{% block go_back %}
+  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
+    Back
+  </a>
 {% endblock %}
 
 {% block content %}
+
   <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-          <h1 class="govuk-heading-xl">Preview {{ query.name }}</h1>
-          <div class="govuk-body">
-              See data fields and example data below.
-          </div>
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Preview {{ query.name }}</h1>
+      <div class="govuk-body">
+          See data fields and example data below.
       </div>
+    </div>
   </div>
 
   {% if fields %}
@@ -57,7 +46,7 @@
       <p class="govuk-body">
         Showing {% if record_count < preview_limit %}all {% else %}<strong>{{ preview_limit }}</strong> random {% endif %}rows from data.
       </p>
-      <div class="scrollable-table">
+      <div class="scrollable-table {% if record_count <= fixed_table_height_limit %}fixed-table-height{% endif %}">
         <table class="govuk-table govuk-!-font-size-16">
           <thead>
             <tr class="govuk-table__row">
@@ -74,7 +63,7 @@
                 {% for field in fields %}
                   {% with record|get_key:field as value %}
                       <td class="govuk-table__cell">
-                        {{ value|not_set_if_none }}
+                        {{ value|not_set_if_none|truncatechars:truncate_limit }}
                       </td>
                   {% endwith %}
                 {% endfor %}
@@ -89,6 +78,7 @@
           </tbody>
         </table>
       </div>
+      <br/>
       <a class="govuk-button" href="{% url "datasets:dataset_query_download" dataset_uuid=dataset.id query_id=query.id %}">
         Download Data
       </a>
