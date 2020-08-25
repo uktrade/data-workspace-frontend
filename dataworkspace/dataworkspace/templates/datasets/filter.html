@@ -9,10 +9,17 @@
         {{ widget.hint_text }}
       </span>
       {% endif %}
-      <div class="govuk-checkboxes">
+      <div class="govuk-checkboxes" data-module="filter-show-more">
       {% for group, options, index in widget.optgroups %}
         {% for option in options %}
-          {% include option.template_name with widget=option %}
+          {% if widget.limit_initial_options == 0 or forloop.parentloop.counter <= widget.limit_initial_options %}
+            {% include option.template_name with widget=option hidden=False %}
+          {% elif forloop.parentloop.counter == widget.limit_initial_options|add:1 %}
+            <button class="govuk-button govuk-button--secondary js-filter-show-more hidden" type="button">{{ widget.show_more_label }}</button>
+            {% include option.template_name with widget=option hidden=True %}
+          {% else %}
+            {% include option.template_name with widget=option hidden=True %}
+          {% endif %}
         {% endfor %}
       {%endfor %}
       </div>
