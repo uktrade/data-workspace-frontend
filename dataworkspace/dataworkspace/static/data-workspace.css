@@ -202,3 +202,11 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .app-\!-fill-width {
     width: 100%
 }
+
+.js-enabled .app-js-hidden {
+    display: none;
+}
+
+.hidden {
+    display: none;
+}

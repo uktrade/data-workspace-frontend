@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Datacut preview page design updates
+- Updated home page filter text for purpose and source
+- Only show 10 sources by default, with a button to show more (only if JavaScript available).
 
 ## 2020-08-20
 

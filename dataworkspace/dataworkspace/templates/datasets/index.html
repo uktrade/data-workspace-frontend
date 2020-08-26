@@ -45,8 +45,11 @@
   </div>
 
     <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-hint">
+        Search in data name and description
+      </div>
       <div class="search-field govuk-!-margin-bottom-9">
-        <label class="govuk-label search-field__label" for="search">Search data</label>
+        <label class="govuk-label search-field__label" for="search">Enter your search term(s)</label>
         <div class="search-field-wrapper">
           <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="">
           <div class="search-field-submit-wrapper search-field__item">
@@ -136,4 +139,10 @@
 </div>
 </form>
 
+{% endblock %}
+
+{% block footer_scripts %}
+  {% if form.source.field.choices %}
+    {{ form.media }}
+  {% endif %}
 {% endblock %}
