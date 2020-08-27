@@ -118,10 +118,10 @@ def filter_datasets(
                 datacut_type
             )
 
-            if user.has_perm(master_perm) and (not use or str(master_type) in use):
+            if user.has_perm(master_perm) and (not use or master_type in use):
                 dataset_filter |= Q(published=False, type=master_type)
 
-            if user.has_perm(datacut_perm) and (not use or str(datacut_type) in use):
+            if user.has_perm(datacut_perm) and (not use or datacut_type in use):
                 dataset_filter |= Q(published=False, type=datacut_type)
 
     datasets = datasets.filter(dataset_filter).annotate(
