@@ -498,6 +498,18 @@ resource "aws_security_group" "notebooks" {
   }
 }
 
+resource "aws_security_group_rule" "notebooks_egress_nfs_efs_mount_target_notebooks" {
+  description = "egress-nfs-efs-mount-target"
+
+  security_group_id = "${aws_security_group.notebooks.id}"
+  source_security_group_id = "${aws_security_group.efs_mount_target_notebooks.id}"
+
+  type        = "egress"
+  from_port   = "2049"
+  to_port     = "2049"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "notebooks_ingress_https_from_admin" {
   description = "ingress-https-from-jupytehub"
 
@@ -1321,5 +1333,45 @@ resource "aws_security_group_rule" "superset_lb_egress_http_superset_service" {
   type        = "egress"
   from_port   = "8000"
   to_port     = "8000"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group" "efs_notebooks" {
+  name        = "${var.prefix}-efs-notebooks"
+  description = "${var.prefix}-efs-notebooks"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "${var.prefix}-efs-notebooks"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group" "efs_mount_target_notebooks" {
+  name        = "${var.prefix}-efs-mount-target-notebooks"
+  description = "${var.prefix}-efs-mount-target-notebooks"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  tags {
+    Name = "${var.prefix}-efs-mount-target-notebooks"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "efs_mount_target_notebooks_nfs_ingress_notebooks" {
+  description = "ingress-nfs-notebooks"
+
+  security_group_id = "${aws_security_group.efs_mount_target_notebooks.id}"
+  source_security_group_id = "${aws_security_group.notebooks.id}"
+
+  type        = "ingress"
+  from_port   = "2049"
+  to_port     = "2049"
   protocol    = "tcp"
 }

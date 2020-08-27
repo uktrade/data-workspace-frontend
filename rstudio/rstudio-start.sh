@@ -1,9 +1,11 @@
 #!/bin/bash
 
-set -e
-
 mkdir -p /etc/rstudio/connections
+
+# When on EFS, we expect to not be able to change ownership, and we don't need to
 chown -R rstudio:rstudio /home/rstudio
+
+set -e
 
 # A previous version of this script wrote environment variables to this file,
 # which was synced between container starts. Deleting to ensure we don't

@@ -1,7 +1,10 @@
 from django import forms
 
 from django.contrib import admin
-from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.admin.widgets import (
+    AdminTextInputWidget,
+    FilteredSelectMultiple,
+)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
@@ -39,6 +42,13 @@ class AppUserCreationForm(forms.ModelForm):
 
 
 class AppUserEditForm(forms.ModelForm):
+    home_directory_efs_access_point_id = forms.CharField(
+        label='Home directory ID',
+        help_text='EFS Access Point ID',
+        max_length=128,
+        required=False,
+        widget=AdminTextInputWidget(),
+    )
     can_start_all_applications = forms.BooleanField(
         label='Can start local tools',
         help_text='For JupyterLab, rStudio and pgAdmin',
@@ -85,6 +95,13 @@ class AppUserEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         instance = kwargs['instance']
+
+        self.fields[
+            'home_directory_efs_access_point_id'
+        ].initial = instance.profile.home_directory_efs_access_point_id
+        self.fields['home_directory_efs_access_point_id'].widget.attrs[
+            'class'
+        ] = 'vTextField'
 
         self.fields[
             'can_start_all_applications'
@@ -211,7 +228,19 @@ class AppUserAdmin(UserAdmin):
     )
     form = AppUserEditForm
     fieldsets = [
-        (None, {'fields': ['email', 'sso_id', 'first_name', 'last_name', 'groups']}),
+        (
+            None,
+            {
+                'fields': [
+                    'email',
+                    'sso_id',
+                    'home_directory_efs_access_point_id',
+                    'first_name',
+                    'last_name',
+                    'groups',
+                ]
+            },
+        ),
         (
             'Permissions',
             {
@@ -430,6 +459,11 @@ class AppUserAdmin(UserAdmin):
                         ],
                         f"Removed application {visualisation_catalogue_item} permission",
                     )
+
+        if 'home_directory_efs_access_point_id' in form.cleaned_data:
+            obj.profile.home_directory_efs_access_point_id = form.cleaned_data[
+                'home_directory_efs_access_point_id'
+            ]
 
         super().save_model(request, obj, form, change)
 

@@ -145,6 +145,8 @@ data "template_file" "admin_container_definitions" {
     superset_root = "https://${var.superset_internal_domain}/"
 
     admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
+
+    efs_id = "${aws_efs_file_system.notebooks.id}"
   }
 }
 
@@ -258,6 +260,8 @@ data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
     superset_root = "${aws_lb.superset_multiuser.dns_name}"
 
     admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
+
+    efs_id = "${aws_efs_file_system.notebooks.id}"
   }
 }
 

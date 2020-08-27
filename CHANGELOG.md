@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- EFS, and the ability to configure a user's tools to launch with their home directory mounted via a pre-existing EFS access point
+
+## 2020-08-20
+
+### Added
+
 - Add weighting to dataset search
 - Allow for searching of datasets by source tag name
 

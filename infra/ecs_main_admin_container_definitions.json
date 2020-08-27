@@ -32,6 +32,10 @@
       "value": ".${root_domain}"
     },
     {
+      "name": "EFS_ID",
+      "value": "${efs_id}"
+    },
+    {
       "name": "S3_POLICY_DOCUMENT_TEMPLATE_BASE64",
       "value": "${notebook_task_role__policy_document_template_base64}"
     },

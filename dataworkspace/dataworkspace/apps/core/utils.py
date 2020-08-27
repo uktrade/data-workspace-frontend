@@ -582,7 +582,7 @@ def get_s3_prefix(user_sso_id):
     )
 
 
-def create_s3_role(user_email_address, user_sso_id):
+def create_file_access_role(user_email_address, user_sso_id, access_point_id):
     iam_client = boto3.client('iam')
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
@@ -637,7 +637,7 @@ def create_s3_role(user_email_address, user_sso_id):
                 PolicyName=policy_name,
                 PolicyDocument=policy_document_template.replace(
                     '__S3_PREFIX__', s3_prefix
-                ),
+                ).replace('__ACCESS_POINT_ID__', access_point_id),
             )
         except iam_client.exceptions.NoSuchEntityException:
             if i == max_attempts - 1:
