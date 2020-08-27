@@ -637,7 +637,7 @@ def create_file_access_role(user_email_address, user_sso_id, access_point_id):
                 PolicyName=policy_name,
                 PolicyDocument=policy_document_template.replace(
                     '__S3_PREFIX__', s3_prefix
-                ).replace('__ACCESS_POINT_ID__', access_point_id),
+                ).replace('__ACCESS_POINT_ID__', access_point_id or ''),
             )
         except iam_client.exceptions.NoSuchEntityException:
             if i == max_attempts - 1:
