@@ -47,6 +47,7 @@ class AppUserEditForm(forms.ModelForm):
         help_text='EFS Access Point ID',
         max_length=128,
         required=False,
+        empty_value=None,
         widget=AdminTextInputWidget(),
     )
     can_start_all_applications = forms.BooleanField(
