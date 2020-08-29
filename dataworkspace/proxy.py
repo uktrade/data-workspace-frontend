@@ -306,6 +306,7 @@ async def async_main():
                 CIMultiDict(admin_headers(downstream_request)),
                 URL(admin_root).with_path(f'/error_{status}'),
                 params,
+                await get_data(downstream_request),
                 default_http_timeout,
             )
 
@@ -386,6 +387,7 @@ async def async_main():
                 CIMultiDict(admin_headers(downstream_request)),
                 admin_root + host_html_path + '/spawning',
                 {},
+                await get_data(downstream_request),
                 default_http_timeout,
                 (('content-security-policy', csp_application_spawning),),
             )
@@ -463,6 +465,7 @@ async def async_main():
                 CIMultiDict(application_headers(downstream_request)),
                 upstream_url,
                 query,
+                await get_data(downstream_request),
                 spawning_http_timeout,
                 # Although the application is spawning, if the response makes it back to the client,
                 # we know the application is running, so we return the _running_ CSP headers
@@ -482,6 +485,7 @@ async def async_main():
                 CIMultiDict(admin_headers(downstream_request)),
                 admin_root + host_html_path + '/spawning',
                 {},
+                await get_data(downstream_request),
                 default_http_timeout,
                 (('content-security-policy', csp_application_spawning),),
             )
@@ -517,6 +521,7 @@ async def async_main():
             CIMultiDict(admin_headers(downstream_request)),
             admin_root + host_html_path + '/running',
             {},
+            await get_data(downstream_request),
             default_http_timeout,
             (
                 (
@@ -539,6 +544,7 @@ async def async_main():
             CIMultiDict(application_headers(downstream_request)),
             upstream_url,
             query,
+            await get_data(downstream_request),
             default_http_timeout,
             (
                 (
@@ -557,6 +563,7 @@ async def async_main():
             CIMultiDict(mirror_headers(downstream_request)),
             upstream_url,
             {},
+            await get_data(downstream_request),
             default_http_timeout,
         )
 
@@ -569,6 +576,7 @@ async def async_main():
             CIMultiDict(superset_headers(downstream_request)),
             upstream_url,
             query,
+            await get_data(downstream_request),
             default_http_timeout,
             (
                 (
@@ -586,6 +594,7 @@ async def async_main():
             CIMultiDict(admin_headers(downstream_request)),
             upstream_url,
             query,
+            await get_data(downstream_request),
             default_http_timeout,
         )
 
@@ -699,15 +708,7 @@ async def async_main():
 
         asyncio.create_task(_send())
 
-    async def handle_http(
-        downstream_request,
-        upstream_method,
-        upstream_headers,
-        upstream_url,
-        upstream_query,
-        timeout,
-        response_headers=tuple(),
-    ):
+    async def get_data(downstream_request):
         # Avoid aiohttp treating request as chunked unnecessarily, which works
         # for some upstream servers, but not all. Specifically RStudio drops
         # GET responses half way through if the request specified a chunked
@@ -715,21 +716,31 @@ async def async_main():
         # is not documented anywhere.
 
         # fmt: off
-        data = \
+        return \
             b'' if (
-                'content-length' not in upstream_headers
+                'content-length' not in downstream_request.headers
                 and downstream_request.headers.get('transfer-encoding', '').lower() != 'chunked'
             ) else \
             await downstream_request.read() if downstream_request.content.at_eof() else \
             downstream_request.content
         # fmt: on
 
+    async def handle_http(
+        downstream_request,
+        upstream_method,
+        upstream_headers,
+        upstream_url,
+        upstream_query,
+        upstream_data,
+        timeout,
+        response_headers=tuple(),
+    ):
         async with client_session.request(
             upstream_method,
             str(upstream_url),
             params=upstream_query,
             headers=upstream_headers,
-            data=data,
+            data=upstream_data,
             allow_redirects=False,
             timeout=timeout,
         ) as upstream_response:
