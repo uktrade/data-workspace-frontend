@@ -282,7 +282,13 @@ async def async_main():
                 return await handle_mirror(downstream_request, method, path)
             if superset_requested:
                 return await handle_superset(downstream_request, method, path, query)
-            return await handle_admin(downstream_request, method, path, query)
+            return await handle_admin(
+                downstream_request,
+                method,
+                path,
+                query,
+                await get_data(downstream_request),
+            )
         except Exception as exception:
             user_exception = isinstance(exception, UserException)
             if not user_exception or (user_exception and exception.args[1] == 500):
@@ -586,7 +592,7 @@ async def async_main():
             ),
         )
 
-    async def handle_admin(downstream_request, method, path, query):
+    async def handle_admin(downstream_request, method, path, query, data):
         upstream_url = URL(admin_root).with_path(path)
         return await handle_http(
             downstream_request,
@@ -594,7 +600,7 @@ async def async_main():
             CIMultiDict(admin_headers(downstream_request)),
             upstream_url,
             query,
-            await get_data(downstream_request),
+            data,
             default_http_timeout,
         )
 
@@ -808,7 +814,9 @@ async def async_main():
                 request['logger'].info(
                     'SSO-token unathenticated: missing authorization header'
                 )
-                return await handle_admin(request, 'GET', '/error_403', {})
+                return await handle_admin(
+                    request, 'GET', '/error_403', {}, await get_data(request)
+                )
 
             async with client_session.get(
                 f'{sso_base_url}{me_path}',
@@ -822,7 +830,9 @@ async def async_main():
                 request['logger'].info(
                     'SSO-token unathenticated: bad authorization header'
                 )
-                return await handle_admin(request, 'GET', '/error_403', {})
+                return await handle_admin(
+                    request, 'GET', '/error_403', {}, await get_data(request)
+                )
 
             request['sso_profile_headers'] = (
                 ('sso-profile-email', me_profile['email']),
@@ -1149,7 +1159,9 @@ async def async_main():
 
             if not peer_ip_in_whitelist:
                 request['logger'].info('IP-whitelist unauthenticated: %s', peer_ip)
-                return await handle_admin(request, 'GET', '/error_403', {})
+                return await handle_admin(
+                    request, 'GET', '/error_403', {}, await get_data(request)
+                )
 
             request['logger'].info('IP-whitelist authenticated: %s', peer_ip)
             return await handler(request)
