@@ -285,6 +285,7 @@ async def async_main():
             return await handle_admin(
                 downstream_request,
                 method,
+                CIMultiDict(admin_headers(downstream_request)),
                 path,
                 query,
                 await get_data(downstream_request),
@@ -592,12 +593,12 @@ async def async_main():
             ),
         )
 
-    async def handle_admin(downstream_request, method, path, query, data):
+    async def handle_admin(downstream_request, method, headers, path, query, data):
         upstream_url = URL(admin_root).with_path(path)
         return await handle_http(
             downstream_request,
             method,
-            CIMultiDict(admin_headers(downstream_request)),
+            headers,
             upstream_url,
             query,
             data,
@@ -815,7 +816,12 @@ async def async_main():
                     'SSO-token unathenticated: missing authorization header'
                 )
                 return await handle_admin(
-                    request, 'GET', '/error_403', {}, await get_data(request)
+                    request,
+                    'GET',
+                    CIMultiDict(admin_headers(request)),
+                    '/error_403',
+                    {},
+                    await get_data(request),
                 )
 
             async with client_session.get(
@@ -831,7 +837,12 @@ async def async_main():
                     'SSO-token unathenticated: bad authorization header'
                 )
                 return await handle_admin(
-                    request, 'GET', '/error_403', {}, await get_data(request)
+                    request,
+                    'GET',
+                    CIMultiDict(admin_headers(request)),
+                    '/error_403',
+                    {},
+                    await get_data(request),
                 )
 
             request['sso_profile_headers'] = (
@@ -1160,7 +1171,12 @@ async def async_main():
             if not peer_ip_in_whitelist:
                 request['logger'].info('IP-whitelist unauthenticated: %s', peer_ip)
                 return await handle_admin(
-                    request, 'GET', '/error_403', {}, await get_data(request)
+                    request,
+                    'GET',
+                    CIMultiDict(admin_headers(request)),
+                    '/error_403',
+                    {},
+                    await get_data(request),
                 )
 
             request['logger'].info('IP-whitelist authenticated: %s', peer_ip)
