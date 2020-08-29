@@ -66,6 +66,12 @@ async def async_main():
     ga_tracking_id = env.get('GA_TRACKING_ID')
     mirror_remote_root = env['MIRROR_REMOTE_ROOT']
     mirror_local_root = '/__mirror/'
+    required_admin_headers = (
+        'cookie',
+        'host',
+        'x-csrftoken',
+        'x-data-workspace-no-modify-application-instance',
+    )
 
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
@@ -144,9 +150,26 @@ async def async_main():
             if key.lower() != 'transfer-encoding'
         )
 
-    def admin_headers(downstream_request):
+    def admin_headers_request(downstream_request):
+        # When we make a deliberate request to the admin application from the
+        # proxy we don't want to proxy content-length or content-type
         return (
-            without_transfer_encoding(downstream_request)
+            tuple(
+                (key, value)
+                for key, value in downstream_request.headers.items()
+                if key.lower() in required_admin_headers
+            )
+            + downstream_request['sso_profile_headers']
+        )
+
+    def admin_headers_proxy(downstream_request):
+        return (
+            tuple(
+                (key, value)
+                for key, value in downstream_request.headers.items()
+                if key.lower()
+                in required_admin_headers + ('content-length', 'content-type')
+            )
             + downstream_request['sso_profile_headers']
         )
 
@@ -285,7 +308,7 @@ async def async_main():
             return await handle_admin(
                 downstream_request,
                 method,
-                CIMultiDict(admin_headers(downstream_request)),
+                CIMultiDict(admin_headers_proxy(downstream_request)),
                 path,
                 query,
                 await get_data(downstream_request),
@@ -310,10 +333,10 @@ async def async_main():
             return await handle_http(
                 downstream_request,
                 'GET',
-                CIMultiDict(admin_headers(downstream_request)),
+                CIMultiDict(admin_headers_request(downstream_request)),
                 URL(admin_root).with_path(f'/error_{status}'),
                 params,
-                await get_data(downstream_request),
+                b'',
                 default_http_timeout,
             )
 
@@ -334,7 +357,9 @@ async def async_main():
         host_html_path = '/tools/' + public_host
 
         async with client_session.request(
-            'GET', host_api_url, headers=CIMultiDict(admin_headers(downstream_request))
+            'GET',
+            host_api_url,
+            headers=CIMultiDict(admin_headers_request(downstream_request)),
         ) as response:
             host_exists = response.status == 200
             application = await response.json()
@@ -350,7 +375,7 @@ async def async_main():
                 async with client_session.request(
                     'DELETE',
                     host_api_url,
-                    headers=CIMultiDict(admin_headers(downstream_request)),
+                    headers=CIMultiDict(admin_headers_request(downstream_request)),
                 ) as delete_response:
                     await delete_response.read()
             raise UserException('Application ' + application['state'], 500)
@@ -369,7 +394,7 @@ async def async_main():
                     'PUT',
                     host_api_url,
                     params=params,
-                    headers=CIMultiDict(admin_headers(downstream_request)),
+                    headers=CIMultiDict(admin_headers_request(downstream_request)),
                 ) as response:
                     host_exists = response.status == 200
                     application = await response.json()
@@ -391,10 +416,10 @@ async def async_main():
             return await handle_http(
                 downstream_request,
                 'GET',
-                CIMultiDict(admin_headers(downstream_request)),
+                CIMultiDict(admin_headers_request(downstream_request)),
                 admin_root + host_html_path + '/spawning',
                 {},
-                await get_data(downstream_request),
+                b'',
                 default_http_timeout,
                 (('content-security-policy', csp_application_spawning),),
             )
@@ -489,10 +514,10 @@ async def async_main():
             return await handle_http(
                 downstream_request,
                 'GET',
-                CIMultiDict(admin_headers(downstream_request)),
+                CIMultiDict(admin_headers_request(downstream_request)),
                 admin_root + host_html_path + '/spawning',
                 {},
-                await get_data(downstream_request),
+                b'',
                 default_http_timeout,
                 (('content-security-policy', csp_application_spawning),),
             )
@@ -506,7 +531,7 @@ async def async_main():
                     'PATCH',
                     host_api_url,
                     json={'state': 'RUNNING'},
-                    headers=CIMultiDict(admin_headers(downstream_request)),
+                    headers=CIMultiDict(admin_headers_request(downstream_request)),
                     timeout=default_http_timeout,
                 ) as patch_response:
                     await patch_response.read()
@@ -525,10 +550,10 @@ async def async_main():
         return await handle_http(
             downstream_request,
             'GET',
-            CIMultiDict(admin_headers(downstream_request)),
+            CIMultiDict(admin_headers_request(downstream_request)),
             admin_root + host_html_path + '/running',
             {},
-            await get_data(downstream_request),
+            b'',
             default_http_timeout,
             (
                 (
@@ -818,10 +843,10 @@ async def async_main():
                 return await handle_admin(
                     request,
                     'GET',
-                    CIMultiDict(admin_headers(request)),
+                    CIMultiDict(admin_headers_request(request)),
                     '/error_403',
                     {},
-                    await get_data(request),
+                    b'',
                 )
 
             async with client_session.get(
@@ -839,10 +864,10 @@ async def async_main():
                 return await handle_admin(
                     request,
                     'GET',
-                    CIMultiDict(admin_headers(request)),
+                    CIMultiDict(admin_headers_request(request)),
                     '/error_403',
                     {},
-                    await get_data(request),
+                    b'',
                 )
 
             request['sso_profile_headers'] = (
@@ -1173,10 +1198,10 @@ async def async_main():
                 return await handle_admin(
                     request,
                     'GET',
-                    CIMultiDict(admin_headers(request)),
+                    CIMultiDict(admin_headers_request(request)),
                     '/error_403',
                     {},
-                    await get_data(request),
+                    b'',
                 )
 
             request['logger'].info('IP-whitelist authenticated: %s', peer_ip)
