@@ -744,6 +744,7 @@ class SourceLinkDownloadView(DetailView):
         response[
             'Content-Disposition'
         ] = f'attachment; filename="{source_link.get_filename()}"'
+        response['Content-Length'] = file_object['ContentLength']
 
         return response
 
