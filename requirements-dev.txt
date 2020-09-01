@@ -15,6 +15,6 @@ pytest==6.0.1
 pytest-cov==2.10.0
 pytest-mock==3.3.1
 pytest-django==3.9.0
-pytest-timeout==1.4.1
+pytest-timeout==1.4.2
 django-debug-toolbar==2.2
 requests-mock==1.8.0
