@@ -5,7 +5,7 @@
         <h2 class="govuk-fieldset__heading">{{ widget.group_label }}</h2>
       </legend>
       {% if widget.hint_text %}
-      <span id="waste-hint" class="govuk-hint">
+      <span id="{{ id }}-hint" class="govuk-hint">
         {{ widget.hint_text }}
       </span>
       {% endif %}
