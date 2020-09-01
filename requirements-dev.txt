@@ -12,7 +12,7 @@ mohawk==1.1.0
 pylint==2.5.3
 pylint-django==2.3.0
 pytest==6.0.1
-pytest-cov==2.10.0
+pytest-cov==2.10.1
 pytest-mock==3.3.1
 pytest-django==3.9.0
 pytest-timeout==1.4.2
