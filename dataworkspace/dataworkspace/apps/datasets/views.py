@@ -5,7 +5,7 @@ import csv
 import io
 from itertools import chain
 import json
-from typing import Union
+from typing import Set
 
 import boto3
 from botocore.exceptions import ClientError
@@ -13,12 +13,23 @@ from csp.decorators import csp_update
 from psycopg2 import sql
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import CharField, F, IntegerField, Q, Value
+from django.db.models import (
+    F,
+    IntegerField,
+    Q,
+    Value,
+    Case,
+    When,
+    BooleanField,
+    UUIDField,
+    QuerySet,
+)
 from django.http import (
     Http404,
     HttpResponse,
@@ -76,25 +87,21 @@ from dataworkspace.zendesk import (
     create_support_request,
     get_people_url,
 )
-from .models import SourceTag
 
 
-def filter_datasets(
-    datasets: Union[ReferenceDataset, DataSet],
-    query,
-    access,
-    source,
-    use=None,
-    user=None,
+def preprocess_datasets(
+    datasets: QuerySet, query, use=None, user=None,
 ):
-    search = (
-        SearchVector('name', weight='A', config='english')
-        + SearchVector('short_description', weight='B', config='english')
-        + SearchVector('source_tags__name', weight='B', config='english')
-    )
-    search_query = SearchQuery(query, config='english')
+    """
+    Filters the dataset queryset for:
+        1) visibility (whether the user can know if the dataset exists)
+        2) matches the search terms
 
-    dataset_filter = Q(published=True)
+    Annotates the dataset queryset with:
+        1) `has_access`, if the user can use the dataset's data.
+    """
+    # Filter out datasets that the user is not allowed to even know about.
+    visibility_filter = Q(published=True)
 
     if user:
         if datasets.model is ReferenceDataset:
@@ -104,7 +111,7 @@ def filter_datasets(
             )
 
             if user.has_perm(reference_perm):
-                dataset_filter |= Q(published=False)
+                visibility_filter |= Q(published=False)
 
         if datasets.model is DataSet:
             master_type, datacut_type = (
@@ -118,18 +125,34 @@ def filter_datasets(
                 datacut_type
             )
 
-            if user.has_perm(master_perm) and (not use or master_type in use):
-                dataset_filter |= Q(published=False, type=master_type)
+            if user.has_perm(master_perm):
+                visibility_filter |= Q(published=False, type=master_type)
 
-            if user.has_perm(datacut_perm) and (not use or datacut_type in use):
-                dataset_filter |= Q(published=False, type=datacut_type)
+            if user.has_perm(datacut_perm):
+                visibility_filter |= Q(published=False, type=datacut_type)
 
-    datasets = datasets.filter(dataset_filter).annotate(
+    datasets = datasets.filter(visibility_filter)
+
+    # Filter out datasets that don't match the search terms
+    search = (
+        SearchVector('name', weight='A', config='english')
+        + SearchVector('short_description', weight='B', config='english')
+        + SearchVector('source_tags__name', weight='B', config='english')
+    )
+    search_query = SearchQuery(query, config='english')
+
+    datasets = datasets.annotate(
         search=search, search_rank=SearchRank(search, search_query)
     )
 
-    if user and access and datasets.model is not ReferenceDataset:
-        access_filter = (
+    if query:
+        datasets = datasets.filter(search=search_query)
+
+    # Mark up whether the user can access the data in the dataset.
+    access_filter = Q()
+
+    if user and datasets.model is not ReferenceDataset:
+        access_filter &= (
             Q(user_access_type='REQUIRES_AUTHENTICATION')
             & (
                 Q(datasetuserpermission__user=user)
@@ -138,43 +161,64 @@ def filter_datasets(
         ) | Q(
             user_access_type='REQUIRES_AUTHORIZATION', datasetuserpermission__user=user
         )
-        datasets = datasets.filter(access_filter)
 
-    if query:
-        datasets = datasets.filter(search=search_query)
+    datasets = datasets.annotate(
+        has_access=Case(
+            When(access_filter, then=True), default=False, output_field=BooleanField(),
+        )
+        if access_filter
+        else Value(True, BooleanField()),
+    )
 
-    if source:
-        datasets = datasets.filter(source_tags__in=source)
+    # Pull in the source tag IDs for the dataset
+    datasets = datasets.annotate(source_tag_ids=ArrayAgg('source_tags', distinct=True))
 
-    if use:
-        datasets = datasets.filter(type__in=use)
+    # Define a `purpose` column denoting the dataset type
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(
+            purpose=Value(DataSetType.REFERENCE.value, IntegerField())
+        )
+    else:
+        datasets = datasets.annotate(purpose=F('type'))
 
     return datasets
 
 
-def filter_visualisations(query, access, source, user=None):
+def preprocess_visualisations(visualisations: QuerySet, query, user=None):
+    """
+    Filters the visualisation queryset for:
+        1) visibility (whether the user can know if the visualisation exists)
+        2) matches the search terms
+
+    Annotates the visualisation queryset with:
+        1) `has_access`, if the user can use the visualisation.
+    """
+    # Filter out visualisations that the user is not allowed to even know about.
+    if not (
+        user
+        and user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(
+                DataSetType.VISUALISATION.value
+            )
+        )
+    ):
+        visualisations = visualisations.filter(published=True)
+
+    # Filter out visualisations that don't match the search terms
     search = SearchVector('name', weight='A', config='english') + SearchVector(
         'short_description', weight='B', config='english'
     )
     search_query = SearchQuery(query, config='english')
 
-    if user and user.has_perm(
-        dataset_type_to_manage_unpublished_permission_codename(
-            DataSetType.VISUALISATION.value
-        )
-    ):
-        published_filter = Q()
-    else:
-        published_filter = Q(published=True)
-
-    visualisations = VisualisationCatalogueItem.objects.filter(
-        published_filter
-    ).annotate(search=search, search_rank=SearchRank(search, search_query))
+    visualisations = visualisations.annotate(
+        search=search, search_rank=SearchRank(search, search_query)
+    )
 
     if query:
         visualisations = visualisations.filter(search=search_query)
 
-    if user and access:
+    # Mark up whether the user can access the visualisation.
+    if user:
         access_filter = (
             Q(user_access_type='REQUIRES_AUTHENTICATION')
             & (
@@ -185,99 +229,117 @@ def filter_visualisations(query, access, source, user=None):
             user_access_type='REQUIRES_AUTHORIZATION',
             visualisationuserpermission__user=user,
         )
-        visualisations = visualisations.filter(access_filter)
+    else:
+        access_filter = Q()
 
-    if source:
-        visualisations = visualisations.filter(
-            visualisation_template__datasetapplicationtemplatepermission__dataset__source_tags__in=source
+    visualisations = visualisations.annotate(
+        has_access=Case(
+            When(access_filter, then=True), default=False, output_field=BooleanField(),
         )
+        if access_filter
+        else Value(True, BooleanField()),
+    )
+
+    # Pull in the source tag IDs for the dataset
+    visualisations = visualisations.annotate(
+        source_tag_ids=Value([], ArrayField(UUIDField()))
+    )
+
+    # Define a `purpose` column denoting the dataset type
+    visualisations = visualisations.annotate(
+        purpose=Value(DataSetType.VISUALISATION.value, IntegerField())
+    )
 
     return visualisations
+
+
+def _matches_filters(data, access: bool, use: Set, source_ids: Set):
+    return (
+        (not access or data['has_access'])
+        and (not use or use == [None] or data['purpose'] in use)
+        and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
+    )
 
 
 @require_GET
 def find_datasets(request):
     form = DatasetSearchForm(request.GET)
+    purposes = form.fields[
+        'use'
+    ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
     if form.is_valid():
         query = form.cleaned_data.get("q")
         access = form.cleaned_data.get("access")
-        use = [int(u) for u in form.cleaned_data.get("use")]
-        source = form.cleaned_data.get("source")
+        use = set(form.cleaned_data.get("use"))
+        source_ids = set(source.id for source in form.cleaned_data.get("source"))
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
-    # Django orders model fields before any additional fields like annotations in generated SQL statement
-    # which means doing a UNION between a model field in one query and an extra field in another results
-    # in different columns getting connected into a single result one (which sometimes leads to a type error
-    # and sometimes succeeds with values ending up in the wrong place). To avoid this, we alias model field
-    # `type` with `.annotate`, making sure it's added to the end of SELECT field list.
-    datasets = (
-        filter_datasets(
-            DataSet.objects.live(), query, access, source, use, user=request.user
-        )
-        .annotate(source_tag_ids=ArrayAgg('source_tags', distinct=True))
-        .annotate(purpose=F('type'))
-        .values(
-            'id',
-            'name',
-            'slug',
-            'short_description',
-            'search_rank',
-            'source_tag_ids',
-            'purpose',
+    master_and_datacut_datasets = preprocess_datasets(
+        DataSet.objects.live(), query, use, user=request.user
+    ).values(
+        'id',
+        'name',
+        'slug',
+        'short_description',
+        'search_rank',
+        'source_tag_ids',
+        'purpose',
+        'has_access',
+    )
+
+    reference_datasets = preprocess_datasets(
+        ReferenceDataset.objects.live(), query, user=request.user,
+    ).values(
+        'uuid',
+        'name',
+        'slug',
+        'short_description',
+        'search_rank',
+        'source_tag_ids',
+        'purpose',
+        'has_access',
+    )
+
+    visualisations = preprocess_visualisations(
+        VisualisationCatalogueItem.objects, query, user=request.user
+    ).values(
+        'id',
+        'name',
+        'slug',
+        'short_description',
+        'search_rank',
+        'source_tag_ids',
+        'purpose',
+        'has_access',
+    )
+
+    # Combine all datasets and visualisations, then filter out any records that don't match the selected
+    # filters. We do this in Python, not the DB, because we need to run varied aggregations on the datasets in
+    # order to count how many records will be available if users apply additional filters and this was difficult
+    # to do in the DB. This process will slowly degrade over time but should be sufficient while the number of
+    # datasets is relatively low (hundreds/thousands).
+    matching_datasets = list(
+        filter(
+            lambda d: _matches_filters(d, bool(access), use, source_ids),
+            master_and_datacut_datasets.union(
+                reference_datasets.union(visualisations)
+            ).order_by('-search_rank', 'name'),
         )
     )
 
-    # Include reference datasets if required
-    if not use or DataSetType.REFERENCE.value in use:
-        reference_datasets = filter_datasets(
-            ReferenceDataset.objects.live(), query, access, source, user=request.user
-        )
-        datasets = datasets.union(
-            reference_datasets.annotate(source_tag_ids=ArrayAgg('source_tags'))
-            .annotate(purpose=Value(DataSetType.REFERENCE.value, IntegerField()))
-            .values(
-                'uuid',
-                'name',
-                'slug',
-                'short_description',
-                'search_rank',
-                'source_tag_ids',
-                'purpose',
-            )
-        )
-
-    if not use or DataSetType.VISUALISATION.value in use:
-        datasets = datasets.union(
-            filter_visualisations(query, access, source, user=request.user)
-            .annotate(source_tag_ids=Value("{}", CharField()))
-            .annotate(purpose=Value(DataSetType.VISUALISATION.value, IntegerField()))
-            .values(
-                'id',
-                'name',
-                'slug',
-                'short_description',
-                'search_rank',
-                'source_tag_ids',
-                'purpose',
-            )
-        )
-
-    # Only display SourceTag filters that are associated with the dataset results
-    source_tags_to_show = {
-        source_tag_id
-        for dataset in datasets
-        for source_tag_id in dataset['source_tag_ids']
-    }
-    form.fields['source'].queryset = SourceTag.objects.order_by('name').filter(
-        id__in=source_tags_to_show
+    # Calculate counts of datasets that will match if users apply additional filters and apply these to the form
+    # labels.
+    form.annotate_and_update_filters(
+        master_and_datacut_datasets,
+        reference_datasets,
+        visualisations,
+        matcher=_matches_filters,
+        number_of_matches=len(matching_datasets),
     )
 
-    paginator = Paginator(
-        datasets.order_by('-search_rank', 'name'),
-        settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
-    )
+    paginator = Paginator(matching_datasets, settings.SEARCH_RESULTS_DATASETS_PER_PAGE,)
 
     return render(
         request,
@@ -286,7 +348,7 @@ def find_datasets(request):
             "form": form,
             "query": query,
             "datasets": paginator.get_page(request.GET.get("page")),
-            "purpose": dict(form.fields['use'].choices),
+            "purpose": dict(purposes),
         },
     )
 

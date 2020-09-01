@@ -98,3 +98,8 @@ def get_http_sso_data(user):
         'HTTP_SSO_PROFILE_LAST_NAME': user.last_name,
         'HTTP_SSO_PROFILE_FIRST_NAME': user.first_name,
     }
+
+
+class MatchUnorderedMembers(list):
+    def __eq__(self, other):
+        return len(self) == len(other) and all(o in self for o in other)

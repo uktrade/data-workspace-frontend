@@ -151,6 +151,11 @@
     }
 
     this.$wrapper.css('opacity', '1')
+
+    if (window.installFilterShowMore !== undefined) {
+        // Hook into app-filter-show-more.js to un-hide the "show more" button on search filters.
+        window.installFilterShowMore();
+    }
   }
 
   LiveSearch.prototype.replaceBlock = function replaceBlock(selector, html) {

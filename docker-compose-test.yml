@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
       target: test
     image: data-workspace-test
+    stdin_open: true
+    tty: true
     env_file:
       - ./.envs/test.env
     ports:

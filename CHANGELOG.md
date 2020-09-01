@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Launch Data Explorer on Fargate 1.4.0 to work with users with EFS
+- Append search segment counts to filters to help users understand how many results are available based on specific filters.
 
 ## 2020-09-02
 
