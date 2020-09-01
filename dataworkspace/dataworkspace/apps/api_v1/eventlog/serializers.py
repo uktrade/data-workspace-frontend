@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from dataworkspace.apps.datasets.models import DataSet, ReferenceDataset
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.applications.models import VisualisationApproval
 
 
 class EventLogDatasetSerializer(serializers.ModelSerializer):
@@ -26,12 +27,29 @@ class EventLogReferenceDatasetSerializer(serializers.ModelSerializer):
         return obj.get_type_display()
 
 
+class EventLogVisualisationApprovalSerialiser(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VisualisationApproval
+        fields = ('id', 'type', 'name')
+
+    def get_type(self, obj):
+        return 'VisualisationApproval'
+
+    def get_name(self, obj):
+        return obj.visualisation.name
+
+
 class EventLogRelatedObjectField(serializers.RelatedField):
     def to_representation(self, value):
         if isinstance(value, DataSet):
             return EventLogDatasetSerializer(value).data
         if isinstance(value, ReferenceDataset):
             return EventLogReferenceDatasetSerializer(value).data
+        if isinstance(value, VisualisationApproval):
+            return EventLogVisualisationApprovalSerialiser(value).data
 
         raise RuntimeError(f"Unknown dataset to serialize: {self}")
 
