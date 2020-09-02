@@ -31,6 +31,11 @@ urlpatterns = [
         name='dataset_query_preview',
     ),
     path(
+        '<str:dataset_uuid>/table/<str:table_uuid>/preview',
+        login_required(views.SourceTablePreviewView.as_view()),
+        name='dataset_table_preview',
+    ),
+    path(
         '<str:dataset_uuid>/reference/<str:format>/download',
         login_required(views.ReferenceDatasetDownloadView.as_view()),
         name='reference_dataset_download',

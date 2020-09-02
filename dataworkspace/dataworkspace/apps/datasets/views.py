@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 from contextlib import closing
 import csv
@@ -9,10 +10,12 @@ from typing import Union
 import boto3
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
+from psycopg2 import sql
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import CharField, F, IntegerField, Q, Value
@@ -28,7 +31,6 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView
-from psycopg2 import sql
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.applications.utils import get_quicksight_dashboard_name_url
@@ -57,6 +59,7 @@ from dataworkspace.apps.datasets.models import (
     SourceLink,
     SourceView,
     VisualisationCatalogueItem,
+    SourceTable,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
@@ -427,6 +430,7 @@ class DatasetDetailView(DetailView):
                 'code_snippets': get_code_snippets(self.object),
                 'visualisation_src': dashboard_url,
                 'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY.value,
+                'source_table_type': DataLinkType.SOURCE_TABLE.value,
             }
         )
         return ctx
@@ -840,47 +844,89 @@ class CustomDatasetQueryDownloadView(DetailView):
         )
 
 
-class CustomDatasetQueryPreviewView(DetailView):
-    model = CustomDatasetQuery
+class DatasetPreviewView(DetailView, metaclass=ABCMeta):
+    @property
+    @abstractmethod
+    def model(self):
+        pass
+
+    @abstractmethod
+    def get_preview_data(self, dataset):
+        pass
 
     def get(self, request, *args, **kwargs):
-        dataset = find_dataset(self.kwargs.get('dataset_uuid'), request.user)
+        user = self.request.user
+        dataset = find_dataset(self.kwargs.get('dataset_uuid'), user)
 
-        if not dataset.user_has_access(self.request.user):
+        if not dataset.user_has_access(user):
             return HttpResponseForbidden()
 
-        query = get_object_or_404(
-            self.model, id=self.kwargs.get('query_id'), dataset=dataset
-        )
-
-        if not query.reviewed and not request.user.is_superuser:
-            return HttpResponseForbidden()
-
-        database = query.database.memorable_name
-
-        columns = datasets_db.get_columns(database, query=query.query)
+        source_object, columns, query = self.get_preview_data(dataset)
 
         records = []
-        sample_size = settings.DATACUT_DATASET_PREVIEW_NUM_OF_ROWS
+        sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
         if columns:
-            rows = get_random_data_sample(database, sql.SQL(query.query), sample_size)
+            rows = get_random_data_sample(
+                source_object.database.memorable_name, sql.SQL(query), sample_size,
+            )
             for row in rows:
                 record_data = {}
                 for i, column in enumerate(columns):
                     record_data[column] = row[i]
                 records.append(record_data)
 
+        can_download = source_object.can_show_link_for_user(user)
+
         return render(
             request,
-            'datasets/data_cut_preview.html',
+            'datasets/dataset_preview.html',
             {
                 'dataset': dataset,
-                'query': query,
+                'source_object': source_object,
                 'fields': columns,
                 'records': records,
                 'preview_limit': sample_size,
                 'record_count': len(records),
                 'fixed_table_height_limit': 10,
                 'truncate_limit': 100,
+                'can_download': can_download,
+                'type': source_object.type,
             },
         )
+
+
+class SourceTablePreviewView(DatasetPreviewView):
+    model = SourceTable
+
+    def get_preview_data(self, dataset):
+        source_table_object = get_object_or_404(
+            self.model, id=self.kwargs.get('table_uuid'), dataset=dataset
+        )
+        database_name = source_table_object.database.memorable_name
+        table_name = source_table_object.table
+        schema_name = source_table_object.schema
+        columns = datasets_db.get_columns(
+            database_name, schema=schema_name, table=table_name
+        )
+        preview_query = f"""
+            select * from "{schema_name}"."{table_name}"
+        """
+        return source_table_object, columns, preview_query
+
+
+class CustomDatasetQueryPreviewView(DatasetPreviewView):
+    model = CustomDatasetQuery
+
+    def get_preview_data(self, dataset):
+        query_object = get_object_or_404(
+            self.model, id=self.kwargs.get('query_id'), dataset=dataset
+        )
+
+        if not query_object.reviewed and not self.request.user.is_superuser:
+            raise PermissionDenied()
+
+        database_name = query_object.database.memorable_name
+        columns = datasets_db.get_columns(database_name, query=query_object.query,)
+        preview_query = query_object.query
+
+        return query_object, columns, preview_query

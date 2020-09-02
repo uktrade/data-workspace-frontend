@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fix the eventlog API to work when there are visualisation approvals
 
+## 2020-08-27
+
+### Added
+
+- Master dataset preview page
+
 ## 2020-08-24
 
 ### Added

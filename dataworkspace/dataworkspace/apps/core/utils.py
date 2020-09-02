@@ -538,7 +538,8 @@ def streaming_query_response(user_email, database, query, filename):
 
 def get_random_data_sample(database, query, sample_size):
     query_timeout = 300 * 1000
-    batch_size = sample_size * 100
+    batch_size = sample_size * 100  # batch size to take sample from
+    minimize_nulls_sample_size = sample_size * 2  # sample size before minimizing nulls
 
     with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor(
         name='data_preview'
@@ -559,7 +560,12 @@ def get_random_data_sample(database, query, sample_size):
                 return []
 
         rows = cur.fetchmany(batch_size)
-        sample = random.sample(rows, min(sample_size, len(rows)))
+        sample = random.sample(rows, min(minimize_nulls_sample_size, len(rows)))
+        sample.sort(
+            key=lambda row: sum(value is not None for value in row), reverse=True
+        )
+        sample = sample[:sample_size]
+        random.shuffle(sample)
 
         return sample
 
