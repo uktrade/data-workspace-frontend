@@ -615,12 +615,26 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     except qs_user_client.exceptions.ResourceExistsException:
         pass
 
-    qs_user_client.create_group_membership(
-        AwsAccountId=account_id,
-        Namespace='default',
-        GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
-        MemberName=f'{embed_role_name}/{user.email}',
-    )
+    attempts = 5
+    while attempts > 0:
+        attempts -= 1
+        try:
+            qs_user_client.create_group_membership(
+                AwsAccountId=account_id,
+                Namespace='default',
+                GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
+                MemberName=f'{embed_role_name}/{user.email}',
+            )
+            break
+
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                if attempts > 0:
+                    gevent.sleep(5 - attempts)
+                else:
+                    raise e
+            else:
+                raise e
 
     dashboard_name = qs_dashboard_client.describe_dashboard(
         AwsAccountId=account_id, DashboardId=dashboard_id, AliasName='$PUBLISHED'

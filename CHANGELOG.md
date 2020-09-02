@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Fixed QuickSight embedded dashboards for IE11.
+- Add retries to QuickSight dashboard embed URL creation step.
 
 ## 2020-09-01
 
