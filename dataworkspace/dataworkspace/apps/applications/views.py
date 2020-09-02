@@ -229,7 +229,7 @@ def _get_embedded_quicksight_dashboard(request, dashboard_id):
     )
 
     extra_params = urlencode(
-        [("punyCodeEmbedOrigin", f"{request.scheme}://{request.get_host()}/-")]
+        [("punyCodeEmbedOrigin", f"{request.scheme}://{request.get_host()}/")]
     )
 
     context = {
