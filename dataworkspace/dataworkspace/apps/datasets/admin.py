@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpResponse
 from django.urls import reverse
+import psqlparse
 
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
@@ -153,6 +154,17 @@ class CustomDatasetQueryInline(admin.TabularInline, SourceReferenceInlineMixin):
     manage_unpublished_permission_codename = (
         'datasets.manage_unpublished_datacut_datasets'
     )
+    readonly_fields = ('query_tables',)
+
+    def query_tables(self, obj):
+        try:
+            tables = obj.parsed_query_tables
+        except psqlparse.exceptions.PSqlParseError:
+            return "SQL syntax error"
+        else:
+            if not tables:
+                return ''
+            return '\n'.join(tables)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)

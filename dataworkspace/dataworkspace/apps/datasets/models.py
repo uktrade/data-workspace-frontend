@@ -11,6 +11,7 @@ from psycopg2 import sql
 import boto3
 from botocore.exceptions import ClientError
 from ckeditor.fields import RichTextField
+import psqlparse
 
 from django import forms
 from django.apps import apps
@@ -613,6 +614,13 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     @property
     def type(self):
         return DataLinkType.CUSTOM_QUERY.value
+
+    @property
+    def parsed_query_tables(self):
+        if not self.query:
+            return None
+        statements = psqlparse.parse(self.query)
+        return list(statements[0].tables())
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
