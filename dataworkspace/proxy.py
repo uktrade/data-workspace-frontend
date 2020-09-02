@@ -321,7 +321,10 @@ async def async_main():
         except ValueError:
             port_override = None
         else:
-            public_host = possible_public_host
+            if 1 <= port_override <= 65535:
+                public_host = possible_public_host
+            else:
+                port_override = None
         host_api_url = admin_root + '/api/v1/application/' + public_host
         host_html_path = '/tools/' + public_host
 

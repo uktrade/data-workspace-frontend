@@ -466,7 +466,7 @@ class TestApplication(unittest.TestCase):
 
         # Ensure the user doesn't have access to the application
         async with session.request(
-            'GET', 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
+            'GET', 'http://testvisualisation--11372717.dataworkspace.test:8000/'
         ) as response:
             content = await response.text()
 
@@ -476,21 +476,21 @@ class TestApplication(unittest.TestCase):
         access_level = 30
 
         async with session.request(
-            'GET', 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
+            'GET', 'http://testvisualisation--11372717.dataworkspace.test:8000/'
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('testvisualisation [58d9e87e]', application_content_1)
+        self.assertIn('testvisualisation [11372717]', application_content_1)
         self.assertIn('is loading...', application_content_1)
 
         await until_non_202(
-            session, 'http://testvisualisation--58d9e87e.dataworkspace.test:8000/'
+            session, 'http://testvisualisation--11372717.dataworkspace.test:8000/'
         )
 
         sent_headers = {'from-downstream': 'downstream-header-value'}
         async with session.request(
             'GET',
-            'http://testvisualisation--58d9e87e.dataworkspace.test:8000/http',
+            'http://testvisualisation--11372717.dataworkspace.test:8000/http',
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
@@ -505,7 +505,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testvisualisation--58d9e87e--8888.dataworkspace.test:8000/http',
+            'http://testvisualisation--11372717--8888.dataworkspace.test:8000/http',
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
@@ -1764,7 +1764,7 @@ class TestApplication(unittest.TestCase):
 
         async with session.request(
             'GET',
-            'http://testvisualisation--58d9e87e.dataworkspace.test:8000/__mirror/some/path/in/mirror',
+            'http://testvisualisation--11372717.dataworkspace.test:8000/__mirror/some/path/in/mirror',
         ) as response:
             status = response.status
             content = await response.text()
