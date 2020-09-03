@@ -51,7 +51,7 @@ class EventLogRelatedObjectField(serializers.RelatedField):
         if isinstance(value, VisualisationApproval):
             return EventLogVisualisationApprovalSerialiser(value).data
 
-        raise RuntimeError(f"Unknown dataset to serialize: {self}")
+        raise RuntimeError(f"Unknown dataset to serialize: {value}")
 
 
 class EventLogSerializer(serializers.ModelSerializer):
