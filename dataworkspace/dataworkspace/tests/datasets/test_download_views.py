@@ -643,6 +643,7 @@ class TestSourceLinkDownloadView:
         download_count = dataset.number_of_downloads
         mock_client().get_object.return_value = {
             'ContentType': 'text/plain',
+            'ContentLength': len(b'This is a test file'),
             'Body': StreamingBody(
                 io.BytesIO(b'This is a test file'), len(b'This is a test file')
             ),
@@ -655,6 +656,7 @@ class TestSourceLinkDownloadView:
         )
         assert response.status_code == 200
         assert list(response.streaming_content)[0] == b'This is a test file'
+        assert response['content-length'] == str(len(b'This is a test file'))
         mock_client().get_object.assert_called_with(
             Bucket=settings.AWS_UPLOADS_BUCKET, Key=link.url
         )

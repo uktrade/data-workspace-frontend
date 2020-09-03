@@ -16,7 +16,6 @@ django==3.0.8
 djangorestframework==3.11.1
 elastic-apm==5.8.1
 gevent==20.6.2
-gunicorn[gevent]==20.0.4
 hawk-server-asyncio==0.0.13
 Markdown==3.2.2
 MarkupSafe==1.1.1

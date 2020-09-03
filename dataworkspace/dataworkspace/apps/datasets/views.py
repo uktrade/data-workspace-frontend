@@ -742,11 +742,13 @@ class SourceLinkDownloadView(DetailView):
                 return HttpResponseServerError()
 
         response = StreamingHttpResponseWithoutDjangoDbConnection(
-            file_object['Body'].iter_chunks(), content_type=file_object['ContentType']
+            file_object['Body'].iter_chunks(chunk_size=65536),
+            content_type=file_object['ContentType'],
         )
         response[
             'Content-Disposition'
         ] = f'attachment; filename="{source_link.get_filename()}"'
+        response['Content-Length'] = file_object['ContentLength']
 
         return response
 

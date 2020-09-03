@@ -1148,6 +1148,14 @@ class TestApplication(unittest.TestCase):
 
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
 
+        # Starting the application is asynchronous, with the proxy component starting up faster
+        # than the Django application. So initial calls to the healthcheck fail at the proxy ->
+        # Django phase, which cause the proxy to log exceptions to (the fake) Sentry. We wait for
+        # these exceptions to make it to Sentry, and then clear our log of them so we can assert
+        # on the ones deliberately sent later on in this test.
+        await asyncio.sleep(1)
+        sentry_requests.clear()
+
         async with session.request(
             'GET',
             'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
