@@ -37,7 +37,10 @@ RUN apk add --no-cache \
         gcc \
         musl-dev \
         postgresql-dev \
-        python3-dev
+        python3-dev \
+        chromium \
+        libxml2-dev \
+        libxslt-dev
 
 COPY requirements-dev.txt requirements-dev.txt
 RUN pip3 install -r requirements-dev.txt

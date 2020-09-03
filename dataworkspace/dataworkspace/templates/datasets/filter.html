@@ -5,11 +5,11 @@
         <h2 class="govuk-fieldset__heading">{{ widget.group_label }}</h2>
       </legend>
       {% if widget.hint_text %}
-      <span id="waste-hint" class="govuk-hint">
+      <span id="{{ id }}-hint" class="govuk-hint">
         {{ widget.hint_text }}
       </span>
       {% endif %}
-      <div class="govuk-checkboxes" data-module="filter-show-more">
+      <div class="govuk-checkboxes" data-module="filter-show-more" data-show-more-id="{{ id }}">
       {% for group, options, index in widget.optgroups %}
         {% for option in options %}
           {% if widget.limit_initial_options == 0 or forloop.parentloop.counter <= widget.limit_initial_options %}

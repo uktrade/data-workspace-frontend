@@ -12,7 +12,10 @@ import aiohttp
 from aiohttp import web
 import aiopg
 import aioredis
+from lxml import html
 import mohawk
+
+from test.pages import HomePage, get_browser  # pylint: disable=wrong-import-order
 
 
 def async_test(func):
@@ -2007,6 +2010,135 @@ class TestApplication(unittest.TestCase):
 
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
 
+    @async_test
+    async def test_search_filter_result_predictions(self):
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'contact_email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        _, _, code = await create_sample_datasets_and_visualisations()
+        assert code == 0
+
+        browser = await get_browser()
+        home_page = await HomePage(browser=browser).open()
+
+        with_no_filters = find_search_filter_labels(await home_page.get_html())
+        assert "You have access (4)" in with_no_filters
+        assert "Download (1)" in with_no_filters
+        assert "Analyse in tools (2)" in with_no_filters
+        assert "Use as reference data (1)" in with_no_filters
+        assert "View data visualisation (1)" in with_no_filters
+        assert "DIT (1)" in with_no_filters
+        assert "ONS (1)" in with_no_filters
+        assert "HMRC (1)" in with_no_filters
+
+        # Toggle the master dataset filter on (filters: master)
+        await home_page.toggle_filter("Analyse in tools")
+
+        with_master_filter = find_search_filter_labels(await home_page.get_html())
+        assert "You have access (1)" in with_master_filter
+        assert "Download (1)" in with_master_filter
+        assert "Analyse in tools (2)" in with_master_filter
+        assert "Use as reference data (1)" in with_master_filter
+        assert "View data visualisation (1)" in with_master_filter
+        assert "DIT (1)" in with_master_filter
+        assert not any(f.startswith("ONS") for f in with_master_filter)
+        assert "HMRC (1)" in with_master_filter
+
+        # Toggle the reference dataset filter on (filters: master, reference)
+        await home_page.toggle_filter("Use as reference data")
+
+        with_master_and_reference_filters = find_search_filter_labels(
+            await home_page.get_html()
+        )
+        assert "You have access (2)" in with_master_and_reference_filters
+        assert "Download (1)" in with_master_and_reference_filters
+        assert "Analyse in tools (2)" in with_master_and_reference_filters
+        assert "Use as reference data (1)" in with_master_and_reference_filters
+        assert "View data visualisation (1)" in with_master_and_reference_filters
+        assert "DIT (1)" in with_master_and_reference_filters
+        assert not any(f.startswith("ONS") for f in with_master_and_reference_filters)
+        assert "HMRC (1)" in with_master_and_reference_filters
+
+        # Toggle the master dataset filter back off (filters: reference)
+        await home_page.toggle_filter("Analyse in tools")
+
+        with_reference_filter = find_search_filter_labels(await home_page.get_html())
+        assert "You have access (1)" in with_reference_filter
+        assert "Download (1)" in with_reference_filter
+        assert "Analyse in tools (2)" in with_reference_filter
+        assert "Use as reference data (1)" in with_reference_filter
+        assert "View data visualisation (1)" in with_reference_filter
+        assert not any(f.startswith("DIT") for f in with_reference_filter)
+        assert not any(f.startswith("ONS") for f in with_reference_filter)
+        assert not any(f.startswith("HMRC") for f in with_reference_filter)
+
+        # Toggle the authorization filter on (filters: authorization, reference)
+        await home_page.toggle_filter("You have access")
+
+        with_authorization_and_reference_filters = find_search_filter_labels(
+            await home_page.get_html()
+        )
+        assert "You have access (1)" in with_authorization_and_reference_filters
+        assert "Download (1)" in with_authorization_and_reference_filters
+        assert "Analyse in tools (1)" in with_authorization_and_reference_filters
+        assert "Use as reference data (1)" in with_authorization_and_reference_filters
+        assert "View data visualisation (1)" in with_authorization_and_reference_filters
+        assert not any(
+            f.startswith("DIT") for f in with_authorization_and_reference_filters
+        )
+        assert not any(
+            f.startswith("ONS") for f in with_authorization_and_reference_filters
+        )
+        assert not any(
+            f.startswith("HMRC") for f in with_authorization_and_reference_filters
+        )
+
+        # Toggle the authorization filter off, reference filter off, and the "DIT" source tag on (filters: DIT)
+        await home_page.toggle_filter("You have access")
+        await home_page.toggle_filter("Use as reference data")
+        await home_page.toggle_filter("DIT")
+
+        with_dit_filter = find_search_filter_labels(await home_page.get_html())
+        assert "You have access (1)" in with_dit_filter
+        assert "Download (0)" in with_dit_filter
+        assert "Analyse in tools (1)" in with_dit_filter
+        assert "Use as reference data (0)" in with_dit_filter
+        assert "View data visualisation (0)" in with_dit_filter
+        assert "DIT (1)" in with_dit_filter
+        assert "ONS (1)" in with_dit_filter
+        assert "HMRC (1)" in with_dit_filter
+
+        # Toggle the "ONS" source tag on (filters: DIT, ONS)
+        await home_page.toggle_filter("ONS")
+
+        with_dit_and_ons_filters = find_search_filter_labels(await home_page.get_html())
+        assert "You have access (2)" in with_dit_and_ons_filters
+        assert "Download (1)" in with_dit_and_ons_filters
+        assert "Analyse in tools (1)" in with_dit_and_ons_filters
+        assert "Use as reference data (0)" in with_dit_and_ons_filters
+        assert "View data visualisation (0)" in with_dit_and_ons_filters
+        assert "DIT (1)" in with_dit_and_ons_filters
+        assert "ONS (1)" in with_dit_and_ons_filters
+        assert "HMRC (1)" in with_dit_and_ons_filters
+
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -2592,3 +2724,133 @@ async def give_visualisation_dataset_perms(vis_name, dataset_name):
     code = await give_perm.wait()
 
     return stdout, stderr, code
+
+
+async def create_sample_datasets_and_visualisations():
+    """Creates one of each type of dataset/visualisation
+
+    WARNING: removes any pre-existing datasets/visualisations
+
+    Creates 5 datasets/visualisations:
+    1) Master dataset, available to all, with DIT source tag
+    2) Master dataset, restricted access (with no grants), with HMRC source tag
+    3) Datacut, available to all, with ONS source tag
+    4) Reference data, available to all
+    5) Visualisation, available to all.
+    """
+    python_code = textwrap.dedent(
+        """
+import random
+
+from django.db import IntegrityError
+import factory
+
+from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.models import SourceTag
+from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.datasets.models import ReferenceDataset
+from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.tests import factories
+
+
+DataSet.objects.all().delete()
+ReferenceDataset.objects.all().delete()
+VisualisationCatalogueItem.objects.all().delete()
+
+for dept in ('DIT', 'HMRC', 'ONS'):
+    SourceTag.objects.get_or_create(name=dept)
+
+source_tags = {st.name: st for st in SourceTag.objects.all()}
+
+def paragraph(_):
+    from faker import Faker
+    return Faker().paragraph(5)
+
+try:
+    master = factories.DataSetFactory(
+        id=1,
+        name="Master 1",
+        slug="master-1",
+        description=factory.LazyAttribute(paragraph),
+        type=DataSetType.MASTER.value,
+        published=True,
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+except IntegrityError:
+    master = DataSet.objects.get(id=1)
+
+master.source_tags.set([source_tags['DIT']])
+
+try:
+    master = factories.DataSetFactory(
+        id=2,
+        name="Master 2",
+        slug="master-2",
+        description=factory.LazyAttribute(paragraph),
+        type=DataSetType.MASTER.value,
+        published=True,
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+except IntegrityError:
+    master = DataSet.objects.get(id=2)
+
+master.source_tags.set([source_tags['HMRC']])
+
+try:
+    datacut = factories.DataSetFactory(
+        id=3,
+        name="Datacut 1",
+        slug="datacut-1",
+        description=factory.LazyAttribute(paragraph),
+        type=DataSetType.DATACUT.value,
+        published=True,
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+except IntegrityError:
+    datacut = DataSet.objects.get(id=3)
+
+datacut.source_tags.set([source_tags['ONS']])
+
+try:
+    factories.ReferenceDatasetFactory(
+        id=1,
+        name=f"Reference 1",
+        slug=f"reference-1",
+        description=factory.LazyAttribute(paragraph),
+        published=True,
+    )
+except IntegrityError:
+    pass
+
+try:
+    factories.VisualisationCatalogueItemFactory(
+        id=1,
+        name="Visualisation 1",
+        description=factory.LazyAttribute(paragraph),
+        published=True,
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+except IntegrityError:
+    pass
+        """
+    ).encode('ascii')
+
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+def find_search_filter_labels(html_):
+    doc = html.fromstring(html_)
+    return {
+        label.strip()
+        for label in doc.xpath('//div[@id="live-search-wrapper"]//label/text()')
+    }

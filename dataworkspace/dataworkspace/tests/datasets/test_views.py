@@ -1,3 +1,4 @@
+import random
 from uuid import uuid4
 
 import mock
@@ -11,7 +12,7 @@ from django.test import Client
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import get_http_sso_data
+from dataworkspace.tests.common import get_http_sso_data, MatchUnorderedMembers
 from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,
@@ -234,6 +235,7 @@ def test_find_datasets_combines_results(client):
             'short_description': ds.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'has_access': False,
         },
         {
             'id': rds.uuid,
@@ -243,6 +245,7 @@ def test_find_datasets_combines_results(client):
             'short_description': rds.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'has_access': True,
         },
         {
             'id': vis.id,
@@ -252,6 +255,7 @@ def test_find_datasets_combines_results(client):
             'short_description': vis.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'has_access': True,
         },
     ]
 
@@ -287,6 +291,7 @@ def test_find_datasets_filters_by_query(client):
             'short_description': ds.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'has_access': False,
         },
         {
             'id': rds.uuid,
@@ -296,6 +301,7 @@ def test_find_datasets_filters_by_query(client):
             'short_description': rds.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'has_access': True,
         },
         {
             'id': vis.id,
@@ -305,6 +311,7 @@ def test_find_datasets_filters_by_query(client):
             'short_description': vis.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'has_access': True,
         },
     ]
 
@@ -328,6 +335,7 @@ def test_find_datasets_filters_by_use(client):
             'short_description': ds.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'has_access': False,
         },
         {
             'id': rds.uuid,
@@ -337,6 +345,7 @@ def test_find_datasets_filters_by_use(client):
             'short_description': rds.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'has_access': True,
         },
     ]
 
@@ -363,6 +372,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'short_description': ds.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'has_access': False,
         },
         {
             'id': vis.id,
@@ -372,12 +382,14 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'short_description': vis.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'has_access': True,
         },
     ]
 
 
 def test_find_datasets_filters_by_source(client):
     source = factories.SourceTagFactory()
+    source_2 = factories.SourceTagFactory()
     # Create another SourceTag that won't be associated to a dataset
     factories.SourceTagFactory()
 
@@ -393,7 +405,7 @@ def test_find_datasets_filters_by_source(client):
     )
 
     ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
-    ds.source_tags.set([source, factories.SourceTagFactory()])
+    ds.source_tags.set([source, source_2])
 
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
@@ -418,8 +430,9 @@ def test_find_datasets_filters_by_source(client):
             'slug': ds.slug,
             'search_rank': 0.0,
             'short_description': ds.short_description,
-            'source_tag_ids': [source.id],
+            'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
             'purpose': ds.type,
+            'has_access': False,
         },
         {
             'id': rds.uuid,
@@ -429,21 +442,93 @@ def test_find_datasets_filters_by_source(client):
             'short_description': rds.short_description,
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': 0.0,
-            'short_description': vis.short_description,
-            'source_tag_ids': [],
-            'purpose': DataSetType.VISUALISATION.value,
+            'has_access': True,
         },
     ]
 
-    # only one filter should be shown as the second SourceTag isn't associated to a dataset
-    assert len(list(response.context["form"].fields['source'].choices)) == 1
-    assert list(response.context["form"].fields['source'].choices)[0][0] == source.id
+    assert len(list(response.context["form"].fields['source'].choices)) == 3
+
+
+def test_finding_datasets_doesnt_query_database_excessively(
+    client, django_assert_num_queries
+):
+    """
+    This test generates a random number of master datasets, datacuts, reference datasets and visualisations, and asserts
+    that the number of queries executed by the search page remains stable. This is potentially a flaky test, given
+    that the inputs are indeterminate, but it would at least highlight at some point that we have an unknown issue.
+    """
+    source_tags = [factories.SourceTagFactory() for _ in range(10)]
+
+    masters = [
+        factories.DataSetFactory(
+            type=DataSetType.MASTER.value,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        for _ in range(random.randint(10, 50))
+    ]
+    for master in masters:
+        master.source_tags.set(random.sample(source_tags, random.randint(1, 3)))
+
+    datacuts = [
+        factories.DataSetFactory(
+            type=DataSetType.DATACUT.value,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        for _ in range(random.randint(10, 50))
+    ]
+    for datacut in datacuts:
+        datacut.source_tags.set(random.sample(source_tags, 1))
+
+    references = [factories.ReferenceDatasetFactory(published=True,) for _ in range(10)]
+    for reference in references:
+        reference.source_tags.set(random.sample(source_tags, random.randint(1, 3)))
+
+    visualisations = [
+        factories.VisualisationCatalogueItemFactory.create(published=True,)
+        for _ in range(random.randint(10, 50))
+    ]
+
+    for visualisation in visualisations:
+        factories.DataSetApplicationTemplatePermissionFactory(
+            application_template=visualisation.visualisation_template,
+            dataset=random.choice(masters),
+        )
+
+    # Log into site (triggers the queries related to setting up the user).
+    client.get(reverse('root'))
+
+    with django_assert_num_queries(10, exact=False):
+        response = client.get(reverse('datasets:find_datasets'), follow=True)
+        assert response.status_code == 200
+
+    with django_assert_num_queries(10, exact=False):
+        response = client.get(reverse('datasets:find_datasets'), {"q": "potato"})
+        assert response.status_code == 200
+
+    with django_assert_num_queries(11, exact=False):
+        response = client.get(
+            reverse('datasets:find_datasets'),
+            {
+                "source": [
+                    str(tag.id)
+                    for tag in random.sample(source_tags, random.randint(1, 5))
+                ]
+            },
+        )
+        assert response.status_code == 200
+
+    with django_assert_num_queries(10, exact=False):
+        response = client.get(
+            reverse('datasets:find_datasets'),
+            {"purpose": str(DataSetType.MASTER.value)},
+        )
+        assert response.status_code == 200
+
+    with django_assert_num_queries(10, exact=False):
+        response = client.get(reverse('datasets:find_datasets'), {"access": "yes"},)
+        assert response.status_code == 200
 
 
 @pytest.mark.django_db
@@ -525,6 +610,7 @@ def test_find_datasets_filters_by_access():
             'short_description': access_granted_master.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
+            'has_access': True,
         },
         {
             'id': public_master.id,
@@ -534,6 +620,7 @@ def test_find_datasets_filters_by_access():
             'short_description': public_master.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': public_master.type,
+            'has_access': True,
         },
         {
             'id': public_reference.uuid,
@@ -543,6 +630,7 @@ def test_find_datasets_filters_by_access():
             'short_description': public_reference.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'has_access': True,
         },
         {
             'id': access_vis.id,
@@ -552,6 +640,7 @@ def test_find_datasets_filters_by_access():
             'short_description': access_vis.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'has_access': True,
         },
         {
             'id': public_vis.id,
@@ -561,6 +650,7 @@ def test_find_datasets_filters_by_access():
             'short_description': public_vis.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'has_access': True,
         },
     ]
 
@@ -602,6 +692,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'short_description': access_granted_master.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
+            'has_access': True,
         }
     ]
 
@@ -936,6 +1027,7 @@ def test_find_datasets_search_by_source_name(client):
             'short_description': ds1.short_description,
             'source_tag_ids': [source.id],
             'purpose': ds1.type,
+            'has_access': False,
         },
         {
             'id': rds.uuid,
@@ -945,6 +1037,7 @@ def test_find_datasets_search_by_source_name(client):
             'short_description': rds.short_description,
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
+            'has_access': True,
         },
     ]
 
@@ -980,6 +1073,7 @@ def test_find_datasets_name_weighting(client):
             'short_description': ds4.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': ds4.type,
+            'has_access': False,
         },
         {
             'id': ds1.id,
@@ -989,6 +1083,7 @@ def test_find_datasets_name_weighting(client):
             'short_description': ds1.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': ds1.type,
+            'has_access': False,
         },
         {
             'id': ds2.id,
@@ -998,5 +1093,6 @@ def test_find_datasets_name_weighting(client):
             'short_description': ds2.short_description,
             'source_tag_ids': mock.ANY,
             'purpose': ds2.type,
+            'has_access': False,
         },
     ]
