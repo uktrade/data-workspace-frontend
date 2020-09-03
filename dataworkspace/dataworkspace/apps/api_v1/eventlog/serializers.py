@@ -43,15 +43,15 @@ class EventLogVisualisationApprovalSerialiser(serializers.ModelSerializer):
 
 
 class EventLogRelatedObjectField(serializers.RelatedField):
-    def to_representation(self, value):
+    def to_representation(  # pylint: disable=inconsistent-return-statements
+        self, value
+    ):
         if isinstance(value, DataSet):
             return EventLogDatasetSerializer(value).data
         if isinstance(value, ReferenceDataset):
             return EventLogReferenceDatasetSerializer(value).data
         if isinstance(value, VisualisationApproval):
             return EventLogVisualisationApprovalSerialiser(value).data
-
-        raise RuntimeError(f"Unknown dataset to serialize: {value}")
 
 
 class EventLogSerializer(serializers.ModelSerializer):
