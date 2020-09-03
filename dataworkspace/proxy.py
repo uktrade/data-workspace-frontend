@@ -71,6 +71,8 @@ async def async_main():
         'host',
         'x-csrftoken',
         'x-data-workspace-no-modify-application-instance',
+        'x-scheme',
+        'x-forwarded-proto',
     )
 
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
