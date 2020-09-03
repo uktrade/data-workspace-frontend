@@ -73,6 +73,7 @@ async def async_main():
         'x-data-workspace-no-modify-application-instance',
         'x-scheme',
         'x-forwarded-proto',
+        'referer',
     )
 
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
