@@ -2476,7 +2476,7 @@ class TestDatasetAdminPytest:
                 'customdatasetquery_set-0-dataset': str(dataset.id),
                 'customdatasetquery_set-0-name': 'test',
                 'customdatasetquery_set-0-database': str(sql.database.id),
-                'customdatasetquery_set-0-query': 'test',
+                'customdatasetquery_set-0-query': 'select 1',
                 'customdatasetquery_set-0-frequency': 1,
                 '_continue': 'Save and continue editing',
             },
@@ -2488,6 +2488,74 @@ class TestDatasetAdminPytest:
         assert (
             "You must review this SQL query before the dataset can be published."
             in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.parametrize(
+        'query, expected_tables',
+        (
+            ('SELECT * FROM auth_user', ['public.auth_user']),
+            (
+                'SELECT * FROM auth_user JOIN auth_user_groups ON auth_user.id = auth_user_groups.user_id',
+                ['public.auth_user', 'public.auth_user_groups'],
+            ),
+            (
+                'WITH foo as (SELECT * FROM auth_user) SELECT * FROM foo',
+                ['public.auth_user'],
+            ),
+            ('SELECT 1', []),
+            ('SELECT * FROM test', []),
+            ('SELECT * FROM', []),
+        ),
+    )
+    @pytest.mark.django_db
+    def test_sql_query_tables_extracted_correctly(
+        self, staff_client, query, expected_tables
+    ):
+        dataset = factories.DataSetFactory.create(published=False)
+        sql = factories.CustomDatasetQueryFactory.create(
+            dataset=dataset, reviewed=False
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': 2,
+                'sourcelink_set-TOTAL_FORMS': '0',
+                'sourcelink_set-INITIAL_FORMS': '0',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourceview_set-TOTAL_FORMS': '0',
+                'sourceview_set-INITIAL_FORMS': '0',
+                'sourceview_set-MIN_NUM_FORMS': '0',
+                'sourceview_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '1',
+                'customdatasetquery_set-INITIAL_FORMS': '1',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-0-id': sql.id,
+                'customdatasetquery_set-0-dataset': str(dataset.id),
+                'customdatasetquery_set-0-name': 'test',
+                'customdatasetquery_set-0-database': str(sql.database.id),
+                'customdatasetquery_set-0-query': query,
+                'customdatasetquery_set-0-frequency': 1,
+                'customdatasetquery_set-0-reviewed': True,
+                '_continue': 'Save and continue editing',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        tables = CustomDatasetQuery.objects.get(id=sql.id).tables.all()
+        assert sorted([f'{t.schema}.{t.table}' for t in tables]) == sorted(
+            expected_tables
         )
 
     @pytest.mark.parametrize(
@@ -2536,7 +2604,7 @@ class TestDatasetAdminPytest:
                 'customdatasetquery_set-0-dataset': str(dataset.id),
                 'customdatasetquery_set-0-name': 'test',
                 'customdatasetquery_set-0-database': str(sql.database.id),
-                'customdatasetquery_set-0-query': 'test',
+                'customdatasetquery_set-0-query': 'select 1',
                 'customdatasetquery_set-0-frequency': 1,
                 'customdatasetquery_set-0-reviewed': True,
                 '_continue': 'Save and continue editing',
@@ -2825,7 +2893,7 @@ class TestDatasetAdminPytest:
                 'customdatasetquery_set-0-dataset': str(dataset.id),
                 'customdatasetquery_set-0-name': 'test',
                 'customdatasetquery_set-0-database': str(sql.database.id),
-                'customdatasetquery_set-0-query': 'changed query',
+                'customdatasetquery_set-0-query': 'select 2',
                 'customdatasetquery_set-0-frequency': 1,
                 'customdatasetquery_set-0-reviewed': True,
                 '_continue': 'Save and continue editing',
@@ -2834,7 +2902,7 @@ class TestDatasetAdminPytest:
         )
 
         assert response.status_code == 200
-        assert CustomDatasetQuery.objects.get(id=sql.id).query == "changed query"
+        assert CustomDatasetQuery.objects.get(id=sql.id).query == "select 2"
         assert (
             CustomDatasetQuery.objects.get(id=sql.id).reviewed
             == expected_reviewed_status
