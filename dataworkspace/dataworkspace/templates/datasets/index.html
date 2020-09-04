@@ -9,7 +9,7 @@
     {{ block.super }}
     <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}jquery-3.4.1.min.js"></script>
     <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}gtm-support.js"></script>
-    <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}search.js"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}search-v2.js"></script>
 {% endblock %}
 
 {% block initialGTMDataLayer %}

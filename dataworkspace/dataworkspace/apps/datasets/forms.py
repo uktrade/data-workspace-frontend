@@ -35,7 +35,7 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         return context
 
     class Media:
-        js = ('app-filter-show-more.js',)
+        js = ('app-filter-show-more-v2.js',)
 
 
 class RequestAccessForm(forms.Form):
@@ -84,7 +84,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     class Media:
-        js = ('app-filter-show-more.js',)
+        js = ('app-filter-show-more-v2.js',)
 
     def annotate_and_update_filters(self, *querysets, matcher, number_of_matches):
         counts = {
