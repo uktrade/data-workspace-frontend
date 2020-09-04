@@ -4,11 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
 ## 2020-09-08
 
 ### Added
 
 - Add CustomDatasetQueryTable model to store the table names extracted from the CustomDatasetQuery query FROM clause.
+
+## 2020-09-04
+
+### Changed
+
+- Add "data last updated" date to data cut download and master dataset table listings
 
 ## 2020-09-03
 

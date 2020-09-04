@@ -469,6 +469,15 @@ class SourceTable(BaseSource):
     def type(self):
         return DataLinkType.SOURCE_TABLE.value
 
+    def get_data_last_updated_date(self):
+        from dataworkspace.datasets_db import (
+            get_tables_last_updated_date,
+        )  # pylint: disable=import-outside-toplevel
+
+        return get_tables_last_updated_date(
+            self.database.memorable_name, ['.'.join([self.schema, self.table])]
+        )
+
 
 class SourceView(BaseSource):
     view = models.CharField(
@@ -572,6 +581,17 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def type(self):
         return DataLinkType.SOURCE_LINK.value
 
+    def get_data_last_updated_date(self):
+        if self.link_type == self.TYPE_LOCAL:
+            try:
+                metadata = boto3.client('s3').head_object(
+                    Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url
+                )
+                return metadata.get('LastModified')
+            except ClientError:
+                pass
+        return None
+
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     FREQ_DAILY = 1
@@ -630,6 +650,18 @@ class CustomDatasetQueryTable(models.Model):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public',
     )
+
+    def get_data_last_updated_date(self):
+        from dataworkspace.datasets_db import (
+            get_tables_last_updated_date,
+        )  # pylint: disable=import-outside-toplevel
+
+        # Ensure all tables have a schema as `public` is not always specified in queries
+        tables = [
+            f'{"public." if len(table_name.split(".")) == 1 else ""}{table_name}'
+            for table_name in self.parsed_query_tables
+        ]
+        return get_tables_last_updated_date(self.database.memorable_name, tables)
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
