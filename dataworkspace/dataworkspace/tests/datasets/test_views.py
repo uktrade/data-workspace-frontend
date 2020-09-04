@@ -10,6 +10,15 @@ from django.urls import reverse
 from django.test import Client
 
 from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.models import (
+    DataSet,
+    ReferenceDataset,
+    VisualisationCatalogueItem,
+)
+from dataworkspace.apps.datasets.views import (
+    preprocess_datasets,
+    preprocess_visualisations,
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data, MatchUnorderedMembers
@@ -447,6 +456,80 @@ def test_find_datasets_filters_by_source(client):
     ]
 
     assert len(list(response.context["form"].fields['source'].choices)) == 3
+
+
+def test_preprocess_datasets_and_visualisations_doesnt_return_duplicate_results(
+    staff_client,
+):
+    normal_user = get_user_model().objects.create(
+        username='bob.user@test.com', is_staff=False, is_superuser=False
+    )
+    staff_user = get_user_model().objects.create(
+        username='bob.staff@test.com', is_staff=True, is_superuser=True
+    )
+
+    users = [factories.UserFactory.create() for _ in range(3)]
+    source_tags = [factories.SourceTagFactory.create() for _ in range(5)]
+
+    master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER.value,
+        name='A master',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    master2 = factories.DataSetFactory.create(
+        published=False,
+        type=DataSetType.MASTER.value,
+        name='A master',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    datacut = factories.DataSetFactory.create(
+        published=False,
+        type=DataSetType.DATACUT.value,
+        name='A datacut',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    datacut2 = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT.value,
+        name='A datacut',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+    visualisation = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A visualisation'
+    )
+
+    for user in users + [normal_user, staff_user]:
+        factories.DataSetUserPermissionFactory.create(dataset=master, user=user)
+        master.source_tags.set(random.sample(source_tags, 3))
+        factories.DataSetUserPermissionFactory.create(dataset=master2, user=user)
+        master2.source_tags.set(random.sample(source_tags, 3))
+
+        factories.DataSetUserPermissionFactory.create(dataset=datacut, user=user)
+        datacut.source_tags.set(random.sample(source_tags, 3))
+        factories.DataSetUserPermissionFactory.create(dataset=datacut2, user=user)
+        datacut2.source_tags.set(random.sample(source_tags, 3))
+
+        factories.VisualisationUserPermissionFactory.create(
+            visualisation=visualisation, user=user
+        )
+
+    for u in [normal_user, staff_user]:
+        datasets = preprocess_datasets(DataSet.objects.live(), query='', use={}, user=u)
+        assert len(datasets) == len(set(dataset.id for dataset in datasets))
+
+        datasets = preprocess_datasets(ReferenceDataset.objects.live(), '', {}, user=u)
+        assert len(datasets) == len(set(dataset.id for dataset in datasets))
+
+        visualisations = preprocess_visualisations(
+            VisualisationCatalogueItem.objects, query='', user=u
+        )
+        assert len(visualisations) == len(
+            set(visualisation.id for visualisation in visualisations)
+        )
 
 
 def test_finding_datasets_doesnt_query_database_excessively(
