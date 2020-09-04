@@ -16,8 +16,8 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
 )
 from dataworkspace.apps.datasets.views import (
-    preprocess_datasets,
-    preprocess_visualisations,
+    get_datasets_data_for_user_matching_query,
+    get_visualisations_data_for_user_matching_query,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
@@ -458,9 +458,7 @@ def test_find_datasets_filters_by_source(client):
     assert len(list(response.context["form"].fields['source'].choices)) == 3
 
 
-def test_preprocess_datasets_and_visualisations_doesnt_return_duplicate_results(
-    staff_client,
-):
+def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_client,):
     normal_user = get_user_model().objects.create(
         username='bob.user@test.com', is_staff=False, is_superuser=False
     )
@@ -518,17 +516,21 @@ def test_preprocess_datasets_and_visualisations_doesnt_return_duplicate_results(
         )
 
     for u in [normal_user, staff_user]:
-        datasets = preprocess_datasets(DataSet.objects.live(), query='', use={}, user=u)
-        assert len(datasets) == len(set(dataset.id for dataset in datasets))
+        datasets = get_datasets_data_for_user_matching_query(
+            DataSet.objects.live(), query='', use={}, user=u
+        )
+        assert len(datasets) == len(set(dataset['id'] for dataset in datasets))
 
-        datasets = preprocess_datasets(ReferenceDataset.objects.live(), '', {}, user=u)
-        assert len(datasets) == len(set(dataset.id for dataset in datasets))
+        references = get_datasets_data_for_user_matching_query(
+            ReferenceDataset.objects.live(), '', {}, user=u
+        )
+        assert len(references) == len(set(reference['id'] for reference in references))
 
-        visualisations = preprocess_visualisations(
+        visualisations = get_visualisations_data_for_user_matching_query(
             VisualisationCatalogueItem.objects, query='', user=u
         )
         assert len(visualisations) == len(
-            set(visualisation.id for visualisation in visualisations)
+            set(visualisation['id'] for visualisation in visualisations)
         )
 
 
