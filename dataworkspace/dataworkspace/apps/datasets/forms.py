@@ -86,7 +86,7 @@ class DatasetSearchForm(forms.Form):
     class Media:
         js = ('app-filter-show-more-v2.js',)
 
-    def annotate_and_update_filters(self, *querysets, matcher, number_of_matches):
+    def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
             "access": defaultdict(int),
             "use": defaultdict(int),
@@ -101,26 +101,25 @@ class DatasetSearchForm(forms.Form):
         use_choices = list(self.fields['use'].choices)
         source_choices = list(self.fields['source'].choices)
 
-        for datasets in querysets:
-            for dataset in datasets.all():
-                dataset_matcher = partial(
-                    matcher,
-                    data=dataset,
-                    access=selected_access,
-                    use=selected_uses,
-                    source_ids=selected_source_ids,
-                )
+        for dataset in datasets:
+            dataset_matcher = partial(
+                matcher,
+                data=dataset,
+                access=selected_access,
+                use=selected_uses,
+                source_ids=selected_source_ids,
+            )
 
-                if dataset_matcher(access=True):
-                    counts['access']['yes'] += 1
+            if dataset_matcher(access=True):
+                counts['access']['yes'] += 1
 
-                for use_id, _ in use_choices:
-                    if dataset_matcher(use={use_id}):
-                        counts['use'][use_id] += 1
+            for use_id, _ in use_choices:
+                if dataset_matcher(use={use_id}):
+                    counts['use'][use_id] += 1
 
-                for source_id, _ in source_choices:
-                    if dataset_matcher(source_ids={source_id}):
-                        counts['source'][source_id] += 1
+            for source_id, _ in source_choices:
+                if dataset_matcher(source_ids={source_id}):
+                    counts['source'][source_id] += 1
 
         self.fields['access'].choices = [
             (access_id, access_text + f" ({counts['access'][access_id]})")

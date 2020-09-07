@@ -12,7 +12,7 @@ from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from psycopg2 import sql
 from django.conf import settings
-from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
@@ -89,8 +89,8 @@ from dataworkspace.zendesk import (
 )
 
 
-def preprocess_datasets(
-    datasets: QuerySet, query, use=None, user=None,
+def get_datasets_data_for_user_matching_query(
+    datasets: QuerySet, query, use=None, user=None, id_field='id'
 ):
     """
     Filters the dataset queryset for:
@@ -100,11 +100,13 @@ def preprocess_datasets(
     Annotates the dataset queryset with:
         1) `has_access`, if the user can use the dataset's data.
     """
+    is_reference_query = datasets.model is ReferenceDataset
+
     # Filter out datasets that the user is not allowed to even know about.
     visibility_filter = Q(published=True)
 
     if user:
-        if datasets.model is ReferenceDataset:
+        if is_reference_query:
             reference_type = DataSetType.REFERENCE.value
             reference_perm = dataset_type_to_manage_unpublished_permission_codename(
                 reference_type
@@ -163,7 +165,7 @@ def preprocess_datasets(
         )
 
     datasets = datasets.annotate(
-        has_access=Case(
+        _has_access=Case(
             When(access_filter, then=True), default=False, output_field=BooleanField(),
         )
         if access_filter
@@ -173,18 +175,42 @@ def preprocess_datasets(
     # Pull in the source tag IDs for the dataset
     datasets = datasets.annotate(source_tag_ids=ArrayAgg('source_tags', distinct=True))
 
-    # Define a `purpose` column denoting the dataset type
-    if datasets.model is ReferenceDataset:
+    # Define a `purpose` column denoting the dataset type.
+    if is_reference_query:
         datasets = datasets.annotate(
             purpose=Value(DataSetType.REFERENCE.value, IntegerField())
         )
     else:
         datasets = datasets.annotate(purpose=F('type'))
 
-    return datasets
+    # We are joining on the user permissions table to determine `_has_access`` to the dataset, so we need to
+    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
+    # of the records say that access is available.
+    datasets = datasets.values(
+        id_field,
+        'name',
+        'slug',
+        'short_description',
+        'search_rank',
+        'source_tag_ids',
+        'purpose',
+    ).annotate(has_access=BoolOr('_has_access'))
+
+    return datasets.values(
+        id_field,
+        'name',
+        'slug',
+        'short_description',
+        'search_rank',
+        'source_tag_ids',
+        'purpose',
+        'has_access',
+    )
 
 
-def preprocess_visualisations(visualisations: QuerySet, query, user=None):
+def get_visualisations_data_for_user_matching_query(
+    visualisations: QuerySet, query, user=None
+):
     """
     Filters the visualisation queryset for:
         1) visibility (whether the user can know if the visualisation exists)
@@ -233,7 +259,7 @@ def preprocess_visualisations(visualisations: QuerySet, query, user=None):
         access_filter = Q()
 
     visualisations = visualisations.annotate(
-        has_access=Case(
+        _has_access=Case(
             When(access_filter, then=True), default=False, output_field=BooleanField(),
         )
         if access_filter
@@ -250,7 +276,29 @@ def preprocess_visualisations(visualisations: QuerySet, query, user=None):
         purpose=Value(DataSetType.VISUALISATION.value, IntegerField())
     )
 
-    return visualisations
+    # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
+    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
+    # of the records say that access is available.
+    visualisations = visualisations.values(
+        'id',
+        'name',
+        'slug',
+        'short_description',
+        'search_rank',
+        'source_tag_ids',
+        'purpose',
+    ).annotate(has_access=BoolOr('_has_access'))
+
+    return visualisations.values(
+        'id',
+        'name',
+        'slug',
+        'short_description',
+        'search_rank',
+        'source_tag_ids',
+        'purpose',
+        'has_access',
+    )
 
 
 def _matches_filters(data, access: bool, use: Set, source_ids: Set):
@@ -259,6 +307,33 @@ def _matches_filters(data, access: bool, use: Set, source_ids: Set):
         and (not use or use == [None] or data['purpose'] in use)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
     )
+
+
+def sorted_datasets_and_visualisations_matching_query_for_user(query, use, user):
+    """
+    Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
+    and returns them, sorted by desc(search_rank), asc(name).
+    """
+    master_and_datacut_datasets = get_datasets_data_for_user_matching_query(
+        DataSet.objects.live(), query, use, user=user, id_field='id'
+    )
+
+    reference_datasets = get_datasets_data_for_user_matching_query(
+        ReferenceDataset.objects.live(), query, user=user, id_field='uuid'
+    )
+
+    visualisations = get_visualisations_data_for_user_matching_query(
+        VisualisationCatalogueItem.objects, query, user=user
+    )
+
+    # Combine all datasets and visualisations and order them.
+    all_datasets = (
+        master_and_datacut_datasets.union(reference_datasets)
+        .union(visualisations)
+        .order_by('-search_rank', 'name')
+    )
+
+    return all_datasets
 
 
 @require_GET
@@ -276,70 +351,32 @@ def find_datasets(request):
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
-    master_and_datacut_datasets = preprocess_datasets(
-        DataSet.objects.live(), query, use, user=request.user
-    ).values(
-        'id',
-        'name',
-        'slug',
-        'short_description',
-        'search_rank',
-        'source_tag_ids',
-        'purpose',
-        'has_access',
+    all_datasets_visible_to_user_matching_query = sorted_datasets_and_visualisations_matching_query_for_user(
+        query=query, use=use, user=request.user
     )
 
-    reference_datasets = preprocess_datasets(
-        ReferenceDataset.objects.live(), query, user=request.user,
-    ).values(
-        'uuid',
-        'name',
-        'slug',
-        'short_description',
-        'search_rank',
-        'source_tag_ids',
-        'purpose',
-        'has_access',
-    )
-
-    visualisations = preprocess_visualisations(
-        VisualisationCatalogueItem.objects, query, user=request.user
-    ).values(
-        'id',
-        'name',
-        'slug',
-        'short_description',
-        'search_rank',
-        'source_tag_ids',
-        'purpose',
-        'has_access',
-    )
-
-    # Combine all datasets and visualisations, then filter out any records that don't match the selected
-    # filters. We do this in Python, not the DB, because we need to run varied aggregations on the datasets in
-    # order to count how many records will be available if users apply additional filters and this was difficult
-    # to do in the DB. This process will slowly degrade over time but should be sufficient while the number of
-    # datasets is relatively low (hundreds/thousands).
-    matching_datasets = list(
+    # Filter out any records that don't match the selected filters. We do this in Python, not the DB, because we need
+    # to run varied aggregations on the datasets in order to count how many records will be available if users apply
+    # additional filters and this was difficult to do in the DB. This process will slowly degrade over time but should
+    # be sufficient while the number of datasets is relatively low (hundreds/thousands).
+    datasets_matching_query_and_filters = list(
         filter(
             lambda d: _matches_filters(d, bool(access), use, source_ids),
-            master_and_datacut_datasets.union(
-                reference_datasets.union(visualisations)
-            ).order_by('-search_rank', 'name'),
+            all_datasets_visible_to_user_matching_query,
         )
     )
 
     # Calculate counts of datasets that will match if users apply additional filters and apply these to the form
     # labels.
     form.annotate_and_update_filters(
-        master_and_datacut_datasets,
-        reference_datasets,
-        visualisations,
+        all_datasets_visible_to_user_matching_query,
         matcher=_matches_filters,
-        number_of_matches=len(matching_datasets),
+        number_of_matches=len(datasets_matching_query_and_filters),
     )
 
-    paginator = Paginator(matching_datasets, settings.SEARCH_RESULTS_DATASETS_PER_PAGE,)
+    paginator = Paginator(
+        datasets_matching_query_and_filters, settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
+    )
 
     return render(
         request,
