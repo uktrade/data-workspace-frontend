@@ -54,7 +54,7 @@ def get_tables_last_updated_date(database_name: str, tables: List[str]):
             FROM (
                 SELECT
                     CONCAT(metadata.table_schema, '.', metadata.table_name),
-                    MAX(dataflow_swapped_tables_utc) run_date
+                    MAX(source_data_modified_utc) run_date
                 FROM dataflow.metadata
                 WHERE CONCAT(metadata.table_schema, '.', metadata.table_name) = ANY(%s)
                 GROUP BY 1
