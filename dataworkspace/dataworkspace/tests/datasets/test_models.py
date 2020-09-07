@@ -188,6 +188,7 @@ def metadata_db(db):
             INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-09-02 00:01:00.0');
             INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '2020-09-01 00:01:00.0');
             INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-01-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', NULL);
             '''
         )
         conn.commit()
@@ -243,6 +244,12 @@ def test_custom_query_data_last_updated(metadata_db):
     query = factories.CustomDatasetQueryFactory(
         dataset=dataset, database=metadata_db, query='select * from table3',
     )
+
+    # Ensure None is returned if the last updated date is null
+    query = factories.CustomDatasetQueryFactory(
+        dataset=dataset, database=metadata_db, query='select * from table4',
+    )
+
     assert query.get_data_last_updated_date() is None
 
 
