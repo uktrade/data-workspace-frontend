@@ -43,6 +43,7 @@ from dataworkspace.apps.datasets.model_utils import (
     get_linked_field_display_name,
     get_linked_field_identifier_name,
 )
+from dataworkspace.datasets_db import get_tables_last_updated_date
 
 
 class DataGroupingManager(DeletableQuerySet):
@@ -470,10 +471,6 @@ class SourceTable(BaseSource):
         return DataLinkType.SOURCE_TABLE.value
 
     def get_data_last_updated_date(self):
-        from dataworkspace.datasets_db import (
-            get_tables_last_updated_date,
-        )  # pylint: disable=import-outside-toplevel
-
         return get_tables_last_updated_date(
             self.database.memorable_name, ['.'.join([self.schema, self.table])]
         )
@@ -652,10 +649,6 @@ class CustomDatasetQueryTable(models.Model):
     )
 
     def get_data_last_updated_date(self):
-        from dataworkspace.datasets_db import (
-            get_tables_last_updated_date,
-        )  # pylint: disable=import-outside-toplevel
-
         # Ensure all tables have a schema as `public` is not always specified in queries
         tables = [
             f'{"public." if len(table_name.split(".")) == 1 else ""}{table_name}'

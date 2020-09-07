@@ -2,9 +2,7 @@ import logging
 from typing import List
 
 import psycopg2
-from django.conf import settings
-
-from dataworkspace.apps.core.utils import database_dsn
+from django.db import connections
 
 logger = logging.getLogger('app')
 
@@ -19,30 +17,22 @@ def get_columns(database_name, schema=None, table=None, query=None):
     else:
         raise ValueError("Either table or query are required")
 
-    with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA[database_name])
-    ) as connection:
+    with connections[database_name].cursor() as cursor:
         try:
-            return query_columns(connection, source)
+            cursor.execute(
+                psycopg2.sql.SQL('SELECT * from {} WHERE false').format(source)
+            )
+            return [c[0] for c in cursor.description]
         except Exception:  # pylint: disable=broad-except
             logger.error("Failed to get dataset fields", exc_info=True)
             return []
-
-
-def query_columns(connection, source):
-    sql = psycopg2.sql.SQL('SELECT * from {} WHERE false').format(source)
-    with connection.cursor() as cursor:
-        cursor.execute(sql)
-        return [c[0] for c in cursor.description]
 
 
 def get_tables_last_updated_date(database_name: str, tables: List[str]):
     """
     Return the earliest of the last updated dates for a list of tables.
     """
-    with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA[database_name])
-    ) as connection, connection.cursor() as cursor:
+    with connections[database_name].cursor() as cursor:
         # Check the metadata table exists before we query it
         cursor.execute("SELECT to_regclass('dataflow.metadata')")
         if cursor.fetchone()[0] != 'dataflow.metadata':
