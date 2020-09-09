@@ -17,7 +17,7 @@ def set_query_tables(apps, schema_editor):
             try:
                 with transaction.atomic():
                     cursor.execute(
-                        f"create temporary view get_tables as (select 1 from ({query.query}) sq)"
+                        f"create temporary view get_tables as (select 1 from ({query.query.strip().rstrip(';')}) sq)"
                     )
             except DatabaseError:
                 continue
