@@ -472,7 +472,7 @@ class SourceTable(BaseSource):
 
     def get_data_last_updated_date(self):
         return get_tables_last_updated_date(
-            self.database.memorable_name, ['.'.join([self.schema, self.table])]
+            self.database.memorable_name, ((self.schema, self.table),)
         )
 
 
@@ -631,6 +631,15 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     def type(self):
         return DataLinkType.CUSTOM_QUERY.value
 
+    def get_data_last_updated_date(self):
+        tables = CustomDatasetQueryTable.objects.filter(query=self)
+        if tables:
+            return get_tables_last_updated_date(
+                self.database.memorable_name,
+                tuple((table.schema, table.table) for table in tables),
+            )
+        return None
+
 
 class CustomDatasetQueryTable(models.Model):
     query = models.ForeignKey(
@@ -647,14 +656,6 @@ class CustomDatasetQueryTable(models.Model):
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public',
     )
-
-    def get_data_last_updated_date(self):
-        # Ensure all tables have a schema as `public` is not always specified in queries
-        tables = [
-            f'{"public." if len(table_name.split(".")) == 1 else ""}{table_name}'
-            for table_name in self.parsed_query_tables
-        ]
-        return get_tables_last_updated_date(self.database.memorable_name, tables)
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):

@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import Tuple
 
 import psycopg2
 from django.db import connections
@@ -28,7 +28,7 @@ def get_columns(database_name, schema=None, table=None, query=None):
             return []
 
 
-def get_tables_last_updated_date(database_name: str, tables: List[str]):
+def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, str]]):
     """
     Return the earliest of the last updated dates for a list of tables.
     """
@@ -40,14 +40,15 @@ def get_tables_last_updated_date(database_name: str, tables: List[str]):
 
         cursor.execute(
             '''
-            SELECT MIN(run_date)
+            SELECT MIN(modified_date)
             FROM (
                 SELECT
-                    CONCAT(metadata.table_schema, '.', metadata.table_name),
-                    MAX(source_data_modified_utc) run_date
+                    table_schema,
+                    table_name,
+                    MAX(source_data_modified_utc) AS modified_date
                 FROM dataflow.metadata
-                WHERE CONCAT(metadata.table_schema, '.', metadata.table_name) = ANY(%s)
-                GROUP BY 1
+                WHERE (table_schema, table_name) IN %s
+                GROUP BY (1, 2)
             ) a
             ''',
             [tables],

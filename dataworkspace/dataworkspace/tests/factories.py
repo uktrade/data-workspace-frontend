@@ -122,6 +122,15 @@ class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
         model = 'datasets.CustomDatasetQuery'
 
 
+class CustomDatasetQueryTableFactory(factory.django.DjangoModelFactory):
+    query = factory.SubFactory(CustomDatasetQueryFactory)
+    table = factory.fuzzy.FuzzyText()
+    schema = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = 'datasets.CustomDatasetQueryTable'
+
+
 class DatasetReferenceCodeFactory(factory.django.DjangoModelFactory):
     id = factory.Sequence(lambda n: n)
     code = factory.fuzzy.FuzzyText(length=3)

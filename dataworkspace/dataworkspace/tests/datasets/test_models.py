@@ -2,7 +2,6 @@ from datetime import datetime
 
 import botocore
 import mock
-import psqlparse
 import psycopg2
 import pytest
 from django.conf import settings
@@ -147,32 +146,6 @@ def test_source_link_filename(db):
     assert source3.get_filename() == 'a-test-source.csv'
 
 
-def test_dataset_parsed_query_tables(db):
-    ds = factories.DataSetFactory.create(published=True)
-
-    blank_query = factories.CustomDatasetQueryFactory(dataset=ds)
-    assert not blank_query.parsed_query_tables
-
-    standard_query = factories.CustomDatasetQueryFactory(
-        dataset=ds, query='select * from foo'
-    )
-    assert standard_query.parsed_query_tables == ['foo']
-
-    join_query = factories.CustomDatasetQueryFactory(
-        dataset=ds, query='select * from foo join bar on foo.id = bar.id'
-    )
-    assert sorted(join_query.parsed_query_tables) == ['bar', 'foo']
-
-    with_query = factories.CustomDatasetQueryFactory(
-        dataset=ds, query='with test as (select * from foo) select * from test'
-    )
-    assert sorted(with_query.parsed_query_tables) == ['foo', 'test']
-
-    bad_query = factories.CustomDatasetQueryFactory(dataset=ds, query='select * from')
-    with pytest.raises(psqlparse.exceptions.PSqlParseError):
-        bad_query.parsed_query_tables  # pylint: disable=pointless-statement
-
-
 @pytest.fixture
 def metadata_db(db):
     database = factories.DatabaseFactory(memorable_name='my_database')
@@ -232,11 +205,20 @@ def test_custom_query_data_last_updated(metadata_db):
         database=metadata_db,
         query='select * from table1 join table2 on 1=1',
     )
+    factories.CustomDatasetQueryTableFactory(
+        query=query, schema='public', table='table1'
+    )
+    factories.CustomDatasetQueryTableFactory(
+        query=query, schema='public', table='table2'
+    )
     assert query.get_data_last_updated_date() == datetime(2020, 9, 1, 0, 1, 0)
 
     # Ensure a single table returns the last update date
     query = factories.CustomDatasetQueryFactory(
         dataset=dataset, database=metadata_db, query='select * from table1',
+    )
+    factories.CustomDatasetQueryTableFactory(
+        query=query, schema='public', table='table1'
     )
     assert query.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0)
 
@@ -296,4 +278,3 @@ def test_source_link_data_last_updated(mock_client):
         url='http://www.example.com',
     )
     assert external_link.get_data_last_updated_date() is None
-
