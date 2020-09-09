@@ -2494,6 +2494,7 @@ class TestDatasetAdminPytest:
         'query, expected_tables',
         (
             ('SELECT * FROM auth_user', ['public.auth_user']),
+            ('SELECT * FROM auth_user;', ['public.auth_user']),
             (
                 'SELECT * FROM auth_user JOIN auth_user_groups ON auth_user.id = auth_user_groups.user_id',
                 ['public.auth_user', 'public.auth_user_groups'],

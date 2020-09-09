@@ -448,7 +448,7 @@ class CustomDatasetQueryInlineForm(forms.ModelForm):
             try:
                 with transaction.atomic():
                     cursor.execute(
-                        f"create temporary view get_tables as (select 1 from ({instance.query}) sq)"
+                        f"create temporary view get_tables as (select 1 from ({instance.query.strip().rstrip(';')}) sq)"
                     )
             except DatabaseError:
                 tables = []
