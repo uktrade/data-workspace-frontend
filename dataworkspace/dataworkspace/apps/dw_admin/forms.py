@@ -6,6 +6,8 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.core.exceptions import ValidationError
+from django.db import connections, transaction
+from django.db.utils import DatabaseError
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
@@ -428,6 +430,40 @@ class CustomDatasetQueryInlineForm(forms.ModelForm):
                 # We need to also update the instance directly, as well, because the `reviewed` field will not otherwise
                 # be updated for users who have `reviewed` as a read-only field (i.e. "Subject Matter Experts").
                 self.instance.reviewed = False
+
+        return self.cleaned_data
+
+    @transaction.atomic
+    def save(self, commit=True):
+        # Lock the row to prevent race conditions that can happen if another user
+        # tries to update the same query at the same time. This prevents potential
+        # duplicate or mismatching CustomDatasetQueryTable objects.
+        if self.instance.pk:
+            CustomDatasetQuery.objects.select_for_update().get(id=self.instance.pk)
+
+        instance = super().save(commit)
+
+        # Extract the queried tables from the FROM clause using temporary views
+        with connections[instance.database.memorable_name].cursor() as cursor:
+            try:
+                with transaction.atomic():
+                    cursor.execute(
+                        f"create temporary view get_tables as (select 1 from ({instance.query}) sq)"
+                    )
+            except DatabaseError:
+                tables = []
+            else:
+                cursor.execute(
+                    "select table_schema, table_name from information_schema.view_table_usage where view_name = 'get_tables'"
+                )
+                tables = cursor.fetchall()
+                cursor.execute("drop view get_tables")
+
+        # Save the extracted tables in a seperate model for later user
+        instance.tables.all().delete()
+        for t in tables:
+            instance.tables.create(schema=t[0], table=t[1])
+        return instance
 
 
 class SourceViewForm(forms.ModelForm):

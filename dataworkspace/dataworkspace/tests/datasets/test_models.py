@@ -1,4 +1,3 @@
-import psqlparse
 import pytest
 
 from dataworkspace.apps.datasets.models import SourceLink
@@ -138,29 +137,3 @@ def test_source_link_filename(db):
         link_type=SourceLink.TYPE_EXTERNAL,
     )
     assert source3.get_filename() == 'a-test-source.csv'
-
-
-def test_dataset_parsed_query_tables(db):
-    ds = factories.DataSetFactory.create(published=True)
-
-    blank_query = factories.CustomDatasetQueryFactory(dataset=ds)
-    assert not blank_query.parsed_query_tables
-
-    standard_query = factories.CustomDatasetQueryFactory(
-        dataset=ds, query='select * from foo'
-    )
-    assert standard_query.parsed_query_tables == ['foo']
-
-    join_query = factories.CustomDatasetQueryFactory(
-        dataset=ds, query='select * from foo join bar on foo.id = bar.id'
-    )
-    assert sorted(join_query.parsed_query_tables) == ['bar', 'foo']
-
-    with_query = factories.CustomDatasetQueryFactory(
-        dataset=ds, query='with test as (select * from foo) select * from test'
-    )
-    assert sorted(with_query.parsed_query_tables) == ['foo', 'test']
-
-    bad_query = factories.CustomDatasetQueryFactory(dataset=ds, query='select * from')
-    with pytest.raises(psqlparse.exceptions.PSqlParseError):
-        bad_query.parsed_query_tables  # pylint: disable=pointless-statement

@@ -11,7 +11,6 @@ from psycopg2 import sql
 import boto3
 from botocore.exceptions import ClientError
 from ckeditor.fields import RichTextField
-import psqlparse
 
 from django import forms
 from django.apps import apps
@@ -615,12 +614,22 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     def type(self):
         return DataLinkType.CUSTOM_QUERY.value
 
-    @property
-    def parsed_query_tables(self):
-        if not self.query:
-            return None
-        statements = psqlparse.parse(self.query)
-        return list(statements[0].tables())
+
+class CustomDatasetQueryTable(models.Model):
+    query = models.ForeignKey(
+        CustomDatasetQuery, on_delete=models.CASCADE, related_name='tables'
+    )
+    table = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+    )
+    schema = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        default='public',
+    )
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
