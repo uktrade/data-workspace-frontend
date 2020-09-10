@@ -33,11 +33,6 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
     Return the earliest of the last updated dates for a list of tables.
     """
     with connections[database_name].cursor() as cursor:
-        # Check the metadata table exists before we query it
-        cursor.execute("SELECT to_regclass('dataflow.metadata')")
-        if cursor.fetchone()[0] != 'dataflow.metadata':
-            return None
-
         cursor.execute(
             '''
             SELECT MIN(modified_date)
