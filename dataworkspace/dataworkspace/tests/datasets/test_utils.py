@@ -27,7 +27,7 @@ def test_dataset_type_to_manage_unpublished_permission_codename():
 
 
 @pytest.mark.django_db
-def test_get_code_snippets():
+def test_get_code_snippets(metadata_db):
     ds = DataSetFactory.create(type=DataSetType.MASTER.value)
 
     assert get_code_snippets(ds) == {}

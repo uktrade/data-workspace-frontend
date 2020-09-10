@@ -2,11 +2,8 @@ from datetime import datetime
 
 import botocore
 import mock
-import psycopg2
 import pytest
-from django.conf import settings
 
-from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.models import SourceLink
 from dataworkspace.tests import factories
 
@@ -146,29 +143,6 @@ def test_source_link_filename(db):
     assert source3.get_filename() == 'a-test-source.csv'
 
 
-@pytest.fixture
-def metadata_db(db):
-    database = factories.DatabaseFactory(memorable_name='my_database')
-    with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA['my_database'])
-    ) as conn, conn.cursor() as cursor:
-        cursor.execute(
-            '''
-            CREATE SCHEMA IF NOT EXISTS dataflow;
-            CREATE TABLE IF NOT EXISTS dataflow.metadata (
-                id int, table_schema text, table_name text, source_data_modified_utc timestamp
-            );
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-09-02 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '2020-09-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-01-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', NULL);
-            '''
-        )
-        conn.commit()
-        yield database
-        cursor.execute('DROP TABLE dataflow.metadata;')
-
-
 @pytest.mark.django_db
 def test_source_table_data_last_updated(metadata_db):
     dataset = factories.DataSetFactory()
@@ -179,17 +153,6 @@ def test_source_table_data_last_updated(metadata_db):
 
     table = factories.SourceTableFactory(
         dataset=dataset, database=metadata_db, schema='public', table='doesntexist'
-    )
-    assert table.get_data_last_updated_date() is None
-
-
-@pytest.mark.django_db
-def test_source_table_no_metadata_table():
-    table = factories.SourceTableFactory(
-        dataset=factories.DataSetFactory(),
-        database=factories.DatabaseFactory(memorable_name='my_database'),
-        schema='public',
-        table='table1',
     )
     assert table.get_data_last_updated_date() is None
 
@@ -226,21 +189,11 @@ def test_custom_query_data_last_updated(metadata_db):
     query = factories.CustomDatasetQueryFactory(
         dataset=dataset, database=metadata_db, query='select * from table3',
     )
+    assert query.get_data_last_updated_date() is None
 
     # Ensure None is returned if the last updated date is null
     query = factories.CustomDatasetQueryFactory(
         dataset=dataset, database=metadata_db, query='select * from table4',
-    )
-
-    assert query.get_data_last_updated_date() is None
-
-
-@pytest.mark.django_db
-def test_custom_query_no_metadata_table():
-    query = factories.CustomDatasetQueryFactory(
-        dataset=factories.DataSetFactory(),
-        database=factories.DatabaseFactory(memorable_name='my_database'),
-        query='select * from table1 join table2 on 1=1',
     )
     assert query.get_data_last_updated_date() is None
 
