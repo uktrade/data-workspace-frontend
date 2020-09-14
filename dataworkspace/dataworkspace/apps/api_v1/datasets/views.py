@@ -12,7 +12,7 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.datasets.model_utils import (
     get_linked_field_identifier_name,
-    get_linked_field_display_name,
+    get_linked_field_display_fields,
 )
 from dataworkspace.apps.datasets.models import (
     SourceTable,
@@ -240,10 +240,12 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
                     values[index] = (
                         value.get_identifier() if value is not None else None
                     )
-                    index = field_names.index(get_linked_field_display_name(field))
-                    values[index] = (
-                        value.get_display_name() if value is not None else None
-                    )
+                    for display_field_name, display_field_value in value.get_display_fields():
+                        display_field_name = f'{field.name}: {display_field_name}'
+                        index = field_names.index(display_field_name)
+                        values[index] = (
+                            display_field_value if display_field_value is not None else None
+                        )
                 else:
                     values[field_names.index(field.name)] = value
             yield values

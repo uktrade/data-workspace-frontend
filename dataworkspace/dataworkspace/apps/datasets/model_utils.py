@@ -54,22 +54,17 @@ def has_circular_link(target_dataset, linked_dataset):
     return False
 
 
-def get_linked_field_name(field, field_type):
+def get_linked_field_identifier_name(field):
     linked_reference_dataset = field.linked_reference_dataset
     if not linked_reference_dataset:
         return field.name
-    if field_type == LINKED_FIELD_IDENTIFIER:
-        if linked_reference_dataset.identifier_field:
-            return f'{field.name}: {linked_reference_dataset.identifier_field.name}'
-    elif field_type == LINKED_FIELD_DISPLAY_NAME:
-        if linked_reference_dataset.display_name_field:
-            return f'{field.name}: {linked_reference_dataset.display_name_field.name}'
+    if linked_reference_dataset.identifier_field:
+        return f'{field.name}: {linked_reference_dataset.identifier_field.name}'
     return field.name
 
 
-def get_linked_field_identifier_name(field):
-    return get_linked_field_name(field, LINKED_FIELD_IDENTIFIER)
-
-
-def get_linked_field_display_name(field):
-    return get_linked_field_name(field, LINKED_FIELD_DISPLAY_NAME)
+def get_linked_field_display_fields(field):
+    linked_reference_dataset = field.linked_reference_dataset
+    if not linked_reference_dataset:
+        return []
+    return linked_reference_dataset.display_name_field.all()

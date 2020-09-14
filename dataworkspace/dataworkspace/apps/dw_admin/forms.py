@@ -91,8 +91,8 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
             raise forms.ValidationError(
                 'Please ensure one field is set as the display name'
             )
-        if len(display_names) > 1:
-            raise forms.ValidationError('Please select only one display name field')
+        # if len(display_names) > 1:
+            # raise forms.ValidationError('Please select only one display name field')
 
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):

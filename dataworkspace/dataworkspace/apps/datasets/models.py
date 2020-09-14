@@ -40,7 +40,7 @@ from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.datasets.model_utils import (
     external_model_class,
     has_circular_link,
-    get_linked_field_display_name,
+    get_linked_field_display_fields,
     get_linked_field_identifier_name,
 )
 
@@ -886,7 +886,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return:
         """
         try:
-            return self.fields.get(is_display_name=True)
+            return self.fields.filter(is_display_name=True)
         except ReferenceDatasetField.DoesNotExist:
             return self.fields.get(is_identifier=True)
 
@@ -900,7 +900,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         for field in self.fields.all():
             if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                 field_names.append(get_linked_field_identifier_name(field))
-                field_names.append(get_linked_field_display_name(field))
+                for display_field in get_linked_field_display_fields(field):
+                    field_names.append(f'{field.name}: {display_field.name}')
             else:
                 field_names.append(field.name)
         return field_names
@@ -1139,16 +1140,22 @@ class ReferenceDatasetRecordBase(models.Model):
         abstract = True
 
     def __str__(self):
-        return self.get_display_name()
+        return ','.join([f[1] for f in self.get_display_fields()])
 
-    def get_display_name(self):
-        display_name_field = self.reference_dataset.display_name_field
-        if display_name_field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-            linked_record = getattr(self, display_name_field.column_name)
-            if linked_record is not None:
-                return linked_record.get_display_name()
-            return 'Unknown record'
-        return getattr(self, display_name_field.column_name, 'Unknown record')
+    def get_display_fields(self):
+        display_name_fields = self.reference_dataset.display_name_field.all()
+        display_names = []
+        for field in display_name_fields:
+            if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                linked_record = getattr(self, field.column_name)
+                if linked_record is not None:
+                    for display_name, value in linked_record.get_display_fields():
+                        display_names.append((display_name, getattr(self, value, None)))
+                else:
+                    display_names.append(('Unknown record', None))
+            else:
+                display_names.append((field.name, getattr(self, field.column_name, 'Unknown record')))
+        return display_names
 
     def get_identifier(self):
         return getattr(self, self.reference_dataset.identifier_field.column_name, None)

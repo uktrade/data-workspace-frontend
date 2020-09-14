@@ -98,14 +98,17 @@
                   <dd class="govuk-summary-list__value">{{ field.description }}</dd>
                 {% endif %}
               </div>
-              <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">{% linked_field_display_name field %}</dt>
-                {% if field.linked_reference_dataset and field.linked_reference_dataset.display_name_field %}
-                  <dd class="govuk-summary-list__value">{{ field.linked_reference_dataset.display_name_field.description }}</dd>
-                {% else %}
-                  <dd class="govuk-summary-list__value">{{ field.description }}</dd>
-                {% endif %}
-              </div>
+              {% linked_field_display_field_names field as display_fields %}
+              {% for display_field in display_fields %}
+                <div class="govuk-summary-list__row">
+                  <dt class="govuk-summary-list__key">{{ field.name }}: {{ display_field.name }}</dt>
+                  {% if field.linked_reference_dataset %}
+                    <dd class="govuk-summary-list__value">{{ display_field.description }}</dd>
+                  {% else %}
+                    <dd class="govuk-summary-list__value">{{ field.description }}</dd>
+                  {% endif %}
+                </div>
+                {% endfor %}
               {% else %}
                 <div class="govuk-summary-list__row">
                   <dt class="govuk-summary-list__key">{{ field.name }}</dt>
@@ -136,7 +139,10 @@
                 {% for field in fields %}
                   {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
                     <th class="govuk-table__header ref-data-col-id">{% linked_field_identifier_name field %}</th>
-                    <th class="govuk-table__header ref-data-col-character-field">{% linked_field_display_name field %}</th>
+                    {% linked_field_display_field_names field as display_fields %}
+                      {% for display_field in display_fields %}
+                        <th class="govuk-table__header ref-data-col-character-field">{{ field.name }}: {{ display_field.name }}</th>
+                      {% endfor %}
                   {% else %}
                     <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
                       {{ field.name }}
@@ -157,9 +163,11 @@
                         <td class="govuk-table__cell">
                           {{ value.get_identifier|not_set_if_none }}
                         </td>
-                        <td class="govuk-table__cell">
-                          {{ value.get_display_name|not_set_if_none }}
-                        </td>
+                         {% for _,display_field_value in value.get_display_fields %}
+                          <td class="govuk-table__cell">
+                            {{ display_field_value|not_set_if_none }}
+                          </td>
+                        {% endfor %}
                       {% else %}
                         <td class="govuk-table__cell">
                           {{ value|not_set_if_none }}

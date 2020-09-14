@@ -59,7 +59,7 @@ from dataworkspace.apps.datasets.forms import (
     RequestAccessForm,
 )
 from dataworkspace.apps.datasets.model_utils import (
-    get_linked_field_display_name,
+    get_linked_field_display_fields,
     get_linked_field_identifier_name,
 )
 from dataworkspace.apps.datasets.models import (
@@ -750,18 +750,20 @@ class ReferenceDatasetDownloadView(DetailView):
         for record in ref_dataset.get_records():
             record_data = {}
             for field in ref_dataset.fields.all():
-                field_name = field.name
                 value = getattr(record, field.column_name)
                 # If this is a linked field display the display name and id of that linked record
                 if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     record_data[get_linked_field_identifier_name(field)] = (
                         value.get_identifier() if value is not None else None
                     )
-                    record_data[get_linked_field_display_name(field)] = (
-                        value.get_display_name() if value is not None else None
-                    )
+                    if not value:
+                        continue
+                    for display_field_name, display_field_value in value.get_display_fields():
+                        record_data[f'{field.name}: {display_field_name}'] = (
+                            display_field_value if display_field_value is not None else None
+                        )
                 else:
-                    record_data[field_name] = value
+                    record_data[field.name] = value
             records.append(record_data)
 
         response = HttpResponse()
