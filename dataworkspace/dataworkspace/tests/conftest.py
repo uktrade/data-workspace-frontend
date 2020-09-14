@@ -1,7 +1,12 @@
+import psycopg2
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase
 import pytest
+
+from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.tests import factories
 
 
 @pytest.fixture
@@ -99,3 +104,26 @@ def request_client(request):
 @pytest.fixture(scope='session')
 def test_case():
     return TestCase('run')
+
+
+@pytest.fixture
+def metadata_db(db):
+    database = factories.DatabaseFactory(memorable_name='my_database')
+    with psycopg2.connect(
+        database_dsn(settings.DATABASES_DATA['my_database'])
+    ) as conn, conn.cursor() as cursor:
+        cursor.execute(
+            '''
+            CREATE SCHEMA IF NOT EXISTS dataflow;
+            CREATE TABLE IF NOT EXISTS dataflow.metadata (
+                id int, table_schema text, table_name text, source_data_modified_utc timestamp
+            );
+            TRUNCATE TABLE dataflow.metadata;
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-09-02 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '2020-09-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-01-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', NULL);
+            '''
+        )
+        conn.commit()
+    return database

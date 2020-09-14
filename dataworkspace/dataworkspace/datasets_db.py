@@ -1,9 +1,8 @@
 import logging
+from typing import Tuple
 
 import psycopg2
-from django.conf import settings
-
-from dataworkspace.apps.core.utils import database_dsn
+from django.db import connections
 
 logger = logging.getLogger('app')
 
@@ -18,18 +17,35 @@ def get_columns(database_name, schema=None, table=None, query=None):
     else:
         raise ValueError("Either table or query are required")
 
-    with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA[database_name])
-    ) as connection:
+    with connections[database_name].cursor() as cursor:
         try:
-            return query_columns(connection, source)
+            cursor.execute(
+                psycopg2.sql.SQL('SELECT * from {} WHERE false').format(source)
+            )
+            return [c[0] for c in cursor.description]
         except Exception:  # pylint: disable=broad-except
             logger.error("Failed to get dataset fields", exc_info=True)
             return []
 
 
-def query_columns(connection, source):
-    sql = psycopg2.sql.SQL('SELECT * from {} WHERE false').format(source)
-    with connection.cursor() as cursor:
-        cursor.execute(sql)
-        return [c[0] for c in cursor.description]
+def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, str]]):
+    """
+    Return the earliest of the last updated dates for a list of tables.
+    """
+    with connections[database_name].cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT MIN(modified_date)
+            FROM (
+                SELECT
+                    table_schema,
+                    table_name,
+                    MAX(source_data_modified_utc) AS modified_date
+                FROM dataflow.metadata
+                WHERE (table_schema, table_name) IN %s
+                GROUP BY (1, 2)
+            ) a
+            ''',
+            [tables],
+        )
+        return cursor.fetchone()[0]

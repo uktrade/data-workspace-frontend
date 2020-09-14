@@ -37,7 +37,9 @@ from dataworkspace.tests.factories import (
         (['Criteria 1', 'Criteria 2'], 'datasets:eligibility_criteria'),
     ],
 )
-def test_dataset_has_request_access_link(client, eligibility_criteria, view_name):
+def test_dataset_has_request_access_link(
+    client, eligibility_criteria, view_name, metadata_db
+):
     ds = factories.DataSetFactory.create(
         eligibility_criteria=eligibility_criteria, published=True
     )
@@ -906,12 +908,15 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
 
 
 @pytest.mark.django_db
-def test_dataset_shows_code_snippets_to_tool_user():
+def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
     user = get_user_model().objects.create(is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.SourceTableFactory.create(
-        dataset=ds, schema="public", table="MY_LOVELY_TABLE"
+        dataset=ds,
+        schema="public",
+        table="MY_LOVELY_TABLE",
+        database=factories.DatabaseFactory(memorable_name='my_database'),
     )
 
     client = Client(**get_http_sso_data(user))

@@ -72,6 +72,7 @@
           <th class="govuk-table__header">Name</th>
           <th class="govuk-table__header">Identifier</th>
           <th class="govuk-table__header">Update frequency</th>
+          <th class="govuk-table__header">Data last updated</th>
           {% if user.is_superuser and data_links_with_link_toggle %}
             <th class="govuk-table__header">Tools*</th>
           {% endif %}
@@ -87,6 +88,7 @@
             <td class="govuk-table__cell">{{ data_link.name }}</td>
             <td class="govuk-table__cell">"{{ data_link.schema }}"."{{ data_link.table }}"</td>
             <td class="govuk-table__cell">{{ data_link.get_frequency_display }}</td>
+            <td class="govuk-table__cell">{{ data_link.get_data_last_updated_date|default_if_none:"N/A" }}</td>
             {% if user.is_superuser %}
               <td class="govuk-table__cell">
                 {% if data_link.get_google_data_studio_link and data_link.accessible_by_google_data_studio %}

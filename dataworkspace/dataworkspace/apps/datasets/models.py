@@ -43,6 +43,7 @@ from dataworkspace.apps.datasets.model_utils import (
     get_linked_field_display_name,
     get_linked_field_identifier_name,
 )
+from dataworkspace.datasets_db import get_tables_last_updated_date
 
 
 class DataGroupingManager(DeletableQuerySet):
@@ -469,6 +470,11 @@ class SourceTable(BaseSource):
     def type(self):
         return DataLinkType.SOURCE_TABLE.value
 
+    def get_data_last_updated_date(self):
+        return get_tables_last_updated_date(
+            self.database.memorable_name, ((self.schema, self.table),)
+        )
+
 
 class SourceView(BaseSource):
     view = models.CharField(
@@ -572,6 +578,17 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def type(self):
         return DataLinkType.SOURCE_LINK.value
 
+    def get_data_last_updated_date(self):
+        if self.link_type == self.TYPE_LOCAL:
+            try:
+                metadata = boto3.client('s3').head_object(
+                    Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url
+                )
+                return metadata.get('LastModified')
+            except ClientError:
+                pass
+        return None
+
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     FREQ_DAILY = 1
@@ -613,6 +630,15 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     @property
     def type(self):
         return DataLinkType.CUSTOM_QUERY.value
+
+    def get_data_last_updated_date(self):
+        tables = CustomDatasetQueryTable.objects.filter(query=self)
+        if tables:
+            return get_tables_last_updated_date(
+                self.database.memorable_name,
+                tuple((table.schema, table.table) for table in tables),
+            )
+        return None
 
 
 class CustomDatasetQueryTable(models.Model):

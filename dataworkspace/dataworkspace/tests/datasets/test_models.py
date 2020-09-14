@@ -1,3 +1,7 @@
+from datetime import datetime
+
+import botocore
+import mock
 import pytest
 
 from dataworkspace.apps.datasets.models import SourceLink
@@ -137,3 +141,93 @@ def test_source_link_filename(db):
         link_type=SourceLink.TYPE_EXTERNAL,
     )
     assert source3.get_filename() == 'a-test-source.csv'
+
+
+@pytest.mark.django_db
+def test_source_table_data_last_updated(metadata_db):
+    dataset = factories.DataSetFactory()
+    table = factories.SourceTableFactory(
+        dataset=dataset, database=metadata_db, schema='public', table='table1'
+    )
+    assert table.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0)
+
+    table = factories.SourceTableFactory(
+        dataset=dataset, database=metadata_db, schema='public', table='doesntexist'
+    )
+    assert table.get_data_last_updated_date() is None
+
+
+@pytest.mark.django_db
+def test_custom_query_data_last_updated(metadata_db):
+    dataset = factories.DataSetFactory()
+
+    # Ensure the earliest "last updated" date is returned when
+    # there are multiple tables in the query
+    query = factories.CustomDatasetQueryFactory(
+        dataset=dataset,
+        database=metadata_db,
+        query='select * from table1 join table2 on 1=1',
+    )
+    factories.CustomDatasetQueryTableFactory(
+        query=query, schema='public', table='table1'
+    )
+    factories.CustomDatasetQueryTableFactory(
+        query=query, schema='public', table='table2'
+    )
+    assert query.get_data_last_updated_date() == datetime(2020, 9, 1, 0, 1, 0)
+
+    # Ensure a single table returns the last update date
+    query = factories.CustomDatasetQueryFactory(
+        dataset=dataset, database=metadata_db, query='select * from table1',
+    )
+    factories.CustomDatasetQueryTableFactory(
+        query=query, schema='public', table='table1'
+    )
+    assert query.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0)
+
+    # Ensure None is returned if we don't have any metadata for the tables
+    query = factories.CustomDatasetQueryFactory(
+        dataset=dataset, database=metadata_db, query='select * from table3',
+    )
+    assert query.get_data_last_updated_date() is None
+
+    # Ensure None is returned if the last updated date is null
+    query = factories.CustomDatasetQueryFactory(
+        dataset=dataset, database=metadata_db, query='select * from table4',
+    )
+    assert query.get_data_last_updated_date() is None
+
+
+@pytest.mark.django_db
+@mock.patch('dataworkspace.apps.datasets.views.boto3.client')
+def test_source_link_data_last_updated(mock_client):
+    dataset = factories.DataSetFactory.create()
+    local_link = factories.SourceLinkFactory(
+        dataset=dataset,
+        link_type=SourceLink.TYPE_LOCAL,
+        url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt',
+    )
+
+    # Returns last modified date if the file exists
+    mock_client().head_object.return_value = {
+        'ContentType': 'text/plain',
+        'LastModified': datetime(2020, 9, 2, 0, 1, 0),
+    }
+    assert local_link.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0)
+
+    # Returns None if file does not exist on s3
+    mock_client().head_object.side_effect = [
+        botocore.exceptions.ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='head_object',
+        )
+    ]
+    assert local_link.get_data_last_updated_date() is None
+
+    # External links never have a last updated date
+    external_link = factories.SourceLinkFactory(
+        dataset=dataset,
+        link_type=SourceLink.TYPE_EXTERNAL,
+        url='http://www.example.com',
+    )
+    assert external_link.get_data_last_updated_date() is None

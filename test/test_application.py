@@ -12,8 +12,8 @@ import aiohttp
 from aiohttp import web
 import aiopg
 import aioredis
-from lxml import html
 import mohawk
+from lxml import html
 
 from test.pages import HomePage, get_browser  # pylint: disable=wrong-import-order
 
@@ -1324,6 +1324,12 @@ class TestApplication(unittest.TestCase):
 
         dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+
+        stdout, stderr, code = await create_metadata_table()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
         stdout, stderr, code = await create_private_dataset(
             'my_database',
             'DATACUT',
@@ -2411,6 +2417,34 @@ async def give_user_visualisation_developer_perms():
         )
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
+        """
+    ).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def create_metadata_table():
+    python_code = textwrap.dedent(
+        """\
+        from django.db import connections
+        with connections["my_database"].cursor() as cursor:
+            cursor.execute(
+                '''
+                CREATE SCHEMA IF NOT EXISTS dataflow;
+                CREATE TABLE IF NOT EXISTS dataflow.metadata (
+                    id int, table_schema text, table_name text, source_data_modified_utc timestamp
+                );
+                '''
+            )
         """
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
