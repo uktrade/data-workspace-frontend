@@ -25,5 +25,5 @@ psycogreen==1.0.2
 redis==3.5.3
 pyjwt==1.7.1
 requests==2.24.0
-sentry-sdk==0.16.5
+sentry-sdk==0.17.4
 zenpy==2.0.21
