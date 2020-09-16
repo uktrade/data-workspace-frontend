@@ -76,9 +76,7 @@
           {% if user.is_superuser and data_links_with_link_toggle %}
             <th class="govuk-table__header">Tools*</th>
           {% endif %}
-          {% if has_access %}
-            <th class="govuk-table__header">Details</th>
-          {% endif %}
+          <th class="govuk-table__header">Details</th>
         </tr>
         </thead>
         <tbody>
@@ -96,18 +94,20 @@
                 {% endif %}
               </td>
             {% endif %}
-            {% if has_access %}
-              <td class="govuk-table__cell">
-                  {% if data_link.type == source_table_type %}
-                    <a class="govuk-link"
-                        href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=data_link.id %}">
-                        Preview
-                    </a>
-                  {% else %}
-                      No preview available
-                  {% endif %}
-              </td>
-            {% endif %}
+            <td class="govuk-table__cell">
+              {% if data_link.type == source_table_type %}
+                {% if has_access %}
+                  <a class="govuk-link"
+                      href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=data_link.id %}">
+                      Preview
+                  </a>
+                {% else %}
+                  <p class="govuk-body">No preview available</p>
+                {% endif %}
+              {% else %}
+                  No preview available
+              {% endif %}
+            </td>
           </tr>
         {% endfor %}
         {% if not data_links_with_link_toggle %}
