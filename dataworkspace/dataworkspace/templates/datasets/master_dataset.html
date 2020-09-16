@@ -37,35 +37,16 @@
       <div class="govuk-body">
         {{ model.description | safe }}
       </div>
+
+      {% if data_links_with_link_toggle and not has_access %}
+        {% include 'partials/unauthorised_warning.html' with thing='this dataset' %}
+      {% endif %}
     </div>
   </div>
 
   <div class="govuk-grid-row" style="overflow-x: auto;">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Details</h2>
-
-      {% if data_links_with_link_toggle %}
-        {% if not has_access %}
-          <div class="govuk-warning-text">
-            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-            <div class="govuk-warning-text__text">
-              <strong>
-                <span class="govuk-warning-text__assistive">Warning</span>
-                You do not have permission to access this dataset.
-                <br>
-                {% if model.eligibility_criteria %}
-                  <a class="govuk-link--no-visited-state"
-                     href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
-                {% else %}
-                  <a class="govuk-link--no-visited-state"
-                     href="{% url 'datasets:request_access' model.id %}">Request access</a>
-                {% endif %}
-              </strong>
-            </div>
-          </div>
-        {% endif %}
-      {% endif %}
-
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
