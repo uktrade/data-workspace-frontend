@@ -49,26 +49,13 @@
     {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-l">{{ model.name }}</h1>
+            <h1 class="govuk-heading-xl">{{ model.name }}</h1>
             <div class="govuk-body">
                 {{ model.description | safe }}
             </div>
 
             {% if data_links_with_link_toggle and not has_access %}
-                <div class="govuk-warning-text">
-                    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-                    <div class="govuk-warning-text__text">
-                        <strong>
-                            <span class="govuk-warning-text__assistive">Warning</span>
-                            You do not have permission to access these links.
-                        </strong>
-                    </div>
-                </div>
-                {% if model.eligibility_criteria %}
-                  <a class="govuk-button" href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
-                {% else %}
-                  <a class="govuk-button" href="{% url 'datasets:request_access' model.id %}">Request access</a>
-                {% endif %}
+                {% include 'partials/unauthorised_warning.html' with thing='these links' %}
             {% endif %}
         </div>
     </div>
@@ -98,9 +85,7 @@
                     <th class="govuk-table__header">Format</th>
                     <th class="govuk-table__header">Frequency</th>
                     <th class="govuk-table__header">Data last updated</th>
-                    {% if has_access %}
                     <th class="govuk-table__header">Details</th>
-                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -129,18 +114,20 @@
                         <td class="govuk-table__cell">
                           {{ data_link.get_data_last_updated_date|default_if_none:"N/A" }}
                         </td>
-                        {% if has_access %}
                         <td class="govuk-table__cell">
                             {% if can_show_link and data_link.type == custom_dataset_query_type %}
-                            <a class="govuk-link"
-                                href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=data_link.id %}">
-                                Preview
-                            </a>
+                                {% if has_access %}
+                                    <a class="govuk-link"
+                                        href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=data_link.id %}">
+                                        Preview
+                                    </a>
+                                {% else %}
+                                    <p class="govuk-body">No preview available</p>
+                                {% endif %}
                             {% else %}
                                 No preview available
                             {% endif %}
                         </td>
-                        {% endif %}
                     </tr>
                 {% endfor %}
 

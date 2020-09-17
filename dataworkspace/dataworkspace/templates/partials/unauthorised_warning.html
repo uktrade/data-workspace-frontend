@@ -1,0 +1,18 @@
+<div class="govuk-warning-text">
+  <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+  <div class="govuk-warning-text__text">
+    <strong>
+      <span class="govuk-warning-text__assistive">Warning</span>
+      You do not have permission to access {{ thing }}.
+      <br>
+    </strong>
+  </div>
+</div>
+
+{% if model.eligibility_criteria %}
+  <a class="govuk-button"
+     href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
+{% else %}
+  <a class="govuk-button"
+     href="{% url 'datasets:request_access' model.id %}">Request access</a>
+{% endif %}
