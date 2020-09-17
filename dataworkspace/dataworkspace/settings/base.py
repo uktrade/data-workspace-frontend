@@ -361,7 +361,6 @@ DATABASES = {
 DATABASES_DATA = {
     db: db_config for db, db_config in DATABASES.items() if db in env['DATA_DB']
 }
-
 # Only used when collectstatic is run
 STATIC_ROOT = '/home/django/static/'
 
@@ -388,6 +387,9 @@ QUICKSIGHT_SSO_URL = (
     "&RelayState=https://quicksight.aws.amazon.com"
 )
 QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS = 'author-custom-permissions'
+
+WAFFLE_CREATE_MISSING_FLAGS = True
+WAFFLE_FLAG_DEFAULT = False
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
 WAFFLE_SWITCH_DEFAULT = False
