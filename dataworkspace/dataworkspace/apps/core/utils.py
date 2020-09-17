@@ -100,6 +100,18 @@ def new_private_database_credentials(
                 )
 
         with connections[database_obj.memorable_name].cursor() as cur:
+            # Give the user reasonable timeouts...
+            cur.execute(
+                sql.SQL(
+                    "ALTER USER {} SET idle_in_transaction_session_timeout = '60min';"
+                ).format(sql.Identifier(db_user))
+            )
+            cur.execute(
+                sql.SQL("ALTER USER {} SET statement_timeout = '60min';").format(
+                    sql.Identifier(db_user)
+                )
+            )
+
             # ... create a role (if it doesn't exist)
             cur.execute(
                 sql.SQL(
