@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-09-17
+
+### Changed
+
+- Timeouts associated with database users to try to make them not hold locks on tables swapped by Airflow
+
 ## 2020-09-08
 
 ### Added
