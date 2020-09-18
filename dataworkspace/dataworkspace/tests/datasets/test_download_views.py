@@ -301,11 +301,7 @@ class TestDatasetViews:
             column_name='extid',
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds,
-            name='name',
-            data_type=1,
-            is_display_name=True,
-            column_name='name',
+            reference_dataset=linked_rds, name='name', data_type=1, column_name='name',
         )
         rds = factories.ReferenceDatasetFactory.create()
         field1 = factories.ReferenceDatasetFieldFactory.create(
@@ -320,10 +316,19 @@ class TestDatasetViews:
         )
         field3 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
-            name='linked',
+            name='linked: id',
             data_type=8,
-            linked_reference_dataset=linked_rds,
-            column_name='linked',
+            linked_reference_dataset_field=linked_rds.fields.get(is_identifier=True),
+            relationship_name='linked',
+            sort_order=2,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='linked: name',
+            data_type=8,
+            linked_reference_dataset_field=linked_rds.fields.get(name='name'),
+            relationship_name='linked',
+            sort_order=3,
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
@@ -354,7 +359,7 @@ class TestDatasetViews:
                 'reference_dataset': rds,
                 field1.column_name: 1,
                 field2.column_name: 'Test record',
-                field3.column_name + '_id': link_record.id,
+                field3.relationship_name + '_id': link_record.id,
             },
         )
         rec2 = rds.save_record(
@@ -363,7 +368,7 @@ class TestDatasetViews:
                 'reference_dataset': rds,
                 field1.column_name: 2,
                 field2.column_name: 'Ánd again',
-                field3.column_name: None,
+                field3.relationship_name: None,
             },
         )
         log_count = EventLog.objects.count()
@@ -415,7 +420,7 @@ class TestDatasetViews:
             reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
+            reference_dataset=linked_rds, name='name', data_type=1
         )
         rds = factories.ReferenceDatasetFactory.create()
         field1 = factories.ReferenceDatasetFieldFactory.create(
@@ -430,24 +435,33 @@ class TestDatasetViews:
         )
         field3 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
-            name='linked',
+            name='linked: id',
+            relationship_name='linked',
             data_type=8,
-            linked_reference_dataset=linked_rds,
+            linked_reference_dataset_field=linked_rds.fields.get(is_identifier=True),
             sort_order=3,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='linked: name',
+            relationship_name='linked',
+            data_type=8,
+            linked_reference_dataset_field=linked_rds.fields.get(name='name'),
+            sort_order=4,
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='auto uuid',
             column_name='auto_uuid',
             data_type=9,
-            sort_order=4,
+            sort_order=5,
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
             name='auto id',
             column_name='auto_id',
             data_type=10,
-            sort_order=5,
+            sort_order=6,
         )
         link_record = linked_rds.save_record(
             None,
@@ -463,7 +477,7 @@ class TestDatasetViews:
                 'reference_dataset': rds,
                 field1.column_name: 1,
                 field2.column_name: 'Test record',
-                field3.column_name + '_id': link_record.id,
+                field3.relationship_name + '_id': link_record.id,
             },
         )
         rec2 = rds.save_record(
@@ -472,7 +486,7 @@ class TestDatasetViews:
                 'reference_dataset': rds,
                 field1.column_name: 2,
                 field2.column_name: 'Ánd again',
-                field3.column_name: None,
+                field3.relationship_name: None,
             },
         )
         log_count = EventLog.objects.count()

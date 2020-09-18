@@ -1,8 +1,11 @@
 from functools import partial
+import inspect
+import sys
 import mock
 
 from botocore.exceptions import ClientError
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.conf import settings
@@ -141,6 +144,96 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, 'Please ensure column names are unique')
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
+    def test_create_reference_dataset_clashing_column_and_relationship_names(self):
+        reference_dataset = self._create_reference_dataset()
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse('admin:datasets_referencedataset_add'),
+            {
+                'name': 'test ref 1',
+                'table_name': 'ref_test1',
+                'slug': 'test-ref-1',
+                'short_description': 'test description that is short',
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 1,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-name': 'field1',
+                'fields-0-column_name': 'field',
+                'fields-0-data_type': 2,
+                'fields-0-description': 'A field',
+                'fields-0-is_identifier': 'on',
+                'fields-0-is_display_name': 'on',
+                'fields-1-name': 'field2',
+                'fields-1-relationship_name': 'field',
+                'fields-1-data_type': 8,
+                'fields-1-description': 'Another field',
+                'fields-1-linked_reference_dataset_field': reference_dataset.fields.get(
+                    is_identifier=True
+                ).id,
+            },
+        )
+        self.assertContains(
+            response, 'Please ensure column names do not clash with relationship names'
+        )
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+    def test_create_reference_dataset_relationship_name_with_different_datasets(self):
+        reference_dataset = self._create_reference_dataset()
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+
+        reference_dataset_2 = self._create_reference_dataset(
+            name='foo', table_name='ref_foo'
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset_2, data_type=1, is_identifier=True
+        )
+
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse('admin:datasets_referencedataset_add'),
+            {
+                'name': 'test ref 1',
+                'table_name': 'ref_test1',
+                'slug': 'test-ref-1',
+                'short_description': 'test description that is short',
+                'fields-TOTAL_FORMS': 3,
+                'fields-INITIAL_FORMS': 1,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-name': 'field1',
+                'fields-0-column_name': 'field',
+                'fields-0-data_type': 2,
+                'fields-0-description': 'A field',
+                'fields-0-is_identifier': 'on',
+                'fields-0-is_display_name': 'on',
+                'fields-1-name': 'field2',
+                'fields-1-relationship_name': 'rel',
+                'fields-1-data_type': 8,
+                'fields-1-description': 'Another field',
+                'fields-1-linked_reference_dataset_field': reference_dataset.fields.get(
+                    is_identifier=True
+                ).id,
+                'fields-2-name': 'field3',
+                'fields-2-relationship_name': 'rel',
+                'fields-2-data_type': 8,
+                'fields-2-description': 'Another field',
+                'fields-2-linked_reference_dataset_field': reference_dataset_2.fields.get(
+                    is_identifier=True
+                ).id,
+            },
+        )
+        self.assertContains(
+            response,
+            'Fields with the same relationship name must point to the same underlying reference dataset',
+        )
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
     def test_create_reference_dataset_duplicate_names(self):
         num_datasets = ReferenceDataset.objects.count()
         response = self._authenticated_post(
@@ -185,7 +278,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-data_type': 2,
                 'fields-0-description': 'A field',
                 'fields-0-is_identifier': 'on',
-                'fields-1-name': 'field1',
+                'fields-1-name': 'field2',
                 'fields-1-column_name': 'field2',
                 'fields-1-data_type': 1,
                 'fields-1-description': 'Another field',
@@ -195,6 +288,118 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             response,
             'Column names must start with a letter and contain only '
             'letters, numbers, underscores and full stops.',
+        )
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+    def test_create_reference_dataset_invalid_relationship_name(self):
+        reference_dataset = self._create_reference_dataset()
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse('admin:datasets_referencedataset_add'),
+            {
+                'name': 'test ref 1',
+                'slug': 'test-ref-1',
+                'short_description': 'test description that is short',
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 0,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-name': 'field1',
+                'fields-0-column_name': 'field1',
+                'fields-0-data_type': 2,
+                'fields-0-description': 'A field',
+                'fields-0-is_identifier': 'on',
+                'fields-1-name': 'field2',
+                'fields-1-relationship_name': 'field2 test',
+                'fields-1-data_type': 8,
+                'fields-1-description': 'Another field',
+                'fields-1-linked_reference_dataset_field': reference_dataset.fields.get(
+                    is_identifier=True
+                ).id,
+            },
+        )
+        self.assertContains(
+            response,
+            'Relationship names must start with a letter and contain only '
+            'letters, numbers, underscores and full stops.',
+        )
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+    def test_create_reference_dataset_invalid_field_type_column_name(self):
+        reference_dataset = self._create_reference_dataset()
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse('admin:datasets_referencedataset_add'),
+            {
+                'name': 'test ref 1',
+                'slug': 'test-ref-1',
+                'short_description': 'test description that is short',
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 0,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-name': 'field1',
+                'fields-0-data_type': 2,
+                'fields-0-description': 'A field',
+                'fields-0-is_identifier': 'on',
+                'fields-1-name': 'field2',
+                'fields-1-column_name': 'field2',
+                'fields-1-data_type': 8,
+                'fields-1-description': 'Another field',
+                'fields-1-linked_reference_dataset_field': reference_dataset.fields.get(
+                    is_identifier=True
+                ).id,
+            },
+        )
+        # field 1 error
+        self.assertContains(
+            response, 'This field type must have a column name',
+        )
+        # field 2 error
+        self.assertContains(
+            response, 'This field type cannot have a column name',
+        )
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+    def test_create_reference_dataset_invalid_field_type_relationship_name(self):
+        reference_dataset = self._create_reference_dataset()
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse('admin:datasets_referencedataset_add'),
+            {
+                'name': 'test ref 1',
+                'slug': 'test-ref-1',
+                'short_description': 'test description that is short',
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 0,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-name': 'field1',
+                'fields-0-data_type': 8,
+                'fields-0-description': 'A field',
+                'fields-0-is_identifier': 'on',
+                'fields-1-name': 'field2',
+                'fields-1-relationship_name': 'field2',
+                'fields-1-data_type': 2,
+                'fields-1-description': 'Another field',
+            },
+        )
+        # field 1 error
+        self.assertContains(
+            response, 'This field type must have a relationship name',
+        )
+        # field 2 error
+        self.assertContains(
+            response, 'This field type cannot have a relationship name',
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
@@ -842,61 +1047,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
         self.assertEqual(num_fields, reference_dataset.fields.count())
 
-    def test_delete_reference_dataset_display_name_field(self):
-        reference_dataset = self._create_reference_dataset()
-        field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=reference_dataset, data_type=1, is_identifier=True
-        )
-        field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=reference_dataset,
-            data_type=2,
-            is_identifier=False,
-            is_display_name=True,
-        )
-        num_datasets = ReferenceDataset.objects.count()
-        num_fields = reference_dataset.fields.count()
-        response = self._authenticated_post(
-            reverse(
-                'admin:datasets_referencedataset_change', args=(reference_dataset.id,)
-            ),
-            {
-                'id': reference_dataset.id,
-                'name': 'test updated',
-                'slug': 'test-ref-1',
-                'short_description': 'test description that is short',
-                'description': '',
-                'valid_from': '',
-                'valid_to': '',
-                'enquiries_contact': '',
-                'licence': '',
-                'restrictions_on_usage': '',
-                'fields-TOTAL_FORMS': 2,
-                'fields-INITIAL_FORMS': 2,
-                'fields-MIN_NUM_FORMS': 1,
-                'fields-MAX_NUM_FORMS': 1000,
-                'fields-0-id': field1.id,
-                'fields-0-reference_dataset': reference_dataset.id,
-                'fields-0-name': 'updated_field_1',
-                'fields-0-column_name': 'updated_field_1',
-                'fields-0-data_type': 2,
-                'fields-0-description': 'Updated field 1',
-                'fields-0-is_identifier': 'on',
-                'fields-1-id': field2.id,
-                'fields-1-reference_dataset': reference_dataset.id,
-                'fields-1-name': 'updated_field_2',
-                'fields-1-column_name': 'updated_field_2',
-                'fields-1-data_type': 2,
-                'fields-1-description': 'Updated field 2',
-                'fields-1-is_display_name': 'on',
-                'fields-1-DELETE': 'on',
-            },
-        )
-        self.assertContains(
-            response, 'Please ensure one field is set as the display name'
-        )
-        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
-        self.assertEqual(num_fields, reference_dataset.fields.count())
-
     def test_delete_reference_dataset_all_fields(self):
         reference_dataset = self._create_reference_dataset()
         field1 = factories.ReferenceDatasetFieldFactory.create(
@@ -1337,12 +1487,27 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, 'Reference dataset record deleted successfully')
         self.assertEqual(num_records - 1, len(reference_dataset.get_records()))
 
-    def test_create_circular_reference_dataset_link(self):
-        reference_dataset = self._create_reference_dataset()
-        self._create_reference_dataset(table_name='test_linked', slug='test-linked')
+    def test_create_reference_dataset_link_to_foreign_key(self):
+        reference_dataset = self._create_reference_dataset(
+            name='foo', table_name='ref_foo'
+        )
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=reference_dataset, data_type=1, is_identifier=True
         )
+
+        reference_dataset_2 = self._create_reference_dataset(
+            name='bar', table_name='ref_bar'
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset_2, data_type=1, is_identifier=True
+        )
+        field3 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset_2,
+            data_type=8,
+            linked_reference_dataset_field=field1,
+            relationship_name='rel',
+        )
+
         num_datasets = ReferenceDataset.objects.count()
         num_fields = reference_dataset.fields.count()
         response = self._authenticated_post(
@@ -1375,15 +1540,15 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-id': '',
                 'fields-1-reference_dataset': reference_dataset.id,
                 'fields-1-name': 'a name',
-                'fields-1-column_name': 'a_column',
+                'fields-1-relationship_name': 'a_column',
                 'fields-1-data_type': ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-                'fields-1-linked_reference_dataset': reference_dataset.id,
+                'fields-1-linked_reference_dataset_field': field3.id,
                 'fields-1-description': 'a description',
             },
         )
         self.assertContains(
             response,
-            'Select a valid choice. That choice is not one of the available choices.',
+            'A reference dataset field cannot point to another field that is itself linked',
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
         self.assertEqual(num_fields, reference_dataset.fields.count())
@@ -1395,6 +1560,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=reference_dataset,
+            data_type=1,
+            is_identifier=True,
+            column_name='test',
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_dataset,
             data_type=1,
             is_identifier=True,
             column_name='test',
@@ -1431,9 +1602,11 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-id': '',
                 'fields-1-reference_dataset': reference_dataset.id,
                 'fields-1-name': 'a name',
-                'fields-1-column_name': 'a_column',
+                'fields-1-relationship_name': 'a_column',
                 'fields-1-data_type': ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-                'fields-1-linked_reference_dataset': linked_dataset.id,
+                'fields-1-linked_reference_dataset_field': linked_dataset.fields.get(
+                    is_identifier=True
+                ).id,
                 'fields-1-description': 'a description',
                 'fields-1-is_identifier': 'on',
             },
@@ -1447,6 +1620,22 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_linked_to_dataset_delete(self):
         # Do not allow deletion of a reference dataset if it is linked to by
         # one or more records within other datasets
+
+        # Dynamically built ReferenceDataset record model classes from other
+        # tests do not get cleaned up. This causes the delete call to fail as
+        # it tries to check for links between the models. Therefore they need
+        # to get deleted explicitly
+        dataset_model_classes = [
+            c[0].lower()
+            for c in inspect.getmembers(
+                sys.modules['dataworkspace.apps.datasets.models'], inspect.isclass
+            )
+        ]
+        for model in list(apps.all_models['datasets']):
+            # If model is a dynamically created one then delete it
+            if model not in dataset_model_classes:
+                del apps.all_models['datasets'][model]
+
         ref_ds1 = self._create_reference_dataset(
             table_name='test_change_linked_dataset1'
         )
@@ -1460,23 +1649,20 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             reference_dataset=ref_ds1,
             data_type=1,
             is_identifier=True,
-            is_display_name=True,
         )
-        ReferenceDatasetField.objects.create(
-            name='link',
-            column_name='link',
-            reference_dataset=ref_ds1,
-            data_type=8,
-            linked_reference_dataset=ref_ds2,
-        )
-
         ReferenceDatasetField.objects.create(
             name='refid',
             column_name='refid',
             reference_dataset=ref_ds2,
             data_type=1,
             is_identifier=True,
-            is_display_name=True,
+        )
+        ReferenceDatasetField.objects.create(
+            name='link',
+            relationship_name='link',
+            reference_dataset=ref_ds1,
+            data_type=8,
+            linked_reference_dataset_field=ref_ds2.fields.get(is_identifier=True),
         )
 
         # Save a record in the linked to dataset
@@ -1521,21 +1707,18 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             is_identifier=True,
         )
         ReferenceDatasetField.objects.create(
-            name='link',
-            column_name='link',
-            reference_dataset=ref_ds1,
-            data_type=8,
-            linked_reference_dataset=ref_ds2,
-            is_display_name=True,
-        )
-
-        ReferenceDatasetField.objects.create(
             name='refid',
             column_name='refid',
             reference_dataset=ref_ds2,
             data_type=1,
             is_identifier=True,
-            is_display_name=True,
+        )
+        ReferenceDatasetField.objects.create(
+            name='link',
+            relationship_name='link',
+            reference_dataset=ref_ds1,
+            data_type=8,
+            linked_reference_dataset_field=ref_ds2.fields.get(is_identifier=True),
         )
 
         # Save a record in the linked to dataset
@@ -1566,101 +1749,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             'by other reference data records',
         )
 
-    def test_change_linked_to_field_existing_records(self):
-        # Ensure you can't edit linked reference dataset field if
-        # there are already records linking to it
-        ref_ds1 = self._create_reference_dataset(
-            table_name='test_change_linked_dataset1'
-        )
-        ref_ds2 = self._create_reference_dataset(
-            table_name='test_change_linked_dataset2'
-        )
-        ref_ds3 = self._create_reference_dataset(
-            table_name='test_change_linked_dataset3'
-        )
-        field1 = ReferenceDatasetField.objects.create(
-            name='refid',
-            column_name='refid',
-            reference_dataset=ref_ds1,
-            data_type=1,
-            is_identifier=True,
-        )
-        field2 = ReferenceDatasetField.objects.create(
-            name='link',
-            column_name='link',
-            reference_dataset=ref_ds1,
-            data_type=8,
-            linked_reference_dataset=ref_ds2,
-            is_display_name=True,
-        )
-
-        ReferenceDatasetField.objects.create(
-            name='refid',
-            column_name='refid',
-            reference_dataset=ref_ds2,
-            data_type=1,
-            is_identifier=True,
-            is_display_name=True,
-        )
-
-        # Save a record in the linked to dataset
-        linked_to = ref_ds2.save_record(
-            None, {'reference_dataset': ref_ds2, 'refid': 'test'}
-        )
-
-        # Save a record in the linked from dataset (linking to the one above)
-        ref_ds1.save_record(
-            None,
-            {
-                'reference_dataset': ref_ds1,
-                'refid': 'another_test',
-                'link_id': linked_to.id,
-            },
-        )
-
-        response = self._authenticated_post(
-            reverse('admin:datasets_referencedataset_change', args=(ref_ds1.id,)),
-            {
-                'id': ref_ds1.id,
-                'name': 'test updated',
-                'table_name': ref_ds1.table_name,
-                'slug': 'test-ref-1',
-                'external_database': '',
-                'short_description': 'test description that is short',
-                'description': '',
-                'valid_from': '',
-                'valid_to': '',
-                'enquiries_contact': '',
-                'licence': '',
-                'restrictions_on_usage': '',
-                'fields-TOTAL_FORMS': 2,
-                'fields-INITIAL_FORMS': 2,
-                'fields-MIN_NUM_FORMS': 1,
-                'fields-MAX_NUM_FORMS': 1000,
-                'fields-0-id': field1.id,
-                'fields-0-reference_dataset': ref_ds1.id,
-                'fields-0-name': field1.name,
-                'fields-0-column_name': field1.column_name,
-                'fields-0-data_type': field1.data_type,
-                'fields-0-description': 'a description',
-                'fields-0-is_identifier': 'on',
-                'fields-0-is_display_name': 'on',
-                'fields-1-id': field2.id,
-                'fields-1-reference_dataset': ref_ds1.id,
-                'fields-1-name': field2.name,
-                'fields-1-column_name': field2.column_name,
-                'fields-1-data_type': field2.data_type,
-                'fields-1-linked_reference_dataset': ref_ds3.id,
-                'fields-1-description': 'test',
-                '_continue': 'Save and continue editing',
-            },
-        )
-        self.assertContains(
-            response,
-            'Unable to change linked reference dataset when relations '
-            'exist in this dataset',
-        )
-
     def test_change_linked_reference_dataset(self):
         # If no records with links exist we should be able to edit the ref dataset link
         ref_ds1 = self._create_reference_dataset(
@@ -1679,22 +1767,26 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             data_type=1,
             is_identifier=True,
         )
-        field2 = ReferenceDatasetField.objects.create(
-            name='link',
-            column_name='link',
-            reference_dataset=ref_ds1,
-            data_type=8,
-            linked_reference_dataset=ref_ds2,
-            is_display_name=True,
-        )
-
         ReferenceDatasetField.objects.create(
             name='refid',
             column_name='refid',
             reference_dataset=ref_ds2,
             data_type=1,
             is_identifier=True,
-            is_display_name=True,
+        )
+        ReferenceDatasetField.objects.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds3,
+            data_type=1,
+            is_identifier=True,
+        )
+        field2 = ReferenceDatasetField.objects.create(
+            name='link',
+            relationship_name='link',
+            reference_dataset=ref_ds1,
+            data_type=8,
+            linked_reference_dataset_field=ref_ds2.fields.get(is_identifier=True),
         )
 
         # Save a record in the linked to dataset
@@ -1738,9 +1830,11 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-1-id': field2.id,
                 'fields-1-reference_dataset': ref_ds1.id,
                 'fields-1-name': field2.name,
-                'fields-1-column_name': field2.column_name,
+                'fields-1-relationship_name': field2.relationship_name,
                 'fields-1-data_type': field2.data_type,
-                'fields-1-linked_reference_dataset': ref_ds3.id,
+                'fields-1-linked_reference_dataset_field': ref_ds3.fields.get(
+                    is_identifier=True
+                ).id,
                 'fields-1-description': 'test',
             },
         )
@@ -1754,6 +1848,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
     def test_link_to_non_external_dataset(self):
         # Test that a dataset with external db cannot link to a dataset without one
         linked_to = factories.ReferenceDatasetFactory.create()
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_to,
+            name='id',
+            data_type=2,
+            is_identifier=True,
+            column_name='extid',
+        )
         db = factories.DatabaseFactory.create()
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
@@ -1779,11 +1880,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-description': 'A field',
                 'fields-0-is_identifier': 'on',
                 'fields-0-is_display_name': 'on',
-                'fields-1-name': 'linked',
-                'fields-1-column_name': 'linked',
+                'fields-1-name': 'linked: id',
+                'fields-1-relationship_name': 'linked',
                 'fields-1-data_type': ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
                 'fields-1-description': 'Linked field',
-                'fields-1-linked_reference_dataset': linked_to.id,
+                'fields-1-linked_reference_dataset_field': linked_to.fields.get(
+                    is_identifier=True
+                ).id,
             },
         )
         self.assertContains(
@@ -1798,6 +1901,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         db = factories.DatabaseFactory.create()
         linked_to = factories.ReferenceDatasetFactory.create(
             name='linked to', table_name='ext_linked_to', external_database=db
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_to,
+            name='id',
+            data_type=2,
+            is_identifier=True,
+            column_name='extid',
         )
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_add'),
@@ -1826,10 +1936,12 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-is_identifier': 'on',
                 'fields-0-is_display_name': 'on',
                 'fields-1-name': 'linked',
-                'fields-1-column_name': 'linked',
+                'fields-1-relationship_name': 'linked',
                 'fields-1-data_type': ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
                 'fields-1-description': 'Linked field',
-                'fields-1-linked_reference_dataset': linked_to.id,
+                'fields-1-linked_reference_dataset_field': linked_to.fields.get(
+                    is_identifier=True
+                ).id,
             },
         )
         self.assertContains(
@@ -1861,10 +1973,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             is_identifier=True,
         )
         factories.ReferenceDatasetFieldFactory.create(
-            name='link',
+            relationship_name='link',
             reference_dataset=from_link_ds,
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=to_link_ds,
+            linked_reference_dataset_field=to_link_ds.fields.get(is_identifier=True),
         )
 
         num_from_records = len(from_link_ds.get_records())
@@ -1882,37 +1994,36 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertEqual(num_from_records + 1, len(from_link_ds.get_records()))
         self.assertEqual(num_to_records, len(to_link_ds.get_records()))
 
-    def test_reference_data_create_circular_link(self):
-        # Create a dataset that links to a second dataset
+    def test_create_reference_dataset_circular_link(self):
         ref_ds1 = factories.ReferenceDatasetFactory.create(
             name='refds1', table_name='refds1'
         )
         ref_ds2 = factories.ReferenceDatasetFactory.create(
             name='refds2', table_name='refds2'
         )
-        factories.ReferenceDatasetFieldFactory.create(
+        ref_ds1_field = factories.ReferenceDatasetFieldFactory.create(
             name='refid',
             column_name='refid',
             reference_dataset=ref_ds1,
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=True,
         )
-        factories.ReferenceDatasetFieldFactory.create(
-            name='link',
-            column_name='link',
-            reference_dataset=ref_ds1,
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=ref_ds2,
-        )
-        id_field = factories.ReferenceDatasetFieldFactory.create(
+
+        ref_ds2_field = factories.ReferenceDatasetFieldFactory.create(
             name='refid',
             column_name='refid',
             reference_dataset=ref_ds2,
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=True,
         )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='link',
+            relationship_name='link',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset_field=ref_ds2.fields.get(is_identifier=True),
+        )
 
-        # Edit second dataset to link to the first dataset
         response = self._authenticated_post(
             reverse('admin:datasets_referencedataset_change', args=(ref_ds2.id,)),
             {
@@ -1932,7 +2043,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-INITIAL_FORMS': 1,
                 'fields-MIN_NUM_FORMS': 1,
                 'fields-MAX_NUM_FORMS': 1000,
-                'fields-0-id': id_field.id,
+                'fields-0-id': ref_ds2_field.id,
                 'fields-0-reference_dataset': ref_ds2.id,
                 'fields-0-name': 'updated_field_1',
                 'fields-0-column_name': 'updated_field_1',
@@ -1942,15 +2053,16 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 'fields-0-is_display_name': 'on',
                 'fields-1-reference_dataset': ref_ds2.id,
                 'fields-1-name': 'Added linked field',
-                'fields-1-column_name': 'linked',
+                'fields-1-relationship_name': 'linked',
                 'fields-1-data_type': ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
                 'fields-1-description': 'Linked field',
-                'fields-1-linked_reference_dataset': ref_ds1.id,
+                'fields-1-linked_reference_dataset_field': ref_ds1_field.id,
             },
         )
         self.assertTrue(ref_ds2.fields.count(), 2)
         self.assertContains(
-            response, 'Unable to link to a dataset that links to this dataset'
+            response,
+            'A reference dataset field cannot point to another field that points back to this dataset (circular link)',
         )
 
     def test_reference_dataset_upload_invalid_columns(self):
@@ -1971,7 +2083,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             column_name='name',
             reference_dataset=ref_ds1,
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_display_name=True,
         )
 
         # Create in memory file with 1 incorrect field name
@@ -2007,7 +2118,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             column_name='name',
             reference_dataset=ref_ds1,
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_display_name=True,
         )
         file1 = SimpleUploadedFile(
             'file1.txt', b'some text\r\n', content_type='text/plain'
@@ -2037,14 +2147,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             column_name='name',
             reference_dataset=ref_ds1,
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_display_name=True,
-        )
-        factories.ReferenceDatasetFieldFactory.create(
-            name='link',
-            column_name='link',
-            reference_dataset=ref_ds1,
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=ref_ds2,
         )
         factories.ReferenceDatasetFieldFactory.create(
             name='refid',
@@ -2058,7 +2160,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             column_name='name',
             reference_dataset=ref_ds2,
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_display_name=True,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            name='link',
+            relationship_name='link',
+            reference_dataset=ref_ds1,
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset_field=ref_ds2.fields.get(is_identifier=True),
         )
         ref_ds1.increment_schema_version()
         ref_ds2.increment_schema_version()
@@ -2144,7 +2252,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             reference_dataset=reference_dataset, data_type=1, is_identifier=True
         )
         field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=reference_dataset, data_type=2, is_display_name=True
+            reference_dataset=reference_dataset, data_type=2
         )
         reference_dataset.sort_field = field1
         reference_dataset.save()

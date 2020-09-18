@@ -45,9 +45,13 @@
               </tr>
             </thead>
             <tbody>
-              {% for field in ref_model.editable_fields %}
+              {% for _, field in ref_model.editable_fields.items %}
                 <tr>
+                  {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
+                    <td><strong>{{ field.relationship_name_for_record_forms }}</strong></td>
+                  {% else %}
                   <td><strong>{{ field.name }}</strong></td>
+                  {% endif %}
                   <td>{{ field.description }}</td>
                 </tr>
               {% endfor %}

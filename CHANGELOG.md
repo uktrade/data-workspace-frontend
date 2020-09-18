@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2020-09-23
+
+### Added
+
+- linked_reference_dataset_field and relationship_name have now been added to the ReferenceDatasetField model
+
+### Changed
+
+- ReferenceDatasetField.column_name is now nullable as fields of type foreign key now use relationship_name instead
+
 ## 2020-09-17
 
 ### Changed

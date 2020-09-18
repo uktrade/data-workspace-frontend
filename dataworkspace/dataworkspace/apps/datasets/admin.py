@@ -365,9 +365,10 @@ class ReferenceDataFieldInline(
             {
                 'fields': [
                     'name',
-                    'column_name',
                     'data_type',
-                    'linked_reference_dataset',
+                    'column_name',
+                    'relationship_name',
+                    'linked_reference_dataset_field',
                     'description',
                     'is_identifier',
                     'is_display_name',
@@ -382,10 +383,12 @@ class ReferenceDataFieldInline(
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Do not allow a link between a reference dataset field and it's parent reference dataset
-        if db_field.name == 'linked_reference_dataset':
+        if db_field.name == 'linked_reference_dataset_field':
             parent_id = request.resolver_match.kwargs.get('object_id')
             if parent_id is not None:
-                kwargs['queryset'] = ReferenceDataset.objects.exclude(id=parent_id)
+                kwargs['queryset'] = ReferenceDatasetField.objects.exclude(
+                    reference_dataset__id=parent_id
+                )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -410,7 +413,6 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
             {
                 'fields': [
                     'published',
-                    'is_joint_dataset',
                     'get_published_version',
                     'name',
                     'table_name',

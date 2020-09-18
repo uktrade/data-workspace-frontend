@@ -423,9 +423,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             table_name='linked_to'
         )
         factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_to_dataset,
-            is_identifier=True,
-            is_display_name=True,
+            reference_dataset=linked_to_dataset, is_identifier=True,
         )
 
         # Create a linked from dataset and id, link fields
@@ -433,117 +431,102 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             table_name='linked_from'
         )
         factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_from_dataset,
-            is_identifier=True,
-            is_display_name=True,
+            reference_dataset=linked_from_dataset, is_identifier=True,
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_from_dataset,
             is_identifier=True,
-            is_display_name=True,
+            relationship_name='rel',
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=linked_to_dataset,
+            linked_reference_dataset_field=linked_to_dataset.fields.get(
+                is_identifier=True
+            ),
         )
 
         # Deleting the dataset should fail
         self.assertRaises(ProtectedError, lambda _: linked_to_dataset.delete(), 1)
 
-    def test_two_circular_linked_datasets(self):
-        # Ensure two datasets cannot be linked to each other
-        ref_dataset1 = self._create_reference_dataset(table_name='circular_link_1')
-        ref_dataset2 = self._create_reference_dataset(table_name='circular_link_2')
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset1,
-            name='identifier',
-            column_name='identifier',
-            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_identifier=True,
-            is_display_name=True,
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset1,
-            name='link',
-            column_name='link',
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=ref_dataset2,
-        )
+    def test_linked_dataset_field_foreign_key(self):
+        # Ensure a reference dataset field cannot link to a linked reference dataset field
+        ref_dataset1 = self._create_reference_dataset(table_name='dataset_1')
+        ref_dataset2 = self._create_reference_dataset(table_name='dataset_2')
         ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset2,
             name='identifier',
             column_name='identifier',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=True,
-            is_display_name=True,
         )
+
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset1,
+            name='identifier',
+            column_name='identifier',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            is_identifier=True,
+        )
+
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset1,
+            name='link',
+            relationship_name='link',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset_field=ref_dataset2.fields.get(is_identifier=True),
+        )
+
         with self.assertRaisesMessage(
-            ValidationError, 'Unable to link reference datasets back to each other'
+            ValidationError,
+            'Unable to link reference dataset fields to another field that is itself linked',
         ):
             ReferenceDatasetField.objects.create(
                 reference_dataset=ref_dataset2,
                 name='link',
                 column_name='link',
                 data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-                linked_reference_dataset=ref_dataset1,
+                linked_reference_dataset_field=ref_dataset1.fields.get(name='link'),
             )
 
-    def test_three_circular_linked_datasets(self):
-        # Ensure datasets cannot be linked to each other through any number of steps
-        ref_dataset1 = self._create_reference_dataset(
-            table_name='multi_circular_link_1'
-        )
-        ref_dataset2 = self._create_reference_dataset(
-            table_name='multi_circular_link_2'
-        )
-        ref_dataset3 = self._create_reference_dataset(
-            table_name='multi_circular_link_3'
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset1,
-            name='identifier',
-            column_name='identifier',
-            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_identifier=True,
-            is_display_name=True,
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset1,
-            name='ref ds2 link',
-            column_name='link',
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=ref_dataset2,
-        )
+    def test_circular_linked_dataset_field(self):
+        # Ensure a reference dataset field cannot link to a reference dataset field
+        # in a dataset that has a field pointing back to itself
+        ref_dataset1 = self._create_reference_dataset(table_name='dataset_1')
+        ref_dataset2 = self._create_reference_dataset(table_name='dataset_2')
         ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset2,
             name='identifier',
             column_name='identifier',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=True,
-            is_display_name=True,
         )
+
         ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset2,
-            name='ref ds3 link',
-            column_name='link',
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=ref_dataset3,
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset3,
+            reference_dataset=ref_dataset1,
             name='identifier',
             column_name='identifier',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=True,
-            is_display_name=True,
         )
+
+        ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset1,
+            name='link',
+            relationship_name='link',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset_field=ref_dataset2.fields.get(is_identifier=True),
+        )
+
         with self.assertRaisesMessage(
-            ValidationError, 'Unable to link reference datasets back to each other'
+            ValidationError,
+            'Unable to link reference dataset fields to another field that points back to this dataset (circular link)',
         ):
             ReferenceDatasetField.objects.create(
-                reference_dataset=ref_dataset3,
-                name='ref ds 1 link',
+                reference_dataset=ref_dataset2,
+                name='link',
                 column_name='link',
                 data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-                linked_reference_dataset=ref_dataset1,
+                linked_reference_dataset_field=ref_dataset1.fields.get(
+                    name='identifier'
+                ),
             )
 
     def test_reference_dataset_ordering(self):
@@ -555,35 +538,6 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         # Add a reference dataset and a dataset it can link to
         ref_dataset = self._create_reference_dataset(table_name='ordering_test_1')
         linked_to_dataset = self._create_reference_dataset(table_name='ordering_test_2')
-
-        # Add id, name and link fields to the main reference dataset
-        id_field = ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='refid',
-            column_name='refid',
-            data_type=ReferenceDatasetField.DATA_TYPE_INT,
-            is_identifier=True,
-        )
-        name_field = ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='name',
-            column_name='name',
-            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_display_name=True,
-        )
-        link_field = ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='link',
-            column_name='link',
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=linked_to_dataset,
-        )
-        auto_id_field = ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='auto id',
-            column_name='auto_id',
-            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
-        )
 
         # Add id and name fields to the linked to dataset
         ReferenceDatasetField.objects.create(
@@ -598,7 +552,36 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             name='name',
             column_name='name',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_display_name=True,
+        )
+
+        # Add id, name and link fields to the main reference dataset
+        id_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='refid',
+            column_name='refid',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+        )
+        name_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='name',
+            column_name='name',
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+        )
+        link_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='link',
+            relationship_name='link',
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            linked_reference_dataset_field=linked_to_dataset.fields.get(
+                is_identifier=True
+            ),
+        )
+        auto_id_field = ReferenceDatasetField.objects.create(
+            reference_dataset=ref_dataset,
+            name='auto id',
+            column_name='auto_id',
+            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
         )
 
         # Create some records in the linked_to dataset
@@ -677,8 +660,9 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         # Test sort by linked field display name
         ref_dataset.sort_field = link_field
         ref_dataset.save()
+
         linked_names = [
-            x.link.get_display_name()
+            getattr(x.link, link_field.linked_reference_dataset_field.column_name)
             for x in ref_dataset.get_records()
             if x.link is not None
         ]
@@ -688,7 +672,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         ref_dataset.sort_direction = ref_dataset.SORT_DIR_DESC
         ref_dataset.save()
         linked_names = [
-            x.link.get_display_name()
+            getattr(x.link, link_field.linked_reference_dataset_field.column_name)
             for x in ref_dataset.get_records()
             if x.link is not None
         ]
@@ -1256,7 +1240,6 @@ class TestExternalModels(BaseModelsTests):
             column_name='field1',
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
-            is_display_name=True,
         )
         field2 = ReferenceDatasetField.objects.create(
             reference_dataset=ref_dataset,
@@ -1381,7 +1364,6 @@ class TestExternalModels(BaseModelsTests):
             column_name='field1',
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
-            is_display_name=True,
         )
 
         # Create an external linked_from dataset and id, link fields
@@ -1396,14 +1378,15 @@ class TestExternalModels(BaseModelsTests):
             column_name='field1',
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
-            is_display_name=True,
         )
         ReferenceDatasetField.objects.create(
             reference_dataset=linked_from_dataset,
             name='field2',
-            column_name='field2',
+            relationship_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=linked_to_dataset,
+            linked_reference_dataset_field=linked_to_dataset.fields.get(
+                is_identifier=True
+            ),
         )
 
         self.assertTrue(self._table_exists('linked_to_external_dataset'))
@@ -1431,7 +1414,6 @@ class TestExternalModels(BaseModelsTests):
             column_name='field1',
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
-            is_display_name=False,
         )
         # Create a display name field
         name_field = ReferenceDatasetField.objects.create(
@@ -1440,7 +1422,6 @@ class TestExternalModels(BaseModelsTests):
             column_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
             is_identifier=False,
-            is_display_name=True,
         )
         # Set the sort field
         linked_to_dataset.sort_field = name_field
@@ -1457,83 +1438,18 @@ class TestExternalModels(BaseModelsTests):
             column_name='field1',
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
-            is_display_name=True,
         )
         ReferenceDatasetField.objects.create(
             reference_dataset=linked_from_dataset,
             name='field2',
-            column_name='field2',
+            relationship_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=linked_to_dataset,
+            linked_reference_dataset_field=linked_to_dataset.fields.get(
+                is_identifier=True
+            ),
         )
 
         # Deleting the name field should work even though it's the sort field
         name_field.delete()
         linked_to_dataset.refresh_from_db()
         self.assertIsNone(linked_to_dataset.sort_field)
-
-    def test_linked_display_name_field(self):
-        # Create a dataset to link to
-        linked_to_dataset = self._create_reference_dataset(
-            table_name='linked_to_external_dataset'
-        )
-        # Create an identifier field
-        ReferenceDatasetField.objects.create(
-            reference_dataset=linked_to_dataset,
-            name='field1',
-            column_name='field1',
-            data_type=ReferenceDatasetField.DATA_TYPE_INT,
-            is_identifier=True,
-            is_display_name=False,
-        )
-        # Create a display name field
-        ReferenceDatasetField.objects.create(
-            reference_dataset=linked_to_dataset,
-            name='field2',
-            column_name='field2',
-            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
-            is_identifier=False,
-            is_display_name=True,
-        )
-        # Add some records
-        rec1 = linked_to_dataset.save_record(
-            None,
-            {'reference_dataset': linked_to_dataset, 'field1': 1, 'field2': 'test1'},
-        )
-        rec2 = linked_to_dataset.save_record(
-            None,
-            {'reference_dataset': linked_to_dataset, 'field1': 2, 'field2': 'test2'},
-        )
-
-        # Create a linked_from dataset
-        linked_from_dataset = self._create_reference_dataset(
-            table_name='linked_from_external_dataset'
-        )
-        # Create identifier field
-        ReferenceDatasetField.objects.create(
-            reference_dataset=linked_from_dataset,
-            name='field1',
-            column_name='field1',
-            data_type=ReferenceDatasetField.DATA_TYPE_INT,
-            is_identifier=True,
-            is_display_name=False,
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=linked_from_dataset,
-            name='field2',
-            column_name='field2',
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset=linked_to_dataset,
-            is_display_name=True,
-        )
-        # Add some records
-        rec3 = linked_from_dataset.save_record(
-            None,
-            {'reference_dataset': linked_from_dataset, 'field1': 1, 'field2': rec1},
-        )
-        rec4 = linked_from_dataset.save_record(
-            None,
-            {'reference_dataset': linked_from_dataset, 'field1': 2, 'field2': rec2},
-        )
-        self.assertEqual(rec3.get_display_name(), rec1.get_display_name())
-        self.assertEqual(rec4.get_display_name(), rec2.get_display_name())
