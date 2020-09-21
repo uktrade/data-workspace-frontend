@@ -1,4 +1,5 @@
 import asyncio
+
 import csv
 import io
 import json
@@ -1347,7 +1348,7 @@ class TestApplication(unittest.TestCase):
             headers={'x-forwarded-for': '1.2.3.4'},
         ) as response:
             content = await response.text()
-        self.assertIn('This is a page.', content)
+        self.assertIn('Welcome to Data Explorer', content)
         self.assertEqual(response.status, 200)
 
         async with session.request(
@@ -1356,7 +1357,7 @@ class TestApplication(unittest.TestCase):
             headers={'x-forwarded-for': '6.5.4.3, 1.2.3.4'},
         ) as response:
             content = await response.text()
-        self.assertIn('This is a page.', content)
+        self.assertIn('Welcome to Data Explorer', content)
         self.assertEqual(response.status, 200)
 
         async with session.request(
@@ -1365,7 +1366,7 @@ class TestApplication(unittest.TestCase):
             headers={'x-forwarded-for': '5.1.1.1'},
         ) as response:
             content = await response.text()
-        self.assertIn('This is a page.', content)
+        self.assertIn('Welcome to Data Explorer', content)
         self.assertEqual(response.status, 200)
 
         async with session.request(

@@ -82,3 +82,6 @@ ssl.crt
 *.swp
 
 node_modules
+webpack-stats.json
+webpack-stats-prod.json
+dataworkspace/dataworkspace/static/assets/bundles/*.js

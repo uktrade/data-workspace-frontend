@@ -3,14 +3,14 @@ version: 2
 restore-docker-cache: &restore-docker-cache
   restore_cache:
     keys:
-      - v1-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
-      - v1-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}
-      - v1-docker-{{ checksum "Dockerfile" }}
-      - v1-docker
+      - v2-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+      - v2-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}
+      - v2-docker-{{ checksum "Dockerfile" }}
+      - v2-docker
 
 save-docker-cache: &save-docker-cache
   save_cache:
-    key: v1-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+    key: v2-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
     paths:
       - "caches"
 
@@ -83,9 +83,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
-            - v1-python-{{ checksum "requirements.txt" }}
-            - v1-python
+            - v2-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+            - v2-python-{{ checksum "requirements.txt" }}
+            - v2-python
       - run:
           name: Install requirements
           command: |
@@ -93,7 +93,7 @@ jobs:
             . venv/bin/activate
             pip install -r requirements-dev.txt
       - save_cache:
-          key: v1-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+          key: v2-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
           paths:
             - "venv"
       - run:
