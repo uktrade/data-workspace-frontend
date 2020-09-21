@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-09-17
+
+### Added
+- A blank "Data Explorer v2" tool with ip restrictions and waffle flag to protect access, in preparation for integrating the existing Data Explorer code.
 
 ## 2020-09-17
 

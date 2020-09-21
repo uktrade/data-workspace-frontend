@@ -206,6 +206,12 @@ async def async_main():
     def is_superset_requested(request):
         return request.url.host == f'superset.{root_domain_no_port}'
 
+    def is_data_explorer_requested(request):
+        return (
+            request.url.path.startswith('/data-explorer/')
+            and request.url.host == root_domain_no_port
+        )
+
     def is_app_requested(request):
         return (
             request.url.host.endswith(f'.{root_domain_no_port}')
@@ -316,7 +322,7 @@ async def async_main():
                 query,
                 await get_data(downstream_request),
             )
-        except Exception as exception:
+        except Exception as exception:  # pylint: disable=broad-except
             user_exception = isinstance(exception, UserException)
             if not user_exception or (user_exception and exception.args[1] == 500):
                 logger.exception(
@@ -515,7 +521,7 @@ async def async_main():
                 ),
             )
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.info('Spawning: Failed to connect to %s', upstream_url)
             return await handle_http(
                 downstream_request,
@@ -1187,6 +1193,7 @@ async def async_main():
                 or is_mirror_requested(request)
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
+                or is_data_explorer_requested(request)
             )
 
             if not ip_whitelist_required:

@@ -73,6 +73,10 @@ urlpatterns = [
         'datasets/',
         include(('dataworkspace.apps.datasets.urls', 'datasets'), namespace='datasets'),
     ),
+    path(
+        'data-explorer/',
+        include(('dataworkspace.apps.explorer.urls', 'explorer'), namespace='explorer'),
+    ),
     path('files', login_required(file_browser_html_view), name='files'),
     path('healthcheck', healthcheck_view),  # No authentication
     path(

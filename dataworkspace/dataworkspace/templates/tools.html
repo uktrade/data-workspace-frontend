@@ -70,6 +70,13 @@
       </div>
     </div>
 
+    {% if show_new_data_explorer %}
+      {% with application_summary='This is the integrated data explorer.' %}
+        {% url 'explorer:index' as data_explorer_url %}
+        {% include 'partials/tool_section.html' with application_name="Data Explorer v2" application_summary=application_summary application_help_link=None instance=None application_url=data_explorer_url customisable_instance=False has_access=perms.applicationss.start_all_applications trailing_horizontal_rule=True %}
+      {% endwith %}
+    {% endif %}
+
     {% for application in applications %}
       {% include 'partials/tool_section.html' with application_name=application.nice_name application_summary=application.summary application_help_link=application.help_link instance=application.instance application_url=application.link customisable_instance=True has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
     {% endfor %}
