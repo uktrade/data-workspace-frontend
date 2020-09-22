@@ -16,6 +16,7 @@ django==3.0.8
 djangorestframework==3.11.1
 elastic-apm==5.8.1
 gevent==20.6.2
+greenlet==0.4.16  # Not a direct dependency but need to pin this temporarily as 0.4.17 is broken.
 hawk-server-asyncio==0.0.13
 Markdown==3.2.2
 MarkupSafe==1.1.1
