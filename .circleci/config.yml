@@ -109,4 +109,3 @@ workflows:
       - docker-test-unit
       - docker-test-integration
       - check-linting
-
