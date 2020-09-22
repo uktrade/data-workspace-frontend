@@ -1,0 +1,24 @@
+-r requirements.txt
+
+aiopg==1.0.0
+black==19.10b0
+factory_boy==3.0.1
+flake8==3.8.3
+flake8-bugbear==20.1.4
+freezegun==1.0.0
+beautifulsoup4==4.9.1
+mock==4.0.2
+mohawk==1.1.0
+pip-tools
+pylint==2.5.3
+pylint-django==2.3.0
+pytest==6.0.2
+pytest-cov==2.10.1
+pytest-mock==3.3.1
+pytest-django==3.9.0
+pytest-timeout==1.4.2
+django-debug-toolbar==3.0
+requests-mock==1.8.0
+pyppeteer
+ipdb
+lxml
