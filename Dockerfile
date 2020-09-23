@@ -41,6 +41,7 @@ RUN apk add --no-cache \
         postgresql-dev \
         python3-dev \
         chromium \
+        chromium-chromedriver \
         libxml2-dev \
         libxslt-dev
 

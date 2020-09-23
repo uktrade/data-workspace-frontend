@@ -16,8 +16,13 @@ import aioredis
 import mohawk
 from lxml import html
 
-from dataworkspace.utils import DATA_EXPLORER_FLAG
-from test.pages import HomePage, get_browser  # pylint: disable=wrong-import-order
+from dataworkspace.utils import (  # pylint: disable=no-name-in-module, import-error
+    DATA_EXPLORER_FLAG,
+)
+from test.pages import (  # pylint: disable=wrong-import-order
+    HomePage,
+    get_browser,
+)
 
 
 def async_test(func):
@@ -2169,6 +2174,7 @@ class TestApplication(unittest.TestCase):
         assert code == 0
 
         browser = await get_browser()
+        self.add_async_cleanup(browser.close)
         home_page = await HomePage(browser=browser).open()
 
         with_no_filters = find_search_filter_labels(await home_page.get_html())
