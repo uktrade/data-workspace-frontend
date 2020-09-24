@@ -22,3 +22,4 @@ requests-mock==1.8.0
 pyppeteer
 ipdb
 lxml
+selenium

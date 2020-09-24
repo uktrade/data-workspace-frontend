@@ -4,6 +4,7 @@ import json
 import os
 import urllib.request
 
+from django.conf.locale.en import formats as en_formats
 from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -80,6 +81,11 @@ INSTALLED_APPS = [
     'dataworkspace.apps.dw_admin',
     'dataworkspace.apps.api_v1',
     'dataworkspace.apps.eventlog',
+    'django_extensions',
+    'dataworkspace.apps.explorer',
+    'dynamic_models',
+    'sass_processor',
+    'webpack_loader',
 ]
 
 MIDDLEWARE = [
@@ -94,6 +100,7 @@ MIDDLEWARE = [
     'dataworkspace.middleware.disable_client_side_caching',
     'csp.middleware.CSPMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 if DEBUG:
@@ -121,6 +128,7 @@ ROOT_URLCONF = 'dataworkspace.urls'
 
 TEMPLATES = [
     {
+        'NAME': 'MainTemplates',
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': False,
@@ -393,3 +401,108 @@ WAFFLE_FLAG_DEFAULT = False
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
 WAFFLE_SWITCH_DEFAULT = False
+
+
+# ----------------------
+# Data Explorer Settings
+# ----------------------
+DEFAULT_SCHEMA = env.get('EXPLORER_APP_SCHEMA', 'public')
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_COLLAPSED': True,
+}
+
+TEMPLATES += [
+    {
+        'NAME': "ExplorerTemplates",
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'apps', 'explorer', 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'dataworkspace.apps.explorer.context_processors.expose_multiuser_setting',
+            ],
+        },
+    }
+]
+
+
+def sort_database_config(database_list):
+    config = {}
+    for database in database_list:
+        config[database['name']] = database['credentials']['uri']
+    return config
+
+
+MULTIUSER_DEPLOYMENT = True
+EXPLORER_CONNECTIONS = json.loads(env.get("EXPLORER_CONNECTIONS", "{}"))
+EXPLORER_DEFAULT_CONNECTION = env.get("EXPLORER_DEFAULT_CONNECTION")
+
+EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
+    'auth_',
+    'contenttypes_',
+    'sessions_',
+    'admin_',
+    'django',
+    'dynamic_models',
+)
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'sass_processor.finders.CssFinder',
+]
+
+STATICFILES_DIRS += [
+    os.path.join(BASE_DIR, 'apps', 'explorer', 'static'),
+    os.path.join(BASE_DIR, 'static', 'assets'),
+]
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'bundles/',
+        'STATS_FILE': os.path.join(BASE_DIR, '..', 'webpack-stats.json'),
+    }
+}
+
+SASS_PROCESSOR_INCLUDE_DIRS = [
+    os.path.join(BASE_DIR, 'apps', 'explorer', 'static'),
+]
+if DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+SASS_PROCESSOR_INCLUDE_FILE_PATTERN = r'^.+\.scss$'
+
+SASS_OUTPUT_STYLE = 'compressed'
+
+SASS_PROCESSOR_ENABLED = DEBUG
+SASS_PROCESSOR_AUTO_INCLUDE = DEBUG
+
+ENABLE_DEBUG_TOOLBAR = bool(env.get('ENABLE_DEBUG_TOOLBAR', DEBUG))
+
+# if DEBUG:
+#     import socket
+#
+#     ip = socket.gethostbyname(socket.gethostname())
+#     INTERNAL_IPS = [
+#         '127.0.0.1',
+#     ]
+#     INTERNAL_IPS += [ip[:-1] + "1"]
+
+
+# asynchronous schema loading
+EXPLORER_TASKS_ENABLED = False
+EXPLORER_ASYNC_SCHEMA = False
+
+# Celery
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']
+
+# date and time formats
+en_formats.SHORT_DATE_FORMAT = "d/m/Y"
+en_formats.SHORT_DATETIME_FORMAT = "d/m/Y H:i"
