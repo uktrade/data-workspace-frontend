@@ -203,7 +203,7 @@ def new_private_database_credentials(
             tables_that_exist = [
                 (schema, table)
                 for schema, table in tables
-                if _table_exists(cur, schema, table)
+                if _table_exists(cur, schema, table) or _view_exists(cur, schema, table)
             ]
 
         schemas = without_duplicates_preserve_order(
@@ -439,21 +439,25 @@ def view_exists(database, schema, view):
     with connect(
         database_dsn(settings.DATABASES_DATA[database])
     ) as conn, conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT 1
-            FROM pg_catalog.pg_views
-            WHERE schemaname = %(schema)s
-            AND viewname = %(view)s
-            UNION
-            SELECT 1
-            FROM pg_catalog.pg_matviews
-            WHERE schemaname = %(schema)s
-            AND matviewname = %(view)s
-        """,
-            {'schema': schema, 'view': view},
-        )
-        return bool(cur.fetchone())
+        return _view_exists(cur, schema, view)
+
+
+def _view_exists(cur, schema, view):
+    cur.execute(
+        """
+        SELECT 1
+        FROM pg_catalog.pg_views
+        WHERE schemaname = %(schema)s
+        AND viewname = %(view)s
+        UNION
+        SELECT 1
+        FROM pg_catalog.pg_matviews
+        WHERE schemaname = %(schema)s
+        AND matviewname = %(view)s
+    """,
+        {'schema': schema, 'view': view},
+    )
+    return bool(cur.fetchone())
 
 
 def table_exists(database, schema, table):
