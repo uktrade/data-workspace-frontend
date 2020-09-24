@@ -511,13 +511,14 @@ en_formats.SHORT_DATE_FORMAT = "d/m/Y"
 en_formats.SHORT_DATETIME_FORMAT = "d/m/Y H:i"
 
 
-for alias in EXPLORER_CONNECTIONS:
-    CELERY_BEAT_SCHEDULE.update(
-        {
-            f"trigger-build-schema-{alias}": {
-                "task": "dataworkspace.apps.explorer.tasks.build_schema_cache_async",
-                "schedule": timedelta(minutes=8),
-                "args": (alias,),
+if EXPLORER_TASKS_ENABLED and EXPLORER_ASYNC_SCHEMA:
+    for alias in EXPLORER_CONNECTIONS:
+        CELERY_BEAT_SCHEDULE.update(
+            {
+                f"trigger-build-schema-{alias}": {
+                    "task": "dataworkspace.apps.explorer.tasks.build_schema_cache_async",
+                    "schedule": timedelta(minutes=8),
+                    "args": (alias,),
+                }
             }
-        }
-    )
+        )
