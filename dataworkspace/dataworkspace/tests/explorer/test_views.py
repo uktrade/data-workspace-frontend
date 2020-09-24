@@ -15,6 +15,7 @@ from dataworkspace.apps.explorer.models import Query, QueryLog
 from dataworkspace.tests.explorer.factories import (
     QueryLogFactory,
     SimpleQueryFactory,
+    UserFactory,
 )
 
 
@@ -135,6 +136,15 @@ class TestQueryDetailView:
 
         assert old != Query.objects.get(pk=query.id).last_run_date
 
+    def test_cannot_view_another_users_query(self, staff_user, staff_client):
+        other_user = UserFactory(email='foo@bar.net')
+        other_query = SimpleQueryFactory(created_by_user=other_user)
+
+        resp = staff_client.get(
+            reverse("explorer:query_detail", kwargs={'query_id': other_query.id})
+        )
+        assert resp.status_code == 404
+
     def test_doesnt_render_results_if_show_is_none(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql='select 6870+1;', created_by_user=staff_user)
 
@@ -166,6 +176,24 @@ class TestQueryDetailView:
             f'<a href="/data-explorer/?sql=select+6870%2B1%3B&amp;query_id={query.id}" class="govuk-back-link">Back</a>'
             in response.content.decode(response.charset)
         )
+
+    def test_cannot_post_to_another_users_query(self, staff_user, staff_client):
+        query_creator = get_user_model().objects.create_superuser(
+            'admin', 'admin@admin.com', 'pwd'
+        )
+        query = SimpleQueryFactory.create(created_by_user=query_creator)
+
+        data = model_to_dict(query)
+        del data['id']
+        data["created_by_user_id"] = staff_user.id
+
+        resp = staff_client.post(
+            reverse("explorer:query_detail", kwargs={'query_id': query.id}),
+            {**data, "action": "save"},
+        )
+        query = Query.objects.get(id=query.id)
+        assert resp.status_code == 404
+        assert query.created_by_user_id == query_creator.id
 
 
 class TestDownloadView:
@@ -232,7 +260,28 @@ class TestHomePage:
         resp = staff_client.get(
             '%s?query_id=%s' % (reverse("explorer:index"), query.id)
         )
+        assert resp.status_code == 200
         assert 'select 1;' in resp.content.decode(resp.charset)
+
+    def test_cannot_open_playground_with_another_users_query(
+        self, staff_user, staff_client
+    ):
+        other_user = UserFactory(email='foo@bar.net')
+        query = SimpleQueryFactory(sql="select 1;", created_by_user=other_user)
+        resp = staff_client.get(
+            '%s?query_id=%s' % (reverse("explorer:index"), query.id)
+        )
+        assert resp.status_code == 404
+
+    def test_cannot_post_to_another_users_query(self, staff_user, staff_client):
+        other_user = UserFactory(email='foo@bar.net')
+        query = SimpleQueryFactory(sql="select 1;", created_by_user=other_user)
+
+        resp = staff_client.post(
+            reverse("explorer:index") + f"?query_id={query.id}",
+            {'title': 'test', 'sql': 'select 1+3400;', "action": "save"},
+        )
+        assert resp.status_code == 404
 
     def test_playground_renders_with_posted_sql(self, staff_user, staff_client):
         resp = staff_client.post(
@@ -262,12 +311,23 @@ class TestHomePage:
         )
         assert resp.status_code == 200
 
-    def test_loads_query_from_log(self, staff_user, staff_client):
-        querylog = QueryLogFactory()
+    def test_can_only_load_query_log_run_by_current_user(
+        self, staff_user, staff_client
+    ):
+        user = UserFactory(email='test@foo.bar')
+        my_querylog = QueryLogFactory(run_by_user=staff_user)
+        other_querylog = QueryLogFactory(run_by_user=user)
+
         resp = staff_client.get(
-            '%s?querylog_id=%s' % (reverse("explorer:index"), querylog.id)
+            '%s?querylog_id=%s' % (reverse("explorer:index"), my_querylog.id)
         )
+        assert resp.status_code == 200
         assert "FOUR" in resp.content.decode(resp.charset)
+
+        resp = staff_client.get(
+            '%s?querylog_id=%s' % (reverse("explorer:index"), other_querylog.id)
+        )
+        assert resp.status_code == 404
 
     def test_multiple_connections_integration(self, staff_user, staff_client):
         from dataworkspace.apps.explorer.app_settings import (  # pylint: disable=import-outside-toplevel
@@ -403,6 +463,7 @@ class TestSQLDownloadViews:
         assert response['content-type'] == 'application/json'
 
 
+@pytest.mark.django_db(transaction=True)
 class TestParamsInViews:
     def test_retrieving_query_works_with_params(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="select $$swap$$;", created_by_user=staff_user)
@@ -414,22 +475,6 @@ class TestParamsInViews:
 
 @pytest.mark.django_db(transaction=True)
 class TestCreatedBy:
-    def test_query_update_doesnt_change_created_user(self, staff_user, staff_client):
-        query_creator = get_user_model().objects.create_superuser(
-            'admin', 'admin@admin.com', 'pwd'
-        )
-        query = SimpleQueryFactory.create(created_by_user=query_creator)
-
-        data = model_to_dict(query)
-        del data['id']
-        data["created_by_user_id"] = staff_user.id
-
-        staff_client.post(
-            reverse("explorer:query_detail", kwargs={'query_id': query.id}), data,
-        )
-        query = Query.objects.get(id=query.id)
-        assert query.created_by_user_id == query_creator.id
-
     def test_new_query_gets_created_by_logged_in_user(self, staff_user, staff_client):
         query = SimpleQueryFactory.build(created_by_user=staff_user)
         data = model_to_dict(query)
@@ -465,14 +510,17 @@ class TestQueryLog:
         staff_client.post(reverse("explorer:index") + f"?query_id={query.id}", data)
         assert QueryLog.objects.count() == 1
 
-    def test_query_gets_logged_and_appears_on_log_page(self, staff_user, staff_client):
-        query = SimpleQueryFactory(created_by_user=staff_user)
-        data = model_to_dict(query)
-        data['sql'] = 'select 12345;'
-        data['action'] = 'run'
-        staff_client.post(reverse("explorer:index") + f"?query_id={query.id}", data)
+    def test_user_can_only_see_their_own_queries_on_log_page(
+        self, staff_user, staff_client
+    ):
+        other_user = UserFactory(email='foo@bar.net')
+        QueryLogFactory(sql="select 1234", run_by_user=other_user)
+        QueryLogFactory(sql="select 9876", run_by_user=staff_user)
+
         resp = staff_client.get(reverse("explorer:explorer_logs"))
-        assert 'select 12345;' in resp.content.decode(resp.charset)
+
+        assert "select 9876" in resp.content.decode(resp.charset)
+        assert "select 1234" not in resp.content.decode(resp.charset)
 
     def test_is_playground(self):
         assert QueryLog(sql='foo').is_playground is True
