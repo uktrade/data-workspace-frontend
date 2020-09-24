@@ -3,10 +3,12 @@ import base64
 import json
 import os
 import urllib.request
+from datetime import timedelta
 
-from django.conf.locale.en import formats as en_formats
 from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
+
+from django.conf.locale.en import formats as en_formats
 
 import sentry
 from dataworkspace.utils import normalise_environment
@@ -275,6 +277,7 @@ CELERY_BEAT_SCHEDULE = {
         'args': (),
     },
 }
+
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
 
 PROMETHEUS_DOMAIN = env['PROMETHEUS_DOMAIN']
@@ -506,3 +509,15 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 # date and time formats
 en_formats.SHORT_DATE_FORMAT = "d/m/Y"
 en_formats.SHORT_DATETIME_FORMAT = "d/m/Y H:i"
+
+
+for alias in EXPLORER_CONNECTIONS:
+    CELERY_BEAT_SCHEDULE.update(
+        {
+            f"trigger-build-schema-{alias}": {
+                "task": "dataworkspace.apps.explorer.tasks.build_schema_cache_async",
+                "schedule": timedelta(minutes=8),
+                "args": (alias,),
+            }
+        }
+    )
