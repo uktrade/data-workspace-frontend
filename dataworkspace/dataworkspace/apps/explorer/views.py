@@ -9,7 +9,12 @@ from django.contrib.auth.views import LoginView
 from django.db import DatabaseError
 from django.db.models import Count
 from django.forms.models import model_to_dict
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    HttpResponseBadRequest,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
@@ -127,7 +132,7 @@ class ListQueryView(ListView):
         return context
 
     def get_queryset(self):
-        qs = Query.objects.all()
+        qs = Query.objects.filter(created_by_user=self.request.user).all()
         return qs.annotate(run_count=Count('querylog'))
 
     def _build_queries_and_headers(self):
@@ -195,7 +200,7 @@ class ListQueryView(ListView):
 
 class ListQueryLogView(ListView):
     def get_queryset(self):
-        kwargs = {'sql__isnull': False}
+        kwargs = {'sql__isnull': False, 'run_by_user': self.request.user}
         if url_get_query_id(self.request):
             kwargs['query_id'] = url_get_query_id(self.request)
         return QueryLog.objects.filter(**kwargs).all()
@@ -280,19 +285,25 @@ class CreateQueryView(CreateView):
 
 
 class DeleteQueryView(DeleteView):
-
     model = Query
     success_url = reverse_lazy("explorer:list_queries")
+
+    def get_queryset(self):
+        return Query.objects.filter(created_by_user=self.request.user).all()
 
 
 class PlayQueryView(View):
     def get(self, request):
         if url_get_query_id(request):
-            query = get_object_or_404(Query, pk=url_get_query_id(request))
+            query = get_object_or_404(
+                Query, pk=url_get_query_id(request), created_by_user=self.request.user
+            )
             return self.render_with_sql(request, query, run_query=False)
 
         if url_get_log_id(request):
-            log = get_object_or_404(QueryLog, pk=url_get_log_id(request))
+            log = get_object_or_404(
+                QueryLog, pk=url_get_log_id(request), run_by_user=self.request.user
+            )
             query = Query(sql=log.sql, title="Playground", connection=log.connection)
             return self.render_with_sql(request, query)
 
@@ -322,7 +333,9 @@ class PlayQueryView(View):
             )
 
         if existing_query_id:
-            query = get_object_or_404(Query, pk=existing_query_id)
+            query = get_object_or_404(
+                Query, pk=existing_query_id, created_by_user=self.request.user
+            )
         else:
             query = Query(
                 sql=sql, title="Playground", connection=request.POST.get('connection')
@@ -443,11 +456,11 @@ class QueryView(View):
             )
 
         else:
-            return HttpResponse(f"Unknown form action: {action}", 400)
+            return HttpResponseBadRequest(f"Unknown form action: {action}")
 
     @staticmethod
     def get_instance_and_form(request, query_id):
-        query = get_object_or_404(Query, pk=query_id)
+        query = get_object_or_404(Query, pk=query_id, created_by_user=request.user)
         query.params = url_get_params(request)
         form = QueryForm(
             request.POST if len(request.POST) > 0 else None, instance=query
