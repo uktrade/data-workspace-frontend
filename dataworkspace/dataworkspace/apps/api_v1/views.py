@@ -236,7 +236,7 @@ def application_api_PUT(request, public_host):
         home_directory_efs_access_point_id = (
             request.user.profile.home_directory_efs_access_point_id
             if app_type == 'TOOL'
-            else None,
+            else None
         )
 
         spawn.delay(
