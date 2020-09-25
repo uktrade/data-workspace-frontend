@@ -233,12 +233,17 @@ def application_api_PUT(request, public_host):
             )
 
         app_schema = f'{USER_SCHEMA_STEM}{db_role_schema_suffix}'
+        home_directory_efs_access_point_id = (
+            request.user.profile.home_directory_efs_access_point_id
+            if app_type == 'TOOL'
+            else None,
+        )
 
         spawn.delay(
             application_template.spawner,
             request.user.email,
             str(request.user.profile.sso_id),
-            request.user.profile.home_directory_efs_access_point_id,
+            home_directory_efs_access_point_id,
             tag,
             application_instance.id,
             spawner_options,
