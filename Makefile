@@ -40,3 +40,8 @@ check: check-flake8 check-black check-pylint
 .PHONY: format
 format:
 	black --exclude=venv --skip-string-normalization .
+
+.PHONY: save-requirements
+save-requirements:
+	pip-compile requirements.in
+	pip-compile requirements-dev.in
