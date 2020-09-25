@@ -36,14 +36,28 @@ def database_dsn(database_data):
 
 
 def postgres_user(stem, suffix=''):
+    if len(suffix) > 10:
+        raise ValueError(
+            "The user suffix should be no more than 10 characters to ensure that the stem "
+            "doesn't get truncated too severely."
+        )
+
     user_alphabet = string.ascii_lowercase + string.digits
     unique_enough = ''.join(secrets.choice(user_alphabet) for i in range(5))
+    suffix = f'_{suffix}' if suffix else ''
+
+    # Postgres identifiers can be up to 63 characters.
+    # Between `user_`, `_`, and `unique_enough` we use 11 of these characters.
+    # This leaves 52 characters for the email and suffix parts.
+    # So let's truncate the email address based on the remaining characters we have available.
+    max_email_length = 52 - len(suffix)
+
     return (
         'user_'
-        + re.sub('[^a-z0-9]', '_', stem.lower())
+        + re.sub('[^a-z0-9]', '_', stem.lower())[:max_email_length]
         + '_'
         + unique_enough
-        + (f'_{suffix}' if suffix else '')
+        + suffix
     )
 
 

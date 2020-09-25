@@ -1,8 +1,14 @@
+import re
+
 import psycopg2
 import pytest
 from django.conf import settings
 
-from dataworkspace.apps.core.utils import database_dsn, get_random_data_sample
+from dataworkspace.apps.core.utils import (
+    database_dsn,
+    get_random_data_sample,
+    postgres_user,
+)
 from dataworkspace.tests import factories
 
 
@@ -45,3 +51,37 @@ class TestGetRandomSample:
         assert ('a', None, None) in sample
         assert (None, None, None) in sample
         assert len(sample) == 4
+
+
+class TestPostgresUser:
+    def test_very_long_suffix_raises_value_error(self):
+        with pytest.raises(ValueError):
+            postgres_user(
+                'short@email.com',
+                suffix='my-very-long-suffix-that-uses-too-many-characters',
+            )
+
+    @pytest.mark.parametrize(
+        'email, suffix, expected_match, expected_length',
+        (
+            ('short@email.com', '', r'^user_short_email_com_[a-z0-9]{5}$', 26),
+            (
+                'a.silly.super.unnecessarily_very.long-email@my.subdomain.domain.com',
+                '',
+                r'^user_a_silly_super_unnecessarily_very_long_email_my_subdo_[a-z0-9]{5}$',
+                63,
+            ),
+            (
+                'a.silly.super.unnecessarily_very.long-email@my.subdomain.domain.com',
+                'suffix',
+                r'^user_a_silly_super_unnecessarily_very_long_email_m_[a-z0-9]{5}_suffix$',
+                63,
+            ),
+        ),
+    )
+    def test_postgres_user_is_restricted_to_63_chars(
+        self, email, suffix, expected_match, expected_length
+    ):
+        username = postgres_user(email, suffix=suffix)
+        assert re.match(expected_match, username)
+        assert len(username) == expected_length
