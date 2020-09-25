@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Hidden other users queries/logs in Data Explorer.
 - Allow views to be master datasets accessible in tools
+- Don't attempt to bind to EFS when a user starts a visualisation
 
 ## 2020-09-22
 
