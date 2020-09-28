@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-09-28
+
+### Changed
+- Show sources of master datasets within search results.
+
 ## 2020-09-24
 
 ### Changed
