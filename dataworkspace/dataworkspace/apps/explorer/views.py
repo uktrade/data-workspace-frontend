@@ -3,7 +3,9 @@ import re
 from collections import Counter
 from urllib.parse import urlencode
 
+from psycopg2 import DatabaseError
 import six
+
 from django.conf import settings
 from django.contrib.auth.views import LoginView
 from django.db.models import Count
@@ -18,7 +20,6 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
-from psycopg2 import DatabaseError
 
 from dataworkspace.apps.explorer import app_settings
 from dataworkspace.apps.explorer.exporters import get_exporter_class
@@ -96,7 +97,9 @@ class ListQueryView(ListView):
     def recently_viewed(self):
         qll = (
             QueryLog.objects.filter(
-                run_by_user=self.request.user, query_id__isnull=False
+                run_by_user=self.request.user,
+                query_id__isnull=False,
+                query__created_by_user=self.request.user,
             )
             .order_by('-run_at')
             .select_related('query')
