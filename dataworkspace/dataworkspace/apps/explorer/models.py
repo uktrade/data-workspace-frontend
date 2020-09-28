@@ -5,6 +5,7 @@ import uuid
 from time import time
 
 import six
+from dynamic_models.models import AbstractFieldSchema, AbstractModelSchema  # noqa: I202
 from django.conf import settings
 from django.db import DatabaseError, models
 
@@ -12,17 +13,14 @@ try:
     from django.urls import reverse
 except ImportError:
     from django.core.urlresolvers import reverse
-from dynamic_models.models import AbstractFieldSchema, AbstractModelSchema  # noqa: I202
 
 from dataworkspace.apps.explorer.utils import (
     extract_params,
     get_params_for_url,
-    get_valid_connection,
+    user_explorer_connection,
     shared_dict_update,
     swap_params,
 )
-
-POSTGRES_VENDOR = 'postgresql'
 
 logger = logging.getLogger(__name__)
 
@@ -68,21 +66,18 @@ class Query(models.Model):
 
     def execute_with_logging(self, executing_user, page, limit, timeout):
         ql = self.log(executing_user)
-        ret = self.execute(page, limit, timeout)
+        ret = self.execute(executing_user, page, limit, timeout)
         ql.duration = ret.duration
         ql.save()
         return ret, ql
 
-    def execute(self, page, limit, timeout):
-        result = QueryResult(
-            self.final_sql(),
-            get_valid_connection(self.connection),
-            page,
-            limit=limit,
-            timeout=timeout,
-        )
-        result.process()
-        return result
+    def execute(self, executing_user, page, limit, timeout):
+        with user_explorer_connection(executing_user, self.connection) as conn:
+            result = QueryResult(
+                self.final_sql(), conn, page, limit=limit, timeout=timeout,
+            )
+            result.process()
+            return result
 
     def available_params(self):
         """
@@ -232,7 +227,7 @@ class SQLQuery:
 
     @property
     def count(self):
-        if not self._count and self.cursor.db.vendor == POSTGRES_VENDOR:
+        if not self._count:
             # trim whitespace and semicolons from the end of the query string
             sql = self.sql.rstrip().rstrip(';')
             self.cursor.execute(f'select count(*) from ({sql}) t')
@@ -248,24 +243,20 @@ class SQLQuery:
         self.duration = (time() - start_time) * 1000
 
     def _execute(self):
-        if self.cursor.db.vendor == POSTGRES_VENDOR:
-            self.cursor.execute(f'SET statement_timeout = {self.timeout}')
-            self.cursor.execute(
-                f'DECLARE {self.cursor_name} CURSOR WITH HOLD FOR {self.sql}'
-            )
-            if self.page and self.page > 1:
-                offset = (self.page - 1) * self.limit
-                self.cursor.execute(f'MOVE {offset} FROM {self.cursor_name}')
-            self.cursor.execute(f'FETCH {self.limit} FROM {self.cursor_name}')
-        else:
-            self.cursor.execute(self.sql)
+        self.cursor.execute(f'SET statement_timeout = {self.timeout}')
+        self.cursor.execute(
+            f'DECLARE {self.cursor_name} CURSOR WITH HOLD FOR {self.sql}'
+        )
+        if self.page and self.page > 1:
+            offset = (self.page - 1) * self.limit
+            self.cursor.execute(f'MOVE {offset} FROM {self.cursor_name}')
+        self.cursor.execute(f'FETCH {self.limit} FROM {self.cursor_name}')
 
     def get_results(self):
         self.execute()
         self._description = self.cursor.description or []
         results = [list(r) for r in self.cursor]
-        if self.cursor.db.vendor == POSTGRES_VENDOR:
-            self.cursor.execute(f'CLOSE {self.cursor_name}')
+        self.cursor.execute(f'CLOSE {self.cursor_name}')
         return results
 
     @property

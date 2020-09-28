@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Show sources of master datasets within search results.
+- Make Data Explorer use per-user connections to enforce our dataset access controls.
 
 ## 2020-09-24
 

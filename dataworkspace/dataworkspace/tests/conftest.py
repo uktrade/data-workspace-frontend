@@ -1,9 +1,10 @@
 import psycopg2
+import pytest
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase
-import pytest
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.tests import factories
@@ -12,7 +13,10 @@ from dataworkspace.tests import factories
 @pytest.fixture
 def staff_user(db):
     staff_user = get_user_model().objects.create(
-        username='bob.testerson@test.com', is_staff=True, is_superuser=True
+        username='bob.testerson@test.com',
+        email='bob.testerson@test.com',
+        is_staff=True,
+        is_superuser=True,
     )
     return staff_user
 

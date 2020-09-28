@@ -1,16 +1,7 @@
 import factory
 
-from django.conf import settings
-
 from dataworkspace.apps.explorer import models
-
-
-class UserFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = settings.AUTH_USER_MODEL
-
-    username = factory.Sequence(lambda n: 'User %03d' % n)
-    is_staff = True
+from dataworkspace.tests.factories import UserFactory
 
 
 class SimpleQueryFactory(factory.django.DjangoModelFactory):
@@ -20,7 +11,7 @@ class SimpleQueryFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: 'My simple query %s' % n)
     sql = "SELECT 1+1 AS TWO"  # same result in postgres and sqlite
     description = "Doin' math"
-    connection = "default"
+    connection = "my_database"
     created_by_user = factory.SubFactory(UserFactory)
 
 

@@ -1,7 +1,6 @@
 import logging
 from collections import namedtuple
 
-from django.core.cache import cache
 from geoalchemy2 import Geometry  # Needed for sqlalchemy to understand geometry columns
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql.array import ARRAY
@@ -21,17 +20,14 @@ from sqlalchemy.sql.sqltypes import (
     VARCHAR,
 )
 
+from django.core.cache import cache
+
 from dataworkspace.apps.explorer.app_settings import (
-    ENABLE_TASKS,
-    EXPLORER_ASYNC_SCHEMA,
-    EXPLORER_CONNECTIONS,
     EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES,
     EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES,
     EXPLORER_SCHEMA_INCLUDE_VIEWS,
 )
-from dataworkspace.apps.explorer.tasks import build_schema_cache_async
-from dataworkspace.apps.explorer.utils import get_valid_connection
-
+from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 
 logger = logging.getLogger(__name__)
 
@@ -49,31 +45,26 @@ def _include_views():
     return EXPLORER_SCHEMA_INCLUDE_VIEWS is True
 
 
-def do_async():
-    return ENABLE_TASKS and EXPLORER_ASYNC_SCHEMA
-
-
 def _include_table(t):
     if _get_includes() is not None:
         return any([t.startswith(p) for p in _get_includes()])
     return not any([t.startswith(p) for p in _get_excludes()])
 
 
-def connection_schema_cache_key(connection_alias):
-    return '_explorer_cache_key_%s' % connection_alias
+def connection_schema_cache_key(user, connection_alias):
+    return f'_explorer_cache_key_{user.profile.sso_id}_{connection_alias}'
 
 
-def schema_info(  # pylint: disable=inconsistent-return-statements
-    connection_alias, schema=None, table=None
-):
-    key = connection_schema_cache_key(connection_alias)
+def schema_info(user, connection_alias, schema=None, table=None):
+    key = connection_schema_cache_key(user, connection_alias)
     ret = cache.get(key)
     if ret:
         return ret
-    if do_async():
-        build_schema_cache_async.delay(connection_alias, schema, table)
-    else:
-        return build_schema_cache_async(connection_alias, schema, table)
+
+    ret = build_schema_info(user, connection_alias, schema, table)
+    cache.set(key, ret)
+
+    return ret
 
 
 COLUMN_MAPPING = {
@@ -107,7 +98,7 @@ class TableName(namedtuple("TableName", ['schema', 'name'])):
         return f'{self.schema}.{self.name}'
 
 
-def build_schema_info(connection_alias, schema=None, table=None):
+def build_schema_info(user, connection_alias, schema=None, table=None):
     """
         Construct schema information via engine-specific queries of the tables in the DB.
 
@@ -122,26 +113,30 @@ def build_schema_info(connection_alias, schema=None, table=None):
             ]
 
         """
-    connection = get_valid_connection(connection_alias)
+    connection = get_user_explorer_connection_settings(user, connection_alias)
 
     engine = create_engine(
-        f'postgresql://{connection.settings_dict["USER"]}:{connection.settings_dict["PASSWORD"]}'
-        f'@{connection.settings_dict["HOST"]}:{connection.settings_dict["PORT"]}/'
-        f'{connection.settings_dict["NAME"]}'
+        f'postgresql://{connection["db_user"]}:{connection["db_password"]}'
+        f'@{connection["db_host"]}:{connection["db_port"]}/'
+        f'{connection["db_name"]}'
     )
 
     insp = Inspector.from_engine(engine)
     if schema and table:
         return _get_columns_for_table(insp, schema, table)
 
-    tables = []
-    schemas_and_tables = _get_accessible_schemas_and_tables(connection)
-    for schema_, table_name in schemas_and_tables:
-        if not _include_table(table_name):
-            continue
+    conn = engine.raw_connection()
+    try:
+        tables = []
+        schemas_and_tables = _get_accessible_schemas_and_tables(conn)
+        for schema_, table_name in schemas_and_tables:
+            if not _include_table(table_name):
+                continue
 
-        columns = _get_columns_for_table(insp, schema_, table_name)
-        tables.append(Table(TableName(schema_, table_name), columns))
+            columns = _get_columns_for_table(insp, schema_, table_name)
+            tables.append(Table(TableName(schema_, table_name), columns))
+    finally:
+        conn.close()
 
     engine.dispose()
     return tables
@@ -186,9 +181,3 @@ def _get_columns_for_table(insp, schema, table_name):
             )
             continue
     return columns
-
-
-def build_async_schemas():
-    if do_async():
-        for c in EXPLORER_CONNECTIONS:
-            schema_info(c)

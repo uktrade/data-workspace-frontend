@@ -3,8 +3,12 @@ from uuid import uuid4
 
 import pytest
 import requests
+from django.core.cache import cache
 
-from test.selenium.conftest import create_sso  # pylint: disable=wrong-import-order
+from test.selenium.conftest import (  # pylint: disable=wrong-import-order
+    create_sso,
+    create_dataset,
+)
 from test.selenium.explorer_pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_driver,
@@ -22,12 +26,12 @@ class TestDataExplorer:
         tokens = iter(['token-1'])
         auth_to_me = {
             'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
+                'email': 'explorer@test.com',
+                'contact_email': 'explorer@test.com',
                 'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'first_name': 'Eddie',
+                'last_name': 'Eagle',
+                'user_id': '9931f73c-469d-4110-9f58-92a74ab1bbfa',
             }
         }
         with create_sso(is_logged_in, codes, tokens, auth_to_me) as sso:
@@ -45,6 +49,8 @@ class TestDataExplorer:
 
             TestDataExplorer.driver = get_driver()
             TestDataExplorer.sso = sso
+
+            cache.clear()
 
             yield
 
@@ -155,3 +161,43 @@ class TestDataExplorer:
         query_log_page = edit_query_on_home_page.click_query_log()
         assert f"Query {query_detail_page.query_id}" in query_log_page.get_html()
         assert "select 1, 2, 3" in query_log_page.get_html()
+
+    def test_user_can_only_read_from_datasets_they_have_access_to(self, _application):
+        dataset_1_id = '47146cc4-1668-4522-82b6-eb5e5de7b044'
+        table_1_id = '164acfc5-3852-400e-a99d-2c7c4eff8555'
+        dataset_2_id = '73534d36-72f7-41b7-ad92-4d277980229e'
+        table_2_id = '0a5a7f68-9e38-422d-94d6-92a366da1ab5'
+        create_dataset(
+            dataset_1_id,
+            'explorer_dataset',
+            table_1_id,
+            'my_database',
+            'REQUIRES_AUTHENTICATION',
+        )
+        create_dataset(
+            dataset_2_id,
+            'explorer_dataset_2',
+            table_2_id,
+            'my_database',
+            'REQUIRES_AUTHORIZATION',
+        )
+
+        home_page = HomePage(
+            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
+        )
+        home_page.open()
+
+        home_page.enter_query("select count(*) as count from public.explorer_dataset")
+        home_page.click_run()
+
+        assert home_page.read_result_headers() == ['count']
+        assert home_page.read_result_rows() == [["0"]]
+        assert "permission denied for relation" not in home_page.get_html()
+
+        home_page.open()  # Reset the page, i.e. to remove the existing query
+        home_page.enter_query("select count(*) as count from public.explorer_dataset_2")
+        home_page.click_run()
+
+        assert home_page.read_result_headers() == []
+        assert home_page.read_result_rows() == []
+        assert "permission denied for relation" in home_page.get_html()

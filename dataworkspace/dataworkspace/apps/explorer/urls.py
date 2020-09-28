@@ -1,10 +1,7 @@
-import threading
-
 from django.conf import settings
 from django.urls import include, path
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.explorer.tasks import build_schema_cache_async
 from dataworkspace.apps.explorer.views import (
     CreateQueryView,
     DeleteQueryView,
@@ -50,14 +47,3 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns = [path('__debug__/', include(debug_toolbar.urls))] + urlpatterns
-
-# Build schema cache at startup in background
-if not settings.MULTIUSER_DEPLOYMENT and not settings.TEST:
-
-    def build_schema():
-        for alias in settings.EXPLORER_CONNECTIONS:
-            build_schema_cache_async(alias)
-
-    t = threading.Thread(target=build_schema, args=(), kwargs={})
-    t.setDaemon(True)
-    t.start()

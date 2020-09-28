@@ -2,11 +2,12 @@ import json
 
 from datetime import date, datetime
 
+import pytest
+from six import b
+
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
-from django.test import TestCase
 from django.utils import timezone
-from six import b
 
 from dataworkspace.apps.explorer.app_settings import EXPLORER_DEFAULT_CONNECTION as CONN
 from dataworkspace.apps.explorer.exporters import (
@@ -16,9 +17,11 @@ from dataworkspace.apps.explorer.exporters import (
 )
 from dataworkspace.apps.explorer.models import QueryResult
 from dataworkspace.tests.explorer.factories import SimpleQueryFactory
+from dataworkspace.tests.factories import UserFactory
 
 
-class TestCsv(TestCase):
+@pytest.mark.django_db(transaction=True)
+class TestCsv:
     def test_writing_unicode(self):
         res = QueryResult(
             SimpleQueryFactory(sql='select 1 as "a", 2 as "b"').sql,
@@ -31,17 +34,19 @@ class TestCsv(TestCase):
         res.process()
         res._data = [[1, None], [u"Jenét", '1']]
 
-        res = CSVExporter(query=None)._get_output(res).getvalue()
-        self.assertEqual(res, 'a,b\r\n1,\r\nJenét,1\r\n')
+        res = CSVExporter(user=None, query=None)._get_output(res).getvalue()
+        assert res == 'a,b\r\n1,\r\nJenét,1\r\n'
 
     def test_custom_delimiter(self):
+        user = UserFactory()
         q = SimpleQueryFactory(sql='select 1, 2')
-        exporter = CSVExporter(query=q)
+        exporter = CSVExporter(user=user, query=q)
         res = exporter.get_output(delim='|')
-        self.assertEqual(res, '?column?|?column?\r\n1|2\r\n')
+        assert res == '?column?|?column?\r\n1|2\r\n'
 
 
-class TestJson(TestCase):
+@pytest.mark.django_db(transaction=True)
+class TestJson:
     def test_writing_json(self):
         res = QueryResult(
             SimpleQueryFactory(sql='select 1 as "a", 2 as "b"').sql,
@@ -54,9 +59,9 @@ class TestJson(TestCase):
         res.process()
         res._data = [[1, None], [u"Jenét", '1']]
 
-        res = JSONExporter(query=None)._get_output(res).getvalue()
+        res = JSONExporter(user=None, query=None)._get_output(res).getvalue()
         expected = [{'a': 1, 'b': None}, {'a': 'Jenét', 'b': '1'}]
-        self.assertEqual(res, json.dumps(expected))
+        assert res == json.dumps(expected)
 
     def test_writing_datetimes(self):
         res = QueryResult(
@@ -70,12 +75,13 @@ class TestJson(TestCase):
         res.process()
         res._data = [[1, date.today()]]
 
-        res = JSONExporter(query=None)._get_output(res).getvalue()
+        res = JSONExporter(user=None, query=None)._get_output(res).getvalue()
         expected = [{'a': 1, 'b': date.today()}]
-        self.assertEqual(res, json.dumps(expected, cls=DjangoJSONEncoder))
+        assert res == json.dumps(expected, cls=DjangoJSONEncoder)
 
 
-class TestExcel(TestCase):
+@pytest.mark.django_db(transaction=True)
+class TestExcel:
     def test_writing_excel(self):
         """ This is a pretty crap test. It at least exercises the code.
             If anyone wants to go through the brain damage of actually building
@@ -101,11 +107,15 @@ class TestExcel(TestCase):
 
         res._data = [[1, None], [u"Jenét", d]]
 
-        res = ExcelExporter(query=SimpleQueryFactory())._get_output(res).getvalue()
+        res = (
+            ExcelExporter(user=None, query=SimpleQueryFactory())
+            ._get_output(res)
+            .getvalue()
+        )
 
         expected = b('PK')
 
-        self.assertEqual(res[:2], expected)
+        assert res[:2] == expected
 
     def test_writing_dict_fields(self):
         res = QueryResult(
@@ -124,8 +134,12 @@ class TestExcel(TestCase):
 
         res._data = [[1, ['foo', 'bar']], [2, {'foo': 'bar'}]]
 
-        res = ExcelExporter(query=SimpleQueryFactory())._get_output(res).getvalue()
+        res = (
+            ExcelExporter(user=None, query=SimpleQueryFactory())
+            ._get_output(res)
+            .getvalue()
+        )
 
         expected = b('PK')
 
-        self.assertEqual(res[:2], expected)
+        assert res[:2] == expected

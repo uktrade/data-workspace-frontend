@@ -7,6 +7,7 @@ import re
 import secrets
 import string
 import csv
+from typing import Tuple
 
 import gevent
 import psycopg2
@@ -20,6 +21,7 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
+from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
@@ -70,7 +72,11 @@ def db_role_schema_suffix_for_app(application_template):
 
 
 def new_private_database_credentials(
-    db_role_and_schema_suffix, source_tables, db_user, valid_for: datetime.timedelta,
+    db_role_and_schema_suffix,
+    source_tables,
+    db_user,
+    valid_for: datetime.timedelta,
+    force_create_for_databases: Tuple[Database] = tuple(),
 ):
     password_alphabet = string.ascii_letters + string.digits
 
@@ -283,6 +289,14 @@ def new_private_database_credentials(
             source_tables, lambda source_table: source_table['database']
         )
     }
+
+    # Sometime we want to make sure credentials have been created for a database, even if the user has no explicit
+    # access to tables in that database (e.g. for Data Explorer, where ensuring they can always connect to the database
+    # can prevent a number of failure conditions.
+    for extra_db in force_create_for_databases:
+        if extra_db not in database_to_tables:
+            database_to_tables[extra_db] = []
+
     creds = [
         get_new_credentials(database_obj, tables)
         for database_obj, tables in database_to_tables.items()
