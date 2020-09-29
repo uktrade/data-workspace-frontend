@@ -44,7 +44,7 @@ tensorflow==2.2.0         # via -r theia/requirements.in
 termcolor==1.1.0          # via tensorflow
 toml==0.10.1              # via pylint
 urllib3==1.25.9           # via requests
-werkzeug==1.0.0           # via tensorboard
+werkzeug==1.0.1           # via tensorboard
 wheel==0.34.2             # via astunparse, tensorboard, tensorflow
 wrapt==1.12.1             # via astroid, tensorflow
 
