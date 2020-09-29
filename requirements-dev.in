@@ -10,7 +10,7 @@ beautifulsoup4==4.9.2
 mock==4.0.2
 mohawk==1.1.0
 pip-tools
-pylint==2.5.3
+pylint==2.6.0
 pylint-django==2.3.0
 pytest==6.0.2
 pytest-cov==2.10.1
