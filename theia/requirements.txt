@@ -22,7 +22,7 @@ keras-preprocessing==1.1.2  # via tensorflow
 lazy-object-proxy==1.4.3  # via astroid
 markdown==3.2.2           # via tensorboard
 mccabe==0.6.1             # via pylint
-numpy==1.19.0             # via -r theia/requirements.in, h5py, keras-preprocessing, opt-einsum, pandas, scipy, tensorboard, tensorflow
+numpy==1.19.2             # via -r theia/requirements.in, h5py, keras-preprocessing, opt-einsum, pandas, scipy, tensorboard, tensorflow
 oauthlib==3.1.0           # via requests-oauthlib
 opt-einsum==3.2.1         # via tensorflow
 pandas==1.0.5             # via -r theia/requirements.in
