@@ -27,6 +27,7 @@ from dataworkspace.apps.explorer.app_settings import (
     EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES,
     EXPLORER_SCHEMA_INCLUDE_VIEWS,
 )
+from dataworkspace.apps.explorer.connections import connections
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,11 @@ def schema_info(user, connection_alias, schema=None, table=None):
     cache.set(key, ret)
 
     return ret
+
+
+def clear_schema_info_cache_for_user(user):
+    for connection in connections.values():
+        cache.delete(connection_schema_cache_key(user, connection))
 
 
 COLUMN_MAPPING = {

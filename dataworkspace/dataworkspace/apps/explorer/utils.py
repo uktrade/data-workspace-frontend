@@ -1,3 +1,4 @@
+import logging
 import re
 from contextlib import contextmanager
 from datetime import timedelta
@@ -21,6 +22,8 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.explorer import app_settings
 
+
+logger = logging.getLogger('app')
 EXPLORER_PARAM_TOKEN = "$$"
 
 
@@ -136,6 +139,10 @@ class InvalidExplorerConnectionException(Exception):
     pass
 
 
+def user_cached_credentials_key(user):
+    return f"explorer_credentials_{user.profile.sso_id}"
+
+
 def get_user_explorer_connection_settings(user, alias):
     from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
         connections,
@@ -153,7 +160,7 @@ def get_user_explorer_connection_settings(user, alias):
     def get_available_user_connections(_user_credentials):
         return {data['memorable_name']: data for data in _user_credentials}
 
-    cache_key = f"explorer_credentials_{user.profile.sso_id}"
+    cache_key = user_cached_credentials_key(user)
     user_credentials = cache.get(cache_key, None)
 
     if not user_credentials:
@@ -204,3 +211,9 @@ def get_total_pages(total_rows, page_size):
     if remainder:
         remainder = 1
     return int(total_rows / page_size) + remainder
+
+
+def remove_data_explorer_user_cached_credentials(user):
+    logger.info("Clearing Data Explorer cached credentials for %s", user)
+    cache_key = user_cached_credentials_key(user)
+    cache.delete(cache_key)

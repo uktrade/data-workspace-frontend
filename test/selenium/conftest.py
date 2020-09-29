@@ -40,7 +40,7 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
         )
         from dataworkspace.apps.datasets.constants import DataSetType
         reference_code, _ = DatasetReferenceCode.objects.get_or_create(code='TEST')
-        dataset, _ = DataSet.objects.get_or_create(
+        dataset, _ = DataSet.objects.update_or_create(
             id="{dataset_id}",
             defaults=dict(
                 name="{dataset_name}",
@@ -53,7 +53,7 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
                 user_access_type="{user_access_type}"
             ),
         )
-        SourceTable.objects.get_or_create(
+        source_table, _ = SourceTable.objects.update_or_create(
             id="{table_id}",
             defaults=dict(
                 dataset=dataset,
@@ -64,6 +64,55 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
         )
         with connections["{database}"].cursor() as cursor:
             cursor.execute("CREATE TABLE IF NOT EXISTS {dataset_name} (id int primary key)")
+    """
+    ).encode('ascii')
+    give_perm = subprocess.Popen(
+        ['django-admin', 'shell'],
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+    )
+    stdout, stderr = give_perm.communicate(_code)
+    code = give_perm.wait()
+    return stdout, stderr, code
+
+
+def set_dataset_access_type(dataset_id, user_access_type):
+    _code = textwrap.dedent(
+        f"""
+        from dataworkspace.apps.datasets.models import DataSet
+
+        print(DataSet.objects.filter(id="{dataset_id}"))
+        DataSet.objects.filter(id="{dataset_id}").update(user_access_type="{user_access_type}")
+    """
+    ).encode('ascii')
+    give_perm = subprocess.Popen(
+        ['django-admin', 'shell'],
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+    )
+    stdout, stderr = give_perm.communicate(_code)
+    code = give_perm.wait()
+    return stdout, stderr, code
+
+
+def reset_data_explorer_credentials(user_sso_id):
+    _code = textwrap.dedent(
+        f"""
+        import mock
+        from django.contrib.auth.models import User
+        from dataworkspace.apps.explorer.admin import clear_data_explorer_cached_credentials
+
+        clear_data_explorer_cached_credentials(
+            modeladmin=mock.Mock(),
+            request=mock.Mock(),
+            queryset=User.objects.filter(
+                profile__sso_id='{user_sso_id}'
+            ),
+        )
     """
     ).encode('ascii')
     give_perm = subprocess.Popen(
