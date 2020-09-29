@@ -46,7 +46,7 @@ jinja2==2.11.2            # via flask, flask-babel
 jsonschema==3.2.0         # via flask-appbuilder
 kombu==4.6.8              # via celery
 mako==1.1.2               # via alembic
-markdown==3.2.1           # via apache-superset
+markdown==3.2.2           # via apache-superset
 markupsafe==1.1.1         # via jinja2, mako
 marshmallow-enum==1.5.1   # via flask-appbuilder
 marshmallow-sqlalchemy==0.22.3  # via flask-appbuilder
