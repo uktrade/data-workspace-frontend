@@ -448,6 +448,7 @@ EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
     'admin_',
     'django',
     'dynamic_models',
+    'data_explorer',
 )
 
 STATICFILES_FINDERS = [

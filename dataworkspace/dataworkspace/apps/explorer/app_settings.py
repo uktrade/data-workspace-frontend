@@ -12,7 +12,15 @@ EXPLORER_DEFAULT_DOWNLOAD_ROWS = getattr(
 EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = getattr(
     settings,
     'EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES',
-    ('auth_', 'contenttypes_', 'sessions_', 'admin_', 'django', 'dynamic_models',),
+    (
+        'auth_',
+        'contenttypes_',
+        'sessions_',
+        'admin_',
+        'django',
+        'dynamic_models',
+        'data_explorer',
+    ),
 )
 
 EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = getattr(
