@@ -160,26 +160,44 @@ def get_user_explorer_connection_settings(user, alias):
     def get_available_user_connections(_user_credentials):
         return {data['memorable_name']: data for data in _user_credentials}
 
-    cache_key = user_cached_credentials_key(user)
-    user_credentials = cache.get(cache_key, None)
+    with cache.lock(
+        f'get-explorer-connection-{user.profile.sso_id}',
+        blocking_timeout=30,
+        timeout=180,
+    ):
+        cache_key = user_cached_credentials_key(user)
+        user_credentials = cache.get(cache_key, None)
 
-    if not user_credentials:
-        db_role_schema_suffix = db_role_schema_suffix_for_user(user)
-        source_tables = source_tables_for_user(user)
-        db_user = postgres_user(user.email, suffix='explorer')
-        duration = timedelta(hours=24)
-        cache_duration = (duration - timedelta(minutes=15)).total_seconds()
+        # Make sure that the connection settings are still valid
+        if user_credentials:
+            db_aliases_to_credentials = get_available_user_connections(user_credentials)
+            try:
+                with user_explorer_connection(db_aliases_to_credentials[alias]):
+                    pass
+            except psycopg2.OperationalError:
+                logger.exception(
+                    "Unable to connect using existing cached explorer credentials for %s",
+                    user,
+                )
+                user_credentials = None
 
-        user_credentials = new_private_database_credentials(
-            db_role_schema_suffix,
-            source_tables,
-            db_user,
-            valid_for=duration,
-            force_create_for_databases=Database.objects.filter(
-                memorable_name__in=connections.keys()
-            ).all(),
-        )
-        cache.set(cache_key, user_credentials, timeout=cache_duration)
+        if not user_credentials:
+            db_role_schema_suffix = db_role_schema_suffix_for_user(user)
+            source_tables = source_tables_for_user(user)
+            db_user = postgres_user(user.email, suffix='explorer')
+            duration = timedelta(hours=24)
+            cache_duration = (duration - timedelta(minutes=15)).total_seconds()
+
+            user_credentials = new_private_database_credentials(
+                db_role_schema_suffix,
+                source_tables,
+                db_user,
+                valid_for=duration,
+                force_create_for_databases=Database.objects.filter(
+                    memorable_name__in=connections.keys()
+                ).all(),
+            )
+            cache.set(cache_key, user_credentials, timeout=cache_duration)
 
     db_aliases_to_credentials = get_available_user_connections(user_credentials)
     if alias not in db_aliases_to_credentials:
@@ -191,9 +209,7 @@ def get_user_explorer_connection_settings(user, alias):
 
 
 @contextmanager
-def user_explorer_connection(user, alias=None):
-    connection_settings = get_user_explorer_connection_settings(user, alias)
-
+def user_explorer_connection(connection_settings):
     with psycopg2.connect(
         dbname=connection_settings['db_name'],
         host=connection_settings['db_host'],

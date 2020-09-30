@@ -20,6 +20,7 @@ from dataworkspace.apps.explorer.utils import (
     user_explorer_connection,
     shared_dict_update,
     swap_params,
+    get_user_explorer_connection_settings,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,7 +73,10 @@ class Query(models.Model):
         return ret, ql
 
     def execute(self, executing_user, page, limit, timeout):
-        with user_explorer_connection(executing_user, self.connection) as conn:
+        user_connection_settings = get_user_explorer_connection_settings(
+            executing_user, self.connection
+        )
+        with user_explorer_connection(user_connection_settings) as conn:
             result = QueryResult(
                 self.final_sql(), conn, page, limit=limit, timeout=timeout,
             )
