@@ -1,14 +1,14 @@
 import json
 import time
 
-import pytest
-
 try:
     from django.urls import reverse
 except ImportError:
     from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
+from lxml import html
+import pytest
 
 from dataworkspace.tests.factories import UserFactory
 from dataworkspace.apps.explorer.models import Query, QueryLog
@@ -288,6 +288,29 @@ class TestHomePage:
             {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
         )
         assert '3401' in resp.content.decode(resp.charset)
+
+    @pytest.mark.parametrize(
+        "page, rows, expected_page, expected_rows",
+        (("1", "1000", "1", "1000"), ("2", "3", "2", "3"), ("a", "b", "1", "1000"),),
+    )
+    def test_playground_suppresses_errors_from_invalid_pagination_values(
+        self, page, rows, expected_page, expected_rows, staff_user, staff_client
+    ):
+        resp = staff_client.post(
+            reverse("explorer:index"),
+            {
+                'title': 'test',
+                'sql': 'select 1+3400;',
+                "query-page": page,
+                "query-rows": rows,
+                "action": "fetch-page",
+            },
+        )
+        doc = html.fromstring(resp.content.decode(resp.charset))
+
+        assert resp.status_code == 200
+        assert doc.xpath("//input[@id='query-page']/@value")[0] == expected_page
+        assert doc.xpath("//input[@id='query-rows']/@value")[0] == expected_rows
 
     def test_playground_redirects_to_query_create_on_save_with_sql_query_param(
         self, staff_user, staff_client

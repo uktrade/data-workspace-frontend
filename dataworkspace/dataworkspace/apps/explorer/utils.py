@@ -100,11 +100,17 @@ def get_params_for_url(query):  # pylint: disable=inconsistent-return-statements
 
 
 def url_get_rows(request):
-    return int(request.POST.get("query-rows", app_settings.EXPLORER_DEFAULT_ROWS))
+    rows = request.POST.get("query-rows", str(app_settings.EXPLORER_DEFAULT_ROWS))
+    if not rows.isnumeric():
+        return app_settings.EXPLORER_DEFAULT_ROWS
+    return int(rows)
 
 
 def url_get_page(request):
-    return int(request.POST.get("query-page", 1))
+    page = request.POST.get("query-page", "1")
+    if not page.isnumeric():
+        return 1
+    return int(page)
 
 
 def url_get_query_id(request):
