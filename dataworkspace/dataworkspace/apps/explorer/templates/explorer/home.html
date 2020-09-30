@@ -216,8 +216,15 @@
 
   </div>
 
-  {% load render_bundle from webpack_loader %}
-  {% render_bundle 'query' %}
-  {% render_bundle 'schema' %}
+  {% block init_govuk_frontend %}
+    {% load render_bundle from webpack_loader %}
+    {% render_bundle 'query' %}
+    {% render_bundle 'schema' %}
+
+    <script nonce="{{ request.csp_nonce }}">
+      window.GOVUKFrontend.initAll()
+      window.initSchemaSearch();
+    </script>
+  {% endblock %}
 
 {% endblock content %}

@@ -163,20 +163,18 @@
         </footer>
 
         {% block javascript %}
-            {% block footer_additions %} {% endblock footer_additions %}
             <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.8.1.min.js"></script>
-            <script nonce="{{ request.csp_nonce }}">
-              var govukFrontendInitialised = false;
-              document.onreadystatechange = function () {
-                if (document.readyState === 'complete' && govukFrontendInitialised === false) {
-                  window.GOVUKFrontend.initAll();
-                  govukFrontendInitialised = true;
-                }
-              };
-            </script>
-        {% endblock %}
 
-        {% load render_bundle from webpack_loader %}
-        {% render_bundle 'index' %}
+            {% block init_govuk_frontend %}
+              <script nonce="{{ request.csp_nonce }}">
+                window.GOVUKFrontend.initAll();
+              </script>
+            {% endblock %}
+
+            {% load render_bundle from webpack_loader %}
+            {% render_bundle 'index' %}
+
+            {% block footer_additions %} {% endblock footer_additions %}
+        {% endblock %}
     </body>
 </html>
