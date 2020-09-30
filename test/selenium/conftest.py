@@ -3,6 +3,7 @@ import multiprocessing
 import os
 import signal
 import subprocess
+import textwrap
 from contextlib import contextmanager
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from io import BytesIO
@@ -13,7 +14,10 @@ import pytest
 
 @pytest.fixture(scope='module')
 def create_application():
-    proc = subprocess.Popen(['/dataworkspace/start.sh'])
+    proc = subprocess.Popen(
+        ['/dataworkspace/start.sh'],
+        env={**os.environ, "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}'},
+    )
 
     yield
 
@@ -21,6 +25,106 @@ def create_application():
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
     except ProcessLookupError:
         pass
+
+
+def create_dataset(dataset_id, dataset_name, table_id, database, user_access_type):
+    _code = textwrap.dedent(
+        f"""
+        import uuid
+        from django.db import connections
+        from dataworkspace.apps.core.models import Database
+        from dataworkspace.apps.datasets.models import (
+            DataSet,
+            SourceTable,
+            DatasetReferenceCode,
+        )
+        from dataworkspace.apps.datasets.constants import DataSetType
+        reference_code, _ = DatasetReferenceCode.objects.get_or_create(code='TEST')
+        dataset, _ = DataSet.objects.update_or_create(
+            id="{dataset_id}",
+            defaults=dict(
+                name="{dataset_name}",
+                description="test_desc",
+                short_description="test_short_desc",
+                slug="{dataset_name}",
+                published=True,
+                reference_code=reference_code,
+                type=DataSetType.MASTER.value,
+                user_access_type="{user_access_type}"
+            ),
+        )
+        source_table, _ = SourceTable.objects.update_or_create(
+            id="{table_id}",
+            defaults=dict(
+                dataset=dataset,
+                database=Database.objects.get(memorable_name="{database}"),
+                schema="public",
+                table="{dataset_name}",
+            ),
+        )
+        with connections["{database}"].cursor() as cursor:
+            cursor.execute("CREATE TABLE IF NOT EXISTS {dataset_name} (id int primary key)")
+    """
+    ).encode('ascii')
+    give_perm = subprocess.Popen(
+        ['django-admin', 'shell'],
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+    )
+    stdout, stderr = give_perm.communicate(_code)
+    code = give_perm.wait()
+    return stdout, stderr, code
+
+
+def set_dataset_access_type(dataset_id, user_access_type):
+    _code = textwrap.dedent(
+        f"""
+        from dataworkspace.apps.datasets.models import DataSet
+
+        print(DataSet.objects.filter(id="{dataset_id}"))
+        DataSet.objects.filter(id="{dataset_id}").update(user_access_type="{user_access_type}")
+    """
+    ).encode('ascii')
+    give_perm = subprocess.Popen(
+        ['django-admin', 'shell'],
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+    )
+    stdout, stderr = give_perm.communicate(_code)
+    code = give_perm.wait()
+    return stdout, stderr, code
+
+
+def reset_data_explorer_credentials(user_sso_id):
+    _code = textwrap.dedent(
+        f"""
+        import mock
+        from django.contrib.auth.models import User
+        from dataworkspace.apps.explorer.admin import clear_data_explorer_cached_credentials
+
+        clear_data_explorer_cached_credentials(
+            modeladmin=mock.Mock(),
+            request=mock.Mock(),
+            queryset=User.objects.filter(
+                profile__sso_id='{user_sso_id}'
+            ),
+        )
+    """
+    ).encode('ascii')
+    give_perm = subprocess.Popen(
+        ['django-admin', 'shell'],
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+    )
+    stdout, stderr = give_perm.communicate(_code)
+    code = give_perm.wait()
+    return stdout, stderr, code
 
 
 class SSOServer(multiprocessing.Process):
@@ -78,9 +182,6 @@ class SSOServer(multiprocessing.Process):
                 self.wfile.write(response.getvalue())
 
             def handle_me(self):
-                print(123)
-                print(self.path)
-                print(self.headers)
                 if self.headers['authorization'] in auth_to_me:
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")

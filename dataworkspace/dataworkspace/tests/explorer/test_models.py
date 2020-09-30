@@ -1,8 +1,8 @@
 from unittest.mock import call, Mock
 
+import pytest
 import six
 from django.db import connections
-from django.test import TestCase
 
 from dataworkspace.apps.explorer.app_settings import EXPLORER_DEFAULT_CONNECTION as CONN
 from dataworkspace.apps.explorer.models import (
@@ -14,54 +14,61 @@ from dataworkspace.apps.explorer.models import (
     SQLQuery,
 )
 from dataworkspace.tests.explorer.factories import SimpleQueryFactory
+from dataworkspace.tests.factories import UserFactory
 
 
-class TestQueryModel(TestCase):
+@pytest.mark.django_db(transaction=True)
+class TestQueryModel:
+    databases = ['default', 'my_database']
+
     def test_params_get_merged(self):
         q = SimpleQueryFactory(sql="select '$$foo$$';")
         q.params = {'foo': 'bar', 'mux': 'qux'}
-        self.assertEqual(q.available_params(), {'foo': 'bar'})
+        assert q.available_params() == {'foo': 'bar'}
 
     def test_default_params_used(self):
         q = SimpleQueryFactory(sql="select '$$foo:bar$$';")
-        self.assertEqual(q.available_params(), {'foo': 'bar'})
+        assert q.available_params() == {'foo': 'bar'}
 
     def test_query_log(self):
-        self.assertEqual(0, QueryLog.objects.count())
-        q = SimpleQueryFactory(connection='alt')
+        assert QueryLog.objects.count() == 0
+        q = SimpleQueryFactory(connection='Alt')
         q.log(None)
-        self.assertEqual(1, QueryLog.objects.count())
+        assert QueryLog.objects.count() == 1
         log = QueryLog.objects.first()
-        self.assertEqual(log.run_by_user, None)
-        self.assertEqual(log.query, q)
-        self.assertFalse(log.is_playground)
-        self.assertEqual(log.connection, q.connection)
+
+        assert log.run_by_user is None
+        assert log.query == q
+        assert log.is_playground is False
+        assert log.connection == q.connection
 
     def test_query_logs_final_sql(self):
         q = SimpleQueryFactory(sql="select '$$foo$$';")
         q.params = {'foo': 'bar'}
         q.log(None)
-        self.assertEqual(1, QueryLog.objects.count())
+        assert QueryLog.objects.count() == 1
         log = QueryLog.objects.first()
-        self.assertEqual(log.sql, "select 'bar';")
+
+        assert log.sql == "select 'bar';"
 
     def test_playground_query_log(self):
         query = Query(sql='select 1;', title="Playground")
         query.log(None)
         log = QueryLog.objects.first()
-        self.assertTrue(log.is_playground)
+
+        assert log.is_playground is True
 
     def test_get_run_count(self):
         q = SimpleQueryFactory()
-        self.assertEqual(q.get_run_count(), 0)
+        assert q.get_run_count() == 0
         expected = 4
         for _ in range(0, expected):
             q.log()
-        self.assertEqual(q.get_run_count(), expected)
+        assert q.get_run_count() == expected
 
     def test_avg_duration(self):
         q = SimpleQueryFactory()
-        self.assertIsNone(q.avg_duration())
+        assert q.avg_duration() is None
         expected = 2.5
         ql = q.log()
         ql.duration = 2
@@ -69,41 +76,49 @@ class TestQueryModel(TestCase):
         ql = q.log()
         ql.duration = 3
         ql.save()
-        self.assertEqual(q.avg_duration(), expected)
+        assert q.avg_duration() == expected
 
     def test_log_saves_duration(self):
+        user = UserFactory()
         q = SimpleQueryFactory()
-        res, _ = q.execute_with_logging(None, None, 10, 10000)
+        res, _ = q.execute_with_logging(user, None, 10, 10000)
         log = QueryLog.objects.first()
 
-        self.assertAlmostEqual(log.duration, res.duration, places=9)
+        assert log.duration == pytest.approx(res.duration, rel=1e-9)
 
     def test_final_sql_uses_merged_params(self):
         q = SimpleQueryFactory(sql="select '$$foo:bar$$', '$$qux$$';")
         q.params = {'qux': 'mux'}
         expected = "select 'bar', 'mux';"
-        self.assertEqual(q.final_sql(), expected)
+
+        assert q.final_sql() == expected
 
     def test_cant_query_with_unregistered_connection(self):
         from dataworkspace.apps.explorer.utils import (  # pylint: disable=import-outside-toplevel
             InvalidExplorerConnectionException,
         )
 
-        q = SimpleQueryFactory(
+        user = UserFactory()
+        q = SimpleQueryFactory.create(
             sql="select '$$foo:bar$$', '$$qux$$';", connection='not_registered'
         )
-        self.assertRaises(
-            InvalidExplorerConnectionException, q.execute, None, 10, 10000
-        )
+        with pytest.raises(InvalidExplorerConnectionException):
+            q.execute(user, None, 10, 10000)
 
 
-class _AbstractQueryResults:
+@pytest.mark.django_db(transaction=True)
+class TestQueryResults:
     connection_name = CONN
+    databases = ['default', 'my_database']
+
     query = "select 1 as foo, 'qux' as mux;"
 
-    def setUp(self):
+    @pytest.fixture(scope='function', autouse=True)
+    def create_query_result(self):
         conn = connections[self.connection_name]
-        self.qr = QueryResult(self.query, conn, 1, 1000, 10000)
+        self.qr = QueryResult(  # pylint: disable=attribute-defined-outside-init
+            self.query, conn, 1, 1000, 10000
+        )
 
     def test_column_access(self):
         self.qr._data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
@@ -146,12 +161,7 @@ class _AbstractQueryResults:
         assert [ColumnHeader('--')][0].title == self.qr._get_headers()[0].title
 
 
-class TestQueryResults(_AbstractQueryResults, TestCase):
-    databases = ['default']
-    connection_name = CONN
-
-
-class TestColumnSummary(TestCase):
+class TestColumnSummary:
     def test_executes(self):
         res = ColumnSummary('foo', [1, 2, 3])
         assert res.stats == {'Min': 1, 'Max': 3, 'Avg': 2, 'Sum': 6, 'NUL': 0}
@@ -165,7 +175,7 @@ class TestColumnSummary(TestCase):
         assert res.stats == {'Min': 0, 'Max': 0, 'Avg': 0, 'Sum': 0, 'NUL': 0}
 
 
-class TestSQLQuery(TestCase):
+class TestSQLQuery:
     def test_connection_timeout(self):
         mock_cursor = Mock()
         mock_cursor.db.vendor = 'postgresql'

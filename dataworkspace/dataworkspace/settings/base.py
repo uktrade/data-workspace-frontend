@@ -3,7 +3,6 @@ import base64
 import json
 import os
 import urllib.request
-from datetime import timedelta
 
 from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -393,10 +392,7 @@ QUICKSIGHT_VPC_ARN = env['QUICKSIGHT_VPC_ARN']
 QUICKSIGHT_DASHBOARD_HOST = 'https://eu-west-2.quicksight.aws.amazon.com'  # For proof-of-concept: plan to remove this.
 QUICKSIGHT_DASHBOARD_GROUP = "DataWorkspace"
 QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN = env['QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN']
-QUICKSIGHT_SSO_URL = (
-    "https://sso.trade.gov.uk/idp/sso/init?sp=aws-quicksight"
-    "&RelayState=https://quicksight.aws.amazon.com"
-)
+QUICKSIGHT_SSO_URL = "https://sso.trade.gov.uk/idp/sso/init?sp=aws-quicksight&RelayState=https://quicksight.aws.amazon.com"
 QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS = 'author-custom-permissions'
 
 WAFFLE_CREATE_MISSING_FLAGS = True
@@ -452,6 +448,7 @@ EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
     'admin_',
     'django',
     'dynamic_models',
+    'data_explorer',
 )
 
 STATICFILES_FINDERS = [
@@ -498,27 +495,9 @@ ENABLE_DEBUG_TOOLBAR = bool(env.get('ENABLE_DEBUG_TOOLBAR', DEBUG))
 #     ]
 #     INTERNAL_IPS += [ip[:-1] + "1"]
 
-
-# asynchronous schema loading
-EXPLORER_TASKS_ENABLED = False
-EXPLORER_ASYNC_SCHEMA = False
-
 # Celery
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 # date and time formats
 en_formats.SHORT_DATE_FORMAT = "d/m/Y"
 en_formats.SHORT_DATETIME_FORMAT = "d/m/Y H:i"
-
-
-if EXPLORER_TASKS_ENABLED and EXPLORER_ASYNC_SCHEMA:
-    for alias in EXPLORER_CONNECTIONS:
-        CELERY_BEAT_SCHEDULE.update(
-            {
-                f"trigger-build-schema-{alias}": {
-                    "task": "dataworkspace.apps.explorer.tasks.build_schema_cache_async",
-                    "schedule": timedelta(minutes=8),
-                    "args": (alias,),
-                }
-            }
-        )

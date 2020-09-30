@@ -22,8 +22,9 @@ class BaseExporter:
     content_type = ''
     file_extension = ''
 
-    def __init__(self, query):
+    def __init__(self, query, user):
         self.query = query
+        self.user = user
 
     def get_output(self, **kwargs):
         value = self.get_file_output(**kwargs).getvalue()
@@ -31,6 +32,7 @@ class BaseExporter:
 
     def get_file_output(self, **kwargs):
         res = self.query.execute(
+            self.user,
             1,
             app_settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
             app_settings.EXPLORER_QUERY_TIMEOUT_MS,

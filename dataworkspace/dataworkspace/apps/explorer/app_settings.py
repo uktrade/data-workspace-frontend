@@ -12,7 +12,15 @@ EXPLORER_DEFAULT_DOWNLOAD_ROWS = getattr(
 EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = getattr(
     settings,
     'EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES',
-    ('auth_', 'contenttypes_', 'sessions_', 'admin_', 'django', 'dynamic_models',),
+    (
+        'auth_',
+        'contenttypes_',
+        'sessions_',
+        'admin_',
+        'django',
+        'dynamic_models',
+        'data_explorer',
+    ),
 )
 
 EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = getattr(
@@ -23,7 +31,6 @@ EXPLORER_SCHEMA_INCLUDE_VIEWS = getattr(
 )
 
 EXPLORER_RECENT_QUERY_COUNT = getattr(settings, 'EXPLORER_RECENT_QUERY_COUNT', 10)
-EXPLORER_ASYNC_SCHEMA = getattr(settings, 'EXPLORER_ASYNC_SCHEMA', False)
 
 EXPLORER_DATA_EXPORTERS = getattr(
     settings,
@@ -40,6 +47,4 @@ CSV_DELIMETER = getattr(settings, "EXPLORER_CSV_DELIMETER", ",")
 EXPLORER_TOKEN = getattr(settings, 'EXPLORER_TOKEN', 'CHANGEME')
 
 
-# Async task related. Note that the EMAIL_HOST settings must be set up for email to work.
-ENABLE_TASKS = getattr(settings, "EXPLORER_TASKS_ENABLED", False)
 UNSAFE_RENDERING = getattr(settings, "EXPLORER_UNSAFE_RENDERING", False)

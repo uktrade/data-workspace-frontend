@@ -8,12 +8,7 @@ class ExplorerAppConfig(AppConfig):
     name = 'explorer'
 
     def ready(self):
-        from dataworkspace.apps.explorer.schema import (  # pylint: disable=import-outside-toplevel
-            build_async_schemas,
-        )
-
         _validate_connections()
-        build_async_schemas()
 
 
 def _get_default():
@@ -33,8 +28,6 @@ def _get_explorer_connections():
 
 
 def _validate_connections():
-
-    # Validate connections
     if _get_default() not in _get_explorer_connections().values():
         raise ImproperlyConfigured(
             'EXPLORER_DEFAULT_CONNECTION is %s, but that alias is not'

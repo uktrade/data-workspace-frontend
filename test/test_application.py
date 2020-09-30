@@ -16,9 +16,9 @@ import aioredis
 import mohawk
 from lxml import html
 
-from dataworkspace.utils import (  # pylint: disable=no-name-in-module, import-error
+from dataworkspace.utils import (
     DATA_EXPLORER_FLAG,
-)
+)  # pylint: disable=no-name-in-module, import-error
 from test.pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_browser,
@@ -1269,8 +1269,14 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_session)
 
         # Create application with a non-open whitelist
+        # Explorer/DB credentials generator cannot handle two database connections which point to the sme
+        # database instance (as it will try to create the user in "each" database and the second will throw an error
+        # because the user already exists.
         cleanup_application = await create_application(
-            env=lambda: {'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32'}
+            env=lambda: {
+                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
+                "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
+            }
         )
         self.add_async_cleanup(cleanup_application)
 
@@ -1340,6 +1346,7 @@ class TestApplication(unittest.TestCase):
                 'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
                 'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
                 'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
+                "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
             }
         )
         self.add_async_cleanup(cleanup_application)

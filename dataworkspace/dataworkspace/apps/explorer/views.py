@@ -3,27 +3,25 @@ import re
 from collections import Counter
 from urllib.parse import urlencode
 
+from psycopg2 import DatabaseError
 import six
+
 from django.conf import settings
 from django.contrib.auth.views import LoginView
-from django.db import DatabaseError
 from django.db.models import Count
 from django.forms.models import model_to_dict
 from django.http import (
-    Http404,
     HttpResponse,
     HttpResponseRedirect,
     HttpResponseBadRequest,
 )
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
 
 from dataworkspace.apps.explorer import app_settings
-from dataworkspace.apps.explorer.connections import connections
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog
@@ -48,7 +46,7 @@ def _export(request, query, download=True):
     exporter_class = get_exporter_class(format_)
     query.params = url_get_params(request)
     delim = request.GET.get('delim')
-    exporter = exporter_class(query)
+    exporter = exporter_class(query=query, user=request.user)
     try:
         output = exporter.get_output(delim=delim)
     except DatabaseError as e:
@@ -95,20 +93,13 @@ class DownloadFromSqlView(View):
         return _export(request, query)
 
 
-def _get_schema_html(connection):
-    if connection not in connections:
-        raise Http404
-    schema = schema_info(connection)
-    return (
-        render_to_string('explorer/schema.html', {'schema': schema}) if schema else ""
-    )
-
-
 class ListQueryView(ListView):
     def recently_viewed(self):
         qll = (
             QueryLog.objects.filter(
-                run_by_user=self.request.user, query_id__isnull=False
+                run_by_user=self.request.user,
+                query_id__isnull=False,
+                query__created_by_user=self.request.user,
             )
             .order_by('-run_at')
             .select_related('query')
@@ -128,7 +119,6 @@ class ListQueryView(ListView):
         context = super(ListQueryView, self).get_context_data(**kwargs)
         context['object_list'] = self._build_queries_and_headers()
         context['recent_queries'] = self.recently_viewed()
-        context['tasks_enabled'] = app_settings.ENABLE_TASKS
         return context
 
     def get_queryset(self):
@@ -315,7 +305,8 @@ class PlayQueryView(View):
                 'form': QueryForm(initial={"sql": request.GET.get('sql')}),
                 'form_action': self.get_form_action(request),
                 'schema': schema_info(
-                    connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
+                    user=request.user,
+                    connection_alias=settings.EXPLORER_DEFAULT_CONNECTION,
                 ),
             },
         )
@@ -405,7 +396,7 @@ class PlayQueryView(View):
             log=log,
         )
         context['schema'] = schema_info(
-            connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
+            user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
         )
         context['form_action'] = self.get_form_action(request)
         return render(self.request, 'explorer/home.html', context)
@@ -489,7 +480,7 @@ def query_viewmodel(
             if log:
                 res, ql = query.execute_with_logging(user, page, rows, timeout)
             else:
-                res = query.execute(page, rows, timeout)
+                res = query.execute(user, page, rows, timeout)
         except DatabaseError as e:
             error = str(e)
     if error and method == "POST":
@@ -497,7 +488,6 @@ def query_viewmodel(
         message = "Query error"
     has_valid_results = not error and res and run_query
     ret = {
-        'tasks_enabled': app_settings.ENABLE_TASKS,
         'params': query.available_params(),
         'title': title,
         'query': query,

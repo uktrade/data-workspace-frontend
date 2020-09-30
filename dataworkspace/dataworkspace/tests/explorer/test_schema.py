@@ -1,60 +1,77 @@
 from unittest.mock import patch
 
-
-from django.core.cache import cache
-from django.test import TestCase
+from django.conf import settings
 
 from dataworkspace.apps.explorer import schema
 from dataworkspace.apps.explorer.app_settings import EXPLORER_CONNECTIONS
 
 
-class TestSchemaInfo(TestCase):
-    def setUp(self):
-        cache.clear()
+class TestSchemaInfo:
+    @staticmethod
+    def _get_connection_data():
+        connection_info = settings.DATABASES_DATA['my_database']
 
+        return {
+            'db_host': connection_info['HOST'],
+            'db_port': connection_info['PORT'],
+            'db_user': connection_info['USER'],
+            'db_password': connection_info['PASSWORD'],
+            'db_name': connection_info['NAME'],
+        }
+
+    @patch('dataworkspace.apps.explorer.schema.get_user_explorer_connection_settings')
     @patch('dataworkspace.apps.explorer.schema._get_includes')
     @patch('dataworkspace.apps.explorer.schema._get_excludes')
-    def test_schema_info_returns_valid_data(self, mocked_excludes, mocked_includes):
+    def test_schema_info_returns_valid_data(
+        self, mocked_excludes, mocked_includes, mock_connection_settings, staff_user
+    ):
         mocked_includes.return_value = None
         mocked_excludes.return_value = []
-        res = schema.schema_info(EXPLORER_CONNECTIONS['Postgres'])
+        mock_connection_settings.return_value = self._get_connection_data()
+        res = schema.schema_info(staff_user, EXPLORER_CONNECTIONS['Postgres'])
         assert mocked_includes.called  # sanity check: ensure patch worked
         tables = [x.name.name for x in res]
-        self.assertIn('explorer_query', tables)
+        assert 'explorer_query' in tables
         schemas = [x.name.schema for x in res]
-        self.assertIn('public', schemas)
+        assert 'public' in schemas
 
+    @patch('dataworkspace.apps.explorer.schema.get_user_explorer_connection_settings')
     @patch('dataworkspace.apps.explorer.schema._get_includes')
     @patch('dataworkspace.apps.explorer.schema._get_excludes')
-    def test_table_exclusion_list(self, mocked_excludes, mocked_includes):
+    def test_table_exclusion_list(
+        self, mocked_excludes, mocked_includes, mock_connection_settings, staff_user
+    ):
         mocked_includes.return_value = None
         mocked_excludes.return_value = ('explorer_',)
-        res = schema.schema_info(EXPLORER_CONNECTIONS['Postgres'])
+        mock_connection_settings.return_value = self._get_connection_data()
+        res = schema.schema_info(staff_user, EXPLORER_CONNECTIONS['Postgres'])
         tables = [x.name.name for x in res]
-        self.assertNotIn('explorer_query', tables)
+        assert 'explorer_query' not in tables
 
+    @patch('dataworkspace.apps.explorer.schema.get_user_explorer_connection_settings')
     @patch('dataworkspace.apps.explorer.schema._get_includes')
     @patch('dataworkspace.apps.explorer.schema._get_excludes')
-    def test_app_inclusion_list(self, mocked_excludes, mocked_includes):
+    def test_app_inclusion_list(
+        self, mocked_excludes, mocked_includes, mock_connection_settings, staff_user
+    ):
         mocked_includes.return_value = ('auth_',)
         mocked_excludes.return_value = []
-        res = schema.schema_info(EXPLORER_CONNECTIONS['Postgres'])
+        mock_connection_settings.return_value = self._get_connection_data()
+        res = schema.schema_info(staff_user, EXPLORER_CONNECTIONS['Postgres'])
         tables = [x.name.name for x in res]
-        self.assertNotIn('explorer_query', tables)
-        self.assertIn('auth_user', tables)
+        assert 'explorer_query' not in tables
+        assert 'auth_user' in tables
 
+    @patch('dataworkspace.apps.explorer.schema.get_user_explorer_connection_settings')
     @patch('dataworkspace.apps.explorer.schema._get_includes')
     @patch('dataworkspace.apps.explorer.schema._get_excludes')
-    def test_app_inclusion_list_excluded(self, mocked_excludes, mocked_includes):
+    def test_app_inclusion_list_excluded(
+        self, mocked_excludes, mocked_includes, mock_connection_settings, staff_user
+    ):
         # Inclusion list "wins"
         mocked_includes.return_value = ('explorer_',)
         mocked_excludes.return_value = ('explorer_',)
-        res = schema.schema_info(EXPLORER_CONNECTIONS['Postgres'])
+        mock_connection_settings.return_value = self._get_connection_data()
+        res = schema.schema_info(staff_user, EXPLORER_CONNECTIONS['Postgres'])
         tables = [x.name.name for x in res]
-        self.assertIn('explorer_query', tables)
-
-    @patch('dataworkspace.apps.explorer.schema.build_schema_cache_async')
-    @patch('dataworkspace.apps.explorer.schema.do_async')
-    def test_builds_async(self, mocked_async_check, mock_build_schema_cache_async):
-        mocked_async_check.return_value = True
-        self.assertIsNone(schema.schema_info(EXPLORER_CONNECTIONS['Postgres']))
+        assert 'explorer_query' in tables
