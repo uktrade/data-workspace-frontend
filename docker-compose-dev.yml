@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: test
+      target: dev
     image: data-workspace
     ports:
       - "8000:8000"
@@ -14,24 +14,6 @@ services:
       - "data-workspace-redis"
     volumes:
       - ./dataworkspace:/dataworkspace
-    command: |
-      sh -c '/bin/sh -s <<EOF
-      set -e
-
-      (
-          cd "$$(dirname "$$0")"
-
-          django-admin migrate
-
-          django-admin ensure_databases_configured
-          django-admin ensure_application_template_models
-
-          echo "Starting proxy and django dev server"
-          parallel --will-cite --line-buffer --jobs 2 --halt now,done=1 ::: \
-              "python3 -m start" \
-              "PROXY_PORT=8000 UPSTREAM_ROOT=http://localhost:8002 python3 -m proxy"
-      )
-      EOF'
   data-workspace-postgres:
     build:
       context: postgres

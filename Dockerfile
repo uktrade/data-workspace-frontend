@@ -55,6 +55,9 @@ USER django
 
 COPY test /test
 
+FROM test as dev
+
+CMD ["/dataworkspace/start-dev.sh"]
 
 FROM base AS live
 
