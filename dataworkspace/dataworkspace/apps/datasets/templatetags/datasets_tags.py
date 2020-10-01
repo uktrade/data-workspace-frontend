@@ -1,3 +1,5 @@
+from urllib import parse
+
 from django import template
 
 from dataworkspace.apps.datasets.model_utils import (
@@ -27,3 +29,8 @@ def url_replace(context, **kwargs):
         query[key] = value
 
     return f"{context['request'].build_absolute_uri('?')}?{query.urlencode()}"
+
+
+@register.filter
+def quote_plus(data):
+    return parse.quote_plus(data)

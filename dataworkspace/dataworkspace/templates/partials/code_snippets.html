@@ -1,4 +1,4 @@
-{% load core_tags %}
+{% load core_tags datasets_tags waffle_tags %}
 {% load static %}
 
 {% if perms.applications.start_all_applications or perms.applications.access_appstream %}
@@ -10,16 +10,30 @@
     <h2 class="govuk-tabs__title">Contents</h2>
     <ul class="govuk-tabs__list">
       <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
+        <a class="govuk-tabs__tab" href="#code-snippet-sql">SQL</a>
+      </li>
+      <li class="govuk-tabs__list-item">
         <a class="govuk-tabs__tab" href="#code-snippet-python">Python</a>
       </li>
       <li class="govuk-tabs__list-item">
         <a class="govuk-tabs__tab" href="#code-snippet-r">R</a>
       </li>
-      <li class="govuk-tabs__list-item">
-        <a class="govuk-tabs__tab" href="#code-snippet-sql">SQL</a>
-      </li>
     </ul>
-    <div class="govuk-tabs__panel" id="code-snippet-python">
+
+    <div class="govuk-tabs__panel" id="code-snippet-sql">
+      <h3 class="govuk-heading-m">SQL</h3>
+      <div class="app-example__code">
+        <pre data-module="app-copy">
+          <code class="hljs psql">{{ code_snippets.sql }}</code>
+        </pre>
+      </div>
+
+      {% flag "SHOW_NEW_DATA_EXPLORER" %}
+      <a class="govuk-button govuk-!-margin-top-5" href="{% url 'explorer:index' %}?sql={{ code_snippets.sql|quote_plus }}">Open in Data Explorer</a>
+      {% endflag %}
+    </div>
+
+    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-python">
       <h3 class="govuk-heading-m">Python</h3>
       <div class="app-example__code">
         <pre data-module="app-copy">
@@ -33,15 +47,6 @@
       <div class="app-example__code">
         <pre data-module="app-copy">
           <code class="hljs r">{{ code_snippets.r }}</code>
-        </pre>
-      </div>
-    </div>
-
-    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-sql">
-      <h3 class="govuk-heading-m">SQL</h3>
-      <div class="app-example__code">
-        <pre data-module="app-copy">
-          <code class="hljs psql">{{ code_snippets.sql }}</code>
         </pre>
       </div>
     </div>
