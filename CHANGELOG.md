@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-10-01
+
+### Added
+- Link to master dataset pages, allowing users to launch a dataset in Data Explorer (currently behind a feature flag).
+
 ## 2020-09-30
 
 ### Changed

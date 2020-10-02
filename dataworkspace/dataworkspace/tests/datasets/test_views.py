@@ -1,4 +1,5 @@
 import random
+from urllib.parse import quote_plus
 from uuid import uuid4
 
 import mock
@@ -8,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.test import Client
+from lxml import html
+from waffle.models import Flag
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
@@ -28,6 +31,7 @@ from dataworkspace.tests.factories import (
     VisualisationUserPermissionFactory,
     VisualisationLinkFactory,
 )
+from dataworkspace.utils import DATA_EXPLORER_FLAG
 
 
 @pytest.mark.parametrize(
@@ -956,6 +960,43 @@ def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
     assert (
         """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
         in response.content.decode(response.charset)
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_launch_master_dataset_in_data_explorer(metadata_db):
+    ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
+    user = get_user_model().objects.create(is_superuser=True)
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+    factories.SourceTableFactory.create(
+        dataset=ds,
+        schema="public",
+        table="MY_LOVELY_TABLE",
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
+    flag = Flag.objects.create(
+        name=DATA_EXPLORER_FLAG, everyone=False, superusers=False
+    )
+    expected_sql = quote_plus("""SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""")
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+    doc = html.fromstring(response.content.decode(response.charset))
+
+    assert response.status_code == 200
+    assert doc.xpath("//a[normalize-space(text()) = 'Open in Data Explorer']") == []
+
+    flag.everyone = True
+    flag.save()
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+    doc = html.fromstring(response.content.decode(response.charset))
+
+    assert response.status_code == 200
+    assert (
+        doc.xpath("//a[normalize-space(text()) = 'Open in Data Explorer']/@href")[0]
+        == f'/data-explorer/?sql={expected_sql}'
     )
 
 
