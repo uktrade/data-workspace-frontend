@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-10-02
+
+### Added
+- The ability to open and run Jupyter notebooks in Theia
+
 ## 2020-10-01
 
 ### Added
