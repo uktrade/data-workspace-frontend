@@ -42,7 +42,7 @@ geopy==2.0.0              # via apache-superset
 gevent==20.6.2            # via gunicorn
 greenlet==0.4.17          # via gevent
 gunicorn[gevent]==20.0.4  # via -r superset-multiuser/requirements.in, apache-superset
-humanize==2.6.0           # via apache-superset
+humanize==3.0.1           # via apache-superset
 idna==2.10                # via email-validator
 isodate==0.6.0            # via apache-superset
 itsdangerous==1.1.0       # via flask, flask-wtf
