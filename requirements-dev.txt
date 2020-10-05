@@ -67,7 +67,7 @@ hiredis==1.1.0            # via -r requirements.txt, aioredis
 idna==2.10                # via -r requirements.txt, requests, yarl
 importlib-metadata==2.0.0  # via -r requirements.txt
 iniconfig==1.0.1          # via pytest
-ipdb==0.13.3              # via -r requirements-dev.in
+ipdb==0.13.4              # via -r requirements-dev.in
 ipython-genutils==0.2.0   # via traitlets
 ipython==7.18.1           # via ipdb
 isort==4.3.21             # via pylint
