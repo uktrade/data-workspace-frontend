@@ -82,7 +82,6 @@ mccabe==0.6.1             # via flake8, pylint
 mock==4.0.2               # via -r requirements-dev.in
 mohawk==1.1.0             # via -r requirements-dev.in
 monotonic==1.5            # via -r requirements.txt, notifications-python-client
-more-itertools==8.5.0     # via pytest
 multidict==4.7.6          # via -r requirements.txt, aiohttp, yarl
 notifications-python-client==5.7.0  # via -r requirements.txt
 oauthlib==3.1.0           # via -r requirements.txt, requests-oauthlib
@@ -115,7 +114,7 @@ pytest-cov==2.10.1        # via -r requirements-dev.in
 pytest-django==3.10.0     # via -r requirements-dev.in
 pytest-mock==3.3.1        # via -r requirements-dev.in
 pytest-timeout==1.4.2     # via -r requirements-dev.in
-pytest==6.0.2             # via -r requirements-dev.in, pytest-cov, pytest-django, pytest-mock, pytest-timeout
+pytest==6.1.1             # via -r requirements-dev.in, pytest-cov, pytest-django, pytest-mock, pytest-timeout
 python-dateutil==2.8.1    # via -r requirements.txt, botocore, celery-redbeat, faker, freezegun, zenpy
 python-dotenv==0.12.0     # via -r requirements.txt
 pytz==2020.1              # via -r requirements.txt, celery, django, zenpy
