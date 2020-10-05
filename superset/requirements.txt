@@ -19,7 +19,7 @@ click==7.1.1              # via apache-superset, flask, flask-appbuilder
 colorama==0.4.3           # via apache-superset, flask-appbuilder
 contextlib2==0.6.0.post1  # via apache-superset
 croniter==0.3.31          # via apache-superset
-cryptography==2.9         # via apache-superset
+cryptography==2.9.2       # via apache-superset
 decorator==4.4.2          # via retry
 defusedxml==0.6.0         # via python3-openid
 flask-appbuilder==2.3.2   # via apache-superset
