@@ -522,6 +522,11 @@ resource "aws_launch_configuration" "gitlab_runner" {
     create_before_destroy = true
   }
 
+  root_block_device {
+    volume_size = "${var.gitlab_runner_root_volume_size}"
+    encrypted = true
+  }
+
   user_data = <<EOF
   #!/bin/bash
   #

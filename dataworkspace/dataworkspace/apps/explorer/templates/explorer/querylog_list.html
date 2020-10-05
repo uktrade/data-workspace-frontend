@@ -1,0 +1,77 @@
+{% extends "explorer/base.html" %}
+{% block title %}Data Explorer - Logs{% endblock %}
+{% block content %}
+<h1 class="govuk-heading-m govuk-!-margin-bottom-2">Recent Query Logs - Page {{ page_obj.number }}</h1>
+<table class="govuk-table">
+    <thead>
+    <tr class="govuk-table__row">
+        <th scope="col" class="govuk-table__header">Run At</th>
+        <th scope="col" class="govuk-table__header">Run By</th>
+        <th scope="col" class="govuk-table__header">Duration</th>
+        <th scope="col" class="govuk-table__header">SQL</th>
+        <th scope="col" class="govuk-table__header">Query ID</th>
+        <th scope="col" class="govuk-table__header">Playground</th>
+    </tr>
+    </thead>
+    <tbody class="govuk-table__body">
+    {% for object in recent_logs %}
+    <tr class="govuk-table__row">
+        <td class="govuk-table__cell">{{ object.run_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+        <td class="govuk-table__cell log-user">{{ object.run_by_user.first_name }} {{ object.run_by_user.last_name }}</td>
+        <td class="govuk-table__cell">{{ object.duration|floatformat:2 }}ms</td>
+        <td class="govuk-table__cell log-sql"><div><pre>{{ object.sql }}</pre></div></td>
+        <td class="govuk-table__cell">
+            {% if object.query_id %}
+            <a class="govuk-link" href="{% url 'explorer:query_detail' object.query_id %}">Query {{ object.query_id }}</a>
+            {% elif object.is_playground %}Playground{% else %}--{% endif %}
+        </td>
+        <td class="govuk-table__cell">
+            <a class="govuk-link" href="{% url 'explorer:index' %}?querylog_id={{ object.id }}">Open</a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% if is_paginated %}
+<nav role="navigation" class="govuk-body">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    <ul class="pagination govuk-list">
+        {% if page_obj.has_previous %}
+        <li><a class="govuk-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+
+        {% if page_obj.number > 3 %}
+        <li><a class="govuk-link" href="?page=1">{{ 1 }}</a></li>
+            {% if page_obj.number > 4 %}
+            <li>&hellip;</li>
+            {% endif %}
+        {% endif %}
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            {% for i in page_obj.paginator.page_range %}
+                {% if page_obj.number == i %}
+                <li class="active">{{ i }}</li>
+                {% elif i >= page_obj.number|add:'-2' and i <= page_obj.number|add:'2' %}
+                <li><a class="govuk-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        {% if page_obj.paginator.num_pages > page_obj.number|add:'2' %}
+            {% if page_obj.paginator.num_pages > page_obj.number|add:'3' %}
+            <li>&hellip;</li>
+            {% endif %}
+        <li><a class="govuk-link" href="?page={{ page_obj.paginator.num_pages }}">
+            {{ page_obj.paginator.num_pages }}
+        </a></li>
+        {% endif %}
+
+        {% if page_obj.has_next %}
+        <li><a class="govuk-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

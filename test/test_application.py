@@ -1,4 +1,5 @@
 import asyncio
+
 import csv
 import io
 import json
@@ -15,7 +16,13 @@ import aioredis
 import mohawk
 from lxml import html
 
-from test.pages import HomePage, get_browser  # pylint: disable=wrong-import-order
+from dataworkspace.utils import (
+    DATA_EXPLORER_FLAG,
+)  # pylint: disable=no-name-in-module, import-error
+from test.pages import (  # pylint: disable=wrong-import-order
+    HomePage,
+    get_browser,
+)
 
 
 def async_test(func):
@@ -1254,6 +1261,137 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(response.status, 403)
 
     @async_test
+    async def test_integrated_data_explorer_has_ip_restrictions(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        # Create application with a non-open whitelist
+        # Explorer/DB credentials generator cannot handle two database connections which point to the sme
+        # database instance (as it will try to create the user in "each" database and the second will throw an error
+        # because the user already exists.
+        cleanup_application = await create_application(
+            env=lambda: {
+                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
+                "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
+            }
+        )
+        self.add_async_cleanup(cleanup_application)
+
+        await set_waffle_flag(DATA_EXPLORER_FLAG, everyone=True)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'contact_email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        # Make a request to the home page, which creates the user...
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
+            await response.text()
+
+        # ... with application permissions...
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # ... and can make requests to the home page...
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
+            content = await response.text()
+        self.assertNotIn('You are not allowed to access this page', content)
+        self.assertEqual(response.status, 200)
+
+        # ... but not data explorer...
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/data-explorer/'
+        ) as response:
+            content = await response.text()
+        self.assertIn('You are not allowed to access this page', content)
+        self.assertEqual(response.status, 403)
+
+        # ... and it can't be spoofed...
+        async with session.request(
+            'GET',
+            'http://dataworkspace.test:8000/data-explorer/',
+            headers={'x-forwarded-for': '1.2.3.4'},
+        ) as response:
+            content = await response.text()
+        self.assertIn('You are not allowed to access this page', content)
+        self.assertEqual(response.status, 403)
+
+        await cleanup_application()
+
+        # ... but that X_FORWARDED_FOR_TRUSTED_HOPS and subnets are respected
+        cleanup_application = await create_application(
+            env=lambda: {
+                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
+                'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
+                'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
+                "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
+            }
+        )
+        self.add_async_cleanup(cleanup_application)
+
+        await set_waffle_flag(DATA_EXPLORER_FLAG, everyone=True)
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        async with session.request(
+            'GET',
+            'http://dataworkspace.test:8000/data-explorer/',
+            headers={'x-forwarded-for': '1.2.3.4'},
+        ) as response:
+            content = await response.text()
+        self.assertIn('Welcome to Data Explorer', content)
+        self.assertEqual(response.status, 200)
+
+        async with session.request(
+            'GET',
+            'http://dataworkspace.test:8000/data-explorer/',
+            headers={'x-forwarded-for': '6.5.4.3, 1.2.3.4'},
+        ) as response:
+            content = await response.text()
+        self.assertIn('Welcome to Data Explorer', content)
+        self.assertEqual(response.status, 200)
+
+        async with session.request(
+            'GET',
+            'http://dataworkspace.test:8000/data-explorer/',
+            headers={'x-forwarded-for': '5.1.1.1'},
+        ) as response:
+            content = await response.text()
+        self.assertIn('Welcome to Data Explorer', content)
+        self.assertEqual(response.status, 200)
+
+        async with session.request(
+            'GET',
+            'http://dataworkspace.test:8000/data-explorer/',
+            headers={'x-forwarded-for': '6.5.4.3'},
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('You are not allowed to access this page', content)
+        self.assertEqual(response.status, 403)
+
+    @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
         await flush_database()
         await flush_redis()
@@ -2043,6 +2181,7 @@ class TestApplication(unittest.TestCase):
         assert code == 0
 
         browser = await get_browser()
+        self.add_async_cleanup(browser.close)
         home_page = await HomePage(browser=browser).open()
 
         with_no_filters = find_search_filter_labels(await home_page.get_html())
@@ -2744,6 +2883,29 @@ async def give_visualisation_dataset_perms(vis_name, dataset_name):
             application_template=application_template,
             dataset=dataset,
         )
+        """
+    ).encode('ascii')
+
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def set_waffle_flag(flag_name, everyone=True):
+    python_code = textwrap.dedent(
+        f"""
+        from waffle.models import Flag
+
+        flag = Flag.objects.create(name='{flag_name}', everyone={everyone})
+        flag.save()
         """
     ).encode('ascii')
 

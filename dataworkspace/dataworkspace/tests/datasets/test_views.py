@@ -1,4 +1,5 @@
 import random
+from urllib.parse import quote_plus
 from uuid import uuid4
 
 import mock
@@ -8,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.test import Client
+from lxml import html
+from waffle.models import Flag
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
@@ -28,6 +31,7 @@ from dataworkspace.tests.factories import (
     VisualisationUserPermissionFactory,
     VisualisationLinkFactory,
 )
+from dataworkspace.utils import DATA_EXPLORER_FLAG
 
 
 @pytest.mark.parametrize(
@@ -244,6 +248,7 @@ def test_find_datasets_combines_results(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
             'has_access': False,
@@ -254,6 +259,7 @@ def test_find_datasets_combines_results(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'has_access': True,
@@ -264,6 +270,7 @@ def test_find_datasets_combines_results(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'has_access': True,
@@ -300,6 +307,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
             'has_access': False,
@@ -310,6 +318,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'has_access': True,
@@ -320,6 +329,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'has_access': True,
@@ -344,6 +354,7 @@ def test_find_datasets_filters_by_use(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
             'has_access': False,
@@ -354,6 +365,7 @@ def test_find_datasets_filters_by_use(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'has_access': True,
@@ -381,6 +393,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
             'has_access': False,
@@ -391,6 +404,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'has_access': True,
@@ -441,6 +455,7 @@ def test_find_datasets_filters_by_source(client):
             'slug': ds.slug,
             'search_rank': 0.0,
             'short_description': ds.short_description,
+            'source_tag_names': MatchUnorderedMembers([source.name, source_2.name]),
             'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
             'purpose': ds.type,
             'has_access': False,
@@ -451,6 +466,7 @@ def test_find_datasets_filters_by_source(client):
             'slug': rds.slug,
             'search_rank': 0.0,
             'short_description': rds.short_description,
+            'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
             'has_access': True,
@@ -695,6 +711,7 @@ def test_find_datasets_filters_by_access():
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
             'has_access': True,
@@ -705,6 +722,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_master.slug,
             'search_rank': mock.ANY,
             'short_description': public_master.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': public_master.type,
             'has_access': True,
@@ -715,6 +733,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_reference.slug,
             'search_rank': mock.ANY,
             'short_description': public_reference.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'has_access': True,
@@ -725,6 +744,7 @@ def test_find_datasets_filters_by_access():
             'slug': access_vis.slug,
             'search_rank': mock.ANY,
             'short_description': access_vis.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'has_access': True,
@@ -735,6 +755,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_vis.slug,
             'search_rank': mock.ANY,
             'short_description': public_vis.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'has_access': True,
@@ -777,6 +798,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
             'has_access': True,
@@ -938,6 +960,43 @@ def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
     assert (
         """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
         in response.content.decode(response.charset)
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_launch_master_dataset_in_data_explorer(metadata_db):
+    ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
+    user = get_user_model().objects.create(is_superuser=True)
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+    factories.SourceTableFactory.create(
+        dataset=ds,
+        schema="public",
+        table="MY_LOVELY_TABLE",
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
+    flag = Flag.objects.create(
+        name=DATA_EXPLORER_FLAG, everyone=False, superusers=False
+    )
+    expected_sql = quote_plus("""SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""")
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+    doc = html.fromstring(response.content.decode(response.charset))
+
+    assert response.status_code == 200
+    assert doc.xpath("//a[normalize-space(text()) = 'Open in Data Explorer']") == []
+
+    flag.everyone = True
+    flag.save()
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+    doc = html.fromstring(response.content.decode(response.charset))
+
+    assert response.status_code == 200
+    assert (
+        doc.xpath("//a[normalize-space(text()) = 'Open in Data Explorer']/@href")[0]
+        == f'/data-explorer/?sql={expected_sql}'
     )
 
 
@@ -1115,6 +1174,7 @@ def test_find_datasets_search_by_source_name(client):
             'slug': ds1.slug,
             'search_rank': 0.243171,
             'short_description': ds1.short_description,
+            'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': ds1.type,
             'has_access': False,
@@ -1125,6 +1185,7 @@ def test_find_datasets_search_by_source_name(client):
             'slug': rds.slug,
             'search_rank': 0.243171,
             'short_description': rds.short_description,
+            'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
             'has_access': True,
@@ -1161,6 +1222,7 @@ def test_find_datasets_name_weighting(client):
             'slug': ds4.slug,
             'search_rank': 0.759909,
             'short_description': ds4.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds4.type,
             'has_access': False,
@@ -1171,6 +1233,7 @@ def test_find_datasets_name_weighting(client):
             'slug': ds1.slug,
             'search_rank': 0.607927,
             'short_description': ds1.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds1.type,
             'has_access': False,
@@ -1181,6 +1244,7 @@ def test_find_datasets_name_weighting(client):
             'slug': ds2.slug,
             'search_rank': 0.243171,
             'short_description': ds2.short_description,
+            'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds2.type,
             'has_access': False,

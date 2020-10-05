@@ -6,11 +6,11 @@ from typing import Dict, List
 
 import boto3
 import botocore
+from django_db_geventpool.utils import close_connection
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db.models import Q
-from django_db_geventpool.utils import close_connection
 import gevent
 from psycopg2 import connect, sql
 import requests
@@ -456,12 +456,25 @@ def _do_delete_unused_datasets_users():
                 """
                 SELECT usename FROM pg_catalog.pg_user
                 WHERE
-                (valuntil != 'infinity' AND usename LIKE 'user_%' AND usename NOT LIKE '%_qs'
-                 AND usename NOT LIKE '%_quicksight')
+                (
+                    valuntil != 'infinity'
+                    AND usename LIKE 'user_%'
+                    AND usename NOT LIKE '%_qs'
+                    AND usename NOT LIKE '%_quicksight'
+                    AND usename NOT LIKE '%_explorer'
+                )
                 OR
-                (valuntil != 'infinity' AND valuntil < now() AND usename LIKE 'user_%' AND usename LIKE '%_qs')
+                (
+                    valuntil != 'infinity'
+                    AND valuntil < now()
+                    AND usename LIKE 'user_%' AND
+                    (
+                        usename LIKE '%_qs'
+                        OR usename LIKE '%_explorer'
+                    )
+                )
                 ORDER BY usename;
-            """
+                """
             )
             usenames = [result[0] for result in cur.fetchall()]
 

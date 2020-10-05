@@ -70,8 +70,18 @@
       </div>
     </div>
 
+    {% if show_new_data_explorer %}
+      {% with application_summary='The Data Explorer is a tool to explore master datasets on Data Workspace. It is a SQL query tool that is an alternative to pgAdmin.' %}
+        {% url 'explorer:index' as data_explorer_url %}
+        {% include 'partials/tool_section.html' with application_name="Data Explorer" application_summary=application_summary application_help_link=None instance=None application_url=data_explorer_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
+      {% endwith %}
+    {% endif %}
+
     {% for application in applications %}
-      {% include 'partials/tool_section.html' with application_name=application.nice_name application_summary=application.summary application_help_link=application.help_link instance=application.instance application_url=application.link customisable_instance=True has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
+      {# This check can be removed when the Data Explorer tool has been removed from Django-Admin/Data Workspace env altogether #}
+      {% if application.nice_name != 'Data Explorer' or not show_new_data_explorer %}
+        {% include 'partials/tool_section.html' with application_name=application.nice_name application_summary=application.summary application_help_link=application.help_link instance=application.instance application_url=application.link customisable_instance=True has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
+      {% endif %}
     {% endfor %}
 
     {% if your_files_enabled %}

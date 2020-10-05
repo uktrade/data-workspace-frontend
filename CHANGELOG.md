@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-10-02
+
+### Added
+- The ability to open and run Jupyter notebooks in Theia
+
+## 2020-10-01
+
+### Added
+- Link to master dataset pages, allowing users to launch a dataset in Data Explorer (currently behind a feature flag).
+
+## 2020-09-30
+
+### Changed
+- Suppress errors from invalid form entry in Data Explorer pagination fields.
+
+## 2020-09-28
+
+### Changed
+- Show sources of master datasets within search results.
+- Make Data Explorer use per-user connections to enforce our dataset access controls.
+
+## 2020-09-24
+
+### Changed
+- Hidden other users queries/logs in Data Explorer.
+- Allow views to be master datasets accessible in tools
+- Don't attempt to bind to EFS when a user starts a visualisation
+
+## 2020-09-22
+
+### Added
+- Merged Data Explorer code into this codebase.
+
+## 2020-09-21
+
+### Added
+
+- Configurable root volume size for the GitLab runner, so it can be bumped in production to reduce frequency of running out of space
+
+## 2020-09-17
+
+### Added
+- A blank "Data Explorer v2" tool with ip restrictions and waffle flag to protect access, in preparation for integrating the existing Data Explorer code.
 
 ## 2020-09-23
 

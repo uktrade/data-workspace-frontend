@@ -27,6 +27,7 @@ from django.db.models import (
     Case,
     When,
     BooleanField,
+    CharField,
     UUIDField,
     QuerySet,
 )
@@ -170,6 +171,9 @@ def get_datasets_data_for_user_matching_query(
 
     # Pull in the source tag IDs for the dataset
     datasets = datasets.annotate(source_tag_ids=ArrayAgg('source_tags', distinct=True))
+    datasets = datasets.annotate(
+        source_tag_names=ArrayAgg('source_tags__name', distinct=True)
+    )
 
     # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
@@ -188,6 +192,7 @@ def get_datasets_data_for_user_matching_query(
         'slug',
         'short_description',
         'search_rank',
+        'source_tag_names',
         'source_tag_ids',
         'purpose',
     ).annotate(has_access=BoolOr('_has_access'))
@@ -198,6 +203,7 @@ def get_datasets_data_for_user_matching_query(
         'slug',
         'short_description',
         'search_rank',
+        'source_tag_names',
         'source_tag_ids',
         'purpose',
         'has_access',
@@ -267,6 +273,10 @@ def get_visualisations_data_for_user_matching_query(
         source_tag_ids=Value([], ArrayField(UUIDField()))
     )
 
+    visualisations = visualisations.annotate(
+        source_tag_names=Value([], ArrayField(CharField(max_length=256)))
+    )
+
     # Define a `purpose` column denoting the dataset type
     visualisations = visualisations.annotate(
         purpose=Value(DataSetType.VISUALISATION.value, IntegerField())
@@ -281,6 +291,7 @@ def get_visualisations_data_for_user_matching_query(
         'slug',
         'short_description',
         'search_rank',
+        'source_tag_names',
         'source_tag_ids',
         'purpose',
     ).annotate(has_access=BoolOr('_has_access'))
@@ -291,6 +302,7 @@ def get_visualisations_data_for_user_matching_query(
         'slug',
         'short_description',
         'search_rank',
+        'source_tag_names',
         'source_tag_ids',
         'purpose',
         'has_access',

@@ -1,0 +1,102 @@
+.text-top {
+    vertical-align: text-top;
+}
+.float-right {
+    float: right;
+}
+.pagination {
+    float: right;
+}
+.pagination li {
+    display: inline;
+    padding-left: 4px;
+}
+.log-sql pre {
+    margin: 2px 0px;
+}
+.log-sql div {
+    max-width: 250px;
+    overflow: auto;
+    white-space: nowrap;
+    padding-right: 10px;
+}
+.log-user {
+    max-width: 200px;
+    overflow: auto;
+    white-space: nowrap;
+}
+.scrollable-table {
+    /*width: 100%;*/
+    overflow-x: auto;
+    max-height: 560px;
+}
+/* add yellow box shadow to query editor on focus */
+.govuk-textarea:focus-within {
+    outline: 3px solid #fd0;
+    outline-offset: 0;
+    box-shadow: inset 0 0 0 2px;
+}
+/* resize editor if wrapper is resized */
+#ace-sql-editor {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.list {
+    -webkit-padding-start: 0px;
+    list-style: none;
+}
+
+.schema-wrapper{
+    overflow-x: hidden;
+}
+
+.schema-panel {
+    background-color: white;
+    padding: 0px;
+    border: 1px solid black;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.schema-title {
+    background-color: lightgrey;
+    padding: 10px;
+    margin-bottom: 0px;
+    font-size: 15px;
+    word-break: break-word;
+}
+
+.schema-cell-left {
+    font-size: 0.8rem;
+    padding: 5px 5px 5px 5;
+    word-break: break-word;
+}
+
+.schema-cell-right {
+    font-size: 0.8rem;
+    padding: 5px 5px 5px 5;
+}
+
+.schema-collapse {
+    width: 50%;
+    float: left;
+    text-align: center;
+    color: #337ab7;
+}
+
+.schema-expand {
+    width: 50%;
+    float: right;
+    text-align: center;
+    color: #337ab7;
+}
+
+.app-label--inline, .app-input--inline {
+    display: inline;
+}
+
+#original-sql:read-only {
+    background-color: #F0F0F0
+}

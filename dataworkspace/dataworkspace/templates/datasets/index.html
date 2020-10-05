@@ -80,6 +80,13 @@
       <p class="govuk-body">{{ dataset.short_description }}</p>
       <p class="govuk-body">
         <span class="govuk-!-font-weight-bold">Purpose:</span> {{ purpose|get_key:dataset.purpose}}
+        <br>
+        <span class="govuk-!-font-weight-bold">Source:</span> 
+        {% if dataset.source_tag_names|length > 1 %}
+          {{ dataset.source_tag_names|join:", " }}
+        {% else %}
+          {{ dataset.source_tag_names.0|default:"N/A" }}
+        {% endif %}
       </p>
     </div>
     {% endfor %}

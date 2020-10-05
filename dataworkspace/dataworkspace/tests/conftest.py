@@ -1,23 +1,31 @@
 import psycopg2
+import pytest
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase
-import pytest
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.tests import factories
 
 
 @pytest.fixture
-def staff_user_data(db):
-    user = get_user_model().objects.create(
-        username='bob.testerson@test.com', is_staff=True, is_superuser=True
+def staff_user(db):
+    staff_user = get_user_model().objects.create(
+        username='bob.testerson@test.com',
+        email='bob.testerson@test.com',
+        is_staff=True,
+        is_superuser=True,
     )
+    return staff_user
 
+
+@pytest.fixture
+def staff_user_data(db, staff_user):
     return {
-        'HTTP_SSO_PROFILE_EMAIL': user.email,
-        'HTTP_SSO_PROFILE_CONTACT_EMAIL': user.email,
+        'HTTP_SSO_PROFILE_EMAIL': staff_user.email,
+        'HTTP_SSO_PROFILE_CONTACT_EMAIL': staff_user.email,
         'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
         'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
         'HTTP_SSO_PROFILE_LAST_NAME': 'Testerson',

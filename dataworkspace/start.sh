@@ -4,6 +4,7 @@ set -e
 
 (
     cd "$(dirname "$0")"
+
     django-admin collectstatic --noinput
 
     # Not suitable on a cluster of size > 1, but for our purposes,

@@ -20,6 +20,8 @@ RUN \
 	apk add --no-cache \
 		nginx=1.16.1-r2 \
 		nginx-mod-http-headers-more=1.16.1-r2 \
+		nodejs=10.19.0-r0 \
+		npm=10.19.0-r0 \
 		openssl=1.1.1g-r0 \
 		parallel=20190522-r0 \
 		py3-psycopg2=2.7.7-r1 \
@@ -39,6 +41,7 @@ RUN apk add --no-cache \
         postgresql-dev \
         python3-dev \
         chromium \
+        chromium-chromedriver \
         libxml2-dev \
         libxslt-dev
 
@@ -46,6 +49,8 @@ COPY requirements-dev.txt requirements-dev.txt
 RUN pip3 install -r requirements-dev.txt
 
 COPY dataworkspace /dataworkspace
+RUN cd dataworkspace && npm install && npm run-script build
+
 COPY etc /etc
 
 USER django
@@ -56,6 +61,8 @@ COPY test /test
 FROM base AS live
 
 COPY dataworkspace /dataworkspace
+RUN cd dataworkspace && npm install && npm run-script build
+
 COPY etc /etc
 
 CMD ["/dataworkspace/start.sh"]

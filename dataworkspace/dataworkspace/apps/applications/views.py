@@ -20,6 +20,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.views.decorators.http import require_GET
+from waffle import flag_is_active
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -61,6 +62,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLink,
 )
 from dataworkspace.notify import decrypt_token, send_email
+from dataworkspace.utils import DATA_EXPLORER_FLAG
 from dataworkspace.zendesk import update_zendesk_ticket
 
 TOOL_LOADING_MESSAGES = [
@@ -194,6 +196,7 @@ def tools_html_GET(request):
             'appstream_url': settings.APPSTREAM_URL,
             'quicksight_url': reverse('applications:quicksight_redirect'),
             'your_files_enabled': settings.YOUR_FILES_ENABLED,
+            'show_new_data_explorer': flag_is_active(request, DATA_EXPLORER_FLAG),
         },
     )
 
