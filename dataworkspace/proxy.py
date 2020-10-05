@@ -76,6 +76,10 @@ async def async_main():
         'referer',
     )
 
+    # Cookies on the embed path must be allowed to be SameSite=None, so they
+    # will be sent when the site is embedded in an iframe
+    embed_path = '/visualisations/link'
+
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
@@ -1228,7 +1232,7 @@ async def async_main():
         app = web.Application(
             middlewares=[
                 server_logger(),
-                redis_session_middleware(redis_pool, root_domain_no_port),
+                redis_session_middleware(redis_pool, root_domain_no_port, embed_path),
                 authenticate_by_staff_sso_token(),
                 authenticate_by_staff_sso(),
                 authenticate_by_basic_auth(),

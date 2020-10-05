@@ -1089,6 +1089,10 @@ class TestVisualisationLinkView:
             'frame-src https://eu-west-2.quicksight.aws.amazon.com'
             in response['content-security-policy']
         )
+        assert (
+            'frame-ancestors dataworkspace.test:8000 https://authorized-embedder.com'
+            in response['content-security-policy']
+        )
 
     @pytest.mark.django_db
     def test_datastudio_link(self):
