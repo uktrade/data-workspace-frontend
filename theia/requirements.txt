@@ -89,7 +89,7 @@ traitlets==5.0.4          # via ipykernel, ipython, jupyter-client, jupyter-core
 urllib3==1.25.9           # via requests
 wcwidth==0.2.5            # via prompt-toolkit
 webencodings==0.5.1       # via bleach
-werkzeug==1.0.0           # via tensorboard
+werkzeug==1.0.1           # via tensorboard
 wheel==0.34.2             # via astunparse, tensorboard, tensorflow
 wrapt==1.12.1             # via astroid, tensorflow
 
