@@ -89,6 +89,16 @@ RUN \
 COPY vscode_postgres.theia /root/plugins/vscode_postgres.theia
 COPY start.sh /start.sh
 
+# The ipython history database does not play well with mobius3, surfacing
+# occasional errors like "attempt to write a readonly database", so we store
+# it where mobius3 does not sync
+ENV IPYTHONDIR=/tmp/ipython
+
+ENV \
+    JUPYTER_CONFIG_DIR=/home/jovyan/.jupyter_theia \
+    JUPYTER_DATA_DIR=/tmp/jupyter_theia \
+    JUPYTER_RUNTIME_DIR=/tmp/jupyter_theia/runtime
+
 ENV \
 	# Theia by default puts webviews on a subdomain, requests to which I think are intercepted by
 	# a service worker. This doesn't work with the locked down DW CSP
