@@ -14,7 +14,7 @@ astroid==2.4.2            # via pylint
 async-timeout==3.0.1      # via -r requirements.txt, aiohttp, aioredis
 attrs==20.2.0             # via -r requirements.txt, aiohttp, black, flake8-bugbear, pytest
 backcall==0.2.0           # via ipython
-beautifulsoup4==4.9.2     # via -r requirements-dev.in
+beautifulsoup4==4.9.3     # via -r requirements-dev.in
 billiard==3.6.3.0         # via -r requirements.txt, celery
 black==19.10b0            # via -r requirements-dev.in
 bleach==3.1.5             # via -r requirements.txt
