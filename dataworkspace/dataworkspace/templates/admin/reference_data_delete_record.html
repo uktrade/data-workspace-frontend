@@ -1,9 +1,5 @@
 {% extends "admin/delete_selected_confirmation.html" %}
 {% load static admin_urls core_tags %}
-{% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static "admin.css" %}">
-{% endblock extrastyle %}
 {% block breadcrumbs %}
   <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">Home</a>
