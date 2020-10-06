@@ -162,9 +162,17 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                 reference_dataset_id__in=circular_reference_datasets
             ).values_list('id', flat=True)
 
-        choices_to_hide = list(linked_reference_dataset_fields) + list(
-            circular_reference_datasets_fields
+        # Hide fields belonging to deleted reference datasets
+        deleted_reference_dataset_fields = ReferenceDatasetField.objects.filter(
+            reference_dataset__deleted=True
+        ).values_list('id', flat=True)
+
+        choices_to_hide = (
+            list(linked_reference_dataset_fields)
+            + list(circular_reference_datasets_fields)
+            + list(deleted_reference_dataset_fields)
         )
+
         self.fields['linked_reference_dataset_field'].choices = sorted(
             [
                 x
