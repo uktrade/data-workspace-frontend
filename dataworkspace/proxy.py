@@ -80,6 +80,13 @@ async def async_main():
     # will be sent when the site is embedded in an iframe
     embed_path = '/visualisations/link'
 
+    def _is_embed_path(url):
+        url_parsed = URL(url)
+        return (
+            url_parsed.path.startswith(f'{embed_path}/')
+            and url_parsed.host == root_domain_no_port
+        )
+
     root_domain_no_port, _, root_port_str = root_domain.partition(':')
     try:
         root_port = int(root_port_str)
@@ -697,7 +704,7 @@ async def async_main():
             upstream_ws = await upstream_connection
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_ws = await with_session_cookie(
-                web.WebSocketResponse(protocols=protocols)
+                web.WebSocketResponse(protocols=protocols), '/', 'Lax'
             )
 
             await downstream_ws.prepare(downstream_request)
@@ -800,7 +807,9 @@ async def async_main():
                     headers=CIMultiDict(
                         without_transfer_encoding(upstream_response) + response_headers
                     ),
-                )
+                ),
+                '/',
+                'Lax',
             )
             await downstream_response.prepare(downstream_request)
             async for chunk in upstream_response.content.iter_any():
@@ -974,7 +983,9 @@ async def async_main():
                             set_session_value, redirect_uri_final
                         )
                     },
-                )
+                ),
+                redirect_from_sso_path,
+                'None' if _is_embed_path(redirect_uri_final) else 'Lax',
             )
 
         @web.middleware
@@ -1030,11 +1041,19 @@ async def async_main():
                 await set_session_value(
                     session_token_key, sso_response_json['access_token']
                 )
+
+                cookie_path, cookie_same_site = (
+                    (embed_path, 'None')
+                    if _is_embed_path(redirect_uri_final_from_session)
+                    else ('/', 'Lax')
+                )
                 return await with_new_session_cookie(
                     web.Response(
                         status=302,
                         headers={'Location': redirect_uri_final_from_session},
-                    )
+                    ),
+                    cookie_path,
+                    cookie_same_site,
                 )
 
             # Get profile from Redis cache to avoid calling SSO on every request

@@ -1090,7 +1090,7 @@ class TestVisualisationLinkView:
             in response['content-security-policy']
         )
         assert (
-            'frame-ancestors dataworkspace.test:8000 https://authorized-embedder.com'
+            'frame-ancestors dataworkspace.test:8000 http://authorized-embedder.com'
             in response['content-security-policy']
         )
 
