@@ -33,7 +33,7 @@ def update_linked_reference_datasets(apps, schema_editor):
         display_field.reference_dataset = field.reference_dataset
         display_field.data_type = 8
         display_field.name = f'{original_field_name}: {linked_display_name_field.name}'
-        display_field.description = linked_display_name_field.name
+        display_field.description = linked_display_name_field.description
         display_field.relationship_name = original_column_name
         display_field.linked_reference_dataset_field = linked_display_name_field
         display_field.save()

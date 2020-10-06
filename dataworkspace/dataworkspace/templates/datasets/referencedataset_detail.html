@@ -91,11 +91,7 @@
           {% for field in fields %}
               <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">{{ field.name }}</dt>
-                {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
-                <dd class="govuk-summary-list__value">{{ field.linked_reference_dataset_field.description }}</dd>
-                {% else %}
-                  <dd class="govuk-summary-list__value">{{ field.description }}</dd>
-                {% endif %}
+                <dd class="govuk-summary-list__value">{{ field.description }}</dd>
               </div>
           {% empty %}
             <div class="govuk-summary-list__row">
