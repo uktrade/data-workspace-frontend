@@ -8,6 +8,7 @@ services:
     image: data-workspace
     ports:
       - "8000:8000"
+      - "4444:4444"
     env_file: .envs/dev.env
     links:
       - "data-workspace-postgres"
