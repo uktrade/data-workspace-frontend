@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-10-08
+
+### Added
+- A mirrors-sync-cran-binary Docker image has been added that builds R packages and uploads to a new CRAN mirror
+- A new ECS task definition and schedule has been added to terraform to provision and run the new script on a daily basis
+
+### Changed
+- The rstudio and visualisation-base-r Docker images have been updated to have two CRAN mirrors defined
+
 ## 2020-10-02
 
 ### Added

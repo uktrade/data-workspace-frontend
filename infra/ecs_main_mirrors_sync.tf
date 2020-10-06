@@ -76,6 +76,35 @@ data "template_file" "mirrors_sync_container_definitions_cran" {
   }
 }
 
+resource "aws_ecs_task_definition" "mirrors_sync_cran_binary" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  family                = "jupyterhub-mirrors-sync-cran-binary"
+  container_definitions = "${data.template_file.mirrors_sync_container_definitions_cran_binary.rendered}"
+  execution_role_arn    = "${aws_iam_role.mirrors_sync_task_execution.arn}"
+  task_role_arn         = "${aws_iam_role.mirrors_sync_task.arn}"
+  network_mode          = "awsvpc"
+  cpu                   = "${local.mirrors_sync_container_cpu}"
+  memory                = "${local.mirrors_sync_container_memory}"
+  requires_compatibilities = ["FARGATE"]
+}
+
+data "template_file" "mirrors_sync_container_definitions_cran_binary" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  template = "${file("${path.module}/ecs_main_mirrors_sync_cran_binary_container_definition.json")}"
+
+  vars {
+    container_image    = "${var.mirrors_sync_cran_binary_container_image}"
+    container_name     = "${local.mirrors_sync_cran_binary_container_name}"
+    container_cpu      = "${local.mirrors_sync_cran_binary_container_cpu}"
+    container_memory   = "${local.mirrors_sync_cran_binary_container_memory}"
+
+    log_group  = "${aws_cloudwatch_log_group.mirrors_sync.name}"
+    log_region = "${data.aws_region.aws_region.name}"
+
+    mirrors_bucket_name = "${var.mirrors_bucket_name}"
+  }
+}
+
 resource "aws_ecs_task_definition" "mirrors_sync_pypi" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   family                = "jupyterhub-mirrors-sync-pypi"
@@ -376,6 +405,26 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_scheduled_task" {
   }
 }
 
+resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_scheduled_task" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  target_id = "${var.prefix}-mirror-cran-binary"
+  arn       = "${aws_ecs_cluster.main_cluster.arn}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.name}"
+  role_arn  = "${aws_iam_role.mirrors_sync_events.arn}"
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran_binary.arn}"
+    launch_type = "FARGATE"
+    network_configuration {
+      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
+      subnets =["${aws_subnet.public.*.id}"]
+      security_groups = ["${aws_security_group.mirrors_sync.id}"]
+      assign_public_ip = true
+    }
+  }
+}
+
 resource "aws_cloudwatch_event_target" "mirrors_sync_nltk_scheduled_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-pypi"
@@ -429,6 +478,7 @@ data "aws_iam_policy_document" "mirrors_sync_events_run_tasks" {
 
     resources = [
       "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_cran.family}:*",
+      "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_cran_binary.family}:*",
       "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_conda.family}:*",
       "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_pypi.family}:*",
       "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_nltk.family}:*",

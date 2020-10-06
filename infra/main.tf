@@ -64,6 +64,7 @@ variable "cloudwatch_destination_arn" {}
 
 variable "mirrors_bucket_name" {}
 variable "mirrors_sync_container_image" {}
+variable "mirrors_sync_cran_binary_container_image" {}
 variable "mirrors_data_bucket_name" {}
 
 variable "sentry_dsn" {}
@@ -167,6 +168,10 @@ locals {
   mirrors_sync_container_name    = "jupyterhub-mirrors-sync"
   mirrors_sync_container_memory  = 8192
   mirrors_sync_container_cpu     = 1024
+
+  mirrors_sync_cran_binary_container_name    = "jupyterhub-mirrors-sync-cran-binary"
+  mirrors_sync_cran_binary_container_memory  = 2048
+  mirrors_sync_cran_binary_container_cpu     = 1024
 
   healthcheck_container_port = 8888
   healthcheck_container_name = "healthcheck"
