@@ -372,6 +372,20 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             )
         return relationship_name
 
+    def clean(self):
+        cleaned = super().clean()
+        if (
+            cleaned['data_type'] != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+            and self.cleaned_data['linked_reference_dataset_field']
+        ):
+            self.add_error(
+                'data_type',
+                forms.ValidationError(
+                    'Please select the "Linked Reference Dataset Field" data type'
+                ),
+            )
+        return cleaned
+
 
 class ReferenceDataRowDeleteForm(forms.Form):
     id = forms.CharField(widget=forms.HiddenInput())

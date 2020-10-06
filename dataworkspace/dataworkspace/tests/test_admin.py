@@ -117,6 +117,43 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, 'Please select only one unique identifier field')
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
+    def test_create_reference_dataset_invalid_data_type(self):
+        reference_dataset = self._create_reference_dataset()
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse('admin:datasets_referencedataset_add'),
+            {
+                'name': 'test ref 1',
+                'table_name': 'ref_test1',
+                'slug': 'test-ref-1',
+                'short_description': 'test description that is short',
+                'fields-TOTAL_FORMS': 2,
+                'fields-INITIAL_FORMS': 1,
+                'fields-MIN_NUM_FORMS': 1,
+                'fields-MAX_NUM_FORMS': 1000,
+                'fields-0-name': 'field1',
+                'fields-0-column_name': 'field',
+                'fields-0-data_type': 2,
+                'fields-0-description': 'A field',
+                'fields-0-is_identifier': 'on',
+                'fields-0-is_display_name': 'on',
+                'fields-1-name': 'field2',
+                'fields-1-column_name': 'field',
+                'fields-1-data_type': 2,
+                'fields-1-description': 'Another field',
+                'fields-1-linked_reference_dataset_field': reference_dataset.fields.get(
+                    is_identifier=True
+                ).id,
+            },
+        )
+        self.assertContains(
+            response, 'Please select the "Linked Reference Dataset Field" data type'
+        )
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
     def test_create_reference_dataset_duplicate_column_names(self):
         num_datasets = ReferenceDataset.objects.count()
         response = self._authenticated_post(
