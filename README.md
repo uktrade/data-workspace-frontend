@@ -44,6 +44,10 @@ docker-compose run \
 For other commands, replace `makemigrations` with the name of the command.
 
 
+## Debugging in docker
+
+See the [remote debugging docs](./docs/Remote%20Debugging.md)
+
 ## Running tests
 
 ```bash
