@@ -43,7 +43,7 @@ REDIS_MAX_AGE = 60 * 60 * 9
 SESSION_KEY = 'SESSION'
 
 
-def redis_session_middleware(redis_pool, root_domain_no_port):
+def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
     def get_secret_cookie_value():
         return secrets.token_urlsafe(64)
 
@@ -101,11 +101,18 @@ def redis_session_middleware(redis_pool, root_domain_no_port):
                 == 'https'
                 else ''
             )
+
+            # Visualisations embedded in other sites must have SameSite=None cookies. We restrict
+            # those cookies to only be sent for visualisation paths. So, for example, they cannot
+            # be used for Django admin
+            is_embed = request.url.path.startswith(f'{embed_path}/')
+            path, same_site = (embed_path, 'None') if is_embed else ('/', 'Lax')
+
             # aiohttp's set_cookie doesn't seem to support the SameSite attribute
             response.headers.add(
                 'set-cookie',
                 f'{COOKIE_NAME}={cookie_value}; domain={root_domain_no_port}; expires={expires}; '
-                f'Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path=/; SameSite=Lax{secure}',
+                f'Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path={path}; SameSite={same_site}{secure}',
             )
             return response
 

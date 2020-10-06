@@ -225,7 +225,10 @@ def tools_html_POST(request):
     return redirect(redirect_target)
 
 
-@csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
+@csp_update(
+    frame_src=settings.QUICKSIGHT_DASHBOARD_HOST,
+    frame_ancestors=settings.VISUALISATION_EMBED_DOMAINS,
+)
 def _get_embedded_quicksight_dashboard(request, dashboard_id):
     dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(
         dashboard_id, request.user
