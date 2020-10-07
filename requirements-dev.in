@@ -25,4 +25,5 @@ lxml
 selenium
 remote-pdb==2.1.0
 remote-pdb-client==1.0.4
-pydevd-pycharm~=202.7319.64
+pydevd-pycharm
+debugpy

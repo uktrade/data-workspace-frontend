@@ -41,4 +41,43 @@ is set to the path of your dev environment.
 
 ## VSCode
 
-Coming soon...
+Below are the basic steps for debugging remotely with vscode. They are confirmed to work but may needs some tweaks so feel free to update the docs.
+
+1. Install the Docker and Python debug plugins
+2. Add a remote debug configuration to your `launch.json`
+    ```json
+    {
+      "configurations": [
+        {
+          "name": "Python: Remote Attach",
+          "type": "python",
+          "request": "attach",
+          "connect": {
+            "host": "0.0.0.0",
+            "port": 4444
+          },
+          "pathMappings": [
+            {
+              "localRoot": "${workspaceFolder}/dataworkspace",
+              "remoteRoot": "/dataworkspace"
+            }
+          ]
+        }
+      ]
+    }
+    ```
+3. Add the following code snippet to the file that you wish to debug  
+    ```python
+    import debugpy
+    debugpy.listen(('0.0.0.0', 4444))
+    debugpy.wait_for_client()
+    ```
+4. Set a breakpoint in your code  
+    `breakpoint()`
+5. Bring up the containers  
+    ` docker-compose -f docker-compose-dev.yml up`
+6. Start the remote python debugger  
+    ![Vscode run debug](./images/vscode-run-debug.png)
+7. Load the relevant page http://dataworkspace.test:8000
+8. Start debugging  
+    ![vscode debugger](./images/vscode-debugger-output.png)
