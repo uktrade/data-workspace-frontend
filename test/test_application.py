@@ -2284,47 +2284,6 @@ class TestApplication(unittest.TestCase):
         assert "ONS (1)" in with_dit_and_ons_filters
         assert "HMRC (1)" in with_dit_and_ons_filters
 
-    @async_test
-    async def test_can_embed_visualisation(self):
-        cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
-
-        cleanup_embedder = await create_embedder()
-        self.add_async_cleanup(cleanup_embedder)
-
-        is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
-        auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
-            }
-        }
-        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
-
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
-
-        browser = await get_browser()
-        self.add_async_cleanup(browser.close)
-
-        page = await browser.newPage()
-        await page.goto('http://authorized-embedder.com:8010/embed')
-
-        iframe_element = await page.querySelector('iframe')
-        iframe_content_frame = await iframe_element.contentFrame()
-        iframe_html = await iframe_content_frame.content()
-
-        # A "Visualisation not found" showing in the iframe is a success for a
-        # visualisation that doesn't exist, since it means we've got all the
-        # CSP headers right
-        assert 'Visualisation not found' in iframe_html
-
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -2416,24 +2375,6 @@ async def create_mirror():
     await mirror_site.start()
 
     return mirror_runner.cleanup
-
-
-async def create_embedder():
-    async def handle(request):
-        return web.Response(
-            body=b'<iframe src="http://dataworkspace.test:8000/visualisations/link/9a7953c8-b4a9-473b-b16e-f5f79cc8af52">',
-            content_type='text/html',
-            status=200,
-        )
-
-    embedder_app = web.Application()
-    embedder_app.add_routes([web.get('/embed', handle)])
-    embedder_runner = web.AppRunner(embedder_app)
-    await embedder_runner.setup()
-    embedder_site = web.TCPSite(embedder_runner, '0.0.0.0', 8010)
-    await embedder_site.start()
-
-    return embedder_runner.cleanup
 
 
 async def create_sentry():
