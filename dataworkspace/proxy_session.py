@@ -70,12 +70,12 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
         # prepared, which is done explicitly for streaming responses before
         # the handler returns
 
-        async def with_new_cookie(response):
+        async def with_new_cookie(response, path, same_site):
             nonlocal cookie_value
             cookie_value = get_secret_cookie_value()
-            return await with_cookie(response)
+            return await with_cookie(response, path, same_site)
 
-        async def with_cookie(response):
+        async def with_cookie(response, path, same_site):
             nonlocal cookie_value
 
             if not cookie_value:
@@ -101,12 +101,6 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
                 == 'https'
                 else ''
             )
-
-            # Visualisations embedded in other sites must have SameSite=None cookies. We restrict
-            # those cookies to only be sent for visualisation paths. So, for example, they cannot
-            # be used for Django admin
-            is_embed = request.url.path.startswith(f'{embed_path}/')
-            path, same_site = (embed_path, 'None') if is_embed else ('/', 'Lax')
 
             # aiohttp's set_cookie doesn't seem to support the SameSite attribute
             response.headers.add(

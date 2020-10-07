@@ -225,10 +225,6 @@ def tools_html_POST(request):
     return redirect(redirect_target)
 
 
-@csp_update(
-    frame_src=settings.QUICKSIGHT_DASHBOARD_HOST,
-    frame_ancestors=settings.VISUALISATION_EMBED_DOMAINS,
-)
 def _get_embedded_quicksight_dashboard(request, dashboard_id):
     dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(
         dashboard_id, request.user
@@ -261,11 +257,15 @@ def quicksight_start_polling_sync_and_redirect(request):
 
 
 @require_GET
+@csp_update(
+    frame_src=settings.QUICKSIGHT_DASHBOARD_HOST,
+    frame_ancestors=settings.VISUALISATION_EMBED_DOMAINS,
+)
 def visualisation_link_html_view(request, link_id):
     try:
         visualisation_link = VisualisationLink.objects.get(id=link_id)
     except VisualisationLink.DoesNotExist:
-        return HttpResponse(status=404)
+        return HttpResponse('Visualisation not found', status=404)
 
     if not visualisation_link.visualisation_catalogue_item.user_has_access(
         request.user
