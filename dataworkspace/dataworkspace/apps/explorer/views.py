@@ -283,6 +283,13 @@ class DeleteQueryView(DeleteView):
 
 
 class PlayQueryView(View):
+    def _schema_info(self, request):
+        schema = schema_info(
+            user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
+        )
+        # used for autocomplete
+        return schema, ['.'.join(schema_table) for schema_table, _ in schema]
+
     def get(self, request):
         if url_get_query_id(request):
             query = get_object_or_404(
@@ -297,6 +304,8 @@ class PlayQueryView(View):
             query = Query(sql=log.sql, title="Playground", connection=log.connection)
             return self.render_with_sql(request, query)
 
+        schema, tables_columns = self._schema_info(request)
+
         return render(
             self.request,
             'explorer/home.html',
@@ -304,10 +313,8 @@ class PlayQueryView(View):
                 'title': 'Playground',
                 'form': QueryForm(initial={"sql": request.GET.get('sql')}),
                 'form_action': self.get_form_action(request),
-                'schema': schema_info(
-                    user=request.user,
-                    connection_alias=settings.EXPLORER_DEFAULT_CONNECTION,
-                ),
+                'schema': schema,
+                'schema_tables': tables_columns,
             },
         )
 
@@ -395,9 +402,11 @@ class PlayQueryView(View):
             form=form,
             log=log,
         )
-        context['schema'] = schema_info(
-            user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
-        )
+
+        schema, tables_columns = self._schema_info(request)
+
+        context['schema'] = schema
+        context['schema_tables'] = tables_columns
         context['form_action'] = self.get_form_action(request)
         return render(self.request, 'explorer/home.html', context)
 
