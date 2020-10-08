@@ -1274,8 +1274,8 @@ class ReferenceDatasetField(TimeStampedUserModel):
         max_length=255,
         blank=True,
         null=True,
-        help_text='Descriptive column name for the field - '
-        'Column name will be used in external databases',
+        help_text='Descriptive name for the field. This name is used in the Data Workspace '
+        'database. Leave blank for linked reference dataset fields',
         validators=[
             RegexValidator(
                 regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$',
@@ -1304,8 +1304,10 @@ class ReferenceDatasetField(TimeStampedUserModel):
         max_length=255,
         blank=True,
         null=True,
-        help_text='Descriptive relationship name for linked reference dataset fields - '
-        'Relationship name will be used as a foreign key in the external databases',
+        help_text='For use with linked reference dataset fields only. Give a name for the '
+        'linked reference dataset, which will be appended with "_id" to form a foreign key '
+        'in the database table. Where multiple fields are selected from the same linked '
+        'reference dataset, the same name should be used',
         validators=[
             RegexValidator(
                 regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$',
