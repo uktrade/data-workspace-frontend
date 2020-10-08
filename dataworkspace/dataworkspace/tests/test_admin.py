@@ -150,7 +150,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             },
         )
         self.assertContains(
-            response, 'Please select the "Linked Reference Dataset Field" data type'
+            response, 'Please select the Linked Reference Dataset Field data type'
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 

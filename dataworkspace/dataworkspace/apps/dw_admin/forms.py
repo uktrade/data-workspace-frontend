@@ -381,7 +381,7 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             self.add_error(
                 'data_type',
                 forms.ValidationError(
-                    'Please select the "Linked Reference Dataset Field" data type'
+                    'Please select the Linked Reference Dataset Field data type'
                 ),
             )
         return cleaned
