@@ -127,7 +127,8 @@ RUN \
     npm cache clean --force && \
     node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean && \
     echo '[global]' > /etc/pip.conf && \
-    echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf
+    echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
+    echo 'no-cache-dir = false' >> /etc/pip.conf
 
 COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2020-10-08
+## 2020-10-09
 
 ### Added
 - A mirrors-sync-cran-binary Docker image has been added that builds R packages and uploads to a new CRAN mirror
@@ -12,6 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - The rstudio and visualisation-base-r Docker images have been updated to have two CRAN mirrors defined
+- Bumped Theia and vscode-python extension to support opening notebooks
+- In Theia allow Python package to be installed into their default location rather than the home directory
+- Don't cache pip packages in Theia and JupyterLab Python to use less space
+
+## 2020-10-07
+
+### Changed
+
+- Fixed embedding visualisations for users that haven't visited it
 
 ## 2020-10-02
 
@@ -56,6 +65,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - A blank "Data Explorer v2" tool with ip restrictions and waffle flag to protect access, in preparation for integrating the existing Data Explorer code.
+
+## 2020-09-23
+
+### Added
+
+- linked_reference_dataset_field and relationship_name have now been added to the ReferenceDatasetField model
+
+### Changed
+
+- ReferenceDatasetField.column_name is now nullable as fields of type foreign key now use relationship_name instead
 
 ## 2020-09-17
 

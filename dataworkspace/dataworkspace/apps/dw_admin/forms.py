@@ -5,7 +5,6 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core import validators
-from django.core.exceptions import ValidationError
 from django.db import connections, transaction
 from django.db.utils import DatabaseError
 from django.template.loader import get_template
@@ -14,7 +13,6 @@ from django.utils.safestring import mark_safe
 from adminsortable2.admin import CustomInlineFormSet
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 
-from dataworkspace.apps.datasets.model_utils import has_circular_link
 from dataworkspace.apps.datasets.models import (
     SourceLink,
     DataSet,
@@ -77,11 +75,7 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
             raise forms.ValidationError('Please ensure column names are unique')
 
         # Ensure field names are not duplicated
-        names = [
-            x.cleaned_data['name']
-            for x in self.forms
-            if x.cleaned_data.get('name') is not None
-        ]
+        names = self._get_all_values_for_field('name')
         if len(names) != len(set(names)):
             raise forms.ValidationError('Please ensure field names are unique')
 
@@ -93,6 +87,37 @@ class ReferenceDataInlineFormset(CustomInlineFormSet):
             )
         if len(display_names) > 1:
             raise forms.ValidationError('Please select only one display name field')
+
+        # Ensure column names dont clash with relationship names
+        if set(column_names) & set(self._get_all_values_for_field('relationship_name')):
+            raise forms.ValidationError(
+                'Please ensure column names do not clash with relationship names'
+            )
+
+        # Ensure fields with the same relationship name point to the same underlying dataset
+        relationships = {}
+        for form in self.forms:
+            if (
+                not form.cleaned_data.get('relationship_name', None)
+                or not form.is_valid()
+            ):
+                continue
+
+            relationship_name = form.cleaned_data['relationship_name']
+            if relationship_name not in relationships:
+                relationships[relationship_name] = form.cleaned_data[
+                    'linked_reference_dataset_field'
+                ].reference_dataset
+            else:
+                if (
+                    relationships[relationship_name]
+                    != form.cleaned_data[
+                        'linked_reference_dataset_field'
+                    ].reference_dataset
+                ):
+                    raise forms.ValidationError(
+                        'Fields with the same relationship name must point to the same underlying reference dataset'
+                    )
 
 
 class ReferenceDataFieldInlineForm(forms.ModelForm):
@@ -110,71 +135,119 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             'name',
             'column_name',
             'data_type',
-            'linked_reference_dataset',
+            'linked_reference_dataset_field',
             'description',
             'is_identifier',
-            'is_display_name',
             'sort_order',
         )
 
     def __init__(self, *args, **kwargs):
         self.reference_dataset = kwargs.pop('parent', None)
         super().__init__(*args, **kwargs)
-        # Hide the option of a linked reference dataset if none exist to link to
-        if not self.fields['linked_reference_dataset'].queryset.exists():
-            self.fields['data_type'].choices = [
+
+        # Hide linked reference datasets fields that are themselves linked to
+        # other reference dataset fields
+        linked_reference_dataset_fields = ReferenceDatasetField.objects.filter(
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+        ).values_list('id', flat=True)
+
+        # Hide all fields from reference datasets that have a linked field
+        # pointing to a field in the current dataset (circular link)
+        circular_reference_datasets_fields = []
+        if self.reference_dataset.id:
+            circular_reference_datasets = ReferenceDatasetField.objects.filter(
+                linked_reference_dataset_field__reference_dataset=self.reference_dataset
+            ).values_list('reference_dataset_id', flat=True)
+            circular_reference_datasets_fields = ReferenceDatasetField.objects.filter(
+                reference_dataset_id__in=circular_reference_datasets
+            ).values_list('id', flat=True)
+
+        # Hide fields belonging to deleted reference datasets
+        deleted_reference_dataset_fields = ReferenceDatasetField.objects.filter(
+            reference_dataset__deleted=True
+        ).values_list('id', flat=True)
+
+        choices_to_hide = (
+            list(linked_reference_dataset_fields)
+            + list(circular_reference_datasets_fields)
+            + list(deleted_reference_dataset_fields)
+        )
+
+        self.fields['linked_reference_dataset_field'].choices = sorted(
+            [
                 x
-                for x in self.fields['data_type'].choices
-                if x[0] != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
-            ]
+                for x in self.fields['linked_reference_dataset_field'].choices
+                if x[0] not in choices_to_hide
+            ],
+            key=lambda x: x[1],
+        )
 
         # Hide the linked dataset add/edit buttons on the inline formset
-        self.fields['linked_reference_dataset'].widget.can_add_related = False
-        self.fields['linked_reference_dataset'].widget.can_change_related = False
-        self.fields['linked_reference_dataset'].widget.can_delete_related = False
+        self.fields['linked_reference_dataset_field'].widget.can_add_related = False
+        self.fields['linked_reference_dataset_field'].widget.can_change_related = False
+        self.fields['linked_reference_dataset_field'].widget.can_delete_related = False
 
         if self.instance.id:
             # Do not allow changing the data type of a foreign key
             if self.instance.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                 self.fields['data_type'].disabled = True
             # Disable the relationship selector if the data type is not foreign key
-            elif self.fields['linked_reference_dataset'].initial is None:
-                self.fields['linked_reference_dataset'].disabled = True
+            elif self.fields['linked_reference_dataset_field'].initial is None:
+                self.fields['linked_reference_dataset_field'].disabled = True
             self.fields['column_name'].disabled = True
+            self.fields['relationship_name'].disabled = True
 
-    def clean_linked_reference_dataset(self):
+    def clean_linked_reference_dataset_field(self):
         cleaned = self.cleaned_data
-        field = self.instance
+
         if cleaned.get('data_type') == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
             # Ensure a reference dataset to link to was provided
-            if cleaned.get('linked_reference_dataset') is None:
-                raise ValidationError('Please select a reference data set to link to')
+            if cleaned.get('linked_reference_dataset_field') is None:
+                raise forms.ValidationError(
+                    'Please select a reference data set field to link to'
+                )
 
             # Ensure a reference dataset field cannot link to it's own parent
-            if self.reference_dataset == cleaned['linked_reference_dataset']:
-                raise ValidationError(
+            if (
+                self.reference_dataset
+                == cleaned['linked_reference_dataset_field'].reference_dataset
+            ):
+                raise forms.ValidationError(
                     'A reference dataset record cannot point to itself'
                 )
 
-            # Do not allow users to change a foreign key relationship if records exist
+            # Ensure a reference dataset field cannot link to a field that is itself linked
+            # to another reference dataset field
             if (
-                field.id
-                and cleaned['linked_reference_dataset']
-                != field.linked_reference_dataset
+                cleaned['linked_reference_dataset_field'].data_type
+                == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
             ):
-                matching_records = self.reference_dataset.get_records().exclude(
-                    **{field.column_name: None}
+                raise forms.ValidationError(
+                    'A reference dataset field cannot point to another field that is itself linked'
                 )
-                if matching_records.exists():
+
+            # Ensure a reference dataset field cannot link to a field in a dataset that has a
+            # linked field pointing to a field in the current dataset (circular link)
+            if self.reference_dataset.id:
+                circular_reference_datasets = ReferenceDatasetField.objects.filter(
+                    data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+                    linked_reference_dataset_field__reference_dataset=self.reference_dataset,
+                ).values_list('reference_dataset_id', flat=True)
+                if (
+                    cleaned['linked_reference_dataset_field'].reference_dataset.id
+                    in circular_reference_datasets
+                ):
                     raise forms.ValidationError(
-                        'Unable to change linked reference dataset when '
-                        'relations exist in this dataset'
+                        'A reference dataset field cannot point to another field that points back '
+                        'to this dataset (circular link)'
                     )
 
             # If this reference dataset syncs with an external database we need
             # to ensure any linked fields also sync with the same database
             ext_db = self.reference_dataset.external_database
-            linked_ext_db = cleaned['linked_reference_dataset'].external_database
+            linked_ext_db = cleaned[
+                'linked_reference_dataset_field'
+            ].reference_dataset.external_database
             if ext_db is not None and ext_db != linked_ext_db:
                 raise forms.ValidationError(
                     'Linked reference dataset does not exist on external database {}'.format(
@@ -182,15 +255,7 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                     )
                 )
 
-            # Ensure a linked to reference dataset doesn't link back to this dataset
-            if has_circular_link(
-                self.reference_dataset, cleaned['linked_reference_dataset']
-            ):
-                raise ValidationError(
-                    'Unable to link to a dataset that links to this dataset'
-                )
-
-        return cleaned['linked_reference_dataset']
+        return cleaned['linked_reference_dataset_field']
 
     def clean_data_type(self):
         orig_data_type = self.instance.data_type
@@ -235,14 +300,14 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             cleaned.get('is_identifier')
             and cleaned.get('data_type') == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
         ):
-            raise ValidationError(
+            raise forms.ValidationError(
                 'Identifier field cannot be linked reference data type'
             )
         return cleaned.get('is_identifier')
 
     def clean_column_name(self):
-        column_name = self.cleaned_data['column_name']
-        original_column_name = self.instance.column_name
+        cleaned = self.cleaned_data
+        column_name = cleaned['column_name']
         if column_name in self._reserved_column_names:
             raise forms.ValidationError(
                 '"{}" is a reserved column name (along with: "{}")'.format(
@@ -252,9 +317,74 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                     ),
                 )
             )
-        if self.instance.id and column_name and column_name != original_column_name:
-            raise forms.ValidationError('column name cannot be updated')
+
+        # Saving a dataset with no fields results in data_type not being
+        # included in the cleaned data as its a mandatory field
+        if not cleaned.get('data_type'):
+            return column_name
+
+        if (
+            not column_name
+            and cleaned['data_type'] != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+        ):
+            raise forms.ValidationError("This field type must have a column name")
+        if (
+            column_name
+            and cleaned['data_type'] == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+        ):
+            raise forms.ValidationError("This field type cannot have a column name")
         return column_name
+
+    def clean_relationship_name(self):
+        cleaned = self.cleaned_data
+        relationship_name = cleaned['relationship_name']
+
+        if relationship_name in self._reserved_column_names:
+            raise forms.ValidationError(
+                '"{}" is a reserved column name (along with: "{}")'.format(
+                    relationship_name,
+                    '", "'.join(
+                        [
+                            x
+                            for x in self._reserved_column_names
+                            if x != relationship_name
+                        ]
+                    ),
+                )
+            )
+
+        # Saving a dataset with no fields results in data_type not being
+        # included in the cleaned data as its a mandatory field
+        if not cleaned.get('data_type'):
+            return relationship_name
+
+        if (
+            not relationship_name
+            and cleaned['data_type'] == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+        ):
+            raise forms.ValidationError("This field type must have a relationship name")
+        if (
+            relationship_name
+            and cleaned['data_type'] != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+        ):
+            raise forms.ValidationError(
+                "This field type cannot have a relationship name"
+            )
+        return relationship_name
+
+    def clean(self):
+        cleaned = super().clean()
+        if (
+            cleaned['data_type'] != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+            and self.cleaned_data['linked_reference_dataset_field']
+        ):
+            self.add_error(
+                'data_type',
+                forms.ValidationError(
+                    'Please select the Linked Reference Dataset Field data type'
+                ),
+            )
+        return cleaned
 
 
 class ReferenceDataRowDeleteForm(forms.Form):
@@ -267,13 +397,17 @@ class ReferenceDataRowDeleteForm(forms.Form):
     def clean(self):
         # Do not allow deletion of records that are linked to by other records
         linking_fields = ReferenceDatasetField.objects.filter(
-            linked_reference_dataset=self.reference_dataset
+            linked_reference_dataset_field__reference_dataset=self.reference_dataset
         )
 
         conflicts = []
         for field in linking_fields:
             conflicts += field.reference_dataset.get_records().filter(
-                **{'{}__id'.format(field.column_name): self.cleaned_data.get('id')}
+                **{
+                    '{}__id'.format(field.relationship_name): self.cleaned_data.get(
+                        'id'
+                    )
+                }
             )
 
         if conflicts:
@@ -299,9 +433,14 @@ class ReferenceDataRecordUploadForm(forms.Form):
     def clean_file(self):
         reader = csv.DictReader(chunk.decode() for chunk in self.cleaned_data['file'])
         csv_fields = [x.lower() for x in reader.fieldnames]
-        for field in [x.name.lower() for x in self.reference_dataset.editable_fields]:
+        for field in [
+            field.name.lower()
+            if field.data_type != field.DATA_TYPE_FOREIGN_KEY
+            else field.relationship_name_for_record_forms.lower()
+            for _, field in self.reference_dataset.editable_fields.items()
+        ]:
             if field not in csv_fields:
-                raise ValidationError(
+                raise forms.ValidationError(
                     'Please ensure the uploaded csv file headers include '
                     'all the target reference dataset columns'
                 )
@@ -537,6 +676,6 @@ class VisualisationLinkForm(forms.ModelForm):
             try:
                 uuid.UUID(identifier)
             except ValueError:
-                raise ValidationError("Quicksight identifiers must be a UUID.")
+                raise forms.ValidationError("Quicksight identifiers must be a UUID.")
 
         return identifier

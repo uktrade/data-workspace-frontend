@@ -45,7 +45,8 @@ RUN \
 
 RUN \
     echo '[global]' > /etc/pip.conf && \
-    echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf
+    echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
+    echo 'no-cache-dir = false' >> /etc/pip.conf
 
 WORKDIR /root
 RUN \
@@ -68,13 +69,14 @@ RUN \
 COPY requirements.txt /root
 
 RUN \
-	python3 -m pip install pip --upgrade && \
-	pip3 install setuptools==49.2.0 --upgrade && \
-	pip3 install -r requirements.txt
-
-RUN \
 	addgroup --system --gid 4356 theia && \
 	adduser --disabled-password --gecos '' --ingroup theia --uid 4357 theia
+
+RUN \
+	python3 -m pip install pip --upgrade && \
+	pip3 install setuptools==49.2.0 --upgrade && \
+	pip3 install -r requirements.txt && \
+	chown -R theia:theia /usr/local
 
 RUN \
 	mkdir /tmp/.yarn-cache && \
@@ -88,6 +90,16 @@ RUN \
 
 COPY vscode_postgres.theia /root/plugins/vscode_postgres.theia
 COPY start.sh /start.sh
+
+# The ipython history database does not play well with mobius3, surfacing
+# occasional errors like "attempt to write a readonly database", so we store
+# it where mobius3 does not sync
+ENV IPYTHONDIR=/tmp/ipython
+
+ENV \
+    JUPYTER_CONFIG_DIR=/home/jovyan/.jupyter_theia \
+    JUPYTER_DATA_DIR=/tmp/jupyter_theia \
+    JUPYTER_RUNTIME_DIR=/tmp/jupyter_theia/runtime
 
 ENV \
 	# Theia by default puts webviews on a subdomain, requests to which I think are intercepted by

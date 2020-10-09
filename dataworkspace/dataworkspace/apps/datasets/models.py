@@ -14,12 +14,19 @@ from ckeditor.fields import RichTextField
 
 from django import forms
 from django.apps import apps
-from django.db import models, connection, connections, transaction, ProgrammingError
+from django.db import (
+    DatabaseError,
+    models,
+    connection,
+    connections,
+    transaction,
+    ProgrammingError,
+)
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.urls import reverse
-from django.core.exceptions import ValidationError
 from django.db.models import F, ProtectedError, Count, Q
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.text import slugify
@@ -37,12 +44,7 @@ from dataworkspace.apps.applications.models import (
     VisualisationTemplate,
 )
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
-from dataworkspace.apps.datasets.model_utils import (
-    external_model_class,
-    has_circular_link,
-    get_linked_field_display_name,
-    get_linked_field_identifier_name,
-)
+from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.datasets_db import get_tables_last_updated_date
 
 
@@ -663,7 +665,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     SORT_DIR_DESC = 2
     _SORT_DIR_CHOICES = ((SORT_DIR_ASC, 'Ascending'), (SORT_DIR_DESC, 'Descending'))
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
-    is_joint_dataset = models.BooleanField(default=False)
+    is_joint_dataset = models.BooleanField(default=False)  # No longer used
     group = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     table_name = models.CharField(
@@ -845,7 +847,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def delete(self, **kwargs):  # pylint: disable=arguments-differ
         # Do not allow deletion if this dataset is referenced by other datasets
         linking_fields = ReferenceDatasetField.objects.filter(
-            linked_reference_dataset=self
+            linked_reference_dataset_field__reference_dataset=self
         )
         if linking_fields.count() > 0:
             raise ProtectedError(
@@ -881,12 +883,22 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     @property
     def editable_fields(self):
         """
-        Returns related ReferenceDatasetFields that are user editable
+        Returns related ReferenceDatasetFields that are user editable.
+
+        This uses dict comprehension as there may be multiple fields of
+        type DATA_TYPE_FOREIGN_KEY pointing to the same reference dataset
+        and we are only concerned with the relationship name rather than
+        the individual field names
         :return:
         """
-        return self.fields.filter(
-            data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES
-        )
+        return {
+            f.name
+            if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+            else f.relationship_name: f
+            for f in self.fields.filter(
+                data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES
+            )
+        }
 
     @property
     def column_names(self) -> List[str]:
@@ -909,6 +921,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         Returns the associated `ReferenceDataField` with `is_display_name`=True.
         Falls back to the identifier field if no display name is set.
+
+        This is used in the DynamicReferenceDatasetRecordForm to display foreign
+        key choices
+
         :return:
         """
         try:
@@ -919,17 +935,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     @property
     def export_field_names(self) -> List[str]:
         """
-        Returns the field names for download files (including id/name from linked datasets)
+        Returns the field names for download files
         :return: list of display field names
         """
-        field_names = []
-        for field in self.fields.all():
-            if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                field_names.append(get_linked_field_identifier_name(field))
-                field_names.append(get_linked_field_display_name(field))
-            else:
-                field_names.append(field.name)
-        return field_names
+        return [f.name for f in self.fields.all()]
 
     @property
     def data_last_updated(self):
@@ -964,13 +973,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         if self.sort_field is not None:
             field = self.sort_field
             order = field.column_name
-            if (
-                field.data_type == field.DATA_TYPE_FOREIGN_KEY
-                and field.linked_reference_dataset is not None
-            ):
+            if field.data_type == field.DATA_TYPE_FOREIGN_KEY:
                 order = '{}__{}'.format(
-                    field.column_name,
-                    field.linked_reference_dataset.display_name_field.column_name,
+                    field.relationship_name,
+                    field.linked_reference_dataset_field.column_name,
                 )
             elif field.data_type == field.DATA_TYPE_AUTO_ID:
                 order = 'id'
@@ -1001,7 +1007,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             ordering = self.record_sort_order
 
         attrs = {
-            **{f.column_name: f.get_model_field() for f in self.fields.all()},
+            **{
+                f.column_name
+                if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                else f.relationship_name: f.get_model_field()
+                for f in self.fields.all()
+            },
             '__module__': 'datasets',
             '__schema_version__': self.schema_version,
             'Meta': Meta,
@@ -1096,12 +1107,18 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         saved_ids = []
 
         for record in self.get_records():
-            record_data = {
-                field.column_name: getattr(record, field.column_name)
-                for field in self.fields.exclude(
-                    data_type__in=ReferenceDatasetField.PROPERTY_DATA_TYPES
-                )
-            }
+            fields = self.fields.exclude(
+                data_type__in=ReferenceDatasetField.PROPERTY_DATA_TYPES
+            )
+            record_data = {}
+            for field in fields:
+                if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                    record_data[field.column_name] = getattr(record, field.column_name)
+                else:
+                    record_data[field.relationship_name] = getattr(
+                        record, field.relationship_name
+                    )
+
             if (
                 model_class.objects.using(external_database)
                 .filter(pk=record.id)
@@ -1165,19 +1182,9 @@ class ReferenceDatasetRecordBase(models.Model):
         abstract = True
 
     def __str__(self):
-        return self.get_display_name()
-
-    def get_display_name(self):
-        display_name_field = self.reference_dataset.display_name_field
-        if display_name_field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-            linked_record = getattr(self, display_name_field.column_name)
-            if linked_record is not None:
-                return linked_record.get_display_name()
-            return 'Unknown record'
-        return getattr(self, display_name_field.column_name, 'Unknown record')
-
-    def get_identifier(self):
-        return getattr(self, self.reference_dataset.identifier_field.column_name, None)
+        return str(
+            getattr(self, self.reference_dataset.display_name_field.column_name, None)
+        )
 
 
 class ReferenceDatasetField(TimeStampedUserModel):
@@ -1199,7 +1206,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         (DATA_TYPE_TIME, 'Time field'),
         (DATA_TYPE_DATETIME, 'Datetime field'),
         (DATA_TYPE_BOOLEAN, 'Boolean field'),
-        (DATA_TYPE_FOREIGN_KEY, 'Linked Reference Dataset'),
+        (DATA_TYPE_FOREIGN_KEY, 'Linked Reference Dataset field'),
         (DATA_TYPE_UUID, 'Universal unique identifier field'),
         (DATA_TYPE_AUTO_ID, 'Auto incrementing integer field'),
     )
@@ -1259,15 +1266,16 @@ class ReferenceDatasetField(TimeStampedUserModel):
     )
     is_display_name = models.BooleanField(
         default=False,
-        help_text='This field is the name that will be displayed when '
-        'referenced by other datasets',
+        help_text='This field is the name that will be displayed in the upload '
+        'record form when referenced by other datasets',
     )
     name = models.CharField(max_length=255, help_text='The display name for the field')
     column_name = models.CharField(
         max_length=255,
-        blank=False,
-        help_text='Descriptive column name for the field - '
-        'Column name will be used in external databases',
+        blank=True,
+        null=True,
+        help_text='Descriptive name for the field. This name is used in the Data Workspace '
+        'database. Leave blank for linked reference dataset fields',
         validators=[
             RegexValidator(
                 regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$',
@@ -1284,6 +1292,29 @@ class ReferenceDatasetField(TimeStampedUserModel):
         related_name='linked_fields',
         null=True,
         blank=True,
+    )  # No longer used
+    linked_reference_dataset_field = models.ForeignKey(
+        'self',
+        on_delete=models.PROTECT,
+        related_name='linked_dataset_fields',
+        null=True,
+        blank=True,
+    )
+    relationship_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text='For use with linked reference dataset fields only. Give a name for the '
+        'linked reference dataset, which will be appended with "_id" to form a foreign key '
+        'in the database table. Where multiple fields are selected from the same linked '
+        'reference dataset, the same name should be used',
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$',
+                message='Relationship names must start with a letter and contain only '
+                'letters, numbers, underscores and full stops.',
+            )
+        ],
     )
     sort_order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
@@ -1303,7 +1334,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         self._original_column_name = self.column_name
 
     def __str__(self):
-        return '{} field: {}'.format(self.reference_dataset.name, self.name)
+        return '{}: {}'.format(self.reference_dataset.name, self.name)
 
     def _add_column_to_db(self):
         """
@@ -1316,9 +1347,15 @@ class ReferenceDatasetField(TimeStampedUserModel):
             model_class = self.reference_dataset.get_record_model_class()
             for database in self.reference_dataset.get_database_names():
                 with connections[database].schema_editor() as editor:
-                    editor.add_field(
-                        model_class, model_class._meta.get_field(self.column_name)
-                    )
+                    if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
+                        editor.add_field(
+                            model_class, model_class._meta.get_field(self.column_name)
+                        )
+                    else:
+                        editor.add_field(
+                            model_class,
+                            model_class._meta.get_field(self.relationship_name),
+                        )
 
     def _update_db_column_name(self):
         """
@@ -1380,17 +1417,42 @@ class ReferenceDatasetField(TimeStampedUserModel):
         """
         ref_dataset = self.reference_dataset
 
-        # Disallow circular linking of reference datasets
-        if self.data_type == self.DATA_TYPE_FOREIGN_KEY and has_circular_link(
-            self.reference_dataset, self.linked_reference_dataset
+        # Ensure a reference dataset field cannot link to a field that is itself linked
+        # to another reference dataset field
+        if (
+            self.linked_reference_dataset_field
+            and self.linked_reference_dataset_field.data_type
+            == self.DATA_TYPE_FOREIGN_KEY
         ):
             raise ValidationError(
-                'Unable to link reference datasets back to each other'
+                'Unable to link reference dataset fields to another field that is itself linked'
+            )
+
+        # Ensure a reference dataset field cannot link to a field in a dataset that has a
+        # linked field pointing to a field in the current dataset (circular link)
+        circular_reference_datasets = ReferenceDatasetField.objects.filter(
+            linked_reference_dataset_field__reference_dataset=self.reference_dataset
+        ).values_list('reference_dataset_id', flat=True)
+        if (
+            self.linked_reference_dataset_field
+            and self.linked_reference_dataset_field.reference_dataset.id
+            in circular_reference_datasets
+        ):
+            raise ValidationError(
+                'Unable to link reference dataset fields to another field that points back to this dataset (circular link)'
             )
 
         # If this is a newly created field add it to the db
         if self.id is None:
-            self._add_column_to_db()
+            # For linked reference dataset fields, the foreign key column to be
+            # added is derived from the field's relationship_name. As we allow
+            # multiple fields with the same relationship_name, the column may
+            # already exist so we catch the database error.
+            try:
+                with transaction.atomic():
+                    self._add_column_to_db()
+            except DatabaseError:
+                pass
         else:
             # Otherwise update where necessary
             if self._original_column_name != self.column_name:
@@ -1411,10 +1473,25 @@ class ReferenceDatasetField(TimeStampedUserModel):
             model_class = self.reference_dataset.get_record_model_class()
             for database in self.reference_dataset.get_database_names():
                 with connections[database].schema_editor() as editor:
-                    editor.remove_field(
-                        model_class,
-                        model_class._meta.get_field(self._original_column_name),
-                    )
+                    if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
+                        editor.remove_field(
+                            model_class,
+                            model_class._meta.get_field(self._original_column_name),
+                        )
+                    else:
+                        # Don't delete the relationship if there are other fields still referencing it
+                        if (
+                            self.reference_dataset.fields.filter(
+                                relationship_name=self.relationship_name
+                            )
+                            .exclude(id=self.id)
+                            .count()
+                        ):
+                            continue
+                        editor.remove_field(
+                            model_class,
+                            model_class._meta.get_field(self.relationship_name),
+                        )
 
         # Remove reference dataset sort field if it is set to this field
         if self.reference_dataset.sort_field == self:
@@ -1444,7 +1521,10 @@ class ReferenceDatasetField(TimeStampedUserModel):
         elif self.data_type == self.DATA_TYPE_TIME:
             field_data['widget'] = forms.DateInput(attrs={'type': 'time'})
         elif self.data_type == self.DATA_TYPE_FOREIGN_KEY:
-            field_data['queryset'] = self.linked_reference_dataset.get_records()
+            field_data[
+                'queryset'
+            ] = self.linked_reference_dataset_field.reference_dataset.get_records()
+            field_data['label'] = self.relationship_name_for_record_forms
         field_data['required'] = self.is_identifier or self.required
         field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type)(**field_data)
         field.widget.attrs['required'] = field.required
@@ -1465,8 +1545,8 @@ class ReferenceDatasetField(TimeStampedUserModel):
         if self.data_type == self.DATA_TYPE_FOREIGN_KEY:
             model_config.update(
                 {
-                    'verbose_name': 'Linked Reference Dataset',
-                    'to': self.linked_reference_dataset.get_record_model_class(),
+                    'verbose_name': 'Linked Reference Dataset field',
+                    'to': self.linked_reference_dataset_field.reference_dataset.get_record_model_class(),
                     'on_delete': models.DO_NOTHING,
                 }
             )
@@ -1475,6 +1555,23 @@ class ReferenceDatasetField(TimeStampedUserModel):
         elif self.data_type == self.DATA_TYPE_AUTO_ID:
             return property(lambda x: x.id)
         return model_field(**model_config)
+
+    @property
+    def relationship_name_for_record_forms(self):
+        """
+        When editing and uploading csv's for records, the label for foreign
+        key relationships should ideally be the relationship name but this is
+        often set as a cryptic name when creating the linked fields, e.ig field_01.
+
+        Instead the string before the colon in the field name is returned.
+        If there is no colon, the relationship name is returned.
+        """
+        if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
+            return None
+
+        if ':' in self.name:
+            return self.name.split(':')[0]
+        return self.relationship_name
 
 
 class ReferenceDatasetUploadLog(TimeStampedUserModel):

@@ -10,10 +10,6 @@ from dataworkspace.apps.core.utils import (
     database_dsn,
     StreamingHttpResponseWithoutDjangoDbConnection,
 )
-from dataworkspace.apps.datasets.model_utils import (
-    get_linked_field_identifier_name,
-    get_linked_field_display_name,
-)
 from dataworkspace.apps.datasets.models import (
     SourceTable,
     ReferenceDataset,
@@ -233,19 +229,20 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
         for record in query_set:
             values = [None] * len(field_names)
             for field in ref_dataset.fields.all():
-                value = getattr(record, field.column_name)
-                # If this is a linked field display the display name and id of that linked record
                 if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                    index = field_names.index(get_linked_field_identifier_name(field))
-                    values[index] = (
-                        value.get_identifier() if value is not None else None
-                    )
-                    index = field_names.index(get_linked_field_display_name(field))
-                    values[index] = (
-                        value.get_display_name() if value is not None else None
+                    relationship = getattr(record, field.relationship_name)
+                    values[field_names.index(field.name)] = (
+                        getattr(
+                            relationship,
+                            field.linked_reference_dataset_field.column_name,
+                        )
+                        if relationship
+                        else None
                     )
                 else:
-                    values[field_names.index(field.name)] = value
+                    values[field_names.index(field.name)] = getattr(
+                        record, field.column_name
+                    )
             yield values
 
     field_names = ref_dataset.export_field_names
