@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Bumped Theia and vscode-python extension to support opening notebooks
+- In Theia allow Python package to be installed into their default location rather than the home directory
 
 ## 2020-10-07
 
