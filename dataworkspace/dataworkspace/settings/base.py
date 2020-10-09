@@ -463,15 +463,6 @@ ENABLE_DEBUG_TOOLBAR = bool(env.get('ENABLE_DEBUG_TOOLBAR', DEBUG))
 EXPLORER_SCHEMA_INCLUDE_VIEWS = False
 EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = None
 
-# if DEBUG:
-#     import socket
-#
-#     ip = socket.gethostbyname(socket.gethostname())
-#     INTERNAL_IPS = [
-#         '127.0.0.1',
-#     ]
-#     INTERNAL_IPS += [ip[:-1] + "1"]
-
 # Celery
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
