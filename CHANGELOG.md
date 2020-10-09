@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Bumped Theia and vscode-python extension to support opening notebooks
 - In Theia allow Python package to be installed into their default location rather than the home directory
+- Don't cache pip packages in Theia and JupyterLab Python to use less space
 
 ## 2020-10-07
 
