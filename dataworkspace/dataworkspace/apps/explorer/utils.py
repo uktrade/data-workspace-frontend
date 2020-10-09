@@ -5,7 +5,6 @@ from datetime import timedelta
 
 import psycopg2
 import sqlparse
-from six import text_type
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -37,7 +36,7 @@ def swap_params(sql, params):
     p = params.items() if params else {}
     for k, v in p:
         regex = re.compile(r"\$\$%s(?:\:([^\$]+))?\$\$" % str(k).lower(), re.I)
-        sql = regex.sub(text_type(v), sql)
+        sql = regex.sub(str(v), sql)
     return sql
 
 

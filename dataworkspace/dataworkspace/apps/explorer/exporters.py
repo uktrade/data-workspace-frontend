@@ -3,12 +3,12 @@ import json
 import string
 import uuid
 from datetime import datetime
+from io import BytesIO, StringIO
 
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
-from six import BytesIO, StringIO
 
 
 def get_exporter_class(format_):

@@ -4,7 +4,6 @@ from collections import Counter
 from urllib.parse import urlencode
 
 from psycopg2 import DatabaseError
-import six
 
 from django.conf import settings
 from django.contrib.auth.views import LoginView
@@ -175,7 +174,7 @@ class ListQueryView(ListView):
                     'created_at': q.created_at,
                     'is_header': False,
                     'run_count': q.run_count,
-                    'created_by_user': six.text_type(q.created_by_user.email)
+                    'created_by_user': q.created_by_user.email
                     if q.created_by_user
                     else None,
                 }
