@@ -68,13 +68,14 @@ RUN \
 COPY requirements.txt /root
 
 RUN \
-	python3 -m pip install pip --upgrade && \
-	pip3 install setuptools==49.2.0 --upgrade && \
-	pip3 install -r requirements.txt
-
-RUN \
 	addgroup --system --gid 4356 theia && \
 	adduser --disabled-password --gecos '' --ingroup theia --uid 4357 theia
+
+RUN \
+	python3 -m pip install pip --upgrade && \
+	pip3 install setuptools==49.2.0 --upgrade && \
+	pip3 install -r requirements.txt && \
+	chown -R theia:theia /usr/local
 
 RUN \
 	mkdir /tmp/.yarn-cache && \
