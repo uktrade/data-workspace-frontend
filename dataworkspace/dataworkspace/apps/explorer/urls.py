@@ -15,7 +15,6 @@ from dataworkspace.apps.explorer.views import (
 
 urlpatterns = [
     path('', login_required(PlayQueryView.as_view()), name='index'),
-    path('auth/', include('authbroker_client.urls', namespace='authbroker')),
     path(
         'download/', login_required(DownloadFromSqlView.as_view()), name='download_sql'
     ),
