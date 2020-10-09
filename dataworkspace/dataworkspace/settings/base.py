@@ -100,7 +100,6 @@ MIDDLEWARE = [
     'dataworkspace.middleware.disable_client_side_caching',
     'csp.middleware.CSPMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 if DEBUG:
