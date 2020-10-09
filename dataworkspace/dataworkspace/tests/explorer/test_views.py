@@ -1,6 +1,8 @@
 import json
 import time
 
+from django.conf import settings
+
 try:
     from django.urls import reverse
 except ImportError:
@@ -355,21 +357,18 @@ class TestHomePage:
     # second "database" we get a "user already exists" exception raised from the DB. Not handling this right now.
     @pytest.mark.xfail
     def test_multiple_connections_integration(self, staff_user, staff_client):
-        from dataworkspace.apps.explorer.app_settings import (  # pylint: disable=import-outside-toplevel
-            EXPLORER_CONNECTIONS,
-        )
         from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
             connections,
         )
 
-        c1_alias = EXPLORER_CONNECTIONS['Postgres']
+        c1_alias = settings.EXPLORER_CONNECTIONS['Postgres']
         conn = connections[c1_alias]
         c1 = conn.cursor()
         c1.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')
         c1.execute('INSERT INTO animals ( name ) VALUES (\'peacock\')')
         c1.execute('COMMIT')
 
-        c2_alias = EXPLORER_CONNECTIONS['Alt']
+        c2_alias = settings.EXPLORER_CONNECTIONS['Alt']
         conn = connections[c2_alias]
         c2 = conn.cursor()
         c2.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')
@@ -427,20 +426,17 @@ class TestSQLDownloadViews:
     # second "database" we get a "user already exists" exception raised from the DB. Not handling this right now.
     @pytest.mark.xfail
     def test_sql_download_respects_connection(self, staff_client):
-        from dataworkspace.apps.explorer.app_settings import (  # pylint: disable=import-outside-toplevel
-            EXPLORER_CONNECTIONS,
-        )
         from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
             connections,
         )
 
-        c1_alias = EXPLORER_CONNECTIONS['Postgres']
+        c1_alias = settings.EXPLORER_CONNECTIONS['Postgres']
         conn = connections[c1_alias]
         c = conn.cursor()
         c.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')
         c.execute('INSERT INTO animals ( name ) VALUES (\'peacock\')')
 
-        c2_alias = EXPLORER_CONNECTIONS['Alt']
+        c2_alias = settings.EXPLORER_CONNECTIONS['Alt']
         conn = connections[c2_alias]
         c = conn.cursor()
         c.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')

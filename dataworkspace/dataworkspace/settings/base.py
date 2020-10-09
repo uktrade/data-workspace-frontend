@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import urllib.request
+from distutils.util import strtobool
 
 from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -485,6 +486,9 @@ SASS_PROCESSOR_AUTO_INCLUDE = DEBUG
 
 ENABLE_DEBUG_TOOLBAR = bool(env.get('ENABLE_DEBUG_TOOLBAR', DEBUG))
 
+EXPLORER_SCHEMA_INCLUDE_VIEWS = False
+EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = None
+
 # if DEBUG:
 #     import socket
 #
@@ -500,3 +504,20 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 # date and time formats
 en_formats.SHORT_DATE_FORMAT = "d/m/Y"
 en_formats.SHORT_DATETIME_FORMAT = "d/m/Y H:i"
+
+
+EXPLORER_DEFAULT_ROWS = int(env.get("EXPLORER_DEFAULT_ROWS", 1000))
+EXPLORER_QUERY_TIMEOUT_MS = int(env.get("EXPLORER_QUERY_TIMEOUT_MS", 60000))
+
+EXPLORER_DEFAULT_DOWNLOAD_ROWS = int(env.get("EXPLORER_DEFAULT_DOWNLOAD_ROWS", 1000))
+
+EXPLORER_RECENT_QUERY_COUNT = int(env.get("EXPLORER_RECENT_QUERY_COUNT", 10))
+
+EXPLORER_UNSAFE_RENDERING = strtobool(env.get("EXPLORER_UNSAFE_RENDERING", '0'))
+EXPLORER_CSV_DELIMETER = env.get("EXPLORER_CSV_DELIMETER", ",")
+
+EXPLORER_DATA_EXPORTERS = [
+    ('csv', 'dataworkspace.apps.explorer.exporters.CSVExporter'),
+    ('excel', 'dataworkspace.apps.explorer.exporters.ExcelExporter'),
+    ('json', 'dataworkspace.apps.explorer.exporters.JSONExporter'),
+]

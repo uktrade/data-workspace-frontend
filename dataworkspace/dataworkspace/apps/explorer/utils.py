@@ -20,8 +20,6 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     postgres_user,
 )
-from dataworkspace.apps.explorer import app_settings
-
 
 logger = logging.getLogger('app')
 EXPLORER_PARAM_TOKEN = "$$"
@@ -100,9 +98,9 @@ def get_params_for_url(query):  # pylint: disable=inconsistent-return-statements
 
 
 def url_get_rows(request):
-    rows = request.POST.get("query-rows", str(app_settings.EXPLORER_DEFAULT_ROWS))
+    rows = request.POST.get("query-rows", str(settings.EXPLORER_DEFAULT_ROWS))
     if not rows.isnumeric():
-        return app_settings.EXPLORER_DEFAULT_ROWS
+        return settings.EXPLORER_DEFAULT_ROWS
     return int(rows)
 
 

@@ -1,10 +1,7 @@
+from django.conf import settings
 from django.forms import CharField, Field, ModelForm, ValidationError
 from django.forms.widgets import Select
 
-from dataworkspace.apps.explorer.app_settings import (
-    EXPLORER_CONNECTIONS,
-    EXPLORER_DEFAULT_CONNECTION,
-)
 from dataworkspace.apps.explorer.models import Query
 
 
@@ -32,7 +29,7 @@ class QueryForm(ModelForm):
         super(QueryForm, self).__init__(*args, **kwargs)
         self.fields['connection'].widget.choices = self.connections
         if not self.instance.connection:
-            self.initial['connection'] = EXPLORER_DEFAULT_CONNECTION
+            self.initial['connection'] = settings.EXPLORER_DEFAULT_CONNECTION
         self.fields['connection'].widget.attrs['class'] = 'form-control'
 
     def clean(self):
@@ -54,7 +51,7 @@ class QueryForm(ModelForm):
 
     @property
     def connections(self):
-        return [(v, k) for k, v in EXPLORER_CONNECTIONS.items()]
+        return [(v, k) for k, v in settings.EXPLORER_CONNECTIONS.items()]
 
     class Meta:
         model = Query

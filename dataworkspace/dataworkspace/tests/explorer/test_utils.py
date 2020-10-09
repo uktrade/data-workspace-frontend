@@ -1,5 +1,6 @@
 from unittest.mock import Mock
 
+from django.conf import settings
 from django.test import TestCase
 
 from dataworkspace.tests.explorer.factories import SimpleQueryFactory
@@ -93,14 +94,11 @@ class TestConnections(TestCase):
         from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
             connections,
         )
-        from dataworkspace.apps.explorer.app_settings import (  # pylint: disable=import-outside-toplevel
-            EXPLORER_DEFAULT_CONNECTION,
-        )
         from django.db import (  # pylint: disable=import-outside-toplevel
             connections as djcs,
         )
 
-        self.assertTrue(EXPLORER_DEFAULT_CONNECTION in connections)
+        self.assertTrue(settings.EXPLORER_DEFAULT_CONNECTION in connections)
         self.assertNotEqual(
             len(connections),
             len([_ for _ in djcs]),  # pylint: disable=unnecessary-comprehension
