@@ -19,6 +19,7 @@ Copy.prototype.init = function () {
   }
 
   this.$button = document.createElement('button');
+  this.$button.id = 'copy-code';
   this.$button.className = 'app-copy-button js-copy-button';
   this.$button.setAttribute('aria-live', 'assertive');
   this.$button.textContent = 'Copy code';
