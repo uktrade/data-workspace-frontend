@@ -86,8 +86,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'dataworkspace.apps.explorer',
     'dynamic_models',
-    'sass_processor',
-    'webpack_loader',
 ]
 
 MIDDLEWARE = [
@@ -454,35 +452,11 @@ EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'sass_processor.finders.CssFinder',
 ]
 
 STATICFILES_DIRS += [
-    os.path.join(BASE_DIR, 'apps', 'explorer', 'static'),
     os.path.join(BASE_DIR, 'static', 'assets'),
 ]
-
-WEBPACK_LOADER = {
-    'DEFAULT': {
-        'BUNDLE_DIR_NAME': 'bundles/',
-        'STATS_FILE': os.path.join(BASE_DIR, '..', 'webpack-stats.json'),
-    }
-}
-
-SASS_PROCESSOR_INCLUDE_DIRS = [
-    os.path.join(BASE_DIR, 'apps', 'explorer', 'static'),
-]
-if DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-else:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-SASS_PROCESSOR_INCLUDE_FILE_PATTERN = r'^.+\.scss$'
-
-SASS_OUTPUT_STYLE = 'compressed'
-
-SASS_PROCESSOR_ENABLED = DEBUG
-SASS_PROCESSOR_AUTO_INCLUDE = DEBUG
 
 ENABLE_DEBUG_TOOLBAR = bool(env.get('ENABLE_DEBUG_TOOLBAR', DEBUG))
 

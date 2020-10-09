@@ -1,10 +1,3 @@
-// SQL Editor
-import * as ace from 'ace-builds'
-import 'ace-builds/src-noconflict/mode-sql'
-import 'ace-builds/src-noconflict/theme-chrome'
-import 'ace-builds/src-noconflict/ext-language_tools'
-import sqlFormatter from "sql-formatter";
-
 var editor = ace.edit("ace-sql-editor", {
   mode: "ace/mode/sql",
   theme: "ace/theme/chrome",

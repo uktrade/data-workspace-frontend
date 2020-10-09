@@ -1,7 +1,5 @@
 {% load static %}
-{% load sass_tags %}
 {% load useful %}
-{% load render_bundle from webpack_loader %}
 
 <!doctype html>
 <html lang="en" class="govuk-template ">
@@ -170,9 +168,6 @@
                 window.GOVUKFrontend.initAll();
               </script>
             {% endblock %}
-
-            {% load render_bundle from webpack_loader %}
-            {% render_bundle 'index' %}
 
             {% block footer_additions %} {% endblock footer_additions %}
         {% endblock %}
