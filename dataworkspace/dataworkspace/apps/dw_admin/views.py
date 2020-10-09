@@ -17,6 +17,7 @@ from django.views.generic import FormView, CreateView
 
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
+    ReferenceDatasetField,
     SourceLink,
     DataSet,
     ReferenceDatasetUploadLog,
@@ -88,7 +89,10 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
         reference_dataset = self._get_reference_dataset()
         record_model = reference_dataset.get_record_model_class()
         field_names = ['reference_dataset'] + [
-            field.column_name for field in reference_dataset.editable_fields
+            field.column_name
+            if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+            else field.relationship_name
+            for _, field in reference_dataset.editable_fields.items()
         ]
 
         class DynamicReferenceDatasetRecordForm(forms.ModelForm):
@@ -101,8 +105,11 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
             # Add the form fields/widgets
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
-                for field in reference_dataset.editable_fields:
-                    self.fields[field.column_name] = field.get_form_field()
+                for _, field in reference_dataset.editable_fields.items():
+                    if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                        self.fields[field.column_name] = field.get_form_field()
+                    else:
+                        self.fields[field.relationship_name] = field.get_form_field()
 
         # Add validation for the custom identifier field
         setattr(
@@ -110,7 +117,6 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
             'clean_{}'.format(reference_dataset.identifier_field.column_name),
             clean_identifier,
         )
-
         return helpers.AdminForm(
             DynamicReferenceDatasetRecordForm(**self.get_form_kwargs()),
             list([(None, {'fields': field_names})]),
@@ -213,7 +219,12 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
         reader.fieldnames = [x.lower() for x in reader.fieldnames]
         reference_dataset = self._get_reference_dataset()
         record_model_class = reference_dataset.get_record_model_class()
-        field_map = {f.name.lower(): f for f in reference_dataset.fields.all()}
+        field_map = {
+            field.name.lower()
+            if field.data_type != field.DATA_TYPE_FOREIGN_KEY
+            else field.relationship_name_for_record_forms.lower(): field
+            for _, field in reference_dataset.editable_fields.items()
+        }
         self.upload_log = ReferenceDatasetUploadLog.objects.create(
             reference_dataset=reference_dataset,
             created_by=self.request.user,
@@ -225,15 +236,23 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
             )
             errors = {}
             form_data = {'reference_dataset': reference_dataset}
-            for field in reference_dataset.editable_fields:
-                header_name = field.name.lower()
+
+            for _, field in reference_dataset.editable_fields.items():
+                field_name = (
+                    field.name
+                    if field.data_type != field.DATA_TYPE_FOREIGN_KEY
+                    else field.relationship_name_for_record_forms
+                )
+                header_name = field_name.lower()
                 value = row[header_name]
                 form_field = field.get_form_field()
                 if field.data_type == field_map[header_name].DATA_TYPE_FOREIGN_KEY:
                     # If the column is a "foreign key ensure the linked dataset exists
                     link_id = None
                     if value != '':
-                        linked_dataset = field_map[header_name].linked_reference_dataset
+                        linked_dataset = field_map[
+                            header_name
+                        ].linked_reference_dataset_field.reference_dataset
                         try:
                             link_id = linked_dataset.get_record_by_custom_id(value).id
                         except linked_dataset.get_record_model_class().DoesNotExist:
@@ -242,7 +261,7 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
                             ] = 'Identifier {} does not exist in linked dataset'.format(
                                 value
                             )
-                    form_data[field.column_name + '_id'] = link_id
+                    form_data[field.relationship_name + '_id'] = link_id
                 else:
                     # Otherwise validate using the associated form field
                     try:

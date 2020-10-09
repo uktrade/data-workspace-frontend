@@ -177,7 +177,7 @@ class TestAPIReferenceDatasetView(TestCase):
             reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds, name='name', data_type=1, is_display_name=True
+            reference_dataset=linked_rds, name='name', data_type=1
         )
         rds = factories.ReferenceDatasetFactory.create(
             group=group, table_name='test_get_ref_data'
@@ -188,11 +188,19 @@ class TestAPIReferenceDatasetView(TestCase):
         field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, name='name', data_type=1
         )
-        field3 = factories.ReferenceDatasetFieldFactory.create(
+        factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
-            name='linked',
+            name='linked: id',
+            relationship_name="rel_1",
             data_type=8,
-            linked_reference_dataset=linked_rds,
+            linked_reference_dataset_field=linked_field1,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='linked: name',
+            relationship_name="rel_1",
+            data_type=8,
+            linked_reference_dataset_field=linked_field2,
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
@@ -222,7 +230,7 @@ class TestAPIReferenceDatasetView(TestCase):
                 'reference_dataset': rds,
                 field1.column_name: 1,
                 field2.column_name: 'Test record',
-                field3.column_name: link_record,
+                'rel_1': link_record,
             },
         )
         rec2 = rds.save_record(
@@ -231,7 +239,7 @@ class TestAPIReferenceDatasetView(TestCase):
                 'reference_dataset': rds,
                 field1.column_name: 2,
                 field2.column_name: 'Ánd again',
-                field3.column_name: None,
+                'rel_1': None,
             },
         )
 

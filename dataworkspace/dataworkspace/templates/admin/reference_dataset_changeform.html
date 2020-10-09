@@ -23,11 +23,21 @@
                   {% for record in instance.get_records %}
                     <tr class="form-row">
                       {% for field in fields %}
-                        {% with record|get_attr:field.column_name as value %}
-                          <td{% if value is None %} style="color: #bfc1c3"{% endif %}>
-                            {{ value|default_if_none:"Not set" }}
-                          </td>
-                        {% endwith %}
+                        {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
+                          {% with record|get_attr:field.relationship_name as relationship %}
+                            {% with relationship|get_attr:field.linked_reference_dataset_field.column_name as value %}
+                              <td{% if value is None %} style="color: #bfc1c3"{% endif %}>
+                                {{ value|default_if_none:"Not set" }}
+                              </td>
+                            {% endwith %}
+                          {% endwith %}
+                        {% else %}
+                            {% with record|get_attr:field.column_name as value %}
+                              <td{% if value is None %} style="color: #bfc1c3"{% endif %}>
+                                {{ value|default_if_none:"Not set" }}
+                              </td>
+                            {% endwith %}
+                        {% endif %}
                       {% endfor %}
                       <td class="edit">
                         <a href="{% url 'dw-admin:reference-dataset-record-edit' reference_dataset_id=instance.id record_id=record.id %}" class="button">
