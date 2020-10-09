@@ -424,7 +424,6 @@ TEMPLATES += [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'dataworkspace.apps.explorer.context_processors.expose_multiuser_setting',
             ],
         },
     }
@@ -438,7 +437,6 @@ def sort_database_config(database_list):
     return config
 
 
-MULTIUSER_DEPLOYMENT = True
 EXPLORER_CONNECTIONS = json.loads(env.get("EXPLORER_CONNECTIONS", "{}"))
 EXPLORER_DEFAULT_CONNECTION = env.get("EXPLORER_DEFAULT_CONNECTION")
 
