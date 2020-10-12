@@ -21,16 +21,6 @@ from dataworkspace.tests.explorer.factories import (
 
 
 class TestQueryListView:
-    def test_headers(self, user, client):
-        SimpleQueryFactory(title='foo - bar1', created_by_user=user)
-        SimpleQueryFactory(title='foo - bar2', created_by_user=user)
-        SimpleQueryFactory(title='foo - bar3', created_by_user=user)
-        SimpleQueryFactory(title='qux - mux', created_by_user=user)
-        resp = client.get(reverse("explorer:list_queries"))
-        assert 'foo (3)' in resp.content.decode(resp.charset)
-        assert 'foo - bar2' in resp.content.decode(resp.charset)
-        assert 'qux - mux' in resp.content.decode(resp.charset)
-
     def test_run_count(self, user, client):
         q = SimpleQueryFactory(title='foo - bar1', created_by_user=user)
         for _ in range(0, 4):
