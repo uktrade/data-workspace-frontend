@@ -20,13 +20,9 @@ from sqlalchemy.sql.sqltypes import (
     VARCHAR,
 )
 
+from django.conf import settings
 from django.core.cache import cache
 
-from dataworkspace.apps.explorer.app_settings import (
-    EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES,
-    EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES,
-    EXPLORER_SCHEMA_INCLUDE_VIEWS,
-)
 from dataworkspace.apps.explorer.connections import connections
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 
@@ -35,15 +31,15 @@ logger = logging.getLogger(__name__)
 
 # These wrappers make it easy to mock and test
 def _get_includes():
-    return EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES
+    return settings.EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES
 
 
 def _get_excludes():
-    return EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES
+    return settings.EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES
 
 
 def _include_views():
-    return EXPLORER_SCHEMA_INCLUDE_VIEWS is True
+    return settings.EXPLORER_SCHEMA_INCLUDE_VIEWS is True
 
 
 def _include_table(t):

@@ -1,6 +1,6 @@
 {% extends 'explorer/base.html' %}
 
-{% load explorer_tags %}
+{% load explorer_tags static %}
 
 {% block title %}{% if form.errors %}Error: {% endif%}Data Explorer - New query{% endblock %}
 
@@ -140,8 +140,10 @@
         </div>
     </div>
 </div>
-
-{% load render_bundle from webpack_loader %}
-{% render_bundle 'query' %}
-
 {% endblock content %}
+
+{% block footer_additions %}
+  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}assets/vendor/ace/ace-multiple-1.4.12.min.js"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}explorer_query.js"></script>
+{% endblock %}

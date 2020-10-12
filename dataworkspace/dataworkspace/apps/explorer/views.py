@@ -4,7 +4,6 @@ from collections import Counter
 from urllib.parse import urlencode
 
 from psycopg2 import DatabaseError
-import six
 
 from django.conf import settings
 from django.contrib.auth.views import LoginView
@@ -21,7 +20,6 @@ from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
 
-from dataworkspace.apps.explorer import app_settings
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog
@@ -107,7 +105,7 @@ class ListQueryView(ListView):
         ret = []
         tracker = []
         for ql in qll:
-            if len(ret) == app_settings.EXPLORER_RECENT_QUERY_COUNT:
+            if len(ret) == settings.EXPLORER_RECENT_QUERY_COUNT:
                 break
 
             if ql.query_id not in tracker:
@@ -176,7 +174,7 @@ class ListQueryView(ListView):
                     'created_at': q.created_at,
                     'is_header': False,
                     'run_count': q.run_count,
-                    'created_by_user': six.text_type(q.created_by_user.email)
+                    'created_by_user': q.created_by_user.email
                     if q.created_by_user
                     else None,
                 }
@@ -466,8 +464,8 @@ def query_viewmodel(
     form=None,
     message=None,
     run_query=True,
-    rows=app_settings.EXPLORER_DEFAULT_ROWS,
-    timeout=app_settings.EXPLORER_QUERY_TIMEOUT_MS,
+    rows=settings.EXPLORER_DEFAULT_ROWS,
+    timeout=settings.EXPLORER_QUERY_TIMEOUT_MS,
     page=1,
     method="POST",
     log=True,
@@ -503,7 +501,7 @@ def query_viewmodel(
         if has_valid_results
         else False,
         'ql_id': ql.id if ql else None,
-        'unsafe_rendering': app_settings.UNSAFE_RENDERING,
+        'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
     }
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)
 

@@ -5,11 +5,11 @@ from datetime import date, datetime
 import pytest
 from six import b
 
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
 from django.utils import timezone
 
-from dataworkspace.apps.explorer.app_settings import EXPLORER_DEFAULT_CONNECTION as CONN
 from dataworkspace.apps.explorer.exporters import (
     CSVExporter,
     ExcelExporter,
@@ -25,7 +25,7 @@ class TestCsv:
     def test_writing_unicode(self):
         res = QueryResult(
             SimpleQueryFactory(sql='select 1 as "a", 2 as "b"').sql,
-            connections[CONN],
+            connections[settings.EXPLORER_DEFAULT_CONNECTION],
             1,
             1000,
             10000,
@@ -50,7 +50,7 @@ class TestJson:
     def test_writing_json(self):
         res = QueryResult(
             SimpleQueryFactory(sql='select 1 as "a", 2 as "b"').sql,
-            connections[CONN],
+            connections[settings.EXPLORER_DEFAULT_CONNECTION],
             1,
             1000,
             10000,
@@ -66,7 +66,7 @@ class TestJson:
     def test_writing_datetimes(self):
         res = QueryResult(
             SimpleQueryFactory(sql='select 1 as "a", 2 as "b"').sql,
-            connections[CONN],
+            connections[settings.EXPLORER_DEFAULT_CONNECTION],
             1,
             1000,
             10000,
@@ -94,7 +94,7 @@ class TestExcel:
                 sql='select 1 as "a", 2',
                 title='\\/*[]:?this title is longer than 32 characters',
             ).sql,
-            connections[CONN],
+            connections[settings.EXPLORER_DEFAULT_CONNECTION],
             1,
             1000,
             10000,
@@ -123,7 +123,7 @@ class TestExcel:
                 sql='select 1 as "a", 2',
                 title='\\/*[]:?this title is longer than 32 characters',
             ).sql,
-            connections[CONN],
+            connections[settings.EXPLORER_DEFAULT_CONNECTION],
             1,
             1000,
             10000,

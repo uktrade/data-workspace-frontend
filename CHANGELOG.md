@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - In Theia allow Python package to be installed into their default location rather than the home directory
 - Don't cache pip packages in Theia and JupyterLab Python to use less space
 
+### Deleted
+
+- Remove unused and unneeded code from Data Explorer: templates, sass preprocessor, webpack, npm/node from Dockerfile, py2 compatibility layer.
+
 ## 2020-10-07
 
 ### Changed

@@ -3,8 +3,8 @@ from unittest.mock import call, Mock
 import pytest
 import six
 from django.db import connections
+from django.conf import settings
 
-from dataworkspace.apps.explorer.app_settings import EXPLORER_DEFAULT_CONNECTION as CONN
 from dataworkspace.apps.explorer.models import (
     ColumnHeader,
     ColumnSummary,
@@ -108,7 +108,7 @@ class TestQueryModel:
 
 @pytest.mark.django_db(transaction=True)
 class TestQueryResults:
-    connection_name = CONN
+    connection_name = settings.EXPLORER_DEFAULT_CONNECTION
     databases = ['default', 'my_database']
 
     query = "select 1 as foo, 'qux' as mux;"

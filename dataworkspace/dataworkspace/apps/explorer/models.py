@@ -4,7 +4,6 @@ import logging
 import uuid
 from time import time
 
-import six
 from dynamic_models.models import AbstractFieldSchema, AbstractModelSchema  # noqa: I202
 from django.conf import settings
 from django.db import DatabaseError, models
@@ -26,7 +25,6 @@ from dataworkspace.apps.explorer.utils import (
 logger = logging.getLogger(__name__)
 
 
-@six.python_2_unicode_compatible
 class Query(models.Model):
     title = models.CharField(max_length=255)
     sql = models.TextField()
@@ -54,7 +52,7 @@ class Query(models.Model):
         verbose_name_plural = 'Queries'
 
     def __str__(self):
-        return six.text_type(self.title)
+        return self.title
 
     def get_run_count(self):
         return self.querylog_set.count()
@@ -197,8 +195,7 @@ class QueryResult:
             return [
                 ix
                 for ix, _ in enumerate(self._description)
-                if not isinstance(d[ix], six.string_types)
-                and six.text_type(d[ix]).isnumeric()
+                if not isinstance(d[ix], str) and str(d[ix]).isnumeric()
             ]
         return []
 
@@ -274,7 +271,6 @@ class SQLQuery:
         return self._description
 
 
-@six.python_2_unicode_compatible
 class ColumnHeader:
     def __init__(self, title):
         self.title = title.strip()
@@ -287,7 +283,6 @@ class ColumnHeader:
         return self.title
 
 
-@six.python_2_unicode_compatible
 class ColumnStat:
     def __init__(self, label, statfn, precision=2, handles_null=False):
         self.label = label
@@ -304,7 +299,6 @@ class ColumnStat:
         return self.label
 
 
-@six.python_2_unicode_compatible
 class ColumnSummary:
     def __init__(self, header, col):
         self._header = header

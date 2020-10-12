@@ -74,9 +74,6 @@
             <a class="govuk-link" href="{% url 'explorer:download_query' object.id %}">Download</a>
           </td>
           <td class="govuk-table__cell">{{ object.created_at|date:"SHORT_DATE_FORMAT" }}
-            {% if object.created_by_user and MULTIUSER_DEPLOYMENT %}
-            by {{ object.created_by_user }}
-            {% endif %}
           </td>
           <td class="govuk-table__cell">
             <a class="govuk-link" href="{% url 'explorer:index' %}?query_id={{ object.id }}">Play</a>

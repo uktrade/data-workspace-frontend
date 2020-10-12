@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connections as djcs
 
@@ -12,19 +13,11 @@ class ExplorerAppConfig(AppConfig):
 
 
 def _get_default():
-    from dataworkspace.apps.explorer.app_settings import (  # pylint: disable=import-outside-toplevel
-        EXPLORER_DEFAULT_CONNECTION,
-    )
-
-    return EXPLORER_DEFAULT_CONNECTION
+    return settings.EXPLORER_DEFAULT_CONNECTION
 
 
 def _get_explorer_connections():
-    from dataworkspace.apps.explorer.app_settings import (  # pylint: disable=import-outside-toplevel
-        EXPLORER_CONNECTIONS,
-    )
-
-    return EXPLORER_CONNECTIONS
+    return settings.EXPLORER_CONNECTIONS
 
 
 def _validate_connections():

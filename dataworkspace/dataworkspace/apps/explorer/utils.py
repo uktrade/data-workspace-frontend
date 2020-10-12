@@ -5,7 +5,6 @@ from datetime import timedelta
 
 import psycopg2
 import sqlparse
-from six import text_type
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -20,8 +19,6 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     postgres_user,
 )
-from dataworkspace.apps.explorer import app_settings
-
 
 logger = logging.getLogger('app')
 EXPLORER_PARAM_TOKEN = "$$"
@@ -39,7 +36,7 @@ def swap_params(sql, params):
     p = params.items() if params else {}
     for k, v in p:
         regex = re.compile(r"\$\$%s(?:\:([^\$]+))?\$\$" % str(k).lower(), re.I)
-        sql = regex.sub(text_type(v), sql)
+        sql = regex.sub(str(v), sql)
     return sql
 
 
@@ -100,9 +97,9 @@ def get_params_for_url(query):  # pylint: disable=inconsistent-return-statements
 
 
 def url_get_rows(request):
-    rows = request.POST.get("query-rows", str(app_settings.EXPLORER_DEFAULT_ROWS))
+    rows = request.POST.get("query-rows", str(settings.EXPLORER_DEFAULT_ROWS))
     if not rows.isnumeric():
-        return app_settings.EXPLORER_DEFAULT_ROWS
+        return settings.EXPLORER_DEFAULT_ROWS
     return int(rows)
 
 

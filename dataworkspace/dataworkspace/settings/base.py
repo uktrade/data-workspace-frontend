@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import urllib.request
+from distutils.util import strtobool
 
 from celery.schedules import crontab
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -85,8 +86,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'dataworkspace.apps.explorer',
     'dynamic_models',
-    'sass_processor',
-    'webpack_loader',
 ]
 
 MIDDLEWARE = [
@@ -101,7 +100,6 @@ MIDDLEWARE = [
     'dataworkspace.middleware.disable_client_side_caching',
     'csp.middleware.CSPMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 if DEBUG:
@@ -424,7 +422,6 @@ TEMPLATES += [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'dataworkspace.apps.explorer.context_processors.expose_multiuser_setting',
             ],
         },
     }
@@ -438,7 +435,6 @@ def sort_database_config(database_list):
     return config
 
 
-MULTIUSER_DEPLOYMENT = True
 EXPLORER_CONNECTIONS = json.loads(env.get("EXPLORER_CONNECTIONS", "{}"))
 EXPLORER_DEFAULT_CONNECTION = env.get("EXPLORER_DEFAULT_CONNECTION")
 
@@ -455,46 +451,16 @@ EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'sass_processor.finders.CssFinder',
 ]
 
 STATICFILES_DIRS += [
-    os.path.join(BASE_DIR, 'apps', 'explorer', 'static'),
     os.path.join(BASE_DIR, 'static', 'assets'),
 ]
 
-WEBPACK_LOADER = {
-    'DEFAULT': {
-        'BUNDLE_DIR_NAME': 'bundles/',
-        'STATS_FILE': os.path.join(BASE_DIR, '..', 'webpack-stats.json'),
-    }
-}
-
-SASS_PROCESSOR_INCLUDE_DIRS = [
-    os.path.join(BASE_DIR, 'apps', 'explorer', 'static'),
-]
-if DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-else:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-SASS_PROCESSOR_INCLUDE_FILE_PATTERN = r'^.+\.scss$'
-
-SASS_OUTPUT_STYLE = 'compressed'
-
-SASS_PROCESSOR_ENABLED = DEBUG
-SASS_PROCESSOR_AUTO_INCLUDE = DEBUG
-
 ENABLE_DEBUG_TOOLBAR = bool(env.get('ENABLE_DEBUG_TOOLBAR', DEBUG))
 
-# if DEBUG:
-#     import socket
-#
-#     ip = socket.gethostbyname(socket.gethostname())
-#     INTERNAL_IPS = [
-#         '127.0.0.1',
-#     ]
-#     INTERNAL_IPS += [ip[:-1] + "1"]
+EXPLORER_SCHEMA_INCLUDE_VIEWS = False
+EXPLORER_SCHEMA_INCLUDE_TABLE_PREFIXES = None
 
 # Celery
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
@@ -502,3 +468,20 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 # date and time formats
 en_formats.SHORT_DATE_FORMAT = "d/m/Y"
 en_formats.SHORT_DATETIME_FORMAT = "d/m/Y H:i"
+
+
+EXPLORER_DEFAULT_ROWS = int(env.get("EXPLORER_DEFAULT_ROWS", 1000))
+EXPLORER_QUERY_TIMEOUT_MS = int(env.get("EXPLORER_QUERY_TIMEOUT_MS", 60000))
+
+EXPLORER_DEFAULT_DOWNLOAD_ROWS = int(env.get("EXPLORER_DEFAULT_DOWNLOAD_ROWS", 1000))
+
+EXPLORER_RECENT_QUERY_COUNT = int(env.get("EXPLORER_RECENT_QUERY_COUNT", 10))
+
+EXPLORER_UNSAFE_RENDERING = strtobool(env.get("EXPLORER_UNSAFE_RENDERING", '0'))
+EXPLORER_CSV_DELIMETER = env.get("EXPLORER_CSV_DELIMETER", ",")
+
+EXPLORER_DATA_EXPORTERS = [
+    ('csv', 'dataworkspace.apps.explorer.exporters.CSVExporter'),
+    ('excel', 'dataworkspace.apps.explorer.exporters.ExcelExporter'),
+    ('json', 'dataworkspace.apps.explorer.exporters.JSONExporter'),
+]

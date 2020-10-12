@@ -3,17 +3,16 @@ import json
 import string
 import uuid
 from datetime import datetime
+from io import BytesIO, StringIO
 
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
-from six import BytesIO, StringIO
-
-from dataworkspace.apps.explorer import app_settings
 
 
 def get_exporter_class(format_):
-    class_str = dict(app_settings.EXPLORER_DATA_EXPORTERS)[format_]
+    class_str = dict(settings.EXPLORER_DATA_EXPORTERS)[format_]
     return import_string(class_str)
 
 
@@ -34,8 +33,8 @@ class BaseExporter:
         res = self.query.execute(
             self.user,
             1,
-            app_settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
-            app_settings.EXPLORER_QUERY_TIMEOUT_MS,
+            settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
+            settings.EXPLORER_QUERY_TIMEOUT_MS,
         )
         return self._get_output(res, **kwargs)
 
@@ -62,9 +61,9 @@ class CSVExporter(BaseExporter):
     file_extension = '.csv'
 
     def _get_output(self, res, **kwargs):
-        delim = kwargs.get('delim') or app_settings.CSV_DELIMETER
+        delim = kwargs.get('delim') or settings.EXPLORER_CSV_DELIMETER
         delim = '\t' if delim == 'tab' else str(delim)
-        delim = app_settings.CSV_DELIMETER if len(delim) > 1 else delim
+        delim = settings.EXPLORER_CSV_DELIMETER if len(delim) > 1 else delim
         csv_data = StringIO()
         writer = csv.writer(csv_data, delimiter=delim)
         writer.writerow(res.headers)
