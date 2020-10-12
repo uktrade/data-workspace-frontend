@@ -1,32 +1,37 @@
 {% extends "explorer/base.html" %}
+
+{% load explorer_tags %}
+
 {% block title %}Data Explorer - Logs{% endblock %}
+
 {% block content %}
-<h1 class="govuk-heading-m govuk-!-margin-bottom-2">Recent Query Logs - Page {{ page_obj.number }}</h1>
+<h1 class="govuk-heading-xl">Logs</h1>
+<h2 class="govuk-heading-l">Query logs</h2>
 <table class="govuk-table">
     <thead>
     <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header">Run At</th>
-        <th scope="col" class="govuk-table__header">Run By</th>
-        <th scope="col" class="govuk-table__header">Duration</th>
+        <th scope="col" class="govuk-table__header">Query title</th>
         <th scope="col" class="govuk-table__header">SQL</th>
-        <th scope="col" class="govuk-table__header">Query ID</th>
-        <th scope="col" class="govuk-table__header">Playground</th>
+        <th scope="col" class="govuk-table__header">Run duration</th>
+        <th scope="col" class="govuk-table__header">Actions</th>
     </tr>
     </thead>
     <tbody class="govuk-table__body">
     {% for object in recent_logs %}
     <tr class="govuk-table__row">
-        <td class="govuk-table__cell">{{ object.run_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-        <td class="govuk-table__cell log-user">{{ object.run_by_user.first_name }} {{ object.run_by_user.last_name }}</td>
-        <td class="govuk-table__cell">{{ object.duration|floatformat:2 }}ms</td>
-        <td class="govuk-table__cell log-sql"><div><pre>{{ object.sql }}</pre></div></td>
-        <td class="govuk-table__cell">
+        <td class="govuk-table__cell" style="width: 25%">
             {% if object.query_id %}
-            <a class="govuk-link" href="{% url 'explorer:query_detail' object.query_id %}">Query {{ object.query_id }}</a>
-            {% elif object.is_playground %}Playground{% else %}--{% endif %}
+              <a class="govuk-link" href="{% url 'explorer:query_detail' object.query_id %}">{{ object.query.title }}</a>
+            {% else %}
+              N/A
+            {% endif %}
         </td>
-        <td class="govuk-table__cell">
-            <a class="govuk-link" href="{% url 'explorer:index' %}?querylog_id={{ object.id }}">Open</a>
+        <td class="govuk-table__cell log-sql">
+          <textarea class="govuk-textarea app-readonly-sql govuk-!-margin-bottom-0 govuk-!-font-size-16" rows="2" readonly style="width: 100%">{{ object.sql }}</textarea>
+        </td>
+        <td class="govuk-table__cell" style="width: 15%">{% if object.duration %}{{ object.duration|format_duration_short }}{% else %}N/A{% endif %}</td>
+        <td class="govuk-table__cell" style="width: 10%">
+            <a class="govuk-link" href="{% url 'explorer:index' %}?querylog_id={{ object.id }}">Run</a>
         </td>
     </tr>
     {% endfor %}
@@ -35,7 +40,7 @@
 
 {% if is_paginated %}
 <nav role="navigation" class="govuk-body">
-    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    Displaying logs {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
     <ul class="pagination govuk-list">
         {% if page_obj.has_previous %}
         <li><a class="govuk-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>

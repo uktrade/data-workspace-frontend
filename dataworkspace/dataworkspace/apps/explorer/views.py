@@ -195,7 +195,7 @@ class ListQueryLogView(ListView):
 
     context_object_name = "recent_logs"
     model = QueryLog
-    paginate_by = 20
+    paginate_by = 15
 
 
 class CreateQueryView(CreateView):
