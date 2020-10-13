@@ -126,7 +126,7 @@
                     <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" type="button" id="unformat_button">
                         Reset format
                     </button>
-                    <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" name="action" value="edit">
+                    <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" name="action" value="view" formaction="{% url 'explorer:index' %}{% if query.id %}?query_id={{ query.id }}{% endif %}">
                         Edit SQL
                     </button>
 

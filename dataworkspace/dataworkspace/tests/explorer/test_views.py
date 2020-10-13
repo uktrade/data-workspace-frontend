@@ -158,13 +158,18 @@ class TestQueryDetailView:
     def test_renders_back_link(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql='select 6870+1;', created_by_user=staff_user)
 
-        response = staff_client.get(
+        response = staff_client.post(
             reverse("explorer:query_detail", kwargs={"query_id": query.id}),
-            {"from": "play"},
+            {
+                "action": "dialog",
+                "sql": query.sql,
+                "title": query.title,
+                "description": query.description,
+            },
         )
 
         assert (
-            f'<a href="/data-explorer/?sql=select+6870%2B1%3B&amp;query_id={query.id}" class="govuk-back-link">Back</a>'
+            f'<a href="/data-explorer/?query_id={query.id}" class="govuk-back-link">Back</a>'
             in response.content.decode(response.charset)
         )
 
