@@ -6,10 +6,36 @@ var editor = ace.edit("ace-sql-editor", {
   fontSize: 18,
   showLineNumbers: false,
   showGutter: false,
+  enableBasicAutocompletion: true,
   enableLiveAutocompletion: true,
   showPrintMargin: false,
   readOnly: document.getElementById('ace-sql-editor').dataset.disabled || false,
 });
+
+var table_list = JSON.parse(document.getElementById("schema_tables").textContent);
+
+var staticWordCompleter = {
+  getCompletions: function(editor, session, pos, prefix, callback) {
+      var wordList = table_list
+
+      callback(null, [...wordList.map(function(word) {
+          return {
+              caption: word,
+              value: word,
+              meta: "static"
+          };
+      }), ...session.$mode.$highlightRules.$keywordList.map(function(word) {
+          return {
+              caption: word,
+              value: word,
+              meta: 'keyword',
+          };
+      })
+    ]);
+  }
+}
+
+editor.completers = [staticWordCompleter]
 
 editor.commands.removeCommand(editor.commands.byName.indent);
 editor.commands.removeCommand(editor.commands.byName.outdent);

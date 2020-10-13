@@ -4,6 +4,7 @@
 
 {% block title %}{% if form.errors %}Error: {% endif %}Data Explorer - Home{% endblock %}
 {% block content %}
+{{ schema_tables|json_script:"schema_tables" }}
   <div class="govuk-width-container">
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full" id="query_area">
