@@ -36,21 +36,19 @@ def format_duration(milli_seconds, short=False):
         second_unit = 's'
         millis_unit = 'ms'
     else:
-        hour_unit = f'hour{"s" if hours != 1 else ""}'
-        minute_unit = f'minute{"s" if minutes != 1 else ""}'
-        second_unit = f'second{"s" if seconds != 1 else ""}'
-        millis_unit = f'millisecond{"s" if millis != 1 else ""}'
+        hour_unit = f' hour{"s" if hours != 1 else ""}'
+        minute_unit = f' minute{"s" if minutes != 1 else ""}'
+        second_unit = f' second{"s" if seconds != 1 else ""}'
+        millis_unit = f' millisecond{"s" if millis != 1 else ""}'
 
     if hours:
-        return (
-            f'{hours} {hour_unit} {minutes} {minute_unit} '
-            f'{seconds} {second_unit} {millis} {millis_unit}'
-        )
+        return f'{hours}{hour_unit} {minutes}{minute_unit} ' f'{seconds}{second_unit}'
     elif minutes:
-        return f'{minutes} {minute_unit} {seconds} {second_unit} {millis} {millis_unit}'
+        return f'{minutes}{minute_unit} {seconds}{second_unit}'
     elif seconds:
-        return f'{seconds} {second_unit} {millis} {millis_unit}'
-    return f'{millis} {millis_unit}'
+        millis = int(r)
+        return f'{seconds}{second_unit} {millis}{millis_unit}'
+    return f'{millis}{millis_unit}'
 
 
 @register.filter
