@@ -467,7 +467,7 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 
 # date and time formats
 en_formats.SHORT_DATE_FORMAT = "d/m/Y"
-en_formats.SHORT_DATETIME_FORMAT = "d/m/Y H:i"
+en_formats.SHORT_DATETIME_FORMAT = "d/m/Y P"
 
 
 EXPLORER_DEFAULT_ROWS = int(env.get("EXPLORER_DEFAULT_ROWS", 1000))

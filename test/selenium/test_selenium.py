@@ -128,7 +128,7 @@ class TestDataExplorer:
         assert edit_query_on_home_page.read_result_rows() == [["1", "2", "3"]]
 
         query_log_page = edit_query_on_home_page.click_query_log()
-        assert f"Query {query_detail_page.query_id}" in query_log_page.get_html()
+        assert str(title) in query_log_page.get_html()
         assert "select 1, 2, 3" in query_log_page.get_html()
 
     def test_query_execution_logs(self, _application):
@@ -161,7 +161,7 @@ class TestDataExplorer:
         assert edit_query_on_home_page.read_result_rows() == [["1", "2", "3"]]
 
         query_log_page = edit_query_on_home_page.click_query_log()
-        assert f"Query {query_detail_page.query_id}" in query_log_page.get_html()
+        assert str(title) in query_log_page.get_html()
         assert "select 1, 2, 3" in query_log_page.get_html()
 
     def test_user_can_only_read_from_datasets_they_have_access_to(self, _application):

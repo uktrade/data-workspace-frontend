@@ -97,6 +97,6 @@
     display: inline;
 }
 
-#original-sql:read-only {
+.app-readonly-sql {
     background-color: #F0F0F0
 }

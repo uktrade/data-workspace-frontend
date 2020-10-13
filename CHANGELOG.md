@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2020-10-12
 
 ### Changed
-
+- Redesigned the query list and query logs pages of the Data Explorer.
 - Bump mobius3 (used in the s3sync) to behave better when on EFS and there are existing files: use less memory and be faster on start, and don't delete files that exist locally until it's sure they're not on S3.
 
 ## 2020-10-09

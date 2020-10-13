@@ -113,7 +113,7 @@
                     <div class="govuk-textarea" id="gov-uk-sql-wrapper" style="display: none;">
                         <div id="ace-sql-editor" data-disabled="true">{% if form.sql.value %}{{ form.sql.value }}{% endif %}</div>
                     </div>
-                    <textarea class="govuk-textarea" aria-label="Sql" name="sql" id="original-sql" rows="15" readonly>{% if form.sql.value %}{{ form.sql.value }}{% endif %}</textarea>
+                    <textarea class="govuk-textarea app-readonly-sql" aria-label="Sql" name="sql" id="original-sql" rows="15" readonly>{% if form.sql.value %}{{ form.sql.value }}{% endif %}</textarea>
                 </div>
 
                 <div class="govuk-form-group">

@@ -1,6 +1,3 @@
-import re
-
-from collections import Counter
 from urllib.parse import urlencode
 
 from psycopg2 import DatabaseError
@@ -8,7 +5,6 @@ from psycopg2 import DatabaseError
 from django.conf import settings
 from django.contrib.auth.views import LoginView
 from django.db.models import Count
-from django.forms.models import model_to_dict
 from django.http import (
     HttpResponse,
     HttpResponseRedirect,
@@ -115,75 +111,20 @@ class ListQueryView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ListQueryView, self).get_context_data(**kwargs)
-        context['object_list'] = self._build_queries_and_headers()
+        context['object_list'] = self.object_list
         context['recent_queries'] = self.recently_viewed()
         return context
 
     def get_queryset(self):
-        qs = Query.objects.filter(created_by_user=self.request.user).all()
+        qs = (
+            Query.objects.filter(created_by_user=self.request.user)
+            .order_by('-created_at')
+            .all()
+        )
         return qs.annotate(run_count=Count('querylog'))
 
-    def _build_queries_and_headers(self):
-        """
-        Build a list of query information and headers (pseudo-folders)
-        for consumption by the template.
-
-        Strategy: Look for queries with titles of the form "something - else"
-        (eg. with a ' - ' in the middle)
-        and split on the ' - ', treating the left side as a "header" (or folder). Interleave the
-        headers into the ListView's object_list as appropriate. Ignore headers that only have one
-        child. The front end uses bootstrap's JS Collapse plugin, which necessitates generating CSS
-        classes to map the header onto the child rows, hence the collapse_target variable.
-
-        To make the return object homogeneous, convert the object_list models into dictionaries for
-        interleaving with the header "objects". This necessitates special handling of 'created_at'
-        and 'created_by_user' because model_to_dict doesn't include non-editable fields (created_at)
-        and will give the int representation of the user instead of the string representation.
-
-        :return: A list of model dictionaries representing all the query objects,
-        interleaved with header dictionaries.
-        """
-
-        dict_list = []
-        rendered_headers = []
-        pattern = re.compile(r'[\W_]+')
-
-        headers = Counter([q.title.split(' - ')[0] for q in self.object_list])
-
-        for q in self.object_list:
-            model_dict = model_to_dict(q)
-            header = q.title.split(' - ')[0]
-            collapse_target = pattern.sub('', header)
-
-            if headers[header] > 1 and header not in rendered_headers:
-                dict_list.append(
-                    {
-                        'title': header,
-                        'is_header': True,
-                        'is_in_category': False,
-                        'collapse_target': collapse_target,
-                        'count': headers[header],
-                    }
-                )
-                rendered_headers.append(header)
-
-            model_dict.update(
-                {
-                    'is_in_category': headers[header] > 1,
-                    'collapse_target': collapse_target,
-                    'created_at': q.created_at,
-                    'is_header': False,
-                    'run_count': q.run_count,
-                    'created_by_user': q.created_by_user.email
-                    if q.created_by_user
-                    else None,
-                }
-            )
-
-            dict_list.append(model_dict)
-        return dict_list
-
     model = Query
+    paginate_by = 15
 
 
 class ListQueryLogView(ListView):
@@ -191,11 +132,11 @@ class ListQueryLogView(ListView):
         kwargs = {'sql__isnull': False, 'run_by_user': self.request.user}
         if url_get_query_id(self.request):
             kwargs['query_id'] = url_get_query_id(self.request)
-        return QueryLog.objects.filter(**kwargs).all()
+        return QueryLog.objects.filter(**kwargs).order_by('-run_at').all()
 
     context_object_name = "recent_logs"
     model = QueryLog
-    paginate_by = 20
+    paginate_by = 15
 
 
 class CreateQueryView(CreateView):
