@@ -228,7 +228,7 @@ class PlayQueryView(View):
         )
         tables_columns = ['.'.join(schema_table) for schema_table, _ in schema]
         return schema, tables_columns
-        
+
     def get(self, request):
         if url_get_query_id(request):
             query = get_object_or_404(
