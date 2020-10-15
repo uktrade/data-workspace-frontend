@@ -198,7 +198,7 @@ class ApplicationInstance(TimeStampedModel):
     )
 
     spawner_application_instance_id = models.CharField(
-        max_length=128,
+        max_length=10240,
         help_text='An ID that the spawner understands to control and report on the application',
     )
 
