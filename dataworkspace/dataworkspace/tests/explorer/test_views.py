@@ -155,6 +155,12 @@ class TestQueryDetailView:
 
         assert '6872' not in resp.content.decode(resp.charset)
 
+    @pytest.mark.xfail(
+        reason=(
+            "A backlink with the current implementation will cause data loss when an existing query"
+            " has been edited, goes to be saved, and then the backlink is used"
+        )
+    )
     def test_renders_back_link(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql='select 6870+1;', created_by_user=staff_user)
 
