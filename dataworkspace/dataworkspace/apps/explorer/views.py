@@ -170,6 +170,23 @@ class CreateQueryView(CreateView):
     def post(self, request, *args, **kwargs):
         action = request.POST.get('action', '')
 
+        if action == 'dialog':
+            # This represents the 'dialog' box for creating a query when clicking 'save' from the playground.
+            context_data = {}
+
+            sql = self.request.POST.get("sql")
+            if sql:
+                context_data['disable_sql'] = True
+
+            query_params = (('sql', request.POST.get('sql')),)
+            context_data['backlink'] = (
+                reverse("explorer:index") + f"?{urlencode(query_params)}"
+            )
+            context_data['form'] = self.get_form()
+            context_data['form'].errors.clear()
+
+            return render(request, self.template_name, context_data)
+
         if action == 'save':
             ret = super().post(request)
             if self.get_form().is_valid():
@@ -199,12 +216,6 @@ class CreateQueryView(CreateView):
                 )
 
             return ret
-
-        elif action == 'edit':
-            query_params = (('sql', request.POST.get('sql')),)
-            return HttpResponseRedirect(
-                reverse('explorer:index') + f"?{urlencode(query_params)}"
-            )
 
         else:
             return HttpResponse(f"Unknown form action: {action}", 400)
@@ -251,6 +262,7 @@ class PlayQueryView(View):
                 'title': 'Playground',
                 'form': QueryForm(initial={"sql": request.GET.get('sql')}),
                 'form_action': self.get_form_action(request),
+                'form_save_action': self.get_form_save_action(request),
                 'schema': schema,
                 'schema_tables': tables_columns,
             },
@@ -293,9 +305,13 @@ class PlayQueryView(View):
                 reverse('explorer:query_create') + f"?{urlencode(query_params)}"
             )
 
-        elif action in {'run', 'fetch-page'}:
+        elif action in {'view', 'run', 'fetch-page'}:
+            run_query = action != 'view'
+
             query.params = url_get_params(request)
-            response = self.render_with_sql(request, query, run_query=True, log=True)
+            response = self.render_with_sql(
+                request, query, run_query=run_query, log=run_query
+            )
 
             return response
 
@@ -317,6 +333,27 @@ class PlayQueryView(View):
 
         return form_action
 
+    def get_form_save_action(self, request, query=None):
+        form_action_params = urlencode(
+            tuple(
+                (k, v)
+                for k, v in request.GET.items()
+                if k not in {'sql', 'querylog_id'}
+            )
+        )
+
+        if query:
+            form_action = reverse(
+                'explorer:query_detail', kwargs={"query_id": query.id}
+            )
+
+        else:
+            form_action = reverse('explorer:query_create')
+            if form_action_params:
+                form_action += "?" + form_action_params
+
+        return form_action
+
     def render_with_sql(self, request, query, run_query=True, log=False):
         rows = url_get_rows(request)
         page = url_get_page(request)
@@ -329,6 +366,10 @@ class PlayQueryView(View):
         # loading the old saved query SQL, and we do that by passing the new SQL through as a query param.
         if request.method == 'GET' and request.GET.get('sql'):
             form.initial['sql'] = request.GET.get('sql')
+
+        # Remove any validation errors - we aren't interested in these from the playground.
+        # SQL syntax errors are added during `query_viewmodel`.
+        form.errors.clear()
 
         context = query_viewmodel(
             request.user,
@@ -344,6 +385,9 @@ class PlayQueryView(View):
         context['schema'] = schema
         context['schema_tables'] = tables_columns
         context['form_action'] = self.get_form_action(request)
+        context['form_save_action'] = self.get_form_save_action(
+            request, query=query if query.id else None
+        )
         return render(self.request, 'explorer/home.html', context)
 
 
@@ -351,25 +395,33 @@ class QueryView(View):
     def get(self, request, query_id):
         query, form = QueryView.get_instance_and_form(request, query_id)
         query.save()  # updates the modified date
-
-        # Overwrite SQL form field from GET query parameter (sent when saving an existing query from the playground).
-        sql = request.GET.get("sql")
-        if sql:
-            form.initial['sql'] = sql
-
         context = {'form': form, 'query': query}
-        if request.GET.get("from") == "play":
-            query_params = (('sql', form.initial['sql']), ('query_id', query.id))
-            context['backlink'] = (
-                reverse("explorer:index") + f"?{urlencode(query_params)}"
-            )
-
         return render(self.request, 'explorer/query.html', context)
 
     def post(self, request, query_id):
         action = request.POST.get("action", "")
 
-        if action == 'save':
+        if action == 'dialog':
+            # This represents the 'dialog' box for updating a query when clicking 'save' from the playground (when
+            # editing a query that has been previously saved).
+            # It shows the user the query but does not save it - they need to click 'save' on this page to persist
+            # the update.
+            show = url_get_show(request)
+            query, form = QueryView.get_instance_and_form(request, query_id)
+            form.errors.clear()
+            vm = query_viewmodel(
+                request.user,
+                query,
+                form=form,
+                run_query=show,
+                rows=url_get_rows(request),
+                page=url_get_page(request),
+            )
+            vm['backlink'] = reverse("explorer:index") + f"?query_id={query.id}"
+            return render(self.request, 'explorer/query.html', vm)
+
+        elif action == 'save':
+            # User has confirmed they want to save the query - commit the updates to DB.
             show = url_get_show(request)
             query, form = QueryView.get_instance_and_form(request, query_id)
             success = form.is_valid() and form.save()
@@ -385,8 +437,9 @@ class QueryView(View):
             return render(self.request, 'explorer/query.html', vm)
 
         elif action == 'edit':
+            # User wants to run/edit the query again - send them to the "playground"/home page.
             query, form = QueryView.get_instance_and_form(request, query_id)
-            query_params = (('query_id', query.id), ('sql', request.POST.get('sql')))
+            query_params = (('query_id', query.id),)
             return HttpResponseRedirect(
                 reverse('explorer:index') + f"?{urlencode(query_params)}"
             )

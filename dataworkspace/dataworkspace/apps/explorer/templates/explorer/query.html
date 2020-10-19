@@ -6,7 +6,14 @@
 
 {% block back_button %}
   {% if backlink %}
-    <a href="{{ backlink }}" class="govuk-back-link">Back</a>
+    {% if query %}
+      {# We can't support backlinks when the query exists due to our POST-based navigation #}
+      {# If it's a pre-existing query, then if the user has edited the query and is now on the "save updates" page #}
+      {# the backlink will only hold a pointer to the current query. If this is clicked, the query from the DB #}
+      {# will be loaded, potentially discarding any changes that the user has made so far. #}
+    {% else %}
+      <a href="{{ backlink }}" class="govuk-back-link">Back</a>
+    {% endif %}
   {% endif %}
 {% endblock %}
 
@@ -126,7 +133,7 @@
                     <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" type="button" id="unformat_button">
                         Reset format
                     </button>
-                    <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" name="action" value="edit">
+                    <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" name="action" value="view" formaction="{% url 'explorer:index' %}{% if query.id %}?query_id={{ query.id }}{% endif %}">
                         Edit SQL
                     </button>
 
