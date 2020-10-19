@@ -133,11 +133,11 @@ RUN \
     node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean && \
     echo 'local({' > /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  r = getOption("repos")' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '  r["CRAN_1"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  options(repos = r)' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '})' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata"), clean=TRUE)' && \
-    Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
+    Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata", "aws.s3"), repos="https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/", clean=TRUE)'
 
 COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
