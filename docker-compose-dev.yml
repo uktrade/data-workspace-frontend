@@ -52,3 +52,7 @@ services:
 
 volumes:
   db-data-dev:
+  
+networks:
+  default:
+    name: data-infrastructure-shared-network
