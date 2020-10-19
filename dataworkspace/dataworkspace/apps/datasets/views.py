@@ -207,6 +207,7 @@ def get_datasets_data_for_user_matching_query(
         'source_tag_ids',
         'purpose',
         'has_access',
+        'modified_date',
     )
 
 
@@ -306,6 +307,7 @@ def get_visualisations_data_for_user_matching_query(
         'source_tag_ids',
         'purpose',
         'has_access',
+        'modified_date',
     )
 
 
@@ -338,7 +340,7 @@ def sorted_datasets_and_visualisations_matching_query_for_user(query, use, user)
     all_datasets = (
         master_and_datacut_datasets.union(reference_datasets)
         .union(visualisations)
-        .order_by('-search_rank', 'name')
+        .order_by('-modified_date', '-search_rank', 'name')
     )
 
     return all_datasets
