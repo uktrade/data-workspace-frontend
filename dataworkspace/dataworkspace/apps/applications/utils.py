@@ -914,43 +914,36 @@ def sync_quicksight_permissions(
 
 @celery_app.task()
 def update_visualisation_catalogue_items():
-    # Gitlab visusalisations
-    for visualisation in VisualisationCatalogueItem.objects.filter(visualisation_template__isnull=False):
-        gitlab_project_id = visualisation.visualisation_template.gitlab_project_id
-        if not gitlab_project_id:
-            continue
-
-        branches = gitlab_api_v4('GET', f'/projects/{gitlab_project_id}/repository/branches'),
-        matching_branches = [branch for branch in branches if branch['name'] == 'master']
-        master_branch = matching_branches[0]
-        latest_commit = master_branch['commit']
-        latest_commit_date = datetime.datetime.strptime(
-            latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
-        )
-
-        visualisation.modified_date = latest_commit_date
-        visualisation.save()
-
-    # AWS QuickSight visualisations
-    for visualisation in VisualisationCatalogueItem.objects.filter(visualisation_template__isnull=True):
-        quicksight_links = visualisation.visualisationlink_set.filter(visualisation_type='QUICKSIGHT')
-        if not quicksight_links:
-            continue
-
+    for visualisation in VisualisationCatalogueItem.objects.all():
         most_recently_updated = datetime.datetime.min()
 
-        for link in quicksight_links:
-            client = boto3.client('quicksight')
-            account_id = boto3.client('sts').get_caller_identity().get('Account')
-
-            response = client.describe_dashboard(
-                AwsAccountId=account_id,
-                DashboardId=link.Identifier,
+        gitlab_project_id = visualisation.visualisation_template.gitlab_project_id
+        if gitlab_project_id:
+            branches = gitlab_api_v4('GET', f'/projects/{gitlab_project_id}/repository/branches'),
+            matching_branches = [branch for branch in branches if branch['name'] == 'master']
+            master_branch = matching_branches[0]
+            latest_commit = master_branch['commit']
+            latest_commit_date = datetime.datetime.strptime(
+                latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
             )
 
-            last_updated = response['Dashboard']['LastUpdatedTime']
-            if last_updated > most_recently_updated:
-                most_recently_updated = last_updated
+            most_recently_updated = latest_commit_date
+            visualisation.modified_date = most_recently_updated
 
-        visualisation.modified_date = most_recently_updated
+        quicksight_links = visualisation.visualisationlink_set.filter(visualisation_type='QUICKSIGHT')
+        if quicksight_links:
+            for link in quicksight_links:
+                client = boto3.client('quicksight')
+                account_id = boto3.client('sts').get_caller_identity().get('Account')
+
+                response = client.describe_dashboard(
+                    AwsAccountId=account_id,
+                    DashboardId=link.Identifier,
+                )
+
+                last_updated = response['Dashboard']['LastUpdatedTime']
+                if last_updated > most_recently_updated:
+                    most_recently_updated = last_updated
+            visualisation.modified_date = most_recently_updated
+
         visualisation.save()
