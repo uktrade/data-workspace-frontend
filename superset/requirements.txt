@@ -36,8 +36,8 @@ flask-wtf==0.14.3         # via apache-superset, flask-appbuilder
 flask==1.1.2              # via apache-superset, flask-appbuilder, flask-babel, flask-caching, flask-compress, flask-jwt-extended, flask-login, flask-migrate, flask-openid, flask-sqlalchemy, flask-wtf
 geographiclib==1.50       # via geopy
 geopy==1.21.0             # via apache-superset
-gevent==1.5.0             # via gunicorn
-greenlet==0.4.15          # via gevent
+gevent==20.6.2            # via gunicorn
+greenlet==0.4.17          # via gevent
 gunicorn[gevent]==20.0.4  # via -r superset/requirements.in, apache-superset
 humanize==2.3.0           # via apache-superset
 isodate==0.6.0            # via apache-superset
@@ -86,3 +86,5 @@ webencodings==0.5.1       # via bleach
 werkzeug==1.0.1           # via flask, flask-jwt-extended
 wtforms-json==0.3.3       # via apache-superset
 wtforms==2.2.1            # via flask-wtf, wtforms-json
+zope.event==4.5.0         # via gevent
+zope.interface==5.1.2     # via gevent
