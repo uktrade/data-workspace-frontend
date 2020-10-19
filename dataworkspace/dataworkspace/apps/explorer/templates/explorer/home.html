@@ -108,7 +108,7 @@
                     </button>
 
                     <button class="govuk-button govuk-button--secondary govuk-!-margin-left-3"
-                            data-module="govuk-button" name="action" value="dialog" formaction="{{ form_save_action }}">
+                            data-module="govuk-button" name="action" value="save">
                       Save
                     </button>
 
@@ -119,7 +119,7 @@
 
                   </div>
 
-                  <input aria-label="Title" type="govuk-visually-hidden" value="{{ form.title.value|default_if_none:"" }}" name="title" hidden/>
+                  <input aria-label="Title" type="govuk-visually-hidden" value="{{ form.title.value|default_if_none:"Playground Query" }}" name="title" hidden/>
                 </div>
               </fieldset>
 
