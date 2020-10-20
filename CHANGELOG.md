@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Fixed support and feedback link in data explorer.
+- Change data explorer implementation to post between the playground and the query creation page, using a temporary sql model to store the submitted query to facilitate using a post-redirect-get pattern.
 
 ## 2020-10-13
 

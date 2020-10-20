@@ -13,10 +13,11 @@ from lxml import html
 import pytest
 
 from dataworkspace.tests.factories import UserFactory
-from dataworkspace.apps.explorer.models import Query, QueryLog
+from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.tests.explorer.factories import (
     QueryLogFactory,
     SimpleQueryFactory,
+    PlaygroundSQLFactory,
 )
 
 
@@ -31,8 +32,11 @@ class TestQueryListView:
 
 @pytest.mark.django_db(transaction=True)
 class TestQueryCreateView:
-    def test_renders_with_title(self, staff_client):
-        resp = staff_client.get(reverse("explorer:query_create"))
+    def test_renders_with_title(self, staff_user, staff_client):
+        play_sql = PlaygroundSQLFactory(sql="", created_by_user=staff_user)
+        resp = staff_client.get(
+            reverse("explorer:query_create"), {"play_id": play_sql.id}
+        )
         assert resp.template_name == ['explorer/query.html']
         assert "New Query" in resp.content.decode(resp.charset)
 
@@ -62,11 +66,14 @@ class TestQueryCreateView:
         assert len(Query.objects.all()) == 0
 
     def test_renders_back_link(self, staff_user, staff_client):
+        play_sql = PlaygroundSQLFactory(
+            sql="select 1, 2, 3", created_by_user=staff_user
+        )
         response = staff_client.get(
-            reverse("explorer:query_create"), {"sql": "select 1, 2, 3"}
+            reverse("explorer:query_create"), {"play_id": play_sql.id}
         )
         assert (
-            '<a href="/data-explorer/?sql=select+1%2C+2%2C+3" class="govuk-back-link">Back</a>'
+            f'<a href="/data-explorer/?play_id={play_sql.id}" class="govuk-back-link">Back</a>'
             in response.content.decode(response.charset)
         )
 
@@ -157,14 +164,17 @@ class TestQueryDetailView:
 
     def test_renders_back_link(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql='select 6870+1;', created_by_user=staff_user)
+        play_sql = PlaygroundSQLFactory(
+            sql='select 1+6870;', created_by_user=staff_user
+        )
 
         response = staff_client.get(
             reverse("explorer:query_detail", kwargs={"query_id": query.id}),
-            {"from": "play"},
+            {"play_id": play_sql.id},
         )
 
         assert (
-            f'<a href="/data-explorer/?sql=select+6870%2B1%3B&amp;query_id={query.id}" class="govuk-back-link">Back</a>'
+            f'<a href="/data-explorer/?query_id={query.id}&amp;play_id={play_sql.id}" class="govuk-back-link">Back</a>'
             in response.content.decode(response.charset)
         )
 
@@ -319,7 +329,11 @@ class TestHomePage:
         resp = staff_client.post(
             reverse("explorer:index"), {'sql': 'select 1+3400;', "action": "save"}
         )
-        assert resp.url == '/data-explorer/queries/create/?sql=select+1%2B3400%3B'
+        play_sql = PlaygroundSQL.objects.get(
+            sql='select 1+3400;', created_by_user=staff_user
+        )
+
+        assert resp.url == f'/data-explorer/queries/create/?play_id={play_sql.id}'
 
     def test_playground_renders_with_empty_posted_sql(self, staff_user, staff_client):
         resp = staff_client.post(
