@@ -10,6 +10,7 @@ from freezegun import freeze_time
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.datasets.models import (
+    DataSet,
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
@@ -143,6 +144,32 @@ class TestTransactionReferenceDatasets(ReferenceDatasetsMixin, BaseTransactionTe
         ref_dataset.save()
         self.assertEqual(ref_dataset.version, '1.2')
         self.assertEqual(ref_dataset.published_version, '1.2')
+
+
+class TestDatasets(BaseModelsTests):
+    @freeze_time('2019-02-01 02:00:00', as_kwarg='frozen_datetime')
+    def test_create_master_dataset(self, frozen_datetime):
+        dataset = DataSet.objects.create(
+            type=DataSet.TYPE_MASTER_DATASET,
+            name='Test Dataset',
+            slug='test-dataset',
+            short_description='Short description',
+            description='Long description',
+            published=True
+        )
+        self.assertEqual(
+            dataset.published_at, datetime(2019, 2, 1, 2, 0, 0, tzinfo=timezone.utc)
+        )
+
+        # Changing the dataset should and saving should not update the published_at date
+        frozen_datetime.tick()
+        dataset.description = 'Modified long description'
+        dataset.save()
+
+        self.assertEqual(dataset.description, 'Modified long description')
+        self.assertEqual(
+            dataset.published_at, datetime(2019, 2, 1, 2, 0, 0, tzinfo=timezone.utc)
+        )
 
 
 class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):

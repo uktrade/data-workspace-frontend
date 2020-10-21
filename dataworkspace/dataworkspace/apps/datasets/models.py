@@ -169,6 +169,7 @@ class DataSet(DeletableTimestampedUserModel):
         default='REQUIRES_AUTHORIZATION',
     )
     published = models.BooleanField(default=False)
+    published_at = models.DateField(null=True, blank=True)
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
     source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
@@ -217,13 +218,22 @@ class DataSet(DeletableTimestampedUserModel):
             ]
         return related
 
+    def update_published_timestamp(self):
+        if not self.published:
+            return
+
+        if not self.published_at:
+            self.published_at = timezone.now()
+
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
+        self.update_published_timestamp()
+        super().save(force_insert, force_update, using, update_fields)
+
         # If the model's reference code has changed as part of this update reset the reference
         # number for any associated sources. This will trigger the source to update it's reference
         # number inline with the new reference code (if any).
-        super().save(force_insert, force_update, using, update_fields)
         if self.reference_code != self._original_reference_code:
             self._original_reference_code = self.reference_code
             for obj in self.related_objects():
