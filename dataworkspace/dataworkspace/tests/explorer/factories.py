@@ -20,3 +20,11 @@ class QueryLogFactory(factory.django.DjangoModelFactory):
         model = models.QueryLog
 
     sql = "SELECT 2+2 AS FOUR"
+
+
+class PlaygroundSQLFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.PlaygroundSQL
+
+    sql = "SELECT 1+2 AS THREE"
+    created_by_user = factory.SubFactory(UserFactory)

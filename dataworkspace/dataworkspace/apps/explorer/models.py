@@ -25,6 +25,20 @@ from dataworkspace.apps.explorer.utils import (
 logger = logging.getLogger(__name__)
 
 
+class PlaygroundSQL(models.Model):
+    """All records in this field are transient and shouldn't be relied upon. These are used to facilitate
+    post-redirect-get flow when moving from 'building a query' to 'saving a query', which has an intermediate
+    dialogue page that needs to be populated. Originally this passed SQL through URL query parameters, but
+    our proxy (and some old browser) don't support long URLs (>2000 bytes) so we need to use POSTs."""
+
+    id = models.AutoField(primary_key=True)
+    sql = models.TextField()
+    created_at = models.DateTimeField(auto_now=True)
+    created_by_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE
+    )
+
+
 class Query(models.Model):
     title = models.CharField(max_length=255)
     sql = models.TextField()

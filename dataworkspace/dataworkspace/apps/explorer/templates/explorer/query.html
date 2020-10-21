@@ -50,11 +50,9 @@
                     </div>
                 {% endif %}
 
-                {% if query %}
-                    <form action="{% url 'explorer:query_detail' query.id %}" method="post" id="editor">{% csrf_token %}
-                {% else %}
-                    <form action="{% url 'explorer:query_create' %}" method="post" id="editor">{% csrf_token %}
-                {% endif %}
+
+                <form action="{{ form_action }}" method="post" id="editor">
+                  {% csrf_token %}
 
                 <div class="govuk-form-group{% if form.title.errors %} govuk-form-group--error {% endif %}">
                     <label class="govuk-label" for="id_title">
