@@ -21,4 +21,5 @@ RUN \
 		gnupg2 && \
 	rm -rf /var/lib/apt/lists/* && \
 	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
-	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list
+	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
+	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf
