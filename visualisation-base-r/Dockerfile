@@ -22,10 +22,11 @@ RUN \
 	rm -rf /var/lib/apt/lists/* && \
 	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
+	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
 	until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
 	rm -rf /var/lib/apt/lists/* && \
-	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
-	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
+	apt-get update && \
+	apt-get install -y --no-install-recommends \
 		r-base=3.6.1-2~bustercran.0 \
 		r-base-dev=3.6.1-2~bustercran.0 \
 		r-recommended=3.6.1-2~bustercran.0 && \

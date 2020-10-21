@@ -10,8 +10,9 @@ RUN \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian-security/ buster/updates main" >> /etc/apt/sources.list && \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
-	apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 && \
-	apt-get install -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 -y --no-install-recommends \
+	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
+	apt-get update && \
+	apt-get install -y --no-install-recommends \
 		locales=2.28-10 && \
 	echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
 	locale-gen en_US.utf8 && \
@@ -29,8 +30,8 @@ ENV \
 COPY exploretiva /exploretiva
 
 RUN \
-	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
-	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
+	apt-get update && \
+	apt-get install -y --no-install-recommends \
 		ca-certificates \
 		dirmngr \
 		gnupg2 && \
@@ -41,8 +42,8 @@ RUN \
 	apt-get autoclean -y && \
 	rm -rf /tmp/* && \
 	rm -rf /var/lib/apt/lists/* && \
-	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
-	apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
+	apt-get update && \
+	apt-get install -y --no-install-recommends \
 		gdebi-core=0.9.5.7+nmu3 \
 		gfortran=4:8.3.0-1 \
 		git=1:2.20.1-2+deb10u3 \

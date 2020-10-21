@@ -38,9 +38,10 @@ RUN \
     echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
     echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
     echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
+    echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
     until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
-    apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 update && \
-    apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=10 install -y --no-install-recommends \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
         build-essential=12.6 \
         gfortran=4:8.3.0-1 \
         git=1:2.20.1-2+deb10u3 \
@@ -132,11 +133,11 @@ RUN \
     node /opt/conda/lib/python3.7/site-packages/jupyterlab/staging/yarn.js cache clean && \
     echo 'local({' > /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  r = getOption("repos")' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
+    echo '  r["CRAN_1"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '  options(repos = r)' >> /opt/conda/lib/R/etc/Rprofile.site && \
     echo '})' >> /opt/conda/lib/R/etc/Rprofile.site && \
-    Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata"), clean=TRUE)' && \
-    Rscript -e 'install.packages("aws.s3", repos = c("cloudyr" = "http://cloudyr.github.io/drat"), clean=TRUE)'
+    Rscript -e 'install.packages(c("tidyverse", "xml2", "base64enc", "curl", "httr", "aws.ec2metadata", "aws.s3"), repos="https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/", clean=TRUE)'
 
 COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
