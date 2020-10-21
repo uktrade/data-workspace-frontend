@@ -167,8 +167,12 @@
 
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
-        <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
+        <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
         <dl class="govuk-summary-list">
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Date added</dt>
+            <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
+          </div>
           <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Licence</dt>
             <dd class="govuk-summary-list__value">{{ model.licence }}</dd>
