@@ -155,7 +155,7 @@ class TestDatasets(BaseModelsTests):
             slug='test-dataset',
             short_description='Short description',
             description='Long description',
-            published=True
+            published=True,
         )
         self.assertEqual(
             dataset.published_at, datetime(2019, 2, 1, 2, 0, 0, tzinfo=timezone.utc)
