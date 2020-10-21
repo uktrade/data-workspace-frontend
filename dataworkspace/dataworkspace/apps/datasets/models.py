@@ -201,6 +201,21 @@ class DataSet(DeletableTimestampedUserModel):
     def __str__(self):
         return self.name
 
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        self.update_published_timestamp()
+        super().save(force_insert, force_update, using, update_fields)
+
+        # If the model's reference code has changed as part of this update reset the reference
+        # number for any associated sources. This will trigger the source to update it's reference
+        # number inline with the new reference code (if any).
+        if self.reference_code != self._original_reference_code:
+            self._original_reference_code = self.reference_code
+            for obj in self.related_objects():
+                obj.reference_number = None
+                obj.save()
+
     def related_objects(self):
         """
         Returns a list of sources related to this dataset
@@ -224,21 +239,6 @@ class DataSet(DeletableTimestampedUserModel):
 
         if not self.published_at:
             self.published_at = timezone.now()
-
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
-        self.update_published_timestamp()
-        super().save(force_insert, force_update, using, update_fields)
-
-        # If the model's reference code has changed as part of this update reset the reference
-        # number for any associated sources. This will trigger the source to update it's reference
-        # number inline with the new reference code (if any).
-        if self.reference_code != self._original_reference_code:
-            self._original_reference_code = self.reference_code
-            for obj in self.related_objects():
-                obj.reference_number = None
-                obj.save()
 
     def user_has_access(self, user):
         return (
