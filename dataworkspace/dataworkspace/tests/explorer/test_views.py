@@ -246,6 +246,15 @@ class TestHomePage:
         resp = staff_client.get(reverse("explorer:index"))
         assert resp.status_code == 200
 
+    def test_support_and_feedback_link(self, staff_user, staff_client):
+        resp = staff_client.get(reverse("explorer:index"))
+
+        doc = html.fromstring(resp.content.decode(resp.charset))
+        assert (
+            doc.xpath('//a[normalize-space(text()) = "feedback"]/@href')[0]
+            == '/support-and-feedback/'
+        )
+
     def test_playground_renders_with_query_sql(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="select 1;", created_by_user=staff_user)
         resp = staff_client.get(
