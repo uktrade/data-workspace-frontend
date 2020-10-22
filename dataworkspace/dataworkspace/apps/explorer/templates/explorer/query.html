@@ -32,14 +32,20 @@
                     </div>
                 </div>
             {% endif %}
-            <h1 class="govuk-heading-m govuk-!-margin-bottom-2">
+            <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">
                 {% if query %}
                     {{ query.title }}
-                    <a class="govuk-link" href="{% url 'explorer:explorer_logs' %}?query_id={{ query.id }}">History</a>
                 {% else %}
                     New Query
                 {% endif %}
             </h1>
+
+            {% if not backlink %}
+            <p class="govuk-body">
+                <a class="govuk-link" href="{% url 'explorer:explorer_logs' %}?query_id={{ query.id }}">View logs for this query</a>
+            </p>
+            {% endif %}
+
             <fieldset class="govuk-fieldset">
                 {% if message %}
                     <div class="govuk-warning-text">
