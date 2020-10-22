@@ -55,10 +55,25 @@ USER django
 
 COPY test /test
 
+FROM test as dev
+
+USER root
+
+RUN \
+    apk add --no-cache \
+    nodejs=10.19.0-r0 \
+    npm=10.19.0-r0
+
+RUN npm install --global --unsafe-perm nodemon
+
+USER django
+
+CMD ["/dataworkspace/start-dev.sh"]
 
 FROM base AS live
 
 COPY dataworkspace /dataworkspace
+
 RUN cd dataworkspace
 
 COPY etc /etc
