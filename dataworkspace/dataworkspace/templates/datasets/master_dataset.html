@@ -53,7 +53,7 @@
           <th class="govuk-table__header">Name</th>
           <th class="govuk-table__header">Identifier</th>
           <th class="govuk-table__header">Update frequency</th>
-          <th class="govuk-table__header">Data last updated</th>
+          <th class="govuk-table__header">Last updated</th>
           {% if user.is_superuser and data_links_with_link_toggle %}
             <th class="govuk-table__header">Tools*</th>
           {% endif %}
@@ -108,8 +108,12 @@
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
       <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Date added</dt>
+          <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
+        </div>
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Licence</dt>
           <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>

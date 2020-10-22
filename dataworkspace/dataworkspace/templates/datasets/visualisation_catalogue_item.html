@@ -59,7 +59,6 @@
                 <tr class="govuk-table__row">
                     <th class="govuk-table__header">Link to the data visualisation</th>
                     <th class="govuk-table__header">Format</th>
-                    <th class="govuk-table__header">Date added</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -76,9 +75,6 @@
                         </td>
                         <td class="govuk-table__cell">
                           Web
-                        </td>
-                        <td class="govuk-table__cell">
-                          {{ visualisation_link.modified_date }}
                         </td>
                     </tr>
                     {% endfor %}
@@ -110,16 +106,12 @@
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional Information</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
 
             <dl class="govuk-summary-list">
                 <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Publish date</dt>
+                    <dt class="govuk-summary-list__key">Date added</dt>
                     <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Updated date</dt>
-                    <dd class="govuk-summary-list__value">{{ model.updated_at }}</dd>
                 </div>
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Licence</dt>
