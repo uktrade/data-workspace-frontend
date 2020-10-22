@@ -88,7 +88,12 @@ RUN \
 	echo 'www-port=8888' >> /etc/rstudio/rserver.conf && \
 	echo 'auth-none=1' >> /etc/rstudio/rserver.conf && \
 	echo 'server-daemonize=0' >> /etc/rstudio/rserver.conf && \
-	rm /usr/lib/R/etc/Rprofile.site && \
+	echo 'local({' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '  r = getOption("repos")' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/"' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '  r["CRAN_1"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '  options(repos = r)' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '})' >> /usr/lib/R/etc/Rprofile.site && \
 	echo 'CRAN=https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/' >> /etc/rstudio/repos.conf && \
 	echo 'CRAN_1=https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/' >> /etc/rstudio/repos.conf && \
 	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
