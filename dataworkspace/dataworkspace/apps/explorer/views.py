@@ -172,10 +172,9 @@ class CreateQueryView(CreateView):
 
     def post(self, request, *args, **kwargs):
         action = request.POST.get('action', '')
+        play_sql = get_playground_sql_from_request(request)
 
         if action == 'edit':
-
-            play_sql = get_playground_sql_from_request(request)
             if not play_sql:
                 play_sql = PlaygroundSQL(
                     sql=request.POST.get("sql", ""), created_by_user=request.user
@@ -190,7 +189,9 @@ class CreateQueryView(CreateView):
             ret = super().post(request)
             if self.get_form().is_valid():
                 show = url_get_show(request)
-                query, form = QueryView.get_instance_and_form(request, self.object.id)
+                query, form = QueryView.get_instance_and_form(
+                    request, self.object.id, play_sql=play_sql
+                )
 
                 if form.is_valid():
                     form.save()
@@ -382,23 +383,29 @@ class PlayQueryView(View):
 
 class QueryView(View):
     def get(self, request, query_id):
-        query, form = QueryView.get_instance_and_form(request, query_id)
+        play_sql = get_playground_sql_from_request(request)
+        query, form = QueryView.get_instance_and_form(
+            request, query_id, play_sql=play_sql
+        )
         query.save()  # updates the modified date
 
         context = {
             'form': form,
             'form_action': request.get_full_path(),
             'query': query,
-            'backlink': self.get_edit_sql_url(request, query),
+            'backlink': self.get_edit_sql_url(request, query) if play_sql else None,
         }
         return render(self.request, 'explorer/query.html', context)
 
     def post(self, request, query_id):
         action = request.POST.get("action", "")
+        play_sql = get_playground_sql_from_request(request)
 
         if action == 'save':
             show = url_get_show(request)
-            query, form = QueryView.get_instance_and_form(request, query_id)
+            query, form = QueryView.get_instance_and_form(
+                request, query_id, play_sql=play_sql
+            )
             success = form.is_valid() and form.save()
             vm = query_viewmodel(
                 request.user,
@@ -419,7 +426,9 @@ class QueryView(View):
             return render(self.request, 'explorer/query.html', vm)
 
         elif action == 'edit':
-            query, _ = QueryView.get_instance_and_form(request, query_id)
+            query, _ = QueryView.get_instance_and_form(
+                request, query_id, play_sql=play_sql
+            )
 
             return HttpResponseRedirect(self.get_edit_sql_url(request, query))
 
@@ -437,14 +446,13 @@ class QueryView(View):
         return reverse('explorer:index') + f"?{urlencode(query_params)}"
 
     @staticmethod
-    def get_instance_and_form(request, query_id):
+    def get_instance_and_form(request, query_id, play_sql=None):
         query = get_object_or_404(Query, pk=query_id, created_by_user=request.user)
         query.params = url_get_params(request)
         form = QueryForm(
             request.POST if len(request.POST) > 0 else None, instance=query
         )
 
-        play_sql = get_playground_sql_from_request(request)
         if play_sql:
             form.initial['sql'] = play_sql.sql
 
