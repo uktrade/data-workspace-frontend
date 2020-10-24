@@ -8,6 +8,9 @@ import re
 SERVER_MODE = False
 MASTER_PASSWORD_REQUIRED = False
 
+# We don't have internet access
+UPGRADE_CHECK_ENABLED = False
+
 
 def normalise_environment(key_values):
     ''' Converts denormalised dict of (string -> string) pairs, where the first string
