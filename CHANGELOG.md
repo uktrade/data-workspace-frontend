@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Version of pgAdmin to work when opened in a new tab
+- Enabled staticfiles manifest storage which will automatically serve assets with a content hash in the filename.
 
 ## 2020-10-23
 

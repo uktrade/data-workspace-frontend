@@ -52,7 +52,7 @@
     </div>
   </div>
 
-  <script src="{% get_static_prefix %}app-copy.js"></script>
+  <script src="{% static 'app-copy.js' %}"></script>
   <script src="{% get_static_prefix %}assets/vendor/highlight/highlight.pack.js"></script>
   <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
   {% endif %}

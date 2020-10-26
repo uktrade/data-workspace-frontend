@@ -149,5 +149,5 @@
 {% block footer_additions %}
   <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}assets/vendor/ace/ace-multiple-1.4.12.min.js"></script>
   <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}explorer_query.js"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_query.js' %}"></script>
 {% endblock %}
