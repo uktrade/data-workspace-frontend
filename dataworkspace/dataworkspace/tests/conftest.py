@@ -4,7 +4,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.tests import factories
@@ -135,3 +135,19 @@ def metadata_db(db):
         )
         conn.commit()
     return database
+
+
+@pytest.fixture(autouse=True, scope='session')
+def change_staticfiles_storage():
+    """
+    Slightly strange, but Django recommends not using the manifest
+    staticfiles storage when testing because it generates the manifest from
+    the `collectstatic` command, which isn't run for tests, so staticfile
+    lookup will fail:
+
+    https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
+    """
+    with override_settings(
+        STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage'
+    ):
+        yield
