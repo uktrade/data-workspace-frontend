@@ -3,7 +3,7 @@
 
 {% if perms.applications.start_all_applications or perms.applications.access_appstream %}
   {% if code_snippets %}
-  <link rel="stylesheet" href="{% get_static_prefix %}assets/vendor/highlight/styles/a11y-light.css">
+  <link rel="stylesheet" href="{% static 'assets/vendor/highlight/styles/a11y-light.css' %}">
 
   <h2 class="govuk-heading-l govuk-!-margin-top-8">Code snippets</h2>
   <div class="govuk-tabs" data-module="govuk-tabs">
@@ -53,7 +53,7 @@
   </div>
 
   <script src="{% static 'app-copy.js' %}"></script>
-  <script src="{% get_static_prefix %}assets/vendor/highlight/highlight.pack.js"></script>
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
   {% endif %}
 {% endif %}
