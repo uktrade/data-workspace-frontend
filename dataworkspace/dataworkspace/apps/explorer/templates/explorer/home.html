@@ -53,8 +53,9 @@
               </a>
             </li>
           </ul>
+
           <div class="govuk-tabs__panel" id="query-tab">
-            <h2 class="govuk-heading-l">Query</h2>
+            <h3 class="govuk-heading-m">Query</h3>
 
             <form role="form" action="{{ form_action }}" method="post" id="editor">
               {% csrf_token %}
@@ -128,9 +129,9 @@
               {% if headers %}
                 <div class="govuk-grid-row">
                   <div class="govuk-grid-column-full">
-                    <p class="govuk-heading-m govuk-!-margin-bottom-2">
+                    <h3 class="govuk-heading-m govuk-!-margin-bottom-2">
                       Query result
-                    </p>
+                    </h3>
                     <p class="govuk-body">
                       {% if rows > total_rows %}
                         Showing {{ total_rows }} rows from a total of {{ total_rows }}
@@ -202,7 +203,7 @@
             </form>
           </div>
           <div class="govuk-tabs__panel" id="database-tab">
-            <h2 class="govuk-heading-l">Database</h2>
+            <h3 class="govuk-heading-m">Database</h3>
             <p class="govuk-body">
               You can see the database tables you have access to here.
             </p>
