@@ -1,7 +1,7 @@
 var editor = ace.edit("ace-sql-editor", {
   mode: "ace/mode/sql",
   theme: "ace/theme/chrome",
-  maxLines: 10,
+  maxLines: 75,
   minLines: 10,
   fontSize: 18,
   showLineNumbers: false,
