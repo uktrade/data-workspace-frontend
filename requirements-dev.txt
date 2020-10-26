@@ -100,7 +100,7 @@ ptyprocess==0.6.0         # via pexpect
 py==1.9.0                 # via pytest
 pycodestyle==2.6.0        # via flake8
 pycparser==2.20           # via -r requirements.txt, cffi
-pydevd-pycharm==202.7319.64  # via -r requirements-dev.in
+pydevd-pycharm==203.4449.8  # via -r requirements-dev.in
 pyee==7.0.4               # via pyppeteer
 pyflakes==2.2.0           # via flake8
 pygments==2.7.1           # via ipython
