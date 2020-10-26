@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2020-10-28
+
+### Added
+- Added tools_access_role_arn to accounts.models.Profile.
+- Celery task to poll activity stream and create django users.
+
+### Changed
+- core.utils.create_file_access_role renamed and now checks the user profile for tools_access_role_arn, returning this if its set instead of calling AWS.
+- User admin screen now shows tools_access_role_arn
+
 ## 2020-10-23
 
 ### Changed

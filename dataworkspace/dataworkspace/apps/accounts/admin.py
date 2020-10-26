@@ -43,6 +43,12 @@ class AppUserCreationForm(forms.ModelForm):
 
 
 class AppUserEditForm(forms.ModelForm):
+    tools_access_role_arn = forms.CharField(
+        label='Tools access IAM role arn',
+        help_text='The arn for the IAM role required to start local tools',
+        required=False,
+        widget=AdminTextInputWidget(),
+    )
     home_directory_efs_access_point_id = forms.CharField(
         label='Home directory ID',
         help_text='EFS Access Point ID',
@@ -97,6 +103,11 @@ class AppUserEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         instance = kwargs['instance']
+
+        self.fields[
+            'tools_access_role_arn'
+        ].initial = instance.profile.tools_access_role_arn
+        self.fields['tools_access_role_arn'].widget.attrs['class'] = 'vTextField'
 
         self.fields[
             'home_directory_efs_access_point_id'
@@ -236,6 +247,7 @@ class AppUserAdmin(UserAdmin):
                 'fields': [
                     'email',
                     'sso_id',
+                    'tools_access_role_arn',
                     'home_directory_efs_access_point_id',
                     'first_name',
                     'last_name',
@@ -465,6 +477,11 @@ class AppUserAdmin(UserAdmin):
         if 'home_directory_efs_access_point_id' in form.cleaned_data:
             obj.profile.home_directory_efs_access_point_id = form.cleaned_data[
                 'home_directory_efs_access_point_id'
+            ]
+
+        if 'tools_access_role_arn' in form.cleaned_data:
+            obj.profile.tools_access_role_arn = form.cleaned_data[
+                'tools_access_role_arn'
             ]
 
         super().save_model(request, obj, form, change)

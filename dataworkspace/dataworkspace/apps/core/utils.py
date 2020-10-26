@@ -15,6 +15,7 @@ from psycopg2 import connect, sql
 
 import boto3
 
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.http import StreamingHttpResponse
 from django.db import connections, connection
@@ -632,7 +633,13 @@ def get_s3_prefix(user_sso_id):
     )
 
 
-def create_file_access_role(user_email_address, user_sso_id, access_point_id):
+def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_id):
+    s3_prefix = get_s3_prefix(user_sso_id)
+
+    user = get_user_model().objects.get(email=user_email_address)
+    if user.profile.tools_access_role_arn:
+        return user.profile.tools_access_role_arn, s3_prefix
+
     iam_client = boto3.client('iam')
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
@@ -642,7 +649,6 @@ def create_file_access_role(user_email_address, user_sso_id, access_point_id):
     role_prefix = settings.S3_ROLE_PREFIX
 
     role_name = role_prefix + user_email_address
-    s3_prefix = get_s3_prefix(user_sso_id)
     max_attempts = 10
 
     try:
@@ -695,6 +701,10 @@ def create_file_access_role(user_email_address, user_sso_id, access_point_id):
             gevent.sleep(1)
         else:
             break
+
+    # Cache the role_arn so it can be retrieved in the future without calling AWS
+    user.profile.tools_access_role_arn = role_arn
+    user.save()
 
     return role_arn, s3_prefix
 

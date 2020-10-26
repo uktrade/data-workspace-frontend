@@ -1075,6 +1075,15 @@
     }, {
       "name": "X_FORWARDED_FOR_TRUSTED_HOPS",
       "value": "2"      
+    }, {
+      "name": "ACTIVITY_STREAM_BASE_URL",
+      "value": "${activity_stream_base_url}"
+    }, {
+      "name": "ACTIVITY_STREAM_HAWK_CREDENTIALS_ID",
+      "value": "${activity_stream_hawk_credentials_id}"
+    }, {
+      "name": "ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY",
+      "value": "${activity_stream_hawk_credentials_key}"
     }],
     "essential": true,
     "image": "${container_image}",

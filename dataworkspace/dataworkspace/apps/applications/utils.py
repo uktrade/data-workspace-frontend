@@ -9,11 +9,13 @@ import botocore
 from django_db_geventpool.utils import close_connection
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db.models import Q
 import gevent
 from psycopg2 import connect, sql
 import requests
+from mohawk import Sender
 import redis
 
 from dataworkspace.apps.applications.spawner import (
@@ -907,3 +909,124 @@ def sync_quicksight_permissions(
         user_sso_ids_to_update,
         poll_for_user_creation,
     )
+
+
+def hawk_request(method, url, key_id, secret_key, body):
+    content_type = 'application/json'
+    header = Sender(
+        {'id': key_id, 'key': secret_key, 'algorithm': 'sha256'},
+        url,
+        method,
+        content=body,
+        content_type=content_type,
+    ).request_header
+
+    response = requests.request(
+        method,
+        url,
+        data=body,
+        headers={'Authorization': header, 'Content-Type': content_type},
+    )
+    return response.status_code, response.content
+
+
+def publish_to_iam_role_creation_channel(user):
+    pass
+
+
+@celery_app.task()
+def sync_activity_stream_sso_users(all_users=False):
+    if all_users:
+        endpoint = f'{settings.ACTIVITY_STREAM_BASE_URL}/v3/objects/_search'
+        query = {
+            "query": {"bool": {"filter": [{"term": {"type": "dit:StaffSSO:User"}}]}},
+            "sort": [{"dit:StaffSSO:User:joined": "desc"}],
+        }
+    else:
+        endpoint = f'{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search'
+        one_minute_ago = datetime.datetime.now(
+            datetime.timezone.utc
+        ) - datetime.timedelta(minutes=1)
+        query = {
+            "query": {
+                "bool": {
+                    "filter": [
+                        {"term": {"object.type": "dit:StaffSSO:User"}},
+                        {
+                            "range": {
+                                "published": {
+                                    "gte": f"{one_minute_ago.strftime('%Y-%m-%dT%H:%M')}"
+                                }
+                            }
+                        },
+                    ]
+                }
+            },
+            "sort": [{"published": "desc"}],
+        }
+
+    while True:
+        status_code, response = hawk_request(
+            'GET',
+            endpoint,
+            settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_ID,
+            settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY,
+            json.dumps(query),
+        )
+        if status_code != 200:
+            raise Exception(f'Failed to fetch SSO users: {response}')
+
+        response_json = json.loads(response)
+
+        if 'failures' in response_json['_shards']:
+            raise Exception(
+                f"Failed to fetch SSO users: {','.join(response_json['_shards']['failures'])}"
+            )
+
+        records = response_json['hits']['hits']
+
+        if not records:
+            break
+
+        for record in records:
+            if all_users:
+                obj = record["_source"]
+            else:
+                obj = record["_source"]["object"]
+
+            user_id = obj['dit:StaffSSO:User:userId']
+            email = obj['dit:emailAddress'][0]
+
+            User = get_user_model()
+            try:
+                user = User.objects.get(username=email)
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    email=email,
+                    username=email,
+                    first_name=obj['dit:firstName'],
+                    last_name=obj['dit:lastName'],
+                )
+                user.save()
+                user.profile.sso_id = user_id
+                user.save()
+            else:
+                if user.profile.sso_id != user_id:
+                    user.profile.sso_id = user_id
+                    user.save()
+
+                # If the user has the permission required to access tools
+                # but not the IAM role then it needs to be created.
+                if (
+                    user.user_permissions.filter(
+                        codename='start_all_applications',
+                        content_type=ContentType.objects.get_for_model(
+                            ApplicationInstance
+                        ),
+                    ).exists()
+                    and not user.profile.tools_access_role_arn
+                ):
+                    publish_to_iam_role_creation_channel(user)
+
+        # paginate to next batch of records
+        query['search_after'] = records[-1]['sort']

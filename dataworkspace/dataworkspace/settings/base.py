@@ -279,6 +279,11 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': 60 * 60 * 6,
         'args': (),
     },
+    'sync-sso-users-from-activity-stream': {
+        'task': 'dataworkspace.apps.applications.utils.sync_activity_stream_sso_users',
+        'schedule': 60,
+        'args': (),
+    },
 }
 
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
@@ -491,3 +496,7 @@ EXPLORER_DATA_EXPORTERS = [
     ('excel', 'dataworkspace.apps.explorer.exporters.ExcelExporter'),
     ('json', 'dataworkspace.apps.explorer.exporters.JSONExporter'),
 ]
+
+ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
+ACTIVITY_STREAM_HAWK_CREDENTIALS_ID = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_ID")
+ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY")
