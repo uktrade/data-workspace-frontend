@@ -36,7 +36,7 @@
           </form>
         </div>
         <div class="govuk-grid-column-one-half">
-          <form action="{{ application_url }}" method="GET" style="display: inline-block" class="govuk-!-width-full" target="_blank">
+          <form action="{{ application_url }}" method="GET" style="display: inline-block" class="govuk-!-width-full" target="_blank" rel="noopener">
             <button class="govuk-button govuk-button--secondary govuk-!-width-full">Open {{ application_name }}</button>
           </form>
         </div>
@@ -44,7 +44,7 @@
     {% else %}
       <div class="govuk-grid-row">
         {% if customisable_instance %}
-          <form action="{{ application_url }}" method="GET" style="display: inline-block" class="govuk-!-width-full" target="_blank">
+          <form action="{{ application_url }}" method="GET" style="display: inline-block" class="govuk-!-width-full" target="_blank" rel="noopener">
             <div class="govuk-grid-column-one-half">
               <div class="govuk-form-group inline-form-group">
                 <select class="govuk-select" id="sort" name="__memory_cpu">
@@ -64,7 +64,7 @@
             <p class="govuk-body"></p>
           </div>
           <div class="govuk-grid-column-one-half">
-            <a class="govuk-button govuk-button--secondary govuk-!-width-full" href="{{ application_url }}" target="_blank">Open {{ application_name }}</a>
+            <a class="govuk-button govuk-button--secondary govuk-!-width-full" href="{{ application_url }}" target="_blank" rel="noopener">Open {{ application_name }}</a>
           </div>
         {% endif %}
       </div>
