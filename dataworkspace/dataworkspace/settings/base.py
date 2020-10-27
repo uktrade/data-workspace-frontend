@@ -21,7 +21,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ENVIRONMENT = env.get("ENVIRONMENT", "Dev")
 SECRET_KEY = env['SECRET_KEY']
-DEBUG = 'dataworkspace.test' in env['ALLOWED_HOSTS']
+LOCAL = 'dataworkspace.test' in env['ALLOWED_HOSTS']
+DEBUG = bool(strtobool(env.get('DEBUG', str(LOCAL))))
 
 
 def aws_fargate_private_ip():
@@ -33,11 +34,11 @@ def aws_fargate_private_ip():
 
 ALLOWED_HOSTS = (
     (env['ALLOWED_HOSTS'])
-    if DEBUG
+    if LOCAL
     else (env['ALLOWED_HOSTS'] + [aws_fargate_private_ip()])
 )
 
-INTERNAL_IPS = ['127.0.0.1'] if DEBUG else []
+INTERNAL_IPS = ['127.0.0.1'] if LOCAL else []
 
 ELASTIC_APM_URL = env.get("ELASTIC_APM_URL")
 ELASTIC_APM_SECRET_TOKEN = env.get("ELASTIC_APM_SECRET_TOKEN")
@@ -47,7 +48,6 @@ ELASTIC_APM = (
         'SECRET_TOKEN': ELASTIC_APM_SECRET_TOKEN,
         'SERVER_URL': ELASTIC_APM_URL,
         'ENVIRONMENT': env.get('ENVIRONMENT', 'development'),
-        # 'DEBUG': True,  # Allow APM to send metrics when Django is in debug mode
     }
     if ELASTIC_APM_SECRET_TOKEN
     else {}
@@ -188,11 +188,11 @@ CACHES = {
 SESSION_COOKIE_NAME = 'data_workspace_session'
 root_domain_no_port, _, _ = env['APPLICATION_ROOT_DOMAIN'].partition(':')
 SESSION_COOKIE_DOMAIN = root_domain_no_port
-SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not LOCAL
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
-CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not LOCAL
 CSRF_COOKIE_NAME = 'data_workspace_csrf'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -209,7 +209,7 @@ APPLICATION_SPAWNER_OPTIONS = env.get('APPLICATION_SPAWNER_OPTIONS', {})
 # CSP Headers
 CSP_DEFAULT_SRC = [APPLICATION_ROOT_DOMAIN]
 CSP_OBJECT_SRC = ["'none'"]
-CSP_UPGRADE_INSECURE_REQUESTS = not DEBUG
+CSP_UPGRADE_INSECURE_REQUESTS = not LOCAL
 CSP_BASE_URI = [APPLICATION_ROOT_DOMAIN]
 CSP_FONT_SRC = [APPLICATION_ROOT_DOMAIN, 'data:', 'https://fonts.gstatic.com']
 CSP_FORM_ACTION = [APPLICATION_ROOT_DOMAIN, f'*.{APPLICATION_ROOT_DOMAIN}']

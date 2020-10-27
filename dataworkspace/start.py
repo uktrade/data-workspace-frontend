@@ -2,8 +2,6 @@
 # pylint: disable=multiple-statements,wrong-import-position,wrong-import-order
 
 # fmt: off
-import os
-
 from gevent import monkey; monkey.patch_all()  # noqa: E402,E702
 from psycogreen.gevent import patch_psycopg; patch_psycopg()  # noqa: E402,E702
 # fmt: on
@@ -12,6 +10,7 @@ from psycogreen.gevent import patch_psycopg; patch_psycopg()  # noqa: E402,E702
 
 import signal
 
+from django.conf import settings
 from django.core.wsgi import get_wsgi_application
 from django.utils.autoreload import run_with_reloader
 import gevent
@@ -31,7 +30,7 @@ def run_server():
     print('Requests completed. Exiting gracefully.', flush=True)
 
 
-if os.environ.get('DEBUG') == 'True':
+if settings.DEBUG is True and settings.LOCAL is True:
     print('Running in DEBUG mode with hot reloader')
     run_with_reloader(run_server)
 else:
