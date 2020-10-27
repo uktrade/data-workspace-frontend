@@ -9,11 +9,11 @@
         <meta http-equiv="x-ua-compatible" content="ie=edge">
 
         <title>{% block title %}Data Explorer{% endblock %}</title>
-        <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="{% get_static_prefix %}assets/images/favicon.ico" type="image/x-icon">
+        <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon">
         <meta name="twitter:dnt" content="on">
         <meta name="format-detection" content="telephone=no">
         {% block styles %}
-            <link rel="stylesheet" href="{% get_static_prefix %}govuk-frontend-including-fonts-3.8.1.min-v1.css">
+            <link rel="stylesheet" href="{% static 'govuk-frontend-including-fonts-3.8.1.min-v1.css' %}">
             <link href="{% static 'explorer_custom.css' %}" rel="stylesheet" media="all" />
             <!--[if lt IE 9]>
                 <script>
