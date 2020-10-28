@@ -470,7 +470,9 @@ class DatasetDetailView(DetailView):
 
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
         source_views = self.object.sourceview_set.all()
-        custom_queries = self.object.customdatasetquery_set.all()
+        custom_queries = self.object.customdatasetquery_set.all().prefetch_related(
+            'tables'
+        )
 
         if source_tables:
             columns = []
@@ -525,6 +527,15 @@ class DatasetDetailView(DetailView):
         else:
             _, dashboard_url = None, None
 
+        query_tables = []
+        for query in custom_queries:
+            query_tables.extend([qt.table for qt in query.tables.all()])
+
+        ds_tables = SourceTable.objects.filter(table__in=query_tables).prefetch_related(
+            'dataset'
+        )
+        related_masters = [ds_table.dataset for ds_table in ds_tables]
+
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
@@ -538,6 +549,7 @@ class DatasetDetailView(DetailView):
                 'visualisation_src': dashboard_url,
                 'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY.value,
                 'source_table_type': DataLinkType.SOURCE_TABLE.value,
+                'related_masters': related_masters,
             }
         )
         return ctx
