@@ -95,3 +95,30 @@ if (sqlTextarea !== null) {
       );
   }
 }
+
+
+
+let tabsContainer = document.getElementById('playground-tabs');
+let fullWidthToggle = document.getElementById('full-width');
+let normalWidthToggle = document.getElementById('normal-width');
+if (tabsContainer !== null && fullWidthToggle !== null && normalWidthToggle !== null) {
+  fullWidthToggle.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    tabsContainer.classList.remove('govuk-width-container');
+    tabsContainer.classList.add('govuk-!-margin-left-5');
+    tabsContainer.classList.add('govuk-!-margin-right-5');
+    fullWidthToggle.classList.add('govuk-!-display-none');
+    normalWidthToggle.classList.remove('govuk-!-display-none');
+  });
+
+  normalWidthToggle.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    tabsContainer.classList.remove('govuk-!-margin-left-5');
+    tabsContainer.classList.remove('govuk-!-margin-right-5');
+    tabsContainer.classList.add('govuk-width-container');
+    normalWidthToggle.classList.add('govuk-!-display-none');
+    fullWidthToggle.classList.remove('govuk-!-display-none');
+  });
+}
