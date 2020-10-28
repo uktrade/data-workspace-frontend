@@ -53,8 +53,9 @@
               </a>
             </li>
           </ul>
+
           <div class="govuk-tabs__panel" id="query-tab">
-            <h2 class="govuk-heading-l">Query</h2>
+            <h3 class="govuk-heading-m">Query</h3>
 
             <form role="form" action="{{ form_action }}" method="post" id="editor">
               {% csrf_token %}
@@ -128,9 +129,9 @@
               {% if headers %}
                 <div class="govuk-grid-row">
                   <div class="govuk-grid-column-full">
-                    <p class="govuk-heading-m govuk-!-margin-bottom-2">
+                    <h3 class="govuk-heading-m govuk-!-margin-bottom-2">
                       Query result
-                    </p>
+                    </h3>
                     <p class="govuk-body">
                       {% if rows > total_rows %}
                         Showing {{ total_rows }} rows from a total of {{ total_rows }}
@@ -202,7 +203,7 @@
             </form>
           </div>
           <div class="govuk-tabs__panel" id="database-tab">
-            <h2 class="govuk-heading-l">Database</h2>
+            <h3 class="govuk-heading-m">Database</h3>
             <p class="govuk-body">
               You can see the database tables you have access to here.
             </p>
@@ -220,11 +221,11 @@
 {% endblock content %}
 
 {% block footer_additions %}
-  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}assets/vendor/listjs/listjs-1.5.0.min.js"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}assets/vendor/ace/ace-multiple-1.4.12.min.js"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}explorer_schema.js"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}explorer_query.js"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'assets/vendor/listjs/listjs-1.5.0.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'assets/vendor/ace/ace-multiple-1.4.12.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_schema.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_query.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     window.initSchemaSearch();
   </script>

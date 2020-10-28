@@ -8,6 +8,9 @@ import re
 SERVER_MODE = False
 MASTER_PASSWORD_REQUIRED = False
 
+# We don't have internet access
+UPGRADE_CHECK_ENABLED = False
+
 
 def normalise_environment(key_values):
     ''' Converts denormalised dict of (string -> string) pairs, where the first string
@@ -114,7 +117,7 @@ env = normalise_environment(os.environ)
 
 servers = {}
 passwords = []
-passfile = '/root/.pgpass'
+passfile = '/pgadmin4/.pgpass'
 
 for i, (name, dsn) in enumerate(env['DATABASE_DSN'].items()):
     user = re.search(r'user=([a-z0-9_]+)', dsn).groups()[0]

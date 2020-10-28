@@ -14,6 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - core.utils.create_file_access_role renamed and now checks the user profile for tools_access_role_arn, returning this if its set instead of calling AWS.
 - User admin screen now shows tools_access_role_arn
 
+## 2020-10-27
+
+### Changed
+
+- Version of pgAdmin to work when opened in a new tab
+- Enabled staticfiles manifest storage which will automatically serve assets with a content hash in the filename.
+
 ## 2020-10-23
 
 ### Changed

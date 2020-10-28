@@ -1,4 +1,4 @@
-FROM dpage/pgadmin4:4.8
+FROM dpage/pgadmin4:4.27
 
 ENV \
 	PGADMIN_LISTEN_ADDRESS=0.0.0.0 \
@@ -7,3 +7,9 @@ ENV \
 	PGADMIN_DEFAULT_PASSWORD=test
 
 COPY pgadmin-config.py /pgadmin4/config_local.py
+
+USER root
+RUN \
+	touch /pgadmin4/.pgpass /pgadmin4/servers.json && \
+	chown pgadmin:pgadmin /pgadmin4/.pgpass /pgadmin4/servers.json
+USER pgadmin
