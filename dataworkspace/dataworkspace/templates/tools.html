@@ -71,7 +71,7 @@
     </div>
 
     {% if show_new_data_explorer %}
-      {% with application_summary='The Data Explorer is a tool to explore master datasets on Data Workspace. It is a SQL query tool that is an alternative to pgAdmin.' %}
+      {% with application_summary='The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.' %}
         {% url 'explorer:index' as data_explorer_url %}
         {% include 'partials/tool_section.html' with application_name="Data Explorer" application_summary=application_summary application_help_link=None instance=None application_url=data_explorer_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
       {% endwith %}
