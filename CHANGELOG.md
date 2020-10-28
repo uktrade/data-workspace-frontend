@@ -7,12 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2020-10-28
 
 ### Added
-- Added tools_access_role_arn to accounts.models.Profile.
+- Field to cache the IAM role arn for tools access.
 - Celery task to poll activity stream and create django users.
 
 ### Changed
-- core.utils.create_file_access_role renamed and now checks the user profile for tools_access_role_arn, returning this if its set instead of calling AWS.
-- User admin screen now shows tools_access_role_arn
+- Renamed core.utils.create_file_access_role and changed to check the user profile for tools_access_role_arn, returning this if its set instead of calling AWS.
+- Show tools_access_role_arn field in user admin screen.
 
 ## 2020-10-27
 
