@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='profile',
             name='tools_access_role_arn',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(blank=True, default=''),
         ),
     ]

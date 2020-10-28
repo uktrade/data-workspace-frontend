@@ -23,7 +23,10 @@ from dataworkspace.apps.datasets.models import (
     VisualisationUserPermission,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.applications.utils import sync_quicksight_permissions
+from dataworkspace.apps.applications.utils import (
+    publish_to_iam_role_creation_channel,
+    sync_quicksight_permissions,
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 
@@ -316,6 +319,10 @@ class AppUserAdmin(UserAdmin):
                 and start_all_applications_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(start_all_applications_permission)
+
+                if not obj.profile.tools_access_role_arn:
+                    publish_to_iam_role_creation_channel(obj)
+
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
                     'can_start_all_applications',

@@ -2,7 +2,11 @@ import logging
 
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
+
+from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.utils import publish_to_iam_role_creation_channel
 
 logger = logging.getLogger('app')
 
@@ -45,6 +49,15 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
             except IntegrityError:
                 # A concurrent request may have overtaken this one and created a user
                 user = User.objects.get(profile__sso_id=user_id)
+
+            if (
+                user.user_permissions.filter(
+                    codename='start_all_applications',
+                    content_type=ContentType.objects.get_for_model(ApplicationInstance),
+                ).exists()
+                and not user.profile.tools_access_role_arn
+            ):
+                publish_to_iam_role_creation_channel(user)
 
         changed = False
 

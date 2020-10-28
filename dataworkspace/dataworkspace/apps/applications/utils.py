@@ -55,6 +55,10 @@ class UnexpectedMetricsException(MetricsException):
     pass
 
 
+class HawkException(Exception):
+    pass
+
+
 def is_8_char_hex(val):
     try:
         int(val, 16)
@@ -911,10 +915,16 @@ def sync_quicksight_permissions(
     )
 
 
-def hawk_request(method, url, key_id, secret_key, body):
+def hawk_request(method, url, body):
+    hawk_id = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_ID
+    hawk_key = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY
+
+    if not hawk_id or not hawk_key:
+        raise HawkException("Hawk id or key not configured")
+
     content_type = 'application/json'
     header = Sender(
-        {'id': key_id, 'key': secret_key, 'algorithm': 'sha256'},
+        {'id': hawk_id, 'key': hawk_key, 'algorithm': 'sha256'},
         url,
         method,
         content=body,
@@ -935,44 +945,53 @@ def publish_to_iam_role_creation_channel(user):
 
 
 @celery_app.task()
-def sync_activity_stream_sso_users(all_users=False):
-    if all_users:
-        endpoint = f'{settings.ACTIVITY_STREAM_BASE_URL}/v3/objects/_search'
-        query = {
-            "query": {"bool": {"filter": [{"term": {"type": "dit:StaffSSO:User"}}]}},
-            "sort": [{"dit:StaffSSO:User:joined": "desc"}],
-        }
-    else:
-        endpoint = f'{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search'
-        one_minute_ago = datetime.datetime.now(
-            datetime.timezone.utc
-        ) - datetime.timedelta(minutes=1)
-        query = {
-            "query": {
-                "bool": {
-                    "filter": [
-                        {"term": {"object.type": "dit:StaffSSO:User"}},
-                        {
-                            "range": {
-                                "published": {
-                                    "gte": f"{one_minute_ago.strftime('%Y-%m-%dT%H:%M')}"
-                                }
+def sync_activity_stream_sso_users():
+    try:
+        with cache.lock(
+            "activity_stream_sync_last_published", blocking_timeout=0, timeout=1800
+        ):
+            _do_sync_activity_stream_sso_users()
+    except redis.exceptions.LockError:
+        logger.info(
+            "activity_stream_sync_last_published: Unable to grab lock - running on another instance?"
+        )
+
+
+def _do_sync_activity_stream_sso_users():
+    last_published = cache.get(
+        'activity_stream_sync_last_published', datetime.datetime.utcfromtimestamp(0)
+    )
+
+    endpoint = f'{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search'
+    ten_seconds_before_last_published = last_published - datetime.timedelta(seconds=10)
+
+    query = {
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"object.type": "dit:StaffSSO:User"}},
+                    {
+                        "range": {
+                            "published": {
+                                "gte": f"{ten_seconds_before_last_published.strftime('%Y-%m-%dT%H:%M:%S')}"
                             }
-                        },
-                    ]
-                }
-            },
-            "sort": [{"published": "desc"}],
-        }
+                        }
+                    },
+                ]
+            }
+        },
+        "sort": [{"published": "asc"}],
+    }
+
+    User = get_user_model()
 
     while True:
-        status_code, response = hawk_request(
-            'GET',
-            endpoint,
-            settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_ID,
-            settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY,
-            json.dumps(query),
-        )
+        try:
+            status_code, response = hawk_request('GET', endpoint, json.dumps(query),)
+        except HawkException as e:
+            logger.error('Failed to call activity stream with error %s', e)
+            break
+
         if status_code != 200:
             raise Exception(f'Failed to fetch SSO users: {response}')
 
@@ -988,19 +1007,20 @@ def sync_activity_stream_sso_users(all_users=False):
         if not records:
             break
 
+        logger.info('Fetched %d from activity stream', len(records))
+
         for record in records:
-            if all_users:
-                obj = record["_source"]
-            else:
-                obj = record["_source"]["object"]
+            obj = record['_source']['object']
 
             user_id = obj['dit:StaffSSO:User:userId']
             email = obj['dit:emailAddress'][0]
 
-            User = get_user_model()
             try:
                 user = User.objects.get(username=email)
             except User.DoesNotExist:
+                logger.info(
+                    'User with email address %s does not exist, creating...', email
+                )
                 user = User.objects.create(
                     email=email,
                     username=email,
@@ -1012,6 +1032,11 @@ def sync_activity_stream_sso_users(all_users=False):
                 user.save()
             else:
                 if user.profile.sso_id != user_id:
+                    logger.info(
+                        'User with email %s already exists, updating sso id to %s',
+                        email,
+                        user_id,
+                    )
                     user.profile.sso_id = user_id
                     user.save()
 
@@ -1026,7 +1051,14 @@ def sync_activity_stream_sso_users(all_users=False):
                     ).exists()
                     and not user.profile.tools_access_role_arn
                 ):
+                    logger.info('Creating IAM role for User with sso id %s', user_id)
                     publish_to_iam_role_creation_channel(user)
 
+        last_published_str = records[-1]['_source']['published']
+        last_published = datetime.datetime.strptime(
+            last_published_str, '%Y-%m-%dT%H:%M:%S.%fZ'
+        )
         # paginate to next batch of records
         query['search_after'] = records[-1]['sort']
+
+    cache.set('activity_stream_sync_last_published', last_published)
