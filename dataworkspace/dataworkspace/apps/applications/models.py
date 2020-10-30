@@ -71,6 +71,16 @@ class ApplicationTemplate(TimeStampedModel):
         ),
         default='TOOL',
     )
+    default_memory = models.CharField(
+        default='8192',
+        max_length=16,
+        help_text='The default amount of memory allocated in MBs',
+    )
+    default_cpu = models.CharField(
+        default='1024',
+        max_length=16,
+        help_text='The default amount of CPU allocated, where 1024 is 1 CPU',
+    )
     gitlab_project_id = models.IntegerField(
         null=True,
         unique=True,

@@ -648,8 +648,8 @@ def _fargate_task_run(
         taskDefinition=definition_arn,
         overrides={
             'taskRoleArn': role_arn,
-            **({'cpu': cpu} if cpu else {}),
-            **({'memory': memory} if memory else {}),
+            'cpu': cpu,
+            'memory': memory,
             'containerOverrides': [
                 {
                     **({'command': command_and_args} if command_and_args else {}),
