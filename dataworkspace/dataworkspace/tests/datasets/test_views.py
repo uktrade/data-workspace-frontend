@@ -1254,3 +1254,70 @@ def test_find_datasets_name_weighting(client):
             'has_access': False,
         },
     ]
+
+
+class TestCustomQueryRelatedDataView:
+    def _get_database(self):
+        return factories.DatabaseFactory(memorable_name='my_database')
+
+    def _setup_datacut_with_masters(self, sql, master_count=1, published=True):
+        masters = []
+        for _ in range(master_count):
+            master = factories.DataSetFactory.create(
+                published=published,
+                type=DataSetType.MASTER.value,
+                name='A master 1',
+                user_access_type='REQUIRES_AUTHENTICATION',
+            )
+            factories.SourceTableFactory.create(
+                dataset=master,
+                schema="public",
+                table="test_dataset",
+                database=self._get_database(),
+            )
+            masters.append(master)
+        datacut = factories.DataSetFactory.create(
+            published=published,
+            type=DataSetType.DATACUT.value,
+            name='A datacut',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        query = factories.CustomDatasetQueryFactory(
+            dataset=datacut, database=self._get_database(), query=sql,
+        )
+        factories.CustomDatasetQueryTableFactory(
+            query=query, schema='public', table='test_dataset'
+        )
+        return datacut, masters
+
+    @pytest.mark.parametrize(
+        "request_client, master_count, published, status",
+        (
+            ("sme_client", 1, True, 200),
+            ("staff_client", 1, True, 200),
+            ("sme_client", 1, False, 200),
+            ("staff_client", 1, False, 200),
+            ("sme_client", 3, True, 200),
+            ("staff_client", 3, True, 200),
+            ("sme_client", 3, False, 200),
+            ("staff_client", 3, False, 200),
+        ),
+        indirect=["request_client"],
+    )
+    @pytest.mark.django_db
+    def test_related_dataset_single_dataset(
+        self, request_client, master_count, published, status
+    ):
+        datacut, masters = self._setup_datacut_with_masters(
+            'SELECT * FROM test_dataset order by id desc limit 10',
+            master_count=master_count,
+            published=published,
+        )
+        url = reverse('datasets:dataset_detail', args=(datacut.id,))
+        response = request_client.get(url)
+        assert response.status_code == status
+        assert len(response.context["related_masters"]) == master_count
+        for i, master in enumerate(masters):
+            related_table = response.context["related_masters"][i]
+            assert related_table.id == master.id
+            assert related_table.name == master.name
