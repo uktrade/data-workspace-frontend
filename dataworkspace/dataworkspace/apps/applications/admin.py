@@ -386,6 +386,8 @@ class ToolTemplateAdmin(admin.ModelAdmin):
                     'spawner',
                     'spawner_time',
                     'spawner_options',
+                    'default_memory',
+                    'default_cpu',
                     'visible',
                 ]
             },
@@ -440,6 +442,8 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
                     'spawner',
                     'spawner_time',
                     'spawner_options',
+                    'default_memory',
+                    'default_cpu',
                     'wrap',
                     'gitlab_project_id',
                     'authorized_master_datasets',
