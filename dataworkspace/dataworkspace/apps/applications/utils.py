@@ -941,12 +941,10 @@ def hawk_request(method, url, body):
     return response.status_code, response.content
 
 
-@celery_app.task()
+@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 def create_tools_access_iam_role_task(user_id):
     with cache.lock(
-        f"create_tools_access_iam_role_task-{user_id}",
-        blocking_timeout=60,
-        timeout=360,
+        "create_tools_access_iam_role_task", blocking_timeout=0, timeout=360,
     ):
         _do_create_tools_access_iam_role(user_id)
 
@@ -963,19 +961,15 @@ def _do_create_tools_access_iam_role(user_id):
             str(user.profile.sso_id),
             user.profile.home_directory_efs_access_point_id,
         )
+        gevent.sleep(1)
 
 
-@celery_app.task()
+@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 def sync_activity_stream_sso_users():
-    try:
-        with cache.lock(
-            "activity_stream_sync_last_published", blocking_timeout=0, timeout=1800
-        ):
-            _do_sync_activity_stream_sso_users()
-    except redis.exceptions.LockError:
-        logger.info(
-            "activity_stream_sync_last_published: Unable to grab lock - running on another instance?"
-        )
+    with cache.lock(
+        "activity_stream_sync_last_published", blocking_timeout=0, timeout=1800
+    ):
+        _do_sync_activity_stream_sso_users()
 
 
 def _do_sync_activity_stream_sso_users():
