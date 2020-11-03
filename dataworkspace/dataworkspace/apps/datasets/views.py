@@ -549,7 +549,7 @@ class DatasetDetailView(DetailView):
                 'visualisation_src': dashboard_url,
                 'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY.value,
                 'source_table_type': DataLinkType.SOURCE_TABLE.value,
-                'related_masters': related_masters,
+                'related_masters': set(related_masters),
             }
         )
         return ctx
