@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.applications.utils import publish_to_iam_role_creation_channel
+from dataworkspace.apps.applications.utils import create_tools_access_iam_role_task
 
 logger = logging.getLogger('app')
 
@@ -57,7 +57,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
                 ).exists()
                 and not user.profile.tools_access_role_arn
             ):
-                publish_to_iam_role_creation_channel(user)
+                create_tools_access_iam_role_task.delay(user.id)
 
         changed = False
 

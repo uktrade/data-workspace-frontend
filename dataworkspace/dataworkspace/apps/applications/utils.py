@@ -30,6 +30,7 @@ from dataworkspace.apps.applications.models import (
 )
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
+    create_tools_access_iam_role,
     database_dsn,
     stable_identification_suffix,
     source_tables_for_user,
@@ -940,8 +941,28 @@ def hawk_request(method, url, body):
     return response.status_code, response.content
 
 
-def publish_to_iam_role_creation_channel(user):
-    pass
+@celery_app.task()
+def create_tools_access_iam_role_task(user_id):
+    with cache.lock(
+        f"create_tools_access_iam_role_task-{user_id}",
+        blocking_timeout=60,
+        timeout=360,
+    ):
+        _do_create_tools_access_iam_role(user_id)
+
+
+def _do_create_tools_access_iam_role(user_id):
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        logger.exception('User id %d does not exist', user_id)
+    else:
+        create_tools_access_iam_role(
+            user.email,
+            str(user.profile.sso_id),
+            user.profile.home_directory_efs_access_point_id,
+        )
 
 
 @celery_app.task()
@@ -1052,7 +1073,7 @@ def _do_sync_activity_stream_sso_users():
                     and not user.profile.tools_access_role_arn
                 ):
                     logger.info('Creating IAM role for User with sso id %s', user_id)
-                    publish_to_iam_role_creation_channel(user)
+                    create_tools_access_iam_role_task.delay(user.id)
 
         last_published_str = records[-1]['_source']['published']
         last_published = datetime.datetime.strptime(

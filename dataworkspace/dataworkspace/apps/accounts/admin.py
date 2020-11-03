@@ -24,7 +24,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.utils import (
-    publish_to_iam_role_creation_channel,
+    create_tools_access_iam_role_task,
     sync_quicksight_permissions,
 )
 from dataworkspace.apps.eventlog.models import EventLog
@@ -321,7 +321,7 @@ class AppUserAdmin(UserAdmin):
                 obj.user_permissions.add(start_all_applications_permission)
 
                 if not obj.profile.tools_access_role_arn:
-                    publish_to_iam_role_creation_channel(obj)
+                    create_tools_access_iam_role_task.delay(obj.id)
 
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,

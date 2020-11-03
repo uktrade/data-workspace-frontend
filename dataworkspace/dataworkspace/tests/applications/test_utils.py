@@ -15,6 +15,7 @@ import redis
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.utils import (
     delete_unused_datasets_users,
+    _do_create_tools_access_iam_role,
     _do_sync_activity_stream_sso_users,
     sync_quicksight_permissions,
 )
@@ -647,14 +648,14 @@ class TestSyncActivityStreamSSOUsers:
 
     @pytest.mark.django_db
     @mock.patch(
-        'dataworkspace.apps.applications.utils.publish_to_iam_role_creation_channel'
+        'dataworkspace.apps.applications.utils.create_tools_access_iam_role_task'
     )
     @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
     @override_settings(
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
     )
     def test_sync_creates_role_if_user_can_access_tools(
-        self, mock_hawk_request, publish_to_iam_role_creation_channel
+        self, mock_hawk_request, create_tools_access_iam_role_task
     ):
         can_access_tools_permission = Permission.objects.get(
             codename='start_all_applications',
@@ -689,19 +690,20 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert publish_to_iam_role_creation_channel.called
-        assert publish_to_iam_role_creation_channel.call_args_list == [mock.call(user,)]
+        assert create_tools_access_iam_role_task.delay.call_args_list == [
+            mock.call(user.id,)
+        ]
 
     @pytest.mark.django_db
     @mock.patch(
-        'dataworkspace.apps.applications.utils.publish_to_iam_role_creation_channel'
+        'dataworkspace.apps.applications.utils.create_tools_access_iam_role_task'
     )
     @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
     @override_settings(
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
     )
     def test_sync_doesnt_create_role_if_user_cant_access_tools(
-        self, mock_hawk_request, publish_to_iam_role_creation_channel
+        self, mock_hawk_request, create_tools_access_iam_role_task
     ):
         UserFactory.create(username='john.smith@trade.gov.uk')
 
@@ -731,18 +733,18 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert not publish_to_iam_role_creation_channel.called
+        assert not create_tools_access_iam_role_task.delay.called
 
     @pytest.mark.django_db
     @mock.patch(
-        'dataworkspace.apps.applications.utils.publish_to_iam_role_creation_channel'
+        'dataworkspace.apps.applications.utils.create_tools_access_iam_role_task'
     )
     @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
     @override_settings(
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
     )
     def test_sync_doesnt_create_role_if_user_already_has_role(
-        self, mock_hawk_request, publish_to_iam_role_creation_channel
+        self, mock_hawk_request, create_tools_access_iam_role_task
     ):
         can_access_tools_permission = Permission.objects.get(
             codename='start_all_applications',
@@ -779,7 +781,7 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert not publish_to_iam_role_creation_channel.called
+        assert not create_tools_access_iam_role_task.delay.called
 
     @pytest.mark.django_db
     @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
@@ -819,3 +821,33 @@ class TestSyncActivityStreamSSOUsers:
 
         User = get_user_model()
         assert not User.objects.all()
+
+
+class TestCreateToolsAccessIAMRoleTask:
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.create_tools_access_iam_role')
+    def test_task_creates_iam_role(self, mock_create_tools_access_iam_role):
+
+        user = UserFactory.create(username='john.smith@trade.gov.uk')
+        user.profile.sso_id = '00000000-0000-0000-0000-000000000001'
+        user.profile.home_directory_efs_access_point_id = 'some-access-point-id'
+        user.save()
+
+        _do_create_tools_access_iam_role(user.id)
+
+        assert mock_create_tools_access_iam_role.call_args_list == [
+            mock.call(
+                'john.smith@trade.gov.uk',
+                '00000000-0000-0000-0000-000000000001',
+                'some-access-point-id',
+            )
+        ]
+
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.create_tools_access_iam_role')
+    @mock.patch('logging.Logger.exception')
+    def test_task_fails_non_existent_user(
+        self, mock_logger, mock_create_tools_access_iam_role
+    ):
+        _do_create_tools_access_iam_role(2)
+        assert mock_logger.call_args_list == [mock.call('User id %d does not exist', 2)]
