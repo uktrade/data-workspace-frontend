@@ -1359,7 +1359,9 @@ class TestCustomQueryRelatedDataView:
         indirect=["request_client"],
     )
     @pytest.mark.django_db
-    def test_related_dataset_duplicate_masters(self, request_client, published, status):
+    def test_related_dataset_does_not_duplicate_masters(
+        self, request_client, published, status
+    ):
         self._setup_new_table()
         master1 = factories.DataSetFactory.create(
             published=published,
