@@ -154,7 +154,7 @@
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Related data</h2>        
             <div class="govuk-grid-row">
                 {% for master in related_masters %}
-                    <div class="govuk-grid-column-{% if related_tables|length == 1 %}two-thirds{% else %}one-third{% endif %}">
+                    <div class="govuk-grid-column-{% if related_masters|length == 1 %}two-thirds{% else %}one-third{% endif %}">
                         <div class="govuk-body">
                             <span class="govuk-caption-m">Master dataset</span>
                             <h3 class="govuk-heading-m">{{ master.name }}</h3>
