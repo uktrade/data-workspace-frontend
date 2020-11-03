@@ -9,6 +9,7 @@ import botocore
 from django_db_geventpool.utils import close_connection
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db.models import Q
 import gevent
@@ -35,7 +36,11 @@ from dataworkspace.apps.core.utils import (
     postgres_user,
 )
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import (
+    VisualisationCatalogueItem,
+    VisualisationLink,
+)
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
@@ -907,3 +912,16 @@ def sync_quicksight_permissions(
         user_sso_ids_to_update,
         poll_for_user_creation,
     )
+
+
+def log_visualisation_view(visualisation_link, user, event_type):
+    EventLog.objects.create(
+        user=user,
+        event_type=event_type,
+        content_type=ContentType.objects.get_for_model(VisualisationLink),
+        object_id=user.id,
+        extra={
+            "name": visualisation_link.name,
+            "visualisation_identifier": visualisation_link.identifier,
+        },
+    ).save()
