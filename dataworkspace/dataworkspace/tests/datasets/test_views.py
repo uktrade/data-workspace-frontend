@@ -1079,6 +1079,7 @@ class TestVisualisationLinkView:
             'my-dashboard',
             'https://my.dashboard.quicksight.amazonaws.com',
         )
+        eventlog_count = EventLog.objects.count()
 
         client = Client(**get_http_sso_data(user))
         response = client.get(link.get_absolute_url())
@@ -1096,6 +1097,11 @@ class TestVisualisationLinkView:
             'frame-ancestors dataworkspace.test:8000 https://authorized-embedder.com'
             in response['content-security-policy']
         )
+        assert EventLog.objects.count() == eventlog_count + 1
+        assert (
+            list(EventLog.objects.all())[-1].event_type
+            == EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION
+        )
 
     @pytest.mark.django_db
     def test_datastudio_link(self):
@@ -1108,12 +1114,18 @@ class TestVisualisationLinkView:
             identifier='https://www.data.studio',
             visualisation_catalogue_item=vis,
         )
+        eventlog_count = EventLog.objects.count()
 
         client = Client(**get_http_sso_data(user))
         response = client.get(link.get_absolute_url())
 
         assert response.status_code == 302
         assert response['location'] == 'https://www.data.studio'
+        assert EventLog.objects.count() == eventlog_count + 1
+        assert (
+            list(EventLog.objects.all())[-1].event_type
+            == EventLog.TYPE_VIEW_DATASTUDIO_VISUALISATION
+        )
 
     @pytest.mark.django_db
     def test_user_needs_access_via_catalogue_item(self, mocker):
