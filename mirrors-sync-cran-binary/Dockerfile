@@ -34,6 +34,12 @@ RUN \
 		libgsl-dev=2.5+dfsg-6 \
 		libxml2-dev=2.9.4+dfsg1-7+b3 \
 		libpq-dev=11.7-0+deb10u1 \
+		libgdal-dev=2.4.0+dfsg-1+b1 \
+		libudunits2-dev=2.2.26-5 \
+		libjq-dev=1.5+dfsg-2+b1 \
+		libprotobuf-dev=3.6.1.3-2 \
+		protobuf-compiler=3.6.1.3-2 \
+		libnode-dev=10.21.0~dfsg-1~deb10u1 \
 		lmodern=2.004.5-6 \
 		procps=2:3.3.15-2 \
 		r-base-dev=3.6.1-2~bustercran.0 \
