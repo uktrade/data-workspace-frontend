@@ -768,63 +768,7 @@ def create_update_delete_quicksight_user_data_sources(
                 raise e
 
 
-@celery_app.task()
-def sync_quicksight_permissions(
-    user_sso_ids_to_update=tuple(), poll_for_user_creation=False
-):
-    logger.info(
-        'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) started',
-        user_sso_ids_to_update,
-        poll_for_user_creation,
-    )
-
-    # QuickSight manages users in a single specific regions
-    user_client = boto3.client(
-        'quicksight', region_name=settings.QUICKSIGHT_USER_REGION
-    )
-    # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
-    data_client = boto3.client('quicksight')
-
-    account_id = boto3.client('sts').get_caller_identity().get('Account')
-
-    quicksight_user_list: List[Dict[str, str]]
-    if len(user_sso_ids_to_update) > 0:
-        quicksight_user_list = []
-
-        for user_sso_id in user_sso_ids_to_update:
-            # Poll for the user for 5 minutes
-            attempts = (5 * 60) if poll_for_user_creation else 1
-            for _ in range(attempts):
-                attempts -= 1
-
-                try:
-                    quicksight_user_list.append(
-                        user_client.describe_user(
-                            AwsAccountId=account_id,
-                            Namespace='default',
-                            # \/ This is the format of the user name created by DIT SSO \/
-                            UserName=f'quicksight_federation/{user_sso_id}',
-                        )['User']
-                    )
-                    break
-
-                except botocore.exceptions.ClientError as e:
-                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                        if attempts > 0:
-                            gevent.sleep(1)
-                        elif poll_for_user_creation:
-                            logger.exception(
-                                "Did not find user with sso id `%s` after 5 minutes",
-                                user_sso_id,
-                            )
-                    else:
-                        raise e
-
-    else:
-        quicksight_user_list: List[Dict[str, str]] = user_client.list_users(
-            AwsAccountId=account_id, Namespace='default'
-        )['UserList']
-
+def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_list):
     for quicksight_user in quicksight_user_list:
         user_arn = quicksight_user['Arn']
         user_email = quicksight_user['Email']
@@ -906,6 +850,87 @@ def sync_quicksight_permissions(
             logger.exception(
                 "Unable to sync permissions for %s", quicksight_user['Arn']
             )
+
+
+@celery_app.task()
+def sync_quicksight_permissions(
+    user_sso_ids_to_update=tuple(), poll_for_user_creation=False
+):
+    logger.info(
+        'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) started',
+        user_sso_ids_to_update,
+        poll_for_user_creation,
+    )
+
+    # QuickSight manages users in a single specific regions
+    user_client = boto3.client(
+        'quicksight', region_name=settings.QUICKSIGHT_USER_REGION
+    )
+    # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
+    data_client = boto3.client('quicksight')
+
+    account_id = boto3.client('sts').get_caller_identity().get('Account')
+
+    quicksight_user_list: List[Dict[str, str]]
+    if len(user_sso_ids_to_update) > 0:
+        quicksight_user_list = []
+
+        for user_sso_id in user_sso_ids_to_update:
+            # Poll for the user for 5 minutes
+            attempts = (5 * 60) if poll_for_user_creation else 1
+            for _ in range(attempts):
+                attempts -= 1
+
+                try:
+                    quicksight_user_list.append(
+                        user_client.describe_user(
+                            AwsAccountId=account_id,
+                            Namespace='default',
+                            # \/ This is the format of the user name created by DIT SSO \/
+                            UserName=f'quicksight_federation/{user_sso_id}',
+                        )['User']
+                    )
+                    break
+
+                except botocore.exceptions.ClientError as e:
+                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                        if attempts > 0:
+                            gevent.sleep(1)
+                        elif poll_for_user_creation:
+                            logger.exception(
+                                "Did not find user with sso id `%s` after 5 minutes",
+                                user_sso_id,
+                            )
+                    else:
+                        raise e
+
+        sync_quicksight_users(
+            data_client=data_client,
+            user_client=user_client,
+            account_id=account_id,
+            quicksight_user_list=quicksight_user_list,
+        )
+
+    else:
+        next_token = None
+        while True:
+            list_user_args = dict(AwsAccountId=account_id, Namespace='default')
+            if next_token:
+                list_user_args['NextToken'] = next_token
+
+            list_users_response = user_client.list_users(**list_user_args)
+            quicksight_user_list: List[Dict[str, str]] = list_users_response['UserList']
+            next_token = list_users_response.get('NextToken')
+
+            sync_quicksight_users(
+                data_client=data_client,
+                user_client=user_client,
+                account_id=account_id,
+                quicksight_user_list=quicksight_user_list,
+            )
+
+            if not next_token:
+                break
 
     logger.info(
         'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) finished',
