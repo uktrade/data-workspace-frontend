@@ -454,6 +454,92 @@ class TestSyncActivityStreamSSOUsers:
         with open(
             os.path.join(
                 os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_empty.json',
+            ),
+            'r',
+        ) as file:
+            empty_result = (200, file.read())
+
+        mock_hawk_request.side_effect = [empty_result]
+
+        _do_sync_activity_stream_sso_users()
+
+        assert mock_hawk_request.call_args_list == [
+            mock.call(
+                'GET',
+                'http://activity.stream/v3/activities/_search',
+                json.dumps(
+                    {
+                        "query": {
+                            "bool": {
+                                "filter": [
+                                    {"term": {"object.type": "dit:StaffSSO:User"}},
+                                    {
+                                        "range": {
+                                            "published": {"gte": "1969-12-31T23:59:50"}
+                                        }
+                                    },
+                                ]
+                            }
+                        },
+                        "sort": [{"published": "asc"}],
+                    }
+                ),
+            )
+        ]
+
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @override_settings(ACTIVITY_STREAM_BASE_URL='http://activity.stream')
+    def test_sync_with_cache_set(self, mock_hawk_request):
+        cache.set(
+            'activity_stream_sync_last_published', datetime.datetime(2020, 1, 1, 12)
+        )
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_empty.json',
+            ),
+            'r',
+        ) as file:
+            empty_result = (200, file.read())
+
+        mock_hawk_request.return_value = empty_result
+
+        _do_sync_activity_stream_sso_users()
+
+        assert mock_hawk_request.call_args_list == [
+            mock.call(
+                'GET',
+                'http://activity.stream/v3/activities/_search',
+                json.dumps(
+                    {
+                        "query": {
+                            "bool": {
+                                "filter": [
+                                    {"term": {"object.type": "dit:StaffSSO:User"}},
+                                    {
+                                        "range": {
+                                            "published": {"gte": "2020-01-01T11:59:50"}
+                                        }
+                                    },
+                                ]
+                            }
+                        },
+                        "sort": [{"published": "asc"}],
+                    }
+                ),
+            )
+        ]
+
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @override_settings(ACTIVITY_STREAM_BASE_URL='http://activity.stream')
+    def test_sync_pagination(self, mock_hawk_request):
+        cache.delete('activity_stream_sync_last_published')
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
                 'test_fixture_activity_stream_sso_john_smith.json',
             ),
             'r',
@@ -519,6 +605,38 @@ class TestSyncActivityStreamSSOUsers:
             ),
         ]
 
+        assert cache.get('activity_stream_sync_last_published') == datetime.datetime(
+            2020, 1, 1, 12
+        )
+
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @override_settings(
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+    )
+    def test_sync_creates_user(self, mock_hawk_request):
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_john_smith.json',
+            ),
+            'r',
+        ) as file:
+            user_john_smith = (200, file.read())
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_empty.json',
+            ),
+            'r',
+        ) as file:
+            empty_result = (200, file.read())
+
+        mock_hawk_request.side_effect = [user_john_smith, empty_result]
+
+        _do_sync_activity_stream_sso_users()
+
         User = get_user_model()
         all_users = User.objects.all()
 
@@ -531,86 +649,13 @@ class TestSyncActivityStreamSSOUsers:
         assert all_users[0].first_name == 'John'
         assert all_users[0].last_name == 'Smith'
 
-        assert cache.get('activity_stream_sync_last_published') == datetime.datetime(
-            2020, 1, 1, 12
-        )
-
     @pytest.mark.django_db
     @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
     @override_settings(
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
     )
-    def test_sync_with_no_results(self, mock_hawk_request):
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
-            ),
-            'r',
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.return_value = empty_result
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        assert not User.objects.all()
-
-    @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
-    @override_settings(ACTIVITY_STREAM_BASE_URL='http://activity.stream')
-    def test_sync_recently_published_users(self, mock_hawk_request):
-        cache.set(
-            'activity_stream_sync_last_published', datetime.datetime(2020, 1, 1, 12)
-        )
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
-            ),
-            'r',
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.return_value = empty_result
-
-        _do_sync_activity_stream_sso_users()
-
-        assert mock_hawk_request.call_args_list == [
-            mock.call(
-                'GET',
-                'http://activity.stream/v3/activities/_search',
-                json.dumps(
-                    {
-                        "query": {
-                            "bool": {
-                                "filter": [
-                                    {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {
-                                        "range": {
-                                            "published": {"gte": "2020-01-01T11:59:50"}
-                                        }
-                                    },
-                                ]
-                            }
-                        },
-                        "sort": [{"published": "asc"}],
-                    }
-                ),
-            )
-        ]
-
-        User = get_user_model()
-        assert not User.objects.all()
-
-    @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
-    @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
-    )
-    def test_sync_updates_existing_user(self, mock_hawk_request):
-        user = UserFactory.create(username='john.smith@trade.gov.uk')
+    def test_sync_updates_existing_users_sso_id(self, mock_hawk_request):
+        user = UserFactory.create(email='john.smith@trade.gov.uk')
         # set the sso id to something different to what the activity stream
         # will return to test that it gets updated
         user.profile.sso_id = '00000000-0000-0000-0000-111111111111'
@@ -647,6 +692,91 @@ class TestSyncActivityStreamSSOUsers:
         )
 
     @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @override_settings(
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+    )
+    def test_sync_updates_existing_users_email(self, mock_hawk_request):
+        # set the email to something different to what the activity stream
+        # will return to test that it gets updated
+        user = UserFactory.create(email='john.smith@gmail.com')
+        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
+        user.save()
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_john_smith.json',
+            ),
+            'r',
+        ) as file:
+            user_john_smith = (200, file.read())
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_empty.json',
+            ),
+            'r',
+        ) as file:
+            empty_result = (200, file.read())
+
+        mock_hawk_request.side_effect = [user_john_smith, empty_result]
+
+        _do_sync_activity_stream_sso_users()
+
+        User = get_user_model()
+        all_users = User.objects.all()
+
+        assert len(all_users) == 1
+        assert str(all_users[0].email) == 'john.smith@trade.gov.uk'
+
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @override_settings(
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+    )
+    def test_sync_updates_existing_users_sso_id_and_email(self, mock_hawk_request):
+        # set the sso id to something different to what the activity stream
+        # will return and set the email to the third email in the list that
+        # the activity stream will return to test that it is able to look up
+        # the user and update both their email and sso id
+        user = UserFactory.create(email='john@trade.gov.uk')
+        user.profile.sso_id = '00000000-0000-0000-0000-111111111111'
+        user.save()
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_john_smith_multiple_emails.json',
+            ),
+            'r',
+        ) as file:
+            user_john_smith = (200, file.read())
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                'test_fixture_activity_stream_sso_empty.json',
+            ),
+            'r',
+        ) as file:
+            empty_result = (200, file.read())
+
+        mock_hawk_request.side_effect = [user_john_smith, empty_result]
+
+        _do_sync_activity_stream_sso_users()
+
+        User = get_user_model()
+        all_users = User.objects.all()
+
+        assert len(all_users) == 1
+        assert (
+            str(all_users[0].profile.sso_id) == '00000000-0000-0000-0000-000000000000'
+        )
+        assert str(all_users[0].email) == 'john.smith@digital.trade.gov.uk'
+
+    @pytest.mark.django_db
     @mock.patch(
         'dataworkspace.apps.applications.utils.create_tools_access_iam_role_task'
     )
@@ -661,7 +791,9 @@ class TestSyncActivityStreamSSOUsers:
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(username='john.smith@trade.gov.uk')
+        user = UserFactory.create(email='john.smith@trade.gov.uk')
+        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
+        user.save()
         user.user_permissions.add(can_access_tools_permission)
 
         with open(
@@ -705,7 +837,9 @@ class TestSyncActivityStreamSSOUsers:
     def test_sync_doesnt_create_role_if_user_cant_access_tools(
         self, mock_hawk_request, create_tools_access_iam_role_task
     ):
-        UserFactory.create(username='john.smith@trade.gov.uk')
+        user = UserFactory.create(email='john.smith@trade.gov.uk')
+        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
+        user.save()
 
         with open(
             os.path.join(
@@ -750,8 +884,9 @@ class TestSyncActivityStreamSSOUsers:
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(username='john.smith@trade.gov.uk')
+        user = UserFactory.create(email='john.smith@trade.gov.uk')
         user.user_permissions.add(can_access_tools_permission)
+        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
         user.profile.tools_access_role_arn = 'some-arn'
         user.save()
 

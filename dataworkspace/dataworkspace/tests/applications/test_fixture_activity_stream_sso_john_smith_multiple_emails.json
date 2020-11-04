@@ -1,0 +1,55 @@
+{
+    "took" : 0,
+    "timed_out" : false,
+    "_shards" : {
+      "total" : 0,
+      "successful" : 0,
+      "skipped" : 0,
+      "failed" : 0
+    },
+    "hits" : {
+      "total" : {
+        "value" : 1,
+        "relation" : "eq"
+      },
+      "max_score" : null,
+      "hits" : [
+        {
+          "_index" : "activities__feed_id_foo",
+          "_type" : "_doc",
+          "_id" : "dit:StaffSSO:User:00000000-0000-0000-0000-000000000000:Update",
+          "_score" : null,
+          "_source" : {
+            "id" : "dit:StaffSSO:User:00000000-0000-0000-0000-000000000000:Update",
+            "object" : {
+              "dit:StaffSSO:User:contactEmailAddress" : null,
+              "dit:StaffSSO:User:emailUserId" : "john.smith@example.com",
+              "dit:StaffSSO:User:joined" : "2020-01-01T12:00:00.000Z",
+              "dit:StaffSSO:User:lastAccessed" : "2020-01-01T12:00:00.000Z",
+              "dit:StaffSSO:User:permittedApplications" : [
+                {
+                  "name" : "Data Explorer",
+                  "url" : "http://example.com"
+                }
+              ],
+              "dit:StaffSSO:User:userId" : "00000000-0000-0000-0000-000000000000",
+              "dit:emailAddress" : [
+                "john.smith@digital.trade.gov.uk",
+                "john.smith@trade.gov.uk",
+                "john@trade.gov.uk"
+              ],
+              "dit:firstName" : "John",
+              "dit:lastName" : "Smith",
+              "id" : "dit:StaffSSO:User:00000000-0000-0000-0000-000000000000",
+              "name" : "John Smith",
+              "type" : "dit:StaffSSO:User"
+            },
+            "published" : "2020-01-01T12:00:00.000Z"
+          },
+          "sort" : [
+            1000000000000
+          ]
+        }
+      ]
+    }
+  }

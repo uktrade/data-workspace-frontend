@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.db import IntegrityError
 from django.db.models import Q
 import gevent
 from psycopg2 import connect, sql
@@ -916,6 +917,75 @@ def sync_quicksight_permissions(
     )
 
 
+def _check_tools_access(user):
+    if (
+        user.user_permissions.filter(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+        and not user.profile.tools_access_role_arn
+    ):
+        create_tools_access_iam_role_task.delay(user.id)
+
+
+def create_user_from_sso(
+    sso_id,
+    primary_email,
+    other_emails,
+    first_name,
+    last_name,
+    check_tools_access_if_user_exists,
+):
+    User = get_user_model()
+    try:
+        user = User.objects.get(profile__sso_id=sso_id)
+    except User.DoesNotExist:
+        user, _ = User.objects.get_or_create(
+            email__in=other_emails,
+            defaults={'email': primary_email, 'username': primary_email},
+        )
+
+        user.save()
+        user.profile.sso_id = sso_id
+        try:
+            user.save()
+        except IntegrityError:
+            # A concurrent request may have overtaken this one and created a user
+            user = User.objects.get(profile__sso_id=sso_id)
+
+        _check_tools_access(user)
+    else:
+        if check_tools_access_if_user_exists:
+            _check_tools_access(user)
+
+    changed = False
+
+    if user.username != primary_email:
+        changed = True
+        user.username = primary_email
+
+    if user.email != primary_email:
+        changed = True
+        user.email = primary_email
+
+    if user.first_name != first_name:
+        changed = True
+        user.first_name = first_name
+
+    if user.last_name != last_name:
+        changed = True
+        user.last_name = last_name
+
+    if user.has_usable_password():
+        changed = True
+        user.set_unusable_password()
+
+    if changed:
+        user.save()
+
+    return user
+
+
 def hawk_request(method, url, body):
     hawk_id = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_ID
     hawk_key = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY
@@ -998,8 +1068,6 @@ def _do_sync_activity_stream_sso_users():
         "sort": [{"published": "asc"}],
     }
 
-    User = get_user_model()
-
     while True:
         try:
             status_code, response = hawk_request('GET', endpoint, json.dumps(query),)
@@ -1022,52 +1090,23 @@ def _do_sync_activity_stream_sso_users():
         if not records:
             break
 
-        logger.info('Fetched %d from activity stream', len(records))
+        logger.info('Fetched %d record(s) from activity stream', len(records))
 
         for record in records:
             obj = record['_source']['object']
 
             user_id = obj['dit:StaffSSO:User:userId']
-            email = obj['dit:emailAddress'][0]
+            emails = obj['dit:emailAddress']
+            primary_email = emails[0]
 
-            try:
-                user = User.objects.get(username=email)
-            except User.DoesNotExist:
-                logger.info(
-                    'User with email address %s does not exist, creating...', email
-                )
-                user = User.objects.create(
-                    email=email,
-                    username=email,
-                    first_name=obj['dit:firstName'],
-                    last_name=obj['dit:lastName'],
-                )
-                user.save()
-                user.profile.sso_id = user_id
-                user.save()
-            else:
-                if user.profile.sso_id != user_id:
-                    logger.info(
-                        'User with email %s already exists, updating sso id to %s',
-                        email,
-                        user_id,
-                    )
-                    user.profile.sso_id = user_id
-                    user.save()
-
-                # If the user has the permission required to access tools
-                # but not the IAM role then it needs to be created.
-                if (
-                    user.user_permissions.filter(
-                        codename='start_all_applications',
-                        content_type=ContentType.objects.get_for_model(
-                            ApplicationInstance
-                        ),
-                    ).exists()
-                    and not user.profile.tools_access_role_arn
-                ):
-                    logger.info('Creating IAM role for User with sso id %s', user_id)
-                    create_tools_access_iam_role_task.delay(user.id)
+            create_user_from_sso(
+                user_id,
+                primary_email,
+                emails,
+                obj['dit:firstName'],
+                obj['dit:lastName'],
+                check_tools_access_if_user_exists=True,
+            )
 
         last_published_str = records[-1]['_source']['published']
         last_published = datetime.datetime.strptime(
