@@ -919,7 +919,7 @@ def log_visualisation_view(visualisation_link, user, event_type):
         user=user,
         event_type=event_type,
         content_type=ContentType.objects.get_for_model(VisualisationLink),
-        object_id=user.id,
+        object_id=visualisation_link.id,
         extra={
             "name": visualisation_link.name,
             "visualisation_identifier": visualisation_link.identifier,
