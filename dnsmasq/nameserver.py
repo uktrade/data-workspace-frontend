@@ -63,7 +63,6 @@ async def async_main():
             (r'^(1\.amazon\.pool\.ntp\.org)$', r'\1'),
             (r'^(2\.amazon\.pool\.ntp\.org)$', r'\1'),
             (r'^(3\.amazon\.pool\.ntp\.org)$', r'\1'),
-            (r'(^.*$)', r'\1'),
         ),
         get_resolver=get_resolver,
     )
