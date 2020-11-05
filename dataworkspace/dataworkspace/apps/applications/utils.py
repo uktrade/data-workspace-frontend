@@ -1099,6 +1099,7 @@ def _do_sync_activity_stream_sso_users():
 
     while True:
         try:
+            logger.info('Calling activity stream with query %s', json.dumps(query))
             status_code, response = hawk_request('GET', endpoint, json.dumps(query),)
         except HawkException as e:
             logger.error('Failed to call activity stream with error %s', e)
