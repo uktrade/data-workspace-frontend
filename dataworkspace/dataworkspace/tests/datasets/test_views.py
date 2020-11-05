@@ -1295,7 +1295,7 @@ class TestCustomQueryRelatedDataView:
             )
             masters.append(master)
         datacut = factories.DataSetFactory.create(
-            published=published,
+            published=True,
             type=DataSetType.DATACUT.value,
             name='A datacut',
             user_access_type='REQUIRES_AUTHENTICATION',
@@ -1325,27 +1325,21 @@ class TestCustomQueryRelatedDataView:
             )
 
     @pytest.mark.parametrize(
-        "request_client, master_count, published, status",
+        "request_client, master_count, status",
         (
-            ("sme_client", 1, True, 200),
-            ("staff_client", 1, True, 200),
-            ("sme_client", 1, False, 200),
-            ("staff_client", 1, False, 200),
-            ("sme_client", 3, True, 200),
-            ("staff_client", 3, True, 200),
-            ("sme_client", 3, False, 200),
-            ("staff_client", 3, False, 200),
+            ("sme_client", 1, 200),
+            ("staff_client", 1, 200),
+            ("sme_client", 3, 200),
+            ("staff_client", 3, 200),
         ),
         indirect=["request_client"],
     )
     @pytest.mark.django_db
-    def test_related_dataset_single_dataset(
-        self, request_client, master_count, published, status
-    ):
+    def test_related_dataset_dataset(self, request_client, master_count, status):
         datacut, masters = self._setup_datacut_with_masters(
             'SELECT * FROM test_dataset order by id desc limit 10',
             master_count=master_count,
-            published=published,
+            published=True,
         )
         url = reverse('datasets:dataset_detail', args=(datacut.id,))
         response = request_client.get(url)
@@ -1361,22 +1355,74 @@ class TestCustomQueryRelatedDataView:
             assert related_master.name == master.name
 
     @pytest.mark.parametrize(
-        "request_client, published, status",
+        "request_client, master_count, status",
         (
-            ("sme_client", True, 200),
-            ("staff_client", True, 200),
-            ("sme_client", False, 200),
-            ("staff_client", False, 200),
+            ("sme_client", 1, 200),
+            ("staff_client", 1, 200),
+            ("sme_client", 3, 200),
+            ("staff_client", 3, 200),
         ),
         indirect=["request_client"],
     )
     @pytest.mark.django_db
-    def test_related_dataset_does_not_duplicate_masters(
-        self, request_client, published, status
+    def test_related_dataset_hide_unpublished_master(
+        self, request_client, master_count, status
     ):
+        published_master = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.MASTER.value,
+            name='Published master',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        factories.SourceTableFactory.create(
+            dataset=published_master,
+            schema="public",
+            table="test_dataset",
+            database=self._get_database(),
+        )
+        unpublished_master = factories.DataSetFactory.create(
+            published=False,
+            type=DataSetType.MASTER.value,
+            name='Unpublished master',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        factories.SourceTableFactory.create(
+            dataset=unpublished_master,
+            schema="public",
+            table="test_dataset",
+            database=self._get_database(),
+        )
+
+        datacut = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.DATACUT.value,
+            name='A datacut',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        query = factories.CustomDatasetQueryFactory(
+            dataset=datacut,
+            database=self._get_database(),
+            query='SELECT * FROM test_dataset order by id desc limit 10',
+        )
+        factories.CustomDatasetQueryTableFactory(
+            query=query, schema='public', table='test_dataset'
+        )
+
+        url = reverse('datasets:dataset_detail', args=(datacut.id,))
+        response = request_client.get(url)
+        assert response.status_code == status
+        assert len(response.context["related_masters"]) == 1
+
+    @pytest.mark.parametrize(
+        "request_client, status",
+        (("sme_client", 200), ("staff_client", 200),),
+        indirect=["request_client"],
+    )
+    @pytest.mark.django_db
+    def test_related_dataset_does_not_duplicate_masters(self, request_client, status):
         self._setup_new_table()
         master1 = factories.DataSetFactory.create(
-            published=published,
+            published=True,
             type=DataSetType.MASTER.value,
             name='A master 1',
             user_access_type='REQUIRES_AUTHENTICATION',
@@ -1395,7 +1441,7 @@ class TestCustomQueryRelatedDataView:
         )
 
         master2 = factories.DataSetFactory.create(
-            published=published,
+            published=True,
             type=DataSetType.MASTER.value,
             name='A master 1',
             user_access_type='REQUIRES_AUTHENTICATION',
@@ -1408,7 +1454,7 @@ class TestCustomQueryRelatedDataView:
         )
 
         datacut = factories.DataSetFactory.create(
-            published=published,
+            published=True,
             type=DataSetType.DATACUT.value,
             name='A datacut',
             user_access_type='REQUIRES_AUTHENTICATION',

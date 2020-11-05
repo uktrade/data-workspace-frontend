@@ -531,9 +531,9 @@ class DatasetDetailView(DetailView):
         for query in custom_queries:
             query_tables.extend([qt.table for qt in query.tables.all()])
 
-        ds_tables = SourceTable.objects.filter(table__in=query_tables).prefetch_related(
-            'dataset'
-        )
+        ds_tables = SourceTable.objects.filter(
+            dataset__published=True, table__in=query_tables,
+        ).prefetch_related('dataset')
         related_masters = [ds_table.dataset for ds_table in ds_tables]
 
         ctx.update(
