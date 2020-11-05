@@ -1066,7 +1066,7 @@ def _do_create_tools_access_iam_role(user_id):
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 def sync_activity_stream_sso_users():
     with cache.lock(
-        "activity_stream_sync_last_published", blocking_timeout=0, timeout=1800
+        "activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800
     ):
         _do_sync_activity_stream_sso_users()
 
