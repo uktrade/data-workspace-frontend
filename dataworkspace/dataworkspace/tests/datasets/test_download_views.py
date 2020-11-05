@@ -271,6 +271,11 @@ class TestDatasetViews:
         response = client.get(ds.get_absolute_url())
         assert response.status_code == 404
 
+    @pytest.mark.django_db
+    def test_dataset_detail_view_invalid_uuid(self, client):
+        response = client.get('/datasets/0c2825e1')
+        assert response.status_code == 404
+
     @override_settings(DEBUG=False, GTM_CONTAINER_ID="test")
     @pytest.mark.parametrize(
         'factory',
