@@ -155,6 +155,76 @@ class TestSyncQuickSightPermissions:
     @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
     @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
     @mock.patch('dataworkspace.apps.applications.utils.cache')
+    def test_list_user_pagination(self, mock_cache, mock_boto3_client, mock_creds):
+        # Arrange
+        UserFactory.create(username='fake@email.com')
+        UserFactory.create(username='fake2@email.com')
+        SourceTableFactory(
+            dataset=MasterDataSetFactory.create(
+                user_access_type='REQUIRES_AUTHENTICATION'
+            )
+        )
+
+        mock_user_client = mock.Mock()
+        mock_user_client.list_users.side_effect = [
+            {
+                "UserList": [
+                    {
+                        "Arn": "Arn",
+                        "Email": "fake@email.com",
+                        "Role": "AUTHOR",
+                        "UserName": "user/fake@email.com",
+                    }
+                ],
+                "NextToken": "foo",
+            },
+            {
+                "UserList": [
+                    {
+                        "Arn": "Arn2",
+                        "Email": "fake2@email.com",
+                        "Role": "AUTHOR",
+                        "UserName": "user/fake2@email.com",
+                    }
+                ]
+            },
+        ]
+        mock_data_client = mock.Mock()
+        mock_sts_client = mock.Mock()
+        mock_boto3_client.side_effect = [
+            mock_user_client,
+            mock_data_client,
+            mock_sts_client,
+        ]
+        mock_creds.return_value = [mock.Mock()]
+
+        # Act
+        sync_quicksight_permissions()
+
+        # Assert
+        assert mock_user_client.update_user.call_args_list == [
+            mock.call(
+                AwsAccountId=mock.ANY,
+                Namespace='default',
+                Role='AUTHOR',
+                CustomPermissionsName='author-custom-permissions',
+                UserName='user/fake@email.com',
+                Email='fake@email.com',
+            ),
+            mock.call(
+                AwsAccountId=mock.ANY,
+                Namespace='default',
+                Role='AUTHOR',
+                CustomPermissionsName='author-custom-permissions',
+                UserName='user/fake2@email.com',
+                Email='fake2@email.com',
+            ),
+        ]
+
+    @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
+    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
+    @mock.patch('dataworkspace.apps.applications.utils.cache')
     def test_update_existing_data_source(
         self, mock_cache, mock_boto3_client, mock_creds
     ):

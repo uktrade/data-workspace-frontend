@@ -100,3 +100,13 @@
 .app-readonly-sql {
     background-color: #F0F0F0
 }
+
+.app-page-width-toggle {
+    display: none
+}
+
+@media only screen and (min-width: 1020px) {
+    .app-page-width-toggle {
+        display: block
+    }
+}

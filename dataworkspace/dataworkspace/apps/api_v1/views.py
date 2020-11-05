@@ -199,8 +199,8 @@ def application_api_PUT(request, public_host):
     try:
         memory, cpu = request.GET['__memory_cpu'].split('_')
     except KeyError:
-        memory = None
-        cpu = None
+        memory = application_template.default_memory
+        cpu = application_template.default_cpu
 
     spawner_options = json.dumps(application_options(application_template))
 

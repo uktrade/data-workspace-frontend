@@ -23,6 +23,11 @@ def get_driver():
         options.add_argument(
             '--disable-dev-shm-usage'
         )  # https://github.com/elgalu/docker-selenium/issues/20
+
+        # Desktop size in order to ensure the browser has desktop styling (less than this hides certain elements
+        # under test)
+        options.add_argument("--window-size=1920,1080")
+
         driver = webdriver.Chrome(options=options)
 
     driver.implicitly_wait(5)
@@ -153,6 +158,14 @@ class HomePage(_BasePage):
             "//button[normalize-space(text()) = 'Fetch page']"
         )
         fetch_page.click()
+
+    def click_full_width(self):
+        toggle = self._driver.find_element_by_id('full-width')
+        toggle.click()
+
+    def click_normal_width(self):
+        toggle = self._driver.find_element_by_id('normal-width')
+        toggle.click()
 
 
 class CreateQueryPage(_BasePage):

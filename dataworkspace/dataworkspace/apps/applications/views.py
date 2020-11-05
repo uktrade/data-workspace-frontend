@@ -45,6 +45,7 @@ from dataworkspace.apps.applications.utils import (
     application_options,
     get_quicksight_dashboard_name_url,
     sync_quicksight_permissions,
+    log_visualisation_view,
 )
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
@@ -61,6 +62,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationUserPermission,
     VisualisationLink,
 )
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.utils import DATA_EXPLORER_FLAG
 from dataworkspace.zendesk import update_zendesk_ticket
@@ -274,8 +276,18 @@ def visualisation_link_html_view(request, link_id):
 
     identifier = visualisation_link.identifier
     if visualisation_link.visualisation_type == 'QUICKSIGHT':
+        log_visualisation_view(
+            visualisation_link,
+            request.user,
+            event_type=EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+        )
         return _get_embedded_quicksight_dashboard(request, identifier)
     elif visualisation_link.visualisation_type == 'DATASTUDIO':
+        log_visualisation_view(
+            visualisation_link,
+            request.user,
+            event_type=EventLog.TYPE_VIEW_DATASTUDIO_VISUALISATION,
+        )
         return redirect(identifier)
 
     return HttpResponse(

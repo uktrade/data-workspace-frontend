@@ -1,12 +1,19 @@
-packages <- list("shiny", "aws.s3", "aws.ec2metadata", "ggraph", "igraph", "RPostgres", "text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2", "tidyverse")
+packages <- list('DBI', 'DT', 'RPostgres', 'aws.ec2metadata', 'aws.s3', 'bizdays', 'countrycode', 'flexdashboard', 'ggraph', 'igraph', 'janitor', 'jsonlite', 'kableExtra', 'leaflet', 'lubridate', 'plotly', 'quantmod', 'readxl', 'rgdal', 'rmapshaper', 'rworldmap', 'scales', 'sf', 'shiny', 'stringr', 'topicmodels', 'text2vec', 'tidytext', 'tidyverse', 'tm', 'tmap', 'tmaptools', 'widyr', 'wordcloud2', 'zoo')
 folder_name <- "cran-binary"
 file_prefix <- "/src/contrib/"
 bucket_name <- Sys.getenv("MIRRORS_BUCKET_NAME") 
 
 # Generate binary packages
+## Custom XML package - support a specifically-required older version
+writeLines("\n\n\n\n\nInstalling package XML\n\n\n\n\n")
+install.packages("https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/src/contrib/XML_3.98-1.20.tar.gz", repos=NULL, type="source", INSTALL_opts = c("--build"))
+
+## Standard packages
 for (package in packages) {
+  writeLines(sprintf("\n\n\n\n\nInstalling package %s\n\n\n\n\n", package))
   install.packages(package, INSTALL_opts = c("--build"))
 }
+
 file_names <- list.files(path = ".", pattern = "*.gz", full.names = TRUE, recursive = FALSE)
 new_file_names <- sub("^(.*)_R_.*.tar.gz", "\\1.tar.gz", file_names)
 file.rename(from = file_names, to = new_file_names)

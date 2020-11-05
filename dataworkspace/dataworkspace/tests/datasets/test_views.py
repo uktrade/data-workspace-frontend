@@ -3,8 +3,10 @@ from urllib.parse import quote_plus
 from uuid import uuid4
 
 import mock
+import psycopg2
 import pytest
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.urls import reverse
@@ -12,6 +14,7 @@ from django.test import Client
 from lxml import html
 from waffle.models import Flag
 
+from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -1076,6 +1079,7 @@ class TestVisualisationLinkView:
             'my-dashboard',
             'https://my.dashboard.quicksight.amazonaws.com',
         )
+        eventlog_count = EventLog.objects.count()
 
         client = Client(**get_http_sso_data(user))
         response = client.get(link.get_absolute_url())
@@ -1093,6 +1097,11 @@ class TestVisualisationLinkView:
             'frame-ancestors dataworkspace.test:8000 https://authorized-embedder.com'
             in response['content-security-policy']
         )
+        assert EventLog.objects.count() == eventlog_count + 1
+        assert (
+            list(EventLog.objects.all())[-1].event_type
+            == EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION
+        )
 
     @pytest.mark.django_db
     def test_datastudio_link(self):
@@ -1105,12 +1114,18 @@ class TestVisualisationLinkView:
             identifier='https://www.data.studio',
             visualisation_catalogue_item=vis,
         )
+        eventlog_count = EventLog.objects.count()
 
         client = Client(**get_http_sso_data(user))
         response = client.get(link.get_absolute_url())
 
         assert response.status_code == 302
         assert response['location'] == 'https://www.data.studio'
+        assert EventLog.objects.count() == eventlog_count + 1
+        assert (
+            list(EventLog.objects.all())[-1].event_type
+            == EventLog.TYPE_VIEW_DATASTUDIO_VISUALISATION
+        )
 
     @pytest.mark.django_db
     def test_user_needs_access_via_catalogue_item(self, mocker):
@@ -1254,3 +1269,168 @@ def test_find_datasets_name_weighting(client):
             'has_access': False,
         },
     ]
+
+
+class TestCustomQueryRelatedDataView:
+    def _get_dsn(self):
+        return database_dsn(settings.DATABASES_DATA['my_database'])
+
+    def _get_database(self):
+        return factories.DatabaseFactory(memorable_name='my_database')
+
+    def _setup_datacut_with_masters(self, sql, master_count=1, published=True):
+        masters = []
+        for _ in range(master_count):
+            master = factories.DataSetFactory.create(
+                published=published,
+                type=DataSetType.MASTER.value,
+                name='A master 1',
+                user_access_type='REQUIRES_AUTHENTICATION',
+            )
+            factories.SourceTableFactory.create(
+                dataset=master,
+                schema="public",
+                table="test_dataset",
+                database=self._get_database(),
+            )
+            masters.append(master)
+        datacut = factories.DataSetFactory.create(
+            published=published,
+            type=DataSetType.DATACUT.value,
+            name='A datacut',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        query = factories.CustomDatasetQueryFactory(
+            dataset=datacut, database=self._get_database(), query=sql,
+        )
+        factories.CustomDatasetQueryTableFactory(
+            query=query, schema='public', table='test_dataset'
+        )
+        return datacut, masters
+
+    def _setup_new_table(self):
+        with psycopg2.connect(self._get_dsn()) as conn, conn.cursor() as cursor:
+            cursor.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS custom_query_test (
+                    id INT,
+                    name VARCHAR(255),
+                    date DATE
+                );
+                TRUNCATE TABLE custom_query_test;
+                INSERT INTO custom_query_test VALUES(1, 'the first record', NULL);
+                INSERT INTO custom_query_test VALUES(2, 'the second record', '2019-01-01');
+                INSERT INTO custom_query_test VALUES(3, 'the last record', NULL);
+                '''
+            )
+
+    @pytest.mark.parametrize(
+        "request_client, master_count, published, status",
+        (
+            ("sme_client", 1, True, 200),
+            ("staff_client", 1, True, 200),
+            ("sme_client", 1, False, 200),
+            ("staff_client", 1, False, 200),
+            ("sme_client", 3, True, 200),
+            ("staff_client", 3, True, 200),
+            ("sme_client", 3, False, 200),
+            ("staff_client", 3, False, 200),
+        ),
+        indirect=["request_client"],
+    )
+    @pytest.mark.django_db
+    def test_related_dataset_single_dataset(
+        self, request_client, master_count, published, status
+    ):
+        datacut, masters = self._setup_datacut_with_masters(
+            'SELECT * FROM test_dataset order by id desc limit 10',
+            master_count=master_count,
+            published=published,
+        )
+        url = reverse('datasets:dataset_detail', args=(datacut.id,))
+        response = request_client.get(url)
+        assert response.status_code == status
+        assert len(response.context["related_masters"]) == master_count
+        for master in masters:
+            related_master = [
+                item
+                for item in response.context["related_masters"]
+                if item.id == master.id
+            ][0]
+            assert related_master.id == master.id
+            assert related_master.name == master.name
+
+    @pytest.mark.parametrize(
+        "request_client, published, status",
+        (
+            ("sme_client", True, 200),
+            ("staff_client", True, 200),
+            ("sme_client", False, 200),
+            ("staff_client", False, 200),
+        ),
+        indirect=["request_client"],
+    )
+    @pytest.mark.django_db
+    def test_related_dataset_does_not_duplicate_masters(
+        self, request_client, published, status
+    ):
+        self._setup_new_table()
+        master1 = factories.DataSetFactory.create(
+            published=published,
+            type=DataSetType.MASTER.value,
+            name='A master 1',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        factories.SourceTableFactory.create(
+            dataset=master1,
+            schema="public",
+            table="test_dataset",
+            database=self._get_database(),
+        )
+        factories.SourceTableFactory.create(
+            dataset=master1,
+            schema="public",
+            table="custom_query_test",
+            database=self._get_database(),
+        )
+
+        master2 = factories.DataSetFactory.create(
+            published=published,
+            type=DataSetType.MASTER.value,
+            name='A master 1',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        factories.SourceTableFactory.create(
+            dataset=master2,
+            schema="public",
+            table="test_dataset",
+            database=self._get_database(),
+        )
+
+        datacut = factories.DataSetFactory.create(
+            published=published,
+            type=DataSetType.DATACUT.value,
+            name='A datacut',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        query1 = factories.CustomDatasetQueryFactory(
+            dataset=datacut,
+            database=self._get_database(),
+            query='SELECT * FROM test_dataset order by id desc limit 10',
+        )
+        factories.CustomDatasetQueryTableFactory(
+            query=query1, schema='public', table='test_dataset'
+        )
+        query2 = factories.CustomDatasetQueryFactory(
+            dataset=datacut,
+            database=self._get_database(),
+            query='SELECT * FROM custom_query_test order by id desc limit 10',
+        )
+        factories.CustomDatasetQueryTableFactory(
+            query=query2, schema='public', table='custom_query_test'
+        )
+
+        url = reverse('datasets:dataset_detail', args=(datacut.id,))
+        response = request_client.get(url)
+        assert response.status_code == status
+        assert len(response.context["related_masters"]) == 2
