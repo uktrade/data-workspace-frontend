@@ -540,6 +540,7 @@ class TestSyncActivityStreamSSOUsers:
                 'http://activity.stream/v3/activities/_search',
                 json.dumps(
                     {
+                        "size": 1000,
                         "query": {
                             "bool": {
                                 "filter": [
@@ -552,7 +553,7 @@ class TestSyncActivityStreamSSOUsers:
                                 ]
                             }
                         },
-                        "sort": [{"published": "asc"}],
+                        "sort": [{"published": "asc"}, {"id": "asc"}],
                     }
                 ),
             )
@@ -584,6 +585,7 @@ class TestSyncActivityStreamSSOUsers:
                 'http://activity.stream/v3/activities/_search',
                 json.dumps(
                     {
+                        "size": 1000,
                         "query": {
                             "bool": {
                                 "filter": [
@@ -596,7 +598,7 @@ class TestSyncActivityStreamSSOUsers:
                                 ]
                             }
                         },
-                        "sort": [{"published": "asc"}],
+                        "sort": [{"published": "asc"}, {"id": "asc"}],
                     }
                 ),
             )
@@ -635,6 +637,7 @@ class TestSyncActivityStreamSSOUsers:
                 'http://activity.stream/v3/activities/_search',
                 json.dumps(
                     {
+                        "size": 1000,
                         "query": {
                             "bool": {
                                 "filter": [
@@ -647,7 +650,7 @@ class TestSyncActivityStreamSSOUsers:
                                 ]
                             }
                         },
-                        "sort": [{"published": "asc"}],
+                        "sort": [{"published": "asc"}, {"id": "asc"}],
                     }
                 ),
             ),
@@ -656,6 +659,7 @@ class TestSyncActivityStreamSSOUsers:
                 'http://activity.stream/v3/activities/_search',
                 json.dumps(
                     {
+                        "size": 1000,
                         "query": {
                             "bool": {
                                 "filter": [
@@ -668,8 +672,11 @@ class TestSyncActivityStreamSSOUsers:
                                 ]
                             }
                         },
-                        "sort": [{"published": "asc"}],
-                        "search_after": [1000000000000],
+                        "sort": [{"published": "asc"}, {"id": "asc"}],
+                        "search_after": [
+                            1000000000000,
+                            "dit:StaffSSO:User:00000000-0000-0000-0000-000000000000:Update",
+                        ],
                     }
                 ),
             ),

@@ -1080,6 +1080,7 @@ def _do_sync_activity_stream_sso_users():
     ten_seconds_before_last_published = last_published - datetime.timedelta(seconds=10)
 
     query = {
+        "size": 1000,
         "query": {
             "bool": {
                 "filter": [
@@ -1094,7 +1095,7 @@ def _do_sync_activity_stream_sso_users():
                 ]
             }
         },
-        "sort": [{"published": "asc"}],
+        "sort": [{"published": "asc"}, {"id": "asc"}],
     }
 
     while True:
@@ -1112,7 +1113,7 @@ def _do_sync_activity_stream_sso_users():
 
         if 'failures' in response_json['_shards']:
             raise Exception(
-                f"Failed to fetch SSO users: {','.join(response_json['_shards']['failures'])}"
+                f"Failed to fetch SSO users: {json.dumps(response_json['_shards']['failures'])}"
             )
 
         records = response_json['hits']['hits']
