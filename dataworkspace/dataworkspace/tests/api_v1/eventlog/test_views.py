@@ -5,8 +5,10 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.fields import DateTimeField
 
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 from dataworkspace.tests import factories
+from dataworkspace.tests.factories import EventLogFactory, VisualisationLinkFactory
 
 
 @pytest.mark.django_db
@@ -70,3 +72,23 @@ class TestEventLogAPIView(BaseAPIViewTest):
         assert response.json()['results'][1]['related_object']['id'] == str(
             approval_1.id
         )
+
+    def test_visualisation_view(self, unauthenticated_client):
+        vis_link = VisualisationLinkFactory.create(
+            visualisation_type='QUICKSIGHT',
+            visualisation_catalogue_item__name='my quicksight vis',
+        )
+        EventLogFactory.create(event_type=EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION)
+
+        response = unauthenticated_client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert (
+            response.json()['results'][0]['event_type']
+            == 'View AWS QuickSight visualisation'
+        )
+        assert response.json()['results'][0]['related_object']['id'] == str(vis_link.id)
+        assert response.json()['results'][0]['related_object']['name'] == str(
+            vis_link.name
+        )
+        assert response.json()['results'][0]['related_object']['type'] == 'QUICKSIGHT'

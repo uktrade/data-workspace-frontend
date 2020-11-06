@@ -1,6 +1,10 @@
 from rest_framework import serializers
 
-from dataworkspace.apps.datasets.models import DataSet, ReferenceDataset
+from dataworkspace.apps.datasets.models import (
+    DataSet,
+    ReferenceDataset,
+    VisualisationLink,
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.applications.models import VisualisationApproval
 
@@ -42,6 +46,21 @@ class EventLogVisualisationApprovalSerialiser(serializers.ModelSerializer):
         return obj.visualisation.name
 
 
+class EventLogVisualisationLinkSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VisualisationLink
+        fields = ('id', 'type', 'name')
+
+    def get_type(self, obj):
+        return obj.visualisation_type
+
+    def get_name(self, obj):
+        return obj.name
+
+
 class EventLogRelatedObjectField(serializers.RelatedField):
     def to_representation(  # pylint: disable=inconsistent-return-statements
         self, value
@@ -52,6 +71,8 @@ class EventLogRelatedObjectField(serializers.RelatedField):
             return EventLogReferenceDatasetSerializer(value).data
         if isinstance(value, VisualisationApproval):
             return EventLogVisualisationApprovalSerialiser(value).data
+        if isinstance(value, VisualisationLink):
+            return EventLogVisualisationLinkSerializer(value).data
 
 
 class EventLogSerializer(serializers.ModelSerializer):
