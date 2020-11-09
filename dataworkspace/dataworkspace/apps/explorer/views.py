@@ -17,6 +17,8 @@ from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
 
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
@@ -215,6 +217,12 @@ class CreateQueryView(CreateView):
                     return render(request, self.template_name, vm)
 
                 messages.success(request, "Your query has been saved.")
+                log_event(
+                    request.user,
+                    EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY,
+                    related_object=query,
+                    extra={"sql": query.sql},
+                )
                 return HttpResponseRedirect(
                     reverse_lazy(
                         'explorer:query_detail', kwargs={'query_id': self.object.id}
@@ -418,6 +426,12 @@ class QueryView(View):
             )
             if success:
                 messages.success(request, "Your query has been updated.")
+                log_event(
+                    request.user,
+                    EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY,
+                    related_object=query,
+                    extra={"sql": query.sql},
+                )
                 return redirect(
                     reverse('explorer:query_detail', kwargs={"query_id": query.id})
                 )
