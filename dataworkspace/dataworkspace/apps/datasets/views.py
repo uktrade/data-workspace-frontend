@@ -196,6 +196,7 @@ def get_datasets_data_for_user_matching_query(
         'source_tag_ids',
         'purpose',
         'published',
+        'published_at',
     ).annotate(has_access=BoolOr('_has_access'))
 
     return datasets.values(
@@ -208,6 +209,7 @@ def get_datasets_data_for_user_matching_query(
         'source_tag_ids',
         'purpose',
         'published',
+        'published_at',
         'has_access',
     )
 
@@ -297,6 +299,7 @@ def get_visualisations_data_for_user_matching_query(
         'source_tag_ids',
         'purpose',
         'published',
+        'published_at',
     ).annotate(has_access=BoolOr('_has_access'))
 
     return visualisations.values(
@@ -309,6 +312,7 @@ def get_visualisations_data_for_user_matching_query(
         'source_tag_ids',
         'purpose',
         'published',
+        'published_at',
         'has_access',
     )
 
@@ -321,10 +325,12 @@ def _matches_filters(data, access: bool, use: Set, source_ids: Set):
     )
 
 
-def sorted_datasets_and_visualisations_matching_query_for_user(query, use, user):
+def sorted_datasets_and_visualisations_matching_query_for_user(
+    query, use, user, sort_by
+):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
-    and returns them, sorted by desc(search_rank), asc(name).
+    and returns them, sorted by incoming sort field, default is desc(search_rank).
     """
     master_and_datacut_datasets = get_datasets_data_for_user_matching_query(
         DataSet.objects.live(), query, use, user=user, id_field='id'
@@ -339,10 +345,13 @@ def sorted_datasets_and_visualisations_matching_query_for_user(query, use, user)
     )
 
     # Combine all datasets and visualisations and order them.
+
+    sort_fields = sort_by.split(',')
+
     all_datasets = (
         master_and_datacut_datasets.union(reference_datasets)
         .union(visualisations)
-        .order_by('-search_rank', 'name')
+        .order_by(*sort_fields)
     )
 
     return all_datasets
@@ -359,12 +368,13 @@ def find_datasets(request):
         query = form.cleaned_data.get("q")
         access = form.cleaned_data.get("access")
         use = set(form.cleaned_data.get("use"))
+        sort = form.cleaned_data.get("sort")
         source_ids = set(source.id for source in form.cleaned_data.get("source"))
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
     all_datasets_visible_to_user_matching_query = sorted_datasets_and_visualisations_matching_query_for_user(
-        query=query, use=use, user=request.user
+        query=query, use=use, user=request.user, sort_by=sort,
     )
 
     # Filter out any records that don't match the selected filters. We do this in Python, not the DB, because we need
