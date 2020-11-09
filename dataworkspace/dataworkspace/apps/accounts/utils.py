@@ -8,7 +8,6 @@ from django.contrib.auth import (
     authenticate,
 )
 from django.contrib.sessions.backends.base import CreateError
-
 from django.http import HttpResponseForbidden
 
 logger = logging.getLogger('app')

@@ -11,10 +11,12 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.db import IntegrityError
 from django.db.models import Q
 import gevent
 from psycopg2 import connect, sql
 import requests
+from mohawk import Sender
 import redis
 
 from dataworkspace.apps.applications.spawner import (
@@ -29,6 +31,7 @@ from dataworkspace.apps.applications.models import (
 )
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
+    create_tools_access_iam_role,
     database_dsn,
     stable_identification_suffix,
     source_tables_for_user,
@@ -55,6 +58,10 @@ class ExpectedMetricsException(MetricsException):
 
 
 class UnexpectedMetricsException(MetricsException):
+    pass
+
+
+class HawkException(Exception):
     pass
 
 
@@ -937,6 +944,209 @@ def sync_quicksight_permissions(
         user_sso_ids_to_update,
         poll_for_user_creation,
     )
+
+
+def _check_tools_access(user):
+    if (
+        user.user_permissions.filter(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+        and not user.profile.tools_access_role_arn
+    ):
+        create_tools_access_iam_role_task.delay(user.id)
+
+
+def create_user_from_sso(
+    sso_id,
+    primary_email,
+    other_emails,
+    first_name,
+    last_name,
+    check_tools_access_if_user_exists,
+):
+    User = get_user_model()
+    try:
+        user = User.objects.get(profile__sso_id=sso_id)
+    except User.DoesNotExist:
+        user, _ = User.objects.get_or_create(
+            email__in=other_emails,
+            defaults={'email': primary_email, 'username': primary_email},
+        )
+
+        user.save()
+        user.profile.sso_id = sso_id
+        try:
+            user.save()
+        except IntegrityError:
+            # A concurrent request may have overtaken this one and created a user
+            user = User.objects.get(profile__sso_id=sso_id)
+
+        _check_tools_access(user)
+    else:
+        if check_tools_access_if_user_exists:
+            _check_tools_access(user)
+
+    changed = False
+
+    if user.username != primary_email:
+        changed = True
+        user.username = primary_email
+
+    if user.email != primary_email:
+        changed = True
+        user.email = primary_email
+
+    if user.first_name != first_name:
+        changed = True
+        user.first_name = first_name
+
+    if user.last_name != last_name:
+        changed = True
+        user.last_name = last_name
+
+    if user.has_usable_password():
+        changed = True
+        user.set_unusable_password()
+
+    if changed:
+        user.save()
+
+    return user
+
+
+def hawk_request(method, url, body):
+    hawk_id = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_ID
+    hawk_key = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY
+
+    if not hawk_id or not hawk_key:
+        raise HawkException("Hawk id or key not configured")
+
+    content_type = 'application/json'
+    header = Sender(
+        {'id': hawk_id, 'key': hawk_key, 'algorithm': 'sha256'},
+        url,
+        method,
+        content=body,
+        content_type=content_type,
+    ).request_header
+
+    response = requests.request(
+        method,
+        url,
+        data=body,
+        headers={'Authorization': header, 'Content-Type': content_type},
+    )
+    return response.status_code, response.content
+
+
+@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
+def create_tools_access_iam_role_task(user_id):
+    with cache.lock(
+        "create_tools_access_iam_role_task", blocking_timeout=0, timeout=360,
+    ):
+        _do_create_tools_access_iam_role(user_id)
+
+
+def _do_create_tools_access_iam_role(user_id):
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        logger.exception('User id %d does not exist', user_id)
+    else:
+        create_tools_access_iam_role(
+            user.email,
+            str(user.profile.sso_id),
+            user.profile.home_directory_efs_access_point_id,
+        )
+        gevent.sleep(1)
+
+
+@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
+def sync_activity_stream_sso_users():
+    with cache.lock(
+        "activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800
+    ):
+        _do_sync_activity_stream_sso_users()
+
+
+def _do_sync_activity_stream_sso_users():
+    last_published = cache.get(
+        'activity_stream_sync_last_published', datetime.datetime.utcfromtimestamp(0)
+    )
+
+    endpoint = f'{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search'
+    ten_seconds_before_last_published = last_published - datetime.timedelta(seconds=10)
+
+    query = {
+        "size": 1000,
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"object.type": "dit:StaffSSO:User"}},
+                    {
+                        "range": {
+                            "published": {
+                                "gte": f"{ten_seconds_before_last_published.strftime('%Y-%m-%dT%H:%M:%S')}"
+                            }
+                        }
+                    },
+                ]
+            }
+        },
+        "sort": [{"published": "asc"}, {"id": "asc"}],
+    }
+
+    while True:
+        try:
+            logger.info('Calling activity stream with query %s', json.dumps(query))
+            status_code, response = hawk_request('GET', endpoint, json.dumps(query),)
+        except HawkException as e:
+            logger.error('Failed to call activity stream with error %s', e)
+            break
+
+        if status_code != 200:
+            raise Exception(f'Failed to fetch SSO users: {response}')
+
+        response_json = json.loads(response)
+
+        if 'failures' in response_json['_shards']:
+            raise Exception(
+                f"Failed to fetch SSO users: {json.dumps(response_json['_shards']['failures'])}"
+            )
+
+        records = response_json['hits']['hits']
+
+        if not records:
+            break
+
+        logger.info('Fetched %d record(s) from activity stream', len(records))
+
+        for record in records:
+            obj = record['_source']['object']
+
+            user_id = obj['dit:StaffSSO:User:userId']
+            emails = obj['dit:emailAddress']
+            primary_email = emails[0]
+
+            create_user_from_sso(
+                user_id,
+                primary_email,
+                emails,
+                obj['dit:firstName'],
+                obj['dit:lastName'],
+                check_tools_access_if_user_exists=True,
+            )
+
+        last_published_str = records[-1]['_source']['published']
+        last_published = datetime.datetime.strptime(
+            last_published_str, '%Y-%m-%dT%H:%M:%S.%fZ'
+        )
+        # paginate to next batch of records
+        query['search_after'] = records[-1]['sort']
+
+    cache.set('activity_stream_sync_last_published', last_published)
 
 
 def log_visualisation_view(visualisation_link, user, event_type):

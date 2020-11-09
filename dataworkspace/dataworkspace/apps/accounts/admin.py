@@ -23,7 +23,10 @@ from dataworkspace.apps.datasets.models import (
     VisualisationUserPermission,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.applications.utils import sync_quicksight_permissions
+from dataworkspace.apps.applications.utils import (
+    create_tools_access_iam_role_task,
+    sync_quicksight_permissions,
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 
@@ -43,6 +46,12 @@ class AppUserCreationForm(forms.ModelForm):
 
 
 class AppUserEditForm(forms.ModelForm):
+    tools_access_role_arn = forms.CharField(
+        label='Tools access IAM role arn',
+        help_text='The arn for the IAM role required to start local tools',
+        required=False,
+        widget=AdminTextInputWidget(),
+    )
     home_directory_efs_access_point_id = forms.CharField(
         label='Home directory ID',
         help_text='EFS Access Point ID',
@@ -97,6 +106,11 @@ class AppUserEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         instance = kwargs['instance']
+
+        self.fields[
+            'tools_access_role_arn'
+        ].initial = instance.profile.tools_access_role_arn
+        self.fields['tools_access_role_arn'].widget.attrs['class'] = 'vTextField'
 
         self.fields[
             'home_directory_efs_access_point_id'
@@ -236,6 +250,7 @@ class AppUserAdmin(UserAdmin):
                 'fields': [
                     'email',
                     'sso_id',
+                    'tools_access_role_arn',
                     'home_directory_efs_access_point_id',
                     'first_name',
                     'last_name',
@@ -304,6 +319,10 @@ class AppUserAdmin(UserAdmin):
                 and start_all_applications_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(start_all_applications_permission)
+
+                if not obj.profile.tools_access_role_arn:
+                    create_tools_access_iam_role_task.delay(obj.id)
+
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
                     'can_start_all_applications',
@@ -465,6 +484,11 @@ class AppUserAdmin(UserAdmin):
         if 'home_directory_efs_access_point_id' in form.cleaned_data:
             obj.profile.home_directory_efs_access_point_id = form.cleaned_data[
                 'home_directory_efs_access_point_id'
+            ]
+
+        if 'tools_access_role_arn' in form.cleaned_data:
+            obj.profile.tools_access_role_arn = form.cleaned_data[
+                'tools_access_role_arn'
             ]
 
         super().save_model(request, obj, form, change)

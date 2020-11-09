@@ -53,6 +53,7 @@ jmespath==0.10.0          # via boto3, botocore
 kombu==4.6.11             # via celery
 markdown==3.2.2           # via -r requirements.in
 markupsafe==1.1.1         # via -r requirements.in
+mohawk==1.1.0             # via -r requirements.in
 monotonic==1.5            # via notifications-python-client
 multidict==4.7.6          # via aiohttp, yarl
 notifications-python-client==5.7.0  # via -r requirements.in
@@ -74,7 +75,7 @@ requests==2.24.0          # via -r requirements.in, notifications-python-client,
 rjsmin==1.1.0             # via django-compressor
 s3transfer==0.3.3         # via boto3
 sentry-sdk==0.17.6        # via -r requirements.in
-six==1.15.0               # via bleach, cryptography, django-compressor, django-extensions, packaging, paste, python-dateutil, tenacity, zenpy
+six==1.15.0               # via bleach, cryptography, django-compressor, django-extensions, mohawk, packaging, paste, python-dateutil, tenacity, zenpy
 sqlalchemy==1.3.19        # via -r requirements.in, geoalchemy2
 sqlparse==0.3.1           # via django
 tenacity==6.2.0           # via celery-redbeat

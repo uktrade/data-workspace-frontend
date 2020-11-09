@@ -253,33 +253,40 @@ NOTIFY_VISUALISATION_ACCESS_REQUEST_TEMPLATE_ID = '7cf395da-2f1b-4084-a526-f2fd6
 NOTIFY_VISUALISATION_ACCESS_GRANTED_TEMPLATE_ID = '139d5e94-1044-49f9-99a9-2a094b8986ea'
 
 CELERY_BROKER_URL = env['REDIS_URL']
-CELERY_BEAT_SCHEDULE = {
-    'kill-idle-fargate-containers': {
-        'task': 'dataworkspace.apps.applications.utils.kill_idle_fargate',
-        'schedule': 60 * 10,
-        'args': (),
-    },
-    'populate-created-stopped-fargate-containers': {
-        'task': 'dataworkspace.apps.applications.utils.populate_created_stopped_fargate',
-        'schedule': 60 * 10,
-        'args': (),
-    },
-    'delete-unused-datasets-users': {
-        'task': 'dataworkspace.apps.applications.utils.delete_unused_datasets_users',
-        'schedule': 60 * 10,
-        'args': (),
-    },
-    'full-quicksight-permissions-sync': {
-        'task': 'dataworkspace.apps.applications.utils.sync_quicksight_permissions',
-        'schedule': crontab(minute=17, hour=1),
-        'args': (),
-    },
-    'clean-up-old-data-explorer-playground-sql-queries': {
-        'task': 'dataworkspace.apps.explorer.tasks.cleanup_playground_sql_table',
-        'schedule': 60 * 60 * 6,
-        'args': (),
-    },
-}
+
+if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
+    CELERY_BEAT_SCHEDULE = {
+        'kill-idle-fargate-containers': {
+            'task': 'dataworkspace.apps.applications.utils.kill_idle_fargate',
+            'schedule': 60 * 10,
+            'args': (),
+        },
+        'populate-created-stopped-fargate-containers': {
+            'task': 'dataworkspace.apps.applications.utils.populate_created_stopped_fargate',
+            'schedule': 60 * 10,
+            'args': (),
+        },
+        'delete-unused-datasets-users': {
+            'task': 'dataworkspace.apps.applications.utils.delete_unused_datasets_users',
+            'schedule': 60 * 10,
+            'args': (),
+        },
+        'full-quicksight-permissions-sync': {
+            'task': 'dataworkspace.apps.applications.utils.sync_quicksight_permissions',
+            'schedule': crontab(minute=17, hour=1),
+            'args': (),
+        },
+        'clean-up-old-data-explorer-playground-sql-queries': {
+            'task': 'dataworkspace.apps.explorer.tasks.cleanup_playground_sql_table',
+            'schedule': 60 * 60 * 6,
+            'args': (),
+        },
+        'sync-sso-users-from-activity-stream': {
+            'task': 'dataworkspace.apps.applications.utils.sync_activity_stream_sso_users',
+            'schedule': 60,
+            'args': (),
+        },
+    }
 
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
 
@@ -493,3 +500,7 @@ EXPLORER_DATA_EXPORTERS = [
     ('excel', 'dataworkspace.apps.explorer.exporters.ExcelExporter'),
     ('json', 'dataworkspace.apps.explorer.exporters.JSONExporter'),
 ]
+
+ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
+ACTIVITY_STREAM_HAWK_CREDENTIALS_ID = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_ID")
+ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY")
