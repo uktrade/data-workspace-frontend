@@ -7,6 +7,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.applications.models import VisualisationApproval
+from dataworkspace.apps.explorer.models import Query
 
 
 class EventLogDatasetSerializer(serializers.ModelSerializer):
@@ -61,6 +62,17 @@ class EventLogVisualisationLinkSerializer(serializers.ModelSerializer):
         return obj.name
 
 
+class EventLogDataExplorerQuerySerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Query
+        fields = ('id', 'name')
+
+    def get_name(self, obj):
+        return obj.title
+
+
 class EventLogRelatedObjectField(serializers.RelatedField):
     def to_representation(  # pylint: disable=inconsistent-return-statements
         self, value
@@ -73,6 +85,8 @@ class EventLogRelatedObjectField(serializers.RelatedField):
             return EventLogVisualisationApprovalSerialiser(value).data
         if isinstance(value, VisualisationLink):
             return EventLogVisualisationLinkSerializer(value).data
+        if isinstance(value, Query):
+            return EventLogDataExplorerQuerySerializer(value).data
 
 
 class EventLogSerializer(serializers.ModelSerializer):

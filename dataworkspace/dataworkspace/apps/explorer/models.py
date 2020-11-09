@@ -6,13 +6,15 @@ from time import time
 
 from dynamic_models.models import AbstractFieldSchema, AbstractModelSchema  # noqa: I202
 from django.conf import settings
-from django.db import DatabaseError, models
+from django.db import DatabaseError, models, transaction
 
 try:
     from django.urls import reverse
 except ImportError:
     from django.core.urlresolvers import reverse
 
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.utils import (
     extract_params,
     get_params_for_url,
@@ -133,6 +135,24 @@ class Query(models.Model):
         )
         ql.save()
         return ql
+
+    @transaction.atomic
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
+
+        log_event(
+            self.created_by_user,
+            EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY,
+            related_object=self,
+            extra={"sql": self.sql},
+        )
 
 
 class QueryLog(models.Model):
