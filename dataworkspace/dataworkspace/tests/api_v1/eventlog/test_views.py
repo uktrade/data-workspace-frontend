@@ -78,7 +78,10 @@ class TestEventLogAPIView(BaseAPIViewTest):
             visualisation_type='QUICKSIGHT',
             visualisation_catalogue_item__name='my quicksight vis',
         )
-        EventLogFactory.create(event_type=EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION)
+        EventLogFactory.create(
+            event_type=EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+            related_object=vis_link,
+        )
 
         response = unauthenticated_client.get(self.url)
 

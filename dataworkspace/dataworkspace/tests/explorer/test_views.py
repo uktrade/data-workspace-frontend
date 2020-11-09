@@ -12,8 +12,9 @@ from django.forms.models import model_to_dict
 from lxml import html
 import pytest
 
-from dataworkspace.tests.factories import UserFactory
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
+from dataworkspace.tests.factories import UserFactory
 from dataworkspace.tests.explorer.factories import (
     QueryLogFactory,
     SimpleQueryFactory,
@@ -65,6 +66,7 @@ class TestQueryCreateView:
         assert response.status_code == 200
         assert len(Query.objects.all()) == 0
 
+    @pytest.mark.django_db(transaction=True)
     def test_renders_back_link(self, staff_user, staff_client):
         play_sql = PlaygroundSQLFactory(
             sql="select 1, 2, 3", created_by_user=staff_user
@@ -106,6 +108,26 @@ class TestQueryDetailView:
         )
 
         assert Query.objects.get(pk=query.id).sql == expected
+
+    def test_saving_query_creates_eventlog_entry(self, staff_user, staff_client):
+        expected = 'select 2;'
+        query = SimpleQueryFactory(sql="select 1;", created_by_user=staff_user)
+        data = model_to_dict(query)
+        data['sql'] = expected
+        data['action'] = 'save'
+
+        eventlog_count = EventLog.objects.count()
+
+        staff_client.post(
+            reverse("explorer:query_detail", kwargs={'query_id': query.id}), data
+        )
+
+        assert (
+            EventLog.objects.filter(
+                event_type=EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY
+            ).count()
+            == eventlog_count + 1
+        )
 
     def test_change_permission_required_to_save_query(self, staff_user, staff_client):
         query = SimpleQueryFactory(created_by_user=staff_user)
