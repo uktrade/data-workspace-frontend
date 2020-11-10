@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages.views import SuccessMessageMixin
 from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import IntegrityError, transaction
@@ -20,6 +21,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.views.decorators.http import require_GET
+from django.views.generic.edit import UpdateView
 from waffle import flag_is_active
 
 from dataworkspace.apps.api_v1.views import (
@@ -38,6 +40,8 @@ from dataworkspace.apps.applications.gitlab import (
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationTemplate,
+    ToolTemplate,
+    UserToolConfiguration,
     VisualisationApproval,
     VisualisationTemplate,
 )
@@ -185,11 +189,16 @@ def tools_html_GET(request):
         {
             'applications': [
                 {
+                    'host_basename': application_template.host_basename,
                     'nice_name': application_template.nice_name,
                     'link': link(application_template),
                     'instance': application_instances.get(application_template, None),
                     'summary': application_template.application_summary,
                     'help_link': application_template.application_help_link,
+                    'tool_configuration': application_template.user_tool_configuration.filter(
+                        user=request.user
+                    ).first()
+                    or UserToolConfiguration.default_config(),
                 }
                 for application_template in ApplicationTemplate.objects.all()
                 .filter(visible=True, application_type='TOOL')
@@ -1464,3 +1473,34 @@ def _without_duplicates_preserve_order(seq, key):
     # base uniqueness on
     seen = set()
     return [x for x in seq if not (key(x) in seen or seen.add(key(x)))]
+
+
+class UserToolSizeConfigurationView(SuccessMessageMixin, UpdateView):
+
+    model = UserToolConfiguration
+    fields = ['size']
+    template_name = 'user_tool_size_configuration_form.html'
+    success_message = "Saved %(tool_template)s size"
+
+    def get_object(self, queryset=None):
+        try:
+            return UserToolConfiguration.objects.get(
+                user=self.request.user,
+                tool_template__host_basename=self.kwargs['tool_host_basename'],
+            )
+        except UserToolConfiguration.DoesNotExist:
+            try:
+                return UserToolConfiguration(
+                    user=self.request.user,
+                    tool_template=ToolTemplate.objects.get(
+                        host_basename=self.kwargs['tool_host_basename']
+                    ),
+                )
+            except ToolTemplate.DoesNotExist:
+                raise Http404
+
+    def get_success_url(self):
+        return reverse('applications:tools')
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(tool_template=self.object.tool_template,)

@@ -16,6 +16,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
     ApplicationTemplate,
+    UserToolConfiguration,
 )
 from dataworkspace.apps.applications.spawner import spawn
 from dataworkspace.apps.applications.utils import (
@@ -196,12 +197,10 @@ def application_api_PUT(request, public_host):
         # For AppStream to access credentials
         write_credentials_to_bucket(request.user, credentials)
 
-    try:
-        memory, cpu = request.GET['__memory_cpu'].split('_')
-    except KeyError:
-        memory = application_template.default_memory
-        cpu = application_template.default_cpu
-
+    tool_configuration = (
+        application_template.user_tool_configuration.filter(user=request.user).first()
+        or UserToolConfiguration.default_config()
+    )
     spawner_options = json.dumps(application_options(application_template))
 
     try:
@@ -214,8 +213,8 @@ def application_api_PUT(request, public_host):
             public_host=public_host,
             state='SPAWNING',
             single_running_or_spawning_integrity=public_host,
-            cpu=cpu,
-            memory=memory,
+            cpu=tool_configuration.size_config.cpu,
+            memory=tool_configuration.size_config.memory,
             commit_id=commit_id,
         )
     except IntegrityError:

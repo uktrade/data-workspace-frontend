@@ -1,4 +1,5 @@
 import uuid
+from collections import namedtuple
 
 from django.conf import settings
 from django.db import models, transaction
@@ -287,3 +288,71 @@ class ApplicationInstanceReport(ApplicationInstance):
         proxy = True
         verbose_name = 'Application report'
         verbose_name_plural = 'Application report'
+
+
+SizeConfig = namedtuple('SizeConfig', ['name', 'memory', 'cpu', 'description'])
+
+
+class UserToolConfiguration(models.Model):
+    SIZE_SMALL = 1
+    SIZE_MEDIUM = 2
+    SIZE_LARGE = 3
+    SIZE_EXTRA_LARGE = 4
+
+    _SIZES = (
+        (SIZE_SMALL, 'Small'),
+        (SIZE_MEDIUM, 'Medium'),
+        (SIZE_LARGE, 'Large'),
+        (SIZE_EXTRA_LARGE, 'Extra Large'),
+    )
+
+    SIZE_CONFIGS = {
+        SIZE_SMALL: SizeConfig(
+            dict(_SIZES)[SIZE_SMALL],
+            512,
+            256,
+            'Suitable for working with small datasets.',
+        ),
+        SIZE_MEDIUM: SizeConfig(
+            dict(_SIZES)[SIZE_MEDIUM],
+            8192,
+            1024,
+            'Suitable for most analysis and visualisation development workflows.',
+        ),
+        SIZE_LARGE: SizeConfig(
+            dict(_SIZES)[SIZE_LARGE],
+            16384,
+            2048,
+            'Allows up to 2 parallel processes for faster analysis, and supports datasets of up to 16 gigabytes in memory.',
+        ),
+        SIZE_EXTRA_LARGE: SizeConfig(
+            dict(_SIZES)[SIZE_EXTRA_LARGE],
+            30720,
+            4096,
+            'Allows up to 4 parallel processes for faster analysis, and supports datasets of up to 30 gigabytes in memory.',
+        ),
+    }
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
+    tool_template = models.ForeignKey(
+        ToolTemplate, on_delete=models.PROTECT, related_name='user_tool_configuration'
+    )
+    size = models.IntegerField(choices=_SIZES, default=SIZE_MEDIUM)
+
+    @classmethod
+    def default_config(cls):
+        # This returns a dynamic class instance that is interchangeable
+        # with a UserToolConfiguration instance, meaning the following
+        # expressions return the same data structure:
+        #
+        # UserToolConfiguration.objects.get(id=1).size_config
+        # UserToolConfiguration.default_config().size_config
+        return type(
+            'DefaultConfig',
+            (object,),
+            {'size_config': cls.SIZE_CONFIGS[cls.SIZE_MEDIUM]},
+        )()
+
+    @property
+    def size_config(self):
+        return self.SIZE_CONFIGS[self.size]
