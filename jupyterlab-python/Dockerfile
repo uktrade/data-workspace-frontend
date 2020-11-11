@@ -63,7 +63,7 @@ RUN \
     useradd -u 4357 jovyan -g jovyan -m && \
     echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
     echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
-    wget -q -O - https://deb.nodesource.com/setup_11.x | bash  && \
+    wget -q -O - https://deb.nodesource.com/setup_14.x | bash  && \
     apt-get install -y nodejs && \
     python -m pip install \
         pip==20.0.2 \
