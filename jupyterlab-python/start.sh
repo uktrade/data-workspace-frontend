@@ -5,7 +5,7 @@ chown -R jovyan:jovyan /home/jovyan
 
 set -e
 
-sudo -E -H -u jovyan /opt/conda/bin/jupyter \
+sudo -E -H -u jovyan jupyter \
 	lab \
 	--config=/etc/jupyter/jupyter_notebook_config.py \
 	--NotebookApp.token='' \
