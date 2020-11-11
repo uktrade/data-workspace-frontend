@@ -1130,14 +1130,17 @@ def _do_sync_activity_stream_sso_users():
             emails = obj['dit:emailAddress']
             primary_email = emails[0]
 
-            create_user_from_sso(
-                user_id,
-                primary_email,
-                emails,
-                obj['dit:firstName'],
-                obj['dit:lastName'],
-                check_tools_access_if_user_exists=True,
-            )
+            try:
+                create_user_from_sso(
+                    user_id,
+                    primary_email,
+                    emails,
+                    obj['dit:firstName'],
+                    obj['dit:lastName'],
+                    check_tools_access_if_user_exists=True,
+                )
+            except IntegrityError:
+                logger.exception('Failed to create user record')
 
         last_published_str = records[-1]['_source']['published']
         last_published = datetime.datetime.strptime(
