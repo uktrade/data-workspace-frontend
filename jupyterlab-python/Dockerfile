@@ -65,9 +65,9 @@ RUN \
     echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
     wget -q -O - https://deb.nodesource.com/setup_14.x | bash  && \
     apt-get install -y nodejs && \
-    python -m pip install \
-        pip==20.0.2 \
-        wheel==0.35.1 && \
+    python -m pip install --upgrade \
+        pip \
+        wheel && \
     python -m pip install \
         aiocontextvars==0.2.2 \
         bokeh==0.13.0 \
