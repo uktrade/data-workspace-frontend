@@ -6,6 +6,7 @@ from dataworkspace.apps.applications.views import (
     application_running_html_view,
     tools_html_view,
     quicksight_start_polling_sync_and_redirect,
+    UserToolSizeConfigurationView,
 )
 
 urlpatterns = [
@@ -16,5 +17,15 @@ urlpatterns = [
         'quicksight/redirect',
         login_required(quicksight_start_polling_sync_and_redirect),
         name='quicksight_redirect',
+    ),
+    path(
+        'quicksight/redirect',
+        login_required(quicksight_start_polling_sync_and_redirect),
+        name='quicksight_redirect',
+    ),
+    path(
+        'configure-size/<str:tool_host_basename>/',
+        login_required(UserToolSizeConfigurationView.as_view()),
+        name='configure_tool_size',
     ),
 ]

@@ -12,6 +12,7 @@ from django.urls import reverse
 from dataworkspace.apps.applications.models import (
     VisualisationApproval,
     ApplicationInstance,
+    UserToolConfiguration,
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -290,3 +291,119 @@ class TestQuickSightPollAndRedirect:
                 poll_for_user_creation=True,
             )
         ]
+
+
+class TestToolsPage:
+    @pytest.mark.django_db
+    def test_user_with_no_size_config_shows_default_config(self):
+        factories.ApplicationTemplateFactory()
+        user = get_user_model().objects.create()
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(reverse('applications:tools'), follow=True)
+
+        assert len(response.context['applications']) == 1
+        assert (
+            response.context['applications'][0]['tool_configuration'].size_config.name
+            == 'Medium'
+        )
+        assert (
+            response.context['applications'][0]['tool_configuration'].size_config.cpu
+            == 1024
+        )
+        assert (
+            response.context['applications'][0]['tool_configuration'].size_config.memory
+            == 8192
+        )
+
+    @pytest.mark.django_db
+    def test_user_with_size_config_shows_correct_config(self):
+        tool = factories.ApplicationTemplateFactory()
+        user = get_user_model().objects.create()
+        UserToolConfiguration.objects.create(
+            user=user, tool_template=tool, size=UserToolConfiguration.SIZE_EXTRA_LARGE
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(reverse('applications:tools'), follow=True)
+
+        assert len(response.context['applications']) == 1
+        assert (
+            response.context['applications'][0]['tool_configuration'].size_config.name
+            == 'Extra Large'
+        )
+        assert (
+            response.context['applications'][0]['tool_configuration'].size_config.cpu
+            == 4096
+        )
+        assert (
+            response.context['applications'][0]['tool_configuration'].size_config.memory
+            == 30720
+        )
+
+
+class TestUserToolSizeConfigurationView:
+    @pytest.mark.django_db
+    def test_get_shows_all_size_choices(self):
+        tool = factories.ApplicationTemplateFactory()
+        user = get_user_model().objects.create()
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(
+            reverse(
+                'applications:configure_tool_size',
+                kwargs={'tool_host_basename': tool.host_basename},
+            ),
+        )
+        assert response.status_code == 200
+        assert b'Small' in response.content
+        assert b'Medium (default)' in response.content
+        assert b'Large' in response.content
+        assert b'Extra Large' in response.content
+
+    @pytest.mark.django_db
+    def test_post_creates_new_tool_configuration(self):
+        tool = factories.ApplicationTemplateFactory(nice_name='RStudio')
+        user = get_user_model().objects.create()
+
+        assert not tool.user_tool_configuration.filter(user=user).first()
+
+        client = Client(**get_http_sso_data(user))
+        response = client.post(
+            reverse(
+                'applications:configure_tool_size',
+                kwargs={'tool_host_basename': tool.host_basename},
+            ),
+            {'size': UserToolConfiguration.SIZE_EXTRA_LARGE},
+            follow=True,
+        )
+        assert response.status_code == 200
+        assert str(list(response.context['messages'])[0]) == 'Saved RStudio size'
+        assert (
+            tool.user_tool_configuration.filter(user=user).first().size
+            == UserToolConfiguration.SIZE_EXTRA_LARGE
+        )
+
+    @pytest.mark.django_db
+    def test_post_updates_existing_tool_configuration(self):
+        tool = factories.ApplicationTemplateFactory(nice_name='RStudio')
+        user = get_user_model().objects.create()
+        UserToolConfiguration.objects.create(
+            user=user, tool_template=tool, size=UserToolConfiguration.SIZE_EXTRA_LARGE
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.post(
+            reverse(
+                'applications:configure_tool_size',
+                kwargs={'tool_host_basename': tool.host_basename},
+            ),
+            {'size': UserToolConfiguration.SIZE_SMALL},
+            follow=True,
+        )
+        assert response.status_code == 200
+        assert str(list(response.context['messages'])[0]) == 'Saved RStudio size'
+        assert (
+            tool.user_tool_configuration.filter(user=user).first().size
+            == UserToolConfiguration.SIZE_SMALL
+        )

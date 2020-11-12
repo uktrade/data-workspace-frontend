@@ -1,0 +1,43 @@
+{% extends 'tools.html' %}
+{% load core_tags %}
+
+{% block content %}
+        <div class="govuk-grid-row govuk-!-margin-bottom-6">
+        <div class="govuk-grid-column-two-thirds">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="govuk-form-group">
+                    <fieldset class="govuk-fieldset">
+                        <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                            <h1 class="govuk-fieldset__heading">
+                                What size {{ form.instance.tool_template }} do you need?
+                            </h1>
+                        </legend>
+                        {% for value, _ in form.size.field.choices %}
+                            {% with form.instance.SIZE_CONFIGS|get_key:value as config %}
+                                <div class="govuk-radios">
+                                    <div class="govuk-radios__item">
+                                        <input class="govuk-radios__input" id="id_size_{{ value }}" name="size" {% if value == form.size.value %}checked {% endif %} type="radio" value="{{ value}}" aria-describedby="id_size_{{ value }}_hint">
+                                        <label class="govuk-label govuk-radios__label" for="id_size_{{ value }}">
+                                            {{ config.name }} {% if config.name == form.instance.default_config.size_config.name %}(default){% endif %}
+                                        </label>
+                                        <div id="id_size_{{ value }}_hint">
+                                            <div  class="govuk-hint govuk-radios__hint">
+                                                {{ config.cpu|spawner_cpu }} CPU, {{ config.memory|spawner_memory }} memory
+                                            </div>
+                                            <div class="govuk-hint govuk-radios__hint">
+                                                {{ config.description }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+                <button type="submit" class="govuk-button">Save {{ form.instance.tool_template }} size</button>
+            </form>
+        </div>
+    </div>
+  
+{% endblock %}

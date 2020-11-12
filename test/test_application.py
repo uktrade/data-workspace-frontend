@@ -902,7 +902,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_status, 200)
 
     @async_test
-    async def test_application_custom_cpu_memory(self):
+    async def test_application_spawn(self):
         await flush_database()
         await flush_redis()
 
@@ -944,9 +944,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/',
-            params={'__memory_cpu': '1024_2048'},
+            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/',
         ) as response:
             application_content_1 = await response.text()
 

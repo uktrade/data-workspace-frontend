@@ -401,21 +401,13 @@ async def async_main():
                 'x-data-workspace-no-modify-application-instance'
                 not in downstream_request.headers
             ):
-                params = {
-                    key: value
-                    for key, value in downstream_request.query.items()
-                    if key == '__memory_cpu'
-                }
                 async with client_session.request(
                     'PUT',
                     host_api_url,
-                    params=params,
                     headers=CIMultiDict(admin_headers_request(downstream_request)),
                 ) as response:
                     host_exists = response.status == 200
                     application = await response.json()
-                if params:
-                    return web.Response(status=302, headers={'location': '/'})
             else:
                 raise UserException('Application stopped while starting', 500)
 

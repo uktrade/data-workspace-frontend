@@ -1,3 +1,4 @@
+{% load core_tags %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
     <h3 class="govuk-heading-m">
@@ -46,14 +47,13 @@
         {% if customisable_instance %}
           <form action="{{ application_url }}" method="GET" style="display: inline-block" class="govuk-!-width-full" target="_blank">
             <div class="govuk-grid-column-one-half">
-              <div class="govuk-form-group inline-form-group">
-                <select class="govuk-select" id="sort" name="__memory_cpu">
-                  <option value="512_256">Small: 0.25 CPU, 0.5GB of memory</option>
-                  <option value="8192_1024" selected>Default: 1 CPU, 8GB of memory</option>
-                  <option value="16384_2048">Large: 2 CPU, 16GB of memory</option>
-                  <option value="30720_4096">Extra large: 4 CPU, 30GB of memory</option>
-                </select>
-              </div>
+              <p class="govuk-body">
+                <strong>Size</strong>
+                <br>{{ tool_configuration.size_config.name }}
+                <br>({{ tool_configuration.size_config.cpu|spawner_cpu }} CPU, {{ tool_configuration.size_config.memory|spawner_memory }} memory)
+                <br>
+                <a class="govuk-link" href="{% url 'applications:configure_tool_size' application_host_basename %}">Change</a>
+              </p>
             </div>
             <div class="govuk-grid-column-one-half">
               <button class="govuk-button govuk-button--secondary govuk-!-width-full">Open {{ application_name }}</button>
