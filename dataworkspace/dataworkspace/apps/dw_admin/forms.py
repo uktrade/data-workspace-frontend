@@ -374,6 +374,8 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        if self.errors:
+            return cleaned
         if (
             cleaned['data_type'] != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
             and self.cleaned_data['linked_reference_dataset_field']
