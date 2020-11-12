@@ -254,6 +254,7 @@ def test_find_datasets_combines_results(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -265,6 +266,7 @@ def test_find_datasets_combines_results(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'published': True,
             'has_access': True,
         },
         {
@@ -276,6 +278,7 @@ def test_find_datasets_combines_results(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'published': True,
             'has_access': True,
         },
     ]
@@ -313,6 +316,7 @@ def test_find_datasets_filters_by_query(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -324,6 +328,7 @@ def test_find_datasets_filters_by_query(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'published': True,
             'has_access': True,
         },
         {
@@ -335,6 +340,7 @@ def test_find_datasets_filters_by_query(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'published': True,
             'has_access': True,
         },
     ]
@@ -360,6 +366,7 @@ def test_find_datasets_filters_by_use(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -371,6 +378,7 @@ def test_find_datasets_filters_by_use(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'published': True,
             'has_access': True,
         },
     ]
@@ -399,6 +407,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -410,6 +419,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'published': True,
             'has_access': True,
         },
     ]
@@ -461,6 +471,7 @@ def test_find_datasets_filters_by_source(client):
             'source_tag_names': MatchUnorderedMembers([source.name, source_2.name]),
             'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
             'purpose': ds.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -472,6 +483,7 @@ def test_find_datasets_filters_by_source(client):
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
+            'published': True,
             'has_access': True,
         },
     ]
@@ -717,6 +729,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
+            'published': True,
             'has_access': True,
         },
         {
@@ -728,6 +741,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': public_master.type,
+            'published': True,
             'has_access': True,
         },
         {
@@ -739,6 +753,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
+            'published': True,
             'has_access': True,
         },
         {
@@ -750,6 +765,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'published': True,
             'has_access': True,
         },
         {
@@ -761,6 +777,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
+            'published': True,
             'has_access': True,
         },
     ]
@@ -804,6 +821,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
+            'published': True,
             'has_access': True,
         }
     ]
@@ -1196,6 +1214,7 @@ def test_find_datasets_search_by_source_name(client):
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': ds1.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -1207,6 +1226,7 @@ def test_find_datasets_search_by_source_name(client):
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
+            'published': True,
             'has_access': True,
         },
     ]
@@ -1244,6 +1264,7 @@ def test_find_datasets_name_weighting(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds4.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -1255,6 +1276,7 @@ def test_find_datasets_name_weighting(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds1.type,
+            'published': True,
             'has_access': False,
         },
         {
@@ -1266,6 +1288,7 @@ def test_find_datasets_name_weighting(client):
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds2.type,
+            'published': True,
             'has_access': False,
         },
     ]
