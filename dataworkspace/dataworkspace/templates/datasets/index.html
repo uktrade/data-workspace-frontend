@@ -77,6 +77,13 @@
       <h2 class="govuk-heading-m">
         <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}</a>
       </h2>
+      {% if not dataset.published %}
+        <div class="govuk-!-display-inline-block" style="float: right">
+          <strong class="govuk-tag govuk-tag--grey">
+            Unpublished
+          </strong>
+        </div>
+      {% endif %}
       <p class="govuk-body">{{ dataset.short_description }}</p>
       <p class="govuk-body">
         <span class="govuk-!-font-weight-bold">Purpose:</span> {{ purpose|get_key:dataset.purpose}}

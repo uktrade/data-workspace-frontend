@@ -195,6 +195,7 @@ def get_datasets_data_for_user_matching_query(
         'source_tag_names',
         'source_tag_ids',
         'purpose',
+        'published',
     ).annotate(has_access=BoolOr('_has_access'))
 
     return datasets.values(
@@ -206,6 +207,7 @@ def get_datasets_data_for_user_matching_query(
         'source_tag_names',
         'source_tag_ids',
         'purpose',
+        'published',
         'has_access',
     )
 
@@ -294,6 +296,7 @@ def get_visualisations_data_for_user_matching_query(
         'source_tag_names',
         'source_tag_ids',
         'purpose',
+        'published',
     ).annotate(has_access=BoolOr('_has_access'))
 
     return visualisations.values(
@@ -305,6 +308,7 @@ def get_visualisations_data_for_user_matching_query(
         'source_tag_names',
         'source_tag_ids',
         'purpose',
+        'published',
         'has_access',
     )
 
