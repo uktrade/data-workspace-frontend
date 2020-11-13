@@ -2,7 +2,7 @@
 <div class="govuk-form-group">
   <span class="govuk-label">
     {{ widget.label }}
-    <select class="govuk-select" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+    <select class="govuk-select govuk-!-margin-left-2" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
       {% for group_name, group_choices, group_index in widget.optgroups %}
         {% if group_name %}
           <optgroup label="{{ group_name }}">
