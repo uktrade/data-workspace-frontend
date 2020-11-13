@@ -432,7 +432,7 @@ def test_find_datasets_filters_by_source(client):
     factories.SourceTagFactory()
 
     _ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
-    _ds.source_tags.set([factories.SourceTagFactory()])
+    _ds.tags.set([factories.SourceTagFactory()])
 
     _vis = factories.VisualisationCatalogueItemFactory.create(
         published=True, name='A visualisation'
@@ -443,12 +443,12 @@ def test_find_datasets_filters_by_source(client):
     )
 
     ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
-    ds.source_tags.set([source, source_2])
+    ds.tags.set([source, source_2])
 
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
     )
-    rds.source_tags.set([source])
+    rds.tags.set([source])
 
     vis = factories.VisualisationCatalogueItemFactory.create(
         published=True, name='A new visualisation'
@@ -535,14 +535,14 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
 
     for user in users + [normal_user, staff_user]:
         factories.DataSetUserPermissionFactory.create(dataset=master, user=user)
-        master.source_tags.set(random.sample(source_tags, 3))
+        master.tags.set(random.sample(source_tags, 3))
         factories.DataSetUserPermissionFactory.create(dataset=master2, user=user)
-        master2.source_tags.set(random.sample(source_tags, 3))
+        master2.tags.set(random.sample(source_tags, 3))
 
         factories.DataSetUserPermissionFactory.create(dataset=datacut, user=user)
-        datacut.source_tags.set(random.sample(source_tags, 3))
+        datacut.tags.set(random.sample(source_tags, 3))
         factories.DataSetUserPermissionFactory.create(dataset=datacut2, user=user)
-        datacut2.source_tags.set(random.sample(source_tags, 3))
+        datacut2.tags.set(random.sample(source_tags, 3))
 
         factories.VisualisationUserPermissionFactory.create(
             visualisation=visualisation, user=user
@@ -586,7 +586,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
         for _ in range(random.randint(10, 50))
     ]
     for master in masters:
-        master.source_tags.set(random.sample(source_tags, random.randint(1, 3)))
+        master.tags.set(random.sample(source_tags, random.randint(1, 3)))
 
     datacuts = [
         factories.DataSetFactory(
@@ -597,11 +597,11 @@ def test_finding_datasets_doesnt_query_database_excessively(
         for _ in range(random.randint(10, 50))
     ]
     for datacut in datacuts:
-        datacut.source_tags.set(random.sample(source_tags, 1))
+        datacut.tags.set(random.sample(source_tags, 1))
 
     references = [factories.ReferenceDatasetFactory(published=True,) for _ in range(10)]
     for reference in references:
-        reference.source_tags.set(random.sample(source_tags, random.randint(1, 3)))
+        reference.tags.set(random.sample(source_tags, random.randint(1, 3)))
 
     visualisations = [
         factories.VisualisationCatalogueItemFactory.create(published=True,)
@@ -1191,15 +1191,15 @@ def test_find_datasets_search_by_source_name(client):
     source = factories.SourceTagFactory(name='source1')
 
     ds1 = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
-    ds1.source_tags.set([source, factories.SourceTagFactory()])
+    ds1.tags.set([source, factories.SourceTagFactory()])
 
     ds2 = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
-    ds2.source_tags.set([factories.SourceTagFactory(name='source2')])
+    ds2.tags.set([factories.SourceTagFactory(name='source2')])
 
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
     )
-    rds.source_tags.set([source])
+    rds.tags.set([source])
 
     response = client.get(reverse('datasets:find_datasets'), {"q": "source1"})
 

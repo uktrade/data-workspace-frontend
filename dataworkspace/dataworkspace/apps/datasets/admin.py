@@ -24,8 +24,8 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetField,
     SourceLink,
     SourceTable,
-    SourceTag,
     SourceView,
+    Tag,
     VisualisationCatalogueItem,
     VisualisationUserPermission,
     VisualisationLink,
@@ -207,14 +207,14 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         'name',
         'slug',
         'short_description',
-        'get_source_tags',
+        'get_tags',
         'published',
         'number_of_downloads',
     )
-    list_filter = ('source_tags',)
+    list_filter = ('tags',)
     search_fields = ['name']
     actions = [clone_dataset]
-    autocomplete_fields = ['source_tags']
+    autocomplete_fields = ['tags']
     fieldsets = [
         (
             None,
@@ -223,7 +223,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     'published',
                     'name',
                     'slug',
-                    'source_tags',
+                    'tags',
                     'reference_code',
                     'short_description',
                     'description',
@@ -259,10 +259,10 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             )
         }
 
-    def get_source_tags(self, obj):
-        return ', '.join([x.name for x in obj.source_tags.all()])
+    def get_tags(self, obj):
+        return ', '.join([x.name for x in obj.tags.all()])
 
-    get_source_tags.short_description = 'Source Tags'
+    get_tags.short_description = 'Tags'
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -343,10 +343,25 @@ class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     )
 
 
-@admin.register(SourceTag)
-class SourceTagAdmin(admin.ModelAdmin):
-    fields = ['name']
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    fields = ['type', 'name']
     search_fields = ['name']
+    list_filter = ['type']
+
+    def get_search_results(self, request, queryset, search_term):
+        """
+        Override to allow autocomplete search to work with tag type as well as tag name
+        """
+        search_term = search_term.lower()
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
+        type_choices = {b.lower(): a for a, b in Tag._TYPE_CHOICES}
+
+        if search_term in type_choices:
+            queryset |= self.model.objects.filter(type=type_choices[search_term])
+        return queryset, use_distinct
 
 
 class ReferenceDataFieldInline(
@@ -406,7 +421,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         'published',
     )
     inlines = [ReferenceDataFieldInline]
-    autocomplete_fields = ['source_tags']
+    autocomplete_fields = ['tags']
     fieldsets = [
         (
             None,
@@ -417,7 +432,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
                     'name',
                     'table_name',
                     'slug',
-                    'source_tags',
+                    'tags',
                     'external_database',
                     'short_description',
                     'description',

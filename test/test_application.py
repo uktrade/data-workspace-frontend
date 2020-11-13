@@ -2939,8 +2939,8 @@ import random
 from django.db import IntegrityError
 import factory
 
-from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import SourceTag
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
+from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.datasets.models import DataSet
 from dataworkspace.apps.datasets.models import ReferenceDataset
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
@@ -2952,9 +2952,9 @@ ReferenceDataset.objects.all().delete()
 VisualisationCatalogueItem.objects.all().delete()
 
 for dept in ('DIT', 'HMRC', 'ONS'):
-    SourceTag.objects.get_or_create(name=dept)
+    Tag.objects.get_or_create(name=dept)
 
-source_tags = {st.name: st for st in SourceTag.objects.all()}
+source_tags = {st.name: st for st in Tag.objects.filter(type=TagType.SOURCE.value)}
 
 def paragraph(_):
     from faker import Faker
@@ -2973,7 +2973,7 @@ try:
 except IntegrityError:
     master = DataSet.objects.get(id=1)
 
-master.source_tags.set([source_tags['DIT']])
+master.tags.set([source_tags['DIT']])
 
 try:
     master = factories.DataSetFactory(
@@ -2988,7 +2988,7 @@ try:
 except IntegrityError:
     master = DataSet.objects.get(id=2)
 
-master.source_tags.set([source_tags['HMRC']])
+master.tags.set([source_tags['HMRC']])
 
 try:
     datacut = factories.DataSetFactory(
@@ -3003,7 +3003,7 @@ try:
 except IntegrityError:
     datacut = DataSet.objects.get(id=3)
 
-datacut.source_tags.set([source_tags['ONS']])
+datacut.tags.set([source_tags['ONS']])
 
 try:
     factories.ReferenceDatasetFactory(

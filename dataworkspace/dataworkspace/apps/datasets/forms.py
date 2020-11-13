@@ -4,7 +4,7 @@ from functools import partial
 from django import forms
 
 from dataworkspace.apps.datasets.constants import DataSetType
-from .models import SourceTag
+from .models import Tag
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
@@ -51,6 +51,11 @@ class EligibilityCriteriaForm(forms.Form):
     )
 
 
+class SourceTagField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return obj.name
+
+
 class DatasetSearchForm(forms.Form):
     q = forms.CharField(required=False)
 
@@ -72,8 +77,8 @@ class DatasetSearchForm(forms.Form):
         widget=FilterWidget("Purpose", hint_text="What do you want to do with data?"),
     )
 
-    source = forms.ModelMultipleChoiceField(
-        queryset=SourceTag.objects.order_by('name').all(),
+    source = SourceTagField(
+        queryset=Tag.objects.order_by('name').filter(type=Tag.TYPE_SOURCE),
         required=False,
         widget=FilterWidget(
             "Source",

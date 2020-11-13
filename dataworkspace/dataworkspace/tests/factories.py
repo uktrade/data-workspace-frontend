@@ -6,6 +6,7 @@ import factory.fuzzy
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
+from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 
@@ -44,12 +45,20 @@ class DataGroupingFactory(factory.django.DjangoModelFactory):
         model = 'datasets.DataGrouping'
 
 
-class SourceTagFactory(factory.django.DjangoModelFactory):
+class TagFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     name = factory.fuzzy.FuzzyText()
 
     class Meta:
-        model = 'datasets.SourceTag'
+        model = 'datasets.Tag'
+
+
+class SourceTagFactory(TagFactory):
+    type = TagType.SOURCE.value
+
+
+class TopicTagFactory(TagFactory):
+    type = TagType.TOPIC.value
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):

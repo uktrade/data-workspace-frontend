@@ -43,7 +43,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
-from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
+from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType, TagType
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.datasets_db import get_tables_last_updated_date
 
@@ -108,12 +108,20 @@ class DataGrouping(DeletableTimestampedUserModel):
         return f'{self.name}'
 
 
-class SourceTag(TimeStampedModel):
+class Tag(TimeStampedModel):
+    TYPE_SOURCE = TagType.SOURCE.value
+    TYPE_TOPIC = TagType.TOPIC.value
+    _TYPE_CHOICES = (
+        (TYPE_SOURCE, 'Source'),
+        (TYPE_TOPIC, 'Topic'),
+    )
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    type = models.IntegerField(choices=_TYPE_CHOICES, default=TYPE_SOURCE)
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        return self.name
+        return f'{dict(self._TYPE_CHOICES)[self.type]}: {self.name}'
 
 
 class DatasetReferenceCode(TimeStampedModel):
@@ -172,7 +180,7 @@ class DataSet(DeletableTimestampedUserModel):
     published_at = models.DateField(null=True, blank=True)
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
-    source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
+    tags = models.ManyToManyField(Tag, related_name='+', blank=True)
     information_asset_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -735,7 +743,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES
     )
     number_of_downloads = models.PositiveIntegerField(default=0)
-    source_tags = models.ManyToManyField(SourceTag, related_name='+', blank=True)
+    tags = models.ManyToManyField(Tag, related_name='+', blank=True)
     information_asset_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
