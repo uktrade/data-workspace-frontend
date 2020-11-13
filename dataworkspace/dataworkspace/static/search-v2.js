@@ -40,7 +40,7 @@
     this.saveState();
 
     this.$form.on(
-      'change', 'input[type=checkbox], input[type=search]',
+      'change', 'input[type=checkbox], input[type=search], select',
       this.formChange.bind(this)
     );
     $(window).on('popstate', this.popState.bind(this));
@@ -59,6 +59,13 @@
           this.formChange();
           e.preventDefault();
         }
+      }.bind(this)
+    );
+
+    this.$form.find('select').change(
+      function(e){
+        this.formChange();
+        e.preventDefault();
       }.bind(this)
     );
   }
@@ -80,6 +87,7 @@
 
     this.restoreBooleans();
     this.restoreSearchInputs();
+    this.restoreSortSelect();
     this.updateResults();
   };
 
@@ -183,6 +191,14 @@
   LiveSearch.prototype.restoreSearchInputs = function restoreSearchInputs(){
     var that = this;
     this.$form.find('input[type=search]').each(function(i, el){
+      var $el = $(el);
+      $el.val(that.getTextInputValue($el.attr('name')));
+    });
+  };
+
+  LiveSearch.prototype.restoreSortSelect = function restoreSortSelect(){
+    var that = this;
+    this.$form.find('select').each(function(i, el){
       var $el = $(el);
       $el.val(that.getTextInputValue($el.attr('name')));
     });
