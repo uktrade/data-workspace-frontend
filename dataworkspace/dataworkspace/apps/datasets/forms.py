@@ -103,9 +103,9 @@ class DatasetSearchForm(forms.Form):
         required=False,
         choices=[
             ('-search_rank,name', 'Relevance'),
-            ('-published_at', 'Latest published'),
-            ('published_at', 'Oldest published'),
-            ('name', 'Alphabetical'),
+            ('-published_at', 'Date published: newest'),
+            ('published_at', 'Date published: oldest'),
+            ('name', 'Alphabetical (A-Z)'),
         ],
         widget=SortSelectWidget(label='Sort by'),
     )
