@@ -10,6 +10,7 @@ services:
     tty: true
     env_file:
       - ./.envs/test.env
+    shm_size: '200mb'  # needed for chromium selenium tests - otherwise page/tab crashes
     ports:
       - "8000"
     links:

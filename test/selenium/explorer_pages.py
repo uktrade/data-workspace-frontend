@@ -20,9 +20,6 @@ def get_driver():
         options.add_argument('--no-sandbox')
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
-        options.add_argument(
-            '--disable-dev-shm-usage'
-        )  # https://github.com/elgalu/docker-selenium/issues/20
 
         # Desktop size in order to ensure the browser has desktop styling (less than this hides certain elements
         # under test)

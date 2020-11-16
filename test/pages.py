@@ -5,7 +5,7 @@ from pyppeteer.browser import Browser
 async def get_browser() -> Browser:
     browser = await launch(
         headless=True,
-        executablePath='/usr/bin/chromium-browser',
+        executablePath='/usr/bin/chromium',
         args=['--no-sandbox', '--disable-gpu'],
     )
     return browser
