@@ -8,13 +8,20 @@ ENV \
 	DJANGO_SETTINGS_MODULE=dataworkspace.settings.base
 
 RUN apt-get update && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends curl bzip2 make ca-certificates && \
+    curl https://ftp.gnu.org/gnu/parallel/parallel-20190522.tar.bz2 > parallel-20190522.tar.bz2 && \
+    tar xjf parallel-20190522.tar.bz2 && \
+    cd parallel-20190522 && \
+    ./configure && make && make install && \
+    cd / && \
+    rm -rf parallel-20190522 parallel-20190522.tar.bz2 && \
     apt-get install -y --no-install-recommends \
         locales=2.28-10 \
         git=1:2.20.1-2+deb10u3 \
         nginx=1.14.2-2+deb10u3 \
         nginx-extras=1.14.2-2+deb10u3 \
         openssl=1.1.1d-0+deb10u3 \
-        parallel=20161222-1.1 \
         build-essential=12.6 \
         python3=3.7.3-1 \
         python3-dev=3.7.3-1 \
@@ -38,7 +45,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         gcc=4:8.3.0-1 \
         musl-dev=1.1.21-2 \
-#        postgresql-dev=
         chromium=83.0.4103.116-1~deb10u3 \
         chromium-driver=83.0.4103.116-1~deb10u3 \
         libxml2-dev=2.9.4+dfsg1-7+b3 \
