@@ -197,10 +197,19 @@ def application_api_PUT(request, public_host):
         # For AppStream to access credentials
         write_credentials_to_bucket(request.user, credentials)
 
-    tool_configuration = (
-        application_template.user_tool_configuration.filter(user=request.user).first()
-        or UserToolConfiguration.default_config()
-    )
+    if app_type == 'TOOL':
+        tool_configuration = (
+            application_template.user_tool_configuration.filter(
+                user=request.user
+            ).first()
+            or UserToolConfiguration.default_config()
+        )
+        cpu = tool_configuration.size_config.cpu
+        memory = tool_configuration.size_config.memory
+    else:
+        cpu = application_template.default_cpu
+        memory = application_template.default_memory
+
     spawner_options = json.dumps(application_options(application_template))
 
     try:
@@ -213,8 +222,8 @@ def application_api_PUT(request, public_host):
             public_host=public_host,
             state='SPAWNING',
             single_running_or_spawning_integrity=public_host,
-            cpu=tool_configuration.size_config.cpu,
-            memory=tool_configuration.size_config.memory,
+            cpu=cpu,
+            memory=memory,
             commit_id=commit_id,
         )
     except IntegrityError:
