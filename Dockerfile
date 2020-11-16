@@ -1,4 +1,4 @@
-FROM alpine:3.10 AS base
+FROM debian:buster-slim AS base
 
 ENV \
 	LC_ALL=en_US.UTF-8 \
@@ -7,41 +7,46 @@ ENV \
 	PYTHONPATH=/dataworkspace \
 	DJANGO_SETTINGS_MODULE=dataworkspace.settings.base
 
-COPY requirements.txt requirements.txt
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        locales=2.28-10 \
+        git=1:2.20.1-2+deb10u3 \
+        nginx=1.14.2-2+deb10u3 \
+        nginx-extras=1.14.2-2+deb10u3 \
+        openssl=1.1.1d-0+deb10u3 \
+        parallel=20161222-1.1 \
+        build-essential=12.6 \
+        python3=3.7.3-1 \
+        python3-dev=3.7.3-1 \
+        python3-pip=18.1-5 \
+        python3-setuptools=40.8.0-1 && \
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
+    locale-gen en_US.utf8 && \
+    rm /etc/nginx/nginx.conf && \
+    rm -rf /tmp/* && \
+    rm -rf /var/lib/apt/lists/* && \
+    useradd -m django && \
+    chown -R django /var/log/nginx
 
-RUN \
-	apk add --no-cache --virtual .build-deps \
-		build-base=0.5-r1 \
-		git=2.22.4-r0 \
-		python3-dev=3.7.7-r1 \
-		libffi-dev=3.2.1-r6 \
-		openssl-dev=1.1.1g-r0 \
-		linux-headers=4.19.36-r0 && \
-	apk add --no-cache \
-		nginx=1.16.1-r2 \
-		nginx-mod-http-headers-more=1.16.1-r2 \
-		openssl=1.1.1g-r0 \
-		parallel=20190522-r0 \
-		py3-psycopg2=2.7.7-r1 \
-		python3=3.7.7-r1 && \
-	rm /etc/nginx/conf.d/default.conf && \
-	rm /etc/nginx/nginx.conf && \
-	python3 -m ensurepip && \
-	pip3 install -r requirements.txt && \
-	apk del .build-deps && \
-	adduser -S django
+COPY requirements.txt requirements.txt
+RUN python3 -m pip install --upgrade pip wheel && \
+	python3 -m pip install -r requirements.txt
 
 FROM base AS test
 
-RUN apk add --no-cache \
-        gcc \
-        musl-dev \
-        postgresql-dev \
-        python3-dev \
-        chromium \
-        chromium-chromedriver \
-        libxml2-dev \
-        libxslt-dev
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc=4:8.3.0-1 \
+        musl-dev=1.1.21-2 \
+#        postgresql-dev=
+        chromium=83.0.4103.116-1~deb10u3 \
+        chromium-driver=83.0.4103.116-1~deb10u3 \
+        libxml2-dev=2.9.4+dfsg1-7+b3 \
+        libxslt1-dev=1.1.32-2.2~deb10u1 && \
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
+    locale-gen en_US.utf8 && \
+    rm -rf /tmp/* && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY requirements-dev.txt requirements-dev.txt
 RUN pip3 install -r requirements-dev.txt
@@ -59,10 +64,10 @@ FROM test as dev
 
 USER root
 
-RUN \
-    apk add --no-cache \
-    nodejs=10.19.0-r0 \
-    npm=10.19.0-r0
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nodejs npm && \
+    rm -rf /tmp/* && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN npm install --global --unsafe-perm nodemon
 

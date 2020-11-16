@@ -1,9 +1,0 @@
-FROM data-workspace
-
-RUN \
-	apk add --no-cache \
-		py3-zmq=17.0.0-r0 \
-	pip3 install \
-		notebook==5.7.0 \
-		jupyterlab==0.35.6 \
-		tornado==5.1.1
