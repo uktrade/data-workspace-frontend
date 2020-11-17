@@ -4,8 +4,8 @@ import os
 import os.path
 from pathlib import PurePosixPath
 
-from notebook.base.handlers import IPythonHandler
-from notebook.utils import url_path_join
+from notebook.base.handlers import IPythonHandler  # pylint: disable=import-error
+from notebook.utils import url_path_join  # pylint: disable=import-error
 
 
 def _jupyter_server_extension_paths():

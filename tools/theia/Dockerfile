@@ -65,8 +65,8 @@ RUN \
 ENV \
 	PATH="/root/.yarn/bin:/root/node_modules/.bin:$PATH"
 
-COPY package.json /root
-COPY yarn.lock /root
+COPY theia/package.json /root
+COPY theia/yarn.lock /root
 
 RUN \
 	yarn install && \
@@ -86,8 +86,8 @@ RUN \
 	echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
 	rm /home/theia/.bashrc
 
-COPY vscode_postgres.theia /root/plugins/vscode_postgres.theia
-COPY start.sh /start.sh
+COPY theia/vscode_postgres.theia /root/plugins/vscode_postgres.theia
+COPY theia/start.sh /start.sh
 
 # The ipython history database does not play well with mobius3, surfacing
 # occasional errors like "attempt to write a readonly database", so we store

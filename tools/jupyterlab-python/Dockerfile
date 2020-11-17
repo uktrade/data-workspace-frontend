@@ -77,8 +77,8 @@ RUN \
     # Avoids errors when installing Java
     mkdir -p /usr/share/man/man1mkdir -p /usr/share/man/man1
 
-COPY jupyterlab_database_access /jupyterlab_database_access
-COPY jupyterlab_template_notebooks /jupyterlab_template_notebooks
+COPY jupyterlab-python/jupyterlab_database_access /jupyterlab_database_access
+COPY jupyterlab-python/jupyterlab_template_notebooks /jupyterlab_template_notebooks
 COPY requirements.txt python-setup.sh /root/
 
 RUN \
@@ -95,7 +95,7 @@ RUN \
     echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
     echo 'no-cache-dir = false' >> /etc/pip.conf
 
-COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
+COPY jupyterlab-python/jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 ENTRYPOINT ["tini", "-g", "--"]
 
@@ -118,6 +118,6 @@ RUN \
     echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
     rm /home/jovyan/.bashrc
 
-COPY start.sh /
+COPY jupyterlab-python/start.sh /
 
 CMD ["/start.sh"]
