@@ -26,7 +26,8 @@ RUN apt-get update && \
         python3=3.7.3-1 \
         python3-dev=3.7.3-1 \
         python3-pip=18.1-5 \
-        python3-setuptools=40.8.0-1 && \
+        python3-setuptools=40.8.0-1 \
+        python3-psycopg2=2.7.7-1 && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
     rm /etc/nginx/nginx.conf && \
