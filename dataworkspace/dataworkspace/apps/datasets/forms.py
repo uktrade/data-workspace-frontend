@@ -38,6 +38,22 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         js = ('app-filter-show-more-v2.js',)
 
 
+class SortSelectWidget(forms.widgets.Select):
+    template_name = 'datasets/select.html'
+    option_template_name = 'datasets/select_option.html'
+
+    def __init__(
+        self, label, *args, **kwargs,  # pylint: disable=keyword-arg-before-vararg
+    ):
+        super().__init__(*args, **kwargs)
+        self._label = label
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['widget']['label'] = self._label
+        return context
+
+
 class RequestAccessForm(forms.Form):
     email = forms.CharField(widget=forms.TextInput, required=True)
     goal = forms.CharField(widget=forms.Textarea, required=True)
@@ -87,6 +103,24 @@ class DatasetSearchForm(forms.Form):
             show_more_label="Show more sources",
         ),
     )
+
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('-search_rank,name', 'Relevance'),
+            ('-published_at', 'Date published: newest'),
+            ('published_at', 'Date published: oldest'),
+            ('name', 'Alphabetical (A-Z)'),
+        ],
+        widget=SortSelectWidget(label='Sort by'),
+    )
+
+    def clean_sort(self):
+        data = self.cleaned_data['sort']
+        if not data:
+            data = '-search_rank,name'
+
+        return data
 
     class Media:
         js = ('app-filter-show-more-v2.js',)

@@ -62,6 +62,7 @@ packaging==20.4           # via bleach
 paste==3.4.3              # via -r requirements.in
 psutil==5.7.2             # via -r requirements.in
 psycogreen==1.0.2         # via -r requirements.in, django-db-geventpool
+psycopg2==2.7.7           # via -r requirements.in
 pycparser==2.20           # via cffi
 pyjwt==1.7.1              # via -r requirements.in, notifications-python-client
 pyparsing==2.4.7          # via packaging

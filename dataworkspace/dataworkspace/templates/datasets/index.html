@@ -72,6 +72,7 @@
   <div class="govuk-grid-column-two-thirds">
     <p class="govuk-body"><span id="search-results-count">{{ datasets.paginator.count }}</span> results</p>
     <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+    {{ form.sort }}
     {% for dataset in datasets %}
     <div class="search-result">
       <h2 class="govuk-heading-m">
@@ -152,7 +153,6 @@
   </div>
 </div>
 </form>
-
 {% endblock %}
 
 {% block footer_scripts %}

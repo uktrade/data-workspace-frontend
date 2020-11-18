@@ -1,3 +1,4 @@
+from datetime import timedelta, date
 import random
 from urllib.parse import quote_plus
 from uuid import uuid4
@@ -251,6 +252,7 @@ def test_find_datasets_combines_results(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
@@ -263,6 +265,7 @@ def test_find_datasets_combines_results(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
@@ -275,6 +278,7 @@ def test_find_datasets_combines_results(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
@@ -313,6 +317,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
@@ -325,6 +330,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
@@ -337,6 +343,7 @@ def test_find_datasets_filters_by_query(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
@@ -363,6 +370,7 @@ def test_find_datasets_filters_by_use(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
@@ -375,6 +383,7 @@ def test_find_datasets_filters_by_use(client):
             'slug': rds.slug,
             'search_rank': mock.ANY,
             'short_description': rds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
@@ -404,6 +413,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'slug': ds.slug,
             'search_rank': mock.ANY,
             'short_description': ds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds.type,
@@ -416,6 +426,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'slug': vis.slug,
             'search_rank': mock.ANY,
             'short_description': vis.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
@@ -468,6 +479,7 @@ def test_find_datasets_filters_by_source(client):
             'slug': ds.slug,
             'search_rank': 0.0,
             'short_description': ds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': MatchUnorderedMembers([source.name, source_2.name]),
             'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
             'purpose': ds.type,
@@ -480,6 +492,7 @@ def test_find_datasets_filters_by_source(client):
             'slug': rds.slug,
             'search_rank': 0.0,
             'short_description': rds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
@@ -489,6 +502,169 @@ def test_find_datasets_filters_by_source(client):
     ]
 
     assert len(list(response.context["form"].fields['source'].choices)) == 3
+
+
+def test_find_datasets_order_by_name_asc(client):
+    ds1 = factories.DataSetFactory.create(name='a dataset')
+    rds = factories.ReferenceDatasetFactory.create(name='b reference dataset')
+    vis = factories.VisualisationCatalogueItemFactory.create(name='c visualisation')
+
+    response = client.get(reverse('datasets:find_datasets'), {"sort": "name"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds1.id,
+            'name': ds1.name,
+            'slug': ds1.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds1.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': ds1.type,
+            'has_access': False,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': mock.ANY,
+            'short_description': rds.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': DataSetType.REFERENCE.value,
+            'has_access': True,
+        },
+        {
+            'id': vis.id,
+            'name': vis.name,
+            'slug': vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': vis.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': DataSetType.VISUALISATION.value,
+            'has_access': True,
+        },
+    ]
+
+
+def test_find_datasets_order_by_newest_first(client):
+    ads1 = factories.DataSetFactory.create(published_at=date.today())
+    ads2 = factories.DataSetFactory.create(
+        published_at=date.today() - timedelta(days=3)
+    )
+    ads3 = factories.DataSetFactory.create(
+        published_at=date.today() - timedelta(days=4)
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"sort": "-published_at"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ads1.id,
+            'name': ads1.name,
+            'slug': ads1.slug,
+            'search_rank': mock.ANY,
+            'short_description': ads1.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': ads1.type,
+            'has_access': False,
+        },
+        {
+            'id': ads2.id,
+            'name': ads2.name,
+            'slug': ads2.slug,
+            'search_rank': mock.ANY,
+            'short_description': ads2.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': ads2.type,
+            'has_access': False,
+        },
+        {
+            'id': ads3.id,
+            'name': ads3.name,
+            'slug': ads3.slug,
+            'search_rank': mock.ANY,
+            'short_description': ads3.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': ads3.type,
+            'has_access': False,
+        },
+    ]
+
+
+def test_find_datasets_order_by_oldest_first(client):
+    ads1 = factories.DataSetFactory.create(
+        published_at=date.today() - timedelta(days=1)
+    )
+    ads2 = factories.DataSetFactory.create(
+        published_at=date.today() - timedelta(days=2)
+    )
+    ads3 = factories.DataSetFactory.create(
+        published_at=date.today() - timedelta(days=3)
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"sort": "published_at"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ads3.id,
+            'name': ads3.name,
+            'slug': ads3.slug,
+            'search_rank': mock.ANY,
+            'short_description': ads3.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': ads3.type,
+            'has_access': False,
+        },
+        {
+            'id': ads2.id,
+            'name': ads2.name,
+            'slug': ads2.slug,
+            'search_rank': mock.ANY,
+            'short_description': ads2.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': ads2.type,
+            'has_access': False,
+        },
+        {
+            'id': ads1.id,
+            'name': ads1.name,
+            'slug': ads1.slug,
+            'search_rank': mock.ANY,
+            'short_description': ads1.short_description,
+            'published': True,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': ads1.type,
+            'has_access': False,
+        },
+    ]
 
 
 def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_client,):
@@ -726,6 +902,7 @@ def test_find_datasets_filters_by_access():
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
@@ -738,6 +915,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_master.slug,
             'search_rank': mock.ANY,
             'short_description': public_master.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': public_master.type,
@@ -750,6 +928,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_reference.slug,
             'search_rank': mock.ANY,
             'short_description': public_reference.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
@@ -762,6 +941,7 @@ def test_find_datasets_filters_by_access():
             'slug': access_vis.slug,
             'search_rank': mock.ANY,
             'short_description': access_vis.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
@@ -774,6 +954,7 @@ def test_find_datasets_filters_by_access():
             'slug': public_vis.slug,
             'search_rank': mock.ANY,
             'short_description': public_vis.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
@@ -818,6 +999,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'slug': access_granted_master.slug,
             'search_rank': mock.ANY,
             'short_description': access_granted_master.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
@@ -1189,12 +1371,12 @@ class TestVisualisationLinkView:
 
 def test_find_datasets_search_by_source_name(client):
     source = factories.SourceTagFactory(name='source1')
-
+    source_2 = factories.SourceTagFactory(name='source2')
     ds1 = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
-    ds1.tags.set([source, factories.SourceTagFactory()])
+    ds1.tags.set([source, source_2])
 
     ds2 = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
-    ds2.tags.set([factories.SourceTagFactory(name='source2')])
+    ds2.tags.set([factories.SourceTagFactory(name='source3')])
 
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
@@ -1211,8 +1393,9 @@ def test_find_datasets_search_by_source_name(client):
             'slug': ds1.slug,
             'search_rank': 0.243171,
             'short_description': ds1.short_description,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
+            'published_at': mock.ANY,
+            'source_tag_names': [source.name, source_2.name],
+            'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
@@ -1223,6 +1406,7 @@ def test_find_datasets_search_by_source_name(client):
             'slug': rds.slug,
             'search_rank': 0.243171,
             'short_description': rds.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
@@ -1261,6 +1445,7 @@ def test_find_datasets_name_weighting(client):
             'slug': ds4.slug,
             'search_rank': 0.759909,
             'short_description': ds4.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds4.type,
@@ -1273,6 +1458,7 @@ def test_find_datasets_name_weighting(client):
             'slug': ds1.slug,
             'search_rank': 0.607927,
             'short_description': ds1.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds1.type,
@@ -1285,12 +1471,43 @@ def test_find_datasets_name_weighting(client):
             'slug': ds2.slug,
             'search_rank': 0.243171,
             'short_description': ds2.short_description,
+            'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
             'purpose': ds2.type,
             'published': True,
             'has_access': False,
         },
+    ]
+
+
+def test_find_datasets_matches_both_source_and_name(client):
+    source_1 = factories.SourceTagFactory(name='source1')
+    source_2 = factories.SourceTagFactory(name='source2')
+
+    ds1 = factories.DataSetFactory.create(
+        published=True, type=1, name='A dataset from source1'
+    )
+    ds1.source_tags.set([source_1, source_2])
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "source1"})
+
+    assert response.status_code == 200
+    assert len(list(response.context["datasets"])) == 1
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds1.id,
+            'name': ds1.name,
+            'slug': ds1.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds1.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': [source_1.name, source_2.name],
+            'source_tag_ids': MatchUnorderedMembers([source_1.id, source_2.id]),
+            'purpose': ds1.type,
+            'published': True,
+            'has_access': False,
+        }
     ]
 
 

@@ -16,9 +16,9 @@ import aioredis
 import mohawk
 from lxml import html
 
-from dataworkspace.utils import (
+from dataworkspace.utils import (  # pylint: disable=no-name-in-module, import-error
     DATA_EXPLORER_FLAG,
-)  # pylint: disable=no-name-in-module, import-error
+)
 from test.pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_browser,

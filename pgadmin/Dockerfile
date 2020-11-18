@@ -7,9 +7,12 @@ ENV \
 	PGADMIN_DEFAULT_PASSWORD=test
 
 COPY pgadmin-config.py /pgadmin4/config_local.py
+COPY start.sh /
 
 USER root
 RUN \
 	touch /pgadmin4/.pgpass /pgadmin4/servers.json && \
-	chown pgadmin:pgadmin /pgadmin4/.pgpass /pgadmin4/servers.json
-USER pgadmin
+	chown pgadmin:pgadmin /pgadmin4/.pgpass /pgadmin4/servers.json && \
+	chmod +x /start.sh
+
+ENTRYPOINT ["/start.sh"]
