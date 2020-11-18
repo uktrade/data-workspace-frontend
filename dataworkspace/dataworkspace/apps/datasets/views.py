@@ -12,6 +12,7 @@ from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from psycopg2 import sql
 from django.conf import settings
+from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
@@ -136,7 +137,9 @@ def get_datasets_data_for_user_matching_query(
     search = (
         SearchVector('name', weight='A', config='english')
         + SearchVector('short_description', weight='B', config='english')
-        + SearchVector('source_tags__name', weight='B', config='english')
+        + SearchVector(
+            StringAgg('source_tags__name', delimiter='\n'), weight='B', config='english'
+        )
     )
     search_query = SearchQuery(query, config='english')
 

@@ -1371,12 +1371,12 @@ class TestVisualisationLinkView:
 
 def test_find_datasets_search_by_source_name(client):
     source = factories.SourceTagFactory(name='source1')
-
+    source_2 = factories.SourceTagFactory(name='source2')
     ds1 = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
-    ds1.source_tags.set([source, factories.SourceTagFactory()])
+    ds1.source_tags.set([source, source_2])
 
     ds2 = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
-    ds2.source_tags.set([factories.SourceTagFactory(name='source2')])
+    ds2.source_tags.set([factories.SourceTagFactory(name='source3')])
 
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
@@ -1394,8 +1394,8 @@ def test_find_datasets_search_by_source_name(client):
             'search_rank': 0.243171,
             'short_description': ds1.short_description,
             'published_at': mock.ANY,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
+            'source_tag_names': [source.name, source_2.name],
+            'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
@@ -1478,6 +1478,36 @@ def test_find_datasets_name_weighting(client):
             'published': True,
             'has_access': False,
         },
+    ]
+
+
+def test_find_datasets_matches_both_source_and_name(client):
+    source_1 = factories.SourceTagFactory(name='source1')
+    source_2 = factories.SourceTagFactory(name='source2')
+
+    ds1 = factories.DataSetFactory.create(
+        published=True, type=1, name='A dataset from source1'
+    )
+    ds1.source_tags.set([source_1, source_2])
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "source1"})
+
+    assert response.status_code == 200
+    assert len(list(response.context["datasets"])) == 1
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds1.id,
+            'name': ds1.name,
+            'slug': ds1.slug,
+            'search_rank': mock.ANY,
+            'short_description': ds1.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': [source_1.name, source_2.name],
+            'source_tag_ids': MatchUnorderedMembers([source_1.id, source_2.id]),
+            'purpose': ds1.type,
+            'published': True,
+            'has_access': False,
+        }
     ]
 
 
