@@ -18,3 +18,8 @@ class DataLinkType(enum.Enum):
     SOURCE_TABLE = 1
     SOURCE_VIEW = 2
     CUSTOM_QUERY = 3
+
+
+class TagType(enum.Enum):
+    SOURCE = 1
+    TOPIC = 2

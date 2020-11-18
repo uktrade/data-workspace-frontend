@@ -55,6 +55,7 @@ from dataworkspace.apps.core.utils import (
     view_exists,
     get_random_data_sample,
 )
+from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
     DatasetSearchForm,
     EligibilityCriteriaForm,
@@ -138,7 +139,7 @@ def get_datasets_data_for_user_matching_query(
         SearchVector('name', weight='A', config='english')
         + SearchVector('short_description', weight='B', config='english')
         + SearchVector(
-            StringAgg('source_tags__name', delimiter='\n'), weight='B', config='english'
+            StringAgg('tags__name', delimiter='\n'), weight='B', config='english'
         )
     )
     search_query = SearchQuery(query, config='english')
@@ -173,9 +174,15 @@ def get_datasets_data_for_user_matching_query(
     )
 
     # Pull in the source tag IDs for the dataset
-    datasets = datasets.annotate(source_tag_ids=ArrayAgg('source_tags', distinct=True))
     datasets = datasets.annotate(
-        source_tag_names=ArrayAgg('source_tags__name', distinct=True)
+        source_tag_ids=ArrayAgg(
+            'tags', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+        )
+    )
+    datasets = datasets.annotate(
+        source_tag_names=ArrayAgg(
+            'tags__name', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+        )
     )
 
     # Define a `purpose` column denoting the dataset type.

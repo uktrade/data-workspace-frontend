@@ -2339,6 +2339,38 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertIsNone(reference_dataset.sort_field)
 
 
+class TestTagAdmin(BaseAdminTestCase):
+    def test_tag_name_search(self):
+        factories.SourceTagFactory(name='Apple')
+        factories.TopicTagFactory(name='Politics')
+
+        response = self._authenticated_get(
+            reverse('admin:datasets_tag_changelist'), {'q': 'apple'}
+        )
+        self.assertContains(response, 'Source: Apple')
+        self.assertNotContains(response, 'Topic: Politics')
+
+    def test_tag_type_search(self):
+        factories.SourceTagFactory(name='Apple')
+        factories.TopicTagFactory(name='Politics')
+
+        response = self._authenticated_get(
+            reverse('admin:datasets_tag_changelist'), {'q': 'topic'}
+        )
+        self.assertContains(response, 'Topic: Politics')
+        self.assertNotContains(response, 'Source: Apple')
+
+    def test_tag_bad_search(self):
+        factories.SourceTagFactory(name='Apple')
+        factories.TopicTagFactory(name='Politics')
+
+        response = self._authenticated_get(
+            reverse('admin:datasets_tag_changelist'), {'q': 'test'}
+        )
+        self.assertNotContains(response, 'Topic: Politics')
+        self.assertNotContains(response, 'Source: Apple')
+
+
 class TestSourceLinkAdmin(BaseAdminTestCase):
     def test_source_link_upload_get(self):
         dataset = factories.DataSetFactory.create()
