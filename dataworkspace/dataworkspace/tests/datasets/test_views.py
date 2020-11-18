@@ -1488,7 +1488,7 @@ def test_find_datasets_matches_both_source_and_name(client):
     ds1 = factories.DataSetFactory.create(
         published=True, type=1, name='A dataset from source1'
     )
-    ds1.source_tags.set([source_1, source_2])
+    ds1.tags.set([source_1, source_2])
 
     response = client.get(reverse('datasets:find_datasets'), {"q": "source1"})
 
