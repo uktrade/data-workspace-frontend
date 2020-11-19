@@ -6,8 +6,8 @@ ENV \
 	PGADMIN_DEFAULT_EMAIL=pgadmin4@pgadmin.org \
 	PGADMIN_DEFAULT_PASSWORD=test
 
-COPY pgadmin-config.py /pgadmin4/config_local.py
-COPY start.sh /
+COPY pgadmin/pgadmin-config.py /pgadmin4/config_local.py
+COPY pgadmin/start.sh /
 
 USER root
 RUN \
