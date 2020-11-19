@@ -11,8 +11,8 @@ COPY start.sh /
 
 USER root
 RUN \
-	touch /pgadmin4/.pgpass /pgadmin4/servers.json && \
-	chown pgadmin:pgadmin /pgadmin4/.pgpass /pgadmin4/servers.json && \
+	usermod -u 4356 pgadmin && \
+	groupmod -g 4357 pgadmin && \
 	chmod +x /start.sh
 
 ENTRYPOINT ["/start.sh"]

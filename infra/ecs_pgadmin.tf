@@ -64,6 +64,6 @@ data "template_file" "pgadmin_container_definitions" {
     metrics_container_image = "${var.metrics_container_image}:${data.external.pgadmin_metrics_current_tag.result.tag}"
     s3sync_container_image = "${var.s3sync_container_image}:${data.external.pgadmin_s3sync_current_tag.result.tag}"
 
-    home_directory = "/home/jovyan"
+    home_directory = "/home/pgadmin"
   }
 }
