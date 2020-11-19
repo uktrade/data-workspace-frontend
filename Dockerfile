@@ -23,6 +23,7 @@ RUN apt-get update && \
         nginx-extras=1.14.2-2+deb10u3 \
         openssl=1.1.1d-0+deb10u3 \
         build-essential=12.6 \
+        procps=2:3.3.15-2 \
         python3=3.7.3-1 \
         python3-dev=3.7.3-1 \
         python3-pip=18.1-5 \

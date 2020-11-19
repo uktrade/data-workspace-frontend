@@ -65,33 +65,6 @@ RUN \
     echo "jovyan ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
     wget -q -O - https://deb.nodesource.com/setup_14.x | bash  && \
     apt-get install -y nodejs && \
-    python -m pip install --upgrade \
-        pip \
-        wheel && \
-    python -m pip install \
-        aiocontextvars==0.2.2 \
-        bokeh==0.13.0 \
-        gensim==3.5.0 \
-        ipympl==0.5.6 \
-        ipython-sql==0.3.9 \
-        ipython==6.5.0 \
-        ipywidgets==7.5.1 \
-        jupyterlab==2.0.0 \
-        matplotlib==3.2.1 \
-        nltk==3.3.0 \
-        notebook==5.7.8 \
-        numpy==1.17.2 \
-        pandas==0.23.4 \
-        psycopg2==2.7.5 \
-        scipy==1.3.1 \
-        scikit-learn==0.21.3 \
-        seaborn==0.9.0 \
-        spacy==2.1.8 \
-        tornado==5.1.0 \
-        sentry-sdk==0.9.0 && \
-    chown -R jovyan:jovyan /usr/local && \
-    python -m spacy download en && \
-    python -m nltk.downloader -d /usr/local/share/nltk_data wordnet stopwords gutenberg && \
     apt-get remove --purge -y \
         wget && \
     apt-get clean -y && \
@@ -104,11 +77,14 @@ RUN \
     # Avoids errors when installing Java
     mkdir -p /usr/share/man/man1mkdir -p /usr/share/man/man1
 
-COPY jupyterlab_database_access /jupyterlab_database_access
-COPY jupyterlab_template_notebooks /jupyterlab_template_notebooks
+COPY jupyterlab-python/jupyterlab_database_access /jupyterlab_database_access
+COPY jupyterlab-python/jupyterlab_template_notebooks /jupyterlab_template_notebooks
+COPY requirements.txt python-setup.sh /root/
 
 RUN \
-    python -m pip install jupyterlab_template_notebooks/server/ && \
+    chown -R jovyan:jovyan /usr/local && \
+    /root/python-setup.sh && \
+    python3 -m pip install jupyterlab_template_notebooks/server/ && \
     jupyter serverextension enable --system --python jupyterlab_template_notebooks && \
     jupyter labextension install \
         /jupyterlab_database_access \
@@ -119,7 +95,7 @@ RUN \
     echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
     echo 'no-cache-dir = false' >> /etc/pip.conf
 
-COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
+COPY jupyterlab-python/jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 ENTRYPOINT ["tini", "-g", "--"]
 
@@ -142,6 +118,6 @@ RUN \
     echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
     rm /home/jovyan/.bashrc
 
-COPY start.sh /
+COPY jupyterlab-python/start.sh /
 
 CMD ["/start.sh"]

@@ -1,8 +1,0 @@
-notebook==6.1.4
-numpy
-pandas
-pylint==2.5.2
-tensorflow
-psycopg2-binary==2.8.6
-SQLAlchemy==1.3.20
-
