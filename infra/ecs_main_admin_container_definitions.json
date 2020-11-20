@@ -1075,6 +1075,9 @@
     }, {
       "name": "X_FORWARDED_FOR_TRUSTED_HOPS",
       "value": "2"      
+    }, {
+      "name": "VISUALISATION_CLOUDWATCH_LOG_GROUP",
+      "value": "${visualisation_cloudwatch_log_group}"
     }],
     "essential": true,
     "image": "${container_image}",

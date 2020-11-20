@@ -14,10 +14,17 @@
         Production{% if production_commit_id %}: {{ production_commit_id }}{% endif %}
     </h2>
 
-    <ul class="govuk-list govuk-!-margin-bottom-0 govuk-!-font-size-16">
-        <li class="govuk-!-margin-bottom-0">
-            <a class="govuk-link" href="#"><a class="govuk-link govuk-link--no-visited-state" href="{{ production_link }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> production visualisation</a>
+    <ul class="govuk-list govuk-!-font-size-16{% if not production_commit_id %} govuk-!-margin-bottom-0{% endif %}">
+        <li>
+            <a class="govuk-link govuk-link--no-visited-state" href="{{ production_link }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> production visualisation</a>
         </li>
+        {% if production_commit_id %}
+            <li class="govuk-!-margin-bottom-0">
+                <a class="govuk-link govuk-link--no-visited-state" href="{% url 'visualisations:logs' gitlab_project.id production_commit_id %}">
+                    Download latest application log
+                </a>
+            </li>
+        {% endif %}
     </ul>
 </section>
 {% endif %}
@@ -62,11 +69,18 @@
                 View<span class="govuk-visually-hidden"> latest</span> commit<span class="govuk-visually-hidden">{{ latest_commit.short_id }}</span> in GitLab
             </a>
         </li>
-        <li class="govuk-!-margin-bottom-0">
+        <li{% if not can_release_latest_commit %} class="govuk-!-margin-bottom-0"{% endif %}>
             <a class="govuk-link govuk-link--no-visited-state" href="{{ latest_commit_preview_link }}">
                 Preview visualisation<span class="govuk-visually-hidden"> at<span class="govuk-visually-hidden"> latest</span> commit {{ latest_commit.short_id }}</span>
             </a>
         </li>
+        {% if can_release_latest_commit %}
+            <li class="govuk-!-margin-bottom-0">
+                <a class="govuk-link govuk-link--no-visited-state" href="{% url 'visualisations:logs' gitlab_project.id latest_commit.short_id %}">
+                    Download latest application log
+                </a>
+            </li>
+        {% endif %}
     </ul>
 </section>
 {% endblock %}

@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import boto3
 import botocore
+from botocore.exceptions import ClientError
 from django_db_geventpool.utils import close_connection
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -1163,3 +1164,23 @@ def log_visualisation_view(visualisation_link, user, event_type):
             "visualisation_identifier": visualisation_link.identifier,
         },
     ).save()
+
+
+def fetch_visualisation_log_events(log_group, log_stream):
+    client = boto3.client('logs')
+    events = []
+    next_token = None
+    while True:
+        try:
+            response = client.get_log_events(
+                logGroupName=log_group,
+                logStreamName=log_stream,
+                **{'nextToken': next_token} if next_token else {},
+            )
+        except ClientError:
+            return []
+        next_token = response.get('nextForwardToken')
+        events += response.get('events', [])
+        if next_token is None or not response['events']:
+            break
+    return events

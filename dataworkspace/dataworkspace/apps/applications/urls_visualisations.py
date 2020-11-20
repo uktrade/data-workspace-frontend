@@ -3,6 +3,7 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 
 from dataworkspace.apps.applications.views import (
+    visualisation_latest_log_GET,
     visualisation_link_html_view,
     visualisations_html_view,
     visualisation_users_give_access_html_view,
@@ -54,5 +55,10 @@ urlpatterns = [
         '<str:gitlab_project_id>/publish',
         login_required(visualisation_publish_html_view),
         name='publish',
+    ),
+    path(
+        '<str:gitlab_project_id>/logs/<str:commit_id>',
+        login_required(visualisation_latest_log_GET),
+        name='logs',
     ),
 ]
