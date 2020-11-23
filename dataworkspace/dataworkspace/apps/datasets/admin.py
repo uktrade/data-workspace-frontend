@@ -29,6 +29,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
     VisualisationUserPermission,
     VisualisationLink,
+    ToolQueryAuditLog,
 )
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
@@ -687,3 +688,19 @@ class VisualisationCatalogueItemAdmin(
 class DatasetReferenceCodeAdmin(admin.ModelAdmin):
     search_fields = ['code', 'description']
     fields = ['code', 'description']
+
+
+@admin.register(ToolQueryAuditLog)
+class ToolQueryAuditLogAdmin(admin.ModelAdmin):
+    search_fields = ['user__email', 'rolename', 'query_sql']
+    fields = ['id', 'timestamp', 'user', 'database', 'rolename', 'query_sql']
+    list_display = ['id', 'timestamp', 'user', 'database', 'rolename', 'query_sql']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
