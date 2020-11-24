@@ -10,11 +10,6 @@ resource "aws_db_parameter_group" "default" {
   }
 
   parameter {
-    name  = "pgaudit.role"
-    value = "rds_pgaudit"
-  }
-
-  parameter {
     name  = "log_destination"
     value = "csvlog"
   }
