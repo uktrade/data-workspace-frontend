@@ -150,7 +150,7 @@ resource "aws_ecs_task_definition" "admin" {
 data "template_file" "admin_container_definitions" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars = "${merge(local.admin_container_vars, map("container_command", "/dataworkspace/start.sh"))}"
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start.sh\"]"))}"
 }
 
 data "external" "admin_current_tag" {
@@ -161,6 +161,43 @@ data "external" "admin_current_tag" {
     service_name = "${var.prefix}-admin"  # Manually specified to avoid a cycle
     container_name = "jupyterhub-admin"
   }
+}
+
+resource "aws_ecs_service" "admin_celery" {
+  name            = "${var.prefix}-admin-celery"
+  cluster         = "${aws_ecs_cluster.main_cluster.id}"
+  task_definition = "${aws_ecs_task_definition.admin_celery.arn}"
+  desired_count   = 2
+  launch_type     = "FARGATE"
+  deployment_maximum_percent = 600
+
+  network_configuration {
+    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    security_groups = ["${aws_security_group.admin_service.id}"]
+  }
+}
+
+resource "aws_ecs_task_definition" "admin_celery" {
+  family                   = "${var.prefix}-admin-celery"
+  container_definitions    = "${data.template_file.admin_celery_container_definitions.rendered}"
+  execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
+  task_role_arn            = "${aws_iam_role.admin_task.arn}"
+  network_mode             = "awsvpc"
+  cpu                      = "${local.admin_container_cpu}"
+  memory                   = "${local.admin_container_memory}"
+  requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
+}
+
+data "template_file" "admin_celery_container_definitions" {
+  template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
+
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery.sh\"]"))}"
 }
 
 resource "aws_ecs_task_definition" "admin_store_db_creds_in_s3" {
