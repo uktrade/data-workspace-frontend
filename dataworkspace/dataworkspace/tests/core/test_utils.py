@@ -1,15 +1,29 @@
+import datetime
 import re
 
 import psycopg2
 import pytest
 from django.conf import settings
+from django.db import connections
+from django.test import override_settings
 
 from dataworkspace.apps.core.utils import (
     database_dsn,
     get_random_data_sample,
     postgres_user,
+    source_tables_for_user,
+    db_role_schema_suffix_for_user,
+    new_private_database_credentials,
+)
+from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
+    Command as ensure_databases_configured,
 )
 from dataworkspace.tests import factories
+from dataworkspace.tests.factories import (
+    UserFactory,
+    SourceTableFactory,
+    MasterDataSetFactory,
+)
 
 
 class TestGetRandomSample:
@@ -85,3 +99,36 @@ class TestPostgresUser:
         username = postgres_user(email, suffix=suffix)
         assert re.match(expected_match, username)
         assert len(username) == expected_length
+
+
+class TestNewPrivateDatabaseCredentials:
+    @pytest.mark.django_db(transaction=True)
+    @override_settings(PGAUDIT_LOG_SCOPES='ALL')
+    def test_new_credentials_have_pgaudit_configuration(self):
+        ensure_databases_configured().handle()
+
+        user = UserFactory(email='test@foo.bar')
+        st = SourceTableFactory(
+            dataset=MasterDataSetFactory.create(
+                user_access_type='REQUIRES_AUTHENTICATION'
+            )
+        )
+
+        source_tables = source_tables_for_user(user)
+        db_role_schema_suffix = db_role_schema_suffix_for_user(user)
+        user_creds_to_drop = new_private_database_credentials(
+            db_role_schema_suffix,
+            source_tables,
+            postgres_user(user.email),
+            valid_for=datetime.timedelta(days=1),
+        )
+
+        connections[st.database.memorable_name].cursor().execute('COMMIT')
+
+        rolename = user_creds_to_drop[0]['db_user']
+        query = f"SELECT rolname, rolconfig FROM pg_roles WHERE rolname = '{rolename}';"
+
+        with connections[st.database.memorable_name].cursor() as cursor:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            assert 'pgaudit.log=ALL' in results[0][1]
