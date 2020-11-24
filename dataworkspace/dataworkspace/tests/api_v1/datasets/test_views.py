@@ -1,14 +1,23 @@
 import json
 
 import psycopg2
+import pytest
 from django.conf import settings
 from django.test import TestCase
-from django.urls import resolve
+from django.urls import resolve, reverse
+from rest_framework import status
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.models import DataGrouping, DataSet, SourceTable
+from dataworkspace.apps.datasets.models import (
+    DataGrouping,
+    DataSet,
+    ReferenceDataset,
+    SourceTable,
+    VisualisationCatalogueItem,
+)
 from dataworkspace.tests import factories
+from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 
 
 def flush_database(connection):
@@ -341,3 +350,105 @@ class TestAPIReferenceDatasetView(TestCase):
             json.loads(output.decode('utf-8')),
             {'headers': ['id', 'name'], 'values': [[2, 'Ánd again']], 'next': None},
         )
+
+
+@pytest.mark.django_db
+class TestCatalogueItemsAPIView(BaseAPIViewTest):
+    url = reverse('api-v1:dataset:catalogue-items')
+    factory = factories.DataSetFactory
+    pagination_class = (
+        'dataworkspace.apps.api_v1.datasets.views.PageNumberPagination.page_size'
+    )
+
+    def expected_response(
+        self,
+        dataset,
+        purpose,
+        personal_data=None,
+        retention_policy=None,
+        eligibility_criteria=None,
+    ):
+        return {
+            'id': str(dataset.uuid)
+            if isinstance(dataset, ReferenceDataset)
+            else str(dataset.id),
+            'name': dataset.name,
+            'short_description': dataset.short_description,
+            'description': dataset.description or None,
+            'published': dataset.published,
+            'created_date': dataset.created_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'published_at': dataset.published_at.strftime('%Y-%m-%d')
+            if dataset.published_at
+            else None,
+            'information_asset_owner': dataset.information_asset_owner.id
+            if dataset.information_asset_owner
+            else None,
+            'information_asset_manager': dataset.information_asset_manager.id
+            if dataset.information_asset_manager
+            else None,
+            'enquiries_contact': dataset.enquiries_contact.id
+            if dataset.enquiries_contact
+            else None,
+            'licence': dataset.licence or None,
+            'purpose': purpose,
+            'source_tags': None
+            if isinstance(dataset, VisualisationCatalogueItem)
+            else [t.name for t in dataset.tags.all()]
+            if dataset.tags.all()
+            else None,
+            'personal_data': personal_data,
+            'retention_policy': retention_policy,
+            'eligibility_criteria': list(eligibility_criteria)
+            if eligibility_criteria
+            else None,
+        }
+
+    def test_success(self, unauthenticated_client):
+        datacut = factories.DatacutDataSetFactory(
+            information_asset_owner=factories.UserFactory(),
+            information_asset_manager=factories.UserFactory(),
+            enquiries_contact=factories.UserFactory(),
+            personal_data='personal',
+            retention_policy='retention',
+            eligibility_criteria=['eligibility'],
+        )
+        datacut.tags.set([factories.SourceTagFactory()])
+
+        master_dataset = factories.MasterDataSetFactory(
+            information_asset_owner=factories.UserFactory(),
+            information_asset_manager=factories.UserFactory(),
+            personal_data='personal',
+            retention_policy='retention',
+        )
+        reference_dataset = factories.ReferenceDatasetFactory(
+            information_asset_owner=factories.UserFactory(),
+        )
+
+        visualisation = factories.VisualisationCatalogueItemFactory(
+            personal_data='personal',
+        )
+
+        visualisation2 = factories.VisualisationCatalogueItemFactory(published=False)
+
+        response = unauthenticated_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['results'] == [
+            self.expected_response(
+                datacut,
+                'Data cut',
+                datacut.personal_data,
+                datacut.retention_policy,
+                datacut.eligibility_criteria,
+            ),
+            self.expected_response(
+                master_dataset,
+                'Master dataset',
+                master_dataset.personal_data,
+                master_dataset.retention_policy,
+            ),
+            self.expected_response(reference_dataset, 'Reference data',),
+            self.expected_response(
+                visualisation, 'Visualisation', visualisation.personal_data
+            ),
+            self.expected_response(visualisation2, 'Visualisation'),
+        ]
