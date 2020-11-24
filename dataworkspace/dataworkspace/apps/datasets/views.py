@@ -327,9 +327,10 @@ def get_visualisations_data_for_user_matching_query(
     )
 
 
-def _matches_filters(data, access: bool, use: Set, source_ids: Set):
+def _matches_filters(data, access: bool, unpublished: bool, use: Set, source_ids: Set):
     return (
         (not access or data['has_access'])
+        and (unpublished or data['published'])
         and (not use or use == [None] or data['purpose'] in use)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
     )
@@ -367,6 +368,16 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
     return all_datasets
 
 
+def has_unpublished_dataset_access(user):
+    access = user.is_superuser
+    for dataset_type in DataSetType:
+        access = access or user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(dataset_type.value)
+        )
+
+    return access
+
+
 @require_GET
 def find_datasets(request):
     form = DatasetSearchForm(request.GET)
@@ -377,6 +388,7 @@ def find_datasets(request):
     if form.is_valid():
         query = form.cleaned_data.get("q")
         access = form.cleaned_data.get("access")
+        unpublished = form.cleaned_data.get("unpublished")
         use = set(form.cleaned_data.get("use"))
         sort = form.cleaned_data.get("sort")
         source_ids = set(source.id for source in form.cleaned_data.get("source"))
@@ -393,7 +405,9 @@ def find_datasets(request):
     # be sufficient while the number of datasets is relatively low (hundreds/thousands).
     datasets_matching_query_and_filters = list(
         filter(
-            lambda d: _matches_filters(d, bool(access), use, source_ids),
+            lambda d: _matches_filters(
+                d, bool(access), bool(unpublished), use, source_ids
+            ),
             all_datasets_visible_to_user_matching_query,
         )
     )
@@ -418,6 +432,7 @@ def find_datasets(request):
             "query": query,
             "datasets": paginator.get_page(request.GET.get("page")),
             "purpose": dict(purposes),
+            "show_unpublished": has_unpublished_dataset_access(request.user),
         },
     )
 

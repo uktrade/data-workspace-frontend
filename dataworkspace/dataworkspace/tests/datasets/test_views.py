@@ -965,6 +965,68 @@ def test_find_datasets_filters_by_access():
 
 
 @pytest.mark.django_db
+def test_find_datasets_filters_by_show_unpublished():
+    user = factories.UserFactory.create(is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
+    publshed_master = factories.DataSetFactory.create(name='published dataset')
+    unpublished_master = factories.DataSetFactory.create(
+        published=False, name='unpublished dataset'
+    )
+
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': publshed_master.id,
+            'name': publshed_master.name,
+            'slug': publshed_master.slug,
+            'search_rank': mock.ANY,
+            'short_description': publshed_master.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': publshed_master.type,
+            'published': True,
+            'has_access': mock.ANY,
+        },
+    ]
+
+    response = client.get(reverse('datasets:find_datasets'), {"unpublished": "yes"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': publshed_master.id,
+            'name': publshed_master.name,
+            'slug': publshed_master.slug,
+            'search_rank': mock.ANY,
+            'short_description': publshed_master.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': publshed_master.type,
+            'published': True,
+            'has_access': mock.ANY,
+        },
+        {
+            'id': unpublished_master.id,
+            'name': unpublished_master.name,
+            'slug': unpublished_master.slug,
+            'search_rank': mock.ANY,
+            'short_description': unpublished_master.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'purpose': unpublished_master.type,
+            'published': False,
+            'has_access': mock.ANY,
+        },
+    ]
+
+
+@pytest.mark.django_db
 def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once():
     """Meant to prevent a regression where the combination of these two filters would return datasets multiple times
     based on the number of users with permissions to see that dataset, but the dataset didn't actually require any
@@ -1082,7 +1144,7 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
         published=False, name='Visualisation'
     )
 
-    response = client.get(reverse('datasets:find_datasets'))
+    response = client.get(reverse('datasets:find_datasets'), {"unpublished": "yes"})
 
     assert response.status_code == 200
     assert {
