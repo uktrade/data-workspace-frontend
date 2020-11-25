@@ -174,7 +174,7 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {'ecs': {'()': 'ecs_logging.StdlibFormatter'}},
+    'formatters': {'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'}},
     'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'ecs'}},
     'loggers': {
         'django': {'handlers': ['console'], 'level': 'INFO'},

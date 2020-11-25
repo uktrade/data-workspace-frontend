@@ -86,6 +86,8 @@ FROM base AS live
 
 COPY dataworkspace /dataworkspace
 
+RUN cd dataworkspace
+
 COPY etc /etc
 
 CMD ["/dataworkspace/start.sh"]
