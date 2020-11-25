@@ -175,10 +175,11 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'formatters': {'ecs': {'()': 'ecs_logging.StdlibFormatter'}},
     'loggers': {
-        'django': {'handlers': ['console'], 'level': 'INFO'},
-        'app': {'handlers': ['console'], 'level': 'INFO'},
-        'celery': {'handlers': ['console'], 'level': 'INFO'},
+        'django': {'handlers': ['console'], 'formatters': ['ecs'], 'level': 'INFO'},
+        'app': {'handlers': ['console'], 'formatters': ['ecs'], 'level': 'INFO'},
+        'celery': {'handlers': ['console'], 'formatters': ['ecs'], 'level': 'INFO'},
     },
 }
 
