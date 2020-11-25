@@ -1807,3 +1807,11 @@ class VisualisationLink(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse('visualisations:link', kwargs={"link_id": self.id})
+
+
+class ToolQueryAuditLog(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
+    database = models.ForeignKey(Database, on_delete=models.PROTECT)
+    rolename = models.CharField(max_length=64, null=False, blank=False)
+    query_sql = models.TextField(null=False, blank=False)
+    timestamp = models.DateTimeField(null=False, blank=False)
