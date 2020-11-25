@@ -13,4 +13,9 @@ resource "aws_db_parameter_group" "default" {
     name  = "log_destination"
     value = "csvlog"
   }
+
+  parameter {
+    name  = "pgaudit.log"
+    value = "none"
+  }
 }
