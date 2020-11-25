@@ -2397,9 +2397,7 @@ async def create_sentry():
 # The environment must be the same as in the Dockerfile
 async def create_application(env=lambda: {}):
     proc = await asyncio.create_subprocess_exec(
-        '/dataworkspace/start-test.sh',
-        env={**os.environ, **env()},
-        preexec_fn=os.setsid,
+        '/dataworkspace/start.sh', env={**os.environ, **env()}, preexec_fn=os.setsid
     )
 
     async def _cleanup_application():
