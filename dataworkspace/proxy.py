@@ -14,6 +14,7 @@ import uuid
 import urllib
 
 import aiohttp
+import ecs_logging
 from aiohttp import web
 
 import aioredis
@@ -44,6 +45,10 @@ CONTEXT_ALPHABET = string.ascii_letters + string.digits
 
 async def async_main():
     stdout_handler = logging.StreamHandler(sys.stdout)
+    ecs_formatter = ecs_logging.StdlibFormatter(
+        exclude_fields=('log.original', 'message')
+    )
+    stdout_handler.setFormatter(ecs_formatter)
     for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access', 'proxy']:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.INFO)
