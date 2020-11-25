@@ -14,16 +14,6 @@ services:
       - "data-workspace-redis"
     volumes:
       - ./dataworkspace:/dataworkspace
-  data-workspace-celery:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: data-workspace
-    env_file: .envs/dev.env
-    links:
-      - "data-workspace-postgres"
-      - "data-workspace-redis"
-    command: "/dataworkspace/start-celery.sh"
   data-workspace-postgres:
     build:
       context: postgres
