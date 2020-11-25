@@ -22,7 +22,6 @@ locals {
 
     environment = "${var.admin_environment}"
 
-    #notebooks_bucket = "${var.appstream_bucket}"
     uploads_bucket = "${var.uploads_bucket}"
     notebooks_bucket = "${var.notebooks_bucket}"
     mirror_remote_root = "https://s3-${data.aws_region.aws_region.name}.amazonaws.com/${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}/"
