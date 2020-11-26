@@ -1646,6 +1646,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     slug = models.SlugField(
         max_length=50, db_index=True, unique=True, null=False, blank=False
     )
+    tags = models.ManyToManyField(Tag, related_name='+', blank=True)
     short_description = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
