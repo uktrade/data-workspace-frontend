@@ -68,8 +68,17 @@ pipeline {
 
 
     stage('release: dev') {
-      steps {
-        ecs_pipeline("analysisworkspace-dev", params.GIT_COMMIT)
+      parallel {
+        stage('release: data-workspace') {
+          steps {
+            ecs_pipeline_admin("analysisworkspace-dev", params.GIT_COMMIT)
+          }
+        }
+        stage('release: data-workspace-celery') {
+          steps {
+            ecs_pipeline_celery("analysisworkspace-dev", params.GIT_COMMIT)
+          }
+        }
       }
     }
 
@@ -84,8 +93,17 @@ pipeline {
           beforeAgent true
       }
 
-      steps {
-        ecs_pipeline("data-workspace-staging", params.GIT_COMMIT)
+      parallel {
+        stage('release: data-workspace') {
+          steps {
+            ecs_pipeline_admin("analysisworkspace-dev", params.GIT_COMMIT)
+          }
+        }
+        stage('release: data-workspace-celery') {
+          steps {
+            ecs_pipeline_celery("analysisworkspace-dev", params.GIT_COMMIT)
+          }
+        }
       }
     }
 
@@ -100,19 +118,39 @@ pipeline {
           beforeAgent true
       }
 
-      steps {
-        ecs_pipeline("jupyterhub", params.GIT_COMMIT)
+      parallel {
+        stage('release: data-workspace') {
+          steps {
+            ecs_pipeline_admin("analysisworkspace-dev", params.GIT_COMMIT)
+          }
+        }
+        stage('release: data-workspace-celery') {
+          steps {
+            ecs_pipeline_celery("analysisworkspace-dev", params.GIT_COMMIT)
+          }
+        }
       }
     }
   }
 }
 
-void ecs_pipeline(cluster, version) {
-  lock("data-workspace-ecs-pipeline-${cluster}") {
+void ecs_pipeline_admin(cluster, version) {
+  lock("data-workspace-ecs-pipeline-${cluster}-admin") {
     build job: "ecs-pipeline", parameters: [
         string(name: "Image", value: "quay.io/uktrade/data-workspace:${version}"),
         string(name: "Cluster", value: cluster),
         string(name: "Service", value: "${cluster}-admin"),
+        string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY")
+    ]
+  }
+}
+
+void ecs_pipeline_celery(cluster, version) {
+  lock("data-workspace-ecs-pipeline-${cluster}-celery") {
+    build job: "ecs-pipeline", parameters: [
+        string(name: "Image", value: "quay.io/uktrade/data-workspace:${version}"),
+        string(name: "Cluster", value: cluster),
+        string(name: "Service", value: "${cluster}-admin-celery"),
         string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY")
     ]
   }
