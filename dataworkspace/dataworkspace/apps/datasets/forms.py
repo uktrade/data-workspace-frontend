@@ -82,7 +82,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     unpublished = forms.MultipleChoiceField(
-        choices=[('yes', 'Show unpublished')],
+        choices=[('yes', 'Include unpublished')],
         required=False,
         widget=FilterWidget("Show unpublished"),
     )
