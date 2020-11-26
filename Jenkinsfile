@@ -96,12 +96,12 @@ pipeline {
       parallel {
         stage('release: data-workspace') {
           steps {
-            ecs_pipeline_admin("analysisworkspace-dev", params.GIT_COMMIT)
+            ecs_pipeline_admin("data-workspace-staging", params.GIT_COMMIT)
           }
         }
         stage('release: data-workspace-celery') {
           steps {
-            ecs_pipeline_celery("analysisworkspace-dev", params.GIT_COMMIT)
+            ecs_pipeline_celery("data-workspace-staging", params.GIT_COMMIT)
           }
         }
       }
@@ -121,12 +121,12 @@ pipeline {
       parallel {
         stage('release: data-workspace') {
           steps {
-            ecs_pipeline_admin("analysisworkspace-dev", params.GIT_COMMIT)
+            ecs_pipeline_admin("jupyterhub", params.GIT_COMMIT)
           }
         }
         stage('release: data-workspace-celery') {
           steps {
-            ecs_pipeline_celery("analysisworkspace-dev", params.GIT_COMMIT)
+            ecs_pipeline_celery("jupyterhub", params.GIT_COMMIT)
           }
         }
       }
