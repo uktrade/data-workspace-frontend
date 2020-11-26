@@ -49,8 +49,8 @@ locals {
 
     fargate_spawner__jupyterlabpython_task_definition_arn = "${aws_ecs_task_definition.jupyterlabpython.family}"
     fargate_spawner__jupyterlabr_task_definition_arn   = "${aws_ecs_task_definition.jupyterlabr.family}"
-    fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}:${aws_ecs_task_definition.rstudio.revision}"
-    fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}:${aws_ecs_task_definition.pgadmin.revision}"
+    fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}"
+    fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}"
     fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
     fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
     fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
