@@ -1,3 +1,87 @@
+locals {
+  admin_container_vars = {
+    container_image   = "${var.admin_container_image}:${data.external.admin_current_tag.result.tag}"
+    container_name    = "${local.admin_container_name}"
+    container_port    = "${local.admin_container_port}"
+    container_cpu     = "${local.admin_container_cpu}"
+    container_memory  = "${local.admin_container_memory}"
+
+    log_group  = "${aws_cloudwatch_log_group.admin.name}"
+    log_region = "${data.aws_region.aws_region.name}"
+
+    root_domain               = "${var.admin_domain}"
+    admin_db__host            = "${aws_db_instance.admin.address}"
+    admin_db__name            = "${aws_db_instance.admin.name}"
+    admin_db__password        = "${random_string.aws_db_instance_admin_password.result}"
+    admin_db__port            = "${aws_db_instance.admin.port}"
+    admin_db__user            = "${aws_db_instance.admin.username}"
+    authbroker_client_id      = "${var.admin_authbroker_client_id}"
+    authbroker_client_secret  = "${var.admin_authbroker_client_secret}"
+    authbroker_url            = "${var.admin_authbroker_url}"
+    secret_key                = "${random_string.admin_secret_key.result}"
+
+    environment = "${var.admin_environment}"
+
+    uploads_bucket = "${var.uploads_bucket}"
+    notebooks_bucket = "${var.notebooks_bucket}"
+    mirror_remote_root = "https://s3-${data.aws_region.aws_region.name}.amazonaws.com/${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}/"
+
+    appstream_url = "https://${var.appstream_domain}/"
+    support_url = "https://${var.support_domain}/"
+
+    redis_url = "redis://${aws_elasticache_cluster.admin.cache_nodes.0.address}:6379"
+
+    sentry_dsn = "${var.sentry_dsn}"
+
+    notebook_task_role__role_prefix                        = "${var.notebook_task_role_prefix}"
+    notebook_task_role__permissions_boundary_arn           = "${aws_iam_policy.notebook_task_boundary.arn}"
+    notebook_task_role__assume_role_policy_document_base64 = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_ecs_tasks_assume_role.json)}"
+    notebook_task_role__policy_name                        = "${var.notebook_task_role_policy_name}"
+    notebook_task_role__policy_document_template_base64    = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_template.json)}"
+    fargate_spawner__aws_region            = "${data.aws_region.aws_region.name}"
+    fargate_spawner__aws_ecs_host          = "ecs.${data.aws_region.aws_region.name}.amazonaws.com"
+    fargate_spawner__notebook_port         = "${local.notebook_container_port}"
+    fargate_spawner__task_custer_name      = "${aws_ecs_cluster.notebooks.name}"
+    fargate_spawner__task_container_name   = "${local.notebook_container_name}"
+    fargate_spawner__task_definition_arn   = "${aws_ecs_task_definition.notebook.family}:${aws_ecs_task_definition.notebook.revision}"
+    fargate_spawner__task_security_group   = "${aws_security_group.notebooks.id}"
+    fargate_spawner__task_subnet           = "${aws_subnet.private_without_egress.*.id[0]}"
+
+    fargate_spawner__jupyterlabpython_task_definition_arn = "${aws_ecs_task_definition.jupyterlabpython.family}"
+    fargate_spawner__jupyterlabr_task_definition_arn   = "${aws_ecs_task_definition.jupyterlabr.family}"
+    fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}:${aws_ecs_task_definition.rstudio.revision}"
+    fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}:${aws_ecs_task_definition.pgadmin.revision}"
+    fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
+    fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
+    fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
+    fargate_spawner__superset_task_definition_arn  = "${aws_ecs_task_definition.superset.family}"
+    fargate_spawner__dataexplorer_task_definition_arn  = "${aws_ecs_task_definition.dataexplorer.family}"
+
+    fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
+    fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
+    fargate_spawner__user_provided_ecr_repository__name = "${aws_ecr_repository.user_provided.name}"
+
+    zendesk_email = "${var.zendesk_email}"
+    zendesk_subdomain = "${var.zendesk_subdomain}"
+    zendesk_token = "${var.zendesk_token}"
+    zendesk_service_field_id = "${var.zendesk_service_field_id}"
+    zendesk_service_field_value = "${var.zendesk_service_field_value}"
+
+    prometheus_domain = "${var.prometheus_domain}"
+    metrics_service_discovery_basic_auth_user = "${var.metrics_service_discovery_basic_auth_user}"
+    metrics_service_discovery_basic_auth_password = "${var.metrics_service_discovery_basic_auth_password}"
+
+    google_analytics_site_id = "${var.google_analytics_site_id}"
+    google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
+
+    superset_root = "${aws_lb.superset_multiuser.dns_name}"
+
+    admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
+
+    efs_id = "${aws_efs_file_system.notebooks.id}"
+  }
+}
+
 resource "aws_ecs_service" "admin" {
   name            = "${var.prefix}-admin"
   cluster         = "${aws_ecs_cluster.main_cluster.id}"
@@ -65,89 +149,7 @@ resource "aws_ecs_task_definition" "admin" {
 data "template_file" "admin_container_definitions" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars {
-    container_image   = "${var.admin_container_image}:${data.external.admin_current_tag.result.tag}"
-    container_name    = "${local.admin_container_name}"
-    container_command = "[\"/dataworkspace/start.sh\"]"
-    container_port    = "${local.admin_container_port}"
-    container_cpu     = "${local.admin_container_cpu}"
-    container_memory  = "${local.admin_container_memory}"
-
-    log_group  = "${aws_cloudwatch_log_group.admin.name}"
-    log_region = "${data.aws_region.aws_region.name}"
-
-    root_domain               = "${var.admin_domain}"
-    admin_db__host            = "${aws_db_instance.admin.address}"
-    admin_db__name            = "${aws_db_instance.admin.name}"
-    admin_db__password        = "${random_string.aws_db_instance_admin_password.result}"
-    admin_db__port            = "${aws_db_instance.admin.port}"
-    admin_db__user            = "${aws_db_instance.admin.username}"
-    authbroker_client_id      = "${var.admin_authbroker_client_id}"
-    authbroker_client_secret  = "${var.admin_authbroker_client_secret}"
-    authbroker_url            = "${var.admin_authbroker_url}"
-    secret_key                = "${random_string.admin_secret_key.result}"
-
-    environment = "${var.admin_environment}"
-
-    #notebooks_bucket = "${var.appstream_bucket}"
-    notebooks_bucket = "${var.notebooks_bucket}"
-    uploads_bucket = "${var.uploads_bucket}"
-    mirror_remote_root = "https://s3-${data.aws_region.aws_region.name}.amazonaws.com/${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}/"
-
-    appstream_url = "https://${var.appstream_domain}/"
-    support_url = "https://${var.support_domain}/"
-
-    redis_url = "redis://${aws_elasticache_cluster.admin.cache_nodes.0.address}:6379"
-
-    sentry_dsn = "${var.sentry_dsn}"
-
-    notebook_task_role__role_prefix                        = "${var.notebook_task_role_prefix}"
-    notebook_task_role__permissions_boundary_arn           = "${aws_iam_policy.notebook_task_boundary.arn}"
-    notebook_task_role__assume_role_policy_document_base64 = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_ecs_tasks_assume_role.json)}"
-    notebook_task_role__policy_name                        = "${var.notebook_task_role_policy_name}"
-    notebook_task_role__policy_document_template_base64    = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_template.json)}"
-    fargate_spawner__aws_region            = "${data.aws_region.aws_region.name}"
-    fargate_spawner__aws_ecs_host          = "ecs.${data.aws_region.aws_region.name}.amazonaws.com"
-    fargate_spawner__notebook_port         = "${local.notebook_container_port}"
-    fargate_spawner__task_custer_name      = "${aws_ecs_cluster.notebooks.name}"
-    fargate_spawner__task_container_name   = "${local.notebook_container_name}"
-    fargate_spawner__task_definition_arn   = "${aws_ecs_task_definition.notebook.family}"
-    fargate_spawner__task_security_group   = "${aws_security_group.notebooks.id}"
-    fargate_spawner__task_subnet           = "${aws_subnet.private_without_egress.*.id[0]}"
-
-    fargate_spawner__jupyterlabpython_task_definition_arn = "${aws_ecs_task_definition.jupyterlabpython.family}"
-    fargate_spawner__jupyterlabr_task_definition_arn   = "${aws_ecs_task_definition.jupyterlabr.family}"
-    fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}"
-    fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}"
-    fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
-    fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
-    fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
-    fargate_spawner__superset_task_definition_arn  = "${aws_ecs_task_definition.superset.family}"
-    fargate_spawner__dataexplorer_task_definition_arn  = "${aws_ecs_task_definition.dataexplorer.family}"
-
-    fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
-    fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
-    fargate_spawner__user_provided_ecr_repository__name = "${aws_ecr_repository.user_provided.name}"
-
-    zendesk_email = "${var.zendesk_email}"
-    zendesk_subdomain = "${var.zendesk_subdomain}"
-    zendesk_token = "${var.zendesk_token}"
-    zendesk_service_field_id = "${var.zendesk_service_field_id}"
-    zendesk_service_field_value = "${var.zendesk_service_field_value}"
-
-    prometheus_domain = "${var.prometheus_domain}"
-    metrics_service_discovery_basic_auth_user = "${var.metrics_service_discovery_basic_auth_user}"
-    metrics_service_discovery_basic_auth_password = "${var.metrics_service_discovery_basic_auth_password}"
-  
-    google_analytics_site_id = "${var.google_analytics_site_id}"
-    google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
-
-    superset_root = "https://${var.superset_internal_domain}/"
-
-    admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
-
-    efs_id = "${aws_efs_file_system.notebooks.id}"
-  }
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start.sh\"]"))}"
 }
 
 data "external" "admin_current_tag" {
@@ -158,6 +160,43 @@ data "external" "admin_current_tag" {
     service_name = "${var.prefix}-admin"  # Manually specified to avoid a cycle
     container_name = "jupyterhub-admin"
   }
+}
+
+resource "aws_ecs_service" "admin_celery" {
+  name            = "${var.prefix}-admin-celery"
+  cluster         = "${aws_ecs_cluster.main_cluster.id}"
+  task_definition = "${aws_ecs_task_definition.admin_celery.arn}"
+  desired_count   = 2
+  launch_type     = "FARGATE"
+  deployment_maximum_percent = 600
+
+  network_configuration {
+    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    security_groups = ["${aws_security_group.admin_service.id}"]
+  }
+}
+
+resource "aws_ecs_task_definition" "admin_celery" {
+  family                   = "${var.prefix}-admin-celery"
+  container_definitions    = "${data.template_file.admin_celery_container_definitions.rendered}"
+  execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
+  task_role_arn            = "${aws_iam_role.admin_task.arn}"
+  network_mode             = "awsvpc"
+  cpu                      = "${local.admin_container_cpu}"
+  memory                   = "${local.admin_container_memory}"
+  requires_compatibilities = ["FARGATE"]
+
+  lifecycle {
+    ignore_changes = [
+      "revision",
+    ]
+  }
+}
+
+data "template_file" "admin_celery_container_definitions" {
+  template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
+
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery.sh\"]"))}"
 }
 
 resource "aws_ecs_task_definition" "admin_store_db_creds_in_s3" {
@@ -180,89 +219,7 @@ resource "aws_ecs_task_definition" "admin_store_db_creds_in_s3" {
 data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars {
-    container_image   = "${var.admin_container_image}:${data.external.admin_current_tag.result.tag}"
-    container_name    = "${local.admin_container_name}"
-    container_command = "[\"django-admin\", \"store_db_creds_in_s3\"]"
-    container_port    = "${local.admin_container_port}"
-    container_cpu     = "${local.admin_container_cpu}"
-    container_memory  = "${local.admin_container_memory}"
-
-    log_group  = "${aws_cloudwatch_log_group.admin.name}"
-    log_region = "${data.aws_region.aws_region.name}"
-
-    root_domain               = "${var.admin_domain}"
-    admin_db__host            = "${aws_db_instance.admin.address}"
-    admin_db__name            = "${aws_db_instance.admin.name}"
-    admin_db__password        = "${random_string.aws_db_instance_admin_password.result}"
-    admin_db__port            = "${aws_db_instance.admin.port}"
-    admin_db__user            = "${aws_db_instance.admin.username}"
-    authbroker_client_id      = "${var.admin_authbroker_client_id}"
-    authbroker_client_secret  = "${var.admin_authbroker_client_secret}"
-    authbroker_url            = "${var.admin_authbroker_url}"
-    secret_key                = "${random_string.admin_secret_key.result}"
-
-    environment = "${var.admin_environment}"
-
-    #notebooks_bucket = "${var.appstream_bucket}"
-    uploads_bucket = "${var.uploads_bucket}"
-    notebooks_bucket = "${var.notebooks_bucket}"
-    mirror_remote_root = "https://s3-${data.aws_region.aws_region.name}.amazonaws.com/${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}/"
-
-    appstream_url = "https://${var.appstream_domain}/"
-    support_url = "https://${var.support_domain}/"
-
-    redis_url = "redis://${aws_elasticache_cluster.admin.cache_nodes.0.address}:6379"
-
-    sentry_dsn = "${var.sentry_dsn}"
-
-    notebook_task_role__role_prefix                        = "${var.notebook_task_role_prefix}"
-    notebook_task_role__permissions_boundary_arn           = "${aws_iam_policy.notebook_task_boundary.arn}"
-    notebook_task_role__assume_role_policy_document_base64 = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_ecs_tasks_assume_role.json)}"
-    notebook_task_role__policy_name                        = "${var.notebook_task_role_policy_name}"
-    notebook_task_role__policy_document_template_base64    = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_template.json)}"
-    fargate_spawner__aws_region            = "${data.aws_region.aws_region.name}"
-    fargate_spawner__aws_ecs_host          = "ecs.${data.aws_region.aws_region.name}.amazonaws.com"
-    fargate_spawner__notebook_port         = "${local.notebook_container_port}"
-    fargate_spawner__task_custer_name      = "${aws_ecs_cluster.notebooks.name}"
-    fargate_spawner__task_container_name   = "${local.notebook_container_name}"
-    fargate_spawner__task_definition_arn   = "${aws_ecs_task_definition.notebook.family}:${aws_ecs_task_definition.notebook.revision}"
-    fargate_spawner__task_security_group   = "${aws_security_group.notebooks.id}"
-    fargate_spawner__task_subnet           = "${aws_subnet.private_without_egress.*.id[0]}"
-
-    fargate_spawner__jupyterlabpython_task_definition_arn = "${aws_ecs_task_definition.jupyterlabpython.family}"
-    fargate_spawner__jupyterlabr_task_definition_arn   = "${aws_ecs_task_definition.jupyterlabr.family}"
-    fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}:${aws_ecs_task_definition.rstudio.revision}"
-    fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}:${aws_ecs_task_definition.pgadmin.revision}"
-    fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
-    fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
-    fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
-    fargate_spawner__superset_task_definition_arn  = "${aws_ecs_task_definition.superset.family}"
-    fargate_spawner__dataexplorer_task_definition_arn  = "${aws_ecs_task_definition.dataexplorer.family}"
-
-    fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
-    fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
-    fargate_spawner__user_provided_ecr_repository__name = "${aws_ecr_repository.user_provided.name}"
-
-    zendesk_email = "${var.zendesk_email}"
-    zendesk_subdomain = "${var.zendesk_subdomain}"
-    zendesk_token = "${var.zendesk_token}"
-    zendesk_service_field_id = "${var.zendesk_service_field_id}"
-    zendesk_service_field_value = "${var.zendesk_service_field_value}"
-
-    prometheus_domain = "${var.prometheus_domain}"
-    metrics_service_discovery_basic_auth_user = "${var.metrics_service_discovery_basic_auth_user}"
-    metrics_service_discovery_basic_auth_password = "${var.metrics_service_discovery_basic_auth_password}"
-
-    google_analytics_site_id = "${var.google_analytics_site_id}"
-    google_data_studio_connector_pattern = "${var.google_data_studio_connector_pattern}"
-
-    superset_root = "${aws_lb.superset_multiuser.dns_name}"
-
-    admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
-
-    efs_id = "${aws_efs_file_system.notebooks.id}"
-  }
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"django-admin\", \"store_db_creds_in_s3\"]"))}"
 }
 
 
