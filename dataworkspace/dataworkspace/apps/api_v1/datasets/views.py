@@ -3,18 +3,26 @@ import json
 
 import psycopg2
 from django.conf import settings
+from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.db import models
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
 
 from dataworkspace.apps.core.utils import (
     database_dsn,
     StreamingHttpResponseWithoutDjangoDbConnection,
 )
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import (
     SourceTable,
+    DataSet,
     ReferenceDataset,
+    VisualisationCatalogueItem,
     ReferenceDatasetField,
 )
+from dataworkspace.apps.api_v1.datasets.serializers import CatalogueItemSerializer
 
 
 def _get_dataset_columns(connection, source_table):
@@ -251,3 +259,84 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
     return _get_streaming_http_response(
         StreamingHttpResponse, request, primary_key.name, field_names, rows
     )
+
+
+def _replace(items, a, b):
+    return [b if i == a else i for i in items]
+
+
+def _static_char(val, **kwargs):
+    return models.Value(val, models.CharField(**kwargs))
+
+
+def _static_int(val, **kwargs):
+    return models.Value(val, models.IntegerField(**kwargs))
+
+
+class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to list catalogue items for consumption by data flow.
+    """
+
+    fields = [
+        'id',
+        'name',
+        'short_description',
+        'description',
+        'published',
+        'created_date',
+        'published_at',
+        'information_asset_owner',
+        'information_asset_manager',
+        'enquiries_contact',
+        'licence',
+        'purpose',
+        'source_tags',
+        'personal_data',
+        'retention_policy',
+        'eligibility_criteria',
+    ]
+    queryset = (
+        DataSet.objects.live()
+        .annotate(purpose=models.F('type'))
+        .annotate(
+            source_tags=ArrayAgg(
+                'tags__name',
+                filter=models.Q(tags__type=TagType.SOURCE.value),
+                distinct=True,
+            )
+        )
+        .values(*fields)
+        .union(
+            ReferenceDataset.objects.live()
+            .annotate(personal_data=_static_char(None))
+            .annotate(retention_policy=_static_char(None))
+            .annotate(eligibility_criteria=_static_char(None))
+            .annotate(purpose=_static_int(DataSetType.REFERENCE.value))
+            .annotate(
+                source_tags=ArrayAgg(
+                    'tags__name',
+                    filter=models.Q(tags__type=TagType.SOURCE.value),
+                    distinct=True,
+                )
+            )
+            .values(*_replace(fields, 'id', 'uuid'))
+        )
+        .union(
+            VisualisationCatalogueItem.objects.live()
+            .annotate(purpose=_static_int(DataSetType.VISUALISATION.value))
+            .annotate(
+                source_tags=ArrayAgg(
+                    'tags__name',
+                    filter=models.Q(tags__type=TagType.SOURCE.value),
+                    distinct=True,
+                )
+            )
+            .values(*fields)
+        )
+    ).order_by('created_date')
+
+    serializer_class = CatalogueItemSerializer
+    # PageNumberPagination is used instead of CursorPagination
+    # as filters cannot be applied to a union-ed queryset.
+    pagination_class = PageNumberPagination
