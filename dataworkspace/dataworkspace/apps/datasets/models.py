@@ -1646,6 +1646,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     slug = models.SlugField(
         max_length=50, db_index=True, unique=True, null=False, blank=False
     )
+    tags = models.ManyToManyField(Tag, related_name='+', blank=True)
     short_description = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
@@ -1807,3 +1808,11 @@ class VisualisationLink(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse('visualisations:link', kwargs={"link_id": self.id})
+
+
+class ToolQueryAuditLog(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
+    database = models.ForeignKey(Database, on_delete=models.PROTECT)
+    rolename = models.CharField(max_length=64, null=False, blank=False)
+    query_sql = models.TextField(null=False, blank=False)
+    timestamp = models.DateTimeField(null=False, blank=False)

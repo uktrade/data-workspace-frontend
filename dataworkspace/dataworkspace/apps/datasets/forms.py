@@ -81,6 +81,12 @@ class DatasetSearchForm(forms.Form):
         widget=FilterWidget("Access status"),
     )
 
+    unpublished = forms.MultipleChoiceField(
+        choices=[('yes', 'Include unpublished')],
+        required=False,
+        widget=FilterWidget("Show unpublished"),
+    )
+
     use = forms.TypedMultipleChoiceField(
         choices=[
             (DataSetType.DATACUT.value, 'Download'),
@@ -128,11 +134,13 @@ class DatasetSearchForm(forms.Form):
     def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
             "access": defaultdict(int),
+            "unpublished": defaultdict(int),
             "use": defaultdict(int),
             "source": defaultdict(int),
         }
 
         selected_access = bool(self.cleaned_data['access'])
+        selected_unpublished = bool(self.cleaned_data['unpublished'])
         selected_uses = set(self.cleaned_data['use'])
         selected_source_ids = set(source.id for source in self.cleaned_data['source'])
 
@@ -145,12 +153,16 @@ class DatasetSearchForm(forms.Form):
                 matcher,
                 data=dataset,
                 access=selected_access,
+                unpublished=selected_unpublished,
                 use=selected_uses,
                 source_ids=selected_source_ids,
             )
 
             if dataset_matcher(access=True):
                 counts['access']['yes'] += 1
+
+            if dataset_matcher(unpublished=True):
+                counts['unpublished']['yes'] += 1
 
             for use_id, _ in use_choices:
                 if dataset_matcher(use={use_id}):
@@ -163,6 +175,11 @@ class DatasetSearchForm(forms.Form):
         self.fields['access'].choices = [
             (access_id, access_text + f" ({counts['access'][access_id]})")
             for access_id, access_text in self.fields['access'].choices
+        ]
+
+        self.fields['unpublished'].choices = [
+            (unpub_id, unpub_text + f" ({counts['unpublished'][unpub_id]})")
+            for unpub_id, unpub_text in self.fields['unpublished'].choices
         ]
 
         self.fields['use'].choices = [
