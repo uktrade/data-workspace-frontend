@@ -4,7 +4,6 @@ import json
 import psycopg2
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
@@ -274,10 +273,6 @@ def _static_int(val, **kwargs):
     return models.Value(val, models.IntegerField(**kwargs))
 
 
-def _static_array(val, **kwargs):
-    return models.Value(val, ArrayField(models.CharField(**kwargs)))
-
-
 class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
     """
     API endpoint to list catalogue items for consumption by data flow.
@@ -330,7 +325,13 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         .union(
             VisualisationCatalogueItem.objects.live()
             .annotate(purpose=_static_int(DataSetType.VISUALISATION.value))
-            .annotate(source_tags=_static_array([], max_length=256))
+            .annotate(
+                source_tags=ArrayAgg(
+                    'tags__name',
+                    filter=models.Q(tags__type=TagType.SOURCE.value),
+                    distinct=True,
+                )
+            )
             .values(*fields)
         )
     ).order_by('created_date')

@@ -14,7 +14,6 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
     SourceTable,
-    VisualisationCatalogueItem,
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
@@ -391,9 +390,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             else None,
             'licence': dataset.licence or None,
             'purpose': purpose,
-            'source_tags': None
-            if isinstance(dataset, VisualisationCatalogueItem)
-            else [t.name for t in dataset.tags.all()]
+            'source_tags': [t.name for t in dataset.tags.all()]
             if dataset.tags.all()
             else None,
             'personal_data': personal_data,
