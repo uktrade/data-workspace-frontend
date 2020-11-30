@@ -15,6 +15,8 @@ docker-entrypoint.sh "$@" \
     -c shared_preload_libraries=pgaudit \
     -c log_destination=csvlog \
     -c logging_collector=on \
+    -c pgaudit.log=none \
+    -c pgaudit.log_catalogue=off \
     -c ssl=on \
     -c ssl_cert_file=/ssl.crt \
     -c ssl_key_file=/ssl.key
