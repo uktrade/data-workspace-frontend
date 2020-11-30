@@ -132,3 +132,4 @@ class TestNewPrivateDatabaseCredentials:
             cursor.execute(query)
             results = cursor.fetchall()
             assert 'pgaudit.log=ALL' in results[0][1]
+            assert 'pgaudit.log_catalog=off' in results[0][1]
