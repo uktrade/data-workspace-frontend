@@ -113,7 +113,7 @@ class ListQueryView(ListView):
         return ret
 
     def get_context_data(self, **kwargs):
-        context = super(ListQueryView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         context['object_list'] = self.object_list
         context['recent_queries'] = self.recently_viewed()
         return context
@@ -190,7 +190,6 @@ class CreateQueryView(CreateView):
         if action == 'save':
             ret = super().post(request)
             if self.get_form().is_valid():
-                show = url_get_show(request)
                 query, form = QueryView.get_instance_and_form(
                     request, self.object.id, play_sql=play_sql
                 )
@@ -202,7 +201,7 @@ class CreateQueryView(CreateView):
                     request.user,
                     query,
                     form=form,
-                    run_query=show,
+                    run_query=False,
                     rows=url_get_rows(request),
                     page=url_get_page(request),
                     message=None,

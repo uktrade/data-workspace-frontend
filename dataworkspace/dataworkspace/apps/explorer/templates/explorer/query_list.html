@@ -18,7 +18,6 @@
 	<tr class="govuk-table__row">
 	  <th scope="col" class="govuk-table__header">Query title</th>
 	  <th scope="col" class="govuk-table__header" style="width: 25%">Date and time run</th>
-	  <th scope="col" class="govuk-table__header" style="width: 20%">Action</th>
 	</tr>
       </thead>
       <tbody class="govuk-table__body">
@@ -30,11 +29,6 @@
 	    </a>
 	  </td>
 	  <td class="govuk-table__cell">{{ object.run_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-	  <td class="govuk-table__cell">
-	    <a class="govuk-link" href="{% url 'explorer:download_query' object.query_id %}">
-	      Download result (CSV)
-	    </a>
-	  </td>
 	</tr>
 	{% endfor %}
       </tbody>
@@ -50,8 +44,8 @@
       <thead class="govuk-table__head">
 	<tr class="govuk-table__row">
 	  <th scope="col" class="govuk-table__header" style="width: 30%">Query title</th>
-	  <th scope="col" class="govuk-table__header" style="width: 15%">Date created</th>
-	  <th scope="col" class="govuk-table__header" style="width: 15%">Run count</th>
+	  <th scope="col" class="govuk-table__header" style="width: 25%">Date created</th>
+	  <th scope="col" class="govuk-table__header" style="width: 25%">Run count</th>
 	  <th scope="col" class="govuk-table__header">Actions</th>
 	</tr>
       </thead>
@@ -72,9 +66,6 @@
         <td class="govuk-table__cell">
           <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:index' %}?query_id={{ object.id }}">Run</a>
           <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:query_delete' object.id %}">Delete</a>
-          <a class="govuk-link govuk-!-display-inline-block" href="{% url 'explorer:download_query' object.id %}">
-            Download result (CSV)
-          </a>
         </td>
 	</tr>
 	{% endfor %}
