@@ -52,7 +52,7 @@ class TestQueryCreateView:
 
         assert Query.objects.all()[0].sql == 'SELECT 1;'
 
-    def test_invalid_query(self, staff_user, staff_client):
+    def test_invalid_query_saved(self, staff_user, staff_client):
         query = SimpleQueryFactory.build(
             sql='SELECT foo; DELETE FROM foo;', created_by_user=staff_user
         )
@@ -61,10 +61,9 @@ class TestQueryCreateView:
         del data['id']
         del data['created_by_user']
 
-        response = staff_client.post(reverse("explorer:query_create"), data)
+        staff_client.post(reverse("explorer:query_create"), data)
 
-        assert response.status_code == 200
-        assert len(Query.objects.all()) == 0
+        assert Query.objects.all()[0].sql == 'SELECT foo; DELETE FROM foo;'
 
     @pytest.mark.django_db(transaction=True)
     def test_renders_back_link(self, staff_user, staff_client):
