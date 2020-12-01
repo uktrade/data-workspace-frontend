@@ -358,3 +358,13 @@ class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'applications.ApplicationInstance'
+
+
+class ApplicationInstanceDbUsersFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    db = factory.SubFactory(DatabaseFactory)
+    db_username = factory.fuzzy.FuzzyText(length=8)
+    application_instance = factory.SubFactory(ApplicationInstanceFactory)
+
+    class Meta:
+        model = 'applications.ApplicationInstanceDbUsers'

@@ -2276,6 +2276,65 @@ class TestApplication(unittest.TestCase):
         assert "ONS (1)" in with_dit_and_ons_filters
         assert "HMRC (1)" in with_dit_and_ons_filters
 
+    @async_test
+    async def test_tool_query_log_sync(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'peter@test.com',
+                'contact_email': 'peter@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        _, _, code = await create_application_db_user()
+        assert code == 0
+
+        _, _, code = await create_query_logs()
+        assert code == 0
+
+        _, _, code = await sync_query_logs()
+        assert code == 0
+
+        # Initial log in forces redirect to admin homepage
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/admin'
+        ) as response:
+            await response.text()
+            self.assertEqual(200, response.status)
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/admin/datasets/toolqueryauditlog/'
+        ) as response:
+            content = await response.text()
+            self.assertEqual(200, response.status)
+            self.assertIn(
+                'CREATE TABLE IF NOT EXISTS query_log_test (id INT, name TEXT);',
+                content,
+            )
+            self.assertIn(
+                'INSERT INTO query_log_test VALUES(1, &#x27;a record&#x27;);', content
+            )
+            self.assertIn('SELECT * FROM query_log_test;', content)
+
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -3051,3 +3110,129 @@ def find_search_filter_labels(html_):
         label.strip()
         for label in doc.xpath('//div[@id="live-search-wrapper"]//label/text()')
     }
+
+
+async def create_application_db_user():
+    """
+    Create an application template, application instance, application db user
+    and a postgres user. Used for testing syncing application logs.
+    """
+    python_code = textwrap.dedent(
+        '''
+            import uuid
+            from django.db import connections
+            from django.contrib.auth.models import User
+            from dataworkspace.apps.applications.models import (
+                ApplicationTemplate, ApplicationInstance, ApplicationInstanceDbUsers
+            )
+            from dataworkspace.apps.datasets.models import Database
+            from dataworkspace.apps.applications.utils import create_user_from_sso
+            user = create_user_from_sso(
+                '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'test@test.com',
+                [],
+                'Peter',
+                'Piper',
+                check_tools_access_if_user_exists=False,
+            )
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            app_template, _ = ApplicationTemplate.objects.get_or_create(
+                id=uuid.uuid4(),
+                name='App template',
+                host_basename='query-log-testing',
+                nice_name='query-sync-test',
+                spawner_time=1,
+                spawner_options='',
+                application_summary='',
+                application_help_link='',
+            )
+            app_instance = ApplicationInstance.objects.create(
+                application_template=ApplicationTemplate.objects.first(),
+                owner=user,
+                public_host='db-test',
+                spawner='FARGATE',
+                spawner_application_instance_id=111,
+                proxy_url='https://analysisworkspace.dev.uktrade.io/',
+                single_running_or_spawning_integrity=str(uuid.uuid4()),
+            )
+            database, _ = Database.objects.get_or_create(memorable_name='my_database')
+            db_user = ApplicationInstanceDbUsers.objects.create(
+                db=database,
+                db_username='postgres',
+                application_instance=app_instance,
+            )
+
+            with connections["my_database"].cursor() as cursor:
+                cursor.execute(
+                    """
+                    ALTER USER postgres SET pgaudit.log = 'ALL, -MISC';
+                    ALTER USER postgres SET pgaudit.log_catalog = off;
+                    """
+                )
+        '''
+    ).encode('ascii')
+    shell = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await shell.communicate(python_code)
+    code = await shell.wait()
+
+    return stdout, stderr, code
+
+
+async def create_query_logs():
+    """
+    Run some queries to generate the pgaudit logs
+    """
+    python_code = textwrap.dedent(
+        '''
+        from django.db import connections
+        with connections["my_database"].cursor() as cursor:
+            cursor.execute('CREATE TABLE IF NOT EXISTS query_log_test (id INT, name TEXT);')
+            cursor.execute("INSERT INTO query_log_test VALUES(1, 'a record');")
+            cursor.execute('SELECT * FROM query_log_test;')
+        '''
+    ).encode('ascii')
+
+    shell = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await shell.communicate(python_code)
+    code = await shell.wait()
+
+    return stdout, stderr, code
+
+
+async def sync_query_logs():
+    """
+    Run the celery task to sync tool query audit logs
+    :return:
+    """
+    python_code = textwrap.dedent(
+        '''
+        from django.core.cache import cache
+        from dataworkspace.apps.applications.utils import _do_sync_tool_query_logs
+        cache.delete('query_tool_logs_last_run')
+        _do_sync_tool_query_logs()
+        '''
+    ).encode('ascii')
+    shell = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await shell.communicate(python_code)
+    code = await shell.wait()
+    return stdout, stderr, code
