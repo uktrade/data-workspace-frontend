@@ -29,6 +29,7 @@ from dataworkspace.apps.applications.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
+from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -430,6 +431,7 @@ class AppUserAdmin(UserAdmin):
             )
             if dataset.type == DataSetType.MASTER.value:
                 update_quicksight_permissions = True
+            clear_schema_info_cache_for_user(obj)
 
         for dataset in current_datasets - authorized_datasets:
             DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
@@ -442,6 +444,7 @@ class AppUserAdmin(UserAdmin):
             )
             if dataset.type == DataSetType.MASTER.value:
                 update_quicksight_permissions = True
+            clear_schema_info_cache_for_user(obj)
 
         if 'authorized_visualisations' in form.cleaned_data:
             current_visualisations = VisualisationCatalogueItem.objects.filter(

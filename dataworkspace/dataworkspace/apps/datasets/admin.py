@@ -47,6 +47,7 @@ from dataworkspace.apps.dw_admin.forms import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
+from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 
 logger = logging.getLogger('app')
 
@@ -296,6 +297,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 f"Added dataset {obj} permission",
             )
             changed_user_sso_ids.add(str(user.profile.sso_id))
+            clear_schema_info_cache_for_user(user)
 
         for user in current_authorized_users - authorized_users:
             DataSetUserPermission.objects.filter(dataset=obj, user=user).delete()
@@ -307,6 +309,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 f"Removed dataset {obj} permission",
             )
             changed_user_sso_ids.add(str(user.profile.sso_id))
+            clear_schema_info_cache_for_user(user)
 
         if original_user_access_type != obj.user_access_type:
             log_permission_change(
