@@ -464,6 +464,7 @@ def test_find_datasets_filters_by_source(client):
     vis = factories.VisualisationCatalogueItemFactory.create(
         published=True, name='A new visualisation'
     )
+    vis.tags.set([source])
 
     factories.DataSetApplicationTemplatePermissionFactory(
         application_template=vis.visualisation_template, dataset=ds
@@ -496,6 +497,19 @@ def test_find_datasets_filters_by_source(client):
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
             'purpose': DataSetType.REFERENCE.value,
+            'published': True,
+            'has_access': True,
+        },
+        {
+            'id': vis.id,
+            'name': vis.name,
+            'slug': vis.slug,
+            'search_rank': 0.0,
+            'short_description': vis.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': [source.name],
+            'source_tag_ids': [source.id],
+            'purpose': DataSetType.VISUALISATION.value,
             'published': True,
             'has_access': True,
         },

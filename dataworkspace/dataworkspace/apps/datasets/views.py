@@ -14,7 +14,6 @@ from psycopg2 import sql
 from django.conf import settings
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
-from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
@@ -28,8 +27,6 @@ from django.db.models import (
     Case,
     When,
     BooleanField,
-    CharField,
-    UUIDField,
     QuerySet,
 )
 from django.http import (
@@ -284,11 +281,15 @@ def get_visualisations_data_for_user_matching_query(
 
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
-        source_tag_ids=Value([], ArrayField(UUIDField()))
+        source_tag_ids=ArrayAgg(
+            'tags', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+        )
     )
 
     visualisations = visualisations.annotate(
-        source_tag_names=Value([], ArrayField(CharField(max_length=256)))
+        source_tag_names=ArrayAgg(
+            'tags__name', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+        )
     )
 
     # Define a `purpose` column denoting the dataset type
