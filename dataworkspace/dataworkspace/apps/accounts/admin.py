@@ -420,6 +420,7 @@ class AppUserAdmin(UserAdmin):
         )
 
         update_quicksight_permissions = False
+        clear_schema_info_cache = False
         for dataset in authorized_datasets - current_datasets:
             DataSetUserPermission.objects.create(dataset=dataset, user=obj)
             log_permission_change(
@@ -431,7 +432,7 @@ class AppUserAdmin(UserAdmin):
             )
             if dataset.type == DataSetType.MASTER.value:
                 update_quicksight_permissions = True
-            clear_schema_info_cache_for_user(obj)
+            clear_schema_info_cache = True
 
         for dataset in current_datasets - authorized_datasets:
             DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
@@ -444,6 +445,9 @@ class AppUserAdmin(UserAdmin):
             )
             if dataset.type == DataSetType.MASTER.value:
                 update_quicksight_permissions = True
+            clear_schema_info_cache = True
+
+        if clear_schema_info_cache:
             clear_schema_info_cache_for_user(obj)
 
         if 'authorized_visualisations' in form.cleaned_data:
