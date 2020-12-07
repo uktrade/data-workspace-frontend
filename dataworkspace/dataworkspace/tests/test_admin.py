@@ -3130,9 +3130,10 @@ class TestDatasetAdminPytest:
         assert mock_sync.delay.call_args_list == [mock.call()]
 
     @mock.patch("dataworkspace.apps.datasets.admin.sync_quicksight_permissions")
+    @mock.patch("dataworkspace.apps.datasets.admin.clear_schema_info_cache_for_user")
     @pytest.mark.django_db
-    def test_master_dataset_authorized_user_changes_calls_sync_job(
-        self, mock_sync, staff_client
+    def test_master_dataset_authorized_user_changes_calls_sync_job_and_clears_explorer_cache(
+        self, mock_clear_cache, mock_sync, staff_client
     ):
         user = factories.UserFactory()
         dataset = factories.MasterDataSetFactory.create(
@@ -3175,3 +3176,4 @@ class TestDatasetAdminPytest:
         assert mock_sync.delay.call_args_list == [
             mock.call(user_sso_ids_to_update=(str(user.profile.sso_id),))
         ]
+        assert mock_clear_cache.call_args_list == [mock.call(user)]
