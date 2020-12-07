@@ -39,7 +39,7 @@ django-ckeditor==5.9.0    # via -r requirements.txt
 django-compressor==2.4    # via -r requirements.txt
 django-csp==3.6           # via -r requirements.txt
 django-db-geventpool==3.2.2  # via -r requirements.txt
-django-debug-toolbar==3.1.1  # via -r requirements-dev.in
+django-debug-toolbar==3.2  # via -r requirements-dev.in
 django-dynamic-models-readonly==0.1.1  # via -r requirements.txt
 django-environ==0.4.5     # via -r requirements.txt
 django-extensions==2.2.9  # via -r requirements.txt
