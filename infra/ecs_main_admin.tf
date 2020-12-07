@@ -79,6 +79,8 @@ locals {
     admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
 
     efs_id = "${aws_efs_file_system.notebooks.id}"
+
+    visualisation_cloudwatch_log_group = "${aws_cloudwatch_log_group.notebook.name}"
   }
 }
 
@@ -687,4 +689,22 @@ resource "aws_elasticache_cluster" "admin" {
 resource "aws_elasticache_subnet_group" "admin" {
   name               = "${var.prefix_short}-admin"
   subnet_ids         = ["${aws_subnet.private_with_egress.*.id}"]
+}
+
+resource "aws_iam_role_policy_attachment" "admin_cloudwatch_logs" {
+  role       = "${aws_iam_role.admin_task.name}"
+  policy_arn = "${aws_iam_policy.admin_cloudwatch_logs.arn}"
+}
+
+resource "aws_iam_policy" "admin_cloudwatch_logs" {
+  name        = "${var.prefix}-admin-cloudwatch-logs"
+  path        = "/"
+  policy       = "${data.aws_iam_policy_document.admin_cloudwatch_logs.json}"
+}
+
+data "aws_iam_policy_document" "admin_cloudwatch_logs" {
+  statement {
+    actions = ["logs:GetLogEvents"]
+    resources = ["*"]
+  }
 }

@@ -1,6 +1,8 @@
+import json
 from contextlib import contextmanager
 from unittest import mock
 
+import botocore
 import pytest
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
@@ -28,7 +30,11 @@ def _visualisation_ui_gitlab_mocks():
         'dataworkspace.apps.applications.views.gitlab_has_developer_access'
     ) as access_mock:
         access_mock.return_value = True
-        projects_mock.return_value = {'id': 1, 'default_branch': 'master'}
+        projects_mock.return_value = {
+            'id': 1,
+            'default_branch': 'master',
+            'name': 'test-gitlab-project',
+        }
         branches_mock.return_value = [
             {
                 'name': 'master',
@@ -407,3 +413,148 @@ class TestUserToolSizeConfigurationView:
             tool.user_tool_configuration.filter(user=user).first().size
             == UserToolConfiguration.SIZE_SMALL
         )
+
+
+class TestVisualisationLogs:
+    @pytest.mark.django_db
+    def test_not_developer(self):
+        develop_visualisations_permission = Permission.objects.get(
+            codename='develop_visualisations',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(
+            username='visualisation.creator@test.com',
+            is_staff=False,
+            is_superuser=False,
+        )
+        user.user_permissions.add(develop_visualisations_permission)
+
+        client = Client(**get_http_sso_data(user))
+        client.post(reverse('admin:index'), follow=True)
+
+        with mock.patch(
+            'dataworkspace.apps.applications.views.gitlab_has_developer_access'
+        ) as access_mock:
+            access_mock.return_value = False
+            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+        assert response.status_code == 403
+
+    @pytest.mark.django_db
+    def test_commit_does_not_exist(self, mocker):
+        application_template = factories.ApplicationTemplateFactory()
+        factories.ApplicationInstanceFactory(
+            application_template=application_template,
+            commit_id='',
+            spawner_application_template_options=json.dumps(
+                {'CONTAINER_NAME': 'user-defined-container'}
+            ),
+            spawner_application_instance_id=json.dumps(
+                {'task_arn': 'arn:test:vis/task-id/999'}
+            ),
+        )
+        mock_get_application_template = mocker.patch(
+            'dataworkspace.apps.applications.views._application_template'
+        )
+        mock_get_application_template.return_value = application_template
+        develop_visualisations_permission = Permission.objects.get(
+            codename='develop_visualisations',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(
+            username='visualisation.creator@test.com',
+            is_staff=False,
+            is_superuser=False,
+        )
+        user.user_permissions.add(develop_visualisations_permission)
+        client = Client(**get_http_sso_data(user))
+        client.post(reverse('admin:index'), follow=True)
+        with _visualisation_ui_gitlab_mocks():
+            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+            assert response.status_code == 200
+            assert response.content == b'No logs were found for this visualisation.'
+
+    @pytest.mark.django_db
+    def test_no_events(self, mocker):
+        application_template = factories.ApplicationTemplateFactory()
+        factories.ApplicationInstanceFactory(
+            application_template=application_template,
+            commit_id='xxx',
+            spawner_application_template_options=json.dumps(
+                {'CONTAINER_NAME': 'user-defined-container'}
+            ),
+            spawner_application_instance_id=json.dumps(
+                {'task_arn': 'arn:test:vis/task-id/999'}
+            ),
+        )
+        mock_get_application_template = mocker.patch(
+            'dataworkspace.apps.applications.views._application_template'
+        )
+        mock_get_application_template.return_value = application_template
+        mock_boto = mocker.patch('dataworkspace.apps.applications.utils.boto3.client')
+        mock_boto.return_value.get_log_events.side_effect = botocore.exceptions.ClientError(
+            error_response={'Error': {'Code': 'ResourceNotFoundException'}},
+            operation_name='get_log_events',
+        )
+        develop_visualisations_permission = Permission.objects.get(
+            codename='develop_visualisations',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(
+            username='visualisation.creator@test.com',
+            is_staff=False,
+            is_superuser=False,
+        )
+        user.user_permissions.add(develop_visualisations_permission)
+        client = Client(**get_http_sso_data(user))
+        client.post(reverse('admin:index'), follow=True)
+        with _visualisation_ui_gitlab_mocks():
+            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+            assert response.status_code == 200
+            assert response.content == b'No logs were found for this visualisation.'
+
+    @pytest.mark.django_db
+    def test_with_events(self, mocker):
+        application_template = factories.ApplicationTemplateFactory()
+        factories.ApplicationInstanceFactory(
+            application_template=application_template,
+            commit_id='xxx',
+            spawner_application_template_options=json.dumps(
+                {'CONTAINER_NAME': 'user-defined-container'}
+            ),
+            spawner_application_instance_id=json.dumps(
+                {'task_arn': 'arn:test:vis/task-id/999'}
+            ),
+        )
+        mock_get_application_template = mocker.patch(
+            'dataworkspace.apps.applications.views._application_template'
+        )
+        mock_get_application_template.return_value = application_template
+        mock_boto = mocker.patch('dataworkspace.apps.applications.utils.boto3.client')
+        mock_boto.return_value.get_log_events.side_effect = [
+            {
+                'nextForwardToken': '12345',
+                'events': [{'timestamp': 1605891793796, 'message': 'log message 1'}],
+            },
+            {'events': [{'timestamp': 1605891793797, 'message': 'log message 2'}]},
+        ]
+        develop_visualisations_permission = Permission.objects.get(
+            codename='develop_visualisations',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user = factories.UserFactory.create(
+            username='visualisation.creator@test.com',
+            is_staff=False,
+            is_superuser=False,
+        )
+        user.user_permissions.add(develop_visualisations_permission)
+
+        client = Client(**get_http_sso_data(user))
+        client.post(reverse('admin:index'), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+            assert response.status_code == 200
+            assert response.content == (
+                b'2020-11-20 17:03:13.796000 - log message 1\n'
+                b'2020-11-20 17:03:13.797000 - log message 2\n'
+            )

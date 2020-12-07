@@ -2,8 +2,11 @@ import datetime
 
 
 import itertools
+import json
 import random
 import re
+from contextlib import closing
+from io import StringIO
 from urllib.parse import urlsplit, urlencode
 
 from csp.decorators import csp_exempt, csp_update
@@ -47,6 +50,7 @@ from dataworkspace.apps.applications.models import (
 )
 from dataworkspace.apps.applications.utils import (
     application_options,
+    fetch_visualisation_log_events,
     get_quicksight_dashboard_name_url,
     sync_quicksight_permissions,
     log_visualisation_view,
@@ -1504,3 +1508,50 @@ class UserToolSizeConfigurationView(SuccessMessageMixin, UpdateView):
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(tool_template=self.object.tool_template,)
+
+
+def _download_log(filename, events):
+    response = HttpResponse(content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename={filename}.log'
+    with closing(StringIO()) as logfile:
+        if events:
+            for event in events:
+                logfile.write(
+                    f'{datetime.datetime.fromtimestamp(event["timestamp"] / 1000)} - {event["message"]}\n'
+                )
+        else:
+            logfile.write('No logs were found for this visualisation.')
+        response.write(logfile.getvalue())
+    return response
+
+
+def visualisation_latest_log_GET(request, gitlab_project_id, commit_id):
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        raise PermissionDenied()
+
+    gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+    application_template = _application_template(gitlab_project)
+    filename = f'{gitlab_project["name"]}-{commit_id}.log'
+
+    try:
+        app_instance = ApplicationInstance.objects.filter(
+            application_template=application_template, commit_id=commit_id
+        ).latest('created_date')
+    except ApplicationInstance.DoesNotExist:
+        return _download_log(filename, [])
+
+    container_name = json.loads(app_instance.spawner_application_template_options)[
+        'CONTAINER_NAME'
+    ]
+    task_arn = json.loads(app_instance.spawner_application_instance_id)[
+        'task_arn'
+    ].split('/')[-1]
+
+    log_stream = f'{container_name}/{container_name}/{task_arn}'
+
+    return _download_log(
+        filename,
+        fetch_visualisation_log_events(
+            settings.VISUALISATION_CLOUDWATCH_LOG_GROUP, log_stream
+        ),
+    )
