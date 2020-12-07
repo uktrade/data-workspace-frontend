@@ -48,7 +48,7 @@ RUN apt-get update && \
         musl-dev=1.1.21-2 \
         chromium=83.0.4103.116-1~deb10u3 \
         chromium-driver=83.0.4103.116-1~deb10u3 \
-        libxml2-dev=2.9.4+dfsg1-7+b3 \
+        libxml2-dev=2.9.4+dfsg1-7+deb10u1 \
         libxslt1-dev=1.1.32-2.2~deb10u1 && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
