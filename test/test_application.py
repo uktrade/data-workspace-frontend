@@ -16,9 +16,6 @@ import aioredis
 import mohawk
 from lxml import html
 
-from dataworkspace.utils import (  # pylint: disable=no-name-in-module, import-error
-    DATA_EXPLORER_FLAG,
-)
 from test.pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_browser,
@@ -1278,8 +1275,6 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(cleanup_application)
 
-        await set_waffle_flag(DATA_EXPLORER_FLAG, everyone=True)
-
         is_logged_in = True
         codes = iter(['some-code'])
         tokens = iter(['token-1'])
@@ -1349,7 +1344,6 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(cleanup_application)
 
-        await set_waffle_flag(DATA_EXPLORER_FLAG, everyone=True)
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
 
         async with session.request(
