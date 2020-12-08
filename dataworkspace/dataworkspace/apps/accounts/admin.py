@@ -447,7 +447,7 @@ class AppUserAdmin(UserAdmin):
                 update_quicksight_permissions = True
             clear_schema_info_cache = True
 
-        if clear_schema_info_cache:
+        if clear_schema_info_cache and obj.pk:
             clear_schema_info_cache_for_user(obj)
 
         if 'authorized_visualisations' in form.cleaned_data:
