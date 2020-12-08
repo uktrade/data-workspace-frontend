@@ -105,6 +105,7 @@ def test_header_links(request_client):
 
     expected_links = [
         ("Data Workspace", "http://dataworkspace.test:8000/"),
+        ("Switch to Data Hub", "https://www.datahub.trade.gov.uk/"),
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
         ("About", "/about/"),

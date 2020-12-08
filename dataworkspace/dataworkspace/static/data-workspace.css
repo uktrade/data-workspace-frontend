@@ -210,3 +210,14 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .hidden {
     display: none;
 }
+
+.app-header--suggestion {
+    display: none;
+}
+
+@media (min-width: 48.05em) {
+    .app-header--suggestion {
+        display: block;
+        float: right;
+    }
+}
