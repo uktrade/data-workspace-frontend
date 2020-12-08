@@ -55,7 +55,6 @@ locals {
     fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
     fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
     fargate_spawner__superset_task_definition_arn  = "${aws_ecs_task_definition.superset.family}"
-    fargate_spawner__dataexplorer_task_definition_arn  = "${aws_ecs_task_definition.dataexplorer.family}"
 
     fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
     fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
@@ -420,8 +419,6 @@ data "aws_iam_policy_document" "admin_run_tasks" {
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.theia.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.superset.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.superset.family}-*",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.dataexplorer.family}",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.dataexplorer.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.user_provided.family}-*",
     ]
   }
