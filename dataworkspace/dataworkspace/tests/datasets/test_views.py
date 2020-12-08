@@ -13,7 +13,6 @@ from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.test import Client
 from lxml import html
-from waffle.models import Flag
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType
@@ -35,7 +34,6 @@ from dataworkspace.tests.factories import (
     VisualisationUserPermissionFactory,
     VisualisationLinkFactory,
 )
-from dataworkspace.utils import DATA_EXPLORER_FLAG
 
 
 @pytest.mark.parametrize(
@@ -1253,20 +1251,7 @@ def test_launch_master_dataset_in_data_explorer(metadata_db):
         table="MY_LOVELY_TABLE",
         database=factories.DatabaseFactory(memorable_name='my_database'),
     )
-    flag = Flag.objects.create(
-        name=DATA_EXPLORER_FLAG, everyone=False, superusers=False
-    )
     expected_sql = quote_plus("""SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""")
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-    doc = html.fromstring(response.content.decode(response.charset))
-
-    assert response.status_code == 200
-    assert doc.xpath("//a[normalize-space(text()) = 'Open in Data Explorer']") == []
-
-    flag.everyone = True
-    flag.save()
 
     client = Client(**get_http_sso_data(user))
     response = client.get(ds.get_absolute_url())
