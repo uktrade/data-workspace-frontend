@@ -24,6 +24,7 @@ from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.schema import schema_info
 from dataworkspace.apps.explorer.utils import (
+    execute_query,
     get_total_pages,
     url_get_log_id,
     url_get_page,
@@ -77,7 +78,12 @@ class DownloadFromSqlView(View):
         sql = request.GET.get('sql')
         connection = request.GET.get('connection')
         query = Query(sql=sql, connection=connection, title='')
-        ql = query.log(request.user)
+        ql = QueryLog.objects.create(
+            sql=query.final_sql(),
+            query_id=query.id,
+            run_by_user=request.user,
+            connection=query.connection,
+        )
         query.title = 'Playground - %s' % ql.id
         return _export(request, query)
 
@@ -85,7 +91,12 @@ class DownloadFromSqlView(View):
         sql = request.POST.get('sql')
         connection = request.POST.get('connection')
         query = Query(sql=sql, connection=connection, title='')
-        ql = query.log(request.user)
+        ql = QueryLog.objects.create(
+            sql=query.final_sql(),
+            query_id=query.id,
+            run_by_user=request.user,
+            connection=query.connection,
+        )
         query.title = 'Playground - %s' % ql.id
         return _export(request, query)
 
@@ -498,14 +509,10 @@ def query_viewmodel(
     log=True,
 ):
     res = None
-    ql = None
     error = None
     if run_query:
         try:
-            if log:
-                res, ql = query.execute_with_logging(user, page, rows, timeout)
-            else:
-                res = query.execute(user, page, rows, timeout)
+            res = execute_query(query, user, page, rows, timeout, log)
         except DatabaseError as e:
             error = str(e)
     if error and method == "POST":
@@ -524,10 +531,6 @@ def query_viewmodel(
         'headers': res.headers if has_valid_results else None,
         'total_rows': res.row_count if has_valid_results else None,
         'duration': res.duration if has_valid_results else None,
-        'has_stats': len([h for h in res.headers if h.summary])
-        if has_valid_results
-        else False,
-        'ql_id': ql.id if ql else None,
         'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
     }
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)

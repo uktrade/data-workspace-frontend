@@ -1,5 +1,7 @@
 import logging
-import re
+import uuid
+from time import time
+
 from contextlib import contextmanager
 from datetime import timedelta
 
@@ -11,6 +13,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
+from django.db import DatabaseError
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
@@ -19,31 +22,15 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     postgres_user,
 )
+from dataworkspace.apps.explorer.models import QueryLog
+
 
 logger = logging.getLogger('app')
 EXPLORER_PARAM_TOKEN = "$$"
 
 
-def _format_field(field):
-    return field.get_attname_column()[1], field.get_internal_type()
-
-
 def param(name):
     return "%s%s%s" % (EXPLORER_PARAM_TOKEN, name, EXPLORER_PARAM_TOKEN)
-
-
-def swap_params(sql, params):
-    p = params.items() if params else {}
-    for k, v in p:
-        regex = re.compile(r"\$\$%s(?:\:([^\$]+))?\$\$" % str(k).lower(), re.I)
-        sql = regex.sub(str(v), sql)
-    return sql
-
-
-def extract_params(text):
-    regex = re.compile(r"\$\$([a-z0-9_]+)(?:\:([^\$]+))?\$\$")
-    params = re.findall(regex, text.lower())
-    return {p[0]: p[1] if len(p) > 1 else '' for p in params}
 
 
 def safe_login_prompt(request):
@@ -57,13 +44,6 @@ def safe_login_prompt(request):
         },
     }
     return LoginView.as_view(**defaults)(request)
-
-
-def shared_dict_update(target, source):
-    for k_d1 in target:
-        if k_d1 in source:
-            target[k_d1] = source[k_d1]
-    return target
 
 
 def safe_cast(val, to_type, default=None):
@@ -89,11 +69,6 @@ def get_params_from_request(request):
         return d
     except Exception:  # pylint: disable=broad-except
         return None
-
-
-def get_params_for_url(query):  # pylint: disable=inconsistent-return-statements
-    if query.params:
-        return '|'.join(['%s:%s' % (p, v) for p, v in query.params.items()])
 
 
 def url_get_rows(request):
@@ -236,3 +211,84 @@ def remove_data_explorer_user_cached_credentials(user):
     logger.info("Clearing Data Explorer cached credentials for %s", user)
     cache_key = user_cached_credentials_key(user)
     cache.delete(cache_key)
+
+
+class QueryResult:
+    def __init__(
+        self, sql, page, limit, timeout, duration, description, data, row_count
+    ):
+        self.sql = sql
+        self.page = page
+        self.limit = limit
+        self.timeout = timeout
+        self.duration = duration
+        self.description = description
+        self.data = data
+        self.row_count = row_count
+
+    @property
+    def header_strings(self):
+        return [str(h) for h in self.headers]
+
+    @property
+    def headers(self):
+        return (
+            [ColumnHeader(d[0]) for d in self.description]
+            if self.description
+            else [ColumnHeader('--')]
+        )
+
+    def column(self, ix):
+        return [r[ix] for r in self.data]
+
+
+class ColumnHeader:
+    def __init__(self, title):
+        self.title = title.strip()
+
+    def __str__(self):
+        return self.title
+
+
+def execute_query(query, user, page, limit, timeout, log_query):
+    user_connection_settings = get_user_explorer_connection_settings(
+        user, query.connection
+    )
+    with user_explorer_connection(user_connection_settings) as conn:
+        cursor = conn.cursor()
+        cursor_name = 'cur_%s' % str(uuid.uuid4()).replace('-', '')[:10]
+
+        start_time = time()
+        try:
+            cursor.execute(f'SET statement_timeout = {timeout}')
+            cursor.execute(
+                f'DECLARE {cursor_name} CURSOR WITH HOLD FOR {query.final_sql()}'
+            )
+            if page and page > 1:
+                offset = (page - 1) * limit
+                cursor.execute(f'MOVE {offset} FROM {cursor_name}')
+            cursor.execute(f'FETCH {limit} FROM {cursor_name}')
+        except DatabaseError as e:
+            raise e
+
+        duration = (time() - start_time) * 1000
+        description = cursor.description or []
+        data = [list(r) for r in cursor]
+        cursor.execute(f'CLOSE {cursor_name}')
+
+        sql = query.final_sql().rstrip().rstrip(';')
+        cursor.execute(f'select count(*) from ({sql}) t')
+        row_count = cursor.fetchone()[0]
+
+    if log_query:
+        QueryLog.objects.create(
+            sql=query.final_sql(),
+            query_id=query.id,
+            run_by_user=user,
+            connection=query.connection,
+            duration=duration,
+        )
+
+    return QueryResult(
+        query.final_sql(), page, limit, timeout, duration, description, data, row_count
+    )

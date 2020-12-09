@@ -26,7 +26,7 @@ class TestQueryListView:
     def test_run_count(self, user, client):
         q = SimpleQueryFactory(title='foo - bar1', created_by_user=user)
         for _ in range(0, 4):
-            q.log()
+            QueryLog.objects.create(query=q)
         resp = client.get(reverse("explorer:list_queries"))
         assert '4' in resp.content.decode(resp.charset)
 
