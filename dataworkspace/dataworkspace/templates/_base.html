@@ -49,7 +49,14 @@
           Data Workspace
         </a>
       </div>
-     <button type="button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation" aria-label="Show or hide Top Level Navigation">Menu</button>
+      <div class="app-header--suggestion">
+        <p class="govuk-body">
+          <a class="govuk-header__link" href="https://www.datahub.trade.gov.uk/" target="_blank">Switch to Data Hub</a>
+        </p>
+      </div>
+      <button type="button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation" aria-label="Show or hide Top Level Navigation">
+        Menu
+      </button>
       <nav>
         <ul id="navigation" class="govuk-header__navigation" aria-label="Top Level Navigation">
           <li class="govuk-header__navigation-item{% if request.get_full_path == '/' %} govuk-header__navigation-item--active{% endif %}">
