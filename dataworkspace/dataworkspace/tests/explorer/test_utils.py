@@ -1,108 +1,28 @@
-from unittest.mock import Mock
+import json
+from datetime import date, datetime
+from unittest.mock import call, MagicMock, Mock, patch
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 
-from dataworkspace.tests.explorer.factories import SimpleQueryFactory
-from dataworkspace.apps.explorer.utils import (
-    EXPLORER_PARAM_TOKEN,
-    extract_params,
-    get_params_for_url,
-    get_params_from_request,
-    get_total_pages,
-    param,
-    shared_dict_update,
-    swap_params,
+import pytest
+import six
+
+
+from dataworkspace.apps.explorer.exporters import (
+    CSVExporter,
+    ExcelExporter,
+    JSONExporter,
 )
-
-
-class TestParams(TestCase):
-    def test_swappable_params_are_built_correctly(self):
-        expected = EXPLORER_PARAM_TOKEN + 'foo' + EXPLORER_PARAM_TOKEN
-        self.assertEqual(expected, param('foo'))
-
-    def test_params_get_swapped(self):
-        sql = 'please Swap $$this$$ and $$THat$$'
-        expected = 'please Swap here and there'
-        params = {'this': 'here', 'that': 'there'}
-        got = swap_params(sql, params)
-        self.assertEqual(got, expected)
-
-    def test_empty_params_does_nothing(self):
-        sql = 'please swap $$this$$ and $$that$$'
-        params = None
-        got = swap_params(sql, params)
-        self.assertEqual(got, sql)
-
-    def test_non_string_param_gets_swapper(self):
-        sql = 'please swap $$this$$'
-        expected = 'please swap 1'
-        params = {'this': 1}
-        got = swap_params(sql, params)
-        self.assertEqual(got, expected)
-
-    def _assertSwap(self, tuple_):
-        self.assertEqual(extract_params(tuple_[0]), tuple_[1])
-
-    def test_extracting_params(self):
-        tests = [
-            ('please swap $$this0$$', {'this0': ''}),
-            ('please swap $$THis0$$', {'this0': ''}),
-            ('please swap $$this6$$ $$this6:that$$', {'this6': 'that'}),
-            ('please swap $$this_7:foo, bar$$', {'this_7': 'foo, bar'}),
-            ('please swap $$this8:$$', {}),
-            ('do nothing with $$this1 $$', {}),
-            ('do nothing with $$this2 :$$', {}),
-            ('do something with $$this3: $$', {'this3': ' '}),
-            ('do nothing with $$this4: ', {}),
-            ('do nothing with $$this5$that$$', {}),
-        ]
-        for s in tests:
-            self._assertSwap(s)
-
-    def test_shared_dict_update(self):
-        source = {'foo': 1, 'bar': 2}
-        target = {'bar': None}  # ha ha!
-        self.assertEqual({'bar': 2}, shared_dict_update(target, source))
-
-    def test_get_params_from_url(self):
-        r = Mock()
-        r.GET = {'params': 'foo:bar|qux:mux'}
-        res = get_params_from_request(r)
-        self.assertEqual(res['foo'], 'bar')
-        self.assertEqual(res['qux'], 'mux')
-
-    def test_get_params_for_request(self):
-        q = SimpleQueryFactory(params={'a': 1, 'b': 2})
-        # For some reason the order of the params is non-deterministic,
-        # causing the following to periodically fail:
-        #     self.assertEqual(get_params_for_url(q), 'a:1|b:2')
-        # So instead we go for the following, convoluted, asserts:
-        res = get_params_for_url(q)
-        res = res.split('|')
-        expected = ['a:1', 'b:2']
-        for e in expected:
-            self.assertIn(e, res)
-
-    def test_get_params_for_request_empty(self):
-        q = SimpleQueryFactory()
-        self.assertEqual(get_params_for_url(q), None)
-
-
-class TestConnections(TestCase):
-    def test_only_registered_connections_are_in_connections(self):
-        from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
-            connections,
-        )
-        from django.db import (  # pylint: disable=import-outside-toplevel
-            connections as djcs,
-        )
-
-        self.assertTrue(settings.EXPLORER_DEFAULT_CONNECTION in connections)
-        self.assertNotEqual(
-            len(connections),
-            len([_ for _ in djcs]),  # pylint: disable=unnecessary-comprehension
-        )
+from dataworkspace.apps.explorer.models import QueryLog
+from dataworkspace.apps.explorer.utils import (
+    execute_query,
+    get_total_pages,
+    InvalidExplorerConnectionException,
+    QueryResult,
+)
+from dataworkspace.tests.explorer.factories import SimpleQueryFactory
 
 
 class TestGetTotalPages(TestCase):
@@ -122,3 +42,154 @@ class TestGetTotalPages(TestCase):
                 expected_total_pages,
                 msg=f'Total rows {total_rows}, Page size {page_size}',
             )
+
+
+@pytest.mark.django_db(transaction=True)
+class TestQueryResults:
+    connection_name = settings.EXPLORER_DEFAULT_CONNECTION
+    databases = ['default', 'my_database']
+
+    query = "select 1 as foo, 'qux' as mux;"
+
+    @pytest.fixture(scope='function', autouse=True)
+    def create_query_result(self):
+        self.qr = QueryResult(  # pylint: disable=attribute-defined-outside-init
+            self.query, 1, 1000, 10000, None, None, None, None
+        )
+
+    def test_column_access(self):
+        self.qr.data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        assert self.qr.column(1) == [2, 5, 8]
+
+    def test_unicode_with_nulls(self):
+        self.qr.description = [("num",), ("char",)]
+        self.qr.data = [[2, six.u("a")], [3, None]]
+        assert self.qr.data == [[2, "a"], [3, None]]
+
+
+class TestExecuteQuery:
+    @pytest.fixture(scope='function', autouse=True)
+    def create_mock_cursor(self):
+        user_explorer_connection_patcher = patch(
+            'dataworkspace.apps.explorer.utils.user_explorer_connection'
+        )
+        mock_user_explorer_connection = user_explorer_connection_patcher.start()
+
+        self.mock_cursor = MagicMock()  # pylint: disable=attribute-defined-outside-init
+        mock_connection = Mock()
+        mock_connection.cursor.return_value = self.mock_cursor
+        mock_user_explorer_connection.return_value.__enter__.return_value = (
+            mock_connection
+        )
+
+        yield
+        user_explorer_connection_patcher.stop()
+
+    @patch('dataworkspace.apps.explorer.utils.uuid')
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_execute_query(self, mock_connection_settings, mock_uuid):
+        mock_uuid.uuid4.return_value = '00000000-0000-0000-0000-000000000000'
+
+        query = SimpleQueryFactory(sql='select * from foo', connection='conn')
+
+        execute_query(query, None, 1, 100, 10000, log_query=False)
+
+        expected_calls = [
+            call('SET statement_timeout = 10000'),
+            call('DECLARE cur_0000000000 CURSOR WITH HOLD FOR select * from foo'),
+            call('FETCH 100 FROM cur_0000000000'),
+            call('CLOSE cur_0000000000'),
+            call('select count(*) from (select * from foo) t'),
+        ]
+        self.mock_cursor.execute.assert_has_calls(expected_calls)
+
+    @patch('dataworkspace.apps.explorer.utils.uuid')
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_execute_query_with_page(self, mock_connection_settings, mock_uuid):
+        mock_uuid.uuid4.return_value = '00000000-0000-0000-0000-000000000000'
+
+        query = SimpleQueryFactory(sql='select * from foo', connection='conn')
+
+        execute_query(query, None, 2, 100, 10000, log_query=False)
+
+        expected_calls = [
+            call("SET statement_timeout = 10000"),
+            call("DECLARE cur_0000000000 CURSOR WITH HOLD FOR select * from foo"),
+            call('MOVE 100 FROM cur_0000000000'),
+            call("FETCH 100 FROM cur_0000000000"),
+            call('CLOSE cur_0000000000'),
+            call('select count(*) from (select * from foo) t'),
+        ]
+
+        self.mock_cursor.execute.assert_has_calls(expected_calls)
+
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_execute_query_with_logging(self, mock_connection_settings):
+        query = SimpleQueryFactory(sql='select * from foo', connection='conn')
+
+        result = execute_query(query, None, 1, 100, 10000, log_query=True)
+        assert QueryLog.objects.count() == 1
+        log = QueryLog.objects.first()
+
+        assert log.run_by_user is None
+        assert log.query == query
+        assert log.is_playground is False
+        assert log.connection == query.connection
+        assert log.duration == pytest.approx(result.duration, rel=1e-9)
+
+    def test_cant_query_with_unregistered_connection(self):
+        query = SimpleQueryFactory(
+            sql="select '$$foo:bar$$', '$$qux$$';", connection='not_registered'
+        )
+
+        with pytest.raises(InvalidExplorerConnectionException):
+            execute_query(query, None, 1, 100, 10000, log_query=False)
+
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_writing_csv_unicode(self, mock_connection_settings):
+        self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', '1')]
+        self.mock_cursor.description = [('a',), ('b',)]
+
+        res = CSVExporter(user=None, query=SimpleQueryFactory()).get_output()
+        assert res == 'a,b\r\n1,\r\nJenét,1\r\n'
+
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_writing_csv_custom_delimiter(self, mock_connection_settings):
+        self.mock_cursor.__iter__.return_value = [(1, 2)]
+        self.mock_cursor.description = [('?column?',), ('?column?',)]
+
+        res = CSVExporter(user=None, query=SimpleQueryFactory()).get_output(delim='|')
+        assert res == '?column?|?column?\r\n1|2\r\n'
+
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_writing_json_unicode(self, mock_connection_settings):
+        self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', '1')]
+        self.mock_cursor.description = [('a',), ('b',)]
+
+        res = JSONExporter(user=None, query=SimpleQueryFactory()).get_output()
+        assert res == json.dumps([{'a': 1, 'b': None}, {'a': 'Jenét', 'b': '1'}])
+
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_writing_json_datetimes(self, mock_connection_settings):
+        self.mock_cursor.__iter__.return_value = [(1, date.today())]
+        self.mock_cursor.description = [('a',), ('b',)]
+
+        res = JSONExporter(user=None, query=SimpleQueryFactory()).get_output()
+        assert res == json.dumps([{'a': 1, 'b': date.today()}], cls=DjangoJSONEncoder)
+
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_writing_excel(self, mock_connection_settings):
+        self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', datetime.now())]
+
+        res = ExcelExporter(user=None, query=SimpleQueryFactory()).get_output()
+        assert res[:2] == six.b('PK')
+
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_writing_excel_dict_fields(self, mock_connection_settings):
+        self.mock_cursor.__iter__.return_value = [
+            (1, ['foo', 'bar']),
+            (2, {'foo': 'bar'}),
+        ]
+
+        res = ExcelExporter(user=None, query=SimpleQueryFactory()).get_output()
+        assert res[:2] == six.b('PK')

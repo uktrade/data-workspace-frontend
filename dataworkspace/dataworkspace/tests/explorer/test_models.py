@@ -1,20 +1,24 @@
-from unittest.mock import call, Mock
+from unittest.mock import Mock
 
 import pytest
-import six
-from django.db import connections
-from django.conf import settings
+from django.test import TestCase
 
 from dataworkspace.apps.explorer.models import (
-    ColumnHeader,
-    ColumnSummary,
-    Query,
+    extract_params,
+    get_params_for_url,
     QueryLog,
-    QueryResult,
-    SQLQuery,
+    shared_dict_update,
+    swap_params,
 )
+
+from dataworkspace.apps.explorer.utils import (
+    EXPLORER_PARAM_TOKEN,
+    get_params_from_request,
+    param,
+)
+
+
 from dataworkspace.tests.explorer.factories import SimpleQueryFactory
-from dataworkspace.tests.factories import UserFactory
 
 
 @pytest.mark.django_db(transaction=True)
@@ -30,61 +34,20 @@ class TestQueryModel:
         q = SimpleQueryFactory(sql="select '$$foo:bar$$';")
         assert q.available_params() == {'foo': 'bar'}
 
-    def test_query_log(self):
-        assert QueryLog.objects.count() == 0
-        q = SimpleQueryFactory(connection='Alt')
-        q.log(None)
-        assert QueryLog.objects.count() == 1
-        log = QueryLog.objects.first()
-
-        assert log.run_by_user is None
-        assert log.query == q
-        assert log.is_playground is False
-        assert log.connection == q.connection
-
-    def test_query_logs_final_sql(self):
-        q = SimpleQueryFactory(sql="select '$$foo$$';")
-        q.params = {'foo': 'bar'}
-        q.log(None)
-        assert QueryLog.objects.count() == 1
-        log = QueryLog.objects.first()
-
-        assert log.sql == "select 'bar';"
-
-    def test_playground_query_log(self):
-        query = Query(sql='select 1;', title="Playground")
-        query.log(None)
-        log = QueryLog.objects.first()
-
-        assert log.is_playground is True
-
     def test_get_run_count(self):
         q = SimpleQueryFactory()
         assert q.get_run_count() == 0
         expected = 4
         for _ in range(0, expected):
-            q.log()
+            QueryLog.objects.create(query=q)
         assert q.get_run_count() == expected
 
     def test_avg_duration(self):
         q = SimpleQueryFactory()
         assert q.avg_duration() is None
-        expected = 2.5
-        ql = q.log()
-        ql.duration = 2
-        ql.save()
-        ql = q.log()
-        ql.duration = 3
-        ql.save()
-        assert q.avg_duration() == expected
-
-    def test_log_saves_duration(self):
-        user = UserFactory()
-        q = SimpleQueryFactory()
-        res, _ = q.execute_with_logging(user, None, 10, 10000)
-        log = QueryLog.objects.first()
-
-        assert log.duration == pytest.approx(res.duration, rel=1e-9)
+        QueryLog.objects.create(query=q, duration=2)
+        QueryLog.objects.create(query=q, duration=3)
+        assert q.avg_duration() == 2.5
 
     def test_final_sql_uses_merged_params(self):
         q = SimpleQueryFactory(sql="select '$$foo:bar$$', '$$qux$$';")
@@ -93,102 +56,75 @@ class TestQueryModel:
 
         assert q.final_sql() == expected
 
-    def test_cant_query_with_unregistered_connection(self):
-        from dataworkspace.apps.explorer.utils import (  # pylint: disable=import-outside-toplevel
-            InvalidExplorerConnectionException,
-        )
 
-        user = UserFactory()
-        q = SimpleQueryFactory.create(
-            sql="select '$$foo:bar$$', '$$qux$$';", connection='not_registered'
-        )
-        with pytest.raises(InvalidExplorerConnectionException):
-            q.execute(user, None, 10, 10000)
+class TestParams(TestCase):
+    def test_swappable_params_are_built_correctly(self):
+        expected = EXPLORER_PARAM_TOKEN + 'foo' + EXPLORER_PARAM_TOKEN
+        self.assertEqual(expected, param('foo'))
 
+    def test_params_get_swapped(self):
+        sql = 'please Swap $$this$$ and $$THat$$'
+        expected = 'please Swap here and there'
+        params = {'this': 'here', 'that': 'there'}
+        got = swap_params(sql, params)
+        self.assertEqual(got, expected)
 
-@pytest.mark.django_db(transaction=True)
-class TestQueryResults:
-    connection_name = settings.EXPLORER_DEFAULT_CONNECTION
-    databases = ['default', 'my_database']
+    def test_empty_params_does_nothing(self):
+        sql = 'please swap $$this$$ and $$that$$'
+        params = None
+        got = swap_params(sql, params)
+        self.assertEqual(got, sql)
 
-    query = "select 1 as foo, 'qux' as mux;"
+    def test_non_string_param_gets_swapper(self):
+        sql = 'please swap $$this$$'
+        expected = 'please swap 1'
+        params = {'this': 1}
+        got = swap_params(sql, params)
+        self.assertEqual(got, expected)
 
-    @pytest.fixture(scope='function', autouse=True)
-    def create_query_result(self):
-        conn = connections[self.connection_name]
-        self.qr = QueryResult(  # pylint: disable=attribute-defined-outside-init
-            self.query, conn, 1, 1000, 10000
-        )
+    def _assertSwap(self, tuple_):
+        self.assertEqual(extract_params(tuple_[0]), tuple_[1])
 
-    def test_column_access(self):
-        self.qr._data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-        assert self.qr.column(1) == [2, 5, 8]
-
-    def test_headers(self):
-        assert str(self.qr.headers[0]) == "foo"
-        assert str(self.qr.headers[1]) == "mux"
-
-    def test_data(self):
-        assert self.qr.data == [[1, "qux"]]
-
-    def test_unicode_with_nulls(self):
-        self.qr._headers = [ColumnHeader('num'), ColumnHeader('char')]
-        self.qr._description = [("num",), ("char",)]
-        self.qr._data = [[2, six.u("a")], [3, None]]
-        self.qr.process()
-        assert self.qr.data == [[2, "a"], [3, None]]
-
-    def test_summary_gets_built(self):
-        self.qr.process()
-        assert len([h for h in self.qr.headers if h.summary]) == 1
-        assert str(self.qr.headers[0].summary) == "foo"
-        assert self.qr.headers[0].summary.stats["Sum"] == 1.0
-
-    def test_summary_gets_built_for_multiple_cols(self):
-        self.qr._headers = [ColumnHeader('a'), ColumnHeader('b')]
-        self.qr._description = [("a",), ("b",)]
-        self.qr._data = [[1, 10], [2, 20]]
-        self.qr.process()
-        assert len([h for h in self.qr.headers if h.summary]) == 2
-        assert self.qr.headers[0].summary.stats["Sum"] == 3.0
-        assert self.qr.headers[1].summary.stats["Sum"] == 30.0
-
-    def test_numeric_detection(self):
-        assert self.qr._get_numerics() == [0]
-
-    def test_get_headers_no_results(self):
-        self.qr._description = None
-        assert [ColumnHeader('--')][0].title == self.qr._get_headers()[0].title
-
-
-class TestColumnSummary:
-    def test_executes(self):
-        res = ColumnSummary('foo', [1, 2, 3])
-        assert res.stats == {'Min': 1, 'Max': 3, 'Avg': 2, 'Sum': 6, 'NUL': 0}
-
-    def test_handles_null_as_zero(self):
-        res = ColumnSummary('foo', [1, None, 5])
-        assert res.stats == {'Min': 0, 'Max': 5, 'Avg': 2, 'Sum': 6, 'NUL': 1}
-
-    def test_empty_data(self):
-        res = ColumnSummary('foo', [])
-        assert res.stats == {'Min': 0, 'Max': 0, 'Avg': 0, 'Sum': 0, 'NUL': 0}
-
-
-class TestSQLQuery:
-    def test_connection_timeout(self):
-        mock_cursor = Mock()
-        mock_cursor.db.vendor = 'postgresql'
-        mock_execute = Mock()
-        mock_cursor.execute.side_effect = mock_execute
-
-        query = SQLQuery(mock_cursor, "select * from foo", 100, 1, 10000)
-        query._cursor_name = "test_cursor"
-        query.execute()
-
-        expected_calls = [
-            call("SET statement_timeout = 10000"),
-            call("DECLARE test_cursor CURSOR WITH HOLD FOR select * from foo"),
-            call("FETCH 100 FROM test_cursor"),
+    def test_extracting_params(self):
+        tests = [
+            ('please swap $$this0$$', {'this0': ''}),
+            ('please swap $$THis0$$', {'this0': ''}),
+            ('please swap $$this6$$ $$this6:that$$', {'this6': 'that'}),
+            ('please swap $$this_7:foo, bar$$', {'this_7': 'foo, bar'}),
+            ('please swap $$this8:$$', {}),
+            ('do nothing with $$this1 $$', {}),
+            ('do nothing with $$this2 :$$', {}),
+            ('do something with $$this3: $$', {'this3': ' '}),
+            ('do nothing with $$this4: ', {}),
+            ('do nothing with $$this5$that$$', {}),
         ]
-        mock_execute.assert_has_calls(expected_calls)
+        for s in tests:
+            self._assertSwap(s)
+
+    def test_shared_dict_update(self):
+        source = {'foo': 1, 'bar': 2}
+        target = {'bar': None}  # ha ha!
+        self.assertEqual({'bar': 2}, shared_dict_update(target, source))
+
+    def test_get_params_from_url(self):
+        r = Mock()
+        r.GET = {'params': 'foo:bar|qux:mux'}
+        res = get_params_from_request(r)
+        self.assertEqual(res['foo'], 'bar')
+        self.assertEqual(res['qux'], 'mux')
+
+    def test_get_params_for_request(self):
+        q = SimpleQueryFactory(params={'a': 1, 'b': 2})
+        # For some reason the order of the params is non-deterministic,
+        # causing the following to periodically fail:
+        #     self.assertEqual(get_params_for_url(q), 'a:1|b:2')
+        # So instead we go for the following, convoluted, asserts:
+        res = get_params_for_url(q)
+        res = res.split('|')
+        expected = ['a:1', 'b:2']
+        for e in expected:
+            self.assertIn(e, res)
+
+    def test_get_params_for_request_empty(self):
+        q = SimpleQueryFactory()
+        self.assertEqual(get_params_for_url(q), None)

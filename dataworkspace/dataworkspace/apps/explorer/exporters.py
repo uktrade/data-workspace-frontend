@@ -10,6 +10,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
 
+from dataworkspace.apps.explorer.utils import execute_query
+
 
 def get_exporter_class(format_):
     class_str = dict(settings.EXPLORER_DATA_EXPORTERS)[format_]
@@ -30,11 +32,13 @@ class BaseExporter:
         return value
 
     def get_file_output(self, **kwargs):
-        res = self.query.execute(
+        res = execute_query(
+            self.query,
             self.user,
             1,
             settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
             settings.EXPLORER_QUERY_TIMEOUT_MS,
+            log_query=False,
         )
         return self._get_output(res, **kwargs)
 
