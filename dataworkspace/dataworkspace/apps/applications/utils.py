@@ -1334,7 +1334,12 @@ def _do_sync_tool_query_logs():
     cache.set('query_tool_logs_last_run', to_date)
 
 
-@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
+@celery_app.task()
 def sync_tool_query_logs():
-    with cache.lock('query_tool_logs_last_run_lock', blocking_timeout=0, timeout=1800):
-        _do_sync_tool_query_logs()
+    try:
+        with cache.lock(
+            'query_tool_logs_last_run_lock', blocking_timeout=0, timeout=1800
+        ):
+            _do_sync_tool_query_logs()
+    except redis.exceptions.LockError:
+        logger.info('Unable to acquire lock to sync tool query logs')
