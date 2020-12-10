@@ -293,7 +293,7 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
         },
         'sync-tool-query-logs': {
             'task': 'dataworkspace.apps.applications.utils.sync_tool_query_logs',
-            'schedule': 60 * 5,
+            'schedule': 60 * 2,
             'args': (),
         },
     }
