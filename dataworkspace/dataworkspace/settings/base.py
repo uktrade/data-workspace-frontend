@@ -281,6 +281,11 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
             'schedule': 60 * 60 * 6,
             'args': (),
         },
+        'clean-up-old-data-explorer-materialized-views': {
+            'task': 'dataworkspace.apps.explorer.tasks.cleanup_temporary_query_tables',
+            'schedule': crontab(hour=0),
+            'args': (),
+        },
         'sync-sso-users-from-activity-stream': {
             'task': 'dataworkspace.apps.applications.utils.sync_activity_stream_sso_users',
             'schedule': 60,
@@ -461,6 +466,7 @@ EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES = (
     'django',
     'dynamic_models',
     'data_explorer',
+    '_data_explorer_tmp_query_',
 )
 
 STATICFILES_FINDERS = [

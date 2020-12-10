@@ -1,7 +1,6 @@
-import json
 import time
 
-from django.conf import settings
+from django.db import connections
 
 try:
     from django.urls import reverse
@@ -12,6 +11,7 @@ from django.forms.models import model_to_dict
 from lxml import html
 import pytest
 
+from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.tests.factories import UserFactory
@@ -218,66 +218,28 @@ class TestQueryDetailView:
         assert query.created_by_user_id == query_creator.id
 
 
-class TestDownloadView:
-    def test_params_in_download(self, staff_user, staff_client):
-        q = SimpleQueryFactory(sql="select '$$foo$$';", created_by_user=staff_user)
-        url = '%s?params=%s' % (
-            reverse("explorer:download_query", kwargs={'query_id': q.id}),
-            'foo:1234567890',
-        )
-        resp = staff_client.get(url)
-        assert "1234567890" in resp.content.decode(resp.charset)
-
-    def test_download_defaults_to_csv(self, staff_user, staff_client):
-        query = SimpleQueryFactory(created_by_user=staff_user)
-        url = reverse("explorer:download_query", args=[query.pk])
-
-        response = staff_client.get(url)
-
-        assert response.status_code == 200
-        assert response['content-type'] == 'text/csv'
-
-    def test_download_csv(self, staff_user, staff_client):
-        query = SimpleQueryFactory(created_by_user=staff_user)
-        url = reverse("explorer:download_query", args=[query.pk]) + '?format=csv'
-
-        response = staff_client.get(url)
-
-        assert response.status_code == 200
-        assert response['content-type'] == 'text/csv'
-
-    def test_bad_query_redirects_to_query_view(self, staff_user, staff_client):
-        query = SimpleQueryFactory(sql='bad', created_by_user=staff_user)
-        url = reverse("explorer:download_query", args=[query.pk]) + '?format=csv'
-
-        response = staff_client.get(url)
-
-        assert response.status_code == 302
-        assert response.url == f'/data-explorer/queries/{query.pk}/'
-
-    def test_download_json(self, staff_user, staff_client):
-        query = SimpleQueryFactory(created_by_user=staff_user)
-        url = reverse("explorer:download_query", args=[query.pk]) + '?format=json'
-
-        response = staff_client.get(url)
-
-        assert response.status_code == 200
-        assert response['content-type'] == 'application/json'
-
-        json_data = json.loads(response.content.decode('utf-8'))
-        assert isinstance(json_data, list)
-        assert len(json_data) == 1
-        assert json_data == [{'two': 2}]
-
-
+@pytest.mark.django_db(transaction=True)
 class TestHomePage:
     databases = ['my_database', 'test_external_db']
 
-    def test_empty_playground_renders(self, staff_user, staff_client):
+    @pytest.fixture(scope='function', autouse=True)
+    def setUp(self, staff_user_data):
+        suffix = stable_identification_suffix(
+            staff_user_data["HTTP_SSO_PROFILE_USER_ID"], short=True
+        )
+        schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
+        for alias in self.databases:
+            with connections[alias].cursor() as cursor:
+                cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
+                cursor.execute(
+                    f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
+                )
+
+    def test_empty_playground_renders(self, staff_client):
         resp = staff_client.get(reverse("explorer:index"))
         assert resp.status_code == 200
 
-    def test_support_and_feedback_link(self, staff_user, staff_client):
+    def test_support_and_feedback_link(self, staff_client):
         resp = staff_client.get(reverse("explorer:index"))
 
         doc = html.fromstring(resp.content.decode(resp.charset))
@@ -294,9 +256,7 @@ class TestHomePage:
         assert resp.status_code == 200
         assert 'select 1;' in resp.content.decode(resp.charset)
 
-    def test_cannot_open_playground_with_another_users_query(
-        self, staff_user, staff_client
-    ):
+    def test_cannot_open_playground_with_another_users_query(self, staff_client):
         other_user = UserFactory(email='foo@bar.net')
         query = SimpleQueryFactory(sql="select 1;", created_by_user=other_user)
         resp = staff_client.get(
@@ -304,7 +264,7 @@ class TestHomePage:
         )
         assert resp.status_code == 404
 
-    def test_cannot_post_to_another_users_query(self, staff_user, staff_client):
+    def test_cannot_post_to_another_users_query(self, staff_client):
         other_user = UserFactory(email='foo@bar.net')
         query = SimpleQueryFactory(sql="select 1;", created_by_user=other_user)
 
@@ -314,7 +274,7 @@ class TestHomePage:
         )
         assert resp.status_code == 404
 
-    def test_playground_renders_with_posted_sql(self, staff_user, staff_client):
+    def test_playground_renders_with_posted_sql(self, staff_client):
         resp = staff_client.post(
             reverse("explorer:index"),
             {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
@@ -326,7 +286,7 @@ class TestHomePage:
         (("1", "1000", "1", "1000"), ("2", "3", "2", "3"), ("a", "b", "1", "1000"),),
     )
     def test_playground_suppresses_errors_from_invalid_pagination_values(
-        self, page, rows, expected_page, expected_rows, staff_user, staff_client
+        self, page, rows, expected_page, expected_rows, staff_client
     ):
         resp = staff_client.post(
             reverse("explorer:index"),
@@ -356,7 +316,7 @@ class TestHomePage:
 
         assert resp.url == f'/data-explorer/queries/create/?play_id={play_sql.id}'
 
-    def test_playground_renders_with_empty_posted_sql(self, staff_user, staff_client):
+    def test_playground_renders_with_empty_posted_sql(self, staff_client):
         resp = staff_client.post(
             reverse("explorer:index"), {'sql': '', "action": "run"}
         )
@@ -387,66 +347,47 @@ class TestHomePage:
         )
         assert resp.status_code == 404
 
-    # The two database configurations point to the same database instance, so when we try to create a user for the
-    # second "database" we get a "user already exists" exception raised from the DB. Not handling this right now.
-    @pytest.mark.xfail
-    def test_multiple_connections_integration(self, staff_user, staff_client):
-        from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
-            connections,
-        )
-
-        c1_alias = settings.EXPLORER_CONNECTIONS['Postgres']
-        conn = connections[c1_alias]
-        c1 = conn.cursor()
-        c1.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')
-        c1.execute('INSERT INTO animals ( name ) VALUES (\'peacock\')')
-        c1.execute('COMMIT')
-
-        c2_alias = settings.EXPLORER_CONNECTIONS['Alt']
-        conn = connections[c2_alias]
-        c2 = conn.cursor()
-        c2.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')
-        c2.execute('INSERT INTO animals ( name ) VALUES (\'superchicken\')')
-        c2.execute('COMMIT')
-
-        resp = staff_client.post(
-            reverse("explorer:index"),
-            {
-                "title": "Playground query",
-                "sql": "select name from animals;",
-                "connection": c1_alias,
-                "action": "run",
-            },
-        )
-        assert "peacock" in resp.content.decode(resp.charset)
-
-        resp = staff_client.post(
-            reverse("explorer:index"),
-            {
-                "title": "Playground query",
-                "sql": "select name from animals;",
-                "connection": c2_alias,
-                "action": "run",
-            },
-        )
-        assert "superchicken" in resp.content.decode(resp.charset)
-
 
 class TestCSVFromSQL:
-    def test_downloading_from_playground(self, staff_client):
+    databases = ['my_database']
+
+    @pytest.fixture(scope='function', autouse=True)
+    def setUp(self, staff_user_data):
+        suffix = stable_identification_suffix(
+            staff_user_data["HTTP_SSO_PROFILE_USER_ID"], short=True
+        )
+        schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
+        for alias in self.databases:
+            with connections[alias].cursor() as cursor:
+                cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
+                cursor.execute(
+                    f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
+                )
+
+    def test_downloading_from_playground(self, staff_user, staff_client):
         sql = "select 1;"
         resp = staff_client.post(reverse("explorer:download_sql"), {'sql': sql})
 
         assert 'attachment' in resp['Content-Disposition']
         assert 'text/csv' in resp['content-type']
-
-        ql = QueryLog.objects.first()
-
-        assert f'filename="Playground_-_{ql.id}.csv"' in resp['Content-Disposition']
+        assert 'filename="Playground_-_select_1.csv"' in resp['Content-Disposition']
 
 
 class TestSQLDownloadViews:
-    databases = ['my_database', 'external_db']
+    databases = ['my_database']
+
+    @pytest.fixture(scope='function', autouse=True)
+    def setUp(self, staff_user_data):
+        suffix = stable_identification_suffix(
+            staff_user_data["HTTP_SSO_PROFILE_USER_ID"], short=True
+        )
+        schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
+        for alias in self.databases:
+            with connections[alias].cursor() as cursor:
+                cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
+                cursor.execute(
+                    f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
+                )
 
     def test_sql_download_csv(self, staff_client):
         url = reverse("explorer:download_sql") + '?format=csv'
@@ -455,35 +396,6 @@ class TestSQLDownloadViews:
 
         assert response.status_code == 200
         assert response['content-type'] == 'text/csv'
-
-    # The two database configurations point to the same database instance, so when we try to create a user for the
-    # second "database" we get a "user already exists" exception raised from the DB. Not handling this right now.
-    @pytest.mark.xfail
-    def test_sql_download_respects_connection(self, staff_client):
-        from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
-            connections,
-        )
-
-        c1_alias = settings.EXPLORER_CONNECTIONS['Postgres']
-        conn = connections[c1_alias]
-        c = conn.cursor()
-        c.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')
-        c.execute('INSERT INTO animals ( name ) VALUES (\'peacock\')')
-
-        c2_alias = settings.EXPLORER_CONNECTIONS['Alt']
-        conn = connections[c2_alias]
-        c = conn.cursor()
-        c.execute('CREATE TABLE IF NOT EXISTS animals (name text NOT NULL);')
-        c.execute('INSERT INTO animals ( name ) VALUES (\'superchicken\')')
-
-        url = reverse("explorer:download_sql") + '?format=csv'
-
-        response = staff_client.post(
-            url, {'sql': 'select * from animals;', 'connection': c2_alias}
-        )
-
-        assert response.status_code == 200
-        assert 'superchicken' in response.content.decode(response.charset)
 
     def test_sql_download_csv_with_custom_delim(self, staff_client):
         url = reverse("explorer:download_sql") + '?format=csv&delim=|'

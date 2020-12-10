@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
 from celery.utils.log import get_task_logger
+from django.db import connections
 from pytz import utc
 
 from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
+from dataworkspace.apps.explorer.utils import tempory_query_table_name
 from dataworkspace.cel import celery_app
 
 
@@ -34,3 +36,17 @@ def cleanup_playground_sql_table():
         count += 1
 
     logger.info("Delete %s PlaygroundSQL rows", count)
+
+
+@celery_app.task()
+def cleanup_temporary_query_tables():
+    one_day_ago = datetime.utcnow() - timedelta(days=1)
+    logger.info(
+        "Cleaning up Data Explorer temporary query tables older than %s", one_day_ago
+    )
+
+    for query_log in QueryLog.objects.filter(run_at__lte=one_day_ago):
+        with connections[query_log.connection].cursor() as cursor:
+            table_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
+            logger.info("Dropping temprary query table %s", table_name)
+            cursor.execute(f'DROP TABLE IF EXISTS {table_name}')

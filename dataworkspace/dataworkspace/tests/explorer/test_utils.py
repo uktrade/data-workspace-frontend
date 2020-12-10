@@ -23,6 +23,7 @@ from dataworkspace.apps.explorer.utils import (
     QueryResult,
 )
 from dataworkspace.tests.explorer.factories import SimpleQueryFactory
+from dataworkspace.tests.factories import UserFactory
 
 
 class TestGetTotalPages(TestCase):
@@ -69,7 +70,7 @@ class TestQueryResults:
 
 class TestExecuteQuery:
     @pytest.fixture(scope='function', autouse=True)
-    def create_mock_cursor(self):
+    def setUp(self):
         user_explorer_connection_patcher = patch(
             'dataworkspace.apps.explorer.utils.user_explorer_connection'
         )
@@ -81,57 +82,122 @@ class TestExecuteQuery:
         mock_user_explorer_connection.return_value.__enter__.return_value = (
             mock_connection
         )
-
+        self.user = UserFactory()
         yield
         user_explorer_connection_patcher.stop()
+        self.user.delete()
 
-    @patch('dataworkspace.apps.explorer.utils.uuid')
+    @patch('dataworkspace.apps.explorer.utils.db_role_schema_suffix_for_user')
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
-    def test_execute_query(self, mock_connection_settings, mock_uuid):
-        mock_uuid.uuid4.return_value = '00000000-0000-0000-0000-000000000000'
+    def test_execute_query(self, mock_connection_settings, mock_schema_suffix):
+        mock_schema_suffix.return_value = '12b9377c'
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
+        self.mock_cursor.description = [('foo', 23), ('bar', 25)]
 
-        query = SimpleQueryFactory(sql='select * from foo', connection='conn')
+        query = SimpleQueryFactory(sql='select * from foo', connection='conn', id=1)
 
-        execute_query(query, None, 1, 100, 10000, log_query=False)
+        execute_query(query, self.user, 1, 100, 10000)
+        query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
             call('SET statement_timeout = 10000'),
-            call('DECLARE cur_0000000000 CURSOR WITH HOLD FOR select * from foo'),
-            call('FETCH 100 FROM cur_0000000000'),
-            call('CLOSE cur_0000000000'),
-            call('select count(*) from (select * from foo) t'),
+            call('SELECT * FROM (select * from foo) sq limit 0'),
+            call(
+                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id} ("foo" integer, "bar" text)'
+            ),
+            call(
+                f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+                ' SELECT * FROM (select * from foo) sq LIMIT 100'
+            ),
+            call(
+                f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+            ),
+            call(
+                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+            ),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
-    @patch('dataworkspace.apps.explorer.utils.uuid')
+    @patch('dataworkspace.apps.explorer.utils.db_role_schema_suffix_for_user')
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
-    def test_execute_query_with_page(self, mock_connection_settings, mock_uuid):
-        mock_uuid.uuid4.return_value = '00000000-0000-0000-0000-000000000000'
+    def test_execute_query_with_pagination(
+        self, mock_connection_settings, mock_schema_suffix
+    ):
+        mock_schema_suffix.return_value = '12b9377c'
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
+        self.mock_cursor.description = [('foo', 23), ('bar', 25)]
 
-        query = SimpleQueryFactory(sql='select * from foo', connection='conn')
+        query = SimpleQueryFactory(sql='select * from foo', connection='conn', id=1)
 
-        execute_query(query, None, 2, 100, 10000, log_query=False)
+        execute_query(query, self.user, 2, 100, 10000)
+        query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = 10000"),
-            call("DECLARE cur_0000000000 CURSOR WITH HOLD FOR select * from foo"),
-            call('MOVE 100 FROM cur_0000000000'),
-            call("FETCH 100 FROM cur_0000000000"),
-            call('CLOSE cur_0000000000'),
-            call('select count(*) from (select * from foo) t'),
+            call('SET statement_timeout = 10000'),
+            call('SELECT * FROM (select * from foo) sq limit 0'),
+            call(
+                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id} ("foo" integer, "bar" text)'
+            ),
+            call(
+                f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+                ' SELECT * FROM (select * from foo) sq LIMIT 100 OFFSET 100'
+            ),
+            call(
+                f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+            ),
+            call(
+                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+            ),
         ]
+        self.mock_cursor.execute.assert_has_calls(expected_calls)
 
+    @patch('dataworkspace.apps.explorer.utils.db_role_schema_suffix_for_user')
+    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    def test_execute_query_with_duplicated_column_names(
+        self, mock_connection_settings, mock_schema_suffix
+    ):
+        mock_schema_suffix.return_value = '12b9377c'
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
+        self.mock_cursor.description = [('bar', 23), ('bar', 25)]
+
+        query = SimpleQueryFactory(sql='select * from foo', connection='conn', id=1)
+
+        execute_query(query, self.user, 2, 100, 10000)
+        query_log_id = QueryLog.objects.first().id
+
+        expected_calls = [
+            call('SET statement_timeout = 10000'),
+            call('SELECT * FROM (select * from foo) sq limit 0'),
+            call(
+                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+                ' ("col_1_bar" integer, "col_2_bar" text)'
+            ),
+            call(
+                f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+                ' SELECT * FROM (select * from foo) sq LIMIT 100 OFFSET 100'
+            ),
+            call(
+                f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+            ),
+            call(
+                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
+            ),
+        ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
-    def test_execute_query_with_logging(self, mock_connection_settings):
+    def test_execute_query_creates_query_log(self, mock_connection_settings):
         query = SimpleQueryFactory(sql='select * from foo', connection='conn')
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description.
+        # As this test makes no assertions on the cursor execute statement, this value can
+        # be anything in the TYPE_CODES_REVERSED dict
+        self.mock_cursor.description = [('foo', 23), ('bar', 23)]
 
-        result = execute_query(query, None, 1, 100, 10000, log_query=True)
+        result = execute_query(query, self.user, 1, 100, 10000)
         assert QueryLog.objects.count() == 1
         log = QueryLog.objects.first()
 
-        assert log.run_by_user is None
+        assert log.run_by_user == self.user
         assert log.query == query
         assert log.is_playground is False
         assert log.connection == query.connection
@@ -143,45 +209,63 @@ class TestExecuteQuery:
         )
 
         with pytest.raises(InvalidExplorerConnectionException):
-            execute_query(query, None, 1, 100, 10000, log_query=False)
+            execute_query(query, self.user, 1, 100, 10000)
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
     def test_writing_csv_unicode(self, mock_connection_settings):
         self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', '1')]
-        self.mock_cursor.description = [('a',), ('b',)]
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description.
+        # As this test makes no assertions on the cursor execute statement, this value can
+        # be anything in the TYPE_CODES_REVERSED dict
+        self.mock_cursor.description = [('a', 23), ('b', 23)]
 
-        res = CSVExporter(user=None, query=SimpleQueryFactory()).get_output()
+        res = CSVExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res == 'a,b\r\n1,\r\nJenét,1\r\n'
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
     def test_writing_csv_custom_delimiter(self, mock_connection_settings):
         self.mock_cursor.__iter__.return_value = [(1, 2)]
-        self.mock_cursor.description = [('?column?',), ('?column?',)]
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description.
+        # As this test makes no assertions on the cursor execute statement, this value can
+        # be anything in the TYPE_CODES_REVERSED dict
+        self.mock_cursor.description = [('?column?', 23), ('?column?', 23)]
 
-        res = CSVExporter(user=None, query=SimpleQueryFactory()).get_output(delim='|')
+        res = CSVExporter(user=self.user, query=SimpleQueryFactory()).get_output(
+            delim='|'
+        )
         assert res == '?column?|?column?\r\n1|2\r\n'
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
     def test_writing_json_unicode(self, mock_connection_settings):
         self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', '1')]
-        self.mock_cursor.description = [('a',), ('b',)]
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description.
+        # As this test makes no assertions on the cursor execute statement, this value can
+        # be anything in the TYPE_CODES_REVERSED dict
+        self.mock_cursor.description = [('a', 23), ('b', 23)]
 
-        res = JSONExporter(user=None, query=SimpleQueryFactory()).get_output()
+        res = JSONExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': None}, {'a': 'Jenét', 'b': '1'}])
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
     def test_writing_json_datetimes(self, mock_connection_settings):
         self.mock_cursor.__iter__.return_value = [(1, date.today())]
-        self.mock_cursor.description = [('a',), ('b',)]
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description.
+        # As this test makes no assertions on the cursor execute statement, this value can
+        # be anything in the TYPE_CODES_REVERSED dict
+        self.mock_cursor.description = [('a', 23), ('b', 23)]
 
-        res = JSONExporter(user=None, query=SimpleQueryFactory()).get_output()
+        res = JSONExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': date.today()}], cls=DjangoJSONEncoder)
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
     def test_writing_excel(self, mock_connection_settings):
         self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', datetime.now())]
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description.
+        # As this test makes no assertions on the cursor execute statement, this value can
+        # be anything in the TYPE_CODES_REVERSED dict
+        self.mock_cursor.description = [('a', 23), ('b', 23)]
 
-        res = ExcelExporter(user=None, query=SimpleQueryFactory()).get_output()
+        res = ExcelExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res[:2] == six.b('PK')
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
@@ -190,6 +274,10 @@ class TestExecuteQuery:
             (1, ['foo', 'bar']),
             (2, {'foo': 'bar'}),
         ]
+        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description.
+        # As this test makes no assertions on the cursor execute statement, this value can
+        # be anything in the TYPE_CODES_REVERSED dict
+        self.mock_cursor.description = [('a', 23), ('b', 23)]
 
-        res = ExcelExporter(user=None, query=SimpleQueryFactory()).get_output()
+        res = ExcelExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res[:2] == six.b('PK')

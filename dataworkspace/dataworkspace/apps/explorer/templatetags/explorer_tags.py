@@ -1,20 +1,6 @@
 from django import template
-from django.conf import settings
-from django.utils.module_loading import import_string
 
 register = template.Library()
-
-
-@register.inclusion_tag('explorer/export_buttons.html')
-def export_buttons(query=None):
-    exporters = []
-    for name, classname in settings.EXPLORER_DATA_EXPORTERS:
-        exporter_class = import_string(classname)
-        exporters.append((name, exporter_class.name))
-    return {
-        'exporters': exporters,
-        'query': query,
-    }
 
 
 @register.filter

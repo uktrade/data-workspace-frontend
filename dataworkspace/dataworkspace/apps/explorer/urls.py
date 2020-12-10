@@ -6,7 +6,6 @@ from dataworkspace.apps.explorer.views import (
     CreateQueryView,
     DeleteQueryView,
     DownloadFromSqlView,
-    DownloadQueryView,
     ListQueryLogView,
     ListQueryView,
     PlayQueryView,
@@ -28,11 +27,6 @@ urlpatterns = [
         'queries/<int:query_id>/',
         login_required(QueryView.as_view()),
         name='query_detail',
-    ),
-    path(
-        'queries/<int:query_id>/download/',
-        login_required(DownloadQueryView.as_view()),
-        name='download_query',
     ),
     path(
         'queries/<int:pk>/delete/',
