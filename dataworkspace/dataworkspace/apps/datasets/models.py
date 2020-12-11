@@ -1816,3 +1816,6 @@ class ToolQueryAuditLog(models.Model):
     rolename = models.CharField(max_length=64, null=False, blank=False)
     query_sql = models.TextField(null=False, blank=False)
     timestamp = models.DateTimeField(null=False, blank=False)
+
+    class Meta:
+        unique_together = ('rolename', 'query_sql', 'timestamp')

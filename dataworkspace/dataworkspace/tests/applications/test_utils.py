@@ -1076,19 +1076,19 @@ class TestSyncToolQueryLogs:
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
         '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
         # Non-pgaudit log
-        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '2020-12-08 18:00:10.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
         '"A random message",,,,,,,,,""\n',
         # Unreognised user
-        '2020-12-08 18:00:00.395 UTC,"unknownuser","test_datasets",114,"172.19.0.4:53462",'
+        '2020-12-08 18:00:20.395 UTC,"unknownuser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19041,"SELECT",2020-12-08 18:18:19 UTC,9/19034,0,LOG,00000,'
         '"AUDIT: SESSION,19041,1,READ,SELECT,,,""SELECT a FROM b"",<not logged>",,,,,,,,,""\n',
         # Unrecognised db
-        '2020-12-08 18:00:00.395 UTC,"auser","unknowndb",114,"172.19.0.4:53462",'
+        '2020-12-08 18:00:30.395 UTC,"auser","unknowndb",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19041,"SELECT",2020-12-08 18:18:19 UTC,9/19034,0,LOG,00000,'
         '"AUDIT: SESSION,19041,1,READ,SELECT,,,""SELECT c FROM d"",<not logged>",,,,,,,,,""\n',
         # Valid user and db insert statement
-        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '2020-12-08 18:00:40.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
         '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO test VALUES(1);"",<not logged>"'
         ',,,,,,,,,""\n',
@@ -1099,9 +1099,13 @@ class TestSyncToolQueryLogs:
         ',,,,,,,,,""\n',
         # No timestamp
         'An exception occurred...\n',
+        # Duplicate record
+        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
     ]
 
-    @pytest.mark.django_db
+    @pytest.mark.django_db(transaction=True)
     @freeze_time('2020-12-08 18:04:00')
     @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
     @override_settings(
@@ -1162,7 +1166,7 @@ class TestSyncToolQueryLogs:
         assert list(queries)[-2].query_sql == 'SELECT * FROM test'
         assert list(queries)[-1].query_sql == 'INSERT INTO test VALUES(1);'
 
-    @pytest.mark.django_db
+    @pytest.mark.django_db(transaction=True)
     @freeze_time('2020-12-08 18:04:00')
     @mock.patch('dataworkspace.apps.applications.utils.os')
     @mock.patch("builtins.open", mock.mock_open(read_data=''.join(log_data)))

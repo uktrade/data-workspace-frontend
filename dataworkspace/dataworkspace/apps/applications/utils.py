@@ -1318,13 +1318,18 @@ def _do_sync_tool_query_logs():
             )
             continue
 
-        ToolQueryAuditLog.objects.create(
-            user=db_user.application_instance.owner,
-            database=database,
-            rolename=log['user_name'],
-            query_sql=log['statement'],
-            timestamp=log['log_time'],
-        )
+        try:
+            ToolQueryAuditLog.objects.create(
+                user=db_user.application_instance.owner,
+                database=database,
+                rolename=log['user_name'],
+                query_sql=log['statement'],
+                timestamp=log['log_time'],
+            )
+        except IntegrityError:
+            logger.info('Skipping duplicate log record for %s', log['user_name'])
+            continue
+
         logger.info(
             'Created log record for user %s in db %s',
             log['user_name'],
