@@ -3122,9 +3122,7 @@ async def create_application_db_user():
             import uuid
             from django.db import connections
             from django.contrib.auth.models import User
-            from dataworkspace.apps.applications.models import (
-                ApplicationTemplate, ApplicationInstance, ApplicationInstanceDbUsers
-            )
+            from dataworkspace.apps.core.models import DatabaseUser
             from dataworkspace.apps.datasets.models import Database
             from dataworkspace.apps.applications.utils import create_user_from_sso
             user = create_user_from_sso(
@@ -3138,30 +3136,11 @@ async def create_application_db_user():
             user.is_staff = True
             user.is_superuser = True
             user.save()
-            app_template, _ = ApplicationTemplate.objects.get_or_create(
-                id=uuid.uuid4(),
-                name='App template',
-                host_basename='query-log-testing',
-                nice_name='query-sync-test',
-                spawner_time=1,
-                spawner_options='',
-                application_summary='',
-                application_help_link='',
-            )
-            app_instance = ApplicationInstance.objects.create(
-                application_template=ApplicationTemplate.objects.first(),
+
+            Database.objects.get_or_create(memorable_name='my_database')
+            DatabaseUser.objects.get_or_create(
                 owner=user,
-                public_host='db-test',
-                spawner='FARGATE',
-                spawner_application_instance_id=111,
-                proxy_url='https://analysisworkspace.dev.uktrade.io/',
-                single_running_or_spawning_integrity=str(uuid.uuid4()),
-            )
-            database, _ = Database.objects.get_or_create(memorable_name='my_database')
-            db_user = ApplicationInstanceDbUsers.objects.create(
-                db=database,
-                db_username='postgres',
-                application_instance=app_instance,
+                username='postgres',
             )
 
             with connections["my_database"].cursor() as cursor:

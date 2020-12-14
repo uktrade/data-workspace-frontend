@@ -22,7 +22,7 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.core.models import Database
+from dataworkspace.apps.core.models import Database, DatabaseUser
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
@@ -38,7 +38,7 @@ def database_dsn(database_data):
     )
 
 
-def postgres_user(stem, suffix=''):
+def postgres_user(stem, suffix='', user=None):
     if len(suffix) > 10:
         raise ValueError(
             "The user suffix should be no more than 10 characters to ensure that the stem "
@@ -55,13 +55,18 @@ def postgres_user(stem, suffix=''):
     # So let's truncate the email address based on the remaining characters we have available.
     max_email_length = 52 - len(suffix)
 
-    return (
+    username = (
         'user_'
         + re.sub('[^a-z0-9]', '_', stem.lower())[:max_email_length]
         + '_'
         + unique_enough
         + suffix
     )
+
+    if user is not None:
+        DatabaseUser.objects.create(owner=user, username=username)
+
+    return username
 
 
 def db_role_schema_suffix_for_user(user):

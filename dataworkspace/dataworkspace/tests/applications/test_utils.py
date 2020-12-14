@@ -1079,7 +1079,7 @@ class TestSyncToolQueryLogs:
         '2020-12-08 18:00:10.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
         '"A random message",,,,,,,,,""\n',
-        # Unreognised user
+        # Unrecognised user
         '2020-12-08 18:00:20.395 UTC,"unknownuser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19041,"SELECT",2020-12-08 18:18:19 UTC,9/19034,0,LOG,00000,'
         '"AUDIT: SESSION,19041,1,READ,SELECT,,,""SELECT a FROM b"",<not logged>",,,,,,,,,""\n',
@@ -1103,6 +1103,14 @@ class TestSyncToolQueryLogs:
         '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
         '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
+        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
+        # Ignored statement
+        '2020-12-08 19:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""select CAST(id as VARCHAR(50)) as col1 from a"",'
+        '<not logged>",,,,,,,,,""\n',
     ]
 
     @pytest.mark.django_db(transaction=True)
@@ -1115,10 +1123,8 @@ class TestSyncToolQueryLogs:
     def test_rds_sync(self, mock_client):
         cache.delete('query_tool_logs_last_run')
         log_count = ToolQueryAuditLog.objects.count()
-        factories.ApplicationInstanceDbUsersFactory.create(
-            db=factories.DatabaseFactory(memorable_name='my_database'),
-            db_username='auser',
-        )
+        factories.DatabaseFactory(memorable_name='my_database')
+        factories.DatabaseUserFactory.create(username='auser')
 
         mock_client.return_value.describe_db_log_files.return_value = {
             'DescribeDBLogFiles': [
@@ -1157,6 +1163,8 @@ class TestSyncToolQueryLogs:
                     + self.log_data[5]
                     # No timestamp
                     + self.log_data[6]
+                    # Duplicate log entry
+                    + self.log_data[7]
                 ),
             },
         ]
@@ -1177,10 +1185,8 @@ class TestSyncToolQueryLogs:
     def test_docker_sync(self, mock_os):
         cache.delete('query_tool_logs_last_run')
         log_count = ToolQueryAuditLog.objects.count()
-        factories.ApplicationInstanceDbUsersFactory.create(
-            db=factories.DatabaseFactory(memorable_name='my_database'),
-            db_username='auser',
-        )
+        factories.DatabaseFactory(memorable_name='my_database')
+        factories.DatabaseUserFactory.create(username='auser')
         mock_os.listdir.return_value = [
             'file1.csv',
             'file2.log',
