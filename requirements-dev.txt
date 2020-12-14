@@ -5,7 +5,7 @@
 #    pip-compile requirements-dev.in
 #
 aiohttp==3.6.2            # via -r requirements.txt
-aiopg==1.0.0              # via -r requirements-dev.in
+aiopg==1.1.0              # via -r requirements-dev.in
 aioredis==1.3.1           # via -r requirements.txt
 amqp==2.6.1               # via -r requirements.txt, kombu
 appdirs==1.4.4            # via black, pyppeteer
