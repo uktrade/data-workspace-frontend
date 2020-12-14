@@ -78,7 +78,7 @@ lxml==4.6.1               # via -r requirements-dev.in
 markdown==3.2.2           # via -r requirements.txt
 markupsafe==1.1.1         # via -r requirements.txt
 mccabe==0.6.1             # via flake8, pylint
-mock==4.0.2               # via -r requirements-dev.in
+mock==4.0.3               # via -r requirements-dev.in
 mohawk==1.1.0             # via -r requirements-dev.in, -r requirements.txt
 monotonic==1.5            # via -r requirements.txt, notifications-python-client
 multidict==4.7.6          # via -r requirements.txt, aiohttp, yarl
