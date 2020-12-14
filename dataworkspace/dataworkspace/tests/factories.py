@@ -360,11 +360,10 @@ class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
         model = 'applications.ApplicationInstance'
 
 
-class ApplicationInstanceDbUsersFactory(factory.django.DjangoModelFactory):
+class DatabaseUserFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
-    db = factory.SubFactory(DatabaseFactory)
-    db_username = factory.fuzzy.FuzzyText(length=8)
-    application_instance = factory.SubFactory(ApplicationInstanceFactory)
+    owner = factory.SubFactory(UserFactory)
+    username = factory.fuzzy.FuzzyText(length=8)
 
     class Meta:
-        model = 'applications.ApplicationInstanceDbUsers'
+        model = 'core.DatabaseUser'

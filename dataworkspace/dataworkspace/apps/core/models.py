@@ -102,3 +102,10 @@ class Database(TimeStampedModel):
 
     def __str__(self):
         return f'{self.memorable_name}'
+
+
+class DatabaseUser(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    username = models.CharField(max_length=256)
+    deleted = models.DateTimeField(null=True)
