@@ -525,6 +525,10 @@ def _do_delete_unused_datasets_users():
             usename for usename in usenames if usename not in in_use_usenames
         ]
 
+        DatabaseUser.objects.filter(username__in=not_in_use_usernames).update(
+            deleted_date=datetime.datetime.now()
+        )
+
         schema_revokes = [
             'REVOKE USAGE ON SCHEMA {} FROM {};',
             'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {} FROM {};',
