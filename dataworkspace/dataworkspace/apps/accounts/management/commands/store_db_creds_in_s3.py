@@ -32,6 +32,7 @@ class Command(BaseCommand):
                 db_role_schema_suffix,
                 source_tables,
                 postgres_user(user.email),
+                user,
                 valid_for=datetime.timedelta(days=31),
             )
             write_credentials_to_bucket(user, creds)

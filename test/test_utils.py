@@ -40,18 +40,21 @@ class TestDeleteUnusedDatasetsUsers:
             db_role_schema_suffix,
             source_tables,
             postgres_user(user.email),
+            user,
             valid_for=datetime.timedelta(days=31),
         )
         qs_creds_to_drop = new_private_database_credentials(
             db_role_schema_suffix,
             source_tables,
             postgres_user(user.email, suffix='qs'),
+            user,
             valid_for=datetime.timedelta(seconds=0),
         )
         qs_creds_to_keep = new_private_database_credentials(
             db_role_schema_suffix,
             source_tables,
             postgres_user(user.email, suffix='qs'),
+            user,
             valid_for=datetime.timedelta(minutes=1),
         )
 

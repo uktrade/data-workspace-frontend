@@ -176,7 +176,7 @@ def application_api_PUT(request, public_host):
         (
             source_tables_for_user(request.user),
             db_role_schema_suffix_for_user(request.user),
-            postgres_user(request.user.email, user=request.user),
+            postgres_user(request.user.email),
         )
         if app_type == 'TOOL'
         else (
@@ -190,6 +190,7 @@ def application_api_PUT(request, public_host):
         db_role_schema_suffix,
         source_tables,
         db_user,
+        request.user,
         valid_for=datetime.timedelta(days=31),
     )
 

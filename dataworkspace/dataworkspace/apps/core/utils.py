@@ -38,7 +38,7 @@ def database_dsn(database_data):
     )
 
 
-def postgres_user(stem, suffix='', user=None):
+def postgres_user(stem, suffix=''):
     if len(suffix) > 10:
         raise ValueError(
             "The user suffix should be no more than 10 characters to ensure that the stem "
@@ -55,18 +55,13 @@ def postgres_user(stem, suffix='', user=None):
     # So let's truncate the email address based on the remaining characters we have available.
     max_email_length = 52 - len(suffix)
 
-    username = (
+    return (
         'user_'
         + re.sub('[^a-z0-9]', '_', stem.lower())[:max_email_length]
         + '_'
         + unique_enough
         + suffix
     )
-
-    if user is not None:
-        DatabaseUser.objects.create(owner=user, username=username)
-
-    return username
 
 
 def db_role_schema_suffix_for_user(user):
@@ -81,6 +76,7 @@ def new_private_database_credentials(
     db_role_and_schema_suffix,
     source_tables,
     db_user,
+    dw_user: get_user_model(),
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[Database] = tuple(),
 ):
@@ -317,6 +313,9 @@ def new_private_database_credentials(
         get_new_credentials(database_obj, tables)
         for database_obj, tables in database_to_tables.items()
     ]
+
+    if dw_user is not None:
+        DatabaseUser.objects.create(owner=dw_user, username=db_user)
 
     return creds
 

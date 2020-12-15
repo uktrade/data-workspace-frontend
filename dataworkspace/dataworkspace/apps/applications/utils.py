@@ -849,7 +849,8 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                 creds = new_private_database_credentials(
                     db_role_schema_suffix,
                     source_tables,
-                    postgres_user(user_email, suffix='qs', user=dw_user),
+                    postgres_user(user_email, suffix='qs'),
+                    dw_user,
                     valid_for=datetime.timedelta(
                         days=7
                     ),  # We refresh these creds every night, so they don't need to last long at all.
@@ -1310,7 +1311,7 @@ def _do_sync_tool_query_logs():
             continue
 
         db_user = DatabaseUser.objects.filter(
-            deleted=None, username=log['user_name']
+            deleted_date=None, username=log['user_name']
         ).first()
         if not db_user:
             logger.info(

@@ -163,7 +163,7 @@ def get_user_explorer_connection_settings(user, alias):
         if not user_credentials:
             db_role_schema_suffix = db_role_schema_suffix_for_user(user)
             source_tables = source_tables_for_user(user)
-            db_user = postgres_user(user.email, suffix='explorer', user=user)
+            db_user = postgres_user(user.email, suffix='explorer')
             duration = timedelta(hours=24)
             cache_duration = (duration - timedelta(minutes=15)).total_seconds()
 
@@ -171,6 +171,7 @@ def get_user_explorer_connection_settings(user, alias):
                 db_role_schema_suffix,
                 source_tables,
                 db_user,
+                user,
                 valid_for=duration,
                 force_create_for_databases=Database.objects.filter(
                     memorable_name__in=connections.keys()

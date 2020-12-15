@@ -10,10 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='databaseuser',
-            name='deleted',
-        ),
+        migrations.RemoveField(model_name='databaseuser', name='deleted'),
         migrations.AddField(
             model_name='databaseuser',
             name='deleted_date',

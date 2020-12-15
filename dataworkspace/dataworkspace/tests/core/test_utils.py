@@ -105,15 +105,17 @@ class TestPostgresUser:
     def test_db_user_record(self):
         user_count = DatabaseUser.objects.count()
 
-        # With user
         user = factories.UserFactory()
-        postgres_user(user.email, suffix='asuffix', user=user)
+        source_tables = source_tables_for_user(user)
+        db_role_schema_suffix = db_role_schema_suffix_for_user(user)
+        new_private_database_credentials(
+            db_role_schema_suffix,
+            source_tables,
+            user.email,
+            user,
+            valid_for=datetime.timedelta(days=31),
+        )
         assert DatabaseUser.objects.count() == user_count + 1
-
-        # No user
-        user_count = DatabaseUser.objects.count()
-        postgres_user(user.email, suffix='asuffix')
-        assert DatabaseUser.objects.count() == user_count
 
 
 class TestNewPrivateDatabaseCredentials:
@@ -135,6 +137,7 @@ class TestNewPrivateDatabaseCredentials:
             db_role_schema_suffix,
             source_tables,
             postgres_user(user.email),
+            user,
             valid_for=datetime.timedelta(days=1),
         )
 
