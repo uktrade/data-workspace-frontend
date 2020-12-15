@@ -564,5 +564,6 @@ PGAUDIT_IGNORE_STATEMENTS_RE = [
     r'SELECT version()',
     r'SELECT current_schema()',
     r"SELECT CAST\('.*?' AS VARCHAR\(\d+\)\) AS \w",
-    r"SELECT .*? FROM information_schema.tables WHERE table_schema not in \(.*?\) ORDER BY .*?",
+    r"SELECT .*? FROM information_schema.tables WHERE table_schema not in \(.*?\) ORDER BY .*",
+    r"^SELECT COUNT\(\*\) FROM \(.*?\) t$",
 ]
