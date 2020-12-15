@@ -1818,4 +1818,9 @@ class ToolQueryAuditLog(models.Model):
     timestamp = models.DateTimeField(null=False, blank=False)
 
     class Meta:
-        unique_together = ('rolename', 'query_sql', 'timestamp')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['rolename', 'query_sql', 'timestamp'],
+                name='unique toolqueryauditlog',
+            )
+        ]
