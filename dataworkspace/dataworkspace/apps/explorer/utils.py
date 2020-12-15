@@ -1,5 +1,5 @@
 import logging
-import uuid
+import re
 from time import time
 
 from contextlib import contextmanager
@@ -21,6 +21,7 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     db_role_schema_suffix_for_user,
     postgres_user,
+    USER_SCHEMA_STEM,
 )
 from dataworkspace.apps.explorer.models import QueryLog
 
@@ -250,44 +251,99 @@ class ColumnHeader:
         return self.title
 
 
-def execute_query(query, user, page, limit, timeout, log_query):
+def tempory_query_table_name(user, query_log_id):
+    schema_name = f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}'
+    return f'{schema_name}._data_explorer_tmp_query_{query_log_id}'
+
+
+TYPE_CODES_REVERSED = {
+    16: 'boolean',
+    17: 'bytea',
+    20: 'bigint',
+    21: 'smallint',
+    23: 'integer',
+    25: 'text',
+    700: 'double precision',
+    701: 'double precision',
+    869: 'inet',
+    1042: 'text',
+    1043: 'text',
+    1082: 'date',
+    1083: 'time',
+    1114: 'timestamp with time zone',
+    1184: 'timestamp with time zone',
+    1186: 'timestamp with time zone',
+    1266: 'time',
+    1700: 'numeric',
+    2950: 'uuid',
+    3802: 'jsonb',
+}
+
+
+def _prefix_column(index, column):
+    return f'col_{index}_{column}'
+
+
+def execute_query(query, user, page, limit, timeout):
     user_connection_settings = get_user_explorer_connection_settings(
         user, query.connection
     )
+    query_log = QueryLog.objects.create(
+        sql=query.final_sql(),
+        query_id=query.id,
+        run_by_user=user,
+        connection=query.connection,
+    )
+
     with user_explorer_connection(user_connection_settings) as conn:
         cursor = conn.cursor()
-        cursor_name = 'cur_%s' % str(uuid.uuid4()).replace('-', '')[:10]
 
         start_time = time()
+        sql = query.final_sql().rstrip().rstrip(';')
+
+        table_name = tempory_query_table_name(user, query_log.id)
         try:
             cursor.execute(f'SET statement_timeout = {timeout}')
-            cursor.execute(
-                f'DECLARE {cursor_name} CURSOR WITH HOLD FOR {query.final_sql()}'
+            # This is required to handle multiple select columns with the same name.
+            # It adds a prefix of col_x_ to duplicated column returned from the query and
+            # these prefixed column names are used to create a table containing the
+            # query results. The prefixes are removed when the results are returned.
+            cursor.execute(f'SELECT * FROM ({sql}) sq limit 0')
+            column_names = list(zip(*cursor.description))[0]
+            duplicated_column_names = set(
+                c for c in column_names if column_names.count(c) > 1
             )
+            prefixed_sql_columns = [
+                (
+                    f'"{_prefix_column(i, col[0]) if col[0] in duplicated_column_names else col[0]}" '
+                    f'{TYPE_CODES_REVERSED[col[1]]}'
+                )
+                for i, col in enumerate(cursor.description, 1)
+            ]
+
+            cursor.execute(
+                f'CREATE TABLE {table_name} ({", ".join(prefixed_sql_columns)})'
+            )
+            offset = ''
             if page and page > 1:
-                offset = (page - 1) * limit
-                cursor.execute(f'MOVE {offset} FROM {cursor_name}')
-            cursor.execute(f'FETCH {limit} FROM {cursor_name}')
+                offset = f' OFFSET {(page - 1) * limit}'
+
+            cursor.execute(
+                f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
+            )
+            cursor.execute(f'SELECT * FROM {table_name}')
         except DatabaseError as e:
             raise e
 
-        duration = (time() - start_time) * 1000
-        description = cursor.description or []
+        # strip the prefix from the results
+        description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
         data = [list(r) for r in cursor]
-        cursor.execute(f'CLOSE {cursor_name}')
+        duration = (time() - start_time) * 1000
+        query_log.duration = duration
+        query_log.save()
 
-        sql = query.final_sql().rstrip().rstrip(';')
-        cursor.execute(f'select count(*) from ({sql}) t')
+        cursor.execute(f'SELECT COUNT(*) FROM {table_name}')
         row_count = cursor.fetchone()[0]
-
-    if log_query:
-        QueryLog.objects.create(
-            sql=query.final_sql(),
-            query_id=query.id,
-            run_by_user=user,
-            connection=query.connection,
-            duration=duration,
-        )
 
     return QueryResult(
         query.final_sql(), page, limit, timeout, duration, description, data, row_count

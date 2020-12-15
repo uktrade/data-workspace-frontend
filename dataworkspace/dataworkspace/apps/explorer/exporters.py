@@ -38,7 +38,6 @@ class BaseExporter:
             1,
             settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
             settings.EXPLORER_QUERY_TIMEOUT_MS,
-            log_query=False,
         )
         return self._get_output(res, **kwargs)
 

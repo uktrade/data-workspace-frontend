@@ -58,46 +58,19 @@ def _export(request, query, download=True):
     return response
 
 
-class DownloadQueryView(View):
-    def get(self, request, query_id, *args, **kwargs):
-        query = get_object_or_404(Query, pk=query_id)
-        resp = _export(request, query)
-        if (
-            isinstance(resp, HttpResponse)
-            and resp.status_code == 500
-            and "Error executing query" in resp.content.decode(resp.charset)
-        ):
-            return HttpResponseRedirect(
-                reverse_lazy('explorer:query_detail', kwargs={'query_id': query_id})
-            )
-        return resp
-
-
 class DownloadFromSqlView(View):
     def get(self, request, *args, **kwargs):
         sql = request.GET.get('sql')
         connection = request.GET.get('connection')
         query = Query(sql=sql, connection=connection, title='')
-        ql = QueryLog.objects.create(
-            sql=query.final_sql(),
-            query_id=query.id,
-            run_by_user=request.user,
-            connection=query.connection,
-        )
-        query.title = 'Playground - %s' % ql.id
+        query.title = 'Playground - %s' % sql[:32]
         return _export(request, query)
 
     def post(self, request, *args, **kwargs):
         sql = request.POST.get('sql')
         connection = request.POST.get('connection')
         query = Query(sql=sql, connection=connection, title='')
-        ql = QueryLog.objects.create(
-            sql=query.final_sql(),
-            query_id=query.id,
-            run_by_user=request.user,
-            connection=query.connection,
-        )
-        query.title = 'Playground - %s' % ql.id
+        query.title = 'Playground - %s' % sql[:32]
         return _export(request, query)
 
 
@@ -216,7 +189,6 @@ class CreateQueryView(CreateView):
                     rows=url_get_rows(request),
                     page=url_get_page(request),
                     message=None,
-                    log=False,
                 )
 
                 if vm['form'].errors:
@@ -342,7 +314,7 @@ class PlayQueryView(View):
 
         elif action in {'run', 'fetch-page'}:
             query.params = url_get_params(request)
-            response = self.render_with_sql(request, query, run_query=True, log=True)
+            response = self.render_with_sql(request, query, run_query=True)
 
             return response
 
@@ -364,7 +336,7 @@ class PlayQueryView(View):
 
         return form_action
 
-    def render_with_sql(self, request, query, run_query=True, log=False):
+    def render_with_sql(self, request, query, run_query=True):
         rows = url_get_rows(request)
         page = url_get_page(request)
         form = QueryForm(
@@ -390,7 +362,6 @@ class PlayQueryView(View):
             rows=rows,
             page=page,
             form=form,
-            log=log,
         )
         schema, tables_columns = self._schema_info(request)
         context['schema'] = schema
@@ -512,7 +483,7 @@ def query_viewmodel(
     error = None
     if run_query:
         try:
-            res = execute_query(query, user, page, rows, timeout, log)
+            res = execute_query(query, user, page, rows, timeout)
         except DatabaseError as e:
             error = str(e)
     if error and method == "POST":
