@@ -1,6 +1,4 @@
 import logging
-import re
-from time import time
 
 from contextlib import contextmanager
 from datetime import timedelta
@@ -13,7 +11,6 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
-from django.db import DatabaseError
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
@@ -23,7 +20,6 @@ from dataworkspace.apps.core.utils import (
     postgres_user,
     USER_SCHEMA_STEM,
 )
-from dataworkspace.apps.explorer.models import QueryLog
 
 
 logger = logging.getLogger('app')
@@ -226,29 +222,9 @@ class QueryResult:
         self.description = description
         self.data = data
         self.row_count = row_count
-
-    @property
-    def header_strings(self):
-        return [str(h) for h in self.headers]
-
-    @property
-    def headers(self):
-        return (
-            [ColumnHeader(d[0]) for d in self.description]
-            if self.description
-            else [ColumnHeader('--')]
+        self.headers = (
+            [d[0].strip() for d in self.description] if self.description else ['--']
         )
-
-    def column(self, ix):
-        return [r[ix] for r in self.data]
-
-
-class ColumnHeader:
-    def __init__(self, title):
-        self.title = title.strip()
-
-    def __str__(self):
-        return self.title
 
 
 def tempory_query_table_name(user, query_log_id):
@@ -278,73 +254,3 @@ TYPE_CODES_REVERSED = {
     2950: 'uuid',
     3802: 'jsonb',
 }
-
-
-def _prefix_column(index, column):
-    return f'col_{index}_{column}'
-
-
-def execute_query(query, user, page, limit, timeout):
-    user_connection_settings = get_user_explorer_connection_settings(
-        user, query.connection
-    )
-    query_log = QueryLog.objects.create(
-        sql=query.final_sql(),
-        query_id=query.id,
-        run_by_user=user,
-        connection=query.connection,
-    )
-
-    with user_explorer_connection(user_connection_settings) as conn:
-        cursor = conn.cursor()
-
-        start_time = time()
-        sql = query.final_sql().rstrip().rstrip(';')
-
-        table_name = tempory_query_table_name(user, query_log.id)
-        try:
-            cursor.execute(f'SET statement_timeout = {timeout}')
-            # This is required to handle multiple select columns with the same name.
-            # It adds a prefix of col_x_ to duplicated column returned from the query and
-            # these prefixed column names are used to create a table containing the
-            # query results. The prefixes are removed when the results are returned.
-            cursor.execute(f'SELECT * FROM ({sql}) sq limit 0')
-            column_names = list(zip(*cursor.description))[0]
-            duplicated_column_names = set(
-                c for c in column_names if column_names.count(c) > 1
-            )
-            prefixed_sql_columns = [
-                (
-                    f'"{_prefix_column(i, col[0]) if col[0] in duplicated_column_names else col[0]}" '
-                    f'{TYPE_CODES_REVERSED[col[1]]}'
-                )
-                for i, col in enumerate(cursor.description, 1)
-            ]
-
-            cursor.execute(
-                f'CREATE TABLE {table_name} ({", ".join(prefixed_sql_columns)})'
-            )
-            offset = ''
-            if page and page > 1:
-                offset = f' OFFSET {(page - 1) * limit}'
-
-            cursor.execute(
-                f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
-            )
-            cursor.execute(f'SELECT * FROM {table_name}')
-        except DatabaseError as e:
-            raise e
-
-        # strip the prefix from the results
-        description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
-        data = [list(r) for r in cursor]
-        duration = (time() - start_time) * 1000
-        query_log.duration = duration
-        query_log.save()
-
-        cursor.execute(f'SELECT COUNT(*) FROM {table_name}')
-        row_count = cursor.fetchone()[0]
-
-    return QueryResult(
-        query.final_sql(), page, limit, timeout, duration, description, data, row_count
-    )

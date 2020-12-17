@@ -23,8 +23,8 @@ from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.schema import schema_info
+from dataworkspace.apps.explorer.tasks import execute_query
 from dataworkspace.apps.explorer.utils import (
-    execute_query,
     get_total_pages,
     url_get_log_id,
     url_get_page,
@@ -483,7 +483,15 @@ def query_viewmodel(
     error = None
     if run_query:
         try:
-            res = execute_query(query, user, page, rows, timeout)
+            res = execute_query.delay(
+                query.final_sql(),
+                query.connection,
+                query.id,
+                user.id,
+                page,
+                rows,
+                timeout,
+            ).get()
         except DatabaseError as e:
             error = str(e)
     if error and method == "POST":
@@ -498,10 +506,10 @@ def query_viewmodel(
         'message': message,
         'rows': rows,
         'page': page,
-        'data': res.data if has_valid_results else None,
-        'headers': res.headers if has_valid_results else None,
-        'total_rows': res.row_count if has_valid_results else None,
-        'duration': res.duration if has_valid_results else None,
+        'data': res['data'] if has_valid_results else None,
+        'headers': res['headers'] if has_valid_results else None,
+        'total_rows': res['row_count'] if has_valid_results else None,
+        'duration': res['duration'] if has_valid_results else None,
         'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
     }
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)

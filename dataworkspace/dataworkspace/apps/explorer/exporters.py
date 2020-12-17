@@ -10,7 +10,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
 
-from dataworkspace.apps.explorer.utils import execute_query
+from dataworkspace.apps.explorer.tasks import execute_query
 
 
 def get_exporter_class(format_):
@@ -32,13 +32,15 @@ class BaseExporter:
         return value
 
     def get_file_output(self, **kwargs):
-        res = execute_query(
-            self.query,
-            self.user,
+        res = execute_query.delay(
+            self.query.final_sql(),
+            self.query.connection,
+            self.query.id,
+            self.user.id,
             1,
             settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
             settings.EXPLORER_QUERY_TIMEOUT_MS,
-        )
+        ).get()
         return self._get_output(res, **kwargs)
 
     def _get_output(self, res, **kwargs):
@@ -69,8 +71,8 @@ class CSVExporter(BaseExporter):
         delim = settings.EXPLORER_CSV_DELIMETER if len(delim) > 1 else delim
         csv_data = StringIO()
         writer = csv.writer(csv_data, delimiter=delim)
-        writer.writerow(res.headers)
-        for row in res.data:
+        writer.writerow(res['headers'])
+        for row in res['data']:
             writer.writerow(row)
         return csv_data
 
@@ -83,9 +85,11 @@ class JSONExporter(BaseExporter):
 
     def _get_output(self, res, **kwargs):
         data = []
-        for row in res.data:
+        for row in res['data']:
             data.append(  # pylint: disable=unnecessary-comprehension
-                dict(zip([str(h) if h is not None else '' for h in res.headers], row))
+                dict(
+                    zip([str(h) if h is not None else '' for h in res['headers']], row)
+                )
             )
 
         json_data = json.dumps(data, cls=DjangoJSONEncoder)
@@ -111,14 +115,14 @@ class ExcelExporter(BaseExporter):
         row = 0
         col = 0
         header_style = wb.add_format({'bold': True})
-        for header in res.header_strings:
-            ws.write(row, col, header, header_style)
+        for header in res['headers']:
+            ws.write(row, col, str(header), header_style)
             col += 1
 
         # Write data
         row = 1
         col = 0
-        for data_row in res.data:
+        for data_row in res['data']:
             for data in data_row:
                 # xlsxwriter can't handle timezone-aware datetimes or
                 # UUIDs, so we help out here and just cast it to a
