@@ -8,7 +8,6 @@ except ImportError:
     from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
-
 from lxml import html
 import pytest
 

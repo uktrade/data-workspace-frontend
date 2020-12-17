@@ -51,7 +51,7 @@ class TestQueryResults:
     @pytest.fixture(scope='function', autouse=True)
     def create_query_result(self):
         self.qr = QueryResult(  # pylint: disable=attribute-defined-outside-init
-            self.query, 1, 1000, 10000, None, None, None, None, None
+            self.query, 1, 1000, 10000, None, None, None
         )
 
     def test_unicode_with_nulls(self):
@@ -106,9 +106,6 @@ class TestExecuteQuery:
                 ' SELECT * FROM (select * from foo) sq LIMIT 100'
             ),
             call(
-                f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
-            ),
-            call(
                 f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
             ),
         ]
@@ -141,9 +138,6 @@ class TestExecuteQuery:
             call(
                 f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
                 ' SELECT * FROM (select * from foo) sq LIMIT 100 OFFSET 100'
-            ),
-            call(
-                f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
             ),
             call(
                 f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
@@ -179,9 +173,6 @@ class TestExecuteQuery:
             call(
                 f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
                 ' SELECT * FROM (select * from foo) sq LIMIT 100'
-            ),
-            call(
-                f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
             ),
             call(
                 f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
@@ -229,76 +220,105 @@ class TestExecuteQuery:
             )
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
-    def test_writing_csv_unicode(self, mock_connection_settings):
-        query = SimpleQueryFactory()
-        self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', '1')]
-        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
-        self.mock_cursor.description = [('a', 23), ('b', 23)]
+    @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
+    def test_writing_csv_unicode(
+        self, mock_fetch_query_results, mock_connection_settings
+    ):
+        # Mock the field names returned by SELECT * FROM ({query}) sq limit 0
+        self.mock_cursor.description = [(None, 23)]
         # Mock the return value of SELECT COUNT(*) FROM {query}
         self.mock_cursor.fetchone.return_value.__getitem__.return_value = 1
+        mock_fetch_query_results.return_value = (
+            ['a', 'b'],
+            [[1, None], [u'Jen\xe9t', '1']],
+            None,
+        )
 
-        res = CSVExporter(user=self.user, query=query).get_output()
+        res = CSVExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res == 'a,b\r\n1,\r\nJenét,1\r\n'
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
-    def test_writing_csv_custom_delimiter(self, mock_connection_settings):
-        query = SimpleQueryFactory()
-        self.mock_cursor.__iter__.return_value = [(1, 2)]
-        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
-        self.mock_cursor.description = [('?column?', 23), ('?column?', 23)]
+    @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
+    def test_writing_csv_custom_delimiter(
+        self, mock_fetch_query_results, mock_connection_settings
+    ):
+        # Mock the field names returned by SELECT * FROM ({query}) sq limit 0
+        self.mock_cursor.description = [(None, 23)]
         # Mock the return value of SELECT COUNT(*) FROM {query}
         self.mock_cursor.fetchone.return_value.__getitem__.return_value = 1
+        mock_fetch_query_results.return_value = (
+            ['?column?', '?column?'],
+            [[1, 2]],
+            None,
+        )
 
-        res = CSVExporter(user=self.user, query=query).get_output(delim='|')
+        res = CSVExporter(user=self.user, query=SimpleQueryFactory()).get_output(
+            delim='|'
+        )
         assert res == '?column?|?column?\r\n1|2\r\n'
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
-    def test_writing_json_unicode(self, mock_connection_settings):
-        query = SimpleQueryFactory()
-        self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', '1')]
-        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
-        self.mock_cursor.description = [('a', 23), ('b', 23)]
+    @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
+    def test_writing_json_unicode(
+        self, mock_fetch_query_results, mock_connection_settings
+    ):
+        # Mock the field names returned by SELECT * FROM ({query}) sq limit 0
+        self.mock_cursor.description = [(None, 23)]
         # Mock the return value of SELECT COUNT(*) FROM {query}
         self.mock_cursor.fetchone.return_value.__getitem__.return_value = 1
+        mock_fetch_query_results.return_value = (
+            ['a', 'b'],
+            [[1, None], [u'Jen\xe9t', '1']],
+            None,
+        )
 
-        res = JSONExporter(user=self.user, query=query).get_output()
+        res = JSONExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': None}, {'a': 'Jenét', 'b': '1'}])
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
-    def test_writing_json_datetimes(self, mock_connection_settings):
-        query = SimpleQueryFactory()
-        self.mock_cursor.__iter__.return_value = [(1, date.today())]
-        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
-        self.mock_cursor.description = [('a', 23), ('b', 23)]
+    @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
+    def test_writing_json_datetimes(
+        self, mock_fetch_query_results, mock_connection_settings
+    ):
+        # Mock the field names returned by SELECT * FROM ({query}) sq limit 0
+        self.mock_cursor.description = [(None, 23)]
         # Mock the return value of SELECT COUNT(*) FROM {query}
         self.mock_cursor.fetchone.return_value.__getitem__.return_value = 1
+        mock_fetch_query_results.return_value = (['a', 'b'], [[1, date.today()]], None)
 
-        res = JSONExporter(user=self.user, query=query).get_output()
+        res = JSONExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': date.today()}], cls=DjangoJSONEncoder)
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
-    def test_writing_excel(self, mock_connection_settings):
-        query = SimpleQueryFactory()
-        self.mock_cursor.__iter__.return_value = [(1, None), (u'Jenét', datetime.now())]
-        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
-        self.mock_cursor.description = [('a', 23), ('b', 23)]
+    @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
+    def test_writing_excel(self, mock_fetch_query_results, mock_connection_settings):
+        # Mock the field names returned by SELECT * FROM ({query}) sq limit 0
+        self.mock_cursor.description = [(None, 23)]
         # Mock the return value of SELECT COUNT(*) FROM {query}
         self.mock_cursor.fetchone.return_value.__getitem__.return_value = 1
+        mock_fetch_query_results.return_value = (
+            ['a', 'b'],
+            [[1, None], [u'Jenét', datetime.now()]],
+            None,
+        )
 
-        res = ExcelExporter(user=self.user, query=query).get_output()
+        res = ExcelExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res[:2] == six.b('PK')
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
-    def test_writing_excel_dict_fields(self, mock_connection_settings):
-        query = SimpleQueryFactory()
-        self.mock_cursor.__iter__.return_value = [
-            (1, ['foo', 'bar']),
-            (2, {'foo': 'bar'}),
-        ]
-        # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
-        self.mock_cursor.description = [('a', 23), ('b', 23)]
+    @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
+    def test_writing_excel_dict_fields(
+        self, mock_fetch_query_results, mock_connection_settings
+    ):
+        # Mock the field names returned by SELECT * FROM ({query}) sq limit 0
+        self.mock_cursor.description = [(None, 23)]
         # Mock the return value of SELECT COUNT(*) FROM {query}
         self.mock_cursor.fetchone.return_value.__getitem__.return_value = 1
+        mock_fetch_query_results.return_value = (
+            ['a', 'b'],
+            [[1, ['foo', 'bar']], [2, {'foo': 'bar'}]],
+            None,
+        )
 
-        res = ExcelExporter(user=self.user, query=query).get_output()
+        res = ExcelExporter(user=self.user, query=SimpleQueryFactory()).get_output()
         assert res[:2] == six.b('PK')

@@ -215,14 +215,7 @@ def remove_data_explorer_user_cached_credentials(user):
 
 class QueryResult:
     def __init__(
-        self,
-        sql,
-        page,
-        limit,
-        timeout,
-        duration,
-        row_count,
-        query_log_id,
+        self, sql, page, limit, timeout, duration, row_count, query_log_id,
     ):
         self.sql = sql
         self.page = page
@@ -275,8 +268,6 @@ def fetch_query_results(query_log_id):
         cursor.execute(f'SELECT * FROM {table_name}')
         # strip the prefix from the results
         description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
-        headers = (
-            [d[0].strip() for d in description] if description else ['--']
-        )
+        headers = [d[0].strip() for d in description] if description else ['--']
         data = [list(r) for r in cursor]
     return headers, data, query_log

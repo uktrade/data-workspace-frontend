@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import re
 from time import time
 
 from celery.utils.log import get_task_logger
@@ -117,17 +116,16 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
             cursor.execute(
                 f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
             )
+            cursor.execute(f'SELECT COUNT(*) FROM {table_name}')
         except Exception as e:
             query_log.state = QueryLog.STATE_FAILED
             query_log.save()
             raise e
 
-        duration = (time() - start_time) * 1000
-        query_log.duration = duration
-        query_log.save()
-
-        cursor.execute(f'SELECT COUNT(*) FROM {table_name}')
         row_count = cursor.fetchone()[0]
+        duration = (time() - start_time) * 1000
+
+        query_log.duration = duration
         query_log.rows = row_count
         query_log.state = QueryLog.STATE_COMPLETE
         query_log.save()
