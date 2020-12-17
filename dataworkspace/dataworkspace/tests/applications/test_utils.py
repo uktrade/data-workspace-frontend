@@ -23,7 +23,7 @@ from dataworkspace.apps.applications.utils import (
     _do_sync_activity_stream_sso_users,
     sync_quicksight_permissions,
 )
-from dataworkspace.apps.datasets.models import ToolQueryAuditLog
+from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
 from dataworkspace.tests import factories
 
 from dataworkspace.tests.factories import (
@@ -1076,7 +1076,7 @@ class TestSyncToolQueryLogs:
         # Valid user and db select statement
         '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
-        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM dataset_test"",<not logged>",,,,,,,,,""\n',
         # Non-pgaudit log
         '2020-12-08 18:00:10.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
@@ -1092,22 +1092,19 @@ class TestSyncToolQueryLogs:
         # Valid user and db insert statement
         '2020-12-08 18:00:40.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
-        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO test VALUES(1);"",<not logged>"'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO dataset_test VALUES(1);"",<not logged>"'
         ',,,,,,,,,""\n',
         # Timestamp out of range
         '2020-12-08 17:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
-        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO test VALUES(2);"",<not logged>"'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO dataset_test VALUES(2);"",<not logged>"'
         ',,,,,,,,,""\n',
         # No timestamp
         'An exception occurred...\n',
         # Duplicate record
         '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
-        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
-        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
-        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
-        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM dataset_test"",<not logged>",,,,,,,,,""\n',
         # Ignored statement
         '2020-12-08 19:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
@@ -1127,12 +1124,13 @@ class TestSyncToolQueryLogs:
         PGAUDIT_LOG_TYPE='rds',
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}},
     )
-    def test_rds_sync(self, mock_client):
-        cache.delete('query_tool_logs_last_run')
+    def test_rds_sync(self, mock_client, dataset_db):
+        cache.delete('q' 'uery_tool_logs_last_run')
         log_count = ToolQueryAuditLog.objects.count()
+        table_count = ToolQueryAuditLogTable.objects.count()
         factories.DatabaseFactory(memorable_name='my_database')
         factories.DatabaseUserFactory.create(username='auser')
-
+        factories.SourceTableFactory.create(schema='public', table='test_dataset')
         mock_client.return_value.describe_db_log_files.return_value = {
             'DescribeDBLogFiles': [
                 {'LogFileName': '/file/1.csv'},
@@ -1177,9 +1175,11 @@ class TestSyncToolQueryLogs:
         ]
         _do_sync_tool_query_logs()
         queries = ToolQueryAuditLog.objects.all()
+        tables = ToolQueryAuditLogTable.objects.all()
         assert queries.count() == log_count + 2
-        assert list(queries)[-2].query_sql == 'SELECT * FROM test'
-        assert list(queries)[-1].query_sql == 'INSERT INTO test VALUES(1);'
+        assert tables.count() == table_count + 1
+        assert list(queries)[-2].query_sql == 'SELECT * FROM dataset_test'
+        assert list(queries)[-1].query_sql == 'INSERT INTO dataset_test VALUES(1);'
 
     @pytest.mark.django_db(transaction=True)
     @freeze_time('2020-12-08 18:04:00')
@@ -1189,11 +1189,13 @@ class TestSyncToolQueryLogs:
         PGAUDIT_LOG_TYPE='docker',
         CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}},
     )
-    def test_docker_sync(self, mock_os):
+    def test_docker_sync(self, mock_os, dataset_db):
         cache.delete('query_tool_logs_last_run')
+        table_count = ToolQueryAuditLogTable.objects.count()
         log_count = ToolQueryAuditLog.objects.count()
         factories.DatabaseFactory(memorable_name='my_database')
         factories.DatabaseUserFactory.create(username='auser')
+        factories.SourceTableFactory.create(schema='public', table='test_dataset')
         mock_os.listdir.return_value = [
             'file1.csv',
             'file2.log',
@@ -1201,6 +1203,8 @@ class TestSyncToolQueryLogs:
         mock_os.path.getmtime.return_value = datetime.datetime.now().timestamp()
         _do_sync_tool_query_logs()
         queries = ToolQueryAuditLog.objects.all()
+        tables = ToolQueryAuditLogTable.objects.all()
         assert queries.count() == log_count + 2
-        assert list(queries)[-2].query_sql == 'SELECT * FROM test'
-        assert list(queries)[-1].query_sql == 'INSERT INTO test VALUES(1);'
+        assert tables.count() == table_count + 1
+        assert list(queries)[-2].query_sql == 'SELECT * FROM dataset_test'
+        assert list(queries)[-1].query_sql == 'INSERT INTO dataset_test VALUES(1);'

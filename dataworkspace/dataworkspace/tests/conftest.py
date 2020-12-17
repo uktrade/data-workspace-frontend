@@ -158,3 +158,28 @@ def change_staticfiles_storage():
 @pytest.fixture(scope='session', autouse=True)
 def make_celery_eager():
     celery_app.conf.task_always_eager = True
+
+
+@pytest.fixture
+def dataset_db(metadata_db):
+    database = factories.DatabaseFactory(memorable_name='my_database')
+    with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
+        conn.cursor().execute(
+            '''
+            CREATE TABLE IF NOT EXISTS dataset_test (
+                id INT,
+                name VARCHAR(255),
+                date DATE
+            );
+
+            CREATE TABLE IF NOT EXISTS dataset_test2 (
+                id INT,
+                name VARCHAR(255)
+            );
+
+            CREATE OR REPLACE VIEW dataset_view AS (SELECT * FROM dataset_test);
+            '''
+        )
+
+    return database
+

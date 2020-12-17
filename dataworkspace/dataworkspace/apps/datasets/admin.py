@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpResponse
 from django.urls import reverse
+from django.utils.html import format_html
 
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
@@ -717,15 +718,16 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
     fields = [
         'id',
         'timestamp',
+        'get_user_name_link',
         'user',
-        'database',
         'rolename',
+        'database',
         'get_detail_truncated_query',
+        'get_related_master_datasets',
     ]
     list_display = [
-        'id',
         'timestamp',
-        'user',
+        'get_user_email_link',
         'database',
         'rolename',
         'get_list_truncated_query',
@@ -758,3 +760,40 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         )
 
     get_detail_truncated_query.short_description = 'Query SQL'
+
+    def _get_user_link(self, obj):
+        return reverse("admin:auth_user_change", args=(obj.user.id,))
+
+    def get_user_email_link(self, obj):
+        return format_html(f'<a href="{self._get_user_link(obj)}">{obj.user.email}</a>')
+
+    def get_user_name_link(self, obj):
+        return format_html(
+            f'<a href="{self._get_user_link(obj)}">{obj.user.get_full_name()}</a>'
+        )
+
+    get_user_name_link.short_description = 'User'
+
+    def get_related_master_datasets(self, obj):
+        source_tables = SourceTable.objects.filter(dataset__deleted=False)
+        datasets = set()
+        for table in obj.tables.all():
+            for source_table in source_tables.filter(
+                schema=table.schema, table=table.table
+            ):
+                datasets.add(source_table.dataset)
+        return (
+            format_html(
+                '<br />'.join(
+                    [
+                        f'<a href="{d.get_admin_edit_url()}">{d.name}</a>'
+                        for d in datasets
+                    ]
+                )
+            )
+            if datasets
+            else '-'
+        )
+
+    get_related_master_datasets.short_description = 'Related Master Datasets'
+
