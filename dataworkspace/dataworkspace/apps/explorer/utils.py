@@ -216,7 +216,16 @@ def remove_data_explorer_user_cached_credentials(user):
 
 class QueryResult:
     def __init__(
-        self, sql, page, limit, timeout, duration, description, data, row_count
+        self,
+        sql,
+        page,
+        limit,
+        timeout,
+        duration,
+        description,
+        data,
+        row_count,
+        query_log,
     ):
         self.sql = sql
         self.page = page
@@ -226,6 +235,7 @@ class QueryResult:
         self.description = description
         self.data = data
         self.row_count = row_count
+        self.query_log = query_log
 
     @property
     def header_strings(self):
@@ -346,5 +356,13 @@ def execute_query(query, user, page, limit, timeout):
         row_count = cursor.fetchone()[0]
 
     return QueryResult(
-        query.final_sql(), page, limit, timeout, duration, description, data, row_count
+        query.final_sql(),
+        page,
+        limit,
+        timeout,
+        duration,
+        description,
+        data,
+        row_count,
+        query_log,
     )

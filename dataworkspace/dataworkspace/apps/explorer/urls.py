@@ -5,7 +5,7 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.explorer.views import (
     CreateQueryView,
     DeleteQueryView,
-    DownloadFromSqlView,
+    DownloadFromQuerylogView,
     ListQueryLogView,
     ListQueryView,
     PlayQueryView,
@@ -15,7 +15,9 @@ from dataworkspace.apps.explorer.views import (
 urlpatterns = [
     path('', login_required(PlayQueryView.as_view()), name='index'),
     path(
-        'download/', login_required(DownloadFromSqlView.as_view()), name='download_sql'
+        'download/<int:querylog_id>',
+        login_required(DownloadFromQuerylogView.as_view()),
+        name='download_querylog',
     ),
     path('queries/', login_required(ListQueryView.as_view()), name='list_queries'),
     path(
