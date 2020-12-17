@@ -11,6 +11,7 @@ from django.utils.module_loading import import_string
 from django.utils.text import slugify
 
 from dataworkspace.apps.explorer.tasks import execute_query
+from dataworkspace.apps.explorer.utils import fetch_query_results
 
 
 def get_exporter_class(format_):
@@ -41,6 +42,7 @@ class BaseExporter:
             settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
             settings.EXPLORER_QUERY_TIMEOUT_MS,
         ).get()
+        res['headers'], res['data'], _ = fetch_query_results(res['query_log_id'])
         return self._get_output(res, **kwargs)
 
     def _get_output(self, res, **kwargs):

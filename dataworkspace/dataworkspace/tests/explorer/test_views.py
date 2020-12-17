@@ -81,8 +81,6 @@ class TestQueryCreateView:
 
 
 class TestQueryDetailView:
-    databases = ['my_database', 'test_external_db']
-
     def test_query_with_bad_sql_fails_on_save(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="select 1;", created_by_user=staff_user)
 
@@ -221,20 +219,18 @@ class TestQueryDetailView:
 
 @pytest.mark.django_db(transaction=True)
 class TestHomePage:
-    databases = ['my_database', 'test_external_db']
-
     @pytest.fixture(scope='function', autouse=True)
     def setUp(self, staff_user_data):
         suffix = stable_identification_suffix(
             staff_user_data["HTTP_SSO_PROFILE_USER_ID"], short=True
         )
         schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
-        for alias in self.databases:
-            with connections[alias].cursor() as cursor:
-                cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
-                cursor.execute(
-                    f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
-                )
+
+        with connections['my_database'].cursor() as cursor:
+            cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
+            cursor.execute(
+                f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
+            )
 
     def test_empty_playground_renders(self, staff_client):
         resp = staff_client.get(reverse("explorer:index"))
@@ -350,24 +346,24 @@ class TestHomePage:
 
 
 class TestCSVFromSQL:
-    databases = ['my_database']
-
     @pytest.fixture(scope='function', autouse=True)
     def setUp(self, staff_user_data):
         suffix = stable_identification_suffix(
             staff_user_data["HTTP_SSO_PROFILE_USER_ID"], short=True
         )
         schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
-        for alias in self.databases:
-            with connections[alias].cursor() as cursor:
-                cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
-                cursor.execute(
-                    f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
-                )
+
+        with connections['my_database'].cursor() as cursor:
+            cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
+            cursor.execute(
+                f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
+            )
 
     def test_downloading_from_playground(self, staff_user, staff_client):
-        sql = "select 1;"
-        resp = staff_client.post(reverse("explorer:download_sql"), {'sql': sql})
+        querylog = QueryLogFactory.create(sql="select 1", run_by_user=staff_user)
+        resp = staff_client.get(
+            reverse("explorer:download_querylog", kwargs=dict(querylog_id=querylog.id)),
+        )
 
         assert 'attachment' in resp['Content-Disposition']
         assert 'text/csv' in resp['content-type']
@@ -375,63 +371,104 @@ class TestCSVFromSQL:
 
 
 class TestSQLDownloadViews:
-    databases = ['my_database']
-
     @pytest.fixture(scope='function', autouse=True)
     def setUp(self, staff_user_data):
         suffix = stable_identification_suffix(
             staff_user_data["HTTP_SSO_PROFILE_USER_ID"], short=True
         )
         schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
-        for alias in self.databases:
-            with connections[alias].cursor() as cursor:
-                cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
-                cursor.execute(
-                    f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
-                )
 
-    def test_sql_download_csv(self, staff_client):
-        url = reverse("explorer:download_sql") + '?format=csv'
+        with connections['my_database'].cursor() as cursor:
+            cursor.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_and_user_name}')
+            cursor.execute(
+                f'GRANT ALL ON SCHEMA {schema_and_user_name} TO {schema_and_user_name}'
+            )
 
-        response = staff_client.post(url, {'sql': 'select 1;'})
+    def test_sql_download_csv(self, staff_user, staff_client):
+        my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+        url = (
+            reverse(
+                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id)
+            )
+            + '?format=csv'
+        )
+
+        response = staff_client.get(url)
 
         assert response.status_code == 200
         assert response['content-type'] == 'text/csv'
 
-    def test_sql_download_csv_with_custom_delim(self, staff_client):
-        url = reverse("explorer:download_sql") + '?format=csv&delim=|'
+    def test_sql_download_csv_with_custom_delim(self, staff_user, staff_client):
+        my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+        url = (
+            reverse(
+                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id)
+            )
+            + '?format=csv&delim=|'
+        )
 
-        response = staff_client.post(url, {'sql': 'select 1,2;'})
+        response = staff_client.get(url)
 
         assert response.status_code == 200
         assert response['content-type'] == 'text/csv'
         assert response.content.decode('utf-8') == '?column?|?column?\r\n1|2\r\n'
 
-    def test_sql_download_csv_with_tab_delim(self, staff_client):
-        url = reverse("explorer:download_sql") + '?format=csv&delim=tab'
+    def test_sql_download_csv_with_tab_delim(self, staff_user, staff_client):
+        my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+        url = (
+            reverse(
+                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id)
+            )
+            + '?format=csv&delim=tab'
+        )
 
-        response = staff_client.post(url, {'sql': 'select 1,2;'})
+        response = staff_client.get(url)
 
         assert response.status_code == 200
         assert response['content-type'] == 'text/csv'
         assert response.content.decode('utf-8') == '?column?\t?column?\r\n1\t2\r\n'
 
-    def test_sql_download_csv_with_bad_delim(self, staff_client):
-        url = reverse("explorer:download_sql") + '?format=csv&delim=foo'
+    def test_sql_download_csv_with_bad_delim(self, staff_user, staff_client):
+        my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+        url = (
+            reverse(
+                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id)
+            )
+            + '?format=csv&delim=foo'
+        )
 
-        response = staff_client.post(url, {'sql': 'select 1,2;'})
+        response = staff_client.get(url)
 
         assert response.status_code == 200
         assert response['content-type'] == 'text/csv'
         assert response.content.decode('utf-8') == '?column?,?column?\r\n1,2\r\n'
 
-    def test_sql_download_json(self, staff_client):
-        url = reverse("explorer:download_sql") + '?format=json'
+    def test_sql_download_json(self, staff_user, staff_client):
+        my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+        url = (
+            reverse(
+                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id)
+            )
+            + '?format=json'
+        )
 
-        response = staff_client.post(url, {'sql': 'select 1;'})
+        response = staff_client.get(url)
 
         assert response.status_code == 200
         assert response['content-type'] == 'application/json'
+
+    def test_cannot_download_someone_elses_querylog(self, staff_user, staff_client):
+        other_user = UserFactory(email='foo@bar.net')
+        my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=other_user)
+        url = (
+            reverse(
+                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id)
+            )
+            + '?format=json'
+        )
+
+        response = staff_client.get(url)
+        assert response.status_code == 404
 
 
 @pytest.mark.django_db(transaction=True)

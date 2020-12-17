@@ -117,15 +117,11 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
             cursor.execute(
                 f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
             )
-            cursor.execute(f'SELECT * FROM {table_name}')
         except Exception as e:
             query_log.state = QueryLog.STATE_FAILED
             query_log.save()
             raise e
 
-        # strip the prefix from the results
-        description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
-        data = [list(r) for r in cursor]
         duration = (time() - start_time) * 1000
         query_log.duration = duration
         query_log.save()
@@ -139,5 +135,5 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
     logger.info("Created table %s and stored results", table_name)
 
     return QueryResult(
-        query_sql, page, limit, timeout, duration, description, data, row_count
+        query_sql, page, limit, timeout, duration, row_count, query_log.id
     ).__dict__

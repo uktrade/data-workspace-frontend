@@ -1,4 +1,5 @@
 import logging
+import re
 
 from contextlib import contextmanager
 from datetime import timedelta
@@ -11,6 +12,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
+from django.shortcuts import get_object_or_404
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
@@ -20,6 +22,7 @@ from dataworkspace.apps.core.utils import (
     postgres_user,
     USER_SCHEMA_STEM,
 )
+from dataworkspace.apps.explorer.models import QueryLog
 
 
 logger = logging.getLogger('app')
@@ -212,19 +215,22 @@ def remove_data_explorer_user_cached_credentials(user):
 
 class QueryResult:
     def __init__(
-        self, sql, page, limit, timeout, duration, description, data, row_count
+        self,
+        sql,
+        page,
+        limit,
+        timeout,
+        duration,
+        row_count,
+        query_log_id,
     ):
         self.sql = sql
         self.page = page
         self.limit = limit
         self.timeout = timeout
         self.duration = duration
-        self.description = description
-        self.data = data
         self.row_count = row_count
-        self.headers = (
-            [d[0].strip() for d in self.description] if self.description else ['--']
-        )
+        self.query_log_id = query_log_id
 
 
 def tempory_query_table_name(user, query_log_id):
@@ -254,3 +260,23 @@ TYPE_CODES_REVERSED = {
     2950: 'uuid',
     3802: 'jsonb',
 }
+
+
+def fetch_query_results(query_log_id):
+    query_log = get_object_or_404(QueryLog, pk=query_log_id)
+
+    user = query_log.run_by_user
+    user_connection_settings = get_user_explorer_connection_settings(
+        user, query_log.connection
+    )
+    table_name = tempory_query_table_name(user, query_log.id)
+    with user_explorer_connection(user_connection_settings) as conn:
+        cursor = conn.cursor()
+        cursor.execute(f'SELECT * FROM {table_name}')
+        # strip the prefix from the results
+        description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
+        headers = (
+            [d[0].strip() for d in description] if description else ['--']
+        )
+        data = [list(r) for r in cursor]
+    return headers, data, query_log

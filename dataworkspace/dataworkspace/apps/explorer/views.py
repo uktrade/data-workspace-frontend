@@ -25,6 +25,7 @@ from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.schema import schema_info
 from dataworkspace.apps.explorer.tasks import execute_query
 from dataworkspace.apps.explorer.utils import (
+    fetch_query_results,
     get_total_pages,
     url_get_log_id,
     url_get_page,
@@ -58,19 +59,19 @@ def _export(request, query, download=True):
     return response
 
 
-class DownloadFromSqlView(View):
-    def get(self, request, *args, **kwargs):
-        sql = request.GET.get('sql')
-        connection = request.GET.get('connection')
-        query = Query(sql=sql, connection=connection, title='')
-        query.title = 'Playground - %s' % sql[:32]
-        return _export(request, query)
+class DownloadFromQuerylogView(View):
+    def get(self, request, querylog_id):
+        querylog = get_object_or_404(
+            QueryLog, pk=querylog_id, run_by_user=self.request.user
+        )
 
-    def post(self, request, *args, **kwargs):
-        sql = request.POST.get('sql')
-        connection = request.POST.get('connection')
-        query = Query(sql=sql, connection=connection, title='')
-        query.title = 'Playground - %s' % sql[:32]
+        query = Query(
+            sql=querylog.sql,
+            connection=querylog.connection,
+            title=querylog.query.title
+            if querylog.query
+            else f'Playground - {querylog.sql[:32]}',
+        )
         return _export(request, query)
 
 
@@ -280,13 +281,6 @@ class PlayQueryView(View):
         action = request.POST.get('action', '')
         existing_query_id = url_get_query_id(request)
 
-        if action.startswith("download"):
-            download_format = action.split('-')[1]
-            query_params = (('sql', sql), ('format', download_format))
-            return HttpResponseRedirect(
-                reverse('explorer:download_sql') + f"?{urlencode(query_params)}"
-            )
-
         if existing_query_id:
             query = get_object_or_404(
                 Query, pk=existing_query_id, created_by_user=self.request.user
@@ -492,6 +486,7 @@ def query_viewmodel(
                 rows,
                 timeout,
             ).get()
+            headers, data, query_log = fetch_query_results(res['query_log_id'])
         except DatabaseError as e:
             error = str(e)
     if error and method == "POST":
@@ -506,11 +501,12 @@ def query_viewmodel(
         'message': message,
         'rows': rows,
         'page': page,
-        'data': res['data'] if has_valid_results else None,
-        'headers': res['headers'] if has_valid_results else None,
+        'data': data if has_valid_results else None,
+        'headers': headers if has_valid_results else None,
         'total_rows': res['row_count'] if has_valid_results else None,
         'duration': res['duration'] if has_valid_results else None,
         'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
+        'query_log': query_log if has_valid_results else None,
     }
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)
 

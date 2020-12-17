@@ -23,8 +23,6 @@ from dataworkspace.tests.explorer.factories import SimpleQueryFactory
 
 @pytest.mark.django_db(transaction=True)
 class TestQueryModel:
-    databases = ['default', 'my_database']
-
     def test_params_get_merged(self):
         q = SimpleQueryFactory(sql="select '$$foo$$';")
         q.params = {'foo': 'bar', 'mux': 'qux'}
