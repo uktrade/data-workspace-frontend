@@ -210,17 +210,9 @@
                         </div>
                       </div>
 
-                      <button class="govuk-button govuk-button--secondary" data-module="govuk-button" name="action" value="download-csv">
-                        Download CSV
-                      </button>
-
-                      <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" name="action" value="download-excel">
-                        Download Excel
-                      </button>
-
-                      <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" name="action" value="download-json">
-                        Download JSON
-                      </button>
+                      <a class="govuk-button govuk-button--secondary" href="{% url 'explorer:download_querylog' query_log.id %}?format=csv">Download CSV</a>
+                      <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4" href="{% url 'explorer:download_querylog' query_log.id %}?format=excel">Download Excel</a>
+                      <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4" href="{% url 'explorer:download_querylog' query_log.id %}?format=json">Download JSON</a>
                     </div>
                   </div>
                 {% endif %}

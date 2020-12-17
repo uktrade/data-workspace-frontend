@@ -2,7 +2,6 @@ import json
 from datetime import date, datetime
 from unittest.mock import call, MagicMock, Mock, patch
 
-from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 
@@ -47,15 +46,12 @@ class TestGetTotalPages(TestCase):
 
 @pytest.mark.django_db(transaction=True)
 class TestQueryResults:
-    connection_name = settings.EXPLORER_DEFAULT_CONNECTION
-    databases = ['default', 'my_database']
-
     query = "select 1 as foo, 'qux' as mux;"
 
     @pytest.fixture(scope='function', autouse=True)
     def create_query_result(self):
         self.qr = QueryResult(  # pylint: disable=attribute-defined-outside-init
-            self.query, 1, 1000, 10000, None, None, None, None
+            self.query, 1, 1000, 10000, None, None, None, None, None
         )
 
     def test_column_access(self):
