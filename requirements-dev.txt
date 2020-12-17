@@ -74,7 +74,7 @@ jedi==0.17.2              # via ipython
 jmespath==0.10.0          # via -r requirements.txt, boto3, botocore
 kombu==4.6.11             # via -r requirements.txt, celery
 lazy-object-proxy==1.4.3  # via astroid
-lxml==4.6.1               # via -r requirements-dev.in
+lxml==4.6.2               # via -r requirements-dev.in
 markdown==3.2.2           # via -r requirements.txt
 markupsafe==1.1.1         # via -r requirements.txt
 mccabe==0.6.1             # via flake8, pylint
