@@ -11,13 +11,13 @@ from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
     create_dataset,
     set_dataset_access_type,
+    set_waffle_flag,
     reset_data_explorer_credentials,
 )
 from test.selenium.explorer_pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_driver,
 )
-from test.test_application import set_waffle_flag  # pylint: disable=wrong-import-order
 
 
 class TestDataExplorer:

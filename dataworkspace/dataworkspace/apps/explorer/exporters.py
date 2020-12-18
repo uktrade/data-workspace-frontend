@@ -90,9 +90,7 @@ class JSONExporter(BaseExporter):
         rows = []
         for row in data:
             rows.append(  # pylint: disable=unnecessary-comprehension
-                dict(
-                    zip([str(h) if h is not None else '' for h in headers], row)
-                )
+                dict(zip([str(h) if h is not None else '' for h in headers], row))
             )
 
         json_data = json.dumps(rows, cls=DjangoJSONEncoder)
@@ -125,17 +123,17 @@ class ExcelExporter(BaseExporter):
         # Write data
         row = 1
         col = 0
-        for data_row in data:
-            for data in data_row:
+        for data_rows in data:
+            for data_row in data_rows:
                 # xlsxwriter can't handle timezone-aware datetimes or
                 # UUIDs, so we help out here and just cast it to a
                 # string
-                if isinstance(data, (datetime, uuid.UUID)):
-                    data = str(data)
+                if isinstance(data_row, (datetime, uuid.UUID)):
+                    data_row = str(data_row)
                 # JSON and Array fields
-                if isinstance(data, (dict, list)):
-                    data = json.dumps(data)
-                ws.write(row, col, data)
+                if isinstance(data_row, (dict, list)):
+                    data_row = json.dumps(data_row)
+                ws.write(row, col, data_row)
                 col += 1
             row += 1
             col = 0
