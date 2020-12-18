@@ -4,23 +4,23 @@ from mock import call, Mock, MagicMock, patch
 from django.test import TestCase
 from freezegun import freeze_time
 
-from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
+from dataworkspace.apps.explorer.models import PlaygroundSQL, QueryLog
 from dataworkspace.apps.explorer.tasks import (
     truncate_querylogs,
     cleanup_playground_sql_table,
     cleanup_temporary_query_tables,
 )
-from dataworkspace.tests.explorer.factories import PlaygroundSQLFactory
+from dataworkspace.tests.explorer.factories import PlaygroundSQLFactory, QueryLogFactory
 from dataworkspace.tests.factories import UserFactory
 
 
 class TestTasks(TestCase):
     def test_truncating_querylogs(self):
-        QueryLog(sql='foo').save()
+        QueryLogFactory(sql='foo')
         QueryLog.objects.filter(sql='foo').update(
             run_at=datetime.now() - timedelta(days=30)
         )
-        QueryLog(sql='bar').save()
+        QueryLogFactory(sql='bar')
         QueryLog.objects.filter(sql='bar').update(
             run_at=datetime.now() - timedelta(days=29)
         )
@@ -52,11 +52,11 @@ class TestTasks(TestCase):
 
         # last run 1 day and 1 hour ago so its materialized view should be deleted
         with freeze_time(datetime.utcnow() - timedelta(days=1, hours=1)):
-            query_log_1 = QueryLog.objects.create(run_by_user=user)
+            query_log_1 = QueryLogFactory(run_by_user=user)
 
         # last run 2 hours ago so its materialized view should be kept
         with freeze_time(datetime.utcnow() - timedelta(hours=2)):
-            QueryLog.objects.create(run_by_user=user)
+            QueryLogFactory(run_by_user=user)
 
         cleanup_temporary_query_tables()
 
