@@ -108,9 +108,7 @@ class TestExecuteQuery:
             call(
                 f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
             ),
-            call(
-                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
-            ),
+            call('SELECT COUNT(*) FROM (select * from foo) sq'),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -141,9 +139,7 @@ class TestExecuteQuery:
             call(
                 f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
             ),
-            call(
-                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
-            ),
+            call('SELECT COUNT(*) FROM (select * from foo) sq'),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -175,9 +171,7 @@ class TestExecuteQuery:
             call(
                 f'SELECT * FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
             ),
-            call(
-                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
-            ),
+            call('SELECT COUNT(*) FROM (select * from foo) sq'),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
