@@ -352,7 +352,7 @@ def execute_query(query, user, page, limit, timeout):
         query_log.duration = duration
         query_log.save()
 
-        cursor.execute(f'SELECT COUNT(*) FROM {table_name}')
+        cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
         row_count = cursor.fetchone()[0]
 
     return QueryResult(
