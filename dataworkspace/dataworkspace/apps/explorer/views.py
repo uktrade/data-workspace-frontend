@@ -475,12 +475,11 @@ def query_viewmodel(
     method="POST",
     log=True,
 ):
-    res = None
     error = None
     if run_query:
         try:
             if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
-                res = execute_query.delay(
+                query_log_id = execute_query.delay(
                     query.final_sql(),
                     query.connection,
                     query.id,
@@ -490,7 +489,7 @@ def query_viewmodel(
                     timeout,
                 ).get()
             else:
-                res = execute_query(
+                query_log_id = execute_query(
                     query.final_sql(),
                     query.connection,
                     query.id,
@@ -500,13 +499,13 @@ def query_viewmodel(
                     timeout,
                 )
 
-            headers, data, query_log = fetch_query_results(res['query_log_id'])
+            headers, data, query_log = fetch_query_results(query_log_id)
         except DatabaseError as e:
             error = str(e)
     if error and method == "POST":
         form.add_error('sql', error)
         message = "Query error"
-    has_valid_results = not error and res and run_query
+    has_valid_results = not error and run_query
     ret = {
         'params': query.available_params(),
         'title': title,
@@ -517,8 +516,8 @@ def query_viewmodel(
         'page': page,
         'data': data if has_valid_results else None,
         'headers': headers if has_valid_results else None,
-        'total_rows': res['row_count'] if has_valid_results else None,
-        'duration': res['duration'] if has_valid_results else None,
+        'total_rows': query_log.rows if has_valid_results else None,
+        'duration': query_log.duration if has_valid_results else None,
         'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
         'query_log': query_log if has_valid_results else None,
     }

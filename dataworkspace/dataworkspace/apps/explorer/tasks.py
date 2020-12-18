@@ -10,7 +10,6 @@ from pytz import utc
 from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.utils import (
     get_user_explorer_connection_settings,
-    QueryResult,
     tempory_query_table_name,
     TYPE_CODES_REVERSED,
     user_explorer_connection,
@@ -132,6 +131,4 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
 
     logger.info("Created table %s and stored results", table_name)
 
-    return QueryResult(
-        query_sql, page, limit, timeout, duration, row_count, query_log.id
-    ).__dict__
+    return query_log.id

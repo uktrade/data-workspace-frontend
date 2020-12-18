@@ -19,7 +19,6 @@ from dataworkspace.apps.explorer.tasks import execute_query
 from dataworkspace.apps.explorer.utils import (
     get_total_pages,
     InvalidExplorerConnectionException,
-    QueryResult,
 )
 from dataworkspace.tests.explorer.factories import SimpleQueryFactory
 from dataworkspace.tests.factories import UserFactory
@@ -42,22 +41,6 @@ class TestGetTotalPages(TestCase):
                 expected_total_pages,
                 msg=f'Total rows {total_rows}, Page size {page_size}',
             )
-
-
-@pytest.mark.django_db(transaction=True)
-class TestQueryResults:
-    query = "select 1 as foo, 'qux' as mux;"
-
-    @pytest.fixture(scope='function', autouse=True)
-    def create_query_result(self):
-        self.qr = QueryResult(  # pylint: disable=attribute-defined-outside-init
-            self.query, 1, 1000, 10000, None, None, None
-        )
-
-    def test_unicode_with_nulls(self):
-        self.qr.description = [("num",), ("char",)]
-        self.qr.data = [[2, six.u("a")], [3, None]]
-        assert self.qr.data == [[2, "a"], [3, None]]
 
 
 class TestExecuteQuery:
@@ -188,17 +171,17 @@ class TestExecuteQuery:
         # Mock the return value of SELECT COUNT(*) FROM {query}
         self.mock_cursor.fetchone.return_value.__getitem__.return_value = 1
 
-        result = execute_query(
+        query_log_id = execute_query(
             query.final_sql(), query.connection, query.id, self.user.id, 1, 100, 10000
         )
         assert QueryLog.objects.count() == 1
-        log = QueryLog.objects.first()
+        log = QueryLog.objects.get(id=query_log_id)
 
         assert log.run_by_user == self.user
         assert log.query == query
         assert log.is_playground is False
         assert log.connection == query.connection
-        assert log.duration == pytest.approx(result['duration'], rel=1e-9)
+        assert log.duration is not None
         assert log.page == 1
         assert log.rows == 1
         assert log.state == QueryLog.STATE_COMPLETE

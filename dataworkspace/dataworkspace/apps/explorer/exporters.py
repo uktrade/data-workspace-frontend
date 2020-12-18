@@ -33,7 +33,7 @@ class BaseExporter:
         return value
 
     def get_file_output(self, **kwargs):
-        res = execute_query.delay(
+        query_log_id = execute_query.delay(
             self.query.final_sql(),
             self.query.connection,
             self.query.id,
@@ -42,12 +42,13 @@ class BaseExporter:
             settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
             settings.EXPLORER_QUERY_TIMEOUT_MS,
         ).get()
-        res['headers'], res['data'], _ = fetch_query_results(res['query_log_id'])
-        return self._get_output(res, **kwargs)
+        headers, data, _ = fetch_query_results(query_log_id)
+        return self._get_output(headers, data, **kwargs)
 
-    def _get_output(self, res, **kwargs):
+    def _get_output(self, headers, data, **kwargs):
         """
-        :param res: QueryResult
+        :param headers: list
+        :param data: list
         :param kwargs: Optional. Any exporter-specific arguments.
         :return: File-like object
         """
@@ -67,14 +68,14 @@ class CSVExporter(BaseExporter):
     content_type = 'text/csv'
     file_extension = '.csv'
 
-    def _get_output(self, res, **kwargs):
+    def _get_output(self, headers, data, **kwargs):
         delim = kwargs.get('delim') or settings.EXPLORER_CSV_DELIMETER
         delim = '\t' if delim == 'tab' else str(delim)
         delim = settings.EXPLORER_CSV_DELIMETER if len(delim) > 1 else delim
         csv_data = StringIO()
         writer = csv.writer(csv_data, delimiter=delim)
-        writer.writerow(res['headers'])
-        for row in res['data']:
+        writer.writerow(headers)
+        for row in data:
             writer.writerow(row)
         return csv_data
 
@@ -85,16 +86,16 @@ class JSONExporter(BaseExporter):
     content_type = 'application/json'
     file_extension = '.json'
 
-    def _get_output(self, res, **kwargs):
-        data = []
-        for row in res['data']:
-            data.append(  # pylint: disable=unnecessary-comprehension
+    def _get_output(self, headers, data, **kwargs):
+        rows = []
+        for row in data:
+            rows.append(  # pylint: disable=unnecessary-comprehension
                 dict(
-                    zip([str(h) if h is not None else '' for h in res['headers']], row)
+                    zip([str(h) if h is not None else '' for h in headers], row)
                 )
             )
 
-        json_data = json.dumps(data, cls=DjangoJSONEncoder)
+        json_data = json.dumps(rows, cls=DjangoJSONEncoder)
         return StringIO(json_data)
 
 
@@ -104,7 +105,7 @@ class ExcelExporter(BaseExporter):
     content_type = 'application/vnd.ms-excel'
     file_extension = '.xlsx'
 
-    def _get_output(self, res, **kwargs):
+    def _get_output(self, headers, data, **kwargs):
         import xlsxwriter  # pylint: disable=import-outside-toplevel
 
         output = BytesIO()
@@ -117,14 +118,14 @@ class ExcelExporter(BaseExporter):
         row = 0
         col = 0
         header_style = wb.add_format({'bold': True})
-        for header in res['headers']:
+        for header in headers:
             ws.write(row, col, str(header), header_style)
             col += 1
 
         # Write data
         row = 1
         col = 0
-        for data_row in res['data']:
+        for data_row in data:
             for data in data_row:
                 # xlsxwriter can't handle timezone-aware datetimes or
                 # UUIDs, so we help out here and just cast it to a

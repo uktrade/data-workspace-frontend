@@ -213,19 +213,6 @@ def remove_data_explorer_user_cached_credentials(user):
     cache.delete(cache_key)
 
 
-class QueryResult:
-    def __init__(
-        self, sql, page, limit, timeout, duration, row_count, query_log_id,
-    ):
-        self.sql = sql
-        self.page = page
-        self.limit = limit
-        self.timeout = timeout
-        self.duration = duration
-        self.row_count = row_count
-        self.query_log_id = query_log_id
-
-
 def tempory_query_table_name(user, query_log_id):
     schema_name = f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}'
     return f'{schema_name}._data_explorer_tmp_query_{query_log_id}'
