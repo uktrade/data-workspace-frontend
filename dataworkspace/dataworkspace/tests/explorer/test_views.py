@@ -1,4 +1,5 @@
 import time
+from mock import patch
 
 from django.db import connections
 
@@ -10,6 +11,7 @@ from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 from lxml import html
 import pytest
+from waffle.testutils import override_flag
 
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.eventlog.models import EventLog
@@ -20,6 +22,7 @@ from dataworkspace.tests.explorer.factories import (
     SimpleQueryFactory,
     PlaygroundSQLFactory,
 )
+from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
 
 
 class TestQueryListView:
@@ -276,6 +279,38 @@ class TestHomePage:
             {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
         )
         assert '3401' in resp.content.decode(resp.charset)
+
+    def test_query_execution_respects_async_flag(self, staff_client):
+        from dataworkspace.apps.explorer.views import (  # pylint: disable=import-outside-toplevel
+            execute_query as original_execute_query,
+        )
+
+        patcher = patch('dataworkspace.apps.explorer.views.execute_query')
+
+        mock_execute_query = patcher.start()
+        mock_execute_query.side_effect = original_execute_query
+        mock_execute_query.delay.side_effect = original_execute_query.delay
+
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            staff_client.post(
+                reverse("explorer:index"),
+                {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
+            )
+        assert not mock_execute_query.called
+        assert mock_execute_query.delay.called
+
+        mock_execute_query.reset_mock()
+        mock_execute_query.delay.reset_mock()
+
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=False):
+            staff_client.post(
+                reverse("explorer:index"),
+                {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
+            )
+            assert mock_execute_query.called
+            assert not mock_execute_query.delay.called
+
+        patcher.stop()
 
     @pytest.mark.parametrize(
         "page, rows, expected_page, expected_rows",

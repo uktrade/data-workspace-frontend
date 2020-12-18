@@ -16,6 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
+from waffle import flag_is_active
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -34,6 +35,7 @@ from dataworkspace.apps.explorer.utils import (
     url_get_rows,
     url_get_show,
 )
+from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
 
 
 class SafeLoginView(LoginView):
@@ -183,7 +185,7 @@ class CreateQueryView(CreateView):
                     form.save()
 
                 vm = query_viewmodel(
-                    request.user,
+                    request,
                     query,
                     form=form,
                     run_query=False,
@@ -349,7 +351,7 @@ class PlayQueryView(View):
                     form.initial['sql'] = play_sql.sql
 
         context = query_viewmodel(
-            request.user,
+            request,
             query,
             title="Home",
             run_query=run_query and form.is_valid(),
@@ -391,7 +393,7 @@ class QueryView(View):
             )
             success = form.is_valid() and form.save()
             vm = query_viewmodel(
-                request.user,
+                request,
                 query,
                 form=form,
                 run_query=show,
@@ -461,7 +463,7 @@ def get_playground_sql_from_request(request):
 
 
 def query_viewmodel(
-    user,
+    request,
     query,
     title=None,
     form=None,
@@ -477,15 +479,27 @@ def query_viewmodel(
     error = None
     if run_query:
         try:
-            res = execute_query.delay(
-                query.final_sql(),
-                query.connection,
-                query.id,
-                user.id,
-                page,
-                rows,
-                timeout,
-            ).get()
+            if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
+                res = execute_query.delay(
+                    query.final_sql(),
+                    query.connection,
+                    query.id,
+                    request.user.id,
+                    page,
+                    rows,
+                    timeout,
+                ).get()
+            else:
+                res = execute_query(
+                    query.final_sql(),
+                    query.connection,
+                    query.id,
+                    request.user.id,
+                    page,
+                    rows,
+                    timeout,
+                )
+
             headers, data, query_log = fetch_query_results(res['query_log_id'])
         except DatabaseError as e:
             error = str(e)
