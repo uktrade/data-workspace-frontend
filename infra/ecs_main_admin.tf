@@ -705,3 +705,24 @@ data "aws_iam_policy_document" "admin_cloudwatch_logs" {
     resources = ["*"]
   }
 }
+
+resource "aws_iam_role_policy_attachment" "admin_datasets_database_rds_logs" {
+  role       = "${aws_iam_role.admin_task.name}"
+  policy_arn = "${aws_iam_policy.admin_datasets_database_rds_logs.arn}"
+}
+
+resource "aws_iam_policy" "admin_datasets_database_rds_logs" {
+  name        = "${var.prefix}-admin-datasets-database-rds-logs"
+  path        = "/"
+  policy       = "${data.aws_iam_policy_document.admin_datasets_database_rds_logs.json}"
+}
+
+data "aws_iam_policy_document" "admin_datasets_database_rds_logs" {
+  statement {
+    actions = [
+      "rds:DownloadDBLogFilePortion",
+      "rds:DescribeDBLogFiles"
+    ]
+    resources = ["*"]
+  }
+}

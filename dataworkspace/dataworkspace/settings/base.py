@@ -291,6 +291,11 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
             'schedule': 60,
             'args': (),
         },
+        'sync-tool-query-logs': {
+            'task': 'dataworkspace.apps.applications.utils.sync_tool_query_logs',
+            'schedule': 60 * 2,
+            'args': (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
@@ -511,6 +516,56 @@ ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
 ACTIVITY_STREAM_HAWK_CREDENTIALS_ID = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_ID")
 ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY")
 
+DATASETS_DB_INSTANCE_ID = env.get(
+    'DATASETS_DB_INSTANCE_ID', 'analysisworkspace-dev-test-1-aurora'
+)
 PGAUDIT_LOG_SCOPES = env.get("PGAUDIT_LOG_SCOPES")
 
 VISUALISATION_CLOUDWATCH_LOG_GROUP = env.get("VISUALISATION_CLOUDWATCH_LOG_GROUP")
+
+PGAUDIT_LOG_TYPE = env.get('PGAUDIT_LOG_TYPE', 'rds')
+POSTGRES_LOG_HEADERS = [
+    'log_time',
+    'user_name',
+    'database_name',
+    'process_id',
+    'connection_from',
+    'session_id',
+    'session_line_num',
+    'command_tag',
+    'session_start_time',
+    'virtual_transaction_id',
+    'transaction_id',
+    'error_severity',
+    'sql_state_code',
+    'message',
+    'detail',
+    'hint',
+    'internal_query',
+    'internal_query_pos',
+    'context',
+    'query',
+    'query_pos',
+    'location',
+]
+PGAUDIT_LOG_HEADERS = [
+    'audit_type',
+    'statement_id',
+    'substatement_id',
+    'class',
+    'command',
+    'object_type',
+    'object_name',
+    'statement',
+    'parameter',
+]
+
+PGAUDIT_IGNORE_STATEMENTS_RE = [
+    r'SELECT version()',
+    r'SELECT current_schema()',
+    r"SELECT CAST\('.*?' AS VARCHAR\(\d+\)\) AS \w",
+    r"SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema not in "
+    r"\('pg_toast', 'pg_temp_1', 'pg_toast_temp_1', 'pg_catalog', 'information_schema'\) "
+    r"ORDER BY table_schema, table_name;",
+    r"^BEGIN$",
+]

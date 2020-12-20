@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db import connections
 from django.test import override_settings
 
+from dataworkspace.apps.core.models import DatabaseUser
 from dataworkspace.apps.core.utils import (
     database_dsn,
     get_random_data_sample,
@@ -100,6 +101,22 @@ class TestPostgresUser:
         assert re.match(expected_match, username)
         assert len(username) == expected_length
 
+    @pytest.mark.django_db(transaction=True)
+    def test_db_user_record(self):
+        user_count = DatabaseUser.objects.count()
+
+        user = factories.UserFactory()
+        source_tables = source_tables_for_user(user)
+        db_role_schema_suffix = db_role_schema_suffix_for_user(user)
+        new_private_database_credentials(
+            db_role_schema_suffix,
+            source_tables,
+            user.email,
+            user,
+            valid_for=datetime.timedelta(days=31),
+        )
+        assert DatabaseUser.objects.count() == user_count + 1
+
 
 class TestNewPrivateDatabaseCredentials:
     @pytest.mark.django_db(transaction=True)
@@ -120,6 +137,7 @@ class TestNewPrivateDatabaseCredentials:
             db_role_schema_suffix,
             source_tables,
             postgres_user(user.email),
+            user,
             valid_for=datetime.timedelta(days=1),
         )
 
