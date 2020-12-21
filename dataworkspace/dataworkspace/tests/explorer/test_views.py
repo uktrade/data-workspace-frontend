@@ -1,5 +1,6 @@
 import time
 from html.parser import HTMLParser
+
 from mock import patch
 
 from django.db import connections
@@ -686,3 +687,85 @@ class TestQueryLog:
             assert QueryLog(sql='foo').is_playground is True
             q = SimpleQueryFactory()
             assert QueryLog(sql='foo', query_id=q.id).is_playground is False
+
+
+@pytest.mark.django_db(transaction=True)
+class TestQueryLogEndpoint:
+    def test_query_does_not_exist(self, staff_user, staff_client):
+        resp = staff_client.get(reverse('explorer:querylog_results', args=(999,)))
+        assert resp.status_code == 404
+        # QueryLogFactory(sql="select 1234", run_by_user=other_user)
+        # QueryLogFactory(sql="select 9876", run_by_user=staff_user)
+        # assert "select 9876" in resp.content.decode(resp.charset)
+        # assert "select 1234" not in resp.content.decode(resp.charset)
+
+    def test_query_owned_by_other_user(self, staff_user, staff_client):
+        QueryLogFactory(sql="select 123", run_by_user=staff_user)
+        query_log = QueryLogFactory(
+            sql="select 456", run_by_user=UserFactory(email='bob@test.com')
+        )
+        resp = staff_client.get(
+            reverse('explorer:querylog_results', args=(query_log.id,))
+        )
+        assert resp.status_code == 404
+
+    def test_query_running(self, staff_user, staff_client):
+        query_log = QueryLogFactory(
+            sql="select 123", run_by_user=staff_user, state=QueryLog.STATE_RUNNING
+        )
+        resp = staff_client.get(
+            reverse('explorer:querylog_results', args=(query_log.id,))
+        )
+        assert resp.status_code == 200
+        json_response = resp.json()
+        assert json_response['query_log_id'] == query_log.id
+        assert json_response['state'] == query_log.state
+        assert json_response['error'] is None
+        assert (
+            'Your query is currently being executed by Data Explorer'
+            in json_response['html']
+        )
+
+    def test_query_failed(self, staff_user, staff_client):
+        query_log = QueryLogFactory(
+            sql="select 123",
+            run_by_user=staff_user,
+            state=QueryLog.STATE_FAILED,
+            error='This is an error message',
+        )
+        resp = staff_client.get(
+            reverse('explorer:querylog_results', args=(query_log.id,))
+        )
+        assert resp.status_code == 200
+        json_response = resp.json()
+        assert json_response['query_log_id'] == query_log.id
+        assert json_response['state'] == query_log.state
+        assert json_response['error'] == 'This is an error message'
+        assert json_response['html'] is None
+
+    def test_query_complete(self, staff_user, staff_client, mocker):
+        mock_fetch = mocker.patch(
+            'dataworkspace.apps.explorer.views.fetch_query_results'
+        )
+        mock_fetch.return_value = (
+            ['col1', 'col2'],
+            [[1, 'record1'], [2, 'record2']],
+            None,
+        )
+        query_log = QueryLogFactory(
+            sql="select 123",
+            run_by_user=staff_user,
+            state=QueryLog.STATE_COMPLETE,
+            rows=100,
+        )
+        resp = staff_client.get(
+            reverse('explorer:querylog_results', args=(query_log.id,))
+        )
+        assert resp.status_code == 200
+        json_response = resp.json()
+        assert json_response['query_log_id'] == query_log.id
+        assert json_response['state'] == query_log.state
+        assert json_response['error'] is None
+        assert 'Showing 2 rows from a total of 100' in json_response['html']
+        assert 'record1' in json_response['html']
+        assert 'record2' in json_response['html']

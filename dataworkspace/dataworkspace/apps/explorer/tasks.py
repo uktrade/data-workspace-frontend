@@ -121,6 +121,7 @@ def execute_query_async(
             cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
         except Exception as e:
             query_log.state = QueryLog.STATE_FAILED
+            query_log.error = str(e)
             query_log.save()
             # Remove the select statement wrapper used for getting the query fields
             error_message = (

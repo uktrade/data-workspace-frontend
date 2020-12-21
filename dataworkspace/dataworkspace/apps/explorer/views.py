@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 from psycopg2 import DatabaseError
 
 from django.conf import settings
+from django.template import loader
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.db.models import Count
@@ -10,6 +11,7 @@ from django.http import (
     HttpResponse,
     HttpResponseRedirect,
     HttpResponseBadRequest,
+    JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -525,3 +527,36 @@ def query_viewmodel(
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)
 
     return ret
+
+
+class QueryLogResultView(View):
+    def get(self, request, querylog_id):
+        query_log = get_object_or_404(
+            QueryLog, pk=querylog_id, run_by_user=self.request.user
+        )
+        html = None
+        if query_log.state == QueryLog.STATE_RUNNING:
+            template = loader.get_template('explorer/partials/query_executing.html')
+            html = template.render({}, request)
+        elif query_log.state == QueryLog.STATE_COMPLETE:
+            template = loader.get_template('explorer/partials/query_results.html')
+            headers, data, _ = fetch_query_results(querylog_id)
+            context = {
+                'query_log': query_log,
+                'headers': headers,
+                'data': data,
+                'rows': len(data),
+                'duration': query_log.duration,
+                'total_rows': query_log.rows,
+                'page': query_log.page,
+            }
+            html = template.render(context, request)
+
+        return JsonResponse(
+            {
+                'query_log_id': query_log.id,
+                'state': query_log.state,
+                'error': query_log.error,
+                'html': html,
+            }
+        )

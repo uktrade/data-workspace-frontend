@@ -9,6 +9,7 @@ from dataworkspace.apps.explorer.views import (
     ListQueryLogView,
     ListQueryView,
     PlayQueryView,
+    QueryLogResultView,
     QueryView,
 )
 
@@ -36,6 +37,11 @@ urlpatterns = [
         name='query_delete',
     ),
     path('logs/', login_required(ListQueryLogView.as_view()), name='explorer_logs'),
+    path(
+        'logs/<int:querylog_id>/',
+        login_required(QueryLogResultView.as_view()),
+        name='querylog_results',
+    ),
 ]
 
 if settings.DEBUG:
