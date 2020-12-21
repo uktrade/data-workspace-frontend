@@ -115,7 +115,7 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
             cursor.execute(
                 f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
             )
-            cursor.execute(f'SELECT COUNT(*) FROM {table_name}')
+            cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
         except Exception as e:
             query_log.state = QueryLog.STATE_FAILED
             query_log.save()

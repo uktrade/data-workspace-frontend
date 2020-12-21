@@ -88,9 +88,7 @@ class TestExecuteQuery:
                 f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
                 ' SELECT * FROM (select * from foo) sq LIMIT 100'
             ),
-            call(
-                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
-            ),
+            call('SELECT COUNT(*) FROM (select * from foo) sq'),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -122,9 +120,7 @@ class TestExecuteQuery:
                 f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
                 ' SELECT * FROM (select * from foo) sq LIMIT 100 OFFSET 100'
             ),
-            call(
-                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
-            ),
+            call('SELECT COUNT(*) FROM (select * from foo) sq'),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -157,9 +153,7 @@ class TestExecuteQuery:
                 f'INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
                 ' SELECT * FROM (select * from foo) sq LIMIT 100'
             ),
-            call(
-                f'SELECT COUNT(*) FROM _user_12b9377c._data_explorer_tmp_query_{query_log_id}'
-            ),
+            call('SELECT COUNT(*) FROM (select * from foo) sq'),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 

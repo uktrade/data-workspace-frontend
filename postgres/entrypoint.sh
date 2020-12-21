@@ -8,6 +8,8 @@ openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj /CN=analysis-wor
 chown postgres:postgres ssl.key ssl.crt
 chmod 0600 ssl.key ssl.crt
 
+chown postgres:postgres /var/log/postgres
+
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=postgres
 
@@ -19,4 +21,6 @@ docker-entrypoint.sh "$@" \
     -c pgaudit.log_catalogue=off \
     -c ssl=on \
     -c ssl_cert_file=/ssl.crt \
-    -c ssl_key_file=/ssl.key
+    -c ssl_key_file=/ssl.key \
+    -c log_directory=/var/log/postgres \
+    -c log_file_mode=0644

@@ -22,7 +22,7 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.core.models import Database
+from dataworkspace.apps.core.models import Database, DatabaseUser
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
@@ -76,6 +76,7 @@ def new_private_database_credentials(
     db_role_and_schema_suffix,
     source_tables,
     db_user,
+    dw_user: get_user_model(),
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[Database] = tuple(),
 ):
@@ -312,6 +313,9 @@ def new_private_database_credentials(
         get_new_credentials(database_obj, tables)
         for database_obj, tables in database_to_tables.items()
     ]
+
+    if dw_user is not None:
+        DatabaseUser.objects.create(owner=dw_user, username=db_user)
 
     return creds
 

@@ -26,6 +26,8 @@ services:
       - "testvisualisation-a.dataworkspace.test:127.0.0.1"
       - "testvisualisation-b.dataworkspace.test:127.0.0.1"
       - "api.ecr.my-region-1.amazonaws.com:127.0.0.1"
+    volumes:
+      - db-logs-dev:/var/log/postgres
   data-workspace-postgres:
     build:
       context: postgres
@@ -33,6 +35,8 @@ services:
     image: data-workspace-postgres
     ports:
       - "5432"
+    volumes:
+      - db-logs-dev:/var/log/postgres
   data-workspace-redis:
     build:
       context: redis
@@ -40,4 +44,7 @@ services:
     image: data-workspace-redis
     ports:
       - "6379"
-  
+
+
+volumes:
+  db-logs-dev:

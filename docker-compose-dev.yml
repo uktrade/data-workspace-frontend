@@ -24,6 +24,9 @@ services:
       - "data-workspace-postgres"
       - "data-workspace-redis"
     command: "/dataworkspace/start-celery.sh"
+    volumes:
+      - ./dataworkspace:/dataworkspace
+      - db-logs-dev:/var/log/postgres
   data-workspace-postgres:
     build:
       context: postgres
@@ -33,6 +36,7 @@ services:
       - "5432:5432"
     volumes:
       - db-data-dev:/var/lib/postgresql/data
+      - db-logs-dev:/var/log/postgres
   data-workspace-redis:
     build:
       context: redis
@@ -44,6 +48,7 @@ services:
 
 volumes:
   db-data-dev:
+  db-logs-dev:
   
 networks:
   default:

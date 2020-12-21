@@ -8,17 +8,21 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import override_settings
+from freezegun import freeze_time
 import mock
 import pytest
 import redis
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.utils import (
+    _do_sync_tool_query_logs,
     delete_unused_datasets_users,
     _do_create_tools_access_iam_role,
     _do_sync_activity_stream_sso_users,
     sync_quicksight_permissions,
 )
+from dataworkspace.apps.datasets.models import ToolQueryAuditLog
+from dataworkspace.tests import factories
 
 from dataworkspace.tests.factories import (
     UserFactory,
@@ -1063,3 +1067,133 @@ class TestCreateToolsAccessIAMRoleTask:
     ):
         _do_create_tools_access_iam_role(2)
         assert mock_logger.call_args_list == [mock.call('User id %d does not exist', 2)]
+
+
+class TestSyncToolQueryLogs:
+    log_data = [
+        # Valid user and db select statement
+        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
+        # Non-pgaudit log
+        '2020-12-08 18:00:10.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"A random message",,,,,,,,,""\n',
+        # Unrecognised user
+        '2020-12-08 18:00:20.395 UTC,"unknownuser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19041,"SELECT",2020-12-08 18:18:19 UTC,9/19034,0,LOG,00000,'
+        '"AUDIT: SESSION,19041,1,READ,SELECT,,,""SELECT a FROM b"",<not logged>",,,,,,,,,""\n',
+        # Unrecognised db
+        '2020-12-08 18:00:30.395 UTC,"auser","unknowndb",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19041,"SELECT",2020-12-08 18:18:19 UTC,9/19034,0,LOG,00000,'
+        '"AUDIT: SESSION,19041,1,READ,SELECT,,,""SELECT c FROM d"",<not logged>",,,,,,,,,""\n',
+        # Valid user and db insert statement
+        '2020-12-08 18:00:40.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO test VALUES(1);"",<not logged>"'
+        ',,,,,,,,,""\n',
+        # Timestamp out of range
+        '2020-12-08 17:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO test VALUES(2);"",<not logged>"'
+        ',,,,,,,,,""\n',
+        # No timestamp
+        'An exception occurred...\n',
+        # Duplicate record
+        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
+        '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""SELECT * FROM test"",<not logged>",,,,,,,,,""\n',
+        # Ignored statement
+        '2020-12-08 19:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""select CAST(id as VARCHAR(50)) as col1 from a"",'
+        '<not logged>",,,,,,,,,""\n',
+    ]
+
+    @pytest.mark.django_db(transaction=True)
+    @freeze_time('2020-12-08 18:04:00')
+    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
+    @override_settings(
+        PGAUDIT_LOG_TYPE='rds',
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}},
+    )
+    def test_rds_sync(self, mock_client):
+        cache.delete('query_tool_logs_last_run')
+        log_count = ToolQueryAuditLog.objects.count()
+        factories.DatabaseFactory(memorable_name='my_database')
+        factories.DatabaseUserFactory.create(username='auser')
+
+        mock_client.return_value.describe_db_log_files.return_value = {
+            'DescribeDBLogFiles': [
+                {'LogFileName': '/file/1.csv'},
+                {'LogFileName': '/file/2.csv'},
+            ]
+        }
+        mock_client.return_value.download_db_log_file_portion.side_effect = [
+            {
+                'Marker': '1',
+                'AdditionalDataPending': True,
+                'LogFileData': (
+                    # Valid user and db select statement
+                    self.log_data[0]
+                    # Non-pgaudit log
+                    + self.log_data[1]
+                ),
+            },
+            {
+                'Marker': None,
+                'AdditionalDataPending': False,
+                'LogFileData': (
+                    # Unrecognised user
+                    self.log_data[2]
+                    # Unrecognised database
+                    + self.log_data[3]
+                ),
+            },
+            {
+                'Marker': None,
+                'AdditionalDataPending': False,
+                'LogFileData': (
+                    # Valid username and db insert statement
+                    self.log_data[4]
+                    # Timestamp out of range
+                    + self.log_data[5]
+                    # No timestamp
+                    + self.log_data[6]
+                    # Duplicate log entry
+                    + self.log_data[7]
+                ),
+            },
+        ]
+        _do_sync_tool_query_logs()
+        queries = ToolQueryAuditLog.objects.all()
+        assert queries.count() == log_count + 2
+        assert list(queries)[-2].query_sql == 'SELECT * FROM test'
+        assert list(queries)[-1].query_sql == 'INSERT INTO test VALUES(1);'
+
+    @pytest.mark.django_db(transaction=True)
+    @freeze_time('2020-12-08 18:04:00')
+    @mock.patch('dataworkspace.apps.applications.utils.os')
+    @mock.patch("builtins.open", mock.mock_open(read_data=''.join(log_data)))
+    @override_settings(
+        PGAUDIT_LOG_TYPE='docker',
+        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}},
+    )
+    def test_docker_sync(self, mock_os):
+        cache.delete('query_tool_logs_last_run')
+        log_count = ToolQueryAuditLog.objects.count()
+        factories.DatabaseFactory(memorable_name='my_database')
+        factories.DatabaseUserFactory.create(username='auser')
+        mock_os.listdir.return_value = [
+            'file1.csv',
+            'file2.log',
+        ]
+        mock_os.path.getmtime.return_value = datetime.datetime.now().timestamp()
+        _do_sync_tool_query_logs()
+        queries = ToolQueryAuditLog.objects.all()
+        assert queries.count() == log_count + 2
+        assert list(queries)[-2].query_sql == 'SELECT * FROM test'
+        assert list(queries)[-1].query_sql == 'INSERT INTO test VALUES(1);'

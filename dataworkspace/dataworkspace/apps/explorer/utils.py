@@ -170,6 +170,7 @@ def get_user_explorer_connection_settings(user, alias):
                 db_role_schema_suffix,
                 source_tables,
                 db_user,
+                user,
                 valid_for=duration,
                 force_create_for_databases=Database.objects.filter(
                     memorable_name__in=connections.keys()
