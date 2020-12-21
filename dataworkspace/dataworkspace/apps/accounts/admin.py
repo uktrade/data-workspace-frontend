@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.db import transaction
 
+from dataworkspace.apps.core.utils import stable_identification_suffix
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -251,6 +252,7 @@ class AppUserAdmin(UserAdmin):
                 'fields': [
                     'email',
                     'sso_id',
+                    'stable_id_suffix',
                     'tools_access_role_arn',
                     'home_directory_efs_access_point_id',
                     'first_name',
@@ -283,7 +285,7 @@ class AppUserAdmin(UserAdmin):
             },
         ),
     ]
-    readonly_fields = ['sso_id']
+    readonly_fields = ['sso_id', 'stable_id_suffix']
 
     class Media:
         css = {'all': ('data-workspace-admin.css',)}
@@ -507,3 +509,6 @@ class AppUserAdmin(UserAdmin):
 
     def sso_id(self, instance):
         return instance.profile.sso_id
+
+    def stable_id_suffix(self, instance):
+        return stable_identification_suffix(str(instance.profile.sso_id), short=True)
