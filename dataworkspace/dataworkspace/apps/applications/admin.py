@@ -63,6 +63,7 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
         'state',
         'max_cpu',
     )
+    search_fields = ['owner__email']
 
     def has_add_permission(self, request):
         return False
