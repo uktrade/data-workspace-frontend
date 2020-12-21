@@ -28,6 +28,7 @@ from dataworkspace.apps.explorer.tasks import execute_query
 from dataworkspace.apps.explorer.utils import (
     fetch_query_results,
     get_total_pages,
+    QueryException,
     url_get_log_id,
     url_get_page,
     url_get_params,
@@ -500,7 +501,7 @@ def query_viewmodel(
                 )
 
             headers, data, query_log = fetch_query_results(query_log_id)
-        except DatabaseError as e:
+        except QueryException as e:
             error = str(e)
     if error and method == "POST":
         form.add_error('sql', error)

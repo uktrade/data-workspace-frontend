@@ -1,4 +1,5 @@
 import time
+from html.parser import HTMLParser
 from mock import patch
 
 from django.db import connections
@@ -311,6 +312,15 @@ class TestHomePage:
             assert not mock_execute_query.delay.called
 
         patcher.stop()
+
+    def test_query_exception_returned_as_friendly_error(self, staff_client):
+        resp = staff_client.post(
+            reverse("explorer:index"),
+            {'title': 'test', 'sql': 'select "1"', "action": "run"},
+        )
+        decoded_response = HTMLParser().unescape(resp.content.decode(resp.charset))
+        assert 'column "1" does not exist\nLINE 1: select "1"' in decoded_response
+        assert 'SELECT * FROM (select "1") sq limit 0' not in decoded_response
 
     @pytest.mark.parametrize(
         "page, rows, expected_page, expected_rows",

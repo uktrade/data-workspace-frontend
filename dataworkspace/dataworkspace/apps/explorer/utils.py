@@ -117,6 +117,10 @@ class InvalidExplorerConnectionException(Exception):
     pass
 
 
+class QueryException(Exception):
+    pass
+
+
 def user_cached_credentials_key(user):
     return f"explorer_credentials_{user.profile.sso_id}"
 

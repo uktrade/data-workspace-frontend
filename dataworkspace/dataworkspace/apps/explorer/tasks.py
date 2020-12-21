@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import re
 from time import time
 
 from celery.utils.log import get_task_logger
@@ -10,6 +11,7 @@ from pytz import utc
 from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.utils import (
     get_user_explorer_connection_settings,
+    QueryException,
     tempory_query_table_name,
     TYPE_CODES_REVERSED,
     user_explorer_connection,
@@ -119,7 +121,11 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
         except Exception as e:
             query_log.state = QueryLog.STATE_FAILED
             query_log.save()
-            raise e
+            # Remove the select statement wrapper used for getting the query fields
+            error_message = (
+                str(e).replace('SELECT * FROM (', '').replace(') sq limit 0', '')
+            )
+            raise QueryException(error_message)
 
         row_count = cursor.fetchone()[0]
         duration = (time() - start_time) * 1000
