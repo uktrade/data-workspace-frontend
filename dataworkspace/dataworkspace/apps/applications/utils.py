@@ -9,6 +9,7 @@ from typing import Dict, List
 
 import boto3
 import botocore
+import waffle
 from botocore.exceptions import ClientError
 from django_db_geventpool.utils import close_connection
 from django.conf import settings
@@ -1349,10 +1350,11 @@ def _do_sync_tool_query_logs():
 
 @celery_app.task()
 def sync_tool_query_logs():
-    try:
-        with cache.lock(
-            'query_tool_logs_last_run_lock', blocking_timeout=0, timeout=1800
-        ):
-            _do_sync_tool_query_logs()
-    except redis.exceptions.LockError:
-        logger.info('Unable to acquire lock to sync tool query logs')
+    if waffle.switch_is_active('enable_tool_query_log_sync'):
+        try:
+            with cache.lock(
+                'query_tool_logs_last_run_lock', blocking_timeout=0, timeout=1800
+            ):
+                _do_sync_tool_query_logs()
+        except redis.exceptions.LockError:
+            logger.info('Unable to acquire lock to sync tool query logs')
