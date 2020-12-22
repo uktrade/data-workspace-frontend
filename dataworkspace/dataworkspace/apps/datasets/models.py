@@ -1811,16 +1811,10 @@ class VisualisationLink(TimeStampedModel):
 
 
 class ToolQueryAuditLog(models.Model):
+    # Note: Unique index on rolename, timestamp and md5 hash of query sql
+    # created manually in migration 0065_add_audit_log_hashed_unique_index
     user = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
     database = models.ForeignKey(Database, on_delete=models.PROTECT)
     rolename = models.CharField(max_length=64, null=False, blank=False)
     query_sql = models.TextField(null=False, blank=False)
     timestamp = models.DateTimeField(null=False, blank=False)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['rolename', 'query_sql', 'timestamp'],
-                name='unique toolqueryauditlog',
-            )
-        ]
