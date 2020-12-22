@@ -24,8 +24,9 @@ from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.schema import schema_info
-from dataworkspace.apps.explorer.tasks import execute_query
+from dataworkspace.apps.explorer.tasks import execute_query_async
 from dataworkspace.apps.explorer.utils import (
+    execute_query_sync,
     fetch_query_results,
     get_total_pages,
     QueryException,
@@ -48,7 +49,7 @@ def _export(request, query, download=True):
     exporter_class = get_exporter_class(format_)
     query.params = url_get_params(request)
     delim = request.GET.get('delim')
-    exporter = exporter_class(query=query, user=request.user)
+    exporter = exporter_class(query=query, request=request)
     try:
         output = exporter.get_output(delim=delim)
     except DatabaseError as e:
@@ -480,7 +481,7 @@ def query_viewmodel(
     if run_query:
         try:
             if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
-                query_log_id = execute_query.delay(
+                query_log_id = execute_query_async.delay(
                     query.final_sql(),
                     query.connection,
                     query.id,
@@ -489,8 +490,9 @@ def query_viewmodel(
                     rows,
                     timeout,
                 ).get()
+                headers, data, query_log = fetch_query_results(query_log_id)
             else:
-                query_log_id = execute_query(
+                headers, data, query_log = execute_query_sync(
                     query.final_sql(),
                     query.connection,
                     query.id,
@@ -499,8 +501,6 @@ def query_viewmodel(
                     rows,
                     timeout,
                 )
-
-            headers, data, query_log = fetch_query_results(query_log_id)
         except QueryException as e:
             error = str(e)
     if error and method == "POST":

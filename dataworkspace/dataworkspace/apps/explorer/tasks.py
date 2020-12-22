@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import re
 from time import time
 
 from celery.utils.log import get_task_logger
@@ -67,7 +66,9 @@ def _prefix_column(index, column):
 
 
 @celery_app.task()
-def execute_query(query_sql, query_connection, query_id, user_id, page, limit, timeout):
+def execute_query_async(
+    query_sql, query_connection, query_id, user_id, page, limit, timeout
+):
     user = get_user_model().objects.get(id=user_id)
 
     user_connection_settings = get_user_explorer_connection_settings(
@@ -94,7 +95,7 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
             # It adds a prefix of col_x_ to duplicated column returned from the query and
             # these prefixed column names are used to create a table containing the
             # query results. The prefixes are removed when the results are returned.
-            cursor.execute(f'SELECT * FROM ({sql}) sq limit 0')
+            cursor.execute(f'SELECT * FROM ({sql}) sq LIMIT 0')
             column_names = list(zip(*cursor.description))[0]
             duplicated_column_names = set(
                 c for c in column_names if column_names.count(c) > 1
@@ -123,7 +124,7 @@ def execute_query(query_sql, query_connection, query_id, user_id, page, limit, t
             query_log.save()
             # Remove the select statement wrapper used for getting the query fields
             error_message = (
-                str(e).replace('SELECT * FROM (', '').replace(') sq limit 0', '')
+                str(e).replace('SELECT * FROM (', '').replace(') sq LIMIT 0', '')
             )
             raise QueryException(error_message)
 

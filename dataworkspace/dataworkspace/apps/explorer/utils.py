@@ -1,5 +1,7 @@
 import logging
 import re
+from time import time
+import uuid
 
 from contextlib import contextmanager
 from datetime import timedelta
@@ -8,7 +10,7 @@ import psycopg2
 import sqlparse
 
 from django.conf import settings
-from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
@@ -262,4 +264,59 @@ def fetch_query_results(query_log_id):
         description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
         headers = [d[0].strip() for d in description] if description else ['--']
         data = [list(r) for r in cursor]
+    return headers, data, query_log
+
+
+def execute_query_sync(
+    query_sql, query_connection, query_id, user_id, page, limit, timeout
+):
+    user = get_user_model().objects.get(id=user_id)
+
+    user_connection_settings = get_user_explorer_connection_settings(
+        user, query_connection
+    )
+    query_log = QueryLog.objects.create(
+        sql=query_sql,
+        query_id=query_id,
+        run_by_user=user,
+        connection=query_connection,
+        page=page,
+    )
+
+    with user_explorer_connection(user_connection_settings) as conn:
+        cursor = conn.cursor()
+        cursor_name = 'cur_%s' % str(uuid.uuid4()).replace('-', '')[:10]
+
+        start_time = time()
+        try:
+            cursor.execute(f'SET statement_timeout = {timeout}')
+            cursor.execute(f'DECLARE {cursor_name} CURSOR WITH HOLD FOR {query_sql}')
+            if page and page > 1:
+                offset = (page - 1) * limit
+                cursor.execute(f'MOVE {offset} FROM {cursor_name}')
+            cursor.execute(f'FETCH {limit} FROM {cursor_name}')
+        except Exception as e:
+            query_log.state = QueryLog.STATE_FAILED
+            query_log.save()
+            # Remove the DECLARE cur_* wrapper
+            error_message = str(e).replace(
+                f'DECLARE {cursor_name} CURSOR WITH HOLD FOR ', ''
+            )
+            raise QueryException(error_message)
+
+        description = cursor.description or []
+        data = [list(r) for r in cursor]
+        cursor.execute(f'CLOSE {cursor_name}')
+
+        sql = query_sql.rstrip().rstrip(';')
+        cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
+        row_count = cursor.fetchone()[0]
+        duration = (time() - start_time) * 1000
+
+    query_log.duration = duration
+    query_log.rows = row_count
+    query_log.state = QueryLog.STATE_COMPLETE
+    query_log.save()
+
+    headers = [d[0].strip() for d in description] if description else ['--']
     return headers, data, query_log

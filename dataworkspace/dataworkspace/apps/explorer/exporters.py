@@ -9,9 +9,11 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
+from waffle import flag_is_active
 
-from dataworkspace.apps.explorer.tasks import execute_query
-from dataworkspace.apps.explorer.utils import fetch_query_results
+from dataworkspace.apps.explorer.tasks import execute_query_async
+from dataworkspace.apps.explorer.utils import execute_query_sync, fetch_query_results
+from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
 
 
 def get_exporter_class(format_):
@@ -24,25 +26,37 @@ class BaseExporter:
     content_type = ''
     file_extension = ''
 
-    def __init__(self, query, user):
+    def __init__(self, query, request):
         self.query = query
-        self.user = user
+        self.request = request
+        self.user = request.user
 
     def get_output(self, **kwargs):
         value = self.get_file_output(**kwargs).getvalue()
         return value
 
     def get_file_output(self, **kwargs):
-        query_log_id = execute_query.delay(
-            self.query.final_sql(),
-            self.query.connection,
-            self.query.id,
-            self.user.id,
-            1,
-            settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
-            settings.EXPLORER_QUERY_TIMEOUT_MS,
-        ).get()
-        headers, data, _ = fetch_query_results(query_log_id)
+        if flag_is_active(self.request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
+            query_log_id = execute_query_async.delay(
+                self.query.final_sql(),
+                self.query.connection,
+                self.query.id,
+                self.user.id,
+                1,
+                settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
+                settings.EXPLORER_QUERY_TIMEOUT_MS,
+            ).get()
+            headers, data, _ = fetch_query_results(query_log_id)
+        else:
+            headers, data, _ = execute_query_sync(
+                self.query.final_sql(),
+                self.query.connection,
+                self.query.id,
+                self.user.id,
+                1,
+                settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
+                settings.EXPLORER_QUERY_TIMEOUT_MS,
+            )
         return self._get_output(headers, data, **kwargs)
 
     def _get_output(self, headers, data, **kwargs):
