@@ -721,9 +721,14 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         'get_user_name_link',
         'user',
         'rolename',
+<<<<<<< HEAD
         'database',
         'get_detail_truncated_query',
         'get_related_master_datasets',
+=======
+        'query_sql',
+        'get_related_datasets',
+>>>>>>> fix: add ref datasets to related datasets
     ]
     list_display = [
         'timestamp',
@@ -774,14 +779,18 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
 
     get_user_name_link.short_description = 'User'
 
-    def get_related_master_datasets(self, obj):
+    def get_related_datasets(self, obj):
         source_tables = SourceTable.objects.filter(dataset__deleted=False)
+        reference_datasets = ReferenceDataset.objects.live()
         datasets = set()
         for table in obj.tables.all():
             for source_table in source_tables.filter(
                 schema=table.schema, table=table.table
             ):
                 datasets.add(source_table.dataset)
+            if table.schema == 'public':
+                for ref_dataset in reference_datasets.filter(table_name=table.table):
+                    datasets.add(ref_dataset)
         return (
             format_html(
                 '<br />'.join(
@@ -795,5 +804,5 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
             else '-'
         )
 
-    get_related_master_datasets.short_description = 'Related Master Datasets'
+    get_related_datasets.short_description = 'Related Datasets'
 
