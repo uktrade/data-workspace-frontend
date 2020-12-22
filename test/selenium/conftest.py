@@ -15,7 +15,7 @@ import pytest
 @pytest.fixture(scope='module')
 def create_application():
     proc = subprocess.Popen(
-        ['/dataworkspace/start.sh'],
+        ['/dataworkspace/start-test.sh'],
         env={**os.environ, "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}'},
     )
 
@@ -25,6 +25,29 @@ def create_application():
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
     except ProcessLookupError:
         pass
+
+
+def set_waffle_flag(flag_name, everyone=True):
+    python_code = textwrap.dedent(
+        f"""
+        from waffle.models import Flag
+
+        flag = Flag.objects.create(name='{flag_name}', everyone={everyone})
+        flag.save()
+        """
+    ).encode('ascii')
+
+    give_perm = subprocess.Popen(
+        ['django-admin', 'shell'],
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+    )
+    stdout, stderr = give_perm.communicate(python_code)
+    code = give_perm.wait()
+
+    return stdout, stderr, code
 
 
 def create_dataset(dataset_id, dataset_name, table_id, database, user_access_type):

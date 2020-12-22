@@ -12,6 +12,8 @@ try:
 except ImportError:
     from django.core.urlresolvers import reverse
 
+from dataworkspace.apps.explorer.constants import QueryLogState
+
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +119,14 @@ class Query(models.Model):
 
 
 class QueryLog(models.Model):
+    STATE_RUNNING = QueryLogState.RUNNING.value
+    STATE_FAILED = QueryLogState.FAILED.value
+    STATE_COMPLETE = QueryLogState.COMPLETE.value
+    _STATE_CHOICES = (
+        (STATE_RUNNING, 'Running'),
+        (STATE_FAILED, 'Failed'),
+        (STATE_COMPLETE, 'Complete'),
+    )
 
     sql = models.TextField(null=True, blank=True)
     query = models.ForeignKey(Query, null=True, blank=True, on_delete=models.SET_NULL)
@@ -126,6 +136,9 @@ class QueryLog(models.Model):
     run_at = models.DateTimeField(auto_now_add=True)
     duration = models.FloatField(blank=True, null=True)  # milliseconds
     connection = models.CharField(blank=True, null=True, max_length=128)
+    state = models.IntegerField(choices=_STATE_CHOICES, default=STATE_RUNNING)
+    rows = models.IntegerField(null=True, blank=True)
+    page = models.IntegerField()
 
     @property
     def is_playground(self):

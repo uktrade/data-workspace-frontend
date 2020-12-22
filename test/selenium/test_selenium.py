@@ -6,10 +6,12 @@ import requests
 from django.core.cache import cache
 from selenium.common.exceptions import ElementNotInteractableException
 
+from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
     create_dataset,
     set_dataset_access_type,
+    set_waffle_flag,
     reset_data_explorer_credentials,
 )
 from test.selenium.explorer_pages import (  # pylint: disable=wrong-import-order
@@ -57,7 +59,23 @@ class TestDataExplorer:
 
             yield
 
-    def test_can_execute_query(self, _application):
+    def test_can_execute_query_with_async_flag_on(self, _application):
+        set_waffle_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, everyone=True)
+
+        home_page = HomePage(
+            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
+        )
+        home_page.open()
+
+        home_page.enter_query("select 1, 2, 3")
+        home_page.click_run()
+
+        assert home_page.read_result_headers() == ['?column?', '?column?', '?column?']
+        assert home_page.read_result_rows() == [["1", "2", "3"]]
+
+    def test_can_execute_query_with_async_flag_off(self, _application):
+        set_waffle_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, everyone=False)
+
         home_page = HomePage(
             driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
         )

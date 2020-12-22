@@ -6,7 +6,6 @@ from django.test import TestCase
 from dataworkspace.apps.explorer.models import (
     extract_params,
     get_params_for_url,
-    QueryLog,
     shared_dict_update,
     swap_params,
 )
@@ -18,7 +17,7 @@ from dataworkspace.apps.explorer.utils import (
 )
 
 
-from dataworkspace.tests.explorer.factories import SimpleQueryFactory
+from dataworkspace.tests.explorer.factories import SimpleQueryFactory, QueryLogFactory
 
 
 @pytest.mark.django_db(transaction=True)
@@ -37,14 +36,14 @@ class TestQueryModel:
         assert q.get_run_count() == 0
         expected = 4
         for _ in range(0, expected):
-            QueryLog.objects.create(query=q)
+            QueryLogFactory(query=q)
         assert q.get_run_count() == expected
 
     def test_avg_duration(self):
         q = SimpleQueryFactory()
         assert q.avg_duration() is None
-        QueryLog.objects.create(query=q, duration=2)
-        QueryLog.objects.create(query=q, duration=3)
+        QueryLogFactory(query=q, duration=2)
+        QueryLogFactory(query=q, duration=3)
         assert q.avg_duration() == 2.5
 
     def test_final_sql_uses_merged_params(self):

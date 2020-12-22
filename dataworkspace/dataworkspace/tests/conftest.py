@@ -9,6 +9,8 @@ from django.test import Client, TestCase, override_settings
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.tests import factories
 
+from dataworkspace.cel import celery_app
+
 
 @pytest.fixture
 def staff_user(db):
@@ -151,3 +153,8 @@ def change_staticfiles_storage():
         STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage'
     ):
         yield
+
+
+@pytest.fixture(scope='session', autouse=True)
+def make_celery_eager():
+    celery_app.conf.task_always_eager = True

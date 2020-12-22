@@ -1,6 +1,7 @@
 import logging
 import re
 from time import time
+import uuid
 
 from contextlib import contextmanager
 from datetime import timedelta
@@ -9,11 +10,11 @@ import psycopg2
 import sqlparse
 
 from django.conf import settings
-from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
-from django.db import DatabaseError
+from django.shortcuts import get_object_or_404
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
@@ -118,6 +119,10 @@ class InvalidExplorerConnectionException(Exception):
     pass
 
 
+class QueryException(Exception):
+    pass
+
+
 def user_cached_credentials_key(user):
     return f"explorer_credentials_{user.profile.sso_id}"
 
@@ -215,53 +220,6 @@ def remove_data_explorer_user_cached_credentials(user):
     cache.delete(cache_key)
 
 
-class QueryResult:
-    def __init__(
-        self,
-        sql,
-        page,
-        limit,
-        timeout,
-        duration,
-        description,
-        data,
-        row_count,
-        query_log,
-    ):
-        self.sql = sql
-        self.page = page
-        self.limit = limit
-        self.timeout = timeout
-        self.duration = duration
-        self.description = description
-        self.data = data
-        self.row_count = row_count
-        self.query_log = query_log
-
-    @property
-    def header_strings(self):
-        return [str(h) for h in self.headers]
-
-    @property
-    def headers(self):
-        return (
-            [ColumnHeader(d[0]) for d in self.description]
-            if self.description
-            else [ColumnHeader('--')]
-        )
-
-    def column(self, ix):
-        return [r[ix] for r in self.data]
-
-
-class ColumnHeader:
-    def __init__(self, title):
-        self.title = title.strip()
-
-    def __str__(self):
-        return self.title
-
-
 def tempory_query_table_name(user, query_log_id):
     schema_name = f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}'
     return f'{schema_name}._data_explorer_tmp_query_{query_log_id}'
@@ -333,79 +291,74 @@ TYPE_CODES_REVERSED = {
 }
 
 
-def _prefix_column(index, column):
-    return f'col_{index}_{column}'
+def fetch_query_results(query_log_id):
+    query_log = get_object_or_404(QueryLog, pk=query_log_id)
 
-
-def execute_query(query, user, page, limit, timeout):
+    user = query_log.run_by_user
     user_connection_settings = get_user_explorer_connection_settings(
-        user, query.connection
+        user, query_log.connection
+    )
+    table_name = tempory_query_table_name(user, query_log.id)
+    with user_explorer_connection(user_connection_settings) as conn:
+        cursor = conn.cursor()
+        cursor.execute(f'SELECT * FROM {table_name}')
+        # strip the prefix from the results
+        description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
+        headers = [d[0].strip() for d in description] if description else ['--']
+        data = [list(r) for r in cursor]
+    return headers, data, query_log
+
+
+def execute_query_sync(
+    query_sql, query_connection, query_id, user_id, page, limit, timeout
+):
+    user = get_user_model().objects.get(id=user_id)
+
+    user_connection_settings = get_user_explorer_connection_settings(
+        user, query_connection
     )
     query_log = QueryLog.objects.create(
-        sql=query.final_sql(),
-        query_id=query.id,
+        sql=query_sql,
+        query_id=query_id,
         run_by_user=user,
-        connection=query.connection,
+        connection=query_connection,
+        page=page,
     )
 
     with user_explorer_connection(user_connection_settings) as conn:
         cursor = conn.cursor()
+        cursor_name = 'cur_%s' % str(uuid.uuid4()).replace('-', '')[:10]
 
         start_time = time()
-        sql = query.final_sql().rstrip().rstrip(';')
-
-        table_name = tempory_query_table_name(user, query_log.id)
         try:
             cursor.execute(f'SET statement_timeout = {timeout}')
-            # This is required to handle multiple select columns with the same name.
-            # It adds a prefix of col_x_ to duplicated column returned from the query and
-            # these prefixed column names are used to create a table containing the
-            # query results. The prefixes are removed when the results are returned.
-            cursor.execute(f'SELECT * FROM ({sql}) sq limit 0')
-            column_names = list(zip(*cursor.description))[0]
-            duplicated_column_names = set(
-                c for c in column_names if column_names.count(c) > 1
-            )
-            prefixed_sql_columns = [
-                (
-                    f'"{_prefix_column(i, col[0]) if col[0] in duplicated_column_names else col[0]}" '
-                    f'{TYPE_CODES_REVERSED[col[1]]}'
-                )
-                for i, col in enumerate(cursor.description, 1)
-            ]
-
-            cursor.execute(
-                f'CREATE TABLE {table_name} ({", ".join(prefixed_sql_columns)})'
-            )
-            offset = ''
+            cursor.execute(f'DECLARE {cursor_name} CURSOR WITH HOLD FOR {query_sql}')
             if page and page > 1:
-                offset = f' OFFSET {(page - 1) * limit}'
-
-            cursor.execute(
-                f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
+                offset = (page - 1) * limit
+                cursor.execute(f'MOVE {offset} FROM {cursor_name}')
+            cursor.execute(f'FETCH {limit} FROM {cursor_name}')
+        except Exception as e:
+            query_log.state = QueryLog.STATE_FAILED
+            query_log.save()
+            # Remove the DECLARE cur_* wrapper
+            error_message = str(e).replace(
+                f'DECLARE {cursor_name} CURSOR WITH HOLD FOR ', ''
             )
-            cursor.execute(f'SELECT * FROM {table_name}')
-        except DatabaseError as e:
-            raise e
+            raise QueryException(error_message)
 
-        # strip the prefix from the results
-        description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
+        description = cursor.description or []
         data = [list(r) for r in cursor]
-        duration = (time() - start_time) * 1000
-        query_log.duration = duration
-        query_log.save()
+        cursor.execute(f'CLOSE {cursor_name}')
 
+        sql = query_sql.rstrip().rstrip(';')
         cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
         row_count = cursor.fetchone()[0]
+        duration = (time() - start_time) * 1000
 
-    return QueryResult(
-        query.final_sql(),
-        page,
-        limit,
-        timeout,
-        duration,
-        description,
-        data,
-        row_count,
-        query_log,
-    )
+    query_log.duration = duration
+    query_log.rows = row_count
+    query_log.state = QueryLog.STATE_COMPLETE
+    query_log.save()
+
+    headers = [d[0].strip() for d in description] if description else ['--']
+    return headers, data, query_log

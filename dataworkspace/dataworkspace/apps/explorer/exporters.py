@@ -9,8 +9,11 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
+from waffle import flag_is_active
 
-from dataworkspace.apps.explorer.utils import execute_query
+from dataworkspace.apps.explorer.tasks import execute_query_async
+from dataworkspace.apps.explorer.utils import execute_query_sync, fetch_query_results
+from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
 
 
 def get_exporter_class(format_):
@@ -23,27 +26,43 @@ class BaseExporter:
     content_type = ''
     file_extension = ''
 
-    def __init__(self, query, user):
+    def __init__(self, query, request):
         self.query = query
-        self.user = user
+        self.request = request
+        self.user = request.user
 
     def get_output(self, **kwargs):
         value = self.get_file_output(**kwargs).getvalue()
         return value
 
     def get_file_output(self, **kwargs):
-        res = execute_query(
-            self.query,
-            self.user,
-            1,
-            settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
-            settings.EXPLORER_QUERY_TIMEOUT_MS,
-        )
-        return self._get_output(res, **kwargs)
+        if flag_is_active(self.request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
+            query_log_id = execute_query_async.delay(
+                self.query.final_sql(),
+                self.query.connection,
+                self.query.id,
+                self.user.id,
+                1,
+                settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
+                settings.EXPLORER_QUERY_TIMEOUT_MS,
+            ).get()
+            headers, data, _ = fetch_query_results(query_log_id)
+        else:
+            headers, data, _ = execute_query_sync(
+                self.query.final_sql(),
+                self.query.connection,
+                self.query.id,
+                self.user.id,
+                1,
+                settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
+                settings.EXPLORER_QUERY_TIMEOUT_MS,
+            )
+        return self._get_output(headers, data, **kwargs)
 
-    def _get_output(self, res, **kwargs):
+    def _get_output(self, headers, data, **kwargs):
         """
-        :param res: QueryResult
+        :param headers: list
+        :param data: list
         :param kwargs: Optional. Any exporter-specific arguments.
         :return: File-like object
         """
@@ -63,14 +82,14 @@ class CSVExporter(BaseExporter):
     content_type = 'text/csv'
     file_extension = '.csv'
 
-    def _get_output(self, res, **kwargs):
+    def _get_output(self, headers, data, **kwargs):
         delim = kwargs.get('delim') or settings.EXPLORER_CSV_DELIMETER
         delim = '\t' if delim == 'tab' else str(delim)
         delim = settings.EXPLORER_CSV_DELIMETER if len(delim) > 1 else delim
         csv_data = StringIO()
         writer = csv.writer(csv_data, delimiter=delim)
-        writer.writerow(res.headers)
-        for row in res.data:
+        writer.writerow(headers)
+        for row in data:
             writer.writerow(row)
         return csv_data
 
@@ -81,14 +100,14 @@ class JSONExporter(BaseExporter):
     content_type = 'application/json'
     file_extension = '.json'
 
-    def _get_output(self, res, **kwargs):
-        data = []
-        for row in res.data:
-            data.append(  # pylint: disable=unnecessary-comprehension
-                dict(zip([str(h) if h is not None else '' for h in res.headers], row))
+    def _get_output(self, headers, data, **kwargs):
+        rows = []
+        for row in data:
+            rows.append(  # pylint: disable=unnecessary-comprehension
+                dict(zip([str(h) if h is not None else '' for h in headers], row))
             )
 
-        json_data = json.dumps(data, cls=DjangoJSONEncoder)
+        json_data = json.dumps(rows, cls=DjangoJSONEncoder)
         return StringIO(json_data)
 
 
@@ -98,7 +117,7 @@ class ExcelExporter(BaseExporter):
     content_type = 'application/vnd.ms-excel'
     file_extension = '.xlsx'
 
-    def _get_output(self, res, **kwargs):
+    def _get_output(self, headers, data, **kwargs):
         import xlsxwriter  # pylint: disable=import-outside-toplevel
 
         output = BytesIO()
@@ -111,24 +130,24 @@ class ExcelExporter(BaseExporter):
         row = 0
         col = 0
         header_style = wb.add_format({'bold': True})
-        for header in res.header_strings:
-            ws.write(row, col, header, header_style)
+        for header in headers:
+            ws.write(row, col, str(header), header_style)
             col += 1
 
         # Write data
         row = 1
         col = 0
-        for data_row in res.data:
-            for data in data_row:
+        for data_rows in data:
+            for data_row in data_rows:
                 # xlsxwriter can't handle timezone-aware datetimes or
                 # UUIDs, so we help out here and just cast it to a
                 # string
-                if isinstance(data, (datetime, uuid.UUID)):
-                    data = str(data)
+                if isinstance(data_row, (datetime, uuid.UUID)):
+                    data_row = str(data_row)
                 # JSON and Array fields
-                if isinstance(data, (dict, list)):
-                    data = json.dumps(data)
-                ws.write(row, col, data)
+                if isinstance(data_row, (dict, list)):
+                    data_row = json.dumps(data_row)
+                ws.write(row, col, data_row)
                 col += 1
             row += 1
             col = 0

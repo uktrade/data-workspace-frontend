@@ -16,6 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
+from waffle import flag_is_active
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -23,9 +24,12 @@ from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.schema import schema_info
+from dataworkspace.apps.explorer.tasks import execute_query_async
 from dataworkspace.apps.explorer.utils import (
-    execute_query,
+    execute_query_sync,
+    fetch_query_results,
     get_total_pages,
+    QueryException,
     url_get_log_id,
     url_get_page,
     url_get_params,
@@ -33,6 +37,7 @@ from dataworkspace.apps.explorer.utils import (
     url_get_rows,
     url_get_show,
 )
+from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
 
 
 class SafeLoginView(LoginView):
@@ -44,7 +49,7 @@ def _export(request, query, download=True):
     exporter_class = get_exporter_class(format_)
     query.params = url_get_params(request)
     delim = request.GET.get('delim')
-    exporter = exporter_class(query=query, user=request.user)
+    exporter = exporter_class(query=query, request=request)
     try:
         output = exporter.get_output(delim=delim)
     except DatabaseError as e:
@@ -182,7 +187,7 @@ class CreateQueryView(CreateView):
                     form.save()
 
                 vm = query_viewmodel(
-                    request.user,
+                    request,
                     query,
                     form=form,
                     run_query=False,
@@ -348,7 +353,7 @@ class PlayQueryView(View):
                     form.initial['sql'] = play_sql.sql
 
         context = query_viewmodel(
-            request.user,
+            request,
             query,
             title="Home",
             run_query=run_query and form.is_valid(),
@@ -390,7 +395,7 @@ class QueryView(View):
             )
             success = form.is_valid() and form.save()
             vm = query_viewmodel(
-                request.user,
+                request,
                 query,
                 form=form,
                 run_query=show,
@@ -460,7 +465,7 @@ def get_playground_sql_from_request(request):
 
 
 def query_viewmodel(
-    user,
+    request,
     query,
     title=None,
     form=None,
@@ -472,17 +477,36 @@ def query_viewmodel(
     method="POST",
     log=True,
 ):
-    res = None
     error = None
     if run_query:
         try:
-            res = execute_query(query, user, page, rows, timeout)
-        except DatabaseError as e:
+            if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
+                query_log_id = execute_query_async.delay(
+                    query.final_sql(),
+                    query.connection,
+                    query.id,
+                    request.user.id,
+                    page,
+                    rows,
+                    timeout,
+                ).get()
+                headers, data, query_log = fetch_query_results(query_log_id)
+            else:
+                headers, data, query_log = execute_query_sync(
+                    query.final_sql(),
+                    query.connection,
+                    query.id,
+                    request.user.id,
+                    page,
+                    rows,
+                    timeout,
+                )
+        except QueryException as e:
             error = str(e)
     if error and method == "POST":
         form.add_error('sql', error)
         message = "Query error"
-    has_valid_results = not error and res and run_query
+    has_valid_results = not error and run_query
     ret = {
         'params': query.available_params(),
         'title': title,
@@ -491,12 +515,12 @@ def query_viewmodel(
         'message': message,
         'rows': rows,
         'page': page,
-        'data': res.data if has_valid_results else None,
-        'headers': res.headers if has_valid_results else None,
-        'total_rows': res.row_count if has_valid_results else None,
-        'duration': res.duration if has_valid_results else None,
+        'data': data if has_valid_results else None,
+        'headers': headers if has_valid_results else None,
+        'total_rows': query_log.rows if has_valid_results else None,
+        'duration': query_log.duration if has_valid_results else None,
         'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
-        'query_log': res.query_log if has_valid_results else None,
+        'query_log': query_log if has_valid_results else None,
     }
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)
 
