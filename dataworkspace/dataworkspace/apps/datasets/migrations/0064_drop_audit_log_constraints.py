@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveConstraint(
-            model_name='toolqueryauditlog',
-            name='unique toolqueryauditlog',
+            model_name='toolqueryauditlog', name='unique toolqueryauditlog',
         ),
     ]
