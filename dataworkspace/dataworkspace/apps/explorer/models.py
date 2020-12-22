@@ -138,7 +138,7 @@ class QueryLog(models.Model):
     connection = models.CharField(blank=True, null=True, max_length=128)
     state = models.IntegerField(choices=_STATE_CHOICES, default=STATE_RUNNING)
     rows = models.IntegerField(null=True, blank=True)
-    page = models.IntegerField()
+    page = models.IntegerField(default=1)
 
     @property
     def is_playground(self):
