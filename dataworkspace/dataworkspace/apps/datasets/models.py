@@ -1833,14 +1833,11 @@ class ToolQueryAuditLogTable(models.Model):
         ToolQueryAuditLog, on_delete=models.CASCADE, related_name='tables'
     )
     schema = models.CharField(
-        max_length=1024,
-        blank=False,
+        max_length=63,
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
         default='public',
     )
     table = models.CharField(
-        max_length=1024,
-        blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        max_length=63, validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
 

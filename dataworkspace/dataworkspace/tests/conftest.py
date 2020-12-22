@@ -182,4 +182,3 @@ def dataset_db(metadata_db):
         )
 
     return database
-

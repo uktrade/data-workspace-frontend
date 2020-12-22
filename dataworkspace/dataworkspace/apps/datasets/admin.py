@@ -721,14 +721,9 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         'get_user_name_link',
         'user',
         'rolename',
-<<<<<<< HEAD
         'database',
         'get_detail_truncated_query',
-        'get_related_master_datasets',
-=======
-        'query_sql',
         'get_related_datasets',
->>>>>>> fix: add ref datasets to related datasets
     ]
     list_display = [
         'timestamp',
@@ -805,4 +800,3 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         )
 
     get_related_datasets.short_description = 'Related Datasets'
-
