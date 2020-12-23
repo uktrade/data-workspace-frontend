@@ -1536,6 +1536,14 @@ class ReferenceDatasetField(TimeStampedUserModel):
         field_data = {'label': self.name}
         if self.data_type == self.DATA_TYPE_DATE:
             field_data['widget'] = forms.DateInput(attrs={'type': 'date'})
+            field_data['input_formats'] = (
+                '%Y-%m-%d',
+                '%d-%m-%Y',
+                '%y-%m-%d',
+                '%d-%m-%y',
+                '%d/%m/%Y',
+                '%d/%m/%y',
+            )
         elif self.data_type == self.DATA_TYPE_TIME:
             field_data['widget'] = forms.DateInput(attrs={'type': 'time'})
         elif self.data_type == self.DATA_TYPE_FOREIGN_KEY:
