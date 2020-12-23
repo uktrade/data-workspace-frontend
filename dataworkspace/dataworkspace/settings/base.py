@@ -565,8 +565,15 @@ PGAUDIT_IGNORE_STATEMENTS_RE = [
     r'SELECT version()',
     r'SELECT current_schema()',
     r"SELECT CAST\('.*?' AS VARCHAR\(\d+\)\) AS \w",
-    r"SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema not in "
-    r"\('pg_toast', 'pg_temp_1', 'pg_toast_temp_1', 'pg_catalog', 'information_schema'\) "
-    r"ORDER BY table_schema, table_name;",
-    r"^BEGIN$",
+    r"SELECT table_schema, table_name( )?FROM information_schema.tables( )?"
+    r"WHERE table_schema not in .*?ORDER BY table_schema, table_name;",
+    r"^BEGIN(;)$",
+    r"^ROLLBACK(;)?$",
+    r"^COMMIT(;)?$",
+    r"^FETCH FORWARD \d+ FROM \"\w+\"(;)?$",
+    r"^SHOW STANDARD_CONFORMING_STRINGS(;)?$",
+    r"^SHOW TRANSACTION ISOLATION LEVEL(;)?$",
+    r"^SET STATEMENT_TIMEOUT = \d+(;)?$",
+    r"^SET TIMEZONE='\w+'(;)?$",
+    r"^SET CLIENT_ENCODING TO '.*?'(;)?$",
 ]
