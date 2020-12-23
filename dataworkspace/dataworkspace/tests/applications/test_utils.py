@@ -1,6 +1,8 @@
 import datetime
 import json
 import os
+import random
+import string
 
 import botocore
 from django.contrib.auth import get_user_model
@@ -1111,6 +1113,11 @@ class TestSyncToolQueryLogs:
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
         '"AUDIT: SESSION,19047,1,READ,SELECT,,,""select CAST(id as VARCHAR(50)) as col1 from a"",'
         '<not logged>",,,,,,,,,""\n',
+        # > 1 million characters
+        '2020-12-08 20:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
+        '"AUDIT: SESSION,19047,1,READ,SELECT,,,""'
+        f'{"".join(random.choices(string.ascii_letters, k=1500000))}"",<not logged>",,,,,,,,,""\n',
     ]
 
     @pytest.mark.django_db(transaction=True)

@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import sys
 import urllib.parse
 from typing import Dict, List
 
@@ -1287,6 +1288,7 @@ def _fetch_rds_pgaudit_logs(from_date, to_date):
 
 
 def _do_sync_tool_query_logs():
+    csv.field_size_limit(sys.maxsize)
     from_date = cache.get(
         'query_tool_logs_last_run',
         datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(minutes=5),
