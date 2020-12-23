@@ -10,5 +10,4 @@ class Migration(migrations.Migration):
         ('datasets', '0065_add_audit_log_hashed_unique_index'),
     ]
 
-    operations = [
-    ]
+    operations = []
