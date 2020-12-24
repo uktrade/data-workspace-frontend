@@ -1,76 +1,77 @@
 data "aws_region" "aws_region" {}
 data "aws_caller_identity" "aws_caller_identity" {}
 
-variable "aws_availability_zones" {
+variable aws_availability_zones {
  type = "list"
 }
-variable "aws_availability_zones_short" {
+variable aws_availability_zones_short {
  type = "list"
 }
 
-variable "ip_whitelist" {
+variable ip_whitelist {
   type = "list"
 }
 
-variable "prefix" {}
-variable "prefix_short" {}
-variable "prefix_underscore" {}
+variable prefix {}
+variable prefix_short {}
+variable prefix_underscore {}
 
-variable "vpc_cidr" {}
-variable "subnets_num_bits" {}
-variable "vpc_notebooks_cidr" {}
-variable "vpc_notebooks_subnets_num_bits" {}
+variable vpc_cidr {}
+variable subnets_num_bits {}
+variable vpc_notebooks_cidr {}
+variable vpc_notebooks_subnets_num_bits {}
+variable vpc_datasets_cidr {}
 
-variable "aws_route53_zone" {}
-variable "admin_domain" {}
-variable "appstream_domain" {}
-variable "support_domain" {}
+variable aws_route53_zone {}
+variable admin_domain {}
+variable appstream_domain {}
+variable support_domain {}
 
-variable "registry_container_image" {}
-variable "registry_proxy_remoteurl" {}
-variable "registry_proxy_username" {}
-variable "registry_proxy_password" {}
-variable "registry_internal_domain" {}
+variable registry_container_image {}
+variable registry_proxy_remoteurl {}
+variable registry_proxy_username {}
+variable registry_proxy_password {}
+variable registry_internal_domain {}
 
-variable "admin_container_image" {}
-variable "admin_db_instance_class" {}
+variable admin_container_image {}
+variable admin_db_instance_class {}
 
-variable "admin_authbroker_client_id" {}
-variable "admin_authbroker_client_secret" {}
-variable "admin_authbroker_url" {}
-variable "admin_environment" {}
+variable admin_authbroker_client_id {}
+variable admin_authbroker_client_secret {}
+variable admin_authbroker_url {}
+variable admin_environment {}
 
-variable "uploads_bucket" {}
-variable "appstream_bucket" {}
-variable "notebooks_bucket" {}
-variable "notebook_container_image" {}
-variable "jupyterlab_python_container_image" {}
-variable "jupyterlab_r_container_image" {}
-variable "rstudio_container_image" {}
-variable "pgadmin_container_image" {}
-variable "pgweb_container_image" {}
-variable "remotedesktop_container_image" {}
-variable "theia_container_image" {}
-variable "superset_container_image" {}
+variable uploads_bucket {}
+variable appstream_bucket {}
+variable notebooks_bucket {}
+variable notebook_container_image {}
+variable jupyterlab_python_container_image {}
+variable jupyterlab_r_container_image {}
+variable rstudio_container_image {}
+variable pgadmin_container_image {}
+variable pgweb_container_image {}
+variable remotedesktop_container_image {}
+variable theia_container_image {}
+variable superset_container_image {}
 
-variable "alb_access_logs_bucket" {}
-variable "alb_logs_account" {}
+variable alb_access_logs_bucket {}
+variable alb_logs_account {}
 
-variable "dnsmasq_container_image" {}
-variable "sentryproxy_container_image" {}
+variable dnsmasq_container_image {}
+variable sentryproxy_container_image {}
 
-variable "cloudwatch_destination_arn" {}
+variable cloudwatch_destination_arn {}
 
-variable "mirrors_bucket_name" {}
-variable "mirrors_sync_container_image" {}
-variable "mirrors_sync_cran_binary_container_image" {}
-variable "mirrors_data_bucket_name" {}
+variable mirrors_bucket_name {}
+variable mirrors_sync_container_image {}
+variable mirrors_sync_cran_binary_container_image {}
+variable mirrors_data_bucket_name {}
 
-variable "sentry_dsn" {}
-variable "sentry_environment" {}
+variable sentry_dsn {}
+variable sentry_environment {}
 
-variable "notebook_task_role_prefix" {}
-variable "notebook_task_role_policy_name" {}
+variable notebook_task_role_prefix {}
+variable notebook_task_role_policy_name {}
 
 variable healthcheck_container_image {}
 variable healthcheck_domain {}
@@ -122,6 +123,28 @@ variable superset_multiuser_admin_users {}
 variable superset_multiuser_db_instance_class {}
 variable superset_multiuser_container_image {}
 variable superset_internal_domain {}
+
+variable datasets_rds_cluster_backup_retention_period {}
+variable datasets_rds_cluster_database_name {}
+variable datasets_rds_cluster_master_username {}
+variable datasets_rds_cluster_storage_encryption_enabled {}
+variable datasets_rds_cluster_cluster_identifier {}
+variable datasets_rds_cluster_instance_class {}
+variable datasets_rds_cluster_instance_performance_insights_enabled {}
+variable datasets_rds_cluster_instance_identifier {}
+
+variable paas_cidr_block {}
+variable paas_vpc_id {}
+variable quicksight_cidr_block {}
+variable datasets_subnet_cidr_blocks {
+  type = "list"
+}
+variable dataset_subnets_availability_zones {
+  type = "list"
+}
+variable quicksight_security_group_name {}
+variable quicksight_security_group_description {}
+variable quicksight_subnet_availability_zone {}
 
 locals {
   registry_container_name    = "jupyterhub-registry"
