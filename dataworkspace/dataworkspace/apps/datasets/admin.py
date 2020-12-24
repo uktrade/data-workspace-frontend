@@ -4,6 +4,7 @@ from datetime import datetime
 
 from adminsortable2.admin import SortableInlineAdminMixin
 from csp.decorators import csp_update
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
@@ -713,8 +714,22 @@ class DatasetReferenceCodeAdmin(admin.ModelAdmin):
 @admin.register(ToolQueryAuditLog)
 class ToolQueryAuditLogAdmin(admin.ModelAdmin):
     search_fields = ['user__email', 'rolename', 'query_sql']
-    fields = ['id', 'timestamp', 'user', 'database', 'rolename', 'query_sql']
-    list_display = ['id', 'timestamp', 'user', 'database', 'rolename', 'query_sql']
+    fields = [
+        'id',
+        'timestamp',
+        'user',
+        'database',
+        'rolename',
+        'get_detail_truncated_query',
+    ]
+    list_display = [
+        'id',
+        'timestamp',
+        'user',
+        'database',
+        'rolename',
+        'get_list_truncated_query',
+    ]
 
     def has_add_permission(self, request):
         return False
@@ -724,3 +739,22 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    def _truncate_query(self, query, length):
+        if len(query) > length:
+            return query[:length] + '...'
+        return query
+
+    def get_list_truncated_query(self, obj):
+        return self._truncate_query(
+            obj.query_sql, settings.TOOL_QUERY_LOG_ADMIN_LIST_QUERY_TRUNC_LENGTH
+        )
+
+    get_list_truncated_query.short_description = 'Query SQL'
+
+    def get_detail_truncated_query(self, obj):
+        return self._truncate_query(
+            obj.query_sql, settings.TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH
+        )
+
+    get_detail_truncated_query.short_description = 'Query SQL'
