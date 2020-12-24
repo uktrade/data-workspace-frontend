@@ -19,6 +19,7 @@ from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
 from waffle import flag_is_active
+from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -529,7 +530,9 @@ def query_viewmodel(
     return ret
 
 
-class QueryLogResultView(View):
+class QueryLogResultView(WaffleFlagMixin, View):
+    waffle_flag = DATA_EXPLORER_ASYNC_QUERIES_FLAG
+
     def get(self, request, querylog_id):
         query_log = get_object_or_404(
             QueryLog, pk=querylog_id, run_by_user=self.request.user

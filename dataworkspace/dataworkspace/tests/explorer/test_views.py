@@ -691,8 +691,16 @@ class TestQueryLog:
 
 @pytest.mark.django_db(transaction=True)
 class TestQueryLogEndpoint:
+    def test_waffle_flag_inactive(self, staff_user, staff_client):
+        query_log = QueryLogFactory(sql="select 123", run_by_user=staff_user)
+        resp = staff_client.get(
+            reverse('explorer:querylog_results', args=(query_log.id,))
+        )
+        assert resp.status_code == 404
+
     def test_query_does_not_exist(self, staff_user, staff_client):
-        resp = staff_client.get(reverse('explorer:querylog_results', args=(999,)))
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            resp = staff_client.get(reverse('explorer:querylog_results', args=(999,)))
         assert resp.status_code == 404
 
     def test_query_owned_by_other_user(self, staff_user, staff_client):
@@ -700,27 +708,29 @@ class TestQueryLogEndpoint:
         query_log = QueryLogFactory(
             sql="select 456", run_by_user=UserFactory(email='bob@test.com')
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            resp = staff_client.get(
+                reverse('explorer:querylog_results', args=(query_log.id,))
+            )
         assert resp.status_code == 404
 
     def test_query_running(self, staff_user, staff_client):
         query_log = QueryLogFactory(
             sql="select 123", run_by_user=staff_user, state=QueryLog.STATE_RUNNING
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
-        assert resp.status_code == 200
-        json_response = resp.json()
-        assert json_response['query_log_id'] == query_log.id
-        assert json_response['state'] == query_log.state
-        assert json_response['error'] is None
-        assert (
-            'Your query is currently being executed by Data Explorer'
-            in json_response['html']
-        )
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            resp = staff_client.get(
+                reverse('explorer:querylog_results', args=(query_log.id,))
+            )
+            assert resp.status_code == 200
+            json_response = resp.json()
+            assert json_response['query_log_id'] == query_log.id
+            assert json_response['state'] == query_log.state
+            assert json_response['error'] is None
+            assert (
+                'Your query is currently being executed by Data Explorer'
+                in json_response['html']
+            )
 
     def test_query_failed(self, staff_user, staff_client):
         query_log = QueryLogFactory(
@@ -729,9 +739,10 @@ class TestQueryLogEndpoint:
             state=QueryLog.STATE_FAILED,
             error='This is an error message',
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            resp = staff_client.get(
+                reverse('explorer:querylog_results', args=(query_log.id,))
+            )
         assert resp.status_code == 200
         json_response = resp.json()
         assert json_response['query_log_id'] == query_log.id
@@ -754,9 +765,10 @@ class TestQueryLogEndpoint:
             state=QueryLog.STATE_COMPLETE,
             rows=100,
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            resp = staff_client.get(
+                reverse('explorer:querylog_results', args=(query_log.id,))
+            )
         assert resp.status_code == 200
         json_response = resp.json()
         assert json_response['query_log_id'] == query_log.id
