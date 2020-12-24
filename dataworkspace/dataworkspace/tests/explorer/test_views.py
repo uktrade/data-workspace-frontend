@@ -701,7 +701,11 @@ class TestQueryLogEndpoint:
     def test_query_does_not_exist(self, staff_user, staff_client):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
             resp = staff_client.get(reverse('explorer:querylog_results', args=(999,)))
-        assert resp.status_code == 404
+        assert resp.status_code == 200
+        assert (
+            resp.json()['error']
+            == 'Error fetching results. Please try running your query again.'
+        )
 
     def test_query_owned_by_other_user(self, staff_user, staff_client):
         QueryLogFactory(sql="select 123", run_by_user=staff_user)
@@ -712,7 +716,11 @@ class TestQueryLogEndpoint:
             resp = staff_client.get(
                 reverse('explorer:querylog_results', args=(query_log.id,))
             )
-        assert resp.status_code == 404
+        assert resp.status_code == 200
+        assert (
+            resp.json()['error']
+            == 'Error fetching results. Please try running your query again.'
+        )
 
     def test_query_running(self, staff_user, staff_client):
         query_log = QueryLogFactory(

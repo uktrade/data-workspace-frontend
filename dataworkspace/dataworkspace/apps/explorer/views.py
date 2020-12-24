@@ -2,6 +2,7 @@ from urllib.parse import urlencode
 
 from psycopg2 import DatabaseError
 
+from django import http
 from django.conf import settings
 from django.template import loader
 from django.contrib.auth.views import LoginView
@@ -534,32 +535,36 @@ class QueryLogResultView(WaffleFlagMixin, View):
     waffle_flag = DATA_EXPLORER_ASYNC_QUERIES_FLAG
 
     def get(self, request, querylog_id):
-        query_log = get_object_or_404(
-            QueryLog, pk=querylog_id, run_by_user=self.request.user
-        )
         html = None
-        if query_log.state == QueryLog.STATE_RUNNING:
-            template = loader.get_template('explorer/partials/query_executing.html')
-            html = template.render({}, request)
-        elif query_log.state == QueryLog.STATE_COMPLETE:
-            template = loader.get_template('explorer/partials/query_results.html')
-            headers, data, _ = fetch_query_results(querylog_id)
-            context = {
-                'query_log': query_log,
-                'headers': headers,
-                'data': data,
-                'rows': len(data),
-                'duration': query_log.duration,
-                'total_rows': query_log.rows,
-                'page': query_log.page,
-            }
-            html = template.render(context, request)
+        error = None
+
+        try:
+            query_log = get_object_or_404(
+                QueryLog, pk=querylog_id, run_by_user=self.request.user
+            )
+        except http.Http404:
+            state = QueryLog.STATE_FAILED
+            error = 'Error fetching results. Please try running your query again.'
+        else:
+            state = query_log.state
+            error = query_log.error
+            if query_log.state == QueryLog.STATE_RUNNING:
+                template = loader.get_template('explorer/partials/query_executing.html')
+                html = template.render({}, request)
+            elif query_log.state == QueryLog.STATE_COMPLETE:
+                template = loader.get_template('explorer/partials/query_results.html')
+                headers, data, _ = fetch_query_results(querylog_id)
+                context = {
+                    'query_log': query_log,
+                    'headers': headers,
+                    'data': data,
+                    'rows': len(data),
+                    'duration': query_log.duration,
+                    'total_rows': query_log.rows,
+                    'page': query_log.page,
+                }
+                html = template.render(context, request)
 
         return JsonResponse(
-            {
-                'query_log_id': query_log.id,
-                'state': query_log.state,
-                'error': query_log.error,
-                'html': html,
-            }
+            {'query_log_id': querylog_id, 'state': state, 'error': error, 'html': html}
         )
