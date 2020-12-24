@@ -694,10 +694,6 @@ class TestQueryLogEndpoint:
     def test_query_does_not_exist(self, staff_user, staff_client):
         resp = staff_client.get(reverse('explorer:querylog_results', args=(999,)))
         assert resp.status_code == 404
-        # QueryLogFactory(sql="select 1234", run_by_user=other_user)
-        # QueryLogFactory(sql="select 9876", run_by_user=staff_user)
-        # assert "select 9876" in resp.content.decode(resp.charset)
-        # assert "select 1234" not in resp.content.decode(resp.charset)
 
     def test_query_owned_by_other_user(self, staff_user, staff_client):
         QueryLogFactory(sql="select 123", run_by_user=staff_user)
