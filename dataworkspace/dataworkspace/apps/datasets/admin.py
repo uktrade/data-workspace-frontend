@@ -4,6 +4,7 @@ from datetime import datetime
 
 from adminsortable2.admin import SortableInlineAdminMixin
 from csp.decorators import csp_update
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
@@ -745,11 +746,15 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         return query
 
     def get_list_truncated_query(self, obj):
-        return self._truncate_query(obj.query_sql, 200)
+        return self._truncate_query(
+            obj.query_sql, settings.TOOL_QUERY_LOG_ADMIN_LIST_QUERY_TRUNC_LENGTH
+        )
 
     get_list_truncated_query.short_description = 'Query SQL'
 
     def get_detail_truncated_query(self, obj):
-        return self._truncate_query(obj.query_sql, 5000)
+        return self._truncate_query(
+            obj.query_sql, settings.TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH
+        )
 
     get_detail_truncated_query.short_description = 'Query SQL'
