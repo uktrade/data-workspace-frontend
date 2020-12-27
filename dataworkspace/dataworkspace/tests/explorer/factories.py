@@ -21,6 +21,7 @@ class QueryLogFactory(factory.django.DjangoModelFactory):
 
     sql = "SELECT 2+2 AS FOUR"
     page = 1
+    duration = 1000
 
 
 class PlaygroundSQLFactory(factory.django.DjangoModelFactory):

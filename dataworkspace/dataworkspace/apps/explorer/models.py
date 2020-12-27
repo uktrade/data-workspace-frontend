@@ -139,6 +139,7 @@ class QueryLog(models.Model):
     state = models.IntegerField(choices=_STATE_CHOICES, default=STATE_RUNNING)
     rows = models.IntegerField(null=True, blank=True)
     page = models.IntegerField(default=1)
+    error = models.TextField(null=True, blank=True)
 
     @property
     def is_playground(self):
