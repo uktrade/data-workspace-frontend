@@ -10,7 +10,6 @@ from pytz import utc
 from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.utils import (
     get_user_explorer_connection_settings,
-    QueryException,
     tempory_query_table_name,
     TYPE_CODES_REVERSED,
     user_explorer_connection,
@@ -66,29 +65,19 @@ def _prefix_column(index, column):
 
 
 @celery_app.task()
-def execute_query_async(
-    query_sql, query_connection, query_id, user_id, page, limit, timeout
-):
-    user = get_user_model().objects.get(id=user_id)
-
+def _run_querylog_query_async(query_log_id, page, limit, timeout):
+    query_log = QueryLog.objects.get(id=query_log_id)
     user_connection_settings = get_user_explorer_connection_settings(
-        user, query_connection
-    )
-    query_log = QueryLog.objects.create(
-        sql=query_sql,
-        query_id=query_id,
-        run_by_user=user,
-        connection=query_connection,
-        page=page,
+        query_log.run_by_user, query_log.connection
     )
 
     with user_explorer_connection(user_connection_settings) as conn:
         cursor = conn.cursor()
 
         start_time = time()
-        sql = query_sql.rstrip().rstrip(';')
+        sql = query_log.sql.rstrip().rstrip(';')
 
-        table_name = tempory_query_table_name(user, query_log.id)
+        table_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
         try:
             cursor.execute(f'SET statement_timeout = {timeout}')
             # This is required to handle multiple select columns with the same name.
@@ -119,15 +108,16 @@ def execute_query_async(
                 f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
             )
             cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
-        except Exception as e:
-            query_log.state = QueryLog.STATE_FAILED
-            query_log.error = str(e)
-            query_log.save()
+        except Exception as e:  # pylint: disable=broad-except
             # Remove the select statement wrapper used for getting the query fields
             error_message = (
                 str(e).replace('SELECT * FROM (', '').replace(') sq LIMIT 0', '')
             )
-            raise QueryException(error_message)
+            query_log.error = error_message
+            query_log.state = QueryLog.STATE_FAILED
+            query_log.save()
+            logger.exception("Failed to run query")
+            return
 
         row_count = cursor.fetchone()[0]
         duration = (time() - start_time) * 1000
@@ -139,4 +129,19 @@ def execute_query_async(
 
     logger.info("Created table %s and stored results", table_name)
 
-    return query_log.id
+
+def execute_query_async(
+    query_sql, query_connection, query_id, user_id, page, limit, timeout
+):
+    user = get_user_model().objects.get(id=user_id)
+    query_log = QueryLog.objects.create(
+        sql=query_sql,
+        query_id=query_id,
+        run_by_user=user,
+        connection=query_connection,
+        page=page,
+    )
+
+    _run_querylog_query_async.delay(query_log.id, page, limit, timeout)
+
+    return query_log

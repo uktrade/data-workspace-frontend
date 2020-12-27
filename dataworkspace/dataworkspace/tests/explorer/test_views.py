@@ -323,13 +323,28 @@ class TestHomePage:
             )
             assert resp.status_code == 404
 
-    def test_playground_renders_with_posted_sql(self, staff_client, waffle_flag_active):
-        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
+    def test_sync_playground_renders_with_posted_sql(
+        self, staff_client, waffle_flag_active
+    ):
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=False):
             resp = staff_client.post(
                 reverse("explorer:index"),
                 {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
             )
             assert '3401' in resp.content.decode(resp.charset)
+
+    def test_async_playground_renders_submitting_message(
+        self, staff_client, waffle_flag_active
+    ):
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            resp = staff_client.post(
+                reverse("explorer:index"),
+                {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
+            )
+            assert (
+                'Your query is being submitted to Data Explorer for execution.'
+                in resp.content.decode(resp.charset)
+            )
 
     def test_query_execution_respects_async_flag(self, staff_client):
         from dataworkspace.apps.explorer.views import (  # pylint: disable=import-outside-toplevel
@@ -339,7 +354,7 @@ class TestHomePage:
 
         async_patcher = patch('dataworkspace.apps.explorer.views.execute_query_async')
         mock_execute_query_async = async_patcher.start()
-        mock_execute_query_async.delay.side_effect = original_execute_query_async.delay
+        mock_execute_query_async.side_effect = original_execute_query_async
 
         sync_patcher = patch('dataworkspace.apps.explorer.views.execute_query_sync')
         mock_execute_query_sync = sync_patcher.start()
@@ -351,9 +366,9 @@ class TestHomePage:
                 {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
             )
         assert not mock_execute_query_sync.called
-        assert mock_execute_query_async.delay.called
+        assert mock_execute_query_async.called
 
-        mock_execute_query_async.delay.reset_mock()
+        mock_execute_query_async.reset_mock()
         mock_execute_query_sync.reset_mock()
 
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=False):
@@ -362,7 +377,7 @@ class TestHomePage:
                 {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
             )
             assert mock_execute_query_sync.called
-            assert not mock_execute_query_async.delay.called
+            assert not mock_execute_query_async.called
 
         async_patcher.stop()
         sync_patcher.stop()
@@ -370,7 +385,7 @@ class TestHomePage:
     def test_query_exception_returned_as_friendly_error(
         self, staff_client, waffle_flag_active
     ):
-        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=False):
             resp = staff_client.post(
                 reverse("explorer:index"),
                 {'title': 'test', 'sql': 'select "1"', "action": "run"},
@@ -386,7 +401,7 @@ class TestHomePage:
     def test_playground_suppresses_errors_from_invalid_pagination_values(
         self, page, rows, expected_page, expected_rows, staff_client, waffle_flag_active
     ):
-        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=False):
             resp = staff_client.post(
                 reverse("explorer:index"),
                 {
