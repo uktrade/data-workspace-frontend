@@ -3,10 +3,15 @@ from time import time
 
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.db import connections
 
 from pytz import utc
 
+from dataworkspace.apps.core.utils import (
+    USER_SCHEMA_STEM,
+    db_role_schema_suffix_for_user,
+)
 from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.utils import (
     get_user_explorer_connection_settings,
@@ -16,7 +21,7 @@ from dataworkspace.apps.explorer.utils import (
     user_explorer_connection,
 )
 from dataworkspace.cel import celery_app
-
+from dataworkspace.settings.base import DATABASES_DATA
 
 logger = get_task_logger(__name__)
 
@@ -55,10 +60,23 @@ def cleanup_temporary_query_tables():
     )
 
     for query_log in QueryLog.objects.filter(run_at__lte=one_day_ago):
-        with connections[query_log.connection].cursor() as cursor:
-            table_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
-            logger.info("Dropping temprary query table %s", table_name)
-            cursor.execute(f'DROP TABLE IF EXISTS {table_name}')
+        server_db_user = DATABASES_DATA[query_log.connection]['USER']
+        schema_name = (
+            f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(query_log.run_by_user)}'
+        )
+        table_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
+
+        with cache.lock(
+            f'database-grant--{DATABASES_DATA[query_log.connection]["NAME"]}--{schema_name}--v4',
+            blocking_timeout=3,
+            timeout=180,
+        ):
+            with connections[query_log.connection].cursor() as cursor:
+                logger.info("Dropping temporary query table %s", table_name)
+                cursor.execute(
+                    f"GRANT USAGE ON SCHEMA {schema_name} TO {server_db_user}"
+                )
+                cursor.execute(f'DROP TABLE IF EXISTS {table_name}')
 
 
 def _prefix_column(index, column):

@@ -54,8 +54,11 @@ class TestTasks(TestCase):
 
         assert PlaygroundSQL.objects.count() == 1
 
+    @patch('dataworkspace.apps.explorer.tasks.DATABASES_DATA')
     @patch('dataworkspace.apps.explorer.tasks.connections')
-    def test_cleanup_temporary_query_tables(self, mock_connections):
+    def test_cleanup_temporary_query_tables(
+        self, mock_connections, mock_databases_data
+    ):
         mock_cursor = Mock()
         mock_connection = Mock()
         mock_cursor_ctx_manager = MagicMock()
@@ -63,6 +66,10 @@ class TestTasks(TestCase):
         mock_cursor_ctx_manager.__enter__.return_value = mock_cursor
         mock_connection.cursor.return_value = mock_cursor_ctx_manager
         mock_connections.__getitem__.return_value = mock_connection
+        mock_databases_data.__getitem__.return_value = {
+            "USER": "postgres",
+            "NAME": "my_database" "",
+        }
 
         user = UserFactory()
         user.profile.sso_id = '00000000-0000-0000-0000-000000000000'  # yields a short hexdigest of 12b9377c
@@ -70,15 +77,16 @@ class TestTasks(TestCase):
 
         # last run 1 day and 1 hour ago so its materialized view should be deleted
         with freeze_time(datetime.utcnow() - timedelta(days=1, hours=1)):
-            query_log_1 = QueryLogFactory(run_by_user=user)
+            query_log_1 = QueryLogFactory.create(run_by_user=user)
 
         # last run 2 hours ago so its materialized view should be kept
         with freeze_time(datetime.utcnow() - timedelta(hours=2)):
-            QueryLogFactory(run_by_user=user)
+            QueryLogFactory.create(run_by_user=user)
 
         cleanup_temporary_query_tables()
 
         expected_calls = [
+            call('GRANT USAGE ON SCHEMA _user_12b9377c TO postgres'),
             call(
                 f'DROP TABLE IF EXISTS _user_12b9377c._data_explorer_tmp_query_{query_log_1.id}'
             ),
