@@ -18,12 +18,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: dev
     image: data-workspace
     env_file: .envs/dev.env
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"
-    command: "/dataworkspace/start-celery.sh"
+    command: "/dataworkspace/start-celery-dev.sh"
     volumes:
       - ./dataworkspace:/dataworkspace
       - db-logs-dev:/var/log/postgres
