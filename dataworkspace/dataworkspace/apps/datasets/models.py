@@ -1840,4 +1840,3 @@ class ToolQueryAuditLogTable(models.Model):
     table = models.CharField(
         max_length=63, validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
-
