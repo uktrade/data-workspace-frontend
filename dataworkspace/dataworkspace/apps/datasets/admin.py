@@ -723,7 +723,7 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         'rolename',
         'database',
         'get_detail_truncated_query',
-        'get_related_datasets',
+        'get_detail_related_datasets',
     ]
     list_display = [
         'timestamp',
@@ -731,7 +731,13 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         'database',
         'rolename',
         'get_list_truncated_query',
+        'get_list_related_datasets',
     ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.source_tables = SourceTable.objects.filter(dataset__deleted=False)
+        self.reference_datasets = ReferenceDataset.objects.live()
 
     def has_add_permission(self, request):
         return False
@@ -774,21 +780,21 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
 
     get_user_name_link.short_description = 'User'
 
-    def get_related_datasets(self, obj):
-        source_tables = SourceTable.objects.filter(dataset__deleted=False)
-        reference_datasets = ReferenceDataset.objects.live()
+    def _get_related_datasets(self, obj, separator):
         datasets = set()
         for table in obj.tables.all():
-            for source_table in source_tables.filter(
+            for source_table in self.source_tables.filter(
                 schema=table.schema, table=table.table
             ):
                 datasets.add(source_table.dataset)
             if table.schema == 'public':
-                for ref_dataset in reference_datasets.filter(table_name=table.table):
+                for ref_dataset in self.reference_datasets.filter(
+                    table_name=table.table
+                ):
                     datasets.add(ref_dataset)
         return (
             format_html(
-                '<br />'.join(
+                separator.join(
                     [
                         f'<a href="{d.get_admin_edit_url()}">{d.name}</a>'
                         for d in datasets
@@ -799,4 +805,12 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
             else '-'
         )
 
-    get_related_datasets.short_description = 'Related Datasets'
+    def get_list_related_datasets(self, obj):
+        return self._get_related_datasets(obj, ',')
+
+    get_list_related_datasets.short_description = 'Related Datasets'
+
+    def get_detail_related_datasets(self, obj):
+        return self._get_related_datasets(obj, '<br />')
+
+    get_detail_related_datasets.short_description = 'Related Datasets'
