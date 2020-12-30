@@ -565,8 +565,10 @@ PGAUDIT_IGNORE_STATEMENTS_RE = [
     r'^SELECT version()(;)?$',
     r'^SELECT current_schema()(;)?$',
     r"^SELECT CAST\('.*?' AS VARCHAR\(\d+\)\) AS \w(;)?$",
-    r"^SELECT table_schema, table_name( )?FROM information_schema.tables( )?"
-    r"WHERE table_schema not in .*?ORDER BY table_schema, table_name;$",
+    (
+        r"^SELECT table_schema, table_name( )?FROM information_schema.tables( )?"
+        r"WHERE table_schema not in .*?ORDER BY table_schema, table_name;$"
+    ),
     r"^BEGIN(;)?$",
     r"^ROLLBACK(;)?$",
     r"^COMMIT(;)?$",
