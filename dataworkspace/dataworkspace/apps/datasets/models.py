@@ -1826,3 +1826,17 @@ class ToolQueryAuditLog(models.Model):
     rolename = models.CharField(max_length=64, null=False, blank=False)
     query_sql = models.TextField(null=False, blank=False)
     timestamp = models.DateTimeField(null=False, blank=False)
+
+
+class ToolQueryAuditLogTable(models.Model):
+    audit_log = models.ForeignKey(
+        ToolQueryAuditLog, on_delete=models.CASCADE, related_name='tables'
+    )
+    schema = models.CharField(
+        max_length=63,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        default='public',
+    )
+    table = models.CharField(
+        max_length=63, validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+    )

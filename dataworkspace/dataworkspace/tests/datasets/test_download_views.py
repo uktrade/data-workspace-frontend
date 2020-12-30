@@ -14,30 +14,6 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 
 
-@pytest.fixture
-def dataset_db(metadata_db):
-    database = factories.DatabaseFactory(memorable_name='my_database')
-    with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
-        conn.cursor().execute(
-            '''
-            CREATE TABLE IF NOT EXISTS dataset_test (
-                id INT,
-                name VARCHAR(255),
-                date DATE
-            );
-
-            CREATE TABLE IF NOT EXISTS dataset_test2 (
-                id INT,
-                name VARCHAR(255)
-            );
-
-            CREATE OR REPLACE VIEW dataset_view AS (SELECT * FROM dataset_test);
-            '''
-        )
-
-    return database
-
-
 def test_master_dataset_fields(client, dataset_db):
     ds = factories.DataSetFactory.create(published=True)
     factories.SourceTableFactory(
