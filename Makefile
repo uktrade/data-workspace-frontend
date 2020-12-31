@@ -10,7 +10,7 @@ docker-test-unit: docker-build
 
 .PHONY: docker-test-integration
 docker-test-integration: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest test/
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --reruns 5 test/
 
 
 .PHONY: docker-test
