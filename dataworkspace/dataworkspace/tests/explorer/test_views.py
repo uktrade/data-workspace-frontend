@@ -342,7 +342,7 @@ class TestHomePage:
                 {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
             )
             assert (
-                'Your query is being submitted to Data Explorer for execution.'
+                'Your query is currently being executed by Data Explorer'
                 in resp.content.decode(resp.charset)
             )
 
