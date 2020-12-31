@@ -24,6 +24,38 @@
       "value": "${admin_db__user}"
     },
     {
+      "name": "DATA_DB__datasets_1__HOST",
+      "value": "${datasets_db__host}"
+    },
+    {
+      "name": "DATA_DB__datasets_1__NAME",
+      "value": "${datasets_db__name}"
+    },
+    {
+      "name": "DATA_DB__datasets_1__PASSWORD",
+      "value": "${datasets_db__password}"
+    },
+    {
+      "name": "DATA_DB__datasets_1__PORT",
+      "value": "${datasets_db__port}"
+    },
+    {
+      "name": "DATA_DB__datasets_1__USER",
+      "value": "${datasets_db__user}"
+    },
+    {
+      "name": "DATASETS_DB_INSTANCE_ID",
+      "value": "${datasets_db__instance_id}"
+    },
+    {
+      "name": "EXPLORER_CONNECTIONS",
+      "value": "{\"datasets_1\":\"datasets_1\"}"
+    },
+    {
+      "name": "EXPLORER_DEFAULT_CONNECTION",
+      "value": "datasets_1"
+    },
+    {
       "name": "ALLOWED_HOSTS__1",
       "value": "${root_domain}"
     },

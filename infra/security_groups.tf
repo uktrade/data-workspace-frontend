@@ -458,6 +458,18 @@ resource "aws_security_group_rule" "admin_service_egress_postgres_to_admin_db" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "admin_service_egress_postgres_to_datasets_db" {
+  description = "egress-postgres-to-datasets-db"
+
+  security_group_id = "${aws_security_group.admin_service.id}"
+  source_security_group_id = "${aws_security_group.datasets.id}"
+
+  type        = "egress"
+  from_port   = "${aws_rds_cluster_instance.datasets.port}"
+  to_port     = "${aws_rds_cluster_instance.datasets.port}"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group" "admin_db" {
   name        = "${var.prefix}-admin-db"
   description = "${var.prefix}-admin-db"
@@ -605,6 +617,19 @@ resource "aws_security_group_rule" "notebooks_egress_dns_udp" {
   to_port     = "53"
   protocol    = "udp"
 }
+
+resource "aws_security_group_rule" "notebooks_egress_postgres_to_datasets_db" {
+  description = "egress-postgres-to-datasets-db"
+
+  security_group_id = "${aws_security_group.notebooks.id}"
+  source_security_group_id = "${aws_security_group.datasets.id}"
+
+  type        = "egress"
+  from_port   = "${aws_rds_cluster_instance.datasets.port}"
+  to_port     = "${aws_rds_cluster_instance.datasets.port}"
+  protocol    = "tcp"
+}
+
 
 resource "aws_security_group" "cloudwatch" {
   name        = "${var.prefix}-cloudwatch"
@@ -1373,5 +1398,118 @@ resource "aws_security_group_rule" "efs_mount_target_notebooks_nfs_ingress_noteb
   type        = "ingress"
   from_port   = "2049"
   to_port     = "2049"
+  protocol    = "tcp"
+}
+
+
+resource "aws_security_group" "quicksight" {
+  name        = "${var.quicksight_security_group_name}"
+  description = "${var.quicksight_security_group_description}"
+  vpc_id      = "${aws_vpc.datasets.id}"
+
+  tags {
+    Name = "${var.quicksight_security_group_name}"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "quicksight_ingress_all_from_datasets_db" {
+  description = "ingress-all-from-datasets-db"
+
+  security_group_id = "${aws_security_group.quicksight.id}"
+  source_security_group_id = "${aws_security_group.datasets.id}"
+
+  type        = "ingress"
+  from_port   = "0"
+  to_port     = "65535"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "quicksight_egress_postgres_to_datasets_db" {
+  description = "egress-postgres-to-datasets-db"
+
+  security_group_id = "${aws_security_group.quicksight.id}"
+  source_security_group_id = "${aws_security_group.datasets.id}"
+
+  type        = "egress"
+  from_port   = "${aws_rds_cluster_instance.datasets.port}"
+  to_port     = "${aws_rds_cluster_instance.datasets.port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group" "datasets" {
+  name        = "${var.prefix}-datasets"
+  description = "${var.prefix}-datasets"
+  vpc_id      = "${aws_vpc.datasets.id}"
+
+  tags {
+    Name = "${var.prefix}-datasets"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "datasets_db_ingress_postgres_from_admin" {
+  description = "ingress-postgres-from-admin"
+
+  security_group_id = "${aws_security_group.datasets.id}"
+  source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type        = "ingress"
+  from_port   = "${aws_rds_cluster_instance.datasets.port}"
+  to_port     = "${aws_rds_cluster_instance.datasets.port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "datasets_db_ingress_postgres_from_notebooks" {
+  description = "ingress-postgres-from-notebooks"
+
+  security_group_id = "${aws_security_group.datasets.id}"
+  source_security_group_id = "${aws_security_group.notebooks.id}"
+
+  type        = "ingress"
+  from_port   = "${aws_rds_cluster_instance.datasets.port}"
+  to_port     = "${aws_rds_cluster_instance.datasets.port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "datasets_db_ingress_postgres_from_paas" {
+  description = "ingress-postgres-from-paas"
+
+  security_group_id = "${aws_security_group.datasets.id}"
+  cidr_blocks       = ["${var.paas_cidr_block}"]
+
+  type        = "ingress"
+  from_port   = "${aws_rds_cluster_instance.datasets.port}"
+  to_port     = "${aws_rds_cluster_instance.datasets.port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "datasets_db_ingress_all_from_quicksight" {
+  description = "ingress-all-from-quicksight"
+
+  security_group_id = "${aws_security_group.datasets.id}"
+  source_security_group_id = "${aws_security_group.quicksight.id}"
+
+  type        = "ingress"
+  from_port   = "0"
+  to_port     = "65535"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "datasets_db_egress_all_to_quicksight" {
+  description = "egress-all-to-quicksight"
+
+  security_group_id = "${aws_security_group.datasets.id}"
+  source_security_group_id = "${aws_security_group.quicksight.id}"
+
+  type        = "egress"
+  from_port   = "0"
+  to_port     = "65535"
   protocol    = "tcp"
 }
