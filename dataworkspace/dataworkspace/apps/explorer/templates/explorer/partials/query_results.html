@@ -7,9 +7,9 @@
       </h3>
       <p class="govuk-body">
         {% if rows > total_rows %}
-          Showing {{ total_rows }} rows from a total of {{ total_rows }}
+          Showing {{ total_rows }} row{{ total_rows|pluralize }} from a total of {{ total_rows }}
         {% else %}
-          Showing {{ rows }} rows from a total of {{ total_rows }}
+          Showing {{ rows }} row{{ rows|pluralize }} from a total of {{ total_rows }}
         {% endif %}
       </p>
       <p class="govuk-body">

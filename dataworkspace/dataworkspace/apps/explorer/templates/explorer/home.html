@@ -14,14 +14,14 @@
     <div class="govuk-width-container">
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-full" id="query_area">
-            {% if form.errors %}
+            <div id="error-banner"{% if not form.errors %} class="govuk-!-display-none"{% endif %}>
               <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1"
                    data-module="govuk-error-summary">
                 <h2 class="govuk-error-summary__title" id="error-summary-title">
                   There is a problem
                 </h2>
                 <div class="govuk-error-summary__body">
-                  <ul class="govuk-list govuk-error-summary__list">
+                  <ul class="govuk-list govuk-error-summary__list" id="error-summary">
                     {% for field, errors in form.errors.items %}
                       {% for error in errors %}
                         <li>
@@ -32,7 +32,7 @@
                   </ul>
                 </div>
               </div>
-            {% endif %}
+            </div>
 
             <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">
               Welcome to Data Explorer
@@ -113,13 +113,13 @@
                         </div>
                       </div>
                     </div>
-                    {% if form.sql.errors %}
+                    <div id="inline-error"{% if not form.sql.errors %} class="govuk-!-display-none"{% endif %}>
                       {% for error in form.sql.errors %}
                         <span id="sql-error" class="govuk-error-message">
-                                <span class="govuk-visually-hidden">Error:</span> {{ error|escape }}
-                            </span>
+                          <span class="govuk-visually-hidden">Error:</span> {{ error|escape }}
+                        </span>
                       {% endfor %}
-                    {% endif %}
+                    </div>
                     <div class="govuk-textarea" id="gov-uk-sql-wrapper" rows="10">
                       <div id="ace-sql-editor">{{ form.sql.value|default_if_none:"" }}</div>
                     </div>
@@ -148,6 +148,9 @@
                   </div>
                 </fieldset>
                 <div id="query-results">
+                  {% if query_log.state == 0 %}
+                    {% include 'explorer/partials/query_executing.html' %}
+                  {% endif %}
                   {% include 'explorer/partials/query_results.html' %}
                 </div>
               </form>
@@ -181,4 +184,12 @@
     document.getElementById('width-toggle-container').classList.remove('govuk-!-display-none');
     window.initSchemaSearch();
   </script>
+  {% if run_queries_async and query_log %}
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_async.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}">
+      setTimeout(function() {
+        window.pollForQueryResults({{ query_log.id }}, 500, 250, 5000);
+      })
+    </script>
+  {% endif %}
 {% endblock %}

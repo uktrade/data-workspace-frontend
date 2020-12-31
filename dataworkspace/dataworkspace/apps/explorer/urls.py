@@ -38,7 +38,7 @@ urlpatterns = [
     ),
     path('logs/', login_required(ListQueryLogView.as_view()), name='explorer_logs'),
     path(
-        'logs/<int:querylog_id>/results-json',
+        'logs/<int:querylog_id>/results-json/',
         login_required(QueryLogResultView.as_view()),
         name='querylog_results',
     ),

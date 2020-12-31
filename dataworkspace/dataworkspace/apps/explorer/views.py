@@ -482,10 +482,13 @@ def query_viewmodel(
     log=True,
 ):
     error = None
+    query_log = None
     if run_query:
         try:
             if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
-                query_log_id = execute_query_async.delay(
+                headers = None
+                data = None
+                query_log = execute_query_async(
                     query.final_sql(),
                     query.connection,
                     query.id,
@@ -493,8 +496,7 @@ def query_viewmodel(
                     page,
                     rows,
                     timeout,
-                ).get()
-                headers, data, query_log = fetch_query_results(query_log_id)
+                )
             else:
                 headers, data, query_log = execute_query_sync(
                     query.final_sql(),
@@ -524,7 +526,8 @@ def query_viewmodel(
         'total_rows': query_log.rows if has_valid_results else None,
         'duration': query_log.duration if has_valid_results else None,
         'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
-        'query_log': query_log if has_valid_results else None,
+        'run_queries_async': flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG),
+        'query_log': query_log,
     }
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)
 

@@ -9,11 +9,8 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
-from waffle import flag_is_active
 
-from dataworkspace.apps.explorer.tasks import execute_query_async
-from dataworkspace.apps.explorer.utils import execute_query_sync, fetch_query_results
-from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
+from dataworkspace.apps.explorer.utils import execute_query_sync
 
 
 def get_exporter_class(format_):
@@ -36,27 +33,15 @@ class BaseExporter:
         return value
 
     def get_file_output(self, **kwargs):
-        if flag_is_active(self.request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
-            query_log_id = execute_query_async.delay(
-                self.query.final_sql(),
-                self.query.connection,
-                self.query.id,
-                self.user.id,
-                1,
-                settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
-                settings.EXPLORER_QUERY_TIMEOUT_MS,
-            ).get()
-            headers, data, _ = fetch_query_results(query_log_id)
-        else:
-            headers, data, _ = execute_query_sync(
-                self.query.final_sql(),
-                self.query.connection,
-                self.query.id,
-                self.user.id,
-                1,
-                settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
-                settings.EXPLORER_QUERY_TIMEOUT_MS,
-            )
+        headers, data, _ = execute_query_sync(
+            self.query.final_sql(),
+            self.query.connection,
+            self.query.id,
+            self.user.id,
+            1,
+            settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
+            settings.EXPLORER_QUERY_TIMEOUT_MS,
+        )
         return self._get_output(headers, data, **kwargs)
 
     def _get_output(self, headers, data, **kwargs):
