@@ -806,7 +806,7 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         )
 
     def get_list_related_datasets(self, obj):
-        return self._get_related_datasets(obj, ',')
+        return self._get_related_datasets(obj, ', ')
 
     get_list_related_datasets.short_description = 'Related Datasets'
 
