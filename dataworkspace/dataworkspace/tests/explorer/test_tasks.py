@@ -87,10 +87,11 @@ class TestTasks(TestCase):
         cleanup_temporary_query_tables()
 
         expected_calls = [
-            call('GRANT USAGE ON SCHEMA _user_12b9377c TO postgres'),
+            call('GRANT _user_12b9377c TO postgres'),
             call(
                 f'DROP TABLE IF EXISTS _user_12b9377c._data_explorer_tmp_query_{query_log_1.id}'
             ),
+            call('REVOKE _user_12b9377c FROM postgres'),
         ]
         mock_cursor.execute.assert_has_calls(expected_calls)
 

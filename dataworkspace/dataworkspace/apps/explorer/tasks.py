@@ -60,22 +60,23 @@ def cleanup_temporary_query_tables():
 
     for query_log in QueryLog.objects.filter(run_at__lte=one_day_ago):
         server_db_user = DATABASES_DATA[query_log.connection]['USER']
-        schema_name = (
+        db_role = (
             f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(query_log.run_by_user)}'
         )
-        table_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
+        table_schema_and_name = tempory_query_table_name(
+            query_log.run_by_user, query_log.id
+        )
 
         with cache.lock(
-            f'database-grant--{DATABASES_DATA[query_log.connection]["NAME"]}--{schema_name}--v4',
+            f'database-grant--{DATABASES_DATA[query_log.connection]["NAME"]}--{db_role}--v4',
             blocking_timeout=3,
             timeout=180,
         ):
             with connections[query_log.connection].cursor() as cursor:
-                logger.info("Dropping temporary query table %s", table_name)
-                cursor.execute(
-                    f"GRANT USAGE ON SCHEMA {schema_name} TO {server_db_user}"
-                )
-                cursor.execute(f'DROP TABLE IF EXISTS {table_name}')
+                logger.info("Dropping temporary query table %s", table_schema_and_name)
+                cursor.execute(f"GRANT {db_role} TO {server_db_user}")
+                cursor.execute(f'DROP TABLE IF EXISTS {table_schema_and_name}')
+                cursor.execute(f"REVOKE {db_role} FROM {server_db_user}")
 
 
 def _prefix_column(index, column):
