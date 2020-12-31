@@ -1273,7 +1273,7 @@ async def async_main():
 
 
 def main():
-    init_sentry(integration=AioHttpIntegration())
+    init_sentry(integrations=[AioHttpIntegration()])
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(async_main())

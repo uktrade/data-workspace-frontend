@@ -22,10 +22,10 @@ def before_send(event, hint):
     return event
 
 
-def init_sentry(integration):
+def init_sentry(integrations):
     if os.environ.get('SENTRY_DSN') is not None:
         sentry_sdk.init(
             os.environ['SENTRY_DSN'],
-            integrations=[integration],
+            integrations=integrations,
             before_send=before_send,
         )
