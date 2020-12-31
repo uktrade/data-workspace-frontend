@@ -6,14 +6,26 @@ import urllib.request
 from distutils.util import strtobool
 
 from celery.schedules import crontab
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from django.conf.locale.en import formats as en_formats
 
 import sentry
 from dataworkspace.utils import normalise_environment
 
-sentry.init_sentry(integration=DjangoIntegration())
+sentry.init_sentry(
+    integrations=[
+        AioHttpIntegration(),
+        DjangoIntegration(),
+        RedisIntegration(),
+        CeleryIntegration(),
+        SqlalchemyIntegration(),
+    ]
+)
 
 env = normalise_environment(os.environ)
 
