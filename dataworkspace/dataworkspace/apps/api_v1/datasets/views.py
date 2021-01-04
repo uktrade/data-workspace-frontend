@@ -53,12 +53,16 @@ def _get_dataset_rows(connection, sql, query_args=None, cursor_itersize=1000):
 def _get_dataset_primary_key(connection, schema, table):
     check_is_table = psycopg2.sql.SQL(
         '''
-        SELECT COUNT(*)
+        SELECT
+            CASE
+                WHEN pg_class.relkind = 'r' THEN 'table'::text
+                WHEN pg_class.relkind = 'v' THEN 'view'::text
+                ELSE pg_class.relkind::text
+            END
         FROM pg_class
                  INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
         WHERE pg_namespace.nspname = %s
-          AND pg_class.relname = %s
-          AND pg_class.relkind = 'r';
+          AND pg_class.relname = %s;
         '''
     )
     sql = psycopg2.sql.SQL(
@@ -86,10 +90,14 @@ def _get_dataset_primary_key(connection, schema, table):
 
     with connection.cursor() as cursor:
         cursor.execute(check_is_table, (schema, table))
-        if cursor.fetchall()[0][0] != 1:
+        result = cursor.fetchall()
+
+        if len(result) == 0:
+            raise ValueError(f"Table does not exist: `{schema}`.`{table}`")
+        if result[0][0] != 'table':
             raise ValueError(
-                f"Cannot get primary keys from something other than an ordinary table "
-                f"(is this a view?): `{schema}`.`{table}`"
+                f"Cannot get primary keys from something other than an ordinary table. "
+                f"`{schema}`.`{table}` is a: {result[0][0]}"
             )
 
         cursor.execute(sql, (schema, table))
