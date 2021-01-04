@@ -68,11 +68,8 @@ class Query(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_run_date = models.DateTimeField(auto_now=True)
     connection = models.CharField(
-        blank=True,
-        null=True,
         max_length=128,
-        help_text="Name of DB connection (as specified in settings) to use for this query."
-        " Will use EXPLORER_DEFAULT_CONNECTION if left blank",
+        help_text="Name of DB connection (as specified in settings) to use for this query.",
     )
 
     def __init__(self, *args, **kwargs):
@@ -135,7 +132,7 @@ class QueryLog(models.Model):
     )
     run_at = models.DateTimeField(auto_now_add=True)
     duration = models.FloatField(blank=True, null=True)  # milliseconds
-    connection = models.CharField(blank=True, null=True, max_length=128)
+    connection = models.CharField(max_length=128)
     state = models.IntegerField(choices=_STATE_CHOICES, default=STATE_RUNNING)
     rows = models.IntegerField(null=True, blank=True)
     page = models.IntegerField(default=1)

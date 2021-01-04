@@ -27,7 +27,7 @@ check-flake8:
 
 .PHONY: docker-check-migrations
 docker-check-migrations:
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test sh -c "sleep 5 && django-admin makemigrations --check --dry-run"
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test sh -c "sleep 5 && django-admin makemigrations --check --dry-run --verbosity 3"
 
 .PHONY: check-black
 check-black:
