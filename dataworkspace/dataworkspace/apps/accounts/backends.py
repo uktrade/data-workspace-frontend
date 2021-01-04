@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from sentry_sdk import set_user
 
 from dataworkspace.apps.applications.utils import create_user_from_sso
 
@@ -22,7 +23,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
 
         primary_email = contact_email if contact_email else email
         emails = [email] + ([contact_email] if contact_email else []) + related_emails
-        return create_user_from_sso(
+        user = create_user_from_sso(
             user_id,
             primary_email,
             emails,
@@ -30,6 +31,8 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
             last_name,
             check_tools_access_if_user_exists=False,
         )
+        set_user({"id": str(user.profile.sso_id), "email": user.email})
+        return user
 
     def get_user(self, user_id):
         User = get_user_model()
