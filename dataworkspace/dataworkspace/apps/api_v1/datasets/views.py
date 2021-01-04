@@ -51,6 +51,16 @@ def _get_dataset_rows(connection, sql, query_args=None, cursor_itersize=1000):
 
 
 def _get_dataset_primary_key(connection, schema, table):
+    check_is_table = psycopg2.sql.SQL(
+        '''
+        SELECT COUNT(*)
+        FROM pg_class
+                 INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+        WHERE pg_namespace.nspname = %s
+          AND pg_class.relname = %s
+          AND pg_class.relkind = 'r';
+        '''
+    )
     sql = psycopg2.sql.SQL(
         '''
         SELECT
@@ -75,6 +85,13 @@ def _get_dataset_primary_key(connection, schema, table):
     )
 
     with connection.cursor() as cursor:
+        cursor.execute(check_is_table, (schema, table))
+        if cursor.fetchall()[0][0] != 1:
+            raise ValueError(
+                f"Cannot get primary keys from something other than an ordinary table "
+                f"(is this a view?): `{schema}`.`{table}`"
+            )
+
         cursor.execute(sql, (schema, table))
         return [row[0] for row in cursor.fetchall()]
 
@@ -170,6 +187,12 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
         primary_key = _get_dataset_primary_key(
             connection, source_table.schema, source_table.table
         )
+
+        if not primary_key:
+            raise ValueError(
+                f"Cannot order response without a primary key on the table: "
+                f"`{source_table.schema}`.`{source_table.table}`"
+            )
 
         if search_after == []:
             sql = psycopg2.sql.SQL(

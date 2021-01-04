@@ -132,6 +132,79 @@ class TestAPIDatasetView(TestCase):
         output_dict = json.loads(output.decode('utf-8'))
         self.assertEqual(output_dict, expected)
 
+    def test_friendly_exception_from_non_standard_table(self):
+        # create django objects
+        memorable_name = self.memorable_name
+        table = self.table
+        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
+        data_grouping = DataGrouping.objects.get_or_create()[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping)[0]
+        _ = SourceTable.objects.get_or_create(
+            dataset=dataset, database=database, table=table
+        )[0]
+        view_source_table = SourceTable.objects.get_or_create(
+            dataset=dataset, database=database, table=f"view_{table}"
+        )[0]
+
+        # create external source table
+        with psycopg2.connect(
+            database_dsn(settings.DATABASES_DATA[memorable_name])
+        ) as conn, conn.cursor() as cur:
+            sql = '''
+            create table {table} (id int primary key, name varchar(100), timestamp timestamp)
+            '''.format(
+                table=table
+            )
+            cur.execute(sql)
+            sql = '''
+            create view view_{table} as (select * from {table})
+            '''.format(
+                table=table
+            )
+            cur.execute(sql)
+
+        url = '/api/v1/dataset/{}/{}'.format(dataset.id, view_source_table.id)
+        with pytest.raises(ValueError) as e:
+            self.client.get(url)
+
+        assert str(e.value) == (
+            "Cannot get primary keys from something other than an ordinary table "
+            "(is this a view?): `public`.`view_test_source_table`"
+        )
+
+    def test_friendly_exception_from_table_without_primary_key(self):
+        """This test is in place to assert existing behaviour. It may well be reasonable to make this view work
+        without primary keys on the table."""
+        # create django objects
+        memorable_name = self.memorable_name
+        table = self.table
+        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
+        data_grouping = DataGrouping.objects.get_or_create()[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping)[0]
+        source_table = SourceTable.objects.get_or_create(
+            dataset=dataset, database=database, table=table
+        )[0]
+
+        # create external source table
+        with psycopg2.connect(
+            database_dsn(settings.DATABASES_DATA[memorable_name])
+        ) as conn, conn.cursor() as cur:
+            sql = '''
+            create table {table} (id int, name varchar(100), timestamp timestamp)
+            '''.format(
+                table=table
+            )
+            cur.execute(sql)
+
+        url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
+        with pytest.raises(ValueError) as e:
+            self.client.get(url)
+
+        assert str(e.value) == (
+            f"Cannot order response without a primary key on the table: "
+            f"`{source_table.schema}`.`{source_table.table}`"
+        )
+
     def test_search_after(self):
         # create django objects
         memorable_name = self.memorable_name
