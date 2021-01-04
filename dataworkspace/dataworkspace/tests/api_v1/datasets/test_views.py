@@ -168,8 +168,8 @@ class TestAPIDatasetView(TestCase):
             self.client.get(url)
 
         assert str(e.value) == (
-            "Cannot get primary keys from something other than an ordinary table "
-            "(is this a view?): `public`.`view_test_source_table`"
+            "Cannot get primary keys from something other than an ordinary table. "
+            "`public`.`view_test_source_table` is a: view"
         )
 
     def test_friendly_exception_from_table_without_primary_key(self):
@@ -203,6 +203,27 @@ class TestAPIDatasetView(TestCase):
         assert str(e.value) == (
             f"Cannot order response without a primary key on the table: "
             f"`{source_table.schema}`.`{source_table.table}`"
+        )
+
+    def test_friendly_exception_from_non_existent_table(self):
+        """This test is in place to assert existing behaviour. It may well be reasonable to make this view work
+        without primary keys on the table."""
+        # create django objects
+        memorable_name = self.memorable_name
+        table = self.table
+        database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
+        data_grouping = DataGrouping.objects.get_or_create()[0]
+        dataset = DataSet.objects.get_or_create(grouping=data_grouping)[0]
+        source_table = SourceTable.objects.get_or_create(
+            dataset=dataset, database=database, table=table
+        )[0]
+
+        url = '/api/v1/dataset/{}/{}'.format(dataset.id, source_table.id)
+        with pytest.raises(ValueError) as e:
+            self.client.get(url)
+
+        assert str(e.value) == (
+            f"Table does not exist: `{source_table.schema}`.`{source_table.table}`"
         )
 
     def test_search_after(self):
