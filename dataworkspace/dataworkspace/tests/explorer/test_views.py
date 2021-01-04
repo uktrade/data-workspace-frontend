@@ -32,6 +32,39 @@ def waffle_flag_active(request):
     return request.param
 
 
+def create_temporary_results_table(querylog):
+    # ID hardcoded in conftest.staff_user_data
+    suffix = stable_identification_suffix(
+        'aae8901a-082f-4f12-8c6c-fdf4aeba2d68', short=True
+    )
+    schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
+
+    with connections['my_database'].cursor() as cursor:
+        cursor.execute(
+            f"DROP TABLE IF EXISTS {schema_and_user_name}._data_explorer_tmp_query_{querylog.id}"
+        )
+        cursor.execute(
+            f'CREATE TABLE {schema_and_user_name}._data_explorer_tmp_query_{querylog.id} '
+            '(id int primary key, data text)'
+        )
+        cursor.execute(
+            f"INSERT INTO {schema_and_user_name}._data_explorer_tmp_query_{querylog.id} VALUES (1, 2)"
+        )
+
+
+def drop_temporary_results_table(querylog):
+    # ID hardcoded in conftest.staff_user_data
+    suffix = stable_identification_suffix(
+        'aae8901a-082f-4f12-8c6c-fdf4aeba2d68', short=True
+    )
+    schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
+
+    with connections['my_database'].cursor() as cursor:
+        cursor.execute(
+            f"DROP TABLE IF EXISTS {schema_and_user_name}._data_explorer_tmp_query_{querylog.id}"
+        )
+
+
 class TestQueryListView:
     def test_run_count(self, user, client, waffle_flag_active):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
@@ -488,7 +521,11 @@ class TestCSVFromSQL:
         self, staff_user, staff_client, waffle_flag_active
     ):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
-            querylog = QueryLogFactory.create(sql="select 1", run_by_user=staff_user)
+            querylog = QueryLogFactory.create(sql="select 1, 2", run_by_user=staff_user)
+
+            if waffle_flag_active:
+                create_temporary_results_table(querylog)
+
             resp = staff_client.get(
                 reverse(
                     "explorer:download_querylog", kwargs=dict(querylog_id=querylog.id)
@@ -497,7 +534,30 @@ class TestCSVFromSQL:
 
             assert 'attachment' in resp['Content-Disposition']
             assert 'text/csv' in resp['content-type']
-            assert 'filename="Playground_-_select_1.csv"' in resp['Content-Disposition']
+            assert (
+                'filename="Playground_-_select_1_2.csv"' in resp['Content-Disposition']
+            )
+
+    def test_downloading_from_results_table_redirects_with_error_if_table_is_not_there(
+        self, staff_user, staff_client
+    ):
+        with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=True):
+            querylog = QueryLogFactory.create(sql="select 1, 2", run_by_user=staff_user)
+
+            # Make sure it's not there
+            drop_temporary_results_table(querylog)
+
+            resp = staff_client.get(
+                reverse(
+                    "explorer:download_querylog", kwargs=dict(querylog_id=querylog.id)
+                ),
+            )
+
+            assert resp.status_code == 302
+            assert (
+                resp['Location']
+                == f'/data-explorer/?querylog_id={querylog.id}&error=download'
+            )
 
 
 class TestSQLDownloadViews:
@@ -517,6 +577,10 @@ class TestSQLDownloadViews:
     def test_sql_download_csv(self, staff_user, staff_client, waffle_flag_active):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
             my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+
+            if waffle_flag_active:
+                create_temporary_results_table(my_querylog)
+
             url = (
                 reverse(
                     "explorer:download_querylog",
@@ -534,7 +598,13 @@ class TestSQLDownloadViews:
         self, staff_user, staff_client, waffle_flag_active
     ):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
-            my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+            my_querylog = QueryLogFactory(
+                sql="select 1 as id, 2 as data", run_by_user=staff_user
+            )
+
+            if waffle_flag_active:
+                create_temporary_results_table(my_querylog)
+
             url = (
                 reverse(
                     "explorer:download_querylog",
@@ -547,13 +617,19 @@ class TestSQLDownloadViews:
 
             assert response.status_code == 200
             assert response['content-type'] == 'text/csv'
-            assert response.content.decode('utf-8') == '?column?|?column?\r\n1|2\r\n'
+            assert response.content.decode('utf-8') == 'id|data\r\n1|2\r\n'
 
     def test_sql_download_csv_with_tab_delim(
         self, staff_user, staff_client, waffle_flag_active
     ):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
-            my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+            my_querylog = QueryLogFactory(
+                sql="select 1 as id, 2 as data", run_by_user=staff_user
+            )
+
+            if waffle_flag_active:
+                create_temporary_results_table(my_querylog)
+
             url = (
                 reverse(
                     "explorer:download_querylog",
@@ -566,13 +642,19 @@ class TestSQLDownloadViews:
 
             assert response.status_code == 200
             assert response['content-type'] == 'text/csv'
-            assert response.content.decode('utf-8') == '?column?\t?column?\r\n1\t2\r\n'
+            assert response.content.decode('utf-8') == 'id\tdata\r\n1\t2\r\n'
 
     def test_sql_download_csv_with_bad_delim(
         self, staff_user, staff_client, waffle_flag_active
     ):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
-            my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+            my_querylog = QueryLogFactory(
+                sql="select 1 as id, 2 as data", run_by_user=staff_user
+            )
+
+            if waffle_flag_active:
+                create_temporary_results_table(my_querylog)
+
             url = (
                 reverse(
                     "explorer:download_querylog",
@@ -585,11 +667,15 @@ class TestSQLDownloadViews:
 
             assert response.status_code == 200
             assert response['content-type'] == 'text/csv'
-            assert response.content.decode('utf-8') == '?column?,?column?\r\n1,2\r\n'
+            assert response.content.decode('utf-8') == 'id,data\r\n1,2\r\n'
 
     def test_sql_download_json(self, staff_user, staff_client, waffle_flag_active):
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
             my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=staff_user)
+
+            if waffle_flag_active:
+                create_temporary_results_table(my_querylog)
+
             url = (
                 reverse(
                     "explorer:download_querylog",
@@ -609,6 +695,10 @@ class TestSQLDownloadViews:
         with override_flag(DATA_EXPLORER_ASYNC_QUERIES_FLAG, active=waffle_flag_active):
             other_user = UserFactory(email='foo@bar.net')
             my_querylog = QueryLogFactory(sql="select 1,2", run_by_user=other_user)
+
+            if waffle_flag_active:
+                create_temporary_results_table(my_querylog)
+
             url = (
                 reverse(
                     "explorer:download_querylog",

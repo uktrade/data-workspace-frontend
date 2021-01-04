@@ -1,3 +1,5 @@
+import logging
+import re
 from urllib.parse import urlencode
 
 from psycopg2 import DatabaseError
@@ -27,6 +29,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
+from dataworkspace.apps.explorer.new_exporters import get_new_exporter_class
 from dataworkspace.apps.explorer.schema import schema_info
 from dataworkspace.apps.explorer.tasks import execute_query_async
 from dataworkspace.apps.explorer.utils import (
@@ -67,16 +70,55 @@ def _export(request, query, download=True):
     return response
 
 
+def _new_export(request, querylog, download=True):
+    format_ = request.GET.get('format', 'csv')
+    exporter_class = get_new_exporter_class(format_)
+    delim = request.GET.get('delim')
+    exporter = exporter_class(querylog=querylog, request=request)
+    try:
+        output = exporter.get_output(delim=delim)
+    except DatabaseError as e:
+        if not re.match(
+            r'^relation "_user_[a-zA-Z0-9]{8}\._data_explorer_tmp_query_\d+" does not exist$',
+            str(e),
+            flags=re.MULTILINE,
+        ):
+            # If the temp query table has been cleaned up, we don't care, so don't log the exception (e.g. to sentry)
+            logger = logging.getLogger('app')
+            logger.exception(
+                'Unable to fetch results for querylog %s: %s', querylog.id, e
+            )
+
+        # But we still need to raise it here for handling to present the user a more friendly error.
+        raise e
+
+    response = HttpResponse(output, content_type=exporter.content_type)
+    if download:
+        response['Content-Disposition'] = 'attachment; filename="%s"' % (
+            exporter.get_filename()
+        )
+    return response
+
+
 class DownloadFromQuerylogView(View):
     def get(self, request, querylog_id):
         querylog = get_object_or_404(
             QueryLog, pk=querylog_id, run_by_user=self.request.user
         )
 
+        if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
+            try:
+                return _new_export(request, querylog)
+            except DatabaseError:
+                redirect_url = reverse('explorer:index')
+                return redirect(
+                    redirect_url + f"?querylog_id={querylog.id}&error=download"
+                )
+
         query = Query(
             sql=querylog.sql,
             connection=querylog.connection,
-            title=querylog.query.title
+            title=querylog.title
             if querylog.query
             else f'Playground - {querylog.sql[:32]}',
         )
@@ -263,7 +305,7 @@ class PlayQueryView(View):
                 QueryLog, pk=url_get_log_id(request), run_by_user=self.request.user
             )
             query = Query(sql=log.sql, title="Playground", connection=log.connection)
-            return self.render_with_sql(request, query)
+            return self.render_with_sql(request, query, run_query=False)
 
         initial_data = {"sql": request.GET.get('sql')}
 
@@ -328,7 +370,7 @@ class PlayQueryView(View):
             tuple(
                 (k, v)
                 for k, v in request.GET.items()
-                if k not in {'sql', 'querylog_id', 'play_id'}
+                if k not in {'sql', 'querylog_id', 'play_id', 'error'}
             )
         )
 
@@ -341,6 +383,7 @@ class PlayQueryView(View):
     def render_with_sql(self, request, query, run_query=True):
         rows = url_get_rows(request)
         page = url_get_page(request)
+        download_failed = request.GET.get('error') == 'download'
         form = QueryForm(
             request.POST if request.method == 'POST' else None, instance=query
         )
@@ -369,6 +412,12 @@ class PlayQueryView(View):
         context['schema'] = schema
         context['schema_tables'] = tables_columns
         context['form_action'] = self.get_form_action(request)
+
+        if download_failed and request.method == 'GET':
+            context['extra_errors'] = [
+                'Your download has failed. Re-run the query and trying downloading again.',
+            ]
+
         return render(self.request, 'explorer/home.html', context)
 
 

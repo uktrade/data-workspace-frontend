@@ -14,7 +14,7 @@
     <div class="govuk-width-container">
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-full" id="query_area">
-            <div id="error-banner"{% if not form.errors %} class="govuk-!-display-none"{% endif %}>
+            <div id="error-banner"{% if not form.errors and not extra_errors %} class="govuk-!-display-none"{% endif %}>
               <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1"
                    data-module="govuk-error-summary">
                 <h2 class="govuk-error-summary__title" id="error-summary-title">
@@ -28,6 +28,11 @@
                           <a href="#id_{{ field }}">{{ error }}</a>
                         </li>
                       {% endfor %}
+                    {% endfor %}
+                    {% for error in extra_errors %}
+                      <li>
+                        {{ error }}
+                      </li>
                     {% endfor %}
                   </ul>
                 </div>

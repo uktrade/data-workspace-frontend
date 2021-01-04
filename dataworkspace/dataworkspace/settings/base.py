@@ -523,6 +523,9 @@ EXPLORER_DATA_EXPORTERS = [
     ('csv', 'dataworkspace.apps.explorer.exporters.CSVExporter'),
     ('excel', 'dataworkspace.apps.explorer.exporters.ExcelExporter'),
     ('json', 'dataworkspace.apps.explorer.exporters.JSONExporter'),
+    ('new-csv', 'dataworkspace.apps.explorer.new_exporters.NewCSVExporter'),
+    ('new-excel', 'dataworkspace.apps.explorer.new_exporters.NewExcelExporter'),
+    ('new-json', 'dataworkspace.apps.explorer.new_exporters.NewJSONExporter'),
 ]
 
 ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
