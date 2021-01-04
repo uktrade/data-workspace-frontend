@@ -181,55 +181,60 @@ def new_private_database_credentials(
             )
 
             # ... and ensure new tables are owned by the role so all users of the role can access
-            cur.execute(
-                sql.SQL(
-                    '''
-                CREATE OR REPLACE FUNCTION set_table_owner()
-                  RETURNS event_trigger
-                  LANGUAGE plpgsql
-                AS $$
-                DECLARE
-                  obj record;
-                BEGIN
-                  FOR obj IN
-                    SELECT
-                        * FROM pg_event_trigger_ddl_commands()
-                    WHERE
-                        command_tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
-                        -- Prevent infinite loop by not altering tables that have the correct owner
-                        -- already. Note pg_trigger_depth() can be used for triggers, but we're in
-                        -- an _event_ trigger.
-                        AND left(schema_name, {}) = '{}'
-                        AND (
-                            SELECT pg_tables.tableowner
-                            FROM pg_tables
-                            WHERE pg_tables.schemaname = schema_name AND pg_tables.tablename = (
-                                SELECT pg_class.relname FROM pg_class WHERE pg_class.oid = objid
-                            )
-                        ) != schema_name
-                  LOOP
-                    EXECUTE format('ALTER TABLE %s OWNER TO %s', obj.object_identity, quote_ident(obj.schema_name));
-                  END LOOP;
-                END;
-                $$;
-            '''.format(
-                        str(len(USER_SCHEMA_STEM)), USER_SCHEMA_STEM
+            with cache.lock(
+                f'database-ddl-trigger--{database_data["NAME"]}--v4',
+                blocking_timeout=3,
+                timeout=180,
+            ):
+                cur.execute(
+                    sql.SQL(
+                        '''
+                    CREATE OR REPLACE FUNCTION set_table_owner()
+                      RETURNS event_trigger
+                      LANGUAGE plpgsql
+                    AS $$
+                    DECLARE
+                      obj record;
+                    BEGIN
+                      FOR obj IN
+                        SELECT
+                            * FROM pg_event_trigger_ddl_commands()
+                        WHERE
+                            command_tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
+                            -- Prevent infinite loop by not altering tables that have the correct owner
+                            -- already. Note pg_trigger_depth() can be used for triggers, but we're in
+                            -- an _event_ trigger.
+                            AND left(schema_name, {}) = '{}'
+                            AND (
+                                SELECT pg_tables.tableowner
+                                FROM pg_tables
+                                WHERE pg_tables.schemaname = schema_name AND pg_tables.tablename = (
+                                    SELECT pg_class.relname FROM pg_class WHERE pg_class.oid = objid
+                                )
+                            ) != schema_name
+                      LOOP
+                        EXECUTE format('ALTER TABLE %s OWNER TO %s', obj.object_identity, quote_ident(obj.schema_name));
+                      END LOOP;
+                    END;
+                    $$;
+                '''.format(
+                            str(len(USER_SCHEMA_STEM)), USER_SCHEMA_STEM
+                        )
                     )
                 )
-            )
-            cur.execute(
+                cur.execute(
+                    '''
+                    DO $$
+                    BEGIN
+                      CREATE EVENT TRIGGER set_table_owner
+                      ON ddl_command_end
+                      WHEN tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
+                      EXECUTE PROCEDURE set_table_owner();
+                    EXCEPTION WHEN OTHERS THEN
+                      NULL;
+                    END $$;
                 '''
-                DO $$
-                BEGIN
-                  CREATE EVENT TRIGGER set_table_owner
-                  ON ddl_command_end
-                  WHEN tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
-                  EXECUTE PROCEDURE set_table_owner();
-                EXCEPTION WHEN OTHERS THEN
-                  NULL;
-                END $$;
-            '''
-            )
+                )
 
         with connections[database_obj.memorable_name].cursor() as cur:
             tables_that_exist = [
