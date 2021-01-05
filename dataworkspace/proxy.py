@@ -20,6 +20,7 @@ import aioredis
 from elasticapm.contrib.aiohttp import ElasticAPM
 from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
+from sentry_sdk import set_user
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yarl import URL
 from sentry import init_sentry
@@ -1060,6 +1061,8 @@ async def async_main():
                     request_url(request),
                 )
 
+                set_user({"id": me_profile['user_id'], "email": me_profile['email']})
+
                 return await handler(request)
 
             if me_profile:
@@ -1126,6 +1129,8 @@ async def async_main():
 
             request['logger'].info('Basic-authenticated: %s', basic_auth_user)
 
+            set_user({"id": basic_auth_user})
+
             return await handler(request)
 
         return _authenticate_by_basic_auth
@@ -1175,6 +1180,8 @@ async def async_main():
                 return web.Response(status=401)
 
             request['logger'].info('Hawk authenticated: %s', creds['id'])
+
+            set_user({"id": creds['id']})
 
             return await handler(request)
 
