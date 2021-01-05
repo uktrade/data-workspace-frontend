@@ -18,6 +18,8 @@ function pollForQueryResults(queryLogId, delay, delayStep, maxDelay) {
         document.getElementById('id_sql').classList.add('govuk-form-group--error');
         document.getElementById('inline-error').innerHTML = '<span id="sql-error" class="govuk-error-message">' + resp.error + '</span>'
         document.getElementById('inline-error').classList.remove('govuk-!-display-none');
+        document.getElementById('async-query-executing').classList.add('govuk-!-display-none');
+        document.getElementById('async-query-submitting').classList.add('govuk-!-display-none');
       }
       else {
         document.getElementById('query-results').innerHTML = resp.html;

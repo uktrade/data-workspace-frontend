@@ -142,6 +142,13 @@ class QueryLog(models.Model):
     def is_playground(self):
         return self.query_id is None
 
+    @property
+    def title(self):
+        if self.query is not None:
+            return self.query.title
+
+        return f'Playground - {self.sql[:32]}'
+
     class Meta:
         ordering = ['-run_at']
 

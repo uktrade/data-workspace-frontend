@@ -510,7 +510,9 @@ en_formats.SHORT_DATETIME_FORMAT = "d/m/Y P"
 
 
 EXPLORER_DEFAULT_ROWS = int(env.get("EXPLORER_DEFAULT_ROWS", 1000))
-EXPLORER_QUERY_TIMEOUT_MS = int(env.get("EXPLORER_QUERY_TIMEOUT_MS", 60000))
+EXPLORER_QUERY_TIMEOUT_MS = int(
+    env.get("EXPLORER_QUERY_TIMEOUT_MS", 3_000_000)  # 15 minutes
+)
 
 EXPLORER_DEFAULT_DOWNLOAD_ROWS = int(env.get("EXPLORER_DEFAULT_DOWNLOAD_ROWS", 1000))
 
@@ -523,6 +525,9 @@ EXPLORER_DATA_EXPORTERS = [
     ('csv', 'dataworkspace.apps.explorer.exporters.CSVExporter'),
     ('excel', 'dataworkspace.apps.explorer.exporters.ExcelExporter'),
     ('json', 'dataworkspace.apps.explorer.exporters.JSONExporter'),
+    ('new-csv', 'dataworkspace.apps.explorer.new_exporters.NewCSVExporter'),
+    ('new-excel', 'dataworkspace.apps.explorer.new_exporters.NewExcelExporter'),
+    ('new-json', 'dataworkspace.apps.explorer.new_exporters.NewJSONExporter'),
 ]
 
 ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
