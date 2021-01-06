@@ -11,8 +11,8 @@ COPY pgadmin/start.sh /
 
 USER root
 RUN \
-	usermod -u 4356 pgadmin && \
-	groupmod -g 4357 pgadmin && \
+	usermod -u 4357 pgadmin && \
+	groupmod -g 4356 pgadmin && \
 	chmod +x /start.sh
 
 ENTRYPOINT ["/start.sh"]
