@@ -296,7 +296,7 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
         },
         'clean-up-old-data-explorer-materialized-views': {
             'task': 'dataworkspace.apps.explorer.tasks.cleanup_temporary_query_tables',
-            'schedule': crontab(hour=0),
+            'schedule': crontab(minute=0, hour=0),
             'args': (),
         },
         'sync-sso-users-from-activity-stream': {
