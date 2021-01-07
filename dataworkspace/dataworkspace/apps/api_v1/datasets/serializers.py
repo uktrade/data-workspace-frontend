@@ -2,7 +2,7 @@ from django.utils.html import strip_tags
 from rest_framework import serializers
 
 from dataworkspace.apps.datasets.constants import DataSetType
-
+from dataworkspace.apps.datasets.models import SourceTable
 
 _PURPOSES = {
     DataSetType.DATACUT.value: 'Data cut',
@@ -10,6 +10,17 @@ _PURPOSES = {
     DataSetType.REFERENCE.value: 'Reference data',
     DataSetType.VISUALISATION.value: 'Visualisation',
 }
+
+
+class SourceTableSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SourceTable
+        fields = (
+            'id',
+            'name',
+            'schema',
+            'table',
+        )
 
 
 class CatalogueItemSerializer(serializers.Serializer):
@@ -29,6 +40,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     personal_data = serializers.CharField()
     retention_policy = serializers.CharField()
     eligibility_criteria = serializers.ListField()
+    source_tables = serializers.SerializerMethodField()
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)
@@ -43,3 +55,10 @@ class CatalogueItemSerializer(serializers.Serializer):
         instance['personal_data'] = instance['personal_data'] or None
         instance['retention_policy'] = instance['retention_policy'] or None
         return instance
+
+    def get_source_tables(self, instance):
+        if instance['purpose'] == DataSetType.MASTER.value:
+            return SourceTableSerializer(
+                SourceTable.objects.filter(dataset_id=instance['id']), many=True
+            ).data
+        return []

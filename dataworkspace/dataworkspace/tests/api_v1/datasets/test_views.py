@@ -17,6 +17,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
+from dataworkspace.apps.datasets.constants import DataSetType
 
 
 def flush_database(connection):
@@ -492,6 +493,12 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             'eligibility_criteria': list(eligibility_criteria)
             if eligibility_criteria
             else None,
+            'source_tables': [
+                {'id': str(x.id), 'name': x.name, 'schema': x.schema, 'table': x.table}
+                for x in dataset.sourcetable_set.all()
+            ]
+            if dataset.type == DataSetType.MASTER.value
+            else [],
         }
 
     def test_success(self, unauthenticated_client):
@@ -510,6 +517,12 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             information_asset_manager=factories.UserFactory(),
             personal_data='personal',
             retention_policy='retention',
+        )
+        factories.SourceTableFactory(
+            dataset=master_dataset, schema='public', table='test_table1'
+        )
+        factories.SourceTableFactory(
+            dataset=master_dataset, schema='public', table='test_table1'
         )
         reference_dataset = factories.ReferenceDatasetFactory(
             information_asset_owner=factories.UserFactory(),
