@@ -41,6 +41,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     retention_policy = serializers.CharField()
     eligibility_criteria = serializers.ListField()
     source_tables = serializers.SerializerMethodField()
+    slug = serializers.CharField()
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)

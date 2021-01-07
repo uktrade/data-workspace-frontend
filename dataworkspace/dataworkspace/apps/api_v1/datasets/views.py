@@ -321,6 +321,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         'information_asset_manager',
         'enquiries_contact',
         'licence',
+        'slug',
         'purpose',
         'source_tags',
         'personal_data',

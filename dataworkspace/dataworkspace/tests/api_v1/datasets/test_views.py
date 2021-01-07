@@ -499,6 +499,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             ]
             if dataset.type == DataSetType.MASTER.value
             else [],
+            'slug': dataset.slug,
         }
 
     def test_success(self, unauthenticated_client):
