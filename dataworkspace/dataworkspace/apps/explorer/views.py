@@ -21,19 +21,15 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import View
 from django.views.generic.edit import CreateView, DeleteView
-from waffle import flag_is_active
-from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
-from dataworkspace.apps.explorer.new_exporters import get_new_exporter_class
 from dataworkspace.apps.explorer.schema import schema_info
-from dataworkspace.apps.explorer.tasks import execute_query_async
+from dataworkspace.apps.explorer.tasks import submit_query_for_execution
 from dataworkspace.apps.explorer.utils import (
-    execute_query_sync,
     fetch_query_results,
     get_total_pages,
     QueryException,
@@ -44,35 +40,15 @@ from dataworkspace.apps.explorer.utils import (
     url_get_rows,
     url_get_show,
 )
-from dataworkspace.utils import DATA_EXPLORER_ASYNC_QUERIES_FLAG
 
 
 class SafeLoginView(LoginView):
     template_name = 'admin/login.html'
 
 
-def _export(request, query, download=True):
+def _export(request, querylog, download=True):
     format_ = request.GET.get('format', 'csv')
     exporter_class = get_exporter_class(format_)
-    query.params = url_get_params(request)
-    delim = request.GET.get('delim')
-    exporter = exporter_class(query=query, request=request)
-    try:
-        output = exporter.get_output(delim=delim)
-    except DatabaseError as e:
-        msg = "Error executing query %s: %s" % (query.title, e)
-        return HttpResponse(msg, status=500)
-    response = HttpResponse(output, content_type=exporter.content_type)
-    if download:
-        response['Content-Disposition'] = 'attachment; filename="%s"' % (
-            exporter.get_filename()
-        )
-    return response
-
-
-def _new_export(request, querylog, download=True):
-    format_ = request.GET.get('format', 'csv')
-    exporter_class = get_new_exporter_class(format_)
     delim = request.GET.get('delim')
     exporter = exporter_class(querylog=querylog, request=request)
     try:
@@ -106,23 +82,11 @@ class DownloadFromQuerylogView(View):
             QueryLog, pk=querylog_id, run_by_user=self.request.user
         )
 
-        if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
-            try:
-                return _new_export(request, querylog)
-            except DatabaseError:
-                redirect_url = reverse('explorer:index')
-                return redirect(
-                    redirect_url + f"?querylog_id={querylog.id}&error=download"
-                )
-
-        query = Query(
-            sql=querylog.sql,
-            connection=querylog.connection,
-            title=querylog.title
-            if querylog.query
-            else f'Playground - {querylog.sql[:32]}',
-        )
-        return _export(request, query)
+        try:
+            return _export(request, querylog)
+        except DatabaseError:
+            redirect_url = reverse('explorer:index')
+            return redirect(redirect_url + f"?querylog_id={querylog.id}&error=download")
 
 
 class ListQueryView(ListView):
@@ -534,28 +498,17 @@ def query_viewmodel(
     query_log = None
     if run_query:
         try:
-            if flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG):
-                headers = None
-                data = None
-                query_log = execute_query_async(
-                    query.final_sql(),
-                    query.connection,
-                    query.id,
-                    request.user.id,
-                    page,
-                    rows,
-                    timeout,
-                )
-            else:
-                headers, data, query_log = execute_query_sync(
-                    query.final_sql(),
-                    query.connection,
-                    query.id,
-                    request.user.id,
-                    page,
-                    rows,
-                    timeout,
-                )
+            headers = None
+            data = None
+            query_log = submit_query_for_execution(
+                query.final_sql(),
+                query.connection,
+                query.id,
+                request.user.id,
+                page,
+                rows,
+                timeout,
+            )
         except QueryException as e:
             error = str(e)
     if error and method == "POST":
@@ -575,7 +528,6 @@ def query_viewmodel(
         'total_rows': query_log.rows if has_valid_results else None,
         'duration': query_log.duration if has_valid_results else None,
         'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
-        'run_queries_async': flag_is_active(request, DATA_EXPLORER_ASYNC_QUERIES_FLAG),
         'query_log': query_log,
     }
     ret['total_pages'] = get_total_pages(ret['total_rows'], rows)
@@ -583,12 +535,9 @@ def query_viewmodel(
     return ret
 
 
-class QueryLogResultView(WaffleFlagMixin, View):
-    waffle_flag = DATA_EXPLORER_ASYNC_QUERIES_FLAG
-
+class QueryLogResultView(View):
     def get(self, request, querylog_id):
         html = None
-        error = None
 
         try:
             query_log = get_object_or_404(

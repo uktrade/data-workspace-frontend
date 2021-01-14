@@ -20,6 +20,8 @@ def staff_user(db):
         is_staff=True,
         is_superuser=True,
     )
+    staff_user.profile.sso_id = 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68'
+    staff_user.profile.save()
     return staff_user
 
 
@@ -29,7 +31,7 @@ def staff_user_data(db, staff_user):
         'HTTP_SSO_PROFILE_EMAIL': staff_user.email,
         'HTTP_SSO_PROFILE_CONTACT_EMAIL': staff_user.email,
         'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
-        'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
+        'HTTP_SSO_PROFILE_USER_ID': staff_user.profile.sso_id,
         'HTTP_SSO_PROFILE_LAST_NAME': 'Testerson',
         'HTTP_SSO_PROFILE_FIRST_NAME': 'Bob',
     }
