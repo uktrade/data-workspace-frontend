@@ -84,7 +84,7 @@ def _prefix_column(index, column):
 
 
 @celery_app.task()
-def _run_querylog_query_async(query_log_id, page, limit, timeout):
+def _run_querylog_query(query_log_id, page, limit, timeout):
     query_log = QueryLog.objects.get(id=query_log_id)
     user_connection_settings = get_user_explorer_connection_settings(
         query_log.run_by_user, query_log.connection
@@ -149,7 +149,7 @@ def _run_querylog_query_async(query_log_id, page, limit, timeout):
     logger.info("Created table %s and stored results", table_name)
 
 
-def execute_query_async(
+def submit_query_for_execution(
     query_sql, query_connection, query_id, user_id, page, limit, timeout
 ):
     user = get_user_model().objects.get(id=user_id)
@@ -161,6 +161,6 @@ def execute_query_async(
         page=page,
     )
 
-    _run_querylog_query_async.delay(query_log.id, page, limit, timeout)
+    _run_querylog_query.delay(query_log.id, page, limit, timeout)
 
     return query_log

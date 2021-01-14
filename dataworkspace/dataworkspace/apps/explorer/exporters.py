@@ -10,11 +10,11 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
 from django.utils.text import slugify
 
-from dataworkspace.apps.explorer.utils import execute_query_sync
+from dataworkspace.apps.explorer.utils import fetch_query_results
 
 
 def get_exporter_class(format_):
-    class_str = dict(settings.EXPLORER_DATA_EXPORTERS)[format_]
+    class_str = dict(settings.EXPLORER_DATA_EXPORTERS)[f"{format_}"]
     return import_string(class_str)
 
 
@@ -23,8 +23,8 @@ class BaseExporter:
     content_type = ''
     file_extension = ''
 
-    def __init__(self, query, request):
-        self.query = query
+    def __init__(self, querylog, request):
+        self.querylog = querylog
         self.request = request
         self.user = request.user
 
@@ -33,15 +33,7 @@ class BaseExporter:
         return value
 
     def get_file_output(self, **kwargs):
-        headers, data, _ = execute_query_sync(
-            self.query.final_sql(),
-            self.query.connection,
-            self.query.id,
-            self.user.id,
-            1,
-            settings.EXPLORER_DEFAULT_DOWNLOAD_ROWS,
-            settings.EXPLORER_QUERY_TIMEOUT_MS,
-        )
+        headers, data, _ = fetch_query_results(self.querylog.id)
         return self._get_output(headers, data, **kwargs)
 
     def _get_output(self, headers, data, **kwargs):
@@ -56,7 +48,7 @@ class BaseExporter:
     def get_filename(self):
         # build list of valid chars, build filename from title and replace spaces
         valid_chars = '-_.() %s%s' % (string.ascii_letters, string.digits)
-        filename = ''.join(c for c in self.query.title if c in valid_chars)
+        filename = ''.join(c for c in self.querylog.title if c in valid_chars)
         filename = filename.replace(' ', '_')
         return '{}{}'.format(filename, self.file_extension)
 
@@ -143,5 +135,5 @@ class ExcelExporter(BaseExporter):
     def _format_title(self):
         # XLSX writer wont allow sheet names > 31 characters or that contain invalid characters
         # https://github.com/jmcnamara/XlsxWriter/blob/master/xlsxwriter/test/workbook/test_check_sheetname.py
-        title = slugify(self.query.title)
+        title = slugify(self.querylog.title)
         return title[:31]

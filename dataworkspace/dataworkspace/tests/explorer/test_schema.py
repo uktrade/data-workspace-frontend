@@ -1,11 +1,17 @@
 from unittest.mock import patch
 
+import pytest
 from django.conf import settings
+from django.core.cache import cache
 
 from dataworkspace.apps.explorer import schema
 
 
 class TestSchemaInfo:
+    @pytest.fixture(scope='function', autouse=True)
+    def _clear_cache(self):
+        cache.clear()
+
     @staticmethod
     def _get_connection_data():
         connection_info = settings.DATABASES_DATA['my_database']

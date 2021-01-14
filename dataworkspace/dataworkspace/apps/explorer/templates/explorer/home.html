@@ -189,7 +189,7 @@
     document.getElementById('width-toggle-container').classList.remove('govuk-!-display-none');
     window.initSchemaSearch();
   </script>
-  {% if run_queries_async and query_log %}
+  {% if query_log %}
     <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_async.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
       setTimeout(function() {

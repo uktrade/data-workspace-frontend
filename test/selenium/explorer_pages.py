@@ -142,6 +142,10 @@ class HomePage(_BasePage):
         textarea = self._driver.find_element_by_id('original-sql')
         return textarea.get_attribute('value')
 
+    def read_sql_error(self):
+        span = self._driver.find_element_by_id('sql-error')
+        return span.text
+
     def change_results_pagination(self, page, results_per_page):
         query_page = self._driver.find_element_by_id('query-page')
         query_page.clear()
