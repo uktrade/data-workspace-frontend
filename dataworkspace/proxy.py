@@ -690,7 +690,7 @@ async def async_main():
             upstream_ws = await upstream_connection
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_ws = await with_session_cookie(
-                web.WebSocketResponse(protocols=protocols)
+                web.WebSocketResponse(protocols=protocols, heartbeat=30)
             )
 
             await downstream_ws.prepare(downstream_request)
