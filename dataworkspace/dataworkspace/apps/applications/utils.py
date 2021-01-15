@@ -43,6 +43,7 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     new_private_database_credentials,
     postgres_user,
+    USER_SCHEMA_STEM,
 )
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.models import (
@@ -526,6 +527,22 @@ def _do_delete_unused_datasets_users():
             usename for usename in usenames if usename not in in_use_usenames
         ]
 
+        # SSO ids are required in order to get the persistent user role and reassign it
+        # objects owned by the temporary user role. However, as items in the not_in_use_usernames
+        # list may not necessarily have an associated ApplicationInstanceDbUsers object, we
+        # can't modify the above queryset and list comprehension to get their sso ids. Instead we
+        # construct a new dict and only attempt the reassignment if the usename is in this dict.
+        sso_ids = {
+            db_user[0]: db_user[1]
+            for db_user in set(
+                ApplicationInstanceDbUsers.objects.filter(
+                    db=database_obj, db_username__in=not_in_use_usernames,
+                ).values_list(
+                    'db_username', 'application_instance__owner__profile__sso_id'
+                )
+            )
+        }
+
         schema_revokes = [
             'REVOKE USAGE ON SCHEMA {} FROM {};',
             'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {} FROM {};',
@@ -593,6 +610,32 @@ def _do_delete_unused_datasets_users():
                         logger.info(
                             'delete_unused_datasets_users: dropping user %s', usename
                         )
+
+                        # Revoke privileges so that the DROP USER command succeeds
+                        if usename in sso_ids:
+                            db_role_schema_suffix = stable_identification_suffix(
+                                str(sso_ids[usename]), short=True
+                            )
+                            persistent_db_role = (
+                                f'{USER_SCHEMA_STEM}{db_role_schema_suffix}'
+                            )
+                            # This reassigns the ownership of all the database objects owned by
+                            # the temporary role, however it does not handle privileges so these
+                            # need to be revoked in the next command
+                            cur.execute(
+                                sql.SQL('REASSIGN OWNED BY {} to {};').format(
+                                    sql.Identifier(usename),
+                                    sql.Identifier(persistent_db_role),
+                                )
+                            )
+                            # Revoke all privileges granted to the temporary role so that it
+                            # can be deleted in the next command
+                            cur.execute(
+                                sql.SQL('DROP OWNED BY {};').format(
+                                    sql.Identifier(usename)
+                                )
+                            )
+
                         cur.execute(
                             sql.SQL('DROP USER {};').format(sql.Identifier(usename))
                         )
