@@ -1,0 +1,32 @@
+{% with id=widget.attrs.id %}
+<div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
+  <fieldset{% if id %} id="{{ id }}"{% endif %} class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--{{ widget.legend_size }}">
+        <{{ widget.heading }} class="govuk-fieldset__heading">{{ widget.label }}</{{ widget.heading }}>
+      </legend>
+
+      {% if widget.hint_html %}
+      <div id="{{ id }}-hint">
+        {{ widget.hint_html }}
+      </div>
+      {% elif widget.hint_text %}
+      <span id="{{ id }}-hint" class="govuk-hint">
+        {{ widget.hint_text }}
+      </span>
+      {% endif %}
+
+      {% if widget.errors %}
+      <span id="{{ id }}-error" class="govuk-error-message">
+          <span class="govuk-visually-hidden">Error: </span>{{ widget.errors.0 }}
+      </span>
+      {% endif %}
+      <div class="govuk-radios">
+      {% for group, options, index in widget.optgroups %}
+        {% for option in options %}
+          {% include option.template_name with widget=option %}
+        {% endfor %}
+      {%endfor %}
+      </div>
+  </fieldset>
+</div>
+{% endwith %}
