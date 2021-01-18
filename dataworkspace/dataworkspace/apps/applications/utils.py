@@ -621,9 +621,24 @@ def _do_delete_unused_datasets_users():
                             )
                             # This reassigns the ownership of all the database objects owned by
                             # the temporary role, however it does not handle privileges so these
-                            # need to be revoked in the next command
+                            # need to be revoked in the next command.
+                            #
+                            # REASSIGN OWNED requires privileges on both the source role(s) and
+                            # the target role so these are granted first.
                             cur.execute(
-                                sql.SQL('REASSIGN OWNED BY {} to {};').format(
+                                sql.SQL('GRANT {} TO {};').format(
+                                    sql.Identifier(usename),
+                                    sql.Identifier(conn.info.user),
+                                )
+                            )
+                            cur.execute(
+                                sql.SQL('GRANT {} TO {};').format(
+                                    sql.Identifier(persistent_db_role),
+                                    sql.Identifier(conn.info.user),
+                                )
+                            )
+                            cur.execute(
+                                sql.SQL('REASSIGN OWNED BY {} TO {};').format(
                                     sql.Identifier(usename),
                                     sql.Identifier(persistent_db_role),
                                 )
