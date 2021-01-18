@@ -629,13 +629,13 @@ def _do_delete_unused_datasets_users():
                             cur.execute(
                                 sql.SQL('GRANT {} TO {};').format(
                                     sql.Identifier(usename),
-                                    sql.Identifier(conn.info.user),
+                                    sql.Identifier(database_data['USER']),
                                 )
                             )
                             cur.execute(
                                 sql.SQL('GRANT {} TO {};').format(
                                     sql.Identifier(persistent_db_role),
-                                    sql.Identifier(conn.info.user),
+                                    sql.Identifier(database_data['USER']),
                                 )
                             )
                             cur.execute(
