@@ -1,10 +1,10 @@
-resource "aws_security_group" "dnsmasq" {
-  name        = "${var.prefix}-dnsmasq"
-  description = "${var.prefix}-dnsmasq"
+resource "aws_security_group" "dns_rewrite_proxy" {
+  name        = "${var.prefix}-dns-rewrite-proxy"
+  description = "${var.prefix}-dns-rewrite-proxy"
   vpc_id      = "${aws_vpc.main.id}"
 
   tags {
-    Name = "${var.prefix}-dnsmasq"
+    Name = "${var.prefix}-dns-rewrite-proxy"
   }
 
   lifecycle {
@@ -12,10 +12,10 @@ resource "aws_security_group" "dnsmasq" {
   }
 }
 
-resource "aws_security_group_rule" "dnsmasq_egress_https" {
+resource "aws_security_group_rule" "dns_rewrite_proxy_egress_https" {
   description = "egress-dns-tcp"
 
-  security_group_id = "${aws_security_group.dnsmasq.id}"
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
   cidr_blocks = ["0.0.0.0/0"]
 
   type        = "egress"
@@ -24,10 +24,10 @@ resource "aws_security_group_rule" "dnsmasq_egress_https" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "dnsmasq_ingress_dns_tcp_notebooks" {
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_tcp_notebooks" {
   description = "ingress-dns-tcp"
 
-  security_group_id = "${aws_security_group.dnsmasq.id}"
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
   source_security_group_id = "${aws_security_group.notebooks.id}"
 
   type        = "ingress"
@@ -36,10 +36,10 @@ resource "aws_security_group_rule" "dnsmasq_ingress_dns_tcp_notebooks" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_notebooks" {
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_notebooks" {
   description = "ingress-dns-udp-notebooks"
 
-  security_group_id = "${aws_security_group.dnsmasq.id}"
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
   source_security_group_id = "${aws_security_group.notebooks.id}"
 
   type        = "ingress"
@@ -48,10 +48,10 @@ resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_notebooks" {
   protocol    = "udp"
 }
 
-resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_gitlab_runner" {
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_gitlab_runner" {
   description = "ingress-dns-udp-gitlab-runner"
 
-  security_group_id = "${aws_security_group.dnsmasq.id}"
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
   source_security_group_id = "${aws_security_group.gitlab_runner.id}"
 
   type        = "ingress"
@@ -60,10 +60,10 @@ resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_gitlab_runner" {
   protocol    = "udp"
 }
 
-resource "aws_security_group_rule" "dnsmasq_ingress_dns_udp_superset_multiuser_service" {
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_superset_multiuser_service" {
   description = "ingress-dns-udp-superset-multiuser-service"
 
-  security_group_id = "${aws_security_group.dnsmasq.id}"
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
   source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
 
   type        = "ingress"
@@ -598,7 +598,7 @@ resource "aws_security_group_rule" "notebooks_egress_dns_tcp" {
   description = "egress-dns-tcp"
 
   security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.dnsmasq.id}"
+  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
 
   type        = "egress"
   from_port   = "53"
@@ -610,7 +610,7 @@ resource "aws_security_group_rule" "notebooks_egress_dns_udp" {
   description = "egress-dns-udp"
 
   security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.dnsmasq.id}"
+  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
 
   type        = "egress"
   from_port   = "53"
@@ -1185,11 +1185,11 @@ resource "aws_security_group_rule" "gitlab_runner_egress_https_to_ecr_api" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dnsmasq" {
-  description = "egress-dns-udp-dnsmasq"
+resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dns_rewrite_proxy" {
+  description = "egress-dns-udp-dns-rewrite-proxy"
 
   security_group_id = "${aws_security_group.gitlab_runner.id}"
-  source_security_group_id = "${aws_security_group.dnsmasq.id}"
+  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
 
   type        = "egress"
   from_port   = "53"
@@ -1311,11 +1311,11 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_https_to_c
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to_dnsmasq" {
-  description = "egress-dns-to-dnsmasq"
+resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to_dns_rewrite_proxy" {
+  description = "egress-dns-to-dns-rewrite-proxy"
 
   security_group_id = "${aws_security_group.superset_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.dnsmasq.id}"
+  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
 
   type        = "egress"
   from_port   = "53"
