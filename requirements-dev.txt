@@ -111,7 +111,7 @@ pylint-plugin-utils==0.6  # via pylint-django
 pylint==2.5.3             # via -r requirements-dev.in, pylint-django, pylint-plugin-utils
 pyparsing==2.4.7          # via -r requirements.txt, packaging
 pyppeteer==0.2.2          # via -r requirements-dev.in
-pytest-cov==2.10.1        # via -r requirements-dev.in
+pytest-cov==2.11.0        # via -r requirements-dev.in
 pytest-django==4.1.0      # via -r requirements-dev.in
 pytest-mock==3.3.1        # via -r requirements-dev.in
 pytest-timeout==1.4.2     # via -r requirements-dev.in
