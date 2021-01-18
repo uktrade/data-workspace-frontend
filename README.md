@@ -104,7 +104,7 @@ The infrastructure is heavily Docker/Fargate based. Production Docker images are
 - [s3sync](https://quay.io/repository/uktrade/data-workspace-s3sync)
   A sidecar-container for the user-launched containers that syncs to and from S3 using [mobius3](https://github.com/uktrade/mobius3). This is to allow file-persistance on S3 without using FUSE, which at the time of writing is not possible on Fargate.
 
-- [dnsmasq](https://quay.io/repository/uktrade/data-workspace-dnsmasq)
+- [dns-rewrite-proxy](https://quay.io/repository/uktrade/data-workspace-dns-rewrite-proxy)
   The DNS server of the VPC that launched containers run in. It selectivly allows only certain DNS requests through to migitate chance of data exfiltration through DNS. When this container is deployed, it changes DHCP settings in the VPC, and will most likely break aspects of user-launched containers.
 
 - [healthcheck](https://quay.io/repository/uktrade/data-workspace-healthcheck)

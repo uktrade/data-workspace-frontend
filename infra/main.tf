@@ -57,7 +57,7 @@ variable superset_container_image {}
 variable alb_access_logs_bucket {}
 variable alb_logs_account {}
 
-variable dnsmasq_container_image {}
+variable dns_rewrite_proxy_container_image {}
 variable sentryproxy_container_image {}
 
 variable cloudwatch_destination_arn {}
@@ -179,9 +179,9 @@ locals {
   logstash_container_port       = "8889"
   logstash_container_api_port   = "9600"
 
-  dnsmasq_container_name       = "jupyterhub-dnsmasq"
-  dnsmasq_container_memory     = 512
-  dnsmasq_container_cpu        = 256
+  dns_rewrite_proxy_container_name       = "jupyterhub-dns-rewrite-proxy"
+  dns_rewrite_proxy_container_memory     = 512
+  dns_rewrite_proxy_container_cpu        = 256
 
   sentryproxy_container_name       = "jupyterhub-sentryproxy"
   sentryproxy_container_memory     = 512
