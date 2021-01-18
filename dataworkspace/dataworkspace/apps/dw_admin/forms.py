@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import connections, transaction
 from django.db.utils import DatabaseError
+from django.forms.widgets import SelectMultiple
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
 
@@ -488,6 +489,7 @@ class BaseDatasetForm(forms.ModelForm):
 
     # Invalid dataset type - must be overridden by the subclass.
     dataset_type = -1
+    can_change_user_permission_codename = None
 
     class Meta:
         model = DataSet
@@ -495,6 +497,7 @@ class BaseDatasetForm(forms.ModelForm):
         widgets = {'type': forms.HiddenInput()}
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
         kwargs['initial'] = {'type': self.dataset_type}
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
@@ -512,14 +515,26 @@ class BaseDatasetForm(forms.ModelForm):
             if is_instance
             else get_user_model().objects.none()
         )
+        if not user.is_superuser and not user.has_perm(
+            self.can_change_user_permission_codename
+        ):
+            self.fields['authorized_users'].disabled = True
+            self.fields['authorized_users'].widget = SelectMultiple(
+                choices=(
+                    (user.id, user.email)
+                    for user in self.fields['authorized_users'].queryset.all()
+                )
+            )
 
 
 class DataCutDatasetForm(BaseDatasetForm):
     dataset_type = DataSet.TYPE_DATA_CUT
+    can_change_user_permission_codename = 'datasets.change_datacutuserpermission'
 
 
 class MasterDatasetForm(BaseDatasetForm):
     dataset_type = DataSet.TYPE_MASTER_DATASET
+    can_change_user_permission_codename = 'datasets.change_masterdatasetuserpermission'
 
 
 class SourceLinkForm(forms.ModelForm):
@@ -636,6 +651,7 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
         widget=FilteredSelectMultiple('users', False),
         queryset=get_user_model().objects.filter().order_by('email'),
     )
+    can_change_user_permission_codename = 'datasets.change_visualisationuserpermission'
 
     class Meta:
         model = VisualisationCatalogueItem
@@ -643,6 +659,7 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
         widgets = {'type': forms.HiddenInput()}
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
 
@@ -659,6 +676,16 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
             if is_instance
             else get_user_model().objects.none()
         )
+        if not user.is_superuser and not user.has_perm(
+            self.can_change_user_permission_codename
+        ):
+            self.fields['authorized_users'].disabled = True
+            self.fields['authorized_users'].widget = SelectMultiple(
+                choices=(
+                    (user.id, user.email)
+                    for user in self.fields['authorized_users'].queryset.all()
+                )
+            )
 
 
 class VisualisationLinkForm(forms.ModelForm):
