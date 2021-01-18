@@ -10,6 +10,7 @@ from typing import Dict, List
 import boto3
 import botocore
 import waffle
+from botocore.config import Config
 from botocore.exceptions import ClientError
 from django_db_geventpool.utils import close_connection
 from django.conf import settings
@@ -621,9 +622,24 @@ def _do_delete_unused_datasets_users():
                             )
                             # This reassigns the ownership of all the database objects owned by
                             # the temporary role, however it does not handle privileges so these
-                            # need to be revoked in the next command
+                            # need to be revoked in the next command.
+                            #
+                            # REASSIGN OWNED requires privileges on both the source role(s) and
+                            # the target role so these are granted first.
                             cur.execute(
-                                sql.SQL('REASSIGN OWNED BY {} to {};').format(
+                                sql.SQL('GRANT {} TO {};').format(
+                                    sql.Identifier(usename),
+                                    sql.Identifier(conn.info.user),
+                                )
+                            )
+                            cur.execute(
+                                sql.SQL('GRANT {} TO {};').format(
+                                    sql.Identifier(persistent_db_role),
+                                    sql.Identifier(conn.info.user),
+                                )
+                            )
+                            cur.execute(
+                                sql.SQL('REASSIGN OWNED BY {} TO {};').format(
                                     sql.Identifier(usename),
                                     sql.Identifier(persistent_db_role),
                                 )
@@ -925,7 +941,9 @@ def sync_quicksight_permissions(
 
     # QuickSight manages users in a single specific regions
     user_client = boto3.client(
-        'quicksight', region_name=settings.QUICKSIGHT_USER_REGION
+        'quicksight',
+        region_name=settings.QUICKSIGHT_USER_REGION,
+        config=Config(retries={'mode': 'standard', 'max_attempts': 10}),
     )
     # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
     data_client = boto3.client('quicksight')

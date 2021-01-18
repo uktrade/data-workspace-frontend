@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from time import time
 
+import psycopg2
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -83,6 +84,15 @@ def _prefix_column(index, column):
     return f'col_{index}_{column}'
 
 
+def _mark_query_log_failed(query_log, exc):
+    # Remove the select statement wrapper used for getting the query fields
+    query_log.error = (
+        str(exc).replace('SELECT * FROM (', '').replace(') sq LIMIT 0', '')
+    )
+    query_log.state = QueryLog.STATE_FAILED
+    query_log.save()
+
+
 @celery_app.task()
 def _run_querylog_query(query_log_id, page, limit, timeout):
     query_log = QueryLog.objects.get(id=query_log_id)
@@ -92,7 +102,6 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
 
     with user_explorer_connection(user_connection_settings) as conn:
         cursor = conn.cursor()
-
         start_time = time()
         sql = query_log.sql.rstrip().rstrip(';')
 
@@ -127,14 +136,12 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
                 f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
             )
             cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
+        except psycopg2.ProgrammingError as e:
+            _mark_query_log_failed(query_log, e)
+            logger.warning('Failed to run query: %s', e)
+            return
         except Exception as e:  # pylint: disable=broad-except
-            # Remove the select statement wrapper used for getting the query fields
-            error_message = (
-                str(e).replace('SELECT * FROM (', '').replace(') sq LIMIT 0', '')
-            )
-            query_log.error = error_message
-            query_log.state = QueryLog.STATE_FAILED
-            query_log.save()
+            _mark_query_log_failed(query_log, e)
             logger.exception("Failed to run query")
             return
 
