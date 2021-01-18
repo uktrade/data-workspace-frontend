@@ -32,10 +32,6 @@ class GOVUKDesignSystemTextWidget(forms.widgets.TextInput):
         self._heading = heading
 
     def get_context(self, name, value, attrs):
-        # GOV.UK Design System says to disable HTML5 validation
-        self.is_required = False
-        attrs['required'] = False
-
         context = super().get_context(name, value, attrs)
         context['widget']['label'] = self._label
         context['widget']['heading'] = self._heading
@@ -80,10 +76,6 @@ class GOVUKDesignSystemTextareaWidget(forms.widgets.Textarea):
         self._heading = heading
 
     def get_context(self, name, value, attrs):
-        # GOV.UK Design System says to disable HTML5 validation
-        self.is_required = False
-        attrs['required'] = False
-
         context = super().get_context(name, value, attrs)
         context['widget']['label'] = self._label
         context['widget']['heading'] = self._heading
@@ -128,10 +120,6 @@ class GOVUKDesignSystemRadiosWidget(forms.widgets.RadioSelect):
         self._heading = heading
 
     def get_context(self, name, value, attrs):
-        # GOV.UK Design System says to disable HTML5 validation
-        self.is_required = False
-        attrs['required'] = False
-
         context = super().get_context(name, value, attrs)
         context['widget']['label'] = self._label
         context['widget']['hint_text'] = self._hint_text
