@@ -10,6 +10,7 @@ from typing import Dict, List
 import boto3
 import botocore
 import waffle
+from botocore.config import Config
 from botocore.exceptions import ClientError
 from django_db_geventpool.utils import close_connection
 from django.conf import settings
@@ -940,7 +941,9 @@ def sync_quicksight_permissions(
 
     # QuickSight manages users in a single specific regions
     user_client = boto3.client(
-        'quicksight', region_name=settings.QUICKSIGHT_USER_REGION
+        'quicksight',
+        region_name=settings.QUICKSIGHT_USER_REGION,
+        config=Config(retries={'mode': 'standard', 'max_attempts': 10}),
     )
     # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
     data_client = boto3.client('quicksight')
