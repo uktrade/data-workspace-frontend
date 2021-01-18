@@ -1,0 +1,29 @@
+{% extends '_main.html' %}
+{% block page_title %}Tell us how we can help{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'root' %}">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        Request data
+      </li>
+    </ol>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% include 'design_system/error_summary.html' with form=form %}
+
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {{ form.name_of_owner_or_manager }}
+
+        <button class="govuk-button">Continue</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

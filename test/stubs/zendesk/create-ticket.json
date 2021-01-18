@@ -1,0 +1,15 @@
+{
+  "ticket": {
+    "id": 1234567890987654321,
+    "subject": "Data Workspace request",
+    "description": "this is a test message",
+    "status": "new",
+    "requester_id": 1,
+    "submitter_id": 1
+  },
+  "audit": {
+    "id": 1,
+    "ticket_id": 1234567890987654321,
+    "author_id": 1
+  }
+}

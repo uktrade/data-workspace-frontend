@@ -108,6 +108,7 @@ def test_header_links(request_client):
         ("Switch to Data Hub", "https://www.datahub.trade.gov.uk/"),
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
+        ("Request data", "/request-data/"),
         ("About", "/about/"),
         ("Support and feedback", "/support-and-feedback/"),
         (
@@ -133,6 +134,7 @@ def test_footer_links(request_client):
     expected_links = [
         ('Home', 'http://dataworkspace.test:8000/'),
         ("Tools", "/tools/"),
+        ("Request data", "/request-data/"),
         ('About', '/about/'),
         ("Support and feedback", "/support-and-feedback/"),
         (

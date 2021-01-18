@@ -16,7 +16,12 @@ import pytest
 def create_application():
     proc = subprocess.Popen(
         ['/dataworkspace/start-test.sh'],
-        env={**os.environ, "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}'},
+        env={
+            **os.environ,
+            "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
+            "ZENPY_FORCE_NETLOC": "dataworkspace.test:8006",
+            "ZENPY_FORCE_SCHEME": "http",
+        },
     )
 
     yield
@@ -246,6 +251,65 @@ class SSOServer(multiprocessing.Process):
 @contextmanager
 def create_sso(is_logged_in, codes, tokens, auth_to_me):
     proc = SSOServer(args=(is_logged_in, codes, tokens, auth_to_me))
+    proc.start()
+
+    yield proc
+
+    proc.kill()
+
+
+class ZendeskServer(multiprocessing.Process):
+    def run(self):
+        submitted_tickets = []
+
+        class ZendeskHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                nonlocal submitted_tickets
+                if self.path == '/_meta/read-submitted-tickets':
+                    self.send_response(200)
+                    self.send_header('Content-Type', "application/json")
+                    self.end_headers()
+
+                    response = BytesIO()
+                    response.write(json.dumps(submitted_tickets).encode('ascii'))
+
+                    self.wfile.write(response.getvalue())
+                    return
+
+                self.send_response(200)
+                self.end_headers()
+
+            def do_POST(self):
+                if self.path == '/api/v2/tickets.json':
+                    self.send_response(200)
+                    self.send_header('Content-Type', "application/json")
+                    self.end_headers()
+
+                    submitted_tickets.append(
+                        json.loads(
+                            self.rfile.read(int(self.headers['content-length'])).decode(
+                                'ascii'
+                            )
+                        )
+                    )
+
+                    with open('test/stubs/zendesk/create-ticket.json', 'rb') as stub:
+                        response = BytesIO()
+                        response.write(stub.read())
+
+                    self.wfile.write(response.getvalue())
+                    return
+
+                self.send_response(500)
+                self.end_headers()
+
+        httpd = HTTPServer(("0.0.0.0", 8006), ZendeskHandler)
+        httpd.serve_forever()
+
+
+@contextmanager
+def create_zendesk():
+    proc = ZendeskServer()
     proc.start()
 
     yield proc

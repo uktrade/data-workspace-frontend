@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'dataworkspace.apps.dw_admin',
     'dataworkspace.apps.api_v1',
     'dataworkspace.apps.eventlog',
+    'dataworkspace.apps.request_data',
     'django_extensions',
     'dataworkspace.apps.explorer',
     'dynamic_models',

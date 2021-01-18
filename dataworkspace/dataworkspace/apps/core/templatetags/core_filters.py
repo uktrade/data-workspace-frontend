@@ -36,3 +36,11 @@ def minimal_markdown(text):
             strip=True,
         )
     )
+
+
+@register.filter('startswith')
+def startswith(text, starts):
+    if isinstance(text, str):
+        return text.startswith(starts)
+
+    return False
