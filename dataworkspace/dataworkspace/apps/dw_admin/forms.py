@@ -518,6 +518,8 @@ class BaseDatasetForm(forms.ModelForm):
         if not user.is_superuser and not user.has_perm(
             self.can_change_user_permission_codename
         ):
+            self.fields['requires_authorization'].disabled = True
+
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(
                 choices=(
@@ -679,6 +681,8 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
         if not user.is_superuser and not user.has_perm(
             self.can_change_user_permission_codename
         ):
+            self.fields['requires_authorization'].disabled = True
+
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(
                 choices=(
