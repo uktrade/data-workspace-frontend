@@ -951,12 +951,13 @@ def sync_quicksight_permissions(
     account_id = boto3.client('sts').get_caller_identity().get('Account')
 
     quicksight_user_list: List[Dict[str, str]]
+    max_retries = settings.MAX_QUICKSIGHT_THROTTLE_RETRIES
     if len(user_sso_ids_to_update) > 0:
         quicksight_user_list = []
 
         for user_sso_id in user_sso_ids_to_update:
             # Poll for the user for 5 minutes
-            attempts = (5 * 60) if poll_for_user_creation else 1
+            attempts = (5 * 60) if poll_for_user_creation else max_retries
             for _ in range(attempts):
                 attempts -= 1
 
@@ -979,6 +980,17 @@ def sync_quicksight_permissions(
                             logger.exception(
                                 "Did not find user with sso id `%s` after 5 minutes",
                                 user_sso_id,
+                            )
+                    elif e.response['Error']['Code'] == 'ThrottlingException':
+                        if attempts > 0:
+                            logger.info(
+                                'Requests throttled. Trying again in 1 second...'
+                            )
+                            gevent.sleep(1)
+                        else:
+                            logger.exception(
+                                "Did not find user in %s attempts due to throttling",
+                                max_retries,
                             )
                     else:
                         raise e

@@ -348,6 +348,7 @@ class TestSyncQuickSightPermissions:
         ]
 
     @pytest.mark.django_db
+    @override_settings(MAX_QUICKSIGHT_THROTTLE_RETRIES=1)
     @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
     @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
     @mock.patch('dataworkspace.apps.applications.utils.cache')
@@ -382,6 +383,10 @@ class TestSyncQuickSightPermissions:
                     "UserName": "user/fake2@email.com",
                 }
             },
+            botocore.exceptions.ClientError(
+                {"Error": {"Code": "ThrottlingException", "Message": "Hold up"}},
+                'DescribeUser',
+            ),
         ]
         mock_data_client = mock.Mock()
         mock_sts_client = mock.Mock()
