@@ -956,7 +956,7 @@ def sync_quicksight_permissions(
 
         for user_sso_id in user_sso_ids_to_update:
             # Poll for the user for 5 minutes
-            attempts = (5 * 60) if poll_for_user_creation else 1
+            attempts = (5 * 60) if poll_for_user_creation else 5
             for _ in range(attempts):
                 attempts -= 1
 
@@ -979,6 +979,16 @@ def sync_quicksight_permissions(
                             logger.exception(
                                 "Did not find user with sso id `%s` after 5 minutes",
                                 user_sso_id,
+                            )
+                    elif e.response['Error']['Code'] == 'ThrottlingException':
+                        if attempts > 0:
+                            logger.info(
+                                'Requests throttled. Trying again in 1 second...'
+                            )
+                            gevent.sleep(1)
+                        else:
+                            logger.exception(
+                                "Did not find user in 5 attempts due to throttling"
                             )
                     else:
                         raise e
