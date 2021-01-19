@@ -8,9 +8,10 @@
     "portMappings": [{
         "containerPort": 53,
         "protocol": "udp"
-    },{
-        "containerPort": 53,
-        "protocol": "tcp"
+    },
+    {
+      "containerPort": 8888,
+      "protocol": "tcp"
     }],
     "logConfiguration": {
       "logDriver": "awslogs",

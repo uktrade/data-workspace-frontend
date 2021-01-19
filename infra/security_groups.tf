@@ -12,6 +12,27 @@ resource "aws_security_group" "dns_rewrite_proxy" {
   }
 }
 
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_healthcheck" {
+  description = "ingress-private-with-egress-healthcheck"
+  type        = "ingress"
+  from_port   = "8888"
+  to_port     = "8888"
+  protocol    = "tcp"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+}
+
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_udp" {
+  description = "ingress-private-without-egress-udp"
+  type        = "ingress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
+  cidr_blocks = ["${aws_subnet.private_without_egress.*.cidr_block[0]}"]
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+}
+
+
 resource "aws_security_group_rule" "dns_rewrite_proxy_egress_https" {
   description = "egress-dns-tcp"
 
@@ -24,53 +45,6 @@ resource "aws_security_group_rule" "dns_rewrite_proxy_egress_https" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_tcp_notebooks" {
-  description = "ingress-dns-tcp"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.notebooks.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_notebooks" {
-  description = "ingress-dns-udp-notebooks"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.notebooks.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
-}
-
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_gitlab_runner" {
-  description = "ingress-dns-udp-gitlab-runner"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.gitlab_runner.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
-}
-
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_superset_multiuser_service" {
-  description = "ingress-dns-udp-superset-multiuser-service"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
-}
 
 resource "aws_security_group" "sentryproxy_service" {
   name        = "${var.prefix}-sentryproxy"
@@ -594,23 +568,11 @@ resource "aws_security_group_rule" "notebooks_egress_ssh_to_gitlab_service" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "notebooks_egress_dns_tcp" {
-  description = "egress-dns-tcp"
-
-  security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-
-  type        = "egress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "tcp"
-}
-
 resource "aws_security_group_rule" "notebooks_egress_dns_udp" {
   description = "egress-dns-udp"
 
   security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
   from_port   = "53"
@@ -1189,7 +1151,7 @@ resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dns_rewrite_pro
   description = "egress-dns-udp-dns-rewrite-proxy"
 
   security_group_id = "${aws_security_group.gitlab_runner.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
   from_port   = "53"
@@ -1315,7 +1277,7 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to
   description = "egress-dns-to-dns-rewrite-proxy"
 
   security_group_id = "${aws_security_group.superset_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
   from_port   = "53"

@@ -1,3 +1,4 @@
+from asyncio import create_task
 import asyncio
 import logging
 import os
@@ -70,12 +71,18 @@ async def async_main():
     proxy_task = await start()
     logger.info('DNS server started')
 
+    async def handle_client(reader, writer):
+        logger.info('[Healthcheck] request received')
+    healthcheck_task = await create_task(asyncio.start_server(handle_client, '0.0.0.0', 8888))
+    logger.info('[Healthcheck] server started')
+
     loop = asyncio.get_running_loop()
     loop.add_signal_handler(signal.SIGINT, proxy_task.cancel)
     loop.add_signal_handler(signal.SIGTERM, proxy_task.cancel)
 
     try:
         await proxy_task
+        await healthcheck_task
     except asyncio.CancelledError:
         pass
 
