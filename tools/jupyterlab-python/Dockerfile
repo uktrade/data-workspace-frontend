@@ -49,7 +49,7 @@ RUN \
         libxext6 \
         libxrender1 \
         man-db=2.8.5-2 \
-        openssl=1.1.1d-0+deb10u3 \
+        openssl=1.1.1d-0+deb10u4 \
         openssh-client=1:7.9p1-10+deb10u2 \
         texlive-xetex=2018.20190227-2 \
         texlive-generic-extra=2018.20190227-2 \
@@ -82,7 +82,6 @@ COPY jupyterlab-python/jupyterlab_template_notebooks /jupyterlab_template_notebo
 COPY requirements.txt python-setup.sh /root/
 
 RUN \
-    chown -R jovyan:jovyan /usr/local && \
     /root/python-setup.sh && \
     python3 -m pip install jupyterlab_template_notebooks/server/ && \
     jupyter serverextension enable --system --python jupyterlab_template_notebooks && \
@@ -93,7 +92,8 @@ RUN \
     npm cache clean --force && \
     echo '[global]' > /etc/pip.conf && \
     echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
-    echo 'no-cache-dir = false' >> /etc/pip.conf
+    echo 'no-cache-dir = false' >> /etc/pip.conf && \
+    chown -R jovyan:jovyan /usr/local
 
 COPY jupyterlab-python/jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
