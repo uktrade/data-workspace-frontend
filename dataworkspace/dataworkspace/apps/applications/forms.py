@@ -2,27 +2,23 @@ from django.contrib.auth import get_user_model
 
 from django.contrib.postgres.forms import SplitArrayField, SplitArrayWidget
 from django.core.exceptions import ValidationError
-from django.core.validators import EmailValidator
 from django.forms import (
     Textarea,
-    TextInput,
-    ModelChoiceField,
     HiddenInput,
     CharField,
-    CheckboxInput,
-    BooleanField,
 )
 
 from dataworkspace.apps.applications.models import VisualisationApproval
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
-from dataworkspace.forms import GOVUKDesignSystemModelForm
-
-
-class _NiceEmailValidationModelChoiceField(ModelChoiceField):
-    def clean(self, value):
-        if value:
-            EmailValidator(message=self.error_messages['invalid_email'])(value.lower())
-        return super().clean(value.lower() if value else value)
+from dataworkspace.forms import (
+    GOVUKDesignSystemModelForm,
+    GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemSingleCheckboxWidget,
+    GOVUKDesignSystemCharField,
+    GOVUKDesignSystemEmailValidationModelChoiceField,
+    GOVUKDesignSystemBooleanField,
+)
 
 
 class BulletListSplitArrayWidget(SplitArrayWidget):
@@ -54,57 +50,91 @@ class DWSplitArrayField(SplitArrayField):
 
 
 class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
-    enquiries_contact = _NiceEmailValidationModelChoiceField(
+    short_description = GOVUKDesignSystemCharField(
+        label="Short description",
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+        error_messages={"required": "The visualisation must have a summary"},
+    )
+
+    enquiries_contact = GOVUKDesignSystemEmailValidationModelChoiceField(
+        label="Enquiries contact",
         queryset=get_user_model().objects.all(),
         to_field_name='email',
-        widget=TextInput,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
             "invalid_email": "Enter a valid email address for the enquiries contact",
             "invalid_choice": "The enquiries contact must have previously visited Data Workspace",
         },
     )
-    secondary_enquiries_contact = _NiceEmailValidationModelChoiceField(
+    secondary_enquiries_contact = GOVUKDesignSystemEmailValidationModelChoiceField(
+        label="Secondary enquiries contact",
         queryset=get_user_model().objects.all(),
         to_field_name='email',
-        widget=TextInput,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
             "invalid_email": "Enter a valid email address for the secondary enquiries contact",
             "invalid_choice": "The secondary enquiries contact must have previously visited Data Workspace",
         },
     )
-    information_asset_manager = _NiceEmailValidationModelChoiceField(
+    information_asset_manager = GOVUKDesignSystemEmailValidationModelChoiceField(
+        label="Information asset manager",
         queryset=get_user_model().objects.all(),
         to_field_name='email',
-        widget=TextInput,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
             "invalid_email": "Enter a valid email address for the information asset manager",
             "invalid_choice": "The information asset manager must have previously visited Data Workspace",
         },
     )
-    information_asset_owner = _NiceEmailValidationModelChoiceField(
+    information_asset_owner = GOVUKDesignSystemEmailValidationModelChoiceField(
+        label="Information asset owner",
         queryset=get_user_model().objects.all(),
         to_field_name='email',
-        widget=TextInput,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
             "invalid_email": "Enter a valid email address for the information asset owner",
             "invalid_choice": "The information asset owner must have previously visited Data Workspace",
         },
     )
-    user_access_type = BooleanField(
+    licence = GOVUKDesignSystemCharField(
+        label="Licence",
+        required=False,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+    )
+    retention_policy = GOVUKDesignSystemCharField(
+        label="Retention policy",
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
+    )
+    personal_data = GOVUKDesignSystemCharField(
+        label="Personal data",
+        required=False,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+    )
+    restrictions_on_usage = GOVUKDesignSystemCharField(
+        label="Restrictions on usage",
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
+    )
+    user_access_type = GOVUKDesignSystemBooleanField(
         label='Each user must be individually authorized to access the data',
         required=False,
-        widget=CheckboxInput(check_test=lambda val: val == 'REQUIRES_AUTHORIZATION'),
+        widget=GOVUKDesignSystemSingleCheckboxWidget(
+            check_test=lambda val: val == 'REQUIRES_AUTHORIZATION',
+        ),
     )
     eligibility_criteria = DWSplitArrayField(
         CharField(required=False),
         widget=BulletListSplitArrayWidget(
             label="Eligibility criteria",
             input_prefix="Eligibility criterion",
-            widget=TextInput(attrs={"class": "govuk-input"}),
+            widget=GOVUKDesignSystemTextWidget(
+                label_is_heading=False, extra_label_classes='govuk-visually-hidden',
+            ),
             size=5,
         ),
         required=False,
@@ -130,15 +160,12 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             'eligibility_criteria',
         ]
         widgets = {"retention_policy": Textarea, "restrictions_on_usage": Textarea}
+        labels = {"description": "Description"}
 
     def __init__(self, *args, **kwargs):
         kwargs['initial'] = kwargs.get("initial", {})
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
-
-        self.fields['short_description'].error_messages[
-            'required'
-        ] = "The visualisation must have a summary"
 
         self._email_fields = [
             'enquiries_contact',
@@ -170,14 +197,23 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = VisualisationApproval
         fields = ['approved', 'visualisation', 'approver']
-        widgets = {"visualisation": HiddenInput, "approver": HiddenInput}
-        labels = {"approved": "I have reviewed this visualisation"}
+        widgets = {
+            "visualisation": HiddenInput,
+            "approver": HiddenInput,
+        }
+
+    approved = GOVUKDesignSystemBooleanField(
+        label="I have reviewed this visualisation",
+        required=False,
+        widget=GOVUKDesignSystemSingleCheckboxWidget(
+            check_test=lambda val: val == 'REQUIRES_AUTHORIZATION',
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
         # If the visualisation has already been approved, we want to render a form that allows the user to unapprove it.
         if kwargs.get('instance') and kwargs.get('instance').approved:
             self._initial_approved = True
-            self.Meta.widgets["approved"] = HiddenInput
             kwargs['initial']['approved'] = False
         else:
             self._initial_approved = False
@@ -193,3 +229,11 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
                 "You must confirm that you have reviewed this visualisation"
             )
         return self.cleaned_data['approved']
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if self.data['action'] == 'unapprove':
+            cleaned_data['approved'] = False
+
+        return cleaned_data

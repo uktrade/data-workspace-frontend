@@ -34,28 +34,35 @@
 <!-- TODO: Link up `published` -->
 <p class="govuk-body">These details are visible in the catalogue once the visualisation has been published.</p>
 
-<form action="{% url 'visualisations:catalogue-item' gitlab_project_id=gitlab_project.id %}" method="POST">
+<form action="{% url 'visualisations:catalogue-item' gitlab_project_id=gitlab_project.id %}" method="POST" novalidate>
   {% csrf_token %}
 
   {{ form.non_field_errors }}
 
-  {% include "partials/govuk_basic_form_field.html" with field=form.short_description %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.description %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.enquiries_contact %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.secondary_enquiries_contact %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.information_asset_manager %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.information_asset_owner %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.licence %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.retention_policy %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.personal_data %}
-  {% include "partials/govuk_basic_form_field.html" with field=form.restrictions_on_usage %}
-  {% include "partials/govuk_single_checkbox_field.html" with field=form.user_access_type %}
+  {{ form.short_description }}
+
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="id_description">
+      Description
+    </label>
+    {{ form.description }}
+  </div>
+
+  {{ form.enquiries_contact }}
+  {{ form.secondary_enquiries_contact }}
+  {{ form.information_asset_manager }}
+  {{ form.information_asset_owner }}
+  {{ form.licence }}
+  {{ form.retention_policy }}
+  {{ form.personal_data }}
+  {{ form.restrictions_on_usage }}
+  {{ form.user_access_type }}
 
   <div id="js-eligibility-criteria-wrapper">
     {{ form.eligibility_criteria }}
   </div>
 
-  <input type="submit" class="govuk-button" value="Save" />
+  <button type="submit" class="govuk-button">Save</button>
 </form>
 {% endblock %}
 

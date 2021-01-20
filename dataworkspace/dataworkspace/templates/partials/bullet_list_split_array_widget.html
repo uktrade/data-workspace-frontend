@@ -7,7 +7,6 @@
     <ul class="govuk-list govuk-list--bullet">
       {% for widget in widget.subwidgets %}
         <li>
-          <label class="govuk-visually-hidden" for="{{ widget.attrs.id }}">{{ widget.label }}</label>
           {% include widget.template_name %}
         </li>
       {% endfor %}
