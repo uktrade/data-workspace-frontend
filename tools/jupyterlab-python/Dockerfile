@@ -49,7 +49,7 @@ RUN \
         libxext6 \
         libxrender1 \
         man-db=2.8.5-2 \
-        openssl=1.1.1d-0+deb10u3 \
+        openssl=1.1.1d-0+deb10u4 \
         openssh-client=1:7.9p1-10+deb10u2 \
         texlive-xetex=2018.20190227-2 \
         texlive-generic-extra=2018.20190227-2 \
