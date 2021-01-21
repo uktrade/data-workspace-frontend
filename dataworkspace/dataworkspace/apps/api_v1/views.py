@@ -239,6 +239,7 @@ def application_api_PUT(request, public_host):
                 application_instance=application_instance,
                 db_id=creds['db_id'],
                 db_username=creds['db_user'],
+                db_persistent_role=creds['db_persistent_role'],
             )
 
         app_schema = f'{USER_SCHEMA_STEM}{db_role_schema_suffix}'
