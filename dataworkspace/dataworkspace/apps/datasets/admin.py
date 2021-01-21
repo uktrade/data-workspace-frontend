@@ -643,6 +643,10 @@ class VisualisationCatalogueItemAdmin(
             )
         }
 
+    def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
+        form_class = super().get_form(request, obj=None, **kwargs)
+        return functools.partial(form_class, user=request.user)
+
     def get_tags(self, obj):
         return ', '.join([x.name for x in obj.tags.all()])
 
