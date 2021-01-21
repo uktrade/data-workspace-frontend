@@ -29,12 +29,11 @@ def test_dataset_type_to_manage_unpublished_permission_codename():
 @pytest.mark.django_db
 def test_get_code_snippets(metadata_db):
     ds = DataSetFactory.create(type=DataSetType.MASTER.value)
+    sourcetable = SourceTableFactory.create(
+        dataset=ds, schema="public", table="MY_LOVELY_TABLE"
+    )
 
-    assert get_code_snippets(ds) == {}
-
-    SourceTableFactory.create(dataset=ds, schema="public", table="MY_LOVELY_TABLE")
-
-    snippets = get_code_snippets(ds)
+    snippets = get_code_snippets(sourcetable)
     assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['python']
     assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['r']
     assert snippets['sql'] == """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50"""

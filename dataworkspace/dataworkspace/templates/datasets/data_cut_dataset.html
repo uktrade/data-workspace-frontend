@@ -90,7 +90,7 @@
                 </thead>
                 <tbody>
 
-                {% for data_link, can_show_link in data_links_with_link_toggle %}
+                {% for data_link, can_show_link, _ in data_links_with_link_toggle %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
                             {% if has_access and can_show_link %}

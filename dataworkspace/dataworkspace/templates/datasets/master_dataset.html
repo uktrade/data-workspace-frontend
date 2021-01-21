@@ -62,20 +62,20 @@
         </thead>
         <tbody>
 
-        {% for data_link, _ in data_links_with_link_toggle %}
+        {% for data_link, _, code_snippets in data_links_with_link_toggle %}
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell">{{ data_link.name }}</td>
-            <td class="govuk-table__cell">"{{ data_link.schema }}"."{{ data_link.table }}"</td>
-            <td class="govuk-table__cell">{{ data_link.get_frequency_display }}</td>
-            <td class="govuk-table__cell">{{ data_link.get_data_last_updated_date|default_if_none:"N/A" }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.name }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">"{{ data_link.schema }}"."{{ data_link.table }}"</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.get_frequency_display }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.get_data_last_updated_date|default_if_none:"N/A" }}</td>
             {% if user.is_superuser %}
-              <td class="govuk-table__cell">
+              <td class="govuk-table__cell app-table_cell--no-border">
                 {% if data_link.get_google_data_studio_link and data_link.accessible_by_google_data_studio %}
                   <a href="{{ data_link.get_google_data_studio_link }}">Google Data Studio</a>
                 {% endif %}
               </td>
             {% endif %}
-            <td class="govuk-table__cell">
+            <td class="govuk-table__cell app-table_cell--no-border">
               {% if data_link.type == source_table_type %}
                 {% if has_access %}
                   <a class="govuk-link"
@@ -89,6 +89,22 @@
                   No preview available
               {% endif %}
             </td>
+            {% if code_snippets %}
+              <tr class="govuk-table__row">
+                <td colspan="6" class="govuk-table__cell">
+                  <details class="govuk-details-!-margin-bottom-2" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                      <span class="govuk-details__summary-text">
+                        Code snippets <span class="govuk-visually-hidden">for "{{ data_link.schema }}"."{{ data_link.table }}"</span>
+                      </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets data_link=data_link %}
+                    </div>
+                  </details>
+                </td>
+              </tr>
+            {% endif %}
           </tr>
         {% endfor %}
         {% if not data_links_with_link_toggle %}
@@ -103,8 +119,6 @@
       {% endif %}
     </div>
   </div>
-
-  {% include 'partials/code_snippets.html' %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
@@ -148,4 +162,10 @@
       {% endif %}
     </div>
   </div>
+  <script nonce="{{ request.csp_nonce }}">
+    let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
+    nodeListForEach($codeBlocks, function ($codeBlock) {
+      new Copy($codeBlock).init()
+    });
+  </script>
 {% endblock %}

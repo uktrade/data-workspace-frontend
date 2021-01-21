@@ -53,12 +53,11 @@ def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
     }[dataset_type]
 
 
-def get_code_snippets(dataset: DataSet):
-    sourcetables = dataset.sourcetable_set.all()
-    if not sourcetables:
+def get_code_snippets(source_table):
+    if not hasattr(source_table, 'schema') or not hasattr(source_table, 'table'):
         return {}
 
-    schema, table_name = sourcetables[0].schema, sourcetables[0].table
+    schema, table_name = source_table.schema, source_table.table
     python_snippet = f"""import os
 import pandas
 import psycopg2
