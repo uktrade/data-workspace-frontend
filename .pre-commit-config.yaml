@@ -17,6 +17,6 @@ repos:
   hooks:
     - id: pylint
       name: pylint
-      entry: env PYTHONPATH=app python3 -m pylint.__main__ --rcfile .pylintrc
+      entry: env PYTHONPATH=dataworkspace python3 -m pylint.__main__ --rcfile .pylintrc
       language: system
       types: [python]

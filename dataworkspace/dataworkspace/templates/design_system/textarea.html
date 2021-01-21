@@ -1,0 +1,31 @@
+{% with id=widget.attrs.id %}
+<div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
+  <{{ widget.heading }} class="govuk-label-wrapper">
+    <label class="govuk-label govuk-label--{{ widget.label_size }}" for="{{ id }}">
+      {{ widget.label }}
+    </label>
+  </{{ widget.heading }}>
+
+  {% if widget.hint_html %}
+  <div id="{{ id }}-hint">
+    {{ widget.hint_html }}
+  </div>
+  {% elif widget.hint_text %}
+  <div id="{{ id }}-hint" class="govuk-hint">
+    {{ widget.hint_text }}
+  </div>
+  {% endif %}
+
+  {% if widget.errors %}
+  <span id="{{ id }}-error" class="govuk-error-message">
+      <span class="govuk-visually-hidden">Error: </span>{{ widget.errors.0 }}
+  </span>
+  {% endif %}
+
+  <textarea
+          class="govuk-textarea"
+          name="{{ widget.name }}"
+          {% if widget.hint_text %}aria-describedby="{{ id }}-hint" {% endif %}
+          {% include "django/forms/widgets/attrs.html" %}>{{ widget.value|default_if_none:'' }}</textarea>
+</div>
+{% endwith %}

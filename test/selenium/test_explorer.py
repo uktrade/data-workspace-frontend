@@ -6,16 +6,14 @@ import requests
 from django.core.cache import cache
 from selenium.common.exceptions import ElementNotInteractableException
 
+from test.selenium.common import get_driver  # pylint: disable=wrong-import-order
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
     create_dataset,
     set_dataset_access_type,
     reset_data_explorer_credentials,
 )
-from test.selenium.explorer_pages import (  # pylint: disable=wrong-import-order
-    HomePage,
-    get_driver,
-)
+from test.selenium.explorer_pages import HomePage  # pylint: disable=wrong-import-order
 
 
 class TestDataExplorer:
@@ -58,9 +56,7 @@ class TestDataExplorer:
             yield
 
     def test_can_execute_query(self, _application):
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query("select 1, 2, 3")
@@ -70,9 +66,7 @@ class TestDataExplorer:
         assert home_page.read_result_rows() == [["1", "2", "3"]]
 
     def test_query_exception_returned_as_friendly_error(self, _application):
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query('select "invalid identifier"')
@@ -86,9 +80,7 @@ class TestDataExplorer:
         )
 
     def test_results_pagination(self, _application):
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query("select unnest(array[1, 2, 3]) as numbers")
@@ -105,9 +97,7 @@ class TestDataExplorer:
         assert home_page.read_result_rows() == [["3"]]
 
     def test_format_sql(self, _application):
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query("select unnest(array[1, 2, 3]) as numbers")
@@ -116,9 +106,7 @@ class TestDataExplorer:
         assert home_page.read_sql() == "select\n  unnest(array [1, 2, 3]) as numbers"
 
     def test_save_and_run_a_query(self, _application):
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query("select 1, 2, 3")
@@ -149,9 +137,7 @@ class TestDataExplorer:
         assert "select 1, 2, 3" in query_log_page.get_html()
 
     def test_query_execution_logs(self, _application):
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query("select 1, 2, 3")
@@ -201,9 +187,7 @@ class TestDataExplorer:
             'REQUIRES_AUTHORIZATION',
         )
 
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query("select count(*) as count from public.explorer_dataset")
@@ -246,9 +230,7 @@ class TestDataExplorer:
             'REQUIRES_AUTHENTICATION',
         )
 
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         home_page.enter_query("select count(*) as count from public.explorer_dataset")
@@ -290,9 +272,7 @@ class TestDataExplorer:
         assert "Columns in public.explorer_2_dataset" in home_page.get_html()
 
     def test_page_width_toggles(self, _application):
-        home_page = HomePage(
-            driver=self.driver, base_url="http://dataworkspace.test:8000/data-explorer"
-        )
+        home_page = HomePage(driver=self.driver)
         home_page.open()
 
         # Check that "normal width" toggle is hidden

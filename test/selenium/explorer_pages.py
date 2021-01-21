@@ -1,81 +1,14 @@
-import os
-import re
-
 from lxml import html
-from selenium import webdriver
-from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+from test.selenium.common import _BasePage  # pylint: disable=wrong-import-order
 
 
-def get_driver():
-    if os.environ.get("REMOTE_SELENIUM_URL"):
-        options = webdriver.ChromeOptions()
-        driver = webdriver.Remote(
-            command_executor=os.environ['REMOTE_SELENIUM_URL'],
-            desired_capabilities=DesiredCapabilities.CHROME,
-            options=options,
-        )
-    else:
-        options = webdriver.ChromeOptions()
-        options.add_argument('--no-sandbox')
-        options.add_argument('--headless')
-        options.add_argument('--disable-gpu')
-
-        # Desktop size in order to ensure the browser has desktop styling (less than this hides certain elements
-        # under test)
-        options.add_argument("--window-size=1920,1080")
-
-        driver = webdriver.Chrome(options=options)
-
-    driver.implicitly_wait(5)
-    return driver
-
-
-class _BasePage:
-    _url_path = ''
-
-    def __init__(
-        self,
-        driver: WebDriver,
-        base_url='http://dataworkspace.test:8000/data-explorer/',
-    ):
-        self._driver = driver
-        self._page = None
-        self._base_url = base_url
-
-    @property
-    def url(self) -> str:
-        return self._base_url + self._url_path
-
-    def open(self):
-        self._driver.get(self.url)
-
-    def get_html(self) -> str:
-        return self._driver.page_source
-
-    def _submit(self, label):
-        button = self._driver.find_element_by_xpath(
-            f"//button[normalize-space(text()) = '{label}']"
-        )
-        button.click()
-
-    def _get_input_field(self, field_label):
-        return self._driver.find_element_by_xpath(
-            f"//*[@id = //label[normalize-space(text()) = '{field_label}']/@for]"
-        )
-
-    def _fill_field(self, field_label, text):
-        field = self._get_input_field(field_label)
-        field.send_keys(text)
-
+class _BaseExplorerPage(_BasePage):
     def click_home(self):
         link = self._driver.find_element_by_link_text('Home')
         link.click()
 
-        home_page = HomePage(self._driver)
-        assert self._driver.current_url == home_page.url
-
-        return home_page
+        self._check_url_and_return_page(HomePage)
 
     def click_saved_queries(self):
         link = self._driver.find_element_by_link_text('Saved queries')
@@ -85,14 +18,11 @@ class _BasePage:
         link = self._driver.find_element_by_link_text('Logs')
         link.click()
 
-        query_log_page = QueryLogPage(driver=self._driver, base_url=self._base_url)
-        assert self._driver.current_url == query_log_page.url
-
-        return query_log_page
+        return self._check_url_and_return_page(QueryLogPage)
 
 
-class HomePage(_BasePage):
-    _url_path = '/'
+class HomePage(_BaseExplorerPage):
+    _url_path = '/data-explorer/'
 
     def enter_query(self, sql):
         textarea = self._driver.find_element_by_class_name('ace_text-input')
@@ -103,10 +33,7 @@ class HomePage(_BasePage):
 
     def click_save(self):
         self._submit("Save")
-
-        assert "/queries/create/" in self._driver.current_url
-
-        return CreateQueryPage(driver=self._driver, base_url=self._base_url)
+        return self._check_url_and_return_page(CreateQueryPage)
 
     def click_format_sql(self):
         self._submit("Format SQL")
@@ -169,8 +96,12 @@ class HomePage(_BasePage):
         toggle.click()
 
 
-class CreateQueryPage(_BasePage):
-    _url_path = '/queries/create'
+class CreateQueryPage(_BaseExplorerPage):
+    _url_regex = r'/data-explorer/queries/create/\?play_id=(?P<play_id>\d+)'
+
+    @property
+    def _url_path(self):
+        return f'/data-explorer/queries/create/?play_id={self._url_data["play_id"]}'
 
     def set_title(self, title):
         field = self._driver.find_element_by_name('title')
@@ -182,25 +113,15 @@ class CreateQueryPage(_BasePage):
 
     def click_save(self):
         self._submit("Save")
-
-        matches_expected_url = re.search(r'/queries/(\d+)/', self._driver.current_url)
-        assert matches_expected_url
-
-        return QueryDetailPage(
-            driver=self._driver,
-            base_url=self._base_url,
-            query_id=matches_expected_url.group(1),
-        )
+        return self._check_url_and_return_page(QueryDetailPage)
 
 
-class QueryDetailPage(_BasePage):
-    _url_path = '/queries/{query_id}'
+class QueryDetailPage(_BaseExplorerPage):
+    _url_regex = r'/data-explorer/queries/(?P<query_id>\d+)/'
 
-    def __init__(self, query_id, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.query_id = query_id
-        self._url_path = QueryDetailPage._url_path.format(query_id=self.query_id)
+    @property
+    def _url_path(self):
+        return f"/data-explorer/queries/{self._url_data['query_id']}/"
 
     def read_title(self):
         return self._get_input_field('Title').get_attribute('value')
@@ -219,5 +140,5 @@ class QueryDetailPage(_BasePage):
         return home_page
 
 
-class QueryLogPage(_BasePage):
-    _url_path = '/logs/'
+class QueryLogPage(_BaseExplorerPage):
+    _url_path = '/data-explorer/logs/'

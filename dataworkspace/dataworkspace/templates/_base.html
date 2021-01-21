@@ -1,4 +1,4 @@
-{% load static %}
+{% load static core_filters %}
 <!DOCTYPE html>
 <html lang="en-GB" class="govuk-template">
 
@@ -70,6 +70,14 @@
               Tools
             </a>
           </li>
+          {% url 'request-data:index' as request_data_url %}
+          {% with path_is_request_for_data=request.get_full_path|startswith:request_data_url %}
+          <li class="govuk-header__navigation-item{% if path_is_request_for_data %} govuk-header__navigation-item--active{% endif %}">
+            <a class="govuk-header__link" href="{{ request_data_url }}">
+              Request data
+            </a>
+          </li>
+          {% endwith %}
           {% if can_see_visualisations_tab %}
           {% url 'visualisations:root' as visualisations_root_url %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == visualisations_root_url %} govuk-header__navigation-item--active{% endif %}">
@@ -129,6 +137,11 @@
             <li class="govuk-footer__list-item">
               <a class="govuk-footer__link" href="{{ tools_url  }}">
                 Tools
+              </a>
+            </li>
+            <li class="govuk-footer__list-item">
+              <a class="govuk-footer__link" href="{{ request_data_url }}">
+                Request data
               </a>
             </li>
             {% if can_see_visualisations_tab %}

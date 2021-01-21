@@ -1,0 +1,63 @@
+{% extends '_main.html' %}
+{% block page_title %}Tell us how we can help{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'root' %}">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        Request data
+      </li>
+    </ol>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">
+        Request data
+      </h1>
+      <p class="govuk-body">
+        Tell us about data you want added to the Data Workspace catalogue.
+      </p>
+      <h2 class="govuk-heading-m">
+        How long it takes
+      </h2>
+      <p class="govuk-body">
+        This is the first stage of the process and should take you about 5 minutes to complete.
+        We will respond to this initial request within 5 working days.
+        We may want to speak with you to confirm that we can support your request, and to discuss scope and timelines.
+        The second stage will be to complete a 'data onboarding' form, which asks for more technical information.
+      </p>
+      <p class="govuk-body">
+        If you feel your request is urgent and supports a time critical departmental priority,
+        contact us via the
+        <a class="govuk-link" href="{% url 'support' %}">support and feedback form.</a>
+      </p>
+      <h2 class="govuk-heading-m">
+        Before you start
+      </h2>
+      <p class="govuk-body">
+        You will be asked to provide details on what the data is used for,
+        where it is currently held and the names of the
+        <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-standards/what-information-asset-owner/">information asset owner</a>
+        or
+        <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-standards/what-information-asset-manager/">manager</a>.
+        You should have this information available before you start.
+      </p>
+      <form method="POST" novalidate>
+        {% csrf_token %}
+        <button type="submit" class="govuk-button">Start now</button>
+      </form>
+      <h2 class="govuk-heading-m">
+        Contact
+      </h2>
+      <p class="govuk-body">
+        Use our
+        <a class="govuk-link" href="{% url 'support' %}">support and feedback form</a>
+        to ask any questions you have about this form.
+      </p>
+    </div>
+  </div>
+{% endblock %}
