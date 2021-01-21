@@ -34,8 +34,20 @@ class RequestDataWhoAreYou(UpdateView):
     template_name = 'request_data/who-are-you.html'
     form_class = RequestDataWhoAreYouForm
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if 'change' in self.request.GET:
+            context['backlink'] = reverse(
+                'request-data:check-answers', kwargs={"pk": self.object.pk}
+            )
+        else:
+            context['backlink'] = reverse('request-data:index')
+
+        return context
+
     def get_success_url(self):
-        if 'check' in self.request.GET:
+        if 'change' in self.request.GET:
             if (
                 self.object.requester_role not in {RoleType.IAM, RoleType.IAO}
                 and not self.object.name_of_owner_or_manager
@@ -44,7 +56,7 @@ class RequestDataWhoAreYou(UpdateView):
                     reverse(
                         'request-data:owner-or-manager', kwargs={"pk": self.object.pk}
                     )
-                    + '?check'
+                    + '?change'
                 )
 
             return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
@@ -60,8 +72,22 @@ class RequestDataOwnerOrManager(UpdateView):
     template_name = 'request_data/data-owner-or-manager.html'
     form_class = RequestDataOwnerOrManagerForm
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if 'change' in self.request.GET:
+            context['backlink'] = reverse(
+                'request-data:check-answers', kwargs={"pk": self.object.pk}
+            )
+        else:
+            context['backlink'] = reverse(
+                'request-data:who-are-you', kwargs={"pk": self.object.pk}
+            )
+
+        return context
+
     def get_success_url(self):
-        if 'check' in self.request.GET:
+        if 'change' in self.request.GET:
             return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
 
         return reverse('request-data:describe-data', kwargs={"pk": self.object.pk})
@@ -72,8 +98,26 @@ class RequestDataDescription(UpdateView):
     template_name = 'request_data/data-description.html'
     form_class = RequestDataDescriptionForm
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if 'change' in self.request.GET:
+            context['backlink'] = reverse(
+                'request-data:check-answers', kwargs={"pk": self.object.pk}
+            )
+        elif self.object.requester_role in {RoleType.IAM, RoleType.IAO}:
+            context['backlink'] = reverse(
+                'request-data:who-are-you', kwargs={"pk": self.object.pk}
+            )
+        else:
+            context['backlink'] = reverse(
+                'request-data:owner-or-manager', kwargs={"pk": self.object.pk}
+            )
+
+        return context
+
     def get_success_url(self):
-        if 'check' in self.request.GET:
+        if 'change' in self.request.GET:
             return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
 
         return reverse('request-data:purpose-of-data', kwargs={"pk": self.object.pk})
@@ -84,8 +128,22 @@ class RequestDataPurpose(UpdateView):
     template_name = 'request_data/data-purpose.html'
     form_class = RequestDataPurposeForm
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if 'change' in self.request.GET:
+            context['backlink'] = reverse(
+                'request-data:check-answers', kwargs={"pk": self.object.pk}
+            )
+        else:
+            context['backlink'] = reverse(
+                'request-data:describe-data', kwargs={"pk": self.object.pk}
+            )
+
+        return context
+
     def get_success_url(self):
-        if 'check' in self.request.GET:
+        if 'change' in self.request.GET:
             return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
 
         return reverse(
@@ -98,8 +156,22 @@ class RequestDataSecurityClassification(UpdateView):
     template_name = 'request_data/security-classification.html'
     form_class = RequestDataSecurityClassificationForm
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if 'change' in self.request.GET:
+            context['backlink'] = reverse(
+                'request-data:check-answers', kwargs={"pk": self.object.pk}
+            )
+        else:
+            context['backlink'] = reverse(
+                'request-data:purpose-of-data', kwargs={"pk": self.object.pk}
+            )
+
+        return context
+
     def get_success_url(self):
-        if 'check' in self.request.GET:
+        if 'change' in self.request.GET:
             return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
 
         return reverse('request-data:location-of-data', kwargs={"pk": self.object.pk})
@@ -109,6 +181,20 @@ class RequestDataLocation(UpdateView):
     model = DataRequest
     template_name = 'request_data/data-location.html'
     form_class = RequestDataLocationForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if 'change' in self.request.GET:
+            context['backlink'] = reverse(
+                'request-data:check-answers', kwargs={"pk": self.object.pk}
+            )
+        else:
+            context['backlink'] = reverse(
+                'request-data:security-classification', kwargs={"pk": self.object.pk}
+            )
+
+        return context
 
     def get_success_url(self):
         return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
@@ -120,14 +206,18 @@ class RequestDataCheckAnswers(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        context['backlink'] = reverse(
+            'request-data:location-of-data', kwargs={"pk": self.object.pk}
+        )
         context['show_owner_or_manager'] = self.object.requester_role not in {
             RoleType.IAM,
             RoleType.IAO,
         }
+
         return context
 
     def post(self, request, *args, **kwargs):
-        print(request.user)
         obj = self.get_object()
         if obj.status != DataRequestStatus.draft:
             return HttpResponseRedirect(

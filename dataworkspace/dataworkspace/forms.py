@@ -144,7 +144,6 @@ class NewGOVUKDesignSystemModelForm(forms.ModelForm):
             for field in self:
                 if self.errors.get(field.name):
                     self.fields[field.name].widget.errors = self.errors[field.name]
-                print(field)
 
         return cleaned_data
 
