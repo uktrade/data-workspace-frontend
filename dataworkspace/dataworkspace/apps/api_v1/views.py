@@ -1,4 +1,3 @@
-import datetime
 import json
 import logging
 import re
@@ -14,7 +13,6 @@ from psycopg2 import connect, sql
 
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
-    ApplicationInstanceDbUsers,
     ApplicationTemplate,
     UserToolConfiguration,
 )
@@ -28,22 +26,12 @@ from dataworkspace.apps.applications.utils import (
     set_application_stopped,
 )
 from dataworkspace.apps.core.utils import (
-    USER_SCHEMA_STEM,
     StreamingHttpResponseWithoutDjangoDbConnection,
     can_access_table_by_google_data_studio,
     database_dsn,
 )
 from dataworkspace.apps.datasets.models import SourceTable
-from dataworkspace.apps.core.utils import (
-    create_tools_access_iam_role,
-    db_role_schema_suffix_for_app,
-    db_role_schema_suffix_for_user,
-    new_private_database_credentials,
-    source_tables_for_app,
-    source_tables_for_user,
-    postgres_user,
-    write_credentials_to_bucket,
-)
+from dataworkspace.apps.core.utils import create_tools_access_iam_role
 
 
 SCHEMA_STRING = {'dataType': 'STRING', 'semantics': {'conceptType': 'DIMENSION'}}
@@ -172,32 +160,6 @@ def application_api_PUT(request, public_host):
 
     app_type = application_template.application_type
 
-    (source_tables, db_role_schema_suffix, db_user) = (
-        (
-            source_tables_for_user(request.user),
-            db_role_schema_suffix_for_user(request.user),
-            postgres_user(request.user.email),
-        )
-        if app_type == 'TOOL'
-        else (
-            source_tables_for_app(application_template),
-            db_role_schema_suffix_for_app(application_template),
-            postgres_user(application_template.host_basename),
-        )
-    )
-
-    credentials = new_private_database_credentials(
-        db_role_schema_suffix,
-        source_tables,
-        db_user,
-        request.user,
-        valid_for=datetime.timedelta(days=31),
-    )
-
-    if app_type == 'TOOL':
-        # For AppStream to access credentials
-        write_credentials_to_bucket(request.user, credentials)
-
     if app_type == 'TOOL':
         tool_configuration = (
             application_template.user_tool_configuration.filter(
@@ -232,32 +194,12 @@ def application_api_PUT(request, public_host):
             public_host
         )
     else:
-        # The database users are stored so when the database users are cleaned up,
-        # we know _not_ to delete any users used by running or spawning apps
-        for creds in credentials:
-            ApplicationInstanceDbUsers.objects.create(
-                application_instance=application_instance,
-                db_id=creds['db_id'],
-                db_username=creds['db_user'],
-            )
-
-        app_schema = f'{USER_SCHEMA_STEM}{db_role_schema_suffix}'
-        home_directory_efs_access_point_id = (
-            request.user.profile.home_directory_efs_access_point_id
-            if app_type == 'TOOL'
-            else None
-        )
-
         spawn.delay(
             application_template.spawner,
-            request.user.email,
-            str(request.user.profile.sso_id),
-            home_directory_efs_access_point_id,
+            request.user.pk,
             tag,
             application_instance.id,
             spawner_options,
-            credentials,
-            app_schema,
         )
 
     return JsonResponse(api_application_dict(application_instance), status=200)
