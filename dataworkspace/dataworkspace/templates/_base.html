@@ -1,4 +1,4 @@
-{% load static core_filters %}
+{% load static core_filters waffle_tags %}
 <!DOCTYPE html>
 <html lang="en-GB" class="govuk-template">
 
@@ -70,6 +70,7 @@
               Tools
             </a>
           </li>
+          {% flag REQUEST_DATA_JOURNEY_FLAG %}
           {% url 'request-data:index' as request_data_url %}
           {% with path_is_request_for_data=request.get_full_path|startswith:request_data_url %}
           <li class="govuk-header__navigation-item{% if path_is_request_for_data %} govuk-header__navigation-item--active{% endif %}">
@@ -78,6 +79,7 @@
             </a>
           </li>
           {% endwith %}
+          {% endflag %}
           {% if can_see_visualisations_tab %}
           {% url 'visualisations:root' as visualisations_root_url %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == visualisations_root_url %} govuk-header__navigation-item--active{% endif %}">
@@ -139,11 +141,13 @@
                 Tools
               </a>
             </li>
+            {% flag REQUEST_DATA_JOURNEY_FLAG %}
             <li class="govuk-footer__list-item">
               <a class="govuk-footer__link" href="{{ request_data_url }}">
                 Request data
               </a>
             </li>
+            {% endflag %}
             {% if can_see_visualisations_tab %}
             <li class="govuk-footer__list-item">
               <a class="govuk-footer__link" href="{{ visualisations_root_url  }}">
