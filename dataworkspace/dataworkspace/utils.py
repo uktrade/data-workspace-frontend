@@ -1,5 +1,7 @@
 import itertools
 
+from ecs_logging import StdlibFormatter
+
 
 def normalise_environment(key_values):
     ''' Converts denormalised dict of (string -> string) pairs, where the first string
@@ -100,3 +102,15 @@ def normalise_environment(key_values):
         ]
 
     return list_sorted_by_int_key() if all_keys_are_ints() else nested_structured_dict
+
+
+class DataWorkspaceECSFormatter(StdlibFormatter):
+    def format_to_ecs(self, record):
+        result = super().format_to_ecs(record)
+
+        # If Django has injected a `request` argument (which it does some times, e.g. when there's an exception),
+        # we need to stringify it as the raw WSGIRequest cannot be serialized to JSON.
+        if result.get('request'):
+            result['request'] = str(result.get('request'))
+
+        return result

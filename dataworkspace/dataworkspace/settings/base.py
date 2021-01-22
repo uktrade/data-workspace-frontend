@@ -174,11 +174,13 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'formatters': {'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'}},
+    'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'ecs'}},
     'loggers': {
         'django': {'handlers': ['console'], 'level': 'INFO'},
         'app': {'handlers': ['console'], 'level': 'INFO'},
-        'celery': {'handlers': ['console'], 'level': 'INFO'},
+        'dataworkspace': {'handlers': ['console'], 'level': 'INFO'},
+        'celery': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
 
