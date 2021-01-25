@@ -275,6 +275,7 @@ class ApplicationInstanceDbUsers(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     db = models.ForeignKey(Database, on_delete=models.CASCADE)
     db_username = models.CharField(max_length=256)
+    db_persistent_role = models.CharField(max_length=256)
     application_instance = models.ForeignKey(
         ApplicationInstance, on_delete=models.CASCADE
     )

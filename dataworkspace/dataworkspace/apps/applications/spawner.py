@@ -115,6 +115,7 @@ class ProcessSpawner:
                     application_instance=application_instance,
                     db_id=creds['db_id'],
                     db_username=creds['db_user'],
+                    db_persistent_role=creds['db_persistent_role'],
                 )
 
             gevent.sleep(1)
@@ -236,6 +237,7 @@ class FargateSpawner:
                     application_instance=application_instance,
                     db_id=creds['db_id'],
                     db_username=creds['db_user'],
+                    db_persistent_role=creds['db_persistent_role'],
                 )
 
             database_env = {

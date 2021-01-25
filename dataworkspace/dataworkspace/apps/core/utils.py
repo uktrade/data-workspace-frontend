@@ -294,6 +294,7 @@ def new_private_database_credentials(
             'db_host': database_data['HOST'],
             'db_port': database_data['PORT'],
             'db_user': db_user,
+            'db_persistent_role': db_role,
             'db_password': db_password,
         }
 
