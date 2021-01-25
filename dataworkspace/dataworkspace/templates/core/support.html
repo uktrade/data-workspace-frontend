@@ -1,4 +1,7 @@
 {% extends '_main.html' %}
+
+{% load waffle_tags %}
+
 {% block page_title %}Tell us how we can help{% endblock page_title %}
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -26,6 +29,12 @@
       {% else %}
         <h1 class="govuk-heading-l">Support and feedback</h1>
         <p class="govuk-body-l">Tell us how we can help.</p>
+        {% flag REQUEST_DATA_JOURNEY_FLAG %}
+        <p class="govuk-body">
+          <a class="govuk-link" href="{% url 'request_data:index' %}">Tell us about a new dataset</a>
+          that you’d like to add to Data Workspace.
+        </p>
+        {% endflag %}
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <fieldset class="govuk-fieldset">
