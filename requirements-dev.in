@@ -5,7 +5,7 @@ black==19.10b0
 factory_boy==3.2.0
 flake8==3.8.4
 flake8-bugbear==20.11.1
-freezegun==1.0.0
+freezegun==1.1.0
 beautifulsoup4==4.9.3
 mock==4.0.3
 mohawk==1.1.0
