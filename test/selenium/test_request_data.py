@@ -79,7 +79,7 @@ class TestRequestData:
 
         # Answer the "who are you" question - we aren't IAM/IAO so will need to say who one of them is in next
         # question.
-        who_are_you_page.select_role(RoleType.delegate)
+        who_are_you_page.select_role(RoleType.other)
         owner_or_manager_page = who_are_you_page.click_continue(
             RequestDataOwnerOrManagerPage
         )

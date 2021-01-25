@@ -213,10 +213,10 @@ class TestRequestDataCheckAnswers:
         assert dr.get_security_classification_display() in body
 
     @override_flag(settings.REQUEST_DATA_JOURNEY_FLAG, active=True)
-    def test_page_prefills_existing_data_for_delegate_with_alternative_name(
+    def test_page_prefills_existing_data_for_someone_else_with_alternative_name(
         self, client
     ):
-        dr = DataRequestFactory.create(requester_role=RoleType.delegate)
+        dr = DataRequestFactory.create(requester_role=RoleType.other)
         resp = client.get(reverse('request-data:check-answers', kwargs={"pk": dr.pk}))
 
         body = resp.content.decode(resp.charset)
