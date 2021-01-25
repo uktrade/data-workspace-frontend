@@ -2,10 +2,12 @@ import mock
 
 import pytest
 from bs4 import BeautifulSoup
+
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
-
 from django.urls import reverse
+from waffle.testutils import override_flag
 
 from dataworkspace.tests.common import (
     BaseTestCase,
@@ -95,6 +97,7 @@ def test_csp_on_files_endpoint_includes_s3(client):
 @pytest.mark.parametrize(
     "request_client", ('client', 'staff_client'), indirect=["request_client"]
 )
+@override_flag(settings.REQUEST_DATA_JOURNEY_FLAG, active=True)
 def test_header_links(request_client):
     response = request_client.get(reverse("root"))
 
@@ -123,6 +126,7 @@ def test_header_links(request_client):
 @pytest.mark.parametrize(
     "request_client", ("client", "staff_client"), indirect=["request_client"]
 )
+@override_flag(settings.REQUEST_DATA_JOURNEY_FLAG, active=True)
 def test_footer_links(request_client):
     response = request_client.get(reverse("root"))
 
