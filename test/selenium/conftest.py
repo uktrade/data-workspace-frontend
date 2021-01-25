@@ -37,7 +37,8 @@ def set_waffle_flag(flag_name, everyone=True):
         f"""
         from waffle.models import Flag
 
-        flag = Flag.objects.create(name='{flag_name}', everyone={everyone})
+        flag, _ = Flag.objects.get_or_create(name='{flag_name}', defaults=dict(everyone={everyone}))
+        flag.everyone = {everyone}
         flag.save()
         """
     ).encode('ascii')

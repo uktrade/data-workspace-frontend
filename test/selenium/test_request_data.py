@@ -3,6 +3,7 @@ import time
 import pytest
 import requests
 
+from django.conf import settings
 from django.core.cache import cache
 
 from dataworkspace.apps.request_data.models import RoleType, SecurityClassificationType
@@ -10,6 +11,7 @@ from test.selenium.common import get_driver  # pylint: disable=wrong-import-orde
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
     create_zendesk,
+    set_waffle_flag,
 )
 from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-order
     HomePage,
@@ -66,6 +68,8 @@ class TestRequestData:
             yield
 
     def test_happy_path(self, _application):
+        set_waffle_flag(settings.REQUEST_DATA_JOURNEY_FLAG, everyone=True)
+
         home_page = HomePage(self.driver)
         home_page.open()
 

@@ -174,11 +174,13 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'formatters': {'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'}},
+    'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'ecs'}},
     'loggers': {
         'django': {'handlers': ['console'], 'level': 'INFO'},
         'app': {'handlers': ['console'], 'level': 'INFO'},
-        'celery': {'handlers': ['console'], 'level': 'INFO'},
+        'dataworkspace': {'handlers': ['console'], 'level': 'INFO'},
+        'celery': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
 
@@ -434,7 +436,7 @@ QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS = 'author-custom-permissions'
 VISUALISATION_EMBED_DOMAINS = env.get('VISUALISATION_EMBED_DOMAINS', [])
 
 WAFFLE_CREATE_MISSING_FLAGS = True
-WAFFLE_FLAG_DEFAULT = False
+WAFFLE_FLAG_DEFAULT = bool(strtobool(env.get('WAFFLE_FLAG_DEFAULT', "False")))
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
 WAFFLE_SWITCH_DEFAULT = False
@@ -603,3 +605,5 @@ TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH = env.get(
 )
 
 MAX_QUICKSIGHT_THROTTLE_RETRIES = env.get('MAX_QUICKSIGHT_THROTTLE_RETRIES', 5)
+
+REQUEST_DATA_JOURNEY_FLAG = 'REQUEST-DATA-JOURNEY'

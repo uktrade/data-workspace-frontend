@@ -17,4 +17,5 @@ def common(request):
         'can_see_visualisations_tab': can_see_visualisations_tab,
         'gtm_container_id': settings.GTM_CONTAINER_ID,
         'gtm_container_environment_params': settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
+        'REQUEST_DATA_JOURNEY_FLAG': settings.REQUEST_DATA_JOURNEY_FLAG,
     }
