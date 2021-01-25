@@ -4,480 +4,159 @@
 #
 #    pip-compile requirements-dev.in
 #
-aiohttp==3.6.2
-    # via -r requirements.txt
-aiopg==1.1.0
-    # via -r requirements-dev.in
-aioredis==1.3.1
-    # via -r requirements.txt
-amqp==2.6.1
-    # via
-    #   -r requirements.txt
-    #   kombu
-appdirs==1.4.4
-    # via
-    #   black
-    #   pyppeteer
-asgiref==3.2.10
-    # via
-    #   -r requirements.txt
-    #   django
-astroid==2.4.2
-    # via pylint
-async-timeout==3.0.1
-    # via
-    #   -r requirements.txt
-    #   aiohttp
-    #   aioredis
-attrs==20.2.0
-    # via
-    #   -r requirements.txt
-    #   aiohttp
-    #   black
-    #   flake8-bugbear
-    #   pytest
-backcall==0.2.0
-    # via ipython
-beautifulsoup4==4.9.3
-    # via -r requirements-dev.in
-billiard==3.6.3.0
-    # via
-    #   -r requirements.txt
-    #   celery
-black==19.10b0
-    # via -r requirements-dev.in
-bleach==3.1.5
-    # via -r requirements.txt
-boto3==1.14.60
-    # via -r requirements.txt
-botocore==1.17.63
-    # via
-    #   -r requirements.txt
-    #   boto3
-    #   s3transfer
-cachetools==4.1.1
-    # via
-    #   -r requirements.txt
-    #   zenpy
-celery-redbeat==1.0.0
-    # via -r requirements.txt
-celery==4.4.7
-    # via
-    #   -r requirements.txt
-    #   celery-redbeat
-certifi==2020.6.20
-    # via
-    #   -r requirements.txt
-    #   elastic-apm
-    #   requests
-    #   sentry-sdk
-cffi==1.14.3
-    # via
-    #   -r requirements.txt
-    #   cryptography
-chardet==3.0.4
-    # via
-    #   -r requirements.txt
-    #   aiohttp
-    #   requests
-click==7.1.2
-    # via
-    #   black
-    #   pip-tools
-coverage==5.3
-    # via pytest-cov
-cryptography==2.9.2
-    # via -r requirements.txt
-debugpy==1.2.1
-    # via -r requirements-dev.in
-decorator==4.4.2
-    # via ipython
-dj-database-url==0.5.0
-    # via -r requirements.txt
-django-admin-sortable2==0.7.7
-    # via -r requirements.txt
-django-appconf==1.0.4
-    # via
-    #   -r requirements.txt
-    #   django-compressor
-django-better-admin-arrayfield==1.3.0
-    # via -r requirements.txt
-django-ckeditor==5.9.0
-    # via -r requirements.txt
-django-compressor==2.4
-    # via -r requirements.txt
-django-csp==3.6
-    # via -r requirements.txt
-django-db-geventpool==3.2.2
-    # via -r requirements.txt
-django-debug-toolbar==3.2
-    # via -r requirements-dev.in
-django-dynamic-models-readonly==0.1.1
-    # via -r requirements.txt
-django-environ==0.4.5
-    # via -r requirements.txt
-django-extensions==2.2.9
-    # via -r requirements.txt
-django-js-asset==1.2.2
-    # via
-    #   -r requirements.txt
-    #   django-ckeditor
-django-redis==4.12.1
-    # via -r requirements.txt
-django-staff-sso-client==2.1.0
-    # via -r requirements.txt
-django-waffle==2.0.0
-    # via -r requirements.txt
-django==3.0.8
-    # via
-    #   -r requirements.txt
-    #   django-admin-sortable2
-    #   django-appconf
-    #   django-csp
-    #   django-db-geventpool
-    #   django-debug-toolbar
-    #   django-dynamic-models-readonly
-    #   django-redis
-    #   django-staff-sso-client
-    #   djangorestframework
-djangorestframework==3.11.1
-    # via -r requirements.txt
-docopt==0.6.2
-    # via
-    #   -r requirements.txt
-    #   notifications-python-client
-docutils==0.15.2
-    # via
-    #   -r requirements.txt
-    #   botocore
-ecs-logging==0.5.0
-    # via -r requirements.txt
-elastic-apm==5.8.1
-    # via -r requirements.txt
-factory_boy==3.2.0
-    # via -r requirements-dev.in
-faker==4.1.3
-    # via factory-boy
-flake8-bugbear==20.11.1
-    # via -r requirements-dev.in
-flake8==3.8.4
-    # via
-    #   -r requirements-dev.in
-    #   flake8-bugbear
-freezegun==1.1.0
-    # via -r requirements-dev.in
-future==0.18.2
-    # via
-    #   -r requirements.txt
-    #   notifications-python-client
-geoalchemy2==0.8.4
-    # via -r requirements.txt
-gevent==20.6.2
-    # via -r requirements.txt
-greenlet==0.4.16
-    # via
-    #   -r requirements.txt
-    #   gevent
-hawk-server-asyncio==0.0.13
-    # via -r requirements.txt
-hiredis==1.1.0
-    # via
-    #   -r requirements.txt
-    #   aioredis
-idna==2.10
-    # via
-    #   -r requirements.txt
-    #   requests
-    #   yarl
-importlib-metadata==2.0.0
-    # via -r requirements.txt
-iniconfig==1.0.1
-    # via pytest
-ipdb==0.13.4
-    # via -r requirements-dev.in
-ipython-genutils==0.2.0
-    # via traitlets
-ipython==7.18.1
-    # via ipdb
-isort==4.3.21
-    # via pylint
-jedi==0.17.2
-    # via ipython
-jmespath==0.10.0
-    # via
-    #   -r requirements.txt
-    #   boto3
-    #   botocore
-kombu==4.6.11
-    # via
-    #   -r requirements.txt
-    #   celery
-lazy-object-proxy==1.4.3
-    # via astroid
-lxml==4.6.2
-    # via -r requirements-dev.in
-markdown==3.2.2
-    # via -r requirements.txt
-markupsafe==1.1.1
-    # via -r requirements.txt
-mccabe==0.6.1
-    # via
-    #   flake8
-    #   pylint
-mock==4.0.3
-    # via -r requirements-dev.in
-mohawk==1.1.0
-    # via
-    #   -r requirements-dev.in
-    #   -r requirements.txt
-monotonic==1.5
-    # via
-    #   -r requirements.txt
-    #   notifications-python-client
-multidict==4.7.6
-    # via
-    #   -r requirements.txt
-    #   aiohttp
-    #   yarl
-notifications-python-client==5.7.0
-    # via -r requirements.txt
-oauthlib==3.1.0
-    # via
-    #   -r requirements.txt
-    #   requests-oauthlib
-packaging==20.4
-    # via
-    #   -r requirements.txt
-    #   bleach
-    #   pytest
-parso==0.7.1
-    # via jedi
-paste==3.4.3
-    # via -r requirements.txt
-pathspec==0.8.0
-    # via black
-pexpect==4.8.0
-    # via ipython
-pickleshare==0.7.5
-    # via ipython
-pip-tools==5.4.0
-    # via -r requirements-dev.in
-pluggy==0.13.1
-    # via pytest
-prompt-toolkit==3.0.7
-    # via
-    #   ipython
-    #   remote-pdb-client
-psutil==5.7.2
-    # via -r requirements.txt
-psycogreen==1.0.2
-    # via
-    #   -r requirements.txt
-    #   django-db-geventpool
-psycopg2-binary==2.8.6
-    # via aiopg
-psycopg2==2.7.7
-    # via -r requirements.txt
-ptyprocess==0.6.0
-    # via pexpect
-py==1.9.0
-    # via pytest
-pycodestyle==2.6.0
-    # via flake8
-pycparser==2.20
-    # via
-    #   -r requirements.txt
-    #   cffi
-pydevd-pycharm==203.6682.179
-    # via -r requirements-dev.in
-pyee==7.0.4
-    # via pyppeteer
-pyflakes==2.2.0
-    # via flake8
-pygments==2.7.1
-    # via ipython
-pyjwt==1.7.1
-    # via
-    #   -r requirements.txt
-    #   notifications-python-client
-pylint-django==2.3.0
-    # via -r requirements-dev.in
-pylint-plugin-utils==0.6
-    # via pylint-django
-pylint==2.5.3
-    # via
-    #   -r requirements-dev.in
-    #   pylint-django
-    #   pylint-plugin-utils
-pyparsing==2.4.7
-    # via
-    #   -r requirements.txt
-    #   packaging
-pyppeteer==0.2.2
-    # via -r requirements-dev.in
-pytest-cov==2.10.1
-    # via -r requirements-dev.in
-pytest-django==4.1.0
-    # via -r requirements-dev.in
-pytest-mock==3.3.1
-    # via -r requirements-dev.in
-pytest-timeout==1.4.2
-    # via -r requirements-dev.in
-pytest==6.2.1
-    # via
-    #   -r requirements-dev.in
-    #   pytest-cov
-    #   pytest-django
-    #   pytest-mock
-    #   pytest-timeout
-python-dateutil==2.8.1
-    # via
-    #   -r requirements.txt
-    #   botocore
-    #   celery-redbeat
-    #   faker
-    #   freezegun
-    #   zenpy
-python-dotenv==0.12.0
-    # via -r requirements.txt
-pytz==2020.1
-    # via
-    #   -r requirements.txt
-    #   celery
-    #   django
-    #   zenpy
-rcssmin==1.0.6
-    # via
-    #   -r requirements.txt
-    #   django-compressor
-redis==3.5.3
-    # via
-    #   -r requirements.txt
-    #   celery-redbeat
-    #   django-redis
-regex==2020.7.14
-    # via black
-remote-pdb-client==1.0.4
-    # via -r requirements-dev.in
-remote-pdb==2.1.0
-    # via -r requirements-dev.in
-requests-mock==1.8.0
-    # via -r requirements-dev.in
-requests-oauthlib==1.3.0
-    # via
-    #   -r requirements.txt
-    #   django-staff-sso-client
-requests==2.24.0
-    # via
-    #   -r requirements.txt
-    #   notifications-python-client
-    #   requests-mock
-    #   requests-oauthlib
-    #   zenpy
-rjsmin==1.1.0
-    # via
-    #   -r requirements.txt
-    #   django-compressor
-s3transfer==0.3.3
-    # via
-    #   -r requirements.txt
-    #   boto3
-selenium==3.141.0
-    # via -r requirements-dev.in
-sentry-sdk==0.17.6
-    # via -r requirements.txt
-six==1.15.0
-    # via
-    #   -r requirements.txt
-    #   astroid
-    #   bleach
-    #   cryptography
-    #   django-compressor
-    #   django-extensions
-    #   mohawk
-    #   packaging
-    #   paste
-    #   pip-tools
-    #   python-dateutil
-    #   requests-mock
-    #   tenacity
-    #   zenpy
-soupsieve==2.0.1
-    # via beautifulsoup4
-sqlalchemy==1.3.19
-    # via
-    #   -r requirements.txt
-    #   geoalchemy2
-sqlparse==0.3.1
-    # via
-    #   -r requirements.txt
-    #   django
-    #   django-debug-toolbar
-tenacity==6.2.0
-    # via
-    #   -r requirements.txt
-    #   celery-redbeat
-text-unidecode==1.3
-    # via faker
-toml==0.10.1
-    # via
-    #   black
-    #   pylint
-    #   pytest
-tqdm==4.49.0
-    # via pyppeteer
-traitlets==5.0.4
-    # via ipython
-typed-ast==1.4.1
-    # via black
-typing-extensions==3.7.4.3
-    # via -r requirements.txt
-urllib3==1.25.10
-    # via
-    #   -r requirements.txt
-    #   botocore
-    #   elastic-apm
-    #   pyppeteer
-    #   requests
-    #   selenium
-    #   sentry-sdk
-vine==1.3.0
-    # via
-    #   -r requirements.txt
-    #   amqp
-    #   celery
-wcwidth==0.2.5
-    # via prompt-toolkit
-webencodings==0.5.1
-    # via
-    #   -r requirements.txt
-    #   bleach
-websockets==8.1
-    # via pyppeteer
-werkzeug==1.0.1
-    # via -r requirements.txt
-wrapt==1.12.1
-    # via astroid
-xlsxwriter==1.2.8
-    # via -r requirements.txt
-yarl==1.5.1
-    # via
-    #   -r requirements.txt
-    #   aiohttp
-zenpy==2.0.21
-    # via -r requirements.txt
-zipp==3.2.0
-    # via
-    #   -r requirements.txt
-    #   importlib-metadata
-zope.event==4.5.0
-    # via
-    #   -r requirements.txt
-    #   gevent
-zope.interface==5.1.0
-    # via
-    #   -r requirements.txt
-    #   gevent
+aiohttp==3.6.2            # via -r requirements.txt
+aiopg==1.1.0              # via -r requirements-dev.in
+aioredis==1.3.1           # via -r requirements.txt
+amqp==2.6.1               # via -r requirements.txt, kombu
+appdirs==1.4.4            # via black, pyppeteer
+appnope==0.1.2            # via ipython
+asgiref==3.2.10           # via -r requirements.txt, django
+astroid==2.4.2            # via pylint
+async-timeout==3.0.1      # via -r requirements.txt, aiohttp, aioredis
+attrs==20.2.0             # via -r requirements.txt, aiohttp, black, flake8-bugbear, pytest
+backcall==0.2.0           # via ipython
+beautifulsoup4==4.9.3     # via -r requirements-dev.in
+billiard==3.6.3.0         # via -r requirements.txt, celery
+black==19.10b0            # via -r requirements-dev.in
+bleach==3.1.5             # via -r requirements.txt
+boto3==1.14.60            # via -r requirements.txt
+botocore==1.17.63         # via -r requirements.txt, boto3, s3transfer
+cachetools==4.1.1         # via -r requirements.txt, zenpy
+celery-redbeat==1.0.0     # via -r requirements.txt
+celery==4.4.7             # via -r requirements.txt, celery-redbeat
+certifi==2020.6.20        # via -r requirements.txt, elastic-apm, requests, sentry-sdk
+cffi==1.14.3              # via -r requirements.txt, cryptography
+chardet==3.0.4            # via -r requirements.txt, aiohttp, requests
+click==7.1.2              # via black, pip-tools
+coverage==5.3             # via pytest-cov
+cryptography==2.9.2       # via -r requirements.txt
+debugpy==1.2.1            # via -r requirements-dev.in
+decorator==4.4.2          # via ipython
+dj-database-url==0.5.0    # via -r requirements.txt
+django-admin-sortable2==0.7.7  # via -r requirements.txt
+django-appconf==1.0.4     # via -r requirements.txt, django-compressor
+django-better-admin-arrayfield==1.3.0  # via -r requirements.txt
+django-ckeditor==5.9.0    # via -r requirements.txt
+django-compressor==2.4    # via -r requirements.txt
+django-csp==3.6           # via -r requirements.txt
+django-db-geventpool==3.2.2  # via -r requirements.txt
+django-debug-toolbar==3.2  # via -r requirements-dev.in
+django-dynamic-models-readonly==0.1.1  # via -r requirements.txt
+django-environ==0.4.5     # via -r requirements.txt
+django-extensions==2.2.9  # via -r requirements.txt
+django-js-asset==1.2.2    # via -r requirements.txt, django-ckeditor
+django-redis==4.12.1      # via -r requirements.txt
+django-staff-sso-client==2.1.0  # via -r requirements.txt
+django-waffle==2.0.0      # via -r requirements.txt
+django==3.0.8             # via -r requirements.txt, django-admin-sortable2, django-appconf, django-csp, django-db-geventpool, django-debug-toolbar, django-dynamic-models-readonly, django-redis, django-staff-sso-client, djangorestframework
+djangorestframework==3.11.1  # via -r requirements.txt
+docopt==0.6.2             # via -r requirements.txt, notifications-python-client
+docutils==0.15.2          # via -r requirements.txt, botocore
+ecs-logging==0.5.0        # via -r requirements.txt
+elastic-apm==5.8.1        # via -r requirements.txt
+factory_boy==3.2.0        # via -r requirements-dev.in
+faker==4.1.3              # via factory-boy
+flake8-bugbear==20.11.1   # via -r requirements-dev.in
+flake8==3.8.4             # via -r requirements-dev.in, flake8-bugbear
+freezegun==1.1.0          # via -r requirements-dev.in
+future==0.18.2            # via -r requirements.txt, notifications-python-client
+geoalchemy2==0.8.4        # via -r requirements.txt
+gevent==20.6.2            # via -r requirements.txt
+greenlet==0.4.16          # via -r requirements.txt, gevent
+hawk-server-asyncio==0.0.13  # via -r requirements.txt
+hiredis==1.1.0            # via -r requirements.txt, aioredis
+idna==2.10                # via -r requirements.txt, requests, yarl
+importlib-metadata==2.0.0  # via -r requirements.txt, flake8, kombu, markdown, pluggy, pytest
+iniconfig==1.0.1          # via pytest
+ipdb==0.13.4              # via -r requirements-dev.in
+ipython-genutils==0.2.0   # via traitlets
+ipython==7.18.1           # via ipdb
+isort==4.3.21             # via pylint
+jedi==0.17.2              # via ipython
+jmespath==0.10.0          # via -r requirements.txt, boto3, botocore
+kombu==4.6.11             # via -r requirements.txt, celery
+lazy-object-proxy==1.4.3  # via astroid
+lxml==4.6.2               # via -r requirements-dev.in
+markdown==3.2.2           # via -r requirements.txt
+markupsafe==1.1.1         # via -r requirements.txt
+mccabe==0.6.1             # via flake8, pylint
+mock==4.0.3               # via -r requirements-dev.in
+mohawk==1.1.0             # via -r requirements-dev.in, -r requirements.txt
+monotonic==1.5            # via -r requirements.txt, notifications-python-client
+multidict==4.7.6          # via -r requirements.txt, aiohttp, yarl
+notifications-python-client==5.7.0  # via -r requirements.txt
+oauthlib==3.1.0           # via -r requirements.txt, requests-oauthlib
+packaging==20.4           # via -r requirements.txt, bleach, pytest
+parso==0.7.1              # via jedi
+paste==3.4.3              # via -r requirements.txt
+pathspec==0.8.0           # via black
+pexpect==4.8.0            # via ipython
+pickleshare==0.7.5        # via ipython
+pip-tools==5.5.0          # via -r requirements-dev.in
+pluggy==0.13.1            # via pytest
+prompt-toolkit==3.0.7     # via ipython, remote-pdb-client
+psutil==5.7.2             # via -r requirements.txt
+psycogreen==1.0.2         # via -r requirements.txt, django-db-geventpool
+psycopg2-binary==2.8.6    # via aiopg
+psycopg2==2.7.7           # via -r requirements.txt
+ptyprocess==0.6.0         # via pexpect
+py==1.9.0                 # via pytest
+pycodestyle==2.6.0        # via flake8
+pycparser==2.20           # via -r requirements.txt, cffi
+pydevd-pycharm==203.6682.179  # via -r requirements-dev.in
+pyee==7.0.4               # via pyppeteer
+pyflakes==2.2.0           # via flake8
+pygments==2.7.1           # via ipython
+pyjwt==1.7.1              # via -r requirements.txt, notifications-python-client
+pylint-django==2.3.0      # via -r requirements-dev.in
+pylint-plugin-utils==0.6  # via pylint-django
+pylint==2.5.3             # via -r requirements-dev.in, pylint-django, pylint-plugin-utils
+pyparsing==2.4.7          # via -r requirements.txt, packaging
+pyppeteer==0.2.2          # via -r requirements-dev.in
+pytest-cov==2.10.1        # via -r requirements-dev.in
+pytest-django==4.1.0      # via -r requirements-dev.in
+pytest-mock==3.3.1        # via -r requirements-dev.in
+pytest-timeout==1.4.2     # via -r requirements-dev.in
+pytest==6.2.1             # via -r requirements-dev.in, pytest-cov, pytest-django, pytest-mock, pytest-timeout
+python-dateutil==2.8.1    # via -r requirements.txt, botocore, celery-redbeat, faker, freezegun, zenpy
+python-dotenv==0.12.0     # via -r requirements.txt
+pytz==2020.1              # via -r requirements.txt, celery, django, zenpy
+rcssmin==1.0.6            # via -r requirements.txt, django-compressor
+redis==3.5.3              # via -r requirements.txt, celery-redbeat, django-redis
+regex==2020.7.14          # via black
+remote-pdb-client==1.0.4  # via -r requirements-dev.in
+remote-pdb==2.1.0         # via -r requirements-dev.in
+requests-mock==1.8.0      # via -r requirements-dev.in
+requests-oauthlib==1.3.0  # via -r requirements.txt, django-staff-sso-client
+requests==2.24.0          # via -r requirements.txt, notifications-python-client, requests-mock, requests-oauthlib, zenpy
+rjsmin==1.1.0             # via -r requirements.txt, django-compressor
+s3transfer==0.3.3         # via -r requirements.txt, boto3
+selenium==3.141.0         # via -r requirements-dev.in
+sentry-sdk==0.17.6        # via -r requirements.txt
+six==1.15.0               # via -r requirements.txt, astroid, bleach, cryptography, django-compressor, django-extensions, mohawk, packaging, paste, python-dateutil, requests-mock, tenacity, zenpy
+soupsieve==2.0.1          # via beautifulsoup4
+sqlalchemy==1.3.19        # via -r requirements.txt, geoalchemy2
+sqlparse==0.3.1           # via -r requirements.txt, django, django-debug-toolbar
+tenacity==6.2.0           # via -r requirements.txt, celery-redbeat
+text-unidecode==1.3       # via faker
+toml==0.10.1              # via black, pylint, pytest
+tqdm==4.49.0              # via pyppeteer
+traitlets==5.0.4          # via ipython
+typed-ast==1.4.1          # via astroid, black
+typing-extensions==3.7.4.3  # via -r requirements.txt, yarl
+urllib3==1.25.10          # via -r requirements.txt, botocore, elastic-apm, pyppeteer, requests, selenium, sentry-sdk
+vine==1.3.0               # via -r requirements.txt, amqp, celery
+wcwidth==0.2.5            # via prompt-toolkit
+webencodings==0.5.1       # via -r requirements.txt, bleach
+websockets==8.1           # via pyppeteer
+werkzeug==1.0.1           # via -r requirements.txt
+wrapt==1.12.1             # via astroid
+xlsxwriter==1.2.8         # via -r requirements.txt
+yarl==1.5.1               # via -r requirements.txt, aiohttp
+zenpy==2.0.21             # via -r requirements.txt
+zipp==3.2.0               # via -r requirements.txt, importlib-metadata
+zope.event==4.5.0         # via -r requirements.txt, gevent
+zope.interface==5.1.0     # via -r requirements.txt, gevent
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

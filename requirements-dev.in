@@ -9,7 +9,7 @@ freezegun==1.1.0
 beautifulsoup4==4.9.3
 mock==4.0.3
 mohawk==1.1.0
-pip-tools
+pip-tools==5.5.0
 pylint==2.5.3
 pylint-django==2.3.0
 pytest==6.2.1
