@@ -1,0 +1,15 @@
+{% extends 'running_base.html' %}
+{% load static %}
+{% block extra_head %}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'quicksight-embedding-js-sdk-1.0.12.min.js' %}"></script>
+{% endblock extra_head %}
+{% block javascript %}
+  <script nonce="{{ request.csp_nonce }}">
+    QuickSightEmbedding.embedDashboard({
+        url: '{{ visualisation_src|safe }}',
+        container: document.getElementById('visualisation'),
+        locale: "en-gb",
+        printEnabled: true,
+    });
+  </script>
+{% endblock javascript %}
