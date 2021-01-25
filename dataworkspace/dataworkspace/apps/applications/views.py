@@ -241,7 +241,7 @@ def tools_html_POST(request):
     frame_src=settings.QUICKSIGHT_DASHBOARD_HOST,
     frame_ancestors=settings.VISUALISATION_EMBED_DOMAINS,
 )
-def _get_embedded_quicksight_dashboard(request, dashboard_id):
+def _get_embedded_quicksight_dashboard(request, dashboard_id, catalogue_item):
     dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(
         dashboard_id, request.user
     )
@@ -254,6 +254,7 @@ def _get_embedded_quicksight_dashboard(request, dashboard_id):
         'visualisation_src': f'{dashboard_url}&{extra_params}',
         'nice_name': dashboard_name,
         'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
+        'catalogue_item': catalogue_item,
     }
 
     return render(request, 'running.html', context, status=200)
@@ -291,7 +292,9 @@ def visualisation_link_html_view(request, link_id):
             request.user,
             event_type=EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
         )
-        return _get_embedded_quicksight_dashboard(request, identifier)
+        return _get_embedded_quicksight_dashboard(
+            request, identifier, visualisation_link.visualisation_catalogue_item
+        )
     elif visualisation_link.visualisation_type == 'DATASTUDIO':
         log_visualisation_view(
             visualisation_link,
