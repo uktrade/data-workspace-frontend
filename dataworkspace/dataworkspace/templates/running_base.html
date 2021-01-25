@@ -24,6 +24,9 @@
     html, body {
       height: 100%;
     }
+    .govuk-header__link, .govuk-phase-banner, .govuk-breadcrumbs {
+      padding-left: 10px;
+    }
   </style>
 
   {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
@@ -76,17 +79,20 @@
     {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
       <div class="header-wrap">
         <header class="govuk-header" role="banner" data-module="govuk-header">
-          <div class="govuk-header__container govuk-width-container">
-            <div class="govuk-header__logotype">
-              <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name">
-                Data Workspace
-              </a>
+          <div class="govuk-header__container govuk-grid-row">
+            <div class="govuk-grid-column-full">
+              <div class="govuk-header__logotype">
+                <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name">
+                  Data Workspace
+                </a>
+              </div>
             </div>
           </div>
         </header>
-        <div class="govuk-width-container">
-          {% include 'partials/alpha_banner.html' %}
-          <div class="govuk-breadcrumbs">
+        <div class="govuk-grid-row">
+          <div class="govuk-grid-column-full">
+            {% include 'partials/alpha_banner.html' %}
+            <div class="govuk-breadcrumbs">
               <ol class="govuk-breadcrumbs__list">
                   <li class="govuk-breadcrumbs__list-item">
                       <a class="govuk-breadcrumbs__link" href="{{ root_href }}">Home</a>
@@ -111,6 +117,7 @@
                   </li>
                 {% endif %}
               </ol>
+            </div>
           </div>
         </div>
       </div>
