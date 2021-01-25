@@ -1,18 +1,22 @@
 {% with id=widget.attrs.id %}
 <div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
+  {% if widget.label_is_heading %}
   <{{ widget.heading }} class="govuk-label-wrapper">
-    <label class="govuk-label govuk-label--{{ widget.label_size }}" for="{{ id }}">
+  {% endif %}
+    <label class="govuk-label {% if widget.label_is_heading %}govuk-label--{{ widget.label_size }}{% endif %} {{ widget.extra_label_classes }}" for="{{ id }}">
       {{ widget.label }}
     </label>
+  {% if widget.label_is_heading %}
   </{{ widget.heading }}>
+  {% endif %}
 
-  {% if widget.hint_html %}
+  {% if widget.help_html %}
   <div id="{{ id }}-hint">
-    {{ widget.hint_html }}
+    {{ widget.help_html }}
   </div>
-  {% elif widget.hint_text %}
+  {% elif widget.help_text %}
   <div id="{{ id }}-hint" class="govuk-hint">
-    {{ widget.hint_text }}
+    {{ widget.help_text }}
   </div>
   {% endif %}
 
@@ -26,7 +30,7 @@
           class="govuk-input"
           type="text"
           name="{{ widget.name }}"
-          {% if widget.hint_text %}aria-describedby="{{ id }}-hint" {% endif %}
+          {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
           {% include "django/forms/widgets/attrs.html" %}
           value="{{ widget.value|default_if_none:'' }}"/>
 </div>

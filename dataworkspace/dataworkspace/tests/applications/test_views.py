@@ -166,6 +166,7 @@ class TestDataVisualisationUIApprovalPage:
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
                 {
+                    "action": "approve",
                     "approved": "on",
                     "approver": user.id,
                     "visualisation": str(visualisation.visualisation_template.id),
@@ -203,6 +204,7 @@ class TestDataVisualisationUIApprovalPage:
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
                 {
+                    "action": "approve",
                     "approver": user.id,
                     "visualisation": str(visualisation.visualisation_template.id),
                 },
@@ -249,6 +251,7 @@ class TestDataVisualisationUIApprovalPage:
                     args=(vis_cat_item.visualisation_template.gitlab_project_id,),
                 ),
                 {
+                    "action": "unapprove",
                     "approver": user.id,
                     "visualisation": str(vis_cat_item.visualisation_template.id),
                 },

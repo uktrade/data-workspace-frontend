@@ -1,139 +1,116 @@
+import copy
+
 from django import forms
-from django.forms import ModelForm, Textarea, TextInput, Select, CheckboxInput
+from django.core.validators import EmailValidator
+from django.forms import CheckboxInput, CharField, ModelChoiceField
 
 
-class GOVUKDesignSystemTextWidget(forms.widgets.TextInput):
+class GOVUKDesignSystemWidgetMixin:
+    def __init__(
+        self,
+        *,
+        label_is_heading=True,
+        heading='h1',
+        label_size='l',
+        extra_label_classes='',
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.custom_context = dict(
+            label_is_heading=label_is_heading,
+            heading=heading,
+            label_size=label_size,
+            extra_label_classes=extra_label_classes,
+        )
+
+    def __deepcopy__(self, memo):
+        obj = copy.copy(self)
+        obj.custom_context = self.custom_context.copy()
+        memo[id(self)] = obj
+        return obj
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['widget'].update(self.custom_context)
+
+        return context
+
+
+class GOVUKDesignSystemFieldMixin:
+    """
+    Must be mixed-in with another class of type django.forms.Field.
+    """
+
+    widget: GOVUKDesignSystemWidgetMixin
+    label: str
+    help_text: str
+
+    def __init__(self, *, help_text=None, help_html=None, **kwargs):
+        if help_text is not None and help_html is not None:
+            raise ValueError("Only one of `help_text` and `help_html` is supported")
+
+        self.help_html = help_html
+
+        super().__init__(help_text=help_text, **kwargs)
+
+        self.widget.custom_context['label'] = self.label
+        self.widget.custom_context['help_text'] = self.help_text
+        self.widget.custom_context['help_html'] = self.help_html
+
+
+class GOVUKDesignSystemTextWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput
+):
     template_name = 'design_system/textinput.html'
-    errors = None
-    label_sizes = {
-        "h1": "l",
-        "h2": "m",
-        "h3": "s",
-    }
-
-    def __init__(
-        self,
-        label,
-        attrs=None,
-        hint_text=None,
-        hint_html=None,
-        heading='h1',
-        *args,
-        **kwargs,  # pylint: disable=keyword-arg-before-vararg
-    ):
-        if hint_text and hint_html:
-            raise ValueError("Only one of `hint_text` and `hint_html` is supported")
-
-        super().__init__(attrs)
-
-        self._label = label
-        self._hint_text = hint_text
-        self._hint_html = hint_html
-        self._heading = heading
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        context['widget']['label'] = self._label
-        context['widget']['heading'] = self._heading
-        context['widget']['hint_text'] = self._hint_text
-        context['widget']['hint_html'] = self._hint_html
-        context['widget']['label'] = self._label
-        context['widget']['errors'] = self.errors
-        context['widget']['label_size'] = self.label_sizes.get(
-            self._heading, self.label_sizes['h1']
-        )
-
-        return context
 
 
-class GOVUKDesignSystemTextareaWidget(forms.widgets.Textarea):
+class GOVUKDesignSystemTextareaWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea
+):
     template_name = 'design_system/textarea.html'
-    errors = None
-    label_sizes = {
-        "h1": "l",
-        "h2": "m",
-        "h3": "s",
-    }
-
-    def __init__(
-        self,
-        label,
-        attrs=None,
-        hint_text=None,
-        hint_html=None,
-        heading='h1',
-        *args,
-        **kwargs,  # pylint: disable=keyword-arg-before-vararg
-    ):
-        if hint_text and hint_html:
-            raise ValueError("Only one of `hint_text` and `hint_html` is supported")
-
-        super().__init__(attrs)
-
-        self._label = label
-        self._hint_text = hint_text
-        self._hint_html = hint_html
-        self._heading = heading
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        context['widget']['label'] = self._label
-        context['widget']['heading'] = self._heading
-        context['widget']['hint_text'] = self._hint_text
-        context['widget']['hint_html'] = self._hint_html
-        context['widget']['label'] = self._label
-        context['widget']['errors'] = self.errors
-        context['widget']['label_size'] = self.label_sizes.get(
-            self._heading, self.label_sizes['h1']
-        )
-
-        return context
 
 
-class GOVUKDesignSystemRadiosWidget(forms.widgets.RadioSelect):
+class GOVUKDesignSystemRadiosWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect
+):
     template_name = 'design_system/radio.html'
     option_template_name = "design_system/radio_option.html"
-    errors = None
-    legend_sizes = {
-        "h1": "l",
-        "h2": "m",
-        "h3": "s",
-    }
-
-    def __init__(
-        self,
-        label,
-        attrs=None,
-        hint_text=None,
-        hint_html=None,
-        heading='h1',
-        *args,
-        **kwargs,  # pylint: disable=keyword-arg-before-vararg
-    ):
-        if hint_text and hint_html:
-            raise ValueError("Only one of `hint_text` and `hint_html` is supported")
-
-        super().__init__(attrs)
-        self._label = label
-        self._hint_text = hint_text
-        self._hint_html = hint_html
-        self._heading = heading
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        context['widget']['label'] = self._label
-        context['widget']['hint_text'] = self._hint_text
-        context['widget']['hint_html'] = self._hint_html
-        context['widget']['heading'] = self._heading
-        context['widget']['errors'] = self.errors
-        context['widget']['legend_size'] = self.legend_sizes.get(
-            self._heading, self.legend_sizes['h1']
-        )
-
-        return context
 
 
-class NewGOVUKDesignSystemModelForm(forms.ModelForm):
+class GOVUKDesignSystemCharField(GOVUKDesignSystemFieldMixin, CharField):
+    widget = GOVUKDesignSystemTextWidget
+
+
+class GOVUKDesignSystemTextareaField(GOVUKDesignSystemCharField):
+    widget = GOVUKDesignSystemTextareaWidget
+
+
+class GOVUKDesignSystemRadioField(GOVUKDesignSystemFieldMixin, forms.ChoiceField):
+    widget = GOVUKDesignSystemRadiosWidget
+
+
+class GOVUKDesignSystemSingleCheckboxWidget(
+    GOVUKDesignSystemWidgetMixin, CheckboxInput
+):
+    template_name = 'design_system/single_checkbox.html'
+
+
+class GOVUKDesignSystemBooleanField(GOVUKDesignSystemFieldMixin, forms.BooleanField):
+    widget = GOVUKDesignSystemSingleCheckboxWidget
+
+
+class GOVUKDesignSystemEmailValidationModelChoiceField(
+    GOVUKDesignSystemFieldMixin, ModelChoiceField
+):
+    widget = GOVUKDesignSystemTextWidget
+
+    def clean(self, value):
+        if value:
+            EmailValidator(message=self.error_messages['invalid_email'])(value.lower())
+        return super().clean(value.lower() if value else value)
+
+
+class GOVUKDesignSystemModelForm(forms.ModelForm):
     def clean(self):
         """We need to attach errors to widgets so that the fields can be rendered correctly. This slightly breaks
         the Django model, which doesn't expose errors/validation to widgets as standard. We need to do this
@@ -143,7 +120,9 @@ class NewGOVUKDesignSystemModelForm(forms.ModelForm):
         if self.is_bound:
             for field in self:
                 if self.errors.get(field.name):
-                    self.fields[field.name].widget.errors = self.errors[field.name]
+                    self.fields[field.name].widget.custom_context[
+                        'errors'
+                    ] = self.errors[field.name]
 
         return cleaned_data
 
@@ -159,27 +138,3 @@ class NewGOVUKDesignSystemModelForm(forms.ModelForm):
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
-
-
-class GOVUKDesignSystemModelForm(ModelForm):
-    """A base form that applies basic GOV.UK Design System form field styles.
-
-    This will probably only work for the most basic forms. If we end up needing more complex forms this will need
-    further work/thought (as well as the corresponding partial template that must be manually used to render the
-    fields (`partials/govuk_basic_form_field.html`).
-
-    DEPRECATED: Use and extend the `NewGOVUKDesignSystemModelForm` class above.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for field in self.fields.values():
-            if isinstance(field.widget, TextInput):
-                field.widget.attrs.update({"class": "govuk-input"})
-            elif isinstance(field.widget, Textarea):
-                field.widget.attrs.update({"class": "govuk-textarea"})
-            elif isinstance(field.widget, Select):
-                field.widget.attrs.update({"class": "govuk-select"})
-            elif isinstance(field.widget, CheckboxInput):
-                field.widget.attrs.update({"class": "govuk-checkboxes__input"})

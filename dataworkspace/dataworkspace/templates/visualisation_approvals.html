@@ -66,16 +66,11 @@
   {{ form.approver }}
 
   {% if already_approved %}
-
-  {% comment "We render this as a hiddenfield for the unapprove state" %}{% endcomment %}
-  {{ form.approved }}
-  <input type="submit" class="govuk-button" value="Unapprove" />
-
+    <button type="submit" class="govuk-button" name="action" value="unapprove">Unapprove</button>
   {% else %}
-
-  {% include "partials/govuk_single_checkbox_field.html" with field=form.approved %}
-  <input type="submit" class="govuk-button" value="Approve" />
-
+    {{ form.approved }}
+    <button type="submit" class="govuk-button" name="action" value="approve">Approve</button>
   {% endif %}
+
  </form>
 {% endblock %}
