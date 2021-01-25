@@ -9,32 +9,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
-    replaces = [
-        ('applications', '0001_initial'),
-        ('applications', '0002_applicationtemplate_host_pattern'),
-        ('applications', '0003_auto_20190827_1125'),
-        ('applications', '0004_auto_20190827_1128'),
-        ('applications', '0005_applicationtemplate_spawner_time'),
-        ('applications', '0006_auto_20190912_0841'),
-        ('applications', '0007_applicationinstancereport'),
-        ('applications', '0008_auto_20190914_0820'),
-        ('applications', '0009_auto_20190914_1306'),
-        ('applications', '0010_auto_20190914_1703'),
-        ('applications', '0011_auto_20190917_1446'),
-        ('applications', '0012_applicationtemplate_visible'),
-        ('applications', '0013_auto_20191210_1616'),
-        ('applications', '0014_auto_20191211_1141'),
-        ('applications', '0015_applicationinstancedbusers'),
-        ('applications', '0016_auto_20191216_1202'),
-        ('applications', '0017_auto_20200221_1734'),
-        ('applications', '0018_tooltemplate'),
-        ('applications', '0019_auto_20200306_1126'),
-        ('applications', '0020_applicationtemplate_gitlab_project_id'),
-        ('applications', '0021_applicationinstance_commit_id'),
-        ('applications', '0022_auto_20200414_1352'),
-    ]
-
     initial = True
 
     dependencies = [
