@@ -20,7 +20,7 @@ class RequestDataWhoAreYouForm(GOVUKDesignSystemModelForm):
         fields = ['requester_role']
 
     requester_role = GOVUKDesignSystemRadioField(
-        label="Who are you in relation to this request?",
+        label="Are you the information asset owner or manager for the data?",
         choices=[(t.value, t.label) for t in RoleType],
         widget=GOVUKDesignSystemRadiosWidget,
         error_messages={

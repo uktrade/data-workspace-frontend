@@ -7,9 +7,9 @@ from dataworkspace.apps.core.models import (  # pylint: disable=import-error
 
 
 class RoleType(models.TextChoices):
-    IAO = 'IAO', 'I am the Information Asset Owner'
-    IAM = 'IAM', 'I am the Information Asset Manager'
-    other = 'other', 'I am someone else'
+    IAO = 'IAO', 'Yes, I am the Information Asset Owner'
+    IAM = 'IAM', 'Yes, I am the Information Asset Manager'
+    other = 'other', 'No, I am someone else'
 
 
 class SecurityClassificationType(models.TextChoices):
