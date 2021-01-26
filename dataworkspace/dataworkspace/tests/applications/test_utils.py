@@ -11,6 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import override_settings
 from freezegun import freeze_time
+from waffle.testutils import override_switch
 import mock
 import pytest
 import redis
@@ -21,6 +22,7 @@ from dataworkspace.apps.applications.utils import (
     delete_unused_datasets_users,
     _do_create_tools_access_iam_role,
     _do_sync_activity_stream_sso_users,
+    long_running_query_alert,
     sync_quicksight_permissions,
 )
 from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
@@ -1213,3 +1215,39 @@ class TestSyncToolQueryLogs:
         assert tables.count() == table_count + 1
         assert list(queries)[-2].query_sql == 'SELECT * FROM dataset_test'
         assert list(queries)[-1].query_sql == 'INSERT INTO dataset_test VALUES(1);'
+
+
+class TestLongRunningQueryAlerts:
+    @pytest.mark.django_db
+    @override_switch('enable_long_running_query_alerts', active=True)
+    @mock.patch('dataworkspace.apps.applications.utils.connections')
+    @mock.patch('dataworkspace.apps.applications.utils._send_slack_message')
+    def test_no_long_running_queries(self, mock_send_slack_message, mock_connections):
+        mock_cursor = mock.Mock()
+        mock_cursor.fetchone.return_value = [0]
+        mock_connection = mock.Mock()
+        mock_cursor_ctx_manager = mock.MagicMock()
+        mock_cursor_ctx_manager.__enter__.return_value = mock_cursor
+        mock_connection.cursor.return_value = mock_cursor_ctx_manager
+        mock_connections.__getitem__.return_value = mock_connection
+        long_running_query_alert()
+        mock_send_slack_message.assert_not_called()
+
+    @pytest.mark.django_db
+    @override_switch('enable_long_running_query_alerts', active=True)
+    @override_settings(SLACK_SENTRY_CHANNEL_WEBHOOK='http://test.com')
+    @mock.patch('dataworkspace.apps.applications.utils.connections')
+    @mock.patch('dataworkspace.apps.applications.utils._send_slack_message')
+    def test_long_running_queries(self, mock_send_slack_message, mock_connections):
+        mock_cursor = mock.Mock()
+        mock_cursor.fetchone.return_value = [1]
+        mock_connection = mock.Mock()
+        mock_cursor_ctx_manager = mock.MagicMock()
+        mock_cursor_ctx_manager.__enter__.return_value = mock_cursor
+        mock_connection.cursor.return_value = mock_cursor_ctx_manager
+        mock_connections.__getitem__.return_value = mock_connection
+        long_running_query_alert()
+        mock_send_slack_message.assert_called_once_with(
+            ':rotating_light: Found 1 SQL query running for longer than 5 minutes '
+            'on the datasets db.'
+        )

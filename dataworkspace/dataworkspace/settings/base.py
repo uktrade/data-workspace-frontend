@@ -312,6 +312,11 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
             'schedule': 60 * 2,
             'args': (),
         },
+        'long-running-queries-monitor': {
+            'task': 'dataworkspace.apps.applications.utils.long_running_query_alert',
+            'schedule': 60 * 5,
+            'args': (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
@@ -607,3 +612,5 @@ TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH = env.get(
 MAX_QUICKSIGHT_THROTTLE_RETRIES = env.get('MAX_QUICKSIGHT_THROTTLE_RETRIES', 5)
 
 REQUEST_DATA_JOURNEY_FLAG = 'REQUEST-DATA-JOURNEY'
+
+SLACK_SENTRY_CHANNEL_WEBHOOK = env.get('SLACK_SENTRY_CHANNEL_WEBHOOK', None)

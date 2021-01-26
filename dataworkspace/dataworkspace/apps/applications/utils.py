@@ -1446,3 +1446,39 @@ def sync_tool_query_logs():
                 _do_sync_tool_query_logs()
         except redis.exceptions.LockError:
             logger.info('Unable to acquire lock to sync tool query logs')
+
+
+def _send_slack_message(text):
+    if settings.SLACK_SENTRY_CHANNEL_WEBHOOK is not None:
+        response = requests.post(
+            settings.SLACK_SENTRY_CHANNEL_WEBHOOK, json={'text': text},
+        )
+        response.raise_for_status()
+
+
+@celery_app.task()
+def long_running_query_alert():
+    if waffle.switch_is_active('enable_long_running_query_alerts'):
+        interval = '5 minutes'
+        logger.info(
+            'Checking for queries running longer than %s on the datasets db.', interval
+        )
+        with connections[settings.EXPLORER_DEFAULT_CONNECTION].cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT COUNT(*)
+                FROM pg_stat_activity
+                WHERE (now() - pg_stat_activity.query_start) > interval '{interval}'
+                AND state = 'active'
+                '''
+            )
+            query_count = int(cursor.fetchone()[0])
+            if query_count > 0:
+                message = (
+                    f':rotating_light: Found {query_count} SQL quer{"y" if query_count == 1 else "ies"}'
+                    f' running for longer than {interval} on the datasets db.'
+                )
+                logger.info(message)
+                _send_slack_message(message)
+            else:
+                logger.info('No long running queries found.')
