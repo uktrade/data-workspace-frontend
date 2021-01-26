@@ -31,9 +31,9 @@ resource "aws_db_instance" "admin" {
 
 resource "aws_db_subnet_group" "admin" {
   name       = "${var.prefix}-admin"
-  subnet_ids = ["${aws_subnet.private_with_egress.*.id}"]
+  subnet_ids = "${aws_subnet.private_with_egress.*.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-admin"
   }
 }

@@ -77,7 +77,7 @@ resource "aws_ecs_task_definition" "gitlab" {
 data "template_file" "gitlab_container_definitions" {
   template = "${file("${path.module}/ecs_main_gitlab_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image   = "${var.gitlab_container_image}"
     container_name    = "gitlab"
     log_group         = "${aws_cloudwatch_log_group.gitlab.name}"
@@ -95,7 +95,7 @@ data "template_file" "gitlab_container_definitions" {
 data "template_file" "gitlab_container_definitions_gitlab_omnibus_config" {
   template = "${file("${path.module}/ecs_main_gitlab_container_definitions_GITLAB_OMNIBUS_CONFIG.rb")}"
 
-  vars {
+  vars = {
     external_domain = "${var.gitlab_domain}"
     db__host        = "${aws_rds_cluster.gitlab.endpoint}"
     db__name        = "${aws_rds_cluster.gitlab.database_name}"
@@ -164,7 +164,7 @@ data "aws_iam_policy_document" "gitlab_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.gitlab.arn}",
+      "${aws_cloudwatch_log_group.gitlab.arn}:*",
     ]
   }
 }
@@ -308,13 +308,13 @@ resource "aws_elasticache_cluster" "gitlab_redis" {
 
 resource "aws_elasticache_subnet_group" "gitlab" {
   name       = "${var.prefix_short}-gitlab"
-  subnet_ids = ["${aws_subnet.private_with_egress.*.id}"]
+  subnet_ids = "${aws_subnet.private_with_egress.*.id}"
 }
 
 resource "aws_rds_cluster" "gitlab" {
   cluster_identifier      = "${var.prefix}-gitlab"
   engine                  = "aurora-postgresql"
-  availability_zones      = ["${var.aws_availability_zones}"]
+  availability_zones      = "${var.aws_availability_zones}"
   database_name           = "${var.prefix_underscore}_gitlab"
   master_username         = "${var.prefix_underscore}_gitlab_master"
   master_password         = "${random_string.aws_db_instance_gitlab_password.result}"
@@ -338,9 +338,9 @@ resource "aws_rds_cluster_instance" "gitlab" {
 
 resource "aws_db_subnet_group" "gitlab" {
   name       = "${var.prefix}-gitlab"
-  subnet_ids = ["${aws_subnet.private_with_egress.*.id}"]
+  subnet_ids = "${aws_subnet.private_with_egress.*.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-gitlab"
   }
 }
@@ -411,7 +411,7 @@ resource "aws_iam_role_policy_attachment" "gitlab_ec2" {
 resource "aws_iam_instance_profile" "gitlab_ec2" {
   name = "${var.prefix}-gitlab-ec2"
   path = "/"
-  roles = ["${aws_iam_role.gitlab_ec2.id}"]
+  role = "${aws_iam_role.gitlab_ec2.id}"
 }
 
 resource "aws_instance" "gitlab" {
@@ -492,7 +492,7 @@ resource "aws_autoscaling_group" "gitlab_runner" {
   health_check_grace_period = 120
   health_check_type         = "EC2"
   launch_configuration      = "${aws_launch_configuration.gitlab_runner.name}"
-  vpc_zone_identifier       = ["${aws_subnet.private_without_egress.*.id}"]
+  vpc_zone_identifier       = "${aws_subnet.private_without_egress.*.id}"
 
   tags = [{
     key                 = "Name"

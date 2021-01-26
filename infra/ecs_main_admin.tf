@@ -98,7 +98,7 @@ resource "aws_ecs_service" "admin" {
   deployment_maximum_percent = 600
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    subnets         = "${aws_subnet.private_with_egress.*.id}"
     security_groups = ["${aws_security_group.admin_service.id}"]
   }
 
@@ -178,7 +178,7 @@ resource "aws_ecs_service" "admin_celery" {
   deployment_maximum_percent = 600
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    subnets         = "${aws_subnet.private_with_egress.*.id}"
     security_groups = ["${aws_security_group.admin_service.id}"]
   }
 }
@@ -284,7 +284,7 @@ data "aws_iam_policy_document" "admin_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.admin.arn}",
+      "${aws_cloudwatch_log_group.admin.arn}:*",
     ]
   }
 }
@@ -619,7 +619,7 @@ data "aws_iam_policy_document" "admin_task_ecs_tasks_assume_role" {
 
 resource "aws_alb" "admin" {
   name            = "${var.prefix}-admin"
-  subnets         = ["${aws_subnet.public.*.id}"]
+  subnets         = "${aws_subnet.public.*.id}"
   security_groups = ["${aws_security_group.admin_alb.id}"]
 
   access_logs {
@@ -691,7 +691,7 @@ resource "aws_elasticache_cluster" "admin" {
 
 resource "aws_elasticache_subnet_group" "admin" {
   name               = "${var.prefix_short}-admin"
-  subnet_ids         = ["${aws_subnet.private_with_egress.*.id}"]
+  subnet_ids         = "${aws_subnet.private_with_egress.*.id}"
 }
 
 resource "aws_iam_role_policy_attachment" "admin_cloudwatch_logs" {

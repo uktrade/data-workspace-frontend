@@ -49,7 +49,7 @@ data "external" "pgadmin_s3sync_current_tag" {
 data "template_file" "pgadmin_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.pgadmin_container_image}:${data.external.pgadmin_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
     container_cpu    = "${local.notebook_container_cpu}"

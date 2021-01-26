@@ -48,7 +48,7 @@ data "external" "remotedesktop_s3sync_current_tag" {
 data "template_file" "remotedesktop_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.remotedesktop_container_image}:${data.external.remotedesktop_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
 

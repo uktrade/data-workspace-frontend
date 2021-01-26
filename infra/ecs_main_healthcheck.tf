@@ -7,7 +7,7 @@ resource "aws_ecs_service" "healthcheck" {
   deployment_maximum_percent = 600
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    subnets         = "${aws_subnet.private_with_egress.*.id}"
     security_groups = ["${aws_security_group.healthcheck_service.id}"]
   }
 
@@ -75,7 +75,7 @@ resource "aws_ecs_task_definition" "healthcheck" {
 data "template_file" "healthcheck_container_definitions" {
   template = "${file("${path.module}/ecs_main_healthcheck_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image   = "${var.healthcheck_container_image}:${data.external.healthcheck_current_tag.result.tag}"
     container_name    = "${local.healthcheck_container_name}"
     container_port    = "${local.healthcheck_container_port}"
@@ -139,7 +139,7 @@ data "aws_iam_policy_document" "healthcheck_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.healthcheck.arn}",
+      "${aws_cloudwatch_log_group.healthcheck.arn}:*",
     ]
   }
 }
@@ -163,7 +163,7 @@ data "aws_iam_policy_document" "healthcheck_task_ecs_tasks_assume_role" {
 
 resource "aws_alb" "healthcheck" {
   name            = "${var.prefix}-hc"
-  subnets         = ["${aws_subnet.public.*.id}"]
+  subnets         = "${aws_subnet.public.*.id}"
   security_groups = ["${aws_security_group.healthcheck_alb.id}"]
 
   access_logs {

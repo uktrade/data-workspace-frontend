@@ -1,5 +1,5 @@
 resource "aws_rds_cluster" "datasets" {
-  availability_zones            = ["${var.aws_availability_zones}"]
+  availability_zones            = "${var.aws_availability_zones}"
   backup_retention_period       = "${var.datasets_rds_cluster_backup_retention_period}"
   cluster_identifier            = "${var.datasets_rds_cluster_cluster_identifier}"
   database_name                 = "${var.datasets_rds_cluster_database_name}"
@@ -35,9 +35,9 @@ resource "aws_rds_cluster_instance" "datasets" {
 
 resource "aws_db_subnet_group" "datasets" {
   name       = "${var.prefix}-datasets"
-  subnet_ids = ["${aws_subnet.datasets.*.id}"]
+  subnet_ids = "${aws_subnet.datasets.*.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-datasets"
   }
 }
@@ -48,6 +48,6 @@ resource "random_string" "aws_rds_cluster_instance_datasets_password" {
   special = false
 
   lifecycle {
-    ignore_changes = "*"
+    ignore_changes = all
   }
 }

@@ -49,7 +49,7 @@ data "external" "pgweb_s3sync_current_tag" {
 data "template_file" "pgweb_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.pgweb_container_image}:pgweb-spike"
     container_name   = "${local.notebook_container_name}"
 

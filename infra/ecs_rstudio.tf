@@ -49,7 +49,7 @@ data "external" "rstudio_s3sync_current_tag" {
 data "template_file" "rstudio_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.rstudio_container_image}:${data.external.rstudio_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
     container_cpu    = "${local.notebook_container_cpu}"

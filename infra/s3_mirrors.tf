@@ -14,13 +14,13 @@ resource "aws_s3_bucket" "mirrors" {
 data "aws_s3_bucket" "mirrors" {
   count = "${var.mirrors_data_bucket_name != "" ? 1 : 0}"
   bucket = "${var.mirrors_data_bucket_name}"
-  provider = "aws.mirror"
+  # provider = "aws.mirror"
 }
 
 resource "aws_s3_bucket_policy" "mirrors" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  bucket = "${aws_s3_bucket.mirrors.id}"
-  policy = "${data.aws_iam_policy_document.mirrors.json}"
+  bucket = "${aws_s3_bucket.mirrors.*.id[count.index]}"
+  policy = "${data.aws_iam_policy_document.mirrors.*.json[count.index]}"
 }
 
 data "aws_iam_policy_document" "mirrors" {
@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "mirrors" {
     ]
 
     resources = [
-      "${aws_s3_bucket.mirrors.arn}/*",
+      "${aws_s3_bucket.mirrors.*.arn[count.index]}/*",
     ]
   }
 }

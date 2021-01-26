@@ -1,10 +1,10 @@
 data "aws_route53_zone" "aws_route53_zone" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   name = "${var.aws_route53_zone}"
 }
 
 resource "aws_route53_record" "registry" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "${var.registry_internal_domain}"
   type    = "A"
@@ -34,7 +34,7 @@ resource "aws_acm_certificate_validation" "registry" {
 }
 
 resource "aws_route53_record" "admin" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "${var.admin_domain}"
   type    = "A"
@@ -51,7 +51,7 @@ resource "aws_route53_record" "admin" {
 }
 
 resource "aws_route53_record" "applications" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "*.${var.admin_domain}"
   type    = "A"
@@ -82,7 +82,7 @@ resource "aws_acm_certificate_validation" "admin" {
 }
 
 resource "aws_route53_record" "healthcheck" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "${var.healthcheck_domain}"
   type    = "A"
@@ -112,7 +112,7 @@ resource "aws_acm_certificate_validation" "healthcheck" {
 }
 
 resource "aws_route53_record" "prometheus" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "${var.prometheus_domain}"
   type    = "A"
@@ -142,7 +142,7 @@ resource "aws_acm_certificate_validation" "prometheus" {
 }
 
 resource "aws_route53_record" "gitlab" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   zone_id  = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name     = "${var.gitlab_domain}"
   type     = "A"
@@ -159,7 +159,7 @@ resource "aws_route53_record" "gitlab" {
 }
 
 resource "aws_route53_record" "superset_multiuser_internal" {
-  provider = "aws.route53"
+  # provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "${var.superset_internal_domain}"
   type    = "A"

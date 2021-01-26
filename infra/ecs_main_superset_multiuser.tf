@@ -44,7 +44,7 @@ resource "aws_ecs_task_definition" "superset_multiuser" {
 data "template_file" "superset_multiuser_container_definitions" {
   template = "${file("${path.module}/ecs_main_superset_multiuser_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image = "${var.superset_multiuser_container_image}"
     container_name  = "superset-multiuser"
     log_group       = "${aws_cloudwatch_log_group.superset_multiuser.name}"
@@ -111,7 +111,7 @@ data "aws_iam_policy_document" "superset_multiuser_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.superset_multiuser.arn}",
+      "${aws_cloudwatch_log_group.superset_multiuser.arn}:*",
     ]
   }
 }
@@ -138,7 +138,7 @@ resource "aws_lb" "superset_multiuser" {
   load_balancer_type = "application"
   internal           = true
   security_groups    = ["${aws_security_group.superset_multiuser_lb.id}"]
-  subnets            = ["${aws_subnet.private_without_egress.*.id}"]
+  subnets            = "${aws_subnet.private_without_egress.*.id}"
 }
 
 resource "aws_lb_listener" "superset_multiuser_443" {
@@ -179,7 +179,7 @@ resource "aws_lb_target_group" "superset_multiuser_8000" {
 resource "aws_rds_cluster" "superset_multiuser" {
   cluster_identifier      = "${var.prefix}-superset-multiuser"
   engine                  = "aurora-postgresql"
-  availability_zones      = ["${var.aws_availability_zones}"]
+  availability_zones      = "${var.aws_availability_zones}"
   database_name           = "${var.prefix_underscore}_superset_multiuser"
   master_username         = "${var.prefix_underscore}_superset_multiuser_master"
   master_password         = "${random_string.aws_db_instance_superset_multiuser_password.result}"
@@ -204,9 +204,9 @@ resource "aws_rds_cluster_instance" "superset_multiuser" {
 
 resource "aws_db_subnet_group" "superset_multiuser" {
   name       = "${var.prefix}-superset-multiuser"
-  subnet_ids = ["${aws_subnet.private_without_egress.*.id}"]
+  subnet_ids = "${aws_subnet.private_without_egress.*.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-superset-multiuser"
   }
 

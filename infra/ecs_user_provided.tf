@@ -27,7 +27,7 @@ data "external" "user_provided_metrics_current_tag" {
 data "template_file" "user_provided_container_definitions" {
   template = "${file("${path.module}/ecs_user_provided_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_name   = "${local.user_provided_container_name}"
     container_cpu    = "${local.user_provided_container_cpu}"
     container_memory = "${local.user_provided_container_memory}"

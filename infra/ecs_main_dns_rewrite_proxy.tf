@@ -87,7 +87,7 @@ resource "aws_ecs_task_definition" "dns_rewrite_proxy" {
 data "template_file" "dns_rewrite_proxy_container_definitions" {
   template = "${file("${path.module}/ecs_main_dns_rewrite_proxy_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image    = "${var.dns_rewrite_proxy_container_image}:feature_dns_rewrite_proxy_nlb"
     container_name     = "${local.dns_rewrite_proxy_container_name}"
     container_cpu      = "${local.dns_rewrite_proxy_container_cpu}"
@@ -153,7 +153,7 @@ data "aws_iam_policy_document" "dns_rewrite_proxy_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.dns_rewrite_proxy.arn}",
+      "${aws_cloudwatch_log_group.dns_rewrite_proxy.arn}:*",
     ]
   }
 }
