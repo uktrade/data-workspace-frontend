@@ -22,6 +22,7 @@ from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-orde
     RequestDataSecurityClassificationPage,
     RequestDataLocationPage,
     RequestDataCheckAnswersPage,
+    SupportPage,
 )
 
 
@@ -73,8 +74,11 @@ class TestRequestData:
         home_page = HomePage(self.driver)
         home_page.open()
 
-        # Request data starting page
-        request_data_page = home_page.click_header_link('Request data', RequestDataPage)
+        # Get to the "Request data" starting page
+        support_page = home_page.click_header_link('Support and feedback', SupportPage)
+        request_data_page = support_page.click_link(
+            "Tell us about a new dataset", new_page_class=RequestDataPage
+        )
         who_are_you_page = request_data_page.click_start()
 
         # Answer the "who are you" question - we aren't IAM/IAO so will need to say who one of them is in next
