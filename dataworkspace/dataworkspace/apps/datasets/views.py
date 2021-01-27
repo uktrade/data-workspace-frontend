@@ -549,12 +549,13 @@ class DatasetDetailView(DetailView):
         )
 
         DataLinkWithLinkToggle = namedtuple(
-            'DataLinkWithLinkToggle', ('data_link', 'can_show_link')
+            'DataLinkWithLinkToggle', ('data_link', 'can_show_link', 'code_snippets')
         )
         data_links_with_link_toggle = [
             DataLinkWithLinkToggle(
                 data_link=data_link,
                 can_show_link=data_link.can_show_link_for_user(self.request.user),
+                code_snippets=get_code_snippets(data_link),
             )
             for data_link in data_links
         ]
@@ -585,7 +586,6 @@ class DatasetDetailView(DetailView):
                     not source_link.url.startswith('s3://')
                     for source_link in self.object.sourcelink_set.all()
                 ),
-                'code_snippets': get_code_snippets(self.object),
                 'visualisation_src': dashboard_url,
                 'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY.value,
                 'source_table_type': DataLinkType.SOURCE_TABLE.value,

@@ -44,8 +44,3 @@ Copy.prototype.init = function () {
     }, 5000)
   });
 };
-
-let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
-nodeListForEach($codeBlocks, function ($codeBlock) {
-  new Copy($codeBlock).init()
-});

@@ -1259,7 +1259,7 @@ def test_launch_master_dataset_in_data_explorer(metadata_db):
 
     assert response.status_code == 200
     assert (
-        doc.xpath("//a[normalize-space(text()) = 'Open in Data Explorer']/@href")[0]
+        doc.xpath('//a[@id="launch-data-explorer"]/@href')[0]
         == f'/data-explorer/?sql={expected_sql}'
     )
 
