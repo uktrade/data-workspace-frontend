@@ -36,6 +36,9 @@
     }, {
       "name": "VPC_ID",
       "value": "${vpc_id}"
+    }, {
+      "name": "IP_ADDRESS",
+      "value": "${ip_address}"
     }]
   }
 ]
