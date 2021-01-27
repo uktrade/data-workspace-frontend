@@ -73,7 +73,10 @@ async def async_main():
 
     async def handle_client(reader, writer):
         logger.info('[Healthcheck] request received')
-    healthcheck_task = await create_task(asyncio.start_server(handle_client, '0.0.0.0', 8888))
+
+    healthcheck_task = await create_task(
+        asyncio.start_server(handle_client, '0.0.0.0', 8888)
+    )
     logger.info('[Healthcheck] server started')
 
     loop = asyncio.get_running_loop()
