@@ -145,6 +145,13 @@ variable dataset_subnets_availability_zones {
 variable quicksight_security_group_name {}
 variable quicksight_security_group_description {}
 variable quicksight_subnet_availability_zone {}
+variable route_53_assume_role {
+  type    = bool
+  default = false
+}
+variable route_53_assume_role_arn {
+  default = ""
+}
 
 locals {
   registry_container_name    = "jupyterhub-registry"

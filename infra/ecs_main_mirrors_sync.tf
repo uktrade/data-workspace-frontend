@@ -277,7 +277,7 @@ data "aws_iam_policy_document" "mirrors_sync_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.mirrors_sync.*.arn[count.index]}",
+      "${aws_cloudwatch_log_group.mirrors_sync.*.arn[count.index]}:*",
     ]
   }
 }
@@ -358,7 +358,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_pypi_scheduled_task" {
     launch_type = "FARGATE"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets =["${aws_subnet.public.*.id}"]
+      subnets = "${aws_subnet.public.*.id}"
       security_groups = ["${aws_security_group.mirrors_sync.id}"]
       assign_public_ip = true
     }
@@ -378,7 +378,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_conda_scheduled_task" {
     launch_type = "FARGATE"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets =["${aws_subnet.public.*.id}"]
+      subnets = "${aws_subnet.public.*.id}"
       security_groups = ["${aws_security_group.mirrors_sync.id}"]
       assign_public_ip = true
     }
@@ -398,7 +398,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_scheduled_task" {
     launch_type = "FARGATE"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets =["${aws_subnet.public.*.id}"]
+      subnets = "${aws_subnet.public.*.id}"
       security_groups = ["${aws_security_group.mirrors_sync.id}"]
       assign_public_ip = true
     }
@@ -418,7 +418,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_scheduled_task"
     launch_type = "FARGATE"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets =["${aws_subnet.public.*.id}"]
+      subnets = "${aws_subnet.public.*.id}"
       security_groups = ["${aws_security_group.mirrors_sync.id}"]
       assign_public_ip = true
     }
@@ -438,7 +438,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_nltk_scheduled_task" {
     launch_type = "FARGATE"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets =["${aws_subnet.public.*.id}"]
+      subnets = "${aws_subnet.public.*.id}"
       security_groups = ["${aws_security_group.mirrors_sync.id}"]
       assign_public_ip = true
     }
