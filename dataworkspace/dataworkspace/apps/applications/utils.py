@@ -1459,7 +1459,7 @@ def _send_slack_message(text):
 @celery_app.task()
 def long_running_query_alert():
     if waffle.switch_is_active('enable_long_running_query_alerts'):
-        interval = '5 minutes'
+        interval = settings.LONG_RUNNING_QUERY_ALERT_THRESHOLD
         logger.info(
             'Checking for queries running longer than %s on the datasets db.', interval
         )

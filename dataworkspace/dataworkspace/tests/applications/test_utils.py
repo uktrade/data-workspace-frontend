@@ -1248,6 +1248,6 @@ class TestLongRunningQueryAlerts:
         mock_connections.__getitem__.return_value = mock_connection
         long_running_query_alert()
         mock_send_slack_message.assert_called_once_with(
-            ':rotating_light: Found 1 SQL query running for longer than 5 minutes '
+            ':rotating_light: Found 1 SQL query running for longer than 15 minutes '
             'on the datasets db.'
         )
