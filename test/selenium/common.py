@@ -101,3 +101,12 @@ class _BasePage:
     def _fill_field(self, field_label, text):
         field = self._get_input_field(field_label)
         field.send_keys(text)
+
+    def click_link(self, link_text, new_page_class: Optional[Type[_PageClassType]]):
+        link = self._driver.find_element_by_link_text(link_text)
+        link.click()
+
+        if new_page_class:
+            return self._check_url_and_return_page(new_page_class)
+
+        return None

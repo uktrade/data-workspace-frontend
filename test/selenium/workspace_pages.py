@@ -23,6 +23,10 @@ class HomePage(_BaseWorkspacePage):
     pass
 
 
+class SupportPage(_BaseWorkspacePage):
+    _url_path = '/support-and-feedback/'
+
+
 class RequestDataPage(_BaseWorkspacePage):
     _url_path = '/request-data/'
 
