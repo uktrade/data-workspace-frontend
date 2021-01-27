@@ -18,4 +18,5 @@ def common(request):
         'gtm_container_id': settings.GTM_CONTAINER_ID,
         'gtm_container_environment_params': settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
         'REQUEST_DATA_JOURNEY_FLAG': settings.REQUEST_DATA_JOURNEY_FLAG,
+        'FILTER_BY_TOPIC_FLAG': settings.FILTER_BY_TOPIC_FLAG,
     }

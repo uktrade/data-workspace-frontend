@@ -110,6 +110,14 @@ class DatasetSearchForm(forms.Form):
         ),
     )
 
+    topic = SourceTagField(
+        queryset=Tag.objects.order_by('name').filter(type=Tag.TYPE_TOPIC),
+        required=False,
+        widget=FilterWidget(
+            "Topics", limit_initial_options=10, show_more_label="Show more topics",
+        ),
+    )
+
     sort = forms.ChoiceField(
         required=False,
         choices=[
@@ -131,22 +139,27 @@ class DatasetSearchForm(forms.Form):
     class Media:
         js = ('app-filter-show-more-v2.js',)
 
-    def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
+    def annotate_and_update_filters(
+        self, datasets, matcher, number_of_matches, topic_flag_active
+    ):
         counts = {
             "access": defaultdict(int),
             "unpublished": defaultdict(int),
             "use": defaultdict(int),
             "source": defaultdict(int),
+            "topic": defaultdict(int),
         }
 
         selected_access = bool(self.cleaned_data['access'])
         selected_unpublished = bool(self.cleaned_data['unpublished'])
         selected_uses = set(self.cleaned_data['use'])
         selected_source_ids = set(source.id for source in self.cleaned_data['source'])
+        selected_topic_ids = set(topic.id for topic in self.cleaned_data['topic'])
 
         # Cache these locally for performance. The source model choice field can end up hitting the DB each time.
         use_choices = list(self.fields['use'].choices)
         source_choices = list(self.fields['source'].choices)
+        topic_choices = list(self.fields['topic'].choices)
 
         for dataset in datasets:
             dataset_matcher = partial(
@@ -156,6 +169,8 @@ class DatasetSearchForm(forms.Form):
                 unpublished=selected_unpublished,
                 use=selected_uses,
                 source_ids=selected_source_ids,
+                topic_ids=selected_topic_ids,
+                topic_flag_active=topic_flag_active,
             )
 
             if dataset_matcher(access=True):
@@ -171,6 +186,10 @@ class DatasetSearchForm(forms.Form):
             for source_id, _ in source_choices:
                 if dataset_matcher(source_ids={source_id}):
                     counts['source'][source_id] += 1
+
+            for topic_id, _ in topic_choices:
+                if dataset_matcher(topic_ids={topic_id}):
+                    counts['topic'][topic_id] += 1
 
         self.fields['access'].choices = [
             (access_id, access_text + f" ({counts['access'][access_id]})")
@@ -191,4 +210,10 @@ class DatasetSearchForm(forms.Form):
             (source_id, source_text + f" ({counts['source'][source_id]})")
             for source_id, source_text in source_choices
             if source_id in selected_source_ids or counts['source'][source_id] != 0
+        ]
+
+        self.fields['topic'].choices = [
+            (topic_id, topic_text + f" ({counts['topic'][topic_id]})")
+            for topic_id, topic_text in topic_choices
+            if topic_id in selected_topic_ids or counts['topic'][topic_id] != 0
         ]

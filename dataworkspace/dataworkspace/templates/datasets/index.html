@@ -4,6 +4,7 @@
 {% load core_filters %}
 {% load core_tags %}
 {% load datasets_tags %}
+{% load waffle_tags %}
 
 {% block head %}
     {{ block.super }}
@@ -68,6 +69,11 @@
       {{ form.unpublished }}
     {% endif %}
     {{ form.use }}
+    {% flag FILTER_BY_TOPIC_FLAG %}
+    {% if form.topic.field.choices %}
+      {{ form.topic }}
+    {% endif %}
+    {% endflag %}
     {% if form.source.field.choices %}
       {{ form.source }}
     {% endif %}
@@ -98,7 +104,18 @@
         {% else %}
           {{ dataset.source_tag_names.0|default:"N/A" }}
         {% endif %}
+
+      {% flag FILTER_BY_TOPIC_FLAG %}
+        {% if dataset.topic_tag_names|length > 0 %}
+          <span class="govuk-body govuk-!-margin-bottom-0 govuk-!-margin-top-2" style="display: block;">
+          {% for tag_name in dataset.topic_tag_names %}
+            <span class="app-tag govuk-!-font-weight-bold govuk-!-font-size-16">{{ tag_name }}</span>
+          {% endfor %}
+          </span>
+        {% endif %}
       </p>
+      {% endflag %}
+
     </div>
     {% endfor %}
 

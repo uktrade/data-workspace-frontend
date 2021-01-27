@@ -223,5 +223,13 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 }
 
 .app-table_cell--no-border {
-  border-bottom: none;
+    border-bottom: none;
+}
+
+.app-tag {
+    box-sizing: border-box;
+    margin: 0;
+    border: 2px solid rgba(11, 12, 12, .15);
+    border-radius: 4px;
+    padding: 2px 4px;
 }
