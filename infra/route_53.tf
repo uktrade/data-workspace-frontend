@@ -1,18 +1,3 @@
-provider "aws" {
-  region  = "eu-west-2"
-  profile = "jupyterhub"
-  alias   = "route53"
-  version = "~> 3.2.0"
-
-  dynamic "assume_role" {
-    for_each = var.route_53_assume_role ? [1] : [0]
-    content {
-      role_arn = "${var.route_53_assume_role_arn}"
-    }
-  }
-
-}
-
 data "aws_route53_zone" "aws_route53_zone" {
   provider = "aws.route53"
   name = "${var.aws_route53_zone}"
