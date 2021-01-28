@@ -40,6 +40,10 @@ variable admin_authbroker_client_id {}
 variable admin_authbroker_client_secret {}
 variable admin_authbroker_url {}
 variable admin_environment {}
+variable admin_deregistration_delay {
+  type = number
+  default = 300
+}
 
 variable uploads_bucket {}
 variable appstream_bucket {}

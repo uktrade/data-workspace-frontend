@@ -664,6 +664,7 @@ resource "aws_alb_target_group" "admin" {
   protocol    = "HTTP"
   vpc_id      = "${aws_vpc.main.id}"
   target_type = "ip"
+  deregistration_delay = "${var.admin_deregistration_delay}"
 
   health_check {
     path = "/healthcheck"
