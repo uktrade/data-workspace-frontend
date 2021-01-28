@@ -8,6 +8,7 @@ import json
 from typing import Set
 
 import boto3
+import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from psycopg2 import sql
@@ -182,6 +183,18 @@ def get_datasets_data_for_user_matching_query(
         )
     )
 
+    # Pull in the topic tag IDs for the dataset
+    datasets = datasets.annotate(
+        topic_tag_ids=ArrayAgg(
+            'tags', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+        )
+    )
+    datasets = datasets.annotate(
+        topic_tag_names=ArrayAgg(
+            'tags__name', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+        )
+    )
+
     # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
         datasets = datasets.annotate(
@@ -201,6 +214,8 @@ def get_datasets_data_for_user_matching_query(
         'search_rank',
         'source_tag_names',
         'source_tag_ids',
+        'topic_tag_names',
+        'topic_tag_ids',
         'purpose',
         'published',
         'published_at',
@@ -214,6 +229,8 @@ def get_datasets_data_for_user_matching_query(
         'search_rank',
         'source_tag_names',
         'source_tag_ids',
+        'topic_tag_names',
+        'topic_tag_ids',
         'purpose',
         'published',
         'published_at',
@@ -292,6 +309,19 @@ def get_visualisations_data_for_user_matching_query(
         )
     )
 
+    # Pull in the topic tag IDs for the dataset
+    visualisations = visualisations.annotate(
+        topic_tag_ids=ArrayAgg(
+            'tags', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+        )
+    )
+
+    visualisations = visualisations.annotate(
+        topic_tag_names=ArrayAgg(
+            'tags__name', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+        )
+    )
+
     # Define a `purpose` column denoting the dataset type
     visualisations = visualisations.annotate(
         purpose=Value(DataSetType.VISUALISATION.value, IntegerField())
@@ -308,6 +338,8 @@ def get_visualisations_data_for_user_matching_query(
         'search_rank',
         'source_tag_names',
         'source_tag_ids',
+        'topic_tag_names',
+        'topic_tag_ids',
         'purpose',
         'published',
         'published_at',
@@ -321,6 +353,8 @@ def get_visualisations_data_for_user_matching_query(
         'search_rank',
         'source_tag_names',
         'source_tag_ids',
+        'topic_tag_names',
+        'topic_tag_ids',
         'purpose',
         'published',
         'published_at',
@@ -328,12 +362,24 @@ def get_visualisations_data_for_user_matching_query(
     )
 
 
-def _matches_filters(data, access: bool, unpublished: bool, use: Set, source_ids: Set):
+def _matches_filters(
+    data,
+    access: bool,
+    unpublished: bool,
+    use: Set,
+    source_ids: Set,
+    topic_ids: Set,
+    topic_flag_active,
+):
     return (
         (not access or data['has_access'])
         and (unpublished or data['published'])
         and (not use or use == [None] or data['purpose'] in use)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
+        and (
+            not topic_flag_active
+            or (not topic_ids or topic_ids.intersection(set(data['topic_tag_ids'])))
+        )
     )
 
 
@@ -393,6 +439,7 @@ def find_datasets(request):
         use = set(form.cleaned_data.get("use"))
         sort = form.cleaned_data.get("sort")
         source_ids = set(source.id for source in form.cleaned_data.get("source"))
+        topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
@@ -407,7 +454,13 @@ def find_datasets(request):
     datasets_matching_query_and_filters = list(
         filter(
             lambda d: _matches_filters(
-                d, bool(access), bool(unpublished), use, source_ids
+                d,
+                bool(access),
+                bool(unpublished),
+                use,
+                source_ids,
+                topic_ids,
+                waffle.flag_is_active(request, settings.FILTER_BY_TOPIC_FLAG),
             ),
             all_datasets_visible_to_user_matching_query,
         )
@@ -419,6 +472,7 @@ def find_datasets(request):
         all_datasets_visible_to_user_matching_query,
         matcher=_matches_filters,
         number_of_matches=len(datasets_matching_query_and_filters),
+        topic_flag_active=waffle.flag_is_active(request, settings.FILTER_BY_TOPIC_FLAG),
     )
 
     paginator = Paginator(

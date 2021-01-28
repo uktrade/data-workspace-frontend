@@ -4,6 +4,7 @@
 {% load core_filters %}
 {% load core_tags %}
 {% load datasets_tags %}
+{% load waffle_tags %}
 
 {% block head %}
     {{ block.super }}
@@ -68,19 +69,26 @@
       {{ form.unpublished }}
     {% endif %}
     {{ form.use }}
+    {% flag FILTER_BY_TOPIC_FLAG %}
+    {% if form.topic.field.choices %}
+      {{ form.topic }}
+    {% endif %}
+    {% endflag %}
     {% if form.source.field.choices %}
       {{ form.source }}
     {% endif %}
   </div>
   <div class="govuk-grid-column-two-thirds">
-    <p class="govuk-body"><span id="search-results-count">{{ datasets.paginator.count }}</span> results</p>
+    <h2 class="govuk-body">
+      {{ datasets.paginator.count }} results
+    </h2>
     <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
     {{ form.sort }}
     {% for dataset in datasets %}
     <div class="search-result">
-      <h2 class="govuk-heading-m">
+      <h3 class="govuk-heading-m">
         <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}</a>
-      </h2>
+      </h3>
       {% if not dataset.published %}
         <div class="govuk-!-display-inline-block" style="float: right">
           <strong class="govuk-tag govuk-tag--grey">
@@ -99,6 +107,20 @@
           {{ dataset.source_tag_names.0|default:"N/A" }}
         {% endif %}
       </p>
+
+      {% flag FILTER_BY_TOPIC_FLAG %}
+      {% if dataset.topic_tag_names|length > 0 %}
+        <p class="govuk-visually-hidden">Topics</p>
+        <span class="govuk-body govuk-!-margin-bottom-0 govuk-!-margin-top-2">
+          <ul class="app-taglist govuk-body govuk-!-margin-0">
+            {% for tag_name in dataset.topic_tag_names %}
+              <li class="app-taglist__item govuk-!-font-weight-bold govuk-!-font-size-16">{{ tag_name }}</li>
+            {% endfor %}
+          </ul>
+        </span>
+      {% endif %}
+      {% endflag %}
+
     </div>
     {% endfor %}
 

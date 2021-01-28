@@ -13,6 +13,7 @@ from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.test import Client
 from lxml import html
+from waffle.testutils import override_flag
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType
@@ -253,6 +254,8 @@ def test_find_datasets_combines_results(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds.type,
             'published': True,
             'has_access': False,
@@ -266,6 +269,8 @@ def test_find_datasets_combines_results(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'published': True,
             'has_access': True,
@@ -279,6 +284,8 @@ def test_find_datasets_combines_results(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'published': True,
             'has_access': True,
@@ -318,6 +325,8 @@ def test_find_datasets_filters_by_query(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds.type,
             'published': True,
             'has_access': False,
@@ -331,6 +340,8 @@ def test_find_datasets_filters_by_query(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'published': True,
             'has_access': True,
@@ -344,6 +355,8 @@ def test_find_datasets_filters_by_query(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'published': True,
             'has_access': True,
@@ -371,6 +384,8 @@ def test_find_datasets_filters_by_use(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds.type,
             'published': True,
             'has_access': False,
@@ -384,6 +399,8 @@ def test_find_datasets_filters_by_use(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'published': True,
             'has_access': True,
@@ -414,6 +431,8 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds.type,
             'published': True,
             'has_access': False,
@@ -427,6 +446,8 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'published': True,
             'has_access': True,
@@ -481,6 +502,8 @@ def test_find_datasets_filters_by_source(client):
             'published_at': mock.ANY,
             'source_tag_names': MatchUnorderedMembers([source.name, source_2.name]),
             'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds.type,
             'published': True,
             'has_access': False,
@@ -494,6 +517,8 @@ def test_find_datasets_filters_by_source(client):
             'published_at': mock.ANY,
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'published': True,
             'has_access': True,
@@ -507,6 +532,8 @@ def test_find_datasets_filters_by_source(client):
             'published_at': mock.ANY,
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'published': True,
             'has_access': True,
@@ -514,6 +541,95 @@ def test_find_datasets_filters_by_source(client):
     ]
 
     assert len(list(response.context["form"].fields['source'].choices)) == 3
+
+
+@override_flag(settings.FILTER_BY_TOPIC_FLAG, active=True)
+def test_find_datasets_filters_by_topic(client):
+    topic = factories.TopicTagFactory.create()
+    topic_2 = factories.TopicTagFactory.create()
+    # Create another SourceTag that won't be associated to a dataset
+    factories.TopicTagFactory.create()
+
+    _ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
+    _ds.tags.set([factories.SourceTagFactory()])
+
+    _vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A visualisation'
+    )
+
+    factories.DataSetApplicationTemplatePermissionFactory(
+        application_template=_vis.visualisation_template, dataset=_ds
+    )
+
+    ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
+    ds.tags.set([topic, topic_2])
+
+    rds = factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+    rds.tags.set([topic])
+
+    vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='A new visualisation'
+    )
+    vis.tags.set([topic])
+
+    factories.DataSetApplicationTemplatePermissionFactory(
+        application_template=vis.visualisation_template, dataset=ds
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"topic": [topic.id]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds.id,
+            'name': ds.name,
+            'slug': ds.slug,
+            'search_rank': 0.0,
+            'short_description': ds.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': MatchUnorderedMembers([topic.name, topic_2.name]),
+            'topic_tag_ids': MatchUnorderedMembers([topic.id, topic_2.id]),
+            'purpose': ds.type,
+            'published': True,
+            'has_access': False,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': 0.0,
+            'short_description': rds.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': [topic.name],
+            'topic_tag_ids': [topic.id],
+            'purpose': DataSetType.REFERENCE.value,
+            'published': True,
+            'has_access': True,
+        },
+        {
+            'id': vis.id,
+            'name': vis.name,
+            'slug': vis.slug,
+            'search_rank': 0.0,
+            'short_description': vis.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': [topic.name],
+            'topic_tag_ids': [topic.id],
+            'purpose': DataSetType.VISUALISATION.value,
+            'published': True,
+            'has_access': True,
+        },
+    ]
+
+    assert len(list(response.context["form"].fields['topic'].choices)) == 2
 
 
 def test_find_datasets_order_by_name_asc(client):
@@ -535,6 +651,8 @@ def test_find_datasets_order_by_name_asc(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds1.type,
             'has_access': False,
         },
@@ -548,6 +666,8 @@ def test_find_datasets_order_by_name_asc(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'has_access': True,
         },
@@ -561,6 +681,8 @@ def test_find_datasets_order_by_name_asc(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'has_access': True,
         },
@@ -590,6 +712,8 @@ def test_find_datasets_order_by_newest_first(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ads1.type,
             'has_access': False,
         },
@@ -603,6 +727,8 @@ def test_find_datasets_order_by_newest_first(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ads2.type,
             'has_access': False,
         },
@@ -616,6 +742,8 @@ def test_find_datasets_order_by_newest_first(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ads3.type,
             'has_access': False,
         },
@@ -647,6 +775,8 @@ def test_find_datasets_order_by_oldest_first(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ads3.type,
             'has_access': False,
         },
@@ -660,6 +790,8 @@ def test_find_datasets_order_by_oldest_first(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ads2.type,
             'has_access': False,
         },
@@ -673,6 +805,8 @@ def test_find_datasets_order_by_oldest_first(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ads1.type,
             'has_access': False,
         },
@@ -689,6 +823,7 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
 
     users = [factories.UserFactory.create() for _ in range(3)]
     source_tags = [factories.SourceTagFactory.create() for _ in range(5)]
+    topic_tags = [factories.TopicTagFactory.create() for _ in range(5)]
 
     master = factories.DataSetFactory.create(
         published=True,
@@ -723,14 +858,14 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
 
     for user in users + [normal_user, staff_user]:
         factories.DataSetUserPermissionFactory.create(dataset=master, user=user)
-        master.tags.set(random.sample(source_tags, 3))
+        master.tags.set(random.sample(source_tags, 3) + random.sample(topic_tags, 3))
         factories.DataSetUserPermissionFactory.create(dataset=master2, user=user)
-        master2.tags.set(random.sample(source_tags, 3))
+        master2.tags.set(random.sample(source_tags, 3) + random.sample(topic_tags, 3))
 
         factories.DataSetUserPermissionFactory.create(dataset=datacut, user=user)
-        datacut.tags.set(random.sample(source_tags, 3))
+        datacut.tags.set(random.sample(source_tags, 3) + random.sample(topic_tags, 3))
         factories.DataSetUserPermissionFactory.create(dataset=datacut2, user=user)
-        datacut2.tags.set(random.sample(source_tags, 3))
+        datacut2.tags.set(random.sample(source_tags, 3) + random.sample(topic_tags, 3))
 
         factories.VisualisationUserPermissionFactory.create(
             visualisation=visualisation, user=user
@@ -755,6 +890,7 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
         )
 
 
+@override_flag(settings.FILTER_BY_TOPIC_FLAG, active=True)
 def test_finding_datasets_doesnt_query_database_excessively(
     client, django_assert_num_queries
 ):
@@ -764,6 +900,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
     that the inputs are indeterminate, but it would at least highlight at some point that we have an unknown issue.
     """
     source_tags = [factories.SourceTagFactory() for _ in range(10)]
+    topic_tags = [factories.TopicTagFactory() for _ in range(10)]
 
     masters = [
         factories.DataSetFactory(
@@ -774,7 +911,10 @@ def test_finding_datasets_doesnt_query_database_excessively(
         for _ in range(random.randint(10, 50))
     ]
     for master in masters:
-        master.tags.set(random.sample(source_tags, random.randint(1, 3)))
+        master.tags.set(
+            random.sample(source_tags, random.randint(1, 3))
+            + random.sample(topic_tags, random.randint(1, 3))
+        )
 
     datacuts = [
         factories.DataSetFactory(
@@ -785,11 +925,14 @@ def test_finding_datasets_doesnt_query_database_excessively(
         for _ in range(random.randint(10, 50))
     ]
     for datacut in datacuts:
-        datacut.tags.set(random.sample(source_tags, 1))
+        datacut.tags.set(random.sample(source_tags, 1) + random.sample(topic_tags, 1))
 
     references = [factories.ReferenceDatasetFactory(published=True,) for _ in range(10)]
     for reference in references:
-        reference.tags.set(random.sample(source_tags, random.randint(1, 3)))
+        reference.tags.set(
+            random.sample(source_tags, random.randint(1, 3))
+            + random.sample(topic_tags, random.randint(1, 3))
+        )
 
     visualisations = [
         factories.VisualisationCatalogueItemFactory.create(published=True,)
@@ -825,6 +968,18 @@ def test_finding_datasets_doesnt_query_database_excessively(
         )
         assert response.status_code == 200
 
+    with django_assert_num_queries(11, exact=False):
+        response = client.get(
+            reverse('datasets:find_datasets'),
+            {
+                "topic": [
+                    str(tag.id)
+                    for tag in random.sample(topic_tags, random.randint(1, 5))
+                ]
+            },
+        )
+        assert response.status_code == 200
+
     with django_assert_num_queries(10, exact=False):
         response = client.get(
             reverse('datasets:find_datasets'),
@@ -833,7 +988,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
         assert response.status_code == 200
 
     with django_assert_num_queries(10, exact=False):
-        response = client.get(reverse('datasets:find_datasets'), {"access": "yes"},)
+        response = client.get(reverse('datasets:find_datasets'), {"access": "yes"})
         assert response.status_code == 200
 
 
@@ -917,6 +1072,8 @@ def test_find_datasets_filters_by_access():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
             'published': True,
             'has_access': True,
@@ -930,6 +1087,8 @@ def test_find_datasets_filters_by_access():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': public_master.type,
             'published': True,
             'has_access': True,
@@ -943,6 +1102,8 @@ def test_find_datasets_filters_by_access():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE.value,
             'published': True,
             'has_access': True,
@@ -956,6 +1117,8 @@ def test_find_datasets_filters_by_access():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'published': True,
             'has_access': True,
@@ -969,6 +1132,8 @@ def test_find_datasets_filters_by_access():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION.value,
             'published': True,
             'has_access': True,
@@ -999,6 +1164,8 @@ def test_find_datasets_filters_by_show_unpublished():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': publshed_master.type,
             'published': True,
             'has_access': mock.ANY,
@@ -1018,6 +1185,8 @@ def test_find_datasets_filters_by_show_unpublished():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': publshed_master.type,
             'published': True,
             'has_access': mock.ANY,
@@ -1031,6 +1200,8 @@ def test_find_datasets_filters_by_show_unpublished():
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': unpublished_master.type,
             'published': False,
             'has_access': mock.ANY,
@@ -1076,6 +1247,8 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': access_granted_master.type,
             'published': True,
             'has_access': True,
@@ -1457,6 +1630,8 @@ def test_find_datasets_search_by_source_name(client):
             'published_at': mock.ANY,
             'source_tag_names': [source.name, source_2.name],
             'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
@@ -1470,6 +1645,60 @@ def test_find_datasets_search_by_source_name(client):
             'published_at': mock.ANY,
             'source_tag_names': [source.name],
             'source_tag_ids': [source.id],
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': DataSetType.REFERENCE.value,
+            'published': True,
+            'has_access': True,
+        },
+    ]
+
+
+@override_flag(settings.FILTER_BY_TOPIC_FLAG, active=True)
+def test_find_datasets_search_by_topic_name(client):
+    topic = factories.TopicTagFactory.create(name='topic1')
+    topic_2 = factories.TopicTagFactory.create(name='topic2')
+    ds1 = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
+    ds1.tags.set([topic, topic_2])
+
+    ds2 = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
+    ds2.tags.set([factories.TopicTagFactory.create(name='topic3')])
+
+    rds = factories.ReferenceDatasetFactory.create(
+        published=True, name='A new reference dataset'
+    )
+    rds.tags.set([topic])
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "topic1"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': ds1.id,
+            'name': ds1.name,
+            'slug': ds1.slug,
+            'search_rank': 0.243171,
+            'short_description': ds1.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': MatchUnorderedMembers([topic.name, topic_2.name]),
+            'topic_tag_ids': MatchUnorderedMembers([topic.id, topic_2.id]),
+            'purpose': ds1.type,
+            'published': True,
+            'has_access': False,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': 0.243171,
+            'short_description': rds.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': [topic.name],
+            'topic_tag_ids': [topic.id],
             'purpose': DataSetType.REFERENCE.value,
             'published': True,
             'has_access': True,
@@ -1509,6 +1738,8 @@ def test_find_datasets_name_weighting(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds4.type,
             'published': True,
             'has_access': False,
@@ -1522,6 +1753,8 @@ def test_find_datasets_name_weighting(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
@@ -1535,6 +1768,8 @@ def test_find_datasets_name_weighting(client):
             'published_at': mock.ANY,
             'source_tag_names': mock.ANY,
             'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds2.type,
             'published': True,
             'has_access': False,
@@ -1565,6 +1800,8 @@ def test_find_datasets_matches_both_source_and_name(client):
             'published_at': mock.ANY,
             'source_tag_names': [source_1.name, source_2.name],
             'source_tag_ids': MatchUnorderedMembers([source_1.id, source_2.id]),
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
