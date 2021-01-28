@@ -226,7 +226,14 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
     border-bottom: none;
 }
 
-.app-tag {
+.app-taglist {
+    list-style: none;
+    display: inline-block;
+    padding-inline: 0;
+}
+
+.app-taglist__item {
+    display: inline;
     box-sizing: border-box;
     margin: 0;
     border: 2px solid rgba(11, 12, 12, .15);
