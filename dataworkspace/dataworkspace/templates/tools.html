@@ -83,7 +83,7 @@
     {% endfor %}
 
     {% if your_files_enabled %}
-      {% url 'files' as files_url %}
+      {% url 'your-files:files' as files_url %}
       {% with application_summary='Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use "Your files" to upload files to this folder, and download files from this folder.' %}
         {% include 'partials/tool_section.html' with application_name="Your files" application_summary=application_summary application_help_link=None instance=None application_url=files_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
       {% endwith %}

@@ -82,7 +82,7 @@ class TestSupportView(BaseTestCase):
 
 
 def test_csp_on_files_endpoint_includes_s3(client):
-    response = client.get(reverse('files'))
+    response = client.get(reverse('your-files:files'))
     assert response.status_code == 200
 
     policies = get_response_csp_as_set(response)
