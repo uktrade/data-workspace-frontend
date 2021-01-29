@@ -1,5 +1,7 @@
 resource "aws_lb" "dns_rewrite_proxy" {
-  name                             = "${var.prefix}-dns-rewrite-proxy"
+  # should be suffixed `dns-rewrite-proxy` but name is limited to 32 chars, and that is too long
+  # for `analysisworkspace-dev-dns-rewrite-proxy`
+  name                             = "${var.prefix}-dns-proxy"
   load_balancer_type               = "network"
   enable_cross_zone_load_balancing = "true"
 
@@ -23,7 +25,9 @@ resource "aws_lb_listener" "dns_rewrite_proxy" {
 }
 
 resource "aws_lb_target_group" "dns_rewrite_proxy" {
-  name                 = "${var.prefix}-dns-rewrite-proxy"
+  # should be suffixed `dns-rewrite-proxy` but name is limited to 32 chars, and that is too long
+  # for `analysisworkspace-dev-dns-rewrite-proxy`
+  name                 = "${var.prefix}-dns-proxy"
   port                 = 53
   protocol             = "UDP"
   vpc_id               = "${aws_vpc.main.id}"
