@@ -1,13 +1,59 @@
+resource "aws_lb" "dns_rewrite_proxy" {
+  name                             = "${var.prefix}-dns-rewrite-proxy"
+  load_balancer_type               = "network"
+  enable_cross_zone_load_balancing = "true"
+
+  internal = true
+  
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.private_with_egress.*.id[0]}"
+    private_ipv4_address = cidrhost("${aws_subnet.private_with_egress.*.cidr_block[0]}", 5)
+  }
+}
+
+resource "aws_lb_listener" "dns_rewrite_proxy" {
+  load_balancer_arn = "${aws_lb.dns_rewrite_proxy.id}"
+  port              = 53
+  protocol          = "UDP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.dns_rewrite_proxy.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_target_group" "dns_rewrite_proxy" {
+  name                 = "${var.prefix}-dns-rewrite-proxy"
+  port                 = 53
+  protocol             = "UDP"
+  vpc_id               = "${aws_vpc.main.id}"
+  target_type          = "ip"
+
+  health_check {
+    protocol           = "TCP"
+    port               = "8888"
+  }
+
+  depends_on = ["aws_lb.dns_rewrite_proxy"]
+}
+
 resource "aws_ecs_service" "dns_rewrite_proxy" {
-  name            = "${var.prefix}-dns-rewrite-proxy"
-  cluster         = "${aws_ecs_cluster.main_cluster.id}"
-  task_definition = "${aws_ecs_task_definition.dns_rewrite_proxy.arn}"
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name                 = "${var.prefix}-dns-rewrite-proxy"
+  cluster              = "${aws_ecs_cluster.main_cluster.id}"
+  task_definition      = "${aws_ecs_task_definition.dns_rewrite_proxy.arn}"
+  desired_count        = 1
+  launch_type          = "FARGATE"
+  platform_version     = "1.4.0"
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id[0]}"]
-    security_groups = ["${aws_security_group.dns_rewrite_proxy.id}"]
+    subnets            = ["${aws_subnet.private_with_egress.*.id[0]}"]
+    security_groups    = ["${aws_security_group.dns_rewrite_proxy.id}"]
+  }
+
+  load_balancer {
+    target_group_arn  = "${aws_lb_target_group.dns_rewrite_proxy.id}"
+    container_name    = "${local.dns_rewrite_proxy_container_name}"
+    container_port    = 53
   }
 }
 
@@ -41,7 +87,7 @@ resource "aws_ecs_task_definition" "dns_rewrite_proxy" {
 data "template_file" "dns_rewrite_proxy_container_definitions" {
   template = "${file("${path.module}/ecs_main_dns_rewrite_proxy_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image    = "${var.dns_rewrite_proxy_container_image}:${data.external.dns_rewrite_proxy_current_tag.result.tag}"
     container_name     = "${local.dns_rewrite_proxy_container_name}"
     container_cpu      = "${local.dns_rewrite_proxy_container_cpu}"
@@ -55,6 +101,7 @@ data "template_file" "dns_rewrite_proxy_container_definitions" {
     aws_ec2_host = "ec2.${data.aws_region.aws_region.name}.amazonaws.com"
     vpc_id       = "${aws_vpc.notebooks.id}"
     aws_route53_zone = "${var.aws_route53_zone}"
+    ip_address   = "${aws_lb.dns_rewrite_proxy.subnet_mapping.*.private_ipv4_address[0]}"
   }
 }
 
@@ -107,7 +154,7 @@ data "aws_iam_policy_document" "dns_rewrite_proxy_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.dns_rewrite_proxy.arn}",
+      "${aws_cloudwatch_log_group.dns_rewrite_proxy.arn}:*",
     ]
   }
 }

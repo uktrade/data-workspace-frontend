@@ -49,7 +49,7 @@ data "external" "jupyterlabr_s3sync_current_tag" {
 data "template_file" "jupyterlabr_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.jupyterlab_r_container_image}:${data.external.jupyterlabr_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
 

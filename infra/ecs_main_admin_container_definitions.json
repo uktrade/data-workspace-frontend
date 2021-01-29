@@ -164,10 +164,6 @@
       "value": "8888"
     },
     {
-      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__PORT",
-      "value": "8888"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX",
       "value": "${notebook_task_role__role_prefix}"
     },
@@ -424,10 +420,6 @@
       "value": "8888"
     },
     {
-      "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__PORT",
-      "value": "8888"
-    },
-    {
       "name": "APPLICATION_TEMPLATES__5__SPAWNER_OPTIONS__ROLE_PREFIX",
       "value": "${notebook_task_role__role_prefix}"
     },
@@ -502,10 +494,6 @@
     {
       "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__SUBNETS__1",
       "value": "${fargate_spawner__task_subnet}"
-    },
-    {
-      "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__PORT",
-      "value": "8888"
     },
     {
       "name": "APPLICATION_TEMPLATES__6__SPAWNER_OPTIONS__PORT",

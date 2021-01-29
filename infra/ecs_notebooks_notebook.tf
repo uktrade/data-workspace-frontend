@@ -49,7 +49,7 @@ data "external" "notebook_s3sync_current_tag" {
 data "template_file" "notebook_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.notebook_container_image}:${data.external.notebook_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
 
@@ -115,7 +115,7 @@ data "aws_iam_policy_document" "notebook_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.notebook.arn}",
+      "${aws_cloudwatch_log_group.notebook.arn}:*",
     ]
   }
 

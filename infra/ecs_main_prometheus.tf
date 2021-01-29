@@ -6,7 +6,7 @@ resource "aws_ecs_service" "prometheus" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    subnets         = "${aws_subnet.private_with_egress.*.id}"
     security_groups = ["${aws_security_group.prometheus_service.id}"]
   }
 
@@ -74,7 +74,7 @@ resource "aws_ecs_task_definition" "prometheus" {
 data "template_file" "prometheus_container_definitions" {
   template = "${file("${path.module}/ecs_main_prometheus_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image   = "${var.prometheus_container_image}:${data.external.prometheus_current_tag.result.tag}"
     container_name    = "${local.prometheus_container_name}"
     container_port    = "${local.prometheus_container_port}"
@@ -140,7 +140,7 @@ data "aws_iam_policy_document" "prometheus_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.prometheus.arn}",
+      "${aws_cloudwatch_log_group.prometheus.arn}:*",
     ]
   }
 }
@@ -164,7 +164,7 @@ data "aws_iam_policy_document" "prometheus_task_ecs_tasks_assume_role" {
 
 resource "aws_alb" "prometheus" {
   name            = "${var.prefix}-pm"
-  subnets         = ["${aws_subnet.public.*.id}"]
+  subnets         = "${aws_subnet.public.*.id}"
   security_groups = ["${aws_security_group.prometheus_alb.id}"]
 
   access_logs {

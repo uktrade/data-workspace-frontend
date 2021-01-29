@@ -101,6 +101,8 @@ aws_ec2_host = os.environ['AWS_EC2_HOST']
 logger.debug('Parsing environment... (aws_ec2_host: %s)', aws_ec2_host)
 vpc_id = os.environ['VPC_ID']
 logger.debug('Parsing environment... (vpc_id: %s)', vpc_id)
+ip_address = os.environ['IP_ADDRESS']
+logger.debug('Parsing environment... (ip_address: %s)', ip_address)
 aws_container_credentials_relative_uri = os.environ[
     'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'
 ]
@@ -109,14 +111,6 @@ logger.debug(
     aws_container_credentials_relative_uri,
 )
 logger.debug('Parsing environment... (done)')
-
-logger.debug('Finding local IP address...')
-with urllib.request.urlopen('http://169.254.170.2/v2/metadata') as ip_response:
-    ip_address = json.loads(ip_response.read().decode('utf-8'))['Containers'][0][
-        'Networks'
-    ][0]['IPv4Addresses'][0]
-logger.debug('Finding local IP address... (ip_address: %s)', ip_address)
-logger.debug('Finding local IP address... (done)')
 
 logger.debug('Finding credentials...')
 with urllib.request.urlopen(

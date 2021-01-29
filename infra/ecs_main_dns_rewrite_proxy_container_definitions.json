@@ -8,9 +8,10 @@
     "portMappings": [{
         "containerPort": 53,
         "protocol": "udp"
-    },{
-        "containerPort": 53,
-        "protocol": "tcp"
+    },
+    {
+      "containerPort": 8888,
+      "protocol": "tcp"
     }],
     "logConfiguration": {
       "logDriver": "awslogs",
@@ -35,6 +36,9 @@
     }, {
       "name": "VPC_ID",
       "value": "${vpc_id}"
+    }, {
+      "name": "IP_ADDRESS",
+      "value": "${ip_address}"
     }]
   }
 ]

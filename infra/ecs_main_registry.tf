@@ -8,7 +8,7 @@ resource "aws_ecs_service" "registry" {
   platform_version = "1.4.0"
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    subnets         = "${aws_subnet.private_with_egress.*.id}"
     security_groups = ["${aws_security_group.registry_service.id}"]
   }
 
@@ -54,7 +54,7 @@ resource "aws_ecs_task_definition" "registry" {
 data "template_file" "registry_container_definitions" {
   template = "${file("${path.module}/ecs_main_registry_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.registry_container_image}:${data.external.registry_current_tag.result.tag}"
     container_name   = "${local.registry_container_name}"
     container_port   = "${local.registry_container_port}"
@@ -119,7 +119,7 @@ data "aws_iam_policy_document" "registry_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.registry.arn}",
+      "${aws_cloudwatch_log_group.registry.arn}:*",
     ]
   }
 }
@@ -143,7 +143,7 @@ data "aws_iam_policy_document" "registry_task_ecs_tasks_assume_role" {
 
 resource "aws_alb" "registry" {
   name            = "${var.prefix}-registry"
-  subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+  subnets         = "${aws_subnet.private_with_egress.*.id}"
   security_groups = ["${aws_security_group.registry_alb.id}"]
   internal        = true
 

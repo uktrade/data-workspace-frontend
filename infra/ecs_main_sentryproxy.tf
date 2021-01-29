@@ -6,7 +6,7 @@ resource "aws_ecs_service" "sentryproxy" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id}"]
+    subnets         = "${aws_subnet.private_with_egress.*.id}"
     security_groups = ["${aws_security_group.sentryproxy_service.id}"]
   }
 
@@ -64,7 +64,7 @@ resource "aws_ecs_task_definition" "sentryproxy" {
 data "template_file" "sentryproxy_container_definitions" {
   template = "${file("${path.module}/ecs_main_sentryproxy_container_definitions.json")}"
 
-  vars {
+  vars = {
     container_image  = "${var.sentryproxy_container_image}:${data.external.sentryproxy_current_tag.result.tag}"
     container_name   = "${local.sentryproxy_container_name}"
     container_cpu    = "${local.sentryproxy_container_cpu}"
@@ -124,7 +124,7 @@ data "aws_iam_policy_document" "sentryproxy_task_execution" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.sentryproxy.arn}",
+      "${aws_cloudwatch_log_group.sentryproxy.arn}:*",
     ]
   }
 }

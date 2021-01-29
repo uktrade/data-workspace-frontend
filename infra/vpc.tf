@@ -22,7 +22,7 @@ resource "aws_vpc" "notebooks" {
   enable_dns_support   = false
   enable_dns_hostnames = false
 
-  tags {
+  tags = {
     Name = "${var.prefix}-notebooks"
   }
 
@@ -32,7 +32,7 @@ resource "aws_vpc" "notebooks" {
 }
 
 resource "aws_flow_log" "notebooks" {
-  log_group_name = "${aws_cloudwatch_log_group.vpc_main_flow_log.name}"
+  log_destination = "${aws_cloudwatch_log_group.vpc_main_flow_log.name}"
   iam_role_arn   = "${aws_iam_role.vpc_notebooks_flow_log.arn}"
   vpc_id         = "${aws_vpc.notebooks.id}"
   traffic_type   = "ALL"
@@ -64,7 +64,7 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 
@@ -77,7 +77,7 @@ resource "aws_vpc_dhcp_options" "main" {
   domain_name_servers = ["AmazonProvidedDNS"]
   domain_name = "eu-west-2.compute.internal"
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 }
@@ -88,7 +88,7 @@ resource "aws_vpc_dhcp_options_association" "main" {
 }
 
 resource "aws_flow_log" "main" {
-  log_group_name = "${aws_cloudwatch_log_group.vpc_main_flow_log.name}"
+  log_destination = "${aws_cloudwatch_log_group.vpc_main_flow_log.name}"
   iam_role_arn   = "${aws_iam_role.vpc_main_flow_log.arn}"
   vpc_id         = "${aws_vpc.main.id}"
   traffic_type   = "ALL"
@@ -130,7 +130,7 @@ data "aws_iam_policy_document" "vpc_main_flow_log" {
     ]
 
     resources = [
-      "${aws_cloudwatch_log_group.vpc_main_flow_log.arn}",
+      "${aws_cloudwatch_log_group.vpc_main_flow_log.arn}:*",
     ]
   }
 }
@@ -142,7 +142,7 @@ resource "aws_subnet" "public" {
 
   availability_zone = "${var.aws_availability_zones[count.index]}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-public-${var.aws_availability_zones_short[count.index]}"
   }
 
@@ -158,7 +158,7 @@ resource "aws_subnet" "private_with_egress" {
 
   availability_zone = "${var.aws_availability_zones[count.index]}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-private-with-egress-${var.aws_availability_zones_short[count.index]}"
   }
 
@@ -174,7 +174,7 @@ resource "aws_subnet" "public_whitelisted_ingress" {
 
   availability_zone = "${var.aws_availability_zones[count.index]}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-public-whitelisted-ingress-${var.aws_availability_zones_short[count.index]}"
   }
 
@@ -191,9 +191,9 @@ resource "aws_route_table_association" "public_whitelisted_ingress" {
 
 resource "aws_network_acl" "public_whitelisted_ingress" {
   vpc_id     = "${aws_vpc.main.id}"
-  subnet_ids = ["${aws_subnet.public_whitelisted_ingress.*.id}"]
+  subnet_ids = "${aws_subnet.public_whitelisted_ingress.*.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-public-whitelisted-ingress"
   }
 }
@@ -243,7 +243,7 @@ resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_ingress" {
 
   egress      = false
   protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + count.index + 1}"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + 1}"
   rule_action = "allow"
   cidr_block  = "${aws_vpc.main.cidr_block}"
   from_port   = 0
@@ -254,7 +254,7 @@ resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_egress" {
 
   egress      = true
   protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + count.index + 2}"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + 2}"
   rule_action = "allow"
   cidr_block  = "${aws_vpc.main.cidr_block}"
   from_port   = 0
@@ -268,7 +268,7 @@ resource "aws_subnet" "private_without_egress" {
 
   availability_zone = "${var.aws_availability_zones[count.index]}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-private-without-egress-${var.aws_availability_zones_short[count.index]}"
   }
 
@@ -279,7 +279,7 @@ resource "aws_subnet" "private_without_egress" {
 
 resource "aws_route_table" "public" {
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "${var.prefix}-public"
   }
 }
@@ -298,7 +298,7 @@ resource "aws_route" "public_internet_gateway_ipv4" {
 
 resource "aws_route_table" "private_with_egress" {
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "${var.prefix}-private-with-egress"
   }
 }
@@ -326,7 +326,7 @@ resource "aws_route" "private_with_egress_nat_gateway_ipv4" {
 resource "aws_internet_gateway" "main" {
   vpc_id = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 }
@@ -335,7 +335,7 @@ resource "aws_nat_gateway" "main" {
   allocation_id = "${aws_eip.nat_gateway.id}"
   subnet_id     = "${aws_subnet.public.*.id[0]}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 }
@@ -346,7 +346,7 @@ resource "aws_eip" "nat_gateway" {
 
 resource "aws_route_table" "private_without_egress" {
   vpc_id = "${aws_vpc.notebooks.id}"
-  tags {
+  tags = {
     Name = "${var.prefix}-private-without-egress"
   }
 }
@@ -377,7 +377,7 @@ resource "aws_vpc" "datasets" {
   enable_dns_support   = true
   enable_dns_hostnames = false
 
-  tags {
+  tags = {
     Name = "${var.prefix}-datasets"
   }
 
@@ -441,7 +441,7 @@ resource "aws_vpc_peering_connection" "datasets_to_notebooks" {
 
 resource "aws_route_table" "datasets" {
   vpc_id = "${aws_vpc.datasets.id}"
-  tags {
+  tags = {
     Name = "${var.prefix}-datasets"
   }
 }
@@ -489,7 +489,7 @@ resource "aws_subnet" "datasets" {
 
   availability_zone = "${var.dataset_subnets_availability_zones[count.index]}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-datasets-${var.aws_availability_zones_short[count.index]}"
   }
 
@@ -510,7 +510,7 @@ resource "aws_subnet" "datasets_quicksight" {
 
   availability_zone = "${var.quicksight_subnet_availability_zone}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-datasets-quicksight"
   }
 

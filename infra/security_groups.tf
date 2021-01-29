@@ -3,7 +3,7 @@ resource "aws_security_group" "dns_rewrite_proxy" {
   description = "${var.prefix}-dns-rewrite-proxy"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-dns-rewrite-proxy"
   }
 
@@ -11,6 +11,27 @@ resource "aws_security_group" "dns_rewrite_proxy" {
     create_before_destroy = true
   }
 }
+
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_healthcheck" {
+  description = "ingress-private-with-egress-healthcheck"
+  type        = "ingress"
+  from_port   = "8888"
+  to_port     = "8888"
+  protocol    = "tcp"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+}
+
+resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_udp" {
+  description = "ingress-private-without-egress-udp"
+  type        = "ingress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
+  cidr_blocks = ["${aws_subnet.private_without_egress.*.cidr_block[0]}"]
+  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+}
+
 
 resource "aws_security_group_rule" "dns_rewrite_proxy_egress_https" {
   description = "egress-dns-tcp"
@@ -24,60 +45,13 @@ resource "aws_security_group_rule" "dns_rewrite_proxy_egress_https" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_tcp_notebooks" {
-  description = "ingress-dns-tcp"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.notebooks.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_notebooks" {
-  description = "ingress-dns-udp-notebooks"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.notebooks.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
-}
-
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_gitlab_runner" {
-  description = "ingress-dns-udp-gitlab-runner"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.gitlab_runner.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
-}
-
-resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_dns_udp_superset_multiuser_service" {
-  description = "ingress-dns-udp-superset-multiuser-service"
-
-  security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
-
-  type        = "ingress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "udp"
-}
 
 resource "aws_security_group" "sentryproxy_service" {
   name        = "${var.prefix}-sentryproxy"
   description = "${var.prefix}-sentryproxy"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-sentryproxy"
   }
 
@@ -115,7 +89,7 @@ resource "aws_security_group" "registry_alb" {
   description = "${var.prefix}-registry-alb"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-registry-alb"
   }
 
@@ -177,7 +151,7 @@ resource "aws_security_group" "registry_service" {
   description = "${var.prefix}-registry-service"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-registry-service"
   }
 
@@ -216,7 +190,7 @@ resource "aws_security_group" "admin_alb" {
   description = "${var.prefix}-admin-alb"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-admin-alb"
   }
 
@@ -229,7 +203,7 @@ resource "aws_security_group_rule" "admin_alb_ingress_https_from_whitelist" {
   description = "ingress-https-from-whitelist"
 
   security_group_id = "${aws_security_group.admin_alb.id}"
-  cidr_blocks       = ["${var.ip_whitelist}", "${aws_eip.nat_gateway.public_ip}/32"]
+  cidr_blocks       = concat("${var.ip_whitelist}", ["${aws_eip.nat_gateway.public_ip}/32"])
 
   type       = "ingress"
   from_port  = "443"
@@ -241,7 +215,7 @@ resource "aws_security_group_rule" "admin_alb_ingress_http_from_whitelist" {
   description = "ingress-http-from-whitelist"
 
   security_group_id = "${aws_security_group.admin_alb.id}"
-  cidr_blocks       = ["${var.ip_whitelist}"]
+  cidr_blocks       = "${var.ip_whitelist}"
 
   type       = "ingress"
   from_port  = "80"
@@ -253,7 +227,7 @@ resource "aws_security_group_rule" "admin_alb_ingress_icmp_host_unreachable_for_
   description = "ingress-icmp-host-unreachable-for-mtu-discovery-from-whitelist"
 
   security_group_id = "${aws_security_group.admin_alb.id}"
-  cidr_blocks       = ["${var.ip_whitelist}"]
+  cidr_blocks       = "${var.ip_whitelist}"
 
   type      = "ingress"
   from_port = 3
@@ -290,7 +264,7 @@ resource "aws_security_group" "admin_redis" {
   description = "${var.prefix}-admin-redis"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-admin-redis"
   }
 
@@ -328,7 +302,7 @@ resource "aws_security_group" "admin_service" {
   description = "${var.prefix}-admin-service"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-admin-service"
   }
 
@@ -475,7 +449,7 @@ resource "aws_security_group" "admin_db" {
   description = "${var.prefix}-admin-db"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-admin-db"
   }
 
@@ -501,7 +475,7 @@ resource "aws_security_group" "notebooks" {
   description = "${var.prefix}-notebooks"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-notebooks"
   }
 
@@ -594,23 +568,11 @@ resource "aws_security_group_rule" "notebooks_egress_ssh_to_gitlab_service" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "notebooks_egress_dns_tcp" {
-  description = "egress-dns-tcp"
-
-  security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
-
-  type        = "egress"
-  from_port   = "53"
-  to_port     = "53"
-  protocol    = "tcp"
-}
-
 resource "aws_security_group_rule" "notebooks_egress_dns_udp" {
   description = "egress-dns-udp"
 
   security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
   from_port   = "53"
@@ -636,7 +598,7 @@ resource "aws_security_group" "cloudwatch" {
   description = "${var.prefix}-cloudwatch"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-cloudwatch"
   }
 
@@ -650,7 +612,7 @@ resource "aws_security_group" "ecr_dkr" {
   description = "${var.prefix}-ecr-dkr"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-ecr-dkr"
   }
 
@@ -664,7 +626,7 @@ resource "aws_security_group" "ecr_api" {
   description = "${var.prefix}-ecr-api"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-ecr-api"
   }
 
@@ -738,7 +700,7 @@ resource "aws_security_group" "mirrors_sync" {
   description = "${var.prefix}-mirrors-sync"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-mirrors-sync"
   }
 
@@ -764,7 +726,7 @@ resource "aws_security_group" "healthcheck_alb" {
   description = "${var.prefix}-healthcheck-alb"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-healthcheck-alb"
   }
 
@@ -814,7 +776,7 @@ resource "aws_security_group" "healthcheck_service" {
   description = "${var.prefix}-healthcheck_service"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-healthcheck_service"
   }
 
@@ -864,7 +826,7 @@ resource "aws_security_group" "prometheus_alb" {
   description = "${var.prefix}-prometheus-alb"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-prometheus-alb"
   }
 
@@ -889,7 +851,7 @@ resource "aws_security_group_rule" "prometheus_alb_ingress_https_from_whitelist"
   description = "ingress-https-from-all"
 
   security_group_id = "${aws_security_group.prometheus_alb.id}"
-  cidr_blocks       = ["${var.prometheus_whitelist}", "${aws_eip.nat_gateway.public_ip}/32"]
+  cidr_blocks       = concat("${var.prometheus_whitelist}", ["${aws_eip.nat_gateway.public_ip}/32"])
 
   type       = "ingress"
   from_port  = "443"
@@ -914,7 +876,7 @@ resource "aws_security_group" "prometheus_service" {
   description = "${var.prefix}-prometheus_service"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-prometheus_service"
   }
 
@@ -964,7 +926,7 @@ resource "aws_security_group" "gitlab_service" {
   description = "${var.prefix}-gitlab-service"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-gitlab-service"
   }
 
@@ -1074,7 +1036,7 @@ resource "aws_security_group" "gitlab_redis" {
   description = "${var.prefix}-gitlab-redis"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-admin-gitlab"
   }
 
@@ -1100,7 +1062,7 @@ resource "aws_security_group" "gitlab_db" {
   description = "${var.prefix}-gitlab-db"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-gitlab-db"
   }
 
@@ -1126,7 +1088,7 @@ resource "aws_security_group" "gitlab-ec2" {
   description = "${var.prefix}-gitlab-ec2"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-gitlab-ec2"
   }
 
@@ -1164,7 +1126,7 @@ resource "aws_security_group" "gitlab_runner" {
   description = "${var.prefix}-gitlab-runner"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-gitlab-runner"
   }
 
@@ -1189,7 +1151,7 @@ resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dns_rewrite_pro
   description = "egress-dns-udp-dns-rewrite-proxy"
 
   security_group_id = "${aws_security_group.gitlab_runner.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
   from_port   = "53"
@@ -1228,7 +1190,7 @@ resource "aws_security_group" "superset_multiuser_db" {
   description = "${var.prefix}-superset-multiuser-db"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-superset-multiuser-db"
   }
 
@@ -1254,7 +1216,7 @@ resource "aws_security_group" "superset_multiuser_service" {
   description = "${var.prefix}-superset-multiuser-service"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-superset-multiuser-service"
   }
 
@@ -1315,7 +1277,7 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to
   description = "egress-dns-to-dns-rewrite-proxy"
 
   security_group_id = "${aws_security_group.superset_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
   from_port   = "53"
@@ -1328,7 +1290,7 @@ resource "aws_security_group" "superset_multiuser_lb" {
   description = "${var.prefix}-superset-multiuser-lb"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-superset-multiuser-lb"
   }
 
@@ -1366,7 +1328,7 @@ resource "aws_security_group" "efs_notebooks" {
   description = "${var.prefix}-efs-notebooks"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-efs-notebooks"
   }
 
@@ -1380,7 +1342,7 @@ resource "aws_security_group" "efs_mount_target_notebooks" {
   description = "${var.prefix}-efs-mount-target-notebooks"
   vpc_id      = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-efs-mount-target-notebooks"
   }
 
@@ -1407,7 +1369,7 @@ resource "aws_security_group" "quicksight" {
   description = "${var.quicksight_security_group_description}"
   vpc_id      = "${aws_vpc.datasets.id}"
 
-  tags {
+  tags = {
     Name = "${var.quicksight_security_group_name}"
   }
 
@@ -1445,7 +1407,7 @@ resource "aws_security_group" "datasets" {
   description = "${var.prefix}-datasets"
   vpc_id      = "${aws_vpc.datasets.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}-datasets"
   }
 
