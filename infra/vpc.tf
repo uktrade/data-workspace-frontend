@@ -32,7 +32,7 @@ resource "aws_vpc" "notebooks" {
 }
 
 resource "aws_flow_log" "notebooks" {
-  log_destination = "${aws_cloudwatch_log_group.vpc_main_flow_log.name}"
+  log_destination = "${aws_cloudwatch_log_group.vpc_main_flow_log.arn}"
   iam_role_arn   = "${aws_iam_role.vpc_notebooks_flow_log.arn}"
   vpc_id         = "${aws_vpc.notebooks.id}"
   traffic_type   = "ALL"
@@ -88,7 +88,7 @@ resource "aws_vpc_dhcp_options_association" "main" {
 }
 
 resource "aws_flow_log" "main" {
-  log_destination = "${aws_cloudwatch_log_group.vpc_main_flow_log.name}"
+  log_destination = "${aws_cloudwatch_log_group.vpc_main_flow_log.arn}"
   iam_role_arn   = "${aws_iam_role.vpc_main_flow_log.arn}"
   vpc_id         = "${aws_vpc.main.id}"
   traffic_type   = "ALL"
