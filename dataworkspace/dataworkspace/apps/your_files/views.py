@@ -1,7 +1,9 @@
 from csp.decorators import csp_update
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.generic import FormView
 from requests import HTTPError
 
@@ -69,7 +71,9 @@ class CreateTableView(WaffleFlagMixin, FormView):
             trigger_dataflow_dag(import_path, schema, table_name, column_definitions)
         except HTTPError:
             return self.form_invalid(form)
-        return JsonResponse({}, status=200)
+        messages.success(self.request, 'Table created')
+        return HttpResponseRedirect(reverse('your-files:files'))
 
     def form_invalid(self, form):
-        return JsonResponse({}, status=400)
+        messages.error(self.request, 'An error occurred while processing your file')
+        return HttpResponseRedirect(reverse('your-files:files'))

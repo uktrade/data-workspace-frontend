@@ -201,20 +201,6 @@ Modified by the Department for International Trade
         <!-- Main Explorer View -->
         <div ng-controller="ViewController" style="min-height: 100vh">
             <h1 class="govuk-heading-l">Your files</h1>
-            {% endverbatim %}
-              {% flag YOUR_FILES_CREATE_TABLE %}
-                <div class="govuk-panel govuk-panel--confirmation" ng-cloak ng-if="tableCreated">
-                  <h1 class="govuk-panel__title">
-                    Table created
-                  </h1>
-                </div>
-                <div class="govuk-error-summary" ng-cloak ng-if="tableCreationFailed" role="alert" tabindex="-1" data-module="govuk-error-summary">
-                  <h2 class="govuk-error-summary__title" id="error-summary-title" style="margin-bottom: 0;">
-                    An error occurred while processing your file
-                  </h2>
-                </div>
-              {% endflag %}
-            {% verbatim %}
             <div dropzone ng-cloak>
                 <div class="browser-header">
                     <button type="button" class="navbutton" ng-click="listObjects()" title="Refresh">
@@ -307,9 +293,15 @@ Modified by the Department for International Trade
                             {% flag YOUR_FILES_CREATE_TABLE %}
                               <td class="govuk-table__cell">
                                 <span ng-if="object.isCsv">
-                                  <a href draggable="false" class="govuk-link govuk-link--no-visited" ng-click="createTable(object.Key, $event)">
-                                    Create table
-                                  </a>
+                                  <form action="{% url 'your-files:create-table' %}" method="POST">
+                                    {% csrf_token %}
+                                    {% verbatim %}
+                                      <input type="hidden" name="path" value="{{  :: object.Key }}">
+                                    {% endverbatim %}
+                                    <button class="govuk-button govuk-!-margin-bottom-0 govuk-link" style="background: none!important; padding: 0!important; font-family: arial, sans-serif; color: #069;text-decoration: underline; box-shadow: none; color:#1d70b8;" type="submit">
+                                      Create table
+                                    </button>
+                                  </form>
                                 </span>
                               </td>
                             {% endflag %}

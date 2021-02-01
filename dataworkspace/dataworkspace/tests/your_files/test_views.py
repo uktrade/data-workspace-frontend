@@ -14,16 +14,18 @@ class TestCreateTableView:
     def test_invalid_file_type(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         response = client.post(
-            self.url, data={'path': 'user/federated/abc/not-a-csv.txt'}
+            self.url, data={'path': 'user/federated/abc/not-a-csv.txt'}, follow=True,
         )
-        assert response.status_code == 400
+        assert b'An error occurred while processing your file' in response.content
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_unauthorised_file(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
-        response = client.post(self.url, data={'path': 'user/federated/def/a-csv.csv'})
-        assert response.status_code == 400
+        response = client.post(
+            self.url, data={'path': 'user/federated/def/a-csv.csv'}, follow=True,
+        )
+        assert b'An error occurred while processing your file' in response.content
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.datasets.views.boto3.client')
@@ -36,8 +38,10 @@ class TestCreateTableView:
             )
         ]
         mock_get_s3_prefix.return_value = 'user/federated/abc'
-        response = client.post(self.url, data={'path': 'user/federated/abc/a-csv.csv'})
-        assert response.status_code == 400
+        response = client.post(
+            self.url, data={'path': 'user/federated/abc/a-csv.csv'}, follow=True,
+        )
+        assert b'An error occurred while processing your file' in response.content
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket')
@@ -60,9 +64,11 @@ class TestCreateTableView:
                 status_code=500,
             )
             response = client.post(
-                self.url, data={'path': 'user/federated/abc/not-a-csv.csv'}
+                self.url,
+                data={'path': 'user/federated/abc/not-a-csv.csv'},
+                follow=True,
             )
-            assert response.status_code == 400
+            assert b'An error occurred while processing your file' in response.content
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.views.trigger_dataflow_dag')
@@ -81,8 +87,10 @@ class TestCreateTableView:
     ):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         mock_get_column_types.return_value = {'field1': 'varchar'}
-        response = client.post(self.url, data={'path': 'user/federated/abc/a-csv.csv'})
-        assert response.status_code == 200
+        response = client.post(
+            self.url, data={'path': 'user/federated/abc/a-csv.csv'}, follow=True,
+        )
+        assert b'Table created' in response.content
         mock_get_column_types.assert_called_with('user/federated/abc/a-csv.csv')
         mock_copy_file.assert_called_with(
             'user/federated/abc/a-csv.csv',
