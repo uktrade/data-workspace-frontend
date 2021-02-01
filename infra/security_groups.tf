@@ -23,12 +23,14 @@ resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_healthcheck" {
 }
 
 resource "aws_security_group_rule" "dns_rewrite_proxy_ingress_udp" {
-  description = "ingress-private-without-egress-udp"
+  count      = "${length(aws_subnet.private_without_egress)}"
+
+  description = "ingress-private-without-egress-udp-${var.aws_availability_zones_short[count.index]}"
   type        = "ingress"
   from_port   = "53"
   to_port     = "53"
   protocol    = "udp"
-  cidr_blocks = ["${aws_subnet.private_without_egress.*.cidr_block[0]}"]
+  cidr_blocks = ["${aws_subnet.private_without_egress[count.index].cidr_block}"]
   security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
 }
 
