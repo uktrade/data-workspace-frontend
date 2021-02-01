@@ -94,8 +94,8 @@ def s3_path_to_table_name(path):
 
 def copy_file_to_uploads_bucket(from_path, to_path):
     client = boto3.client('s3')
-    client.copy(
-        {'Bucket': settings.NOTEBOOKS_BUCKET, 'Key': from_path},
-        settings.AWS_UPLOADS_BUCKET,
-        to_path,
+    client.copy_object(
+        CopySource={'Bucket': settings.NOTEBOOKS_BUCKET, 'Key': from_path},
+        Bucket=settings.AWS_UPLOADS_BUCKET,
+        Key=to_path,
     )
