@@ -231,6 +231,19 @@ def test_find_datasets_with_no_results(client):
     assert b"There are no results for your search" in response.content
 
 
+def test_find_datasets_has_search_result_count_span_for_live_search_and_gtm(client):
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    doc = html.fromstring(response.content.decode(response.charset))
+
+    elem = doc.xpath('//*[@id="search-results-count"]')
+    assert (
+        len(elem) == 1
+    ), "There must be a node with the 'search-results-count' id for live search/GTM to work correctly."
+    assert elem[0].text.isnumeric(), "The contents of the node should be numeric only"
+
+
 def test_find_datasets_combines_results(client):
     factories.DataSetFactory.create(published=False, name='Unpublished search dataset')
     ds = factories.DataSetFactory.create(published=True, name='A search dataset')
