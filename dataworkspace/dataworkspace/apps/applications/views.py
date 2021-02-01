@@ -294,13 +294,6 @@ def visualisation_link_html_view(request, link_id):
         return _get_embedded_quicksight_dashboard(
             request, identifier, visualisation_link.visualisation_catalogue_item
         )
-    elif visualisation_link.visualisation_type == 'DATASTUDIO':
-        log_visualisation_view(
-            visualisation_link,
-            request.user,
-            event_type=EventLog.TYPE_VIEW_DATASTUDIO_VISUALISATION,
-        )
-        return redirect(identifier)
 
     return HttpResponse(
         status=500,

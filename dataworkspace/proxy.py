@@ -838,74 +838,6 @@ async def async_main():
 
         return _server_logger
 
-    def authenticate_by_staff_sso_token():
-
-        me_path = 'api/v1/user/me/'
-
-        @web.middleware
-        async def _authenticate_by_staff_sso_token(request, handler):
-            staff_sso_token_required = is_table_requested(request)
-            request.setdefault('sso_profile_headers', ())
-
-            if not staff_sso_token_required:
-                return await handler(request)
-
-            if 'Authorization' not in request.headers:
-                request['logger'].info(
-                    'SSO-token unathenticated: missing authorization header'
-                )
-                return await handle_admin(
-                    request,
-                    'GET',
-                    CIMultiDict(admin_headers_request(request)),
-                    '/error_403',
-                    {},
-                    b'',
-                )
-
-            async with client_session.get(
-                f'{sso_base_url}{me_path}',
-                headers={'Authorization': request.headers['Authorization']},
-            ) as me_response:
-                me_profile = (
-                    await me_response.json() if me_response.status == 200 else None
-                )
-
-            if not me_profile:
-                request['logger'].info(
-                    'SSO-token unathenticated: bad authorization header'
-                )
-                return await handle_admin(
-                    request,
-                    'GET',
-                    CIMultiDict(admin_headers_request(request)),
-                    '/error_403',
-                    {},
-                    b'',
-                )
-
-            request['sso_profile_headers'] = (
-                ('sso-profile-email', me_profile['email']),
-                ('sso-profile-contact-email', me_profile['contact_email']),
-                (
-                    'sso-profile-related-emails',
-                    ','.join(me_profile.get('related_emails', [])),
-                ),
-                ('sso-profile-user-id', me_profile['user_id']),
-                ('sso-profile-first-name', me_profile['first_name']),
-                ('sso-profile-last-name', me_profile['last_name']),
-            )
-
-            request['logger'].info(
-                'SSO-token authenticated: %s %s',
-                me_profile['email'],
-                me_profile['user_id'],
-            )
-
-            return await handler(request)
-
-        return _authenticate_by_staff_sso_token
-
     def authenticate_by_staff_sso():
 
         auth_path = 'o/authorize/'
@@ -1237,7 +1169,6 @@ async def async_main():
             middlewares=[
                 server_logger(),
                 redis_session_middleware(redis_pool, root_domain_no_port, embed_path),
-                authenticate_by_staff_sso_token(),
                 authenticate_by_staff_sso(),
                 authenticate_by_basic_auth(),
                 authenticate_by_hawk_auth(),

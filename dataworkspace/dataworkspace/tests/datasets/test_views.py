@@ -187,41 +187,6 @@ def test_request_gitlab_visualisation_access(client, user, mocker):
     )
 
 
-def test_request_non_gitlab_visualisation_access(client, user, mocker):
-    owner = factories.UserFactory()
-    secondary_contact = factories.UserFactory()
-    create_zendesk_ticket = mocker.patch(
-        'dataworkspace.apps.datasets.views.create_zendesk_ticket'
-    )
-    create_zendesk_ticket.return_value = 999
-
-    ds = factories.VisualisationCatalogueItemFactory.create(
-        published=True,
-        enquiries_contact=owner,
-        secondary_enquiries_contact=secondary_contact,
-        user_access_type='REQUIRES_AUTHORIZATION',
-        visualisation_template=None,
-    )
-    VisualisationLinkFactory.create(
-        visualisation_type='DATASTUDIO',
-        visualisation_catalogue_item=ds,
-        name='Visualisation datastudio',
-        identifier='https://www.data.studio.test',
-    )
-
-    response = client.post(
-        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
-        data={"email": "user@example.com", "goal": "My goal"},
-        follow=True,
-    )
-
-    assert response.status_code == 200
-
-    create_zendesk_ticket.assert_called_once_with(
-        "user@example.com", mock.ANY, "My goal", mock.ANY, ds.name, mock.ANY, None, None
-    )
-
-
 def test_find_datasets_with_no_results(client):
     response = client.get(reverse('datasets:find_datasets'), {"q": "search"})
 
@@ -1485,12 +1450,6 @@ class TestVisualisationsDetailView:
             visualisation_template__host_basename='visualisation'
         )
         link1 = VisualisationLinkFactory.create(
-            visualisation_type='DATASTUDIO',
-            visualisation_catalogue_item=vis,
-            name='Visualisation datastudio',
-            identifier='https://www.data.studio.test',
-        )
-        link2 = VisualisationLinkFactory.create(
             visualisation_type='QUICKSIGHT',
             visualisation_catalogue_item=vis,
             name='Visualisation quicksight',
@@ -1503,7 +1462,6 @@ class TestVisualisationsDetailView:
         assert response.status_code == 200
         assert '//visualisation.dataworkspace.test:8000/' in body
         assert f'/visualisations/link/{link1.id}' in body
-        assert f'/visualisations/link/{link2.id}' in body
 
 
 class TestVisualisationLinkView:
@@ -1548,30 +1506,6 @@ class TestVisualisationLinkView:
         assert (
             list(EventLog.objects.all())[-1].event_type
             == EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION
-        )
-
-    @pytest.mark.django_db
-    def test_datastudio_link(self):
-        user = UserFactory.create()
-        vis = VisualisationCatalogueItemFactory.create(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
-        link = VisualisationLinkFactory.create(
-            visualisation_type='DATASTUDIO',
-            identifier='https://www.data.studio',
-            visualisation_catalogue_item=vis,
-        )
-        eventlog_count = EventLog.objects.count()
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(link.get_absolute_url())
-
-        assert response.status_code == 302
-        assert response['location'] == 'https://www.data.studio'
-        assert EventLog.objects.count() == eventlog_count + 1
-        assert (
-            list(EventLog.objects.all())[-1].event_type
-            == EventLog.TYPE_VIEW_DATASTUDIO_VISUALISATION
         )
 
     @pytest.mark.django_db
