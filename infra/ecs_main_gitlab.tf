@@ -422,7 +422,7 @@ resource "aws_instance" "gitlab" {
 
   vpc_security_group_ids      = ["${aws_security_group.gitlab-ec2.id}"]
   associate_public_ip_address = "false"
-  key_name                    = "${var.gitlab_key}"
+  key_name                    = "${aws_key_pair.shared.key_name}"
 
   subnet_id                   = "${aws_subnet.private_with_egress.*.id[0]}"
   user_data                   = <<EOF
@@ -514,7 +514,7 @@ resource "aws_launch_configuration" "gitlab_runner" {
   instance_type   = "${var.gitlab_runner_instance_type}"
   iam_instance_profile = "${aws_iam_instance_profile.gitlab_runner.name}"
   security_groups = ["${aws_security_group.gitlab_runner.id}"]
-  key_name        = "${var.gitlab_runner_key}"
+  key_name        = "${aws_key_pair.shared.key_name}"
 
   associate_public_ip_address = false
 
