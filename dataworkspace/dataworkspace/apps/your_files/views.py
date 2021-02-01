@@ -1,9 +1,24 @@
 from csp.decorators import csp_update
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.views.generic import FormView
+from requests import HTTPError
 
-from dataworkspace.apps.core.utils import get_s3_prefix
+from waffle.mixins import WaffleFlagMixin
+
+from dataworkspace.apps.core.utils import (
+    USER_SCHEMA_STEM,
+    db_role_schema_suffix_for_user,
+    get_s3_prefix,
+)
+from dataworkspace.apps.your_files.forms import CreateTableForm
+from dataworkspace.apps.your_files.utils import (
+    copy_file_to_uploads_bucket,
+    get_s3_csv_column_types,
+    s3_path_to_table_name,
+    trigger_dataflow_dag,
+)
 
 
 def file_browser_html_view(request):
@@ -23,6 +38,38 @@ def file_browser_html_GET(request):
     return render(
         request,
         'files.html',
-        {'prefix': prefix, 'bucket': settings.NOTEBOOKS_BUCKET},
+        {
+            'prefix': prefix,
+            'bucket': settings.NOTEBOOKS_BUCKET,
+            'YOUR_FILES_CREATE_TABLE_FLAG': settings.YOUR_FILES_CREATE_TABLE_FLAG,
+        },
         status=200,
     )
+
+
+class CreateTableView(WaffleFlagMixin, FormView):
+    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
+    form_class = CreateTableForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        path = form.cleaned_data['path']
+        schema = (
+            f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(self.request.user)}'
+        )
+        table_name = s3_path_to_table_name(path)
+        column_definitions = get_s3_csv_column_types(path)
+        import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + '/' + path
+        copy_file_to_uploads_bucket(path, import_path)
+        try:
+            trigger_dataflow_dag(import_path, schema, table_name, column_definitions)
+        except HTTPError:
+            return self.form_invalid(form)
+        return JsonResponse({}, status=200)
+
+    def form_invalid(self, form):
+        return JsonResponse({}, status=400)

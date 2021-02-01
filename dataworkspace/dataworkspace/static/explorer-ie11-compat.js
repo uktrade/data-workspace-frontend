@@ -78,8 +78,6 @@ angular.module('aws-js-s3-explorer').factory('s3', function (Config) {
   }
 
   var Credentials = /*#__PURE__*/function (_AWS$Credentials) {
-    "use strict";
-
     _inherits(Credentials, _AWS$Credentials);
 
     var _super = _createSuper(Credentials);
@@ -270,6 +268,62 @@ angular.module('aws-js-s3-explorer').controller('ViewController', function (Conf
     };
   }();
 
+  function getCookie(name) {
+    var cookieValue = null;
+
+    if (document.cookie && document.cookie !== '') {
+      var cookies = document.cookie.split(';');
+
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim(); // Does this cookie string begin with the name we want?
+
+        if (cookie.substring(0, name.length + 1) === name + '=') {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+
+    return cookieValue;
+  }
+
+  $scope.createTable = function () {
+    return function (fileKey, event) {
+      $scope.tableCreated = false;
+      $scope.tableCreationFailed = false;
+      $scope.$broadcast('spinner::start::refresh');
+      var request = new XMLHttpRequest();
+      var formData = new FormData();
+
+      request.onreadystatechange = function () {
+        if (this.readyState === XMLHttpRequest.DONE) {
+          if (this.status === 200) {
+            $scope.tableCreated = true;
+          } else {
+            $scope.tableCreationFailed = true;
+          }
+
+          $scope.$applyAsync();
+          if (typeof dataLayer !== 'undefined') {
+            dataLayer.push({
+              "event": "yourFilesCreateTable",
+              "path": fileKey,
+              "success": $scope.tableCreated
+            });
+          }
+        } else {
+          $scope.$broadcast('spinner::start::refresh');
+        }
+      };
+
+      formData.append('path', fileKey);
+      request.open('POST', '/files/create-table');
+      request.setRequestHeader('X-CSRFToken', getCookie('data_workspace_csrf'));
+      request.send(formData);
+      return false;
+    };
+  }();
+
   var setBreadcrumbs = function setBreadcrumbs() {
     var prefix = Config.prefix;
     $scope.breadcrumbs = [{
@@ -327,6 +381,9 @@ angular.module('aws-js-s3-explorer').controller('ViewController', function (Conf
                 });
                 $scope.objects = response.Contents.filter(function (object) {
                   return object.Key != prefix;
+                }).map(function (object) {
+                  object.isCsv = object.Key.substr(object.Key.length - 3, object.Key.length) === 'csv';
+                  return object;
                 });
                 $scope.initialising = false;
                 $scope.inBigdata = startsWith(currentPrefix, originalPrefix + Config.bigdataPrefix);

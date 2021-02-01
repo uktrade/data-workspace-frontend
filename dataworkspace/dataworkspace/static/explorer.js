@@ -146,6 +146,60 @@ angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $
         window.location.href = url;
     }
 
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    $scope.createTable = function() {
+        return function(fileKey, event) {
+          $scope.tableCreated = false;
+          $scope.tableCreationFailed = false;
+          $scope.$broadcast('spinner::start::refresh');
+          var request = new XMLHttpRequest();
+          var formData = new FormData();
+          request.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+              if (this.status === 200) {
+                $scope.tableCreated = true;
+              }
+              else {
+                $scope.tableCreationFailed = true;
+              }
+              $scope.$applyAsync()
+              if (typeof dataLayer !== 'undefined') {
+                  dataLayer.push(
+                      {
+                          "event": "yourFilesCreateTable",
+                          "path": fileKey,
+                          "success": $scope.tableCreated,
+                      }
+                  )
+              }
+            }
+            else {
+              $scope.$broadcast('spinner::start::refresh');
+            }
+          };
+          formData.append('path', fileKey);
+          request.open('POST', '/files/create-table');
+          request.setRequestHeader('X-CSRFToken', getCookie('data_workspace_csrf'));
+          request.send(formData);
+          return false;
+        }
+      }();
+
     var setBreadcrumbs = () => {
         var prefix = Config.prefix;
         $scope.breadcrumbs = [{
@@ -190,6 +244,9 @@ angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $
                 });
                 $scope.objects = response.Contents.filter((object) => {
                     return object.Key != prefix;
+                }).map(object => {
+                    object.isCsv = object.Key.substr(object.Key.length - 3, object.Key.length) === 'csv';;
+                    return object;
                 });
                 $scope.initialising = false;
                 $scope.inBigdata = startsWith(currentPrefix, originalPrefix + Config.bigdataPrefix);

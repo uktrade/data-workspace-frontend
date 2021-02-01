@@ -35,6 +35,7 @@ attrs==20.2.0
     #   aiohttp
     #   black
     #   flake8-bugbear
+    #   jsonschema
     #   pytest
 backcall==0.2.0
     # via ipython
@@ -49,12 +50,18 @@ black==19.10b0
 bleach==3.1.5
     # via -r requirements.txt
 boto3==1.14.60
-    # via -r requirements.txt
+    # via
+    #   -r requirements.txt
+    #   tabulator
 botocore==1.17.63
     # via
     #   -r requirements.txt
     #   boto3
     #   s3transfer
+cached-property==1.5.2
+    # via
+    #   -r requirements.txt
+    #   tableschema
 cachetools==4.1.1
     # via
     #   -r requirements.txt
@@ -80,11 +87,15 @@ chardet==3.0.4
     #   -r requirements.txt
     #   aiohttp
     #   requests
+    #   tabulator
 click==7.1.2
     # via
+    #   -r requirements.txt
     #   black
     #   pip-tools
-coverage==5.3
+    #   tableschema
+    #   tabulator
+coverage==5.4
     # via pytest-cov
 cryptography==2.9.2
     # via -r requirements.txt
@@ -154,9 +165,13 @@ ecs-logging==0.5.0
     # via -r requirements.txt
 elastic-apm==5.8.1
     # via -r requirements.txt
+et-xmlfile==1.0.1
+    # via
+    #   -r requirements.txt
+    #   openpyxl
 factory_boy==3.2.0
     # via -r requirements-dev.in
-faker==4.1.3
+faker==5.8.0
     # via factory-boy
 flake8-bugbear==20.11.1
     # via -r requirements-dev.in
@@ -189,31 +204,53 @@ idna==2.10
     #   -r requirements.txt
     #   requests
     #   yarl
-importlib-metadata==2.0.0
-    # via -r requirements.txt
-iniconfig==1.0.1
+ijson==3.1.3
+    # via
+    #   -r requirements.txt
+    #   tabulator
+iniconfig==1.1.1
     # via pytest
 ipdb==0.13.4
     # via -r requirements-dev.in
 ipython-genutils==0.2.0
     # via traitlets
-ipython==7.18.1
+ipython==7.20.0
     # via ipdb
+isodate==0.6.0
+    # via
+    #   -r requirements.txt
+    #   tableschema
 isort==4.3.21
     # via pylint
-jedi==0.17.2
+jdcal==1.4.1
+    # via
+    #   -r requirements.txt
+    #   openpyxl
+jedi==0.18.0
     # via ipython
 jmespath==0.10.0
     # via
     #   -r requirements.txt
     #   boto3
     #   botocore
+jsonlines==2.0.0
+    # via
+    #   -r requirements.txt
+    #   tabulator
+jsonschema==3.2.0
+    # via
+    #   -r requirements.txt
+    #   tableschema
 kombu==4.6.11
     # via
     #   -r requirements.txt
     #   celery
 lazy-object-proxy==1.4.3
     # via astroid
+linear-tsv==1.1.0
+    # via
+    #   -r requirements.txt
+    #   tabulator
 lxml==4.6.2
     # via -r requirements-dev.in
 markdown==3.2.2
@@ -245,26 +282,30 @@ oauthlib==3.1.0
     # via
     #   -r requirements.txt
     #   requests-oauthlib
+openpyxl==3.0.6
+    # via
+    #   -r requirements.txt
+    #   tabulator
 packaging==20.4
     # via
     #   -r requirements.txt
     #   bleach
     #   pytest
-parso==0.7.1
+parso==0.8.1
     # via jedi
 paste==3.4.3
     # via -r requirements.txt
-pathspec==0.8.0
+pathspec==0.8.1
     # via black
 pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pip-tools==5.4.0
+pip-tools==5.5.0
     # via -r requirements-dev.in
 pluggy==0.13.1
     # via pytest
-prompt-toolkit==3.0.7
+prompt-toolkit==3.0.14
     # via
     #   ipython
     #   remote-pdb-client
@@ -278,9 +319,9 @@ psycopg2-binary==2.8.6
     # via aiopg
 psycopg2==2.7.7
     # via -r requirements.txt
-ptyprocess==0.6.0
+ptyprocess==0.7.0
     # via pexpect
-py==1.9.0
+py==1.10.0
     # via pytest
 pycodestyle==2.6.0
     # via flake8
@@ -290,11 +331,11 @@ pycparser==2.20
     #   cffi
 pydevd-pycharm==211.4961.30
     # via -r requirements-dev.in
-pyee==7.0.4
+pyee==8.1.0
     # via pyppeteer
 pyflakes==2.2.0
     # via flake8
-pygments==2.7.1
+pygments==2.7.4
     # via ipython
 pyjwt==1.7.1
     # via
@@ -313,8 +354,12 @@ pyparsing==2.4.7
     # via
     #   -r requirements.txt
     #   packaging
-pyppeteer==0.2.2
+pyppeteer==0.2.5
     # via -r requirements-dev.in
+pyrsistent==0.17.3
+    # via
+    #   -r requirements.txt
+    #   jsonschema
 pytest-cov==2.11.1
     # via -r requirements-dev.in
 pytest-django==4.1.0
@@ -337,6 +382,7 @@ python-dateutil==2.8.1
     #   celery-redbeat
     #   faker
     #   freezegun
+    #   tableschema
     #   zenpy
 python-dotenv==0.12.0
     # via -r requirements.txt
@@ -355,7 +401,7 @@ redis==3.5.3
     #   -r requirements.txt
     #   celery-redbeat
     #   django-redis
-regex==2020.7.14
+regex==2020.11.13
     # via black
 remote-pdb-client==1.0.4
     # via -r requirements-dev.in
@@ -373,7 +419,13 @@ requests==2.24.0
     #   notifications-python-client
     #   requests-mock
     #   requests-oauthlib
+    #   tableschema
+    #   tabulator
     #   zenpy
+rfc3986==1.4.0
+    # via
+    #   -r requirements.txt
+    #   tableschema
 rjsmin==1.1.0
     # via
     #   -r requirements.txt
@@ -394,44 +446,58 @@ six==1.15.0
     #   cryptography
     #   django-compressor
     #   django-extensions
+    #   isodate
+    #   jsonschema
+    #   linear-tsv
     #   mohawk
     #   packaging
     #   paste
-    #   pip-tools
     #   python-dateutil
     #   requests-mock
+    #   tableschema
+    #   tabulator
     #   tenacity
     #   zenpy
-soupsieve==2.0.1
+soupsieve==2.1
     # via beautifulsoup4
 sqlalchemy==1.3.19
     # via
     #   -r requirements.txt
     #   geoalchemy2
+    #   tabulator
 sqlparse==0.3.1
     # via
     #   -r requirements.txt
     #   django
     #   django-debug-toolbar
+tableschema==1.20.0
+    # via -r requirements.txt
+tabulator==1.53.1
+    # via
+    #   -r requirements.txt
+    #   tableschema
 tenacity==6.2.0
     # via
     #   -r requirements.txt
     #   celery-redbeat
 text-unidecode==1.3
     # via faker
-toml==0.10.1
+toml==0.10.2
     # via
     #   black
     #   pylint
     #   pytest
-tqdm==4.49.0
+tqdm==4.56.0
     # via pyppeteer
-traitlets==5.0.4
+traitlets==5.0.5
     # via ipython
-typed-ast==1.4.1
+typed-ast==1.4.2
     # via black
-typing-extensions==3.7.4.3
-    # via -r requirements.txt
+unicodecsv==0.14.1
+    # via
+    #   -r requirements.txt
+    #   tableschema
+    #   tabulator
 urllib3==1.25.10
     # via
     #   -r requirements.txt
@@ -458,6 +524,10 @@ werkzeug==1.0.1
     # via -r requirements.txt
 wrapt==1.12.1
     # via astroid
+xlrd==2.0.1
+    # via
+    #   -r requirements.txt
+    #   tabulator
 xlsxwriter==1.2.8
     # via -r requirements.txt
 yarl==1.5.1
@@ -466,10 +536,6 @@ yarl==1.5.1
     #   aiohttp
 zenpy==2.0.21
     # via -r requirements.txt
-zipp==3.2.0
-    # via
-    #   -r requirements.txt
-    #   importlib-metadata
 zope.event==4.5.0
     # via
     #   -r requirements.txt
