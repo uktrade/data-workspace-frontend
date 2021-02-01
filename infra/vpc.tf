@@ -388,6 +388,7 @@ resource "aws_vpc" "datasets" {
 
 resource "aws_flow_log" "datasets" {
   log_destination_type = "s3"
+  log_destination = "arn:aws:s3:::flowlog-${data.aws_caller_identity.aws_caller_identity.account_id}/${aws_vpc.datasets.id}"
   vpc_id         = "${aws_vpc.datasets.id}"
   traffic_type   = "ALL"
 }
