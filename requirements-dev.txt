@@ -290,7 +290,7 @@ pycparser==2.20
     #   cffi
 pydevd-pycharm==211.4961.30
     # via -r requirements-dev.in
-pyee==7.0.4
+pyee==8.1.0
     # via pyppeteer
 pyflakes==2.2.0
     # via flake8
@@ -313,7 +313,7 @@ pyparsing==2.4.7
     # via
     #   -r requirements.txt
     #   packaging
-pyppeteer==0.2.2
+pyppeteer==0.2.5
     # via -r requirements-dev.in
 pytest-cov==2.11.1
     # via -r requirements-dev.in
