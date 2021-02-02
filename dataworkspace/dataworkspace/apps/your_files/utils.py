@@ -37,9 +37,9 @@ def get_s3_csv_column_types(path):
     schema = Schema()
     schema.infer(list(reader), confidence=1, headers=1)
 
-    field_map = []
+    fields = []
     for field in schema.descriptor['fields']:
-        field_map.append(
+        fields.append(
             {
                 'header_name': field['name'],
                 'column_name': clean_db_identifier(field['name']),
@@ -48,7 +48,7 @@ def get_s3_csv_column_types(path):
                 ),
             }
         )
-    return field_map
+    return fields
 
 
 def trigger_dataflow_dag(path, schema, table, column_definitions):
