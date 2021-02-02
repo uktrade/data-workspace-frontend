@@ -229,7 +229,7 @@ Modified by the Department for International Trade
                             <th scope="col" class="govuk-table__header" style="width: 15em;" >Last modified</th>
                             <th scope="col" class="govuk-table__header" style="width: 5em;">Size</th>
                             {% endverbatim %}
-                              {% flag YOUR_FILES_CREATE_TABLE %}
+                              {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
                                 <th scope="col" class="govuk-table__header" style="width: 8em;">
                                   Details
                                 </th>
@@ -246,7 +246,7 @@ Modified by the Department for International Trade
                             <td class="govuk-table__cell"></td>
                             <td class="govuk-table__cell"></td>
                             {% endverbatim %}
-                              {% flag YOUR_FILES_CREATE_TABLE %}
+                              {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
                                 <td class="govuk-table__cell"></td>
                               {% endflag %}
                             {% verbatim %}
@@ -266,7 +266,7 @@ Modified by the Department for International Trade
                             <td class="govuk-table__cell"></td>
                             <td class="govuk-table__cell"></td>
                             {% endverbatim %}
-                              {% flag YOUR_FILES_CREATE_TABLE %}
+                              {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
                                 <td class="govuk-table__cell"></td>
                               {% endflag %}
                             {% verbatim %}
@@ -290,7 +290,7 @@ Modified by the Department for International Trade
                             <td class="govuk-table__cell">{{ :: object.LastModified.toLocaleString() }}</td>
                             <td class="govuk-table__cell">{{ :: bytesToSize(object.Size) }}</td>
                           {% endverbatim %}
-                            {% flag YOUR_FILES_CREATE_TABLE %}
+                            {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
                               <td class="govuk-table__cell">
                                 <span ng-if="object.isCsv">
                                   <form action="{% url 'your-files:create-table' %}" method="POST">
