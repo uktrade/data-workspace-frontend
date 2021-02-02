@@ -37,12 +37,18 @@ def get_s3_csv_column_types(path):
     schema = Schema()
     schema.infer(list(reader), confidence=1, headers=1)
 
-    field_map = {}
+    fields = []
     for field in schema.descriptor['fields']:
-        field_map[field['name']] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
-            field['type'], PostgresDataTypes.TEXT.value
+        fields.append(
+            {
+                'header_name': field['name'],
+                'column_name': clean_db_identifier(field['name']),
+                'data_type': SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
+                    field['type'], PostgresDataTypes.TEXT.value
+                ),
+            }
         )
-    return field_map
+    return fields
 
 
 def trigger_dataflow_dag(path, schema, table, column_definitions):
@@ -62,8 +68,8 @@ def trigger_dataflow_dag(path, schema, table, column_definitions):
         {
             'conf': {
                 'file_path': path,
-                'data_uploader_schema_name': schema,
-                'data_uploader_table_name': table,
+                'schema_name': schema,
+                'table_name': table,
                 'column_definitions': column_definitions,
             }
         }
@@ -86,10 +92,10 @@ def trigger_dataflow_dag(path, schema, table, column_definitions):
     response.raise_for_status()
 
 
-def s3_path_to_table_name(path):
-    file_name = os.path.splitext(os.path.split(path)[-1])[0]
-    file_name = re.sub(r'[^\w\s-]', '', file_name).strip().lower()
-    return re.sub(r'[-\s]+', '_', file_name)
+def clean_db_identifier(identifier):
+    identifier = os.path.splitext(os.path.split(identifier)[-1])[0]
+    identifier = re.sub(r'[^\w\s-]', '', identifier).strip().lower()
+    return re.sub(r'[-\s]+', '_', identifier)
 
 
 def copy_file_to_uploads_bucket(from_path, to_path):

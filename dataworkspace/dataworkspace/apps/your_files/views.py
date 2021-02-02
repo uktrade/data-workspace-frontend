@@ -18,7 +18,7 @@ from dataworkspace.apps.your_files.forms import CreateTableForm
 from dataworkspace.apps.your_files.utils import (
     copy_file_to_uploads_bucket,
     get_s3_csv_column_types,
-    s3_path_to_table_name,
+    clean_db_identifier,
     trigger_dataflow_dag,
 )
 
@@ -63,7 +63,7 @@ class CreateTableView(WaffleFlagMixin, FormView):
         schema = (
             f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(self.request.user)}'
         )
-        table_name = s3_path_to_table_name(path)
+        table_name = clean_db_identifier(path)
         column_definitions = get_s3_csv_column_types(path)
         import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + '/' + path
         copy_file_to_uploads_bucket(path, import_path)
