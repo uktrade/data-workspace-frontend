@@ -78,8 +78,6 @@ angular.module('aws-js-s3-explorer').factory('s3', function (Config) {
   }
 
   var Credentials = /*#__PURE__*/function (_AWS$Credentials) {
-    "use strict";
-
     _inherits(Credentials, _AWS$Credentials);
 
     var _super = _createSuper(Credentials);
@@ -327,6 +325,9 @@ angular.module('aws-js-s3-explorer').controller('ViewController', function (Conf
                 });
                 $scope.objects = response.Contents.filter(function (object) {
                   return object.Key != prefix;
+                }).map(function (object) {
+                  object.isCsv = object.Key.substr(object.Key.length - 3, object.Key.length) === 'csv';
+                  return object;
                 });
                 $scope.initialising = false;
                 $scope.inBigdata = startsWith(currentPrefix, originalPrefix + Config.bigdataPrefix);

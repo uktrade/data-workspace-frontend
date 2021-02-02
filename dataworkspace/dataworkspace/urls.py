@@ -13,7 +13,6 @@ from dataworkspace.apps.core.views import (
     healthcheck_view,
     SupportView,
     table_data_view,
-    file_browser_html_view,
 )
 from dataworkspace.apps.datasets.views import find_datasets
 from dataworkspace.apps.appstream.views import (
@@ -84,7 +83,13 @@ urlpatterns = [
             namespace='request-data',
         ),
     ),
-    path('files', login_required(file_browser_html_view), name='files'),
+    path(
+        'files/',
+        include(
+            ('dataworkspace.apps.your_files.urls', 'your_files'),
+            namespace='your-files',
+        ),
+    ),
     path('healthcheck', healthcheck_view),  # No authentication
     path(
         'support-and-feedback/', login_required(SupportView.as_view()), name='support'
