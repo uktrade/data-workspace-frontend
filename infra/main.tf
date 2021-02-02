@@ -128,9 +128,6 @@ variable gitlab_sso_id {}
 variable gitlab_sso_secret {}
 variable gitlab_sso_domain {}
 
-variable gitlab_key {}
-variable gitlab_runner_key {}
-
 variable superset_multiuser_admin_users {}
 variable superset_multiuser_db_instance_class {}
 variable superset_multiuser_container_image {}
@@ -157,6 +154,8 @@ variable dataset_subnets_availability_zones {
 variable quicksight_security_group_name {}
 variable quicksight_security_group_description {}
 variable quicksight_subnet_availability_zone {}
+
+variable shared_keypair_public_key {}
 
 locals {
   registry_container_name    = "jupyterhub-registry"
