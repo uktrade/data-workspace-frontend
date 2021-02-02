@@ -293,15 +293,9 @@ Modified by the Department for International Trade
                             {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
                               <td class="govuk-table__cell">
                                 <span ng-if="object.isCsv">
-                                  <form action="{% url 'your-files:create-table' %}" method="POST">
-                                    {% csrf_token %}
-                                    {% verbatim %}
-                                      <input type="hidden" name="path" value="{{  :: object.Key }}">
-                                    {% endverbatim %}
-                                    <button class="govuk-button govuk-!-margin-bottom-0 govuk-link" style="background: none!important; padding: 0!important; font-family: arial, sans-serif; color: #069;text-decoration: underline; box-shadow: none; color:#1d70b8;" type="submit">
-                                      Create table
-                                    </button>
-                                  </form>
+                                  <a class="govuk-link" href="{% url 'your-files:create-table' %}?path={% verbatim %}{{ :: object.Key }}{% endverbatim %}">
+                                    Create table
+                                  </a>
                                 </span>
                               </td>
                             {% endflag %}
