@@ -333,9 +333,14 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
         if isinstance(self, MasterDatasetAdmin):
             if changed_user_sso_ids:
-                sync_quicksight_permissions.delay(
-                    user_sso_ids_to_update=tuple(changed_user_sso_ids)
-                )
+                # If we're changing permissions for loads of users, let's just do a full quicksight re-sync.
+                # Makes fewer AWS calls and probably completes as quickly if not quicker.
+                if len(changed_user_sso_ids) >= 50:
+                    sync_quicksight_permissions.delay()
+                else:
+                    sync_quicksight_permissions.delay(
+                        user_sso_ids_to_update=tuple(changed_user_sso_ids)
+                    )
             elif original_user_access_type != obj.user_access_type:
                 sync_quicksight_permissions.delay()
 

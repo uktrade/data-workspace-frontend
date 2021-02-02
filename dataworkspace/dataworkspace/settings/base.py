@@ -630,3 +630,9 @@ DATAFLOW_API_CONFIG = {
     'DATAFLOW_HAWK_KEY': env.get('DATAFLOW_HAWK_KEY'),
     'DATAFLOW_S3_IMPORT_DAG': env.get('DATAFLOW_S3_IMPORT_DAG'),
 }
+
+# We increase this from the default (1000) because we want some datasets to be able to be granted to thousands of users
+# This is not an ideal solution, but it is a quite one. A better solution might eventually involve groups of users,
+# and granting a single group permissions on a dataset. For our admin dataset permissions, django sends one form field
+# per user granted, rather than a single field with e.g. comma-separated users.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
