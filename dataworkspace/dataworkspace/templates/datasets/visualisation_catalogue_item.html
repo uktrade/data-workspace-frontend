@@ -58,6 +58,7 @@
                 <thead>
                 <tr class="govuk-table__row">
                     <th class="govuk-table__header">Link to the data visualisation</th>
+                    <th class="govuk-table__header">Last updated</th>
                     <th class="govuk-table__header">Format</th>
                 </tr>
                 </thead>
@@ -72,6 +73,9 @@
                             {% else %}
                                 {{ visualisation_link.name }}
                             {% endif %}
+                        </td>
+                        <td class="govuk-table__cell">
+                            {{ visualisation_link.modified_date|default_if_none:"N/A" }}
                         </td>
                         <td class="govuk-table__cell">
                           Web
