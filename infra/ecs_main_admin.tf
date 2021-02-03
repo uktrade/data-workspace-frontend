@@ -206,30 +206,6 @@ data "template_file" "admin_celery_container_definitions" {
   vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery.sh\"]"))}"
 }
 
-resource "aws_ecs_task_definition" "admin_store_db_creds_in_s3" {
-  family                   = "${var.prefix}-admin-store-db-creds-in-s3"
-  container_definitions    = "${data.template_file.admin_store_db_creds_in_s3_container_definitions.rendered}"
-  execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
-  task_role_arn            = "${aws_iam_role.admin_store_db_creds_in_s3_task.arn}"
-  network_mode             = "awsvpc"
-  cpu                      = "${local.admin_container_cpu}"
-  memory                   = "${local.admin_container_memory}"
-  requires_compatibilities = ["FARGATE"]
-
-  lifecycle {
-    ignore_changes = [
-      "revision",
-    ]
-  }
-}
-
-data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
-  template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
-
-  vars = "${merge(local.admin_container_vars, map("container_command", "[\"django-admin\", \"store_db_creds_in_s3\"]"))}"
-}
-
-
 resource "random_string" "admin_secret_key" {
   length = 256
   special = false
