@@ -206,29 +206,6 @@ data "template_file" "admin_celery_container_definitions" {
   vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery.sh\"]"))}"
 }
 
-resource "aws_ecs_task_definition" "admin_store_db_creds_in_s3" {
-  family                   = "${var.prefix}-admin-store-db-creds-in-s3"
-  container_definitions    = "${data.template_file.admin_store_db_creds_in_s3_container_definitions.rendered}"
-  execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
-  task_role_arn            = "${aws_iam_role.admin_store_db_creds_in_s3_task.arn}"
-  network_mode             = "awsvpc"
-  cpu                      = "${local.admin_container_cpu}"
-  memory                   = "${local.admin_container_memory}"
-  requires_compatibilities = ["FARGATE"]
-
-  lifecycle {
-    ignore_changes = [
-      "revision",
-    ]
-  }
-}
-
-data "template_file" "admin_store_db_creds_in_s3_container_definitions" {
-  template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
-
-  vars = "${merge(local.admin_container_vars, map("container_command", "[\"django-admin\", \"store_db_creds_in_s3\"]"))}"
-}
-
 
 resource "random_string" "admin_secret_key" {
   length = 256
@@ -566,42 +543,6 @@ data "aws_iam_policy_document" "admin_run_tasks" {
 
     resources = [
       "${aws_iam_role.admin_dashboard_embedding.arn}"
-    ]
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "admin_admin_store_db_creds_in_s3_task" {
-  role       = "${aws_iam_role.admin_task.name}"
-  policy_arn = "${aws_iam_policy.admin_store_db_creds_in_s3_task.arn}"
-}
-
-resource "aws_iam_role" "admin_store_db_creds_in_s3_task" {
-  name               = "${var.prefix}-admin-store-db-creds-in-s3-task"
-  path               = "/"
-  assume_role_policy = "${data.aws_iam_policy_document.admin_task_ecs_tasks_assume_role.json}"
-}
-
-resource "aws_iam_role_policy_attachment" "admin_store_db_creds_in_s3_task" {
-  role       = "${aws_iam_role.admin_store_db_creds_in_s3_task.name}"
-  policy_arn = "${aws_iam_policy.admin_store_db_creds_in_s3_task.arn}"
-}
-
-resource "aws_iam_policy" "admin_store_db_creds_in_s3_task" {
-  name        = "${var.prefix}-admin-store-db-creds-in-s3-task"
-  path        = "/"
-  policy       = "${data.aws_iam_policy_document.admin_store_db_creds_in_s3_task.json}"
-}
-
-data "aws_iam_policy_document" "admin_store_db_creds_in_s3_task" {
-  statement {
-    actions = [
-        "s3:PutObject",
-        "s3:PutObjectAcl",
-    ]
-
-    resources = [
-      "${aws_s3_bucket.notebooks.arn}/*",
-      "arn:aws:s3:::appstream2-36fb080bb8-eu-west-1-664841488776/*",
     ]
   }
 }
