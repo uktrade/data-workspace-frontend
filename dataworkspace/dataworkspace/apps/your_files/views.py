@@ -1,7 +1,7 @@
 from csp.decorators import csp_update
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import FormView
@@ -50,8 +50,20 @@ def file_browser_html_GET(request):
 
 
 class CreateTableView(WaffleFlagMixin, FormView):
+    template_name = 'your_files/create-table.html'
     waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     form_class = CreateTableForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'path' not in self.request.GET:
+            return HttpResponseBadRequest(
+                "Expected a `path` parameter for the CSV file"
+            )
+
+        context['path'] = self.request.GET['path']
+        context['filename'] = context['path'].split('/')[-1]
+        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

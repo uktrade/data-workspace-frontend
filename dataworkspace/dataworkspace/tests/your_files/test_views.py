@@ -10,6 +10,14 @@ class TestCreateTableView:
     url = reverse('your-files:create-table')
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
+    def test_get_with_csv_file(self, client):
+        response = client.get(self.url + "?path=user/federated/abc/i-am-a.csv")
+        assert response.status_code == 200
+        assert "Create a table from i-am-a.csv" in response.content.decode(
+            response.charset
+        )
+
+    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_invalid_file_type(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
