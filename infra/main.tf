@@ -56,6 +56,9 @@ variable admin_deregistration_delay {
 variable uploads_bucket {}
 variable appstream_bucket {}
 variable notebooks_bucket {}
+variable notebooks_bucket_cors_domains {
+  type = list(string)
+}
 variable notebook_container_image {}
 variable jupyterlab_python_container_image {}
 variable jupyterlab_r_container_image {}
