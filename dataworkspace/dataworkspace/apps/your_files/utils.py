@@ -2,7 +2,6 @@ import csv
 import json
 import os
 import re
-from io import StringIO
 
 import boto3
 import requests
@@ -27,13 +26,13 @@ def get_s3_csv_column_types(path):
     client = boto3.client('s3')
     file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path)
 
-    csv_data = ''
+    sample_csv_data = []
     for count, line in enumerate(file['Body'].iter_lines()):
-        csv_data += str(line) + '\n'
+        sample_csv_data.append(line.decode('utf-8'))
         if count > 9:
             break
 
-    reader = csv.reader(StringIO(csv_data))
+    reader = csv.reader(sample_csv_data)
     schema = Schema()
     schema.infer(list(reader), confidence=1, headers=1)
 
