@@ -51,7 +51,7 @@ def get_s3_csv_column_types(path):
     return fields
 
 
-def trigger_dataflow_dag(path, schema, table, column_definitions):
+def trigger_dataflow_dag(path, schema, table, column_definitions, dag_run_id):
     config = settings.DATAFLOW_API_CONFIG
     trigger_url = (
         f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
@@ -66,12 +66,14 @@ def trigger_dataflow_dag(path, schema, table, column_definitions):
     content_type = 'application/json'
     body = json.dumps(
         {
+            'run_id': dag_run_id,
             'conf': {
+                'db_role': schema,
                 'file_path': path,
                 'schema_name': schema,
                 'table_name': table,
                 'column_definitions': column_definitions,
-            }
+            },
         }
     )
 
