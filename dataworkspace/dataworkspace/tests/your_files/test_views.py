@@ -111,5 +111,5 @@ class TestCreateTableView:
             '_user_40e80e4e',
             'a_csv',
             {'field1': 'varchar'},
-            '_user_40e80e4e-a_csv-1609462861',
+            '_user_40e80e4e-a_csv-2021-01-01T01:01:01',
         )

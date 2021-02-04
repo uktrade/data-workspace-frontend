@@ -1,4 +1,4 @@
-import time
+from datetime import datetime
 
 from csp.decorators import csp_update
 from django.conf import settings
@@ -81,7 +81,7 @@ class CreateTableView(WaffleFlagMixin, FormView):
         column_definitions = get_s3_csv_column_types(path)
         import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + '/' + path
         copy_file_to_uploads_bucket(path, import_path)
-        dag_run_id = f'{schema}-{table_name}-{int(time.time())}'
+        dag_run_id = f'{schema}-{table_name}-{datetime.now().isoformat()}'
         try:
             trigger_dataflow_dag(
                 import_path, schema, table_name, column_definitions, dag_run_id
