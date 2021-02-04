@@ -68,6 +68,7 @@ def trigger_dataflow_dag(path, schema, table, column_definitions, dag_run_id):
         {
             'run_id': dag_run_id,
             'conf': {
+                'db_role': schema,
                 'file_path': path,
                 'schema_name': schema,
                 'table_name': table,

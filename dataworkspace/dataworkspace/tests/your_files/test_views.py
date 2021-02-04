@@ -2,6 +2,7 @@ import botocore
 import requests_mock
 from django.conf import settings
 from django.urls import reverse
+from freezegun import freeze_time
 from mock import mock
 from waffle.testutils import override_flag
 
@@ -79,6 +80,7 @@ class TestCreateTableView:
             assert b'An error occurred while processing your file' in response.content
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
+    @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.trigger_dataflow_dag')
     @mock.patch('dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
@@ -109,4 +111,5 @@ class TestCreateTableView:
             '_user_40e80e4e',
             'a_csv',
             {'field1': 'varchar'},
+            '_user_40e80e4e-a_csv-1609462861',
         )
