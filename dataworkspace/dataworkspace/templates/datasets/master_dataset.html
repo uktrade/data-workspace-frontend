@@ -159,3 +159,9 @@
     });
   </script>
 {% endblock %}
+
+{% block footer_scripts %}
+  <script src="{% static 'app-copy.js' %}"></script>
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+{% endblock %}
