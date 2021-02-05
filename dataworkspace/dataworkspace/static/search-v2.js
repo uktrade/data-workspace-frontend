@@ -43,6 +43,10 @@
       'change', 'input[type=checkbox], input[type=search], select',
       this.formChange.bind(this)
     );
+    this.$form.on(
+      'search', 'input[type=search]',
+      this.formChange.bind(this)
+    );
     $(window).on('popstate', this.popState.bind(this));
 
     this.$form.find('input[type=submit]').click(
