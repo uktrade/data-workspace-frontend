@@ -1,0 +1,26 @@
+{% extends 'your_files/create-table-base.html' %}
+{% block page_title %}Validating data{% endblock page_title %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <div class="govuk-panel govuk-panel--confirmation">
+        <h1 id="pipeline_header" class="govuk-panel__title">Validating {{ filename }}</h1>
+        <div id="spinner" class="govuk-!-margin-bottom-7 loading-spinner"></div>
+        <div id="pipeline_info" class="govuk-panel__body govuk-!-font-size-24">
+          Your CSV file is being validated against your chosen columns and data types.
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    window.pollForDagStateChange(
+        "{{ execution_date }}",
+        ["success", "running"],
+        "{% url 'your-files:create-table-ingesting' %}?{{ request.GET.urlencode }}",
+        "{% url 'your-files:create-table-failed' %}?{{ request.GET.urlencode }}",
+        500
+    );
+  </script>
+{% endblock %}
