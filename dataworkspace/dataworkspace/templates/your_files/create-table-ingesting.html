@@ -15,6 +15,7 @@
   </div>
 {% endblock content %}
 {% block footer_scripts %}
+  {{ block.super }}
   <script nonce="{{ request.csp_nonce }}">
     window.pollForDagStateChange(
         "{{ execution_date }}",
