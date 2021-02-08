@@ -468,20 +468,12 @@ class SourceTable(BaseSource):
         blank=False,
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
-    accessible_by_google_data_studio = models.BooleanField(
-        default=False, help_text='Only Superusers can access the data'
-    )
 
     class Meta:
         db_table = 'app_sourcetable'
 
     def __str__(self):
         return f'{self.name} ({self.id})'
-
-    def get_google_data_studio_link(self):
-        return settings.GOOGLE_DATA_STUDIO_CONNECTOR_PATTERN.replace(
-            '<table-id>', str(self.id)
-        )
 
     def can_show_link_for_user(self, user):
         return False
@@ -1790,10 +1782,7 @@ class VisualisationLink(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_type = models.CharField(
         max_length=64,
-        choices=(
-            ('DATASTUDIO', 'Google Data Studio'),
-            ('QUICKSIGHT', 'AWS QuickSight'),
-        ),
+        choices=(('QUICKSIGHT', 'AWS QuickSight'),),
         null=False,
         blank=False,
     )
@@ -1804,8 +1793,7 @@ class VisualisationLink(TimeStampedModel):
         help_text='Used as the displayed text in the download link',
     )
     identifier = models.CharField(
-        max_length=256,
-        help_text='For Google Data Studio, the dashboard URL. For QuickSight, the dashboard ID.',
+        max_length=256, help_text='For QuickSight, the dashboard ID.',
     )
     visualisation_catalogue_item = models.ForeignKey(
         VisualisationCatalogueItem, on_delete=models.CASCADE

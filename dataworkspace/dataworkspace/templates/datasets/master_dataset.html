@@ -54,9 +54,6 @@
           <th class="govuk-table__header">Identifier</th>
           <th class="govuk-table__header">Update frequency</th>
           <th class="govuk-table__header">Last updated</th>
-          {% if user.is_superuser and data_links_with_link_toggle %}
-            <th class="govuk-table__header">Tools*</th>
-          {% endif %}
           <th class="govuk-table__header">Details</th>
         </tr>
         </thead>
@@ -68,13 +65,6 @@
             <td class="govuk-table__cell app-table_cell--no-border">"{{ data_link.schema }}"."{{ data_link.table }}"</td>
             <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.get_frequency_display }}</td>
             <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.get_data_last_updated_date|default_if_none:"N/A" }}</td>
-            {% if user.is_superuser %}
-              <td class="govuk-table__cell app-table_cell--no-border">
-                {% if data_link.get_google_data_studio_link and data_link.accessible_by_google_data_studio %}
-                  <a href="{{ data_link.get_google_data_studio_link }}">Google Data Studio</a>
-                {% endif %}
-              </td>
-            {% endif %}
             <td class="govuk-table__cell app-table_cell--no-border">
               {% if data_link.type == source_table_type %}
                 {% if has_access %}

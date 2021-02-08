@@ -24,7 +24,6 @@ class EventLog(models.Model):
     TYPE_REVOKED_VISUALISATION_PERMISSION = 15
     TYPE_SET_DATASET_USER_ACCESS_TYPE = 16
     TYPE_VIEW_QUICKSIGHT_VISUALISATION = 17
-    TYPE_VIEW_DATASTUDIO_VISUALISATION = 18
     TYPE_DATA_EXPLORER_SAVED_QUERY = 19
 
     _TYPE_CHOICES = (
@@ -45,7 +44,6 @@ class EventLog(models.Model):
         (TYPE_REVOKED_VISUALISATION_PERMISSION, 'Revoked visualisation permission'),
         (TYPE_SET_DATASET_USER_ACCESS_TYPE, 'Set dataset user access type'),
         (TYPE_VIEW_QUICKSIGHT_VISUALISATION, 'View AWS QuickSight visualisation'),
-        (TYPE_VIEW_DATASTUDIO_VISUALISATION, 'View Google DataStudio visualisation'),
         (TYPE_DATA_EXPLORER_SAVED_QUERY, 'Saved a query in Data Explorer'),
     )
     user = models.ForeignKey(
