@@ -58,8 +58,8 @@ data "template_file" "superset_container_definitions" {
     sentry_dsn = "${var.sentry_dsn}"
     sentry_environment = "${var.sentry_environment}"
 
-    metrics_container_image = "${var.metrics_container_image}:master"
-    s3sync_container_image = "${var.s3sync_container_image}:master"
+    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:master"
+    s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:master"
 
     home_directory = "/home/superset"
   }

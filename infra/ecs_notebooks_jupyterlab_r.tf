@@ -59,8 +59,8 @@ data "template_file" "jupyterlabr_container_definitions" {
     sentry_dsn = "${var.sentry_dsn}"
     sentry_environment = "${var.sentry_environment}"
 
-    metrics_container_image = "${var.metrics_container_image}:${data.external.jupyterlabr_metrics_current_tag.result.tag}"
-    s3sync_container_image = "${var.s3sync_container_image}:${data.external.jupyterlabr_s3sync_current_tag.result.tag}"
+    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:${data.external.jupyterlabr_metrics_current_tag.result.tag}"
+    s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:${data.external.jupyterlabr_s3sync_current_tag.result.tag}"
 
     home_directory = "/home/jovyan"
   }

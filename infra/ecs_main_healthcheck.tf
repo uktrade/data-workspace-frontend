@@ -76,7 +76,7 @@ data "template_file" "healthcheck_container_definitions" {
   template = "${file("${path.module}/ecs_main_healthcheck_container_definitions.json")}"
 
   vars = {
-    container_image   = "${var.healthcheck_container_image}:${data.external.healthcheck_current_tag.result.tag}"
+    container_image   = "${aws_ecr_repository.healthcheck.repository_url}:${data.external.healthcheck_current_tag.result.tag}"
     container_name    = "${local.healthcheck_container_name}"
     container_port    = "${local.healthcheck_container_port}"
     container_cpu     = "${local.healthcheck_container_cpu}"
@@ -140,6 +140,27 @@ data "aws_iam_policy_document" "healthcheck_task_execution" {
 
     resources = [
       "${aws_cloudwatch_log_group.healthcheck.arn}:*",
+    ]
+  }
+
+   statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.healthcheck.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 }

@@ -41,7 +41,6 @@ variable registry_proxy_username {}
 variable registry_proxy_password {}
 variable registry_internal_domain {}
 
-variable admin_container_image {}
 variable admin_db_instance_class {}
 
 variable admin_authbroker_client_id {}
@@ -60,20 +59,12 @@ variable notebooks_bucket_cors_domains {
   type = list(string)
 }
 variable notebook_container_image {}
-variable jupyterlab_python_container_image {}
 variable jupyterlab_r_container_image {}
-variable rstudio_container_image {}
-variable pgadmin_container_image {}
 variable pgweb_container_image {}
-variable remotedesktop_container_image {}
-variable theia_container_image {}
 variable superset_container_image {}
 
 variable alb_access_logs_bucket {}
 variable alb_logs_account {}
-
-variable dns_rewrite_proxy_container_image {}
-variable sentryproxy_container_image {}
 
 variable cloudwatch_destination_arn {}
 
@@ -88,10 +79,8 @@ variable sentry_environment {}
 variable notebook_task_role_prefix {}
 variable notebook_task_role_policy_name {}
 
-variable healthcheck_container_image {}
 variable healthcheck_domain {}
 
-variable prometheus_container_image {}
 variable prometheus_domain {}
 
 variable cloudwatch_subscription_filter {}
@@ -106,9 +95,6 @@ variable prometheus_whitelist {
 }
 variable metrics_service_discovery_basic_auth_user {}
 variable metrics_service_discovery_basic_auth_password {}
-variable metrics_container_image {}
-
-variable s3sync_container_image {}
 
 variable google_analytics_site_id {}
 
@@ -117,7 +103,6 @@ variable gitlab_ip_whitelist {
 }
 variable gitlab_domain {}
 variable gitlab_bucket {}
-variable gitlab_container_image {}
 variable gitlab_instance_type {}
 variable gitlab_memory {}
 variable gitlab_cpu {}

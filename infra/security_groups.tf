@@ -637,11 +637,35 @@ resource "aws_security_group" "ecr_api" {
   }
 }
 
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_dns_rewrite_proxy" {
+  description = "ingress-https-from-dns-rewrite-proxy"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.dns_rewrite_proxy.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "ecr_api_ingress_https_from_admin-service" {
   description = "ingress-https-from-admin-service"
 
   security_group_id = "${aws_security_group.ecr_api.id}"
   source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_gitlab_ec2" {
+  description = "ingress-https-from-gitlab-ec2"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.gitlab-ec2.id}"
 
   type        = "ingress"
   from_port   = "443"

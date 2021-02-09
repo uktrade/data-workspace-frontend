@@ -92,7 +92,7 @@ data "template_file" "dns_rewrite_proxy_container_definitions" {
   template = "${file("${path.module}/ecs_main_dns_rewrite_proxy_container_definitions.json")}"
 
   vars = {
-    container_image    = "${var.dns_rewrite_proxy_container_image}:${data.external.dns_rewrite_proxy_current_tag.result.tag}"
+    container_image    = "${aws_ecr_repository.dns_rewrite_proxy.repository_url}:${data.external.dns_rewrite_proxy_current_tag.result.tag}"
     container_name     = "${local.dns_rewrite_proxy_container_name}"
     container_cpu      = "${local.dns_rewrite_proxy_container_cpu}"
     container_memory   = "${local.dns_rewrite_proxy_container_memory}"
@@ -159,6 +159,27 @@ data "aws_iam_policy_document" "dns_rewrite_proxy_task_execution" {
 
     resources = [
       "${aws_cloudwatch_log_group.dns_rewrite_proxy.arn}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.dns_rewrite_proxy.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 }
