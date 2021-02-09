@@ -1,4 +1,9 @@
+from urllib.parse import quote
+
 from django import template
+from django.urls import reverse
+
+from dataworkspace.apps.datasets.utils import get_sql_snippet
 
 register = template.Library()
 
@@ -40,3 +45,8 @@ def format_duration(milli_seconds, short=False):
 @register.filter
 def format_duration_short(milli_seconds):
     return format_duration(milli_seconds, short=True)
+
+
+@register.simple_tag
+def query_table_in_explorer_link(schema, table, *args, **kwargs):
+    return f"{reverse('explorer:index')}?sql={quote(get_sql_snippet(schema, table))}"
