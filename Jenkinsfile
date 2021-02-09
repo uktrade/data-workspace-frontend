@@ -55,11 +55,18 @@ pipeline {
         }
         lock("data-workspace-build-admin") {
           container(name: 'builder', shell: '/busybox/sh') {
-            withEnv(['PATH+EXTRA=/busybox:/kaniko']) {
-              sh """
-                #!/busybox/sh
-                /kaniko/executor --dockerfile ${env.WORKSPACE}/Dockerfile -c ${env.WORKSPACE} --destination=quay.io/uktrade/data-workspace:${params.GIT_COMMIT}
-                """
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'DATASCIENCE_ECS_DEPLOY']]) {
+              withEnv(['PATH+EXTRA=/busybox:/kaniko']) {
+                sh """
+                  #!/busybox/sh
+                  /kaniko/executor \
+                    --dockerfile ${env.WORKSPACE}/Dockerfile \
+                    -c ${env.WORKSPACE} \
+                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/analysisworkspace-dev-admin:${params.GIT_COMMIT} \
+                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/data-workspace-staging-admin:${params.GIT_COMMIT} \
+                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/jupyterhub-admin:${params.GIT_COMMIT}
+                  """
+              }
             }
           }
         }
@@ -137,10 +144,11 @@ pipeline {
 void ecs_pipeline_admin(cluster, version) {
   lock("data-workspace-ecs-pipeline-${cluster}-admin") {
     build job: "ecs-pipeline", parameters: [
-        string(name: "Image", value: "quay.io/uktrade/data-workspace:${version}"),
+        string(name: "Image", value: "165562107270.dkr.ecr.eu-west-2.amazonaws.com/${cluster}-admin:${version}"),
         string(name: "Cluster", value: cluster),
         string(name: "Service", value: "${cluster}-admin"),
-        string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY")
+        string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY"),
+        string(name: "EcsPipelineRepository", value: "public.ecr.aws/j9o7k4h4/ecs-pipeline:latest")
     ]
   }
 }
@@ -148,10 +156,11 @@ void ecs_pipeline_admin(cluster, version) {
 void ecs_pipeline_celery(cluster, version) {
   lock("data-workspace-ecs-pipeline-${cluster}-celery") {
     build job: "ecs-pipeline", parameters: [
-        string(name: "Image", value: "quay.io/uktrade/data-workspace:${version}"),
+        string(name: "Image", value: "165562107270.dkr.ecr.eu-west-2.amazonaws.com/${cluster}-admin:${version}"),
         string(name: "Cluster", value: cluster),
         string(name: "Service", value: "${cluster}-admin-celery"),
-        string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY")
+        string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY"),
+        string(name: "EcsPipelineRepository", value: "public.ecr.aws/j9o7k4h4/ecs-pipeline:latest")
     ]
   }
 }
