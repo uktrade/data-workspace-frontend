@@ -26,7 +26,7 @@ class TestCreateTableViews:
     def test_invalid_file_type(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         response = client.post(self.url, data={'path': 'not-a-csv.txt'}, follow=True,)
-        assert b'We can\'t process your CSV file' in response.content
+        assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
@@ -35,7 +35,7 @@ class TestCreateTableViews:
         response = client.post(
             self.url, data={'path': 'user/federated/def/a-csv.csv'}, follow=True,
         )
-        assert b'We can\'t process your CSV file' in response.content
+        assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.datasets.views.boto3.client')
@@ -51,7 +51,7 @@ class TestCreateTableViews:
         response = client.post(
             self.url, data={'path': 'user/federated/abc/a-csv.csv'}, follow=True,
         )
-        assert b'We can\'t process your CSV file' in response.content
+        assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket')
@@ -78,7 +78,7 @@ class TestCreateTableViews:
                 data={'path': 'user/federated/abc/not-a-csv.csv'},
                 follow=True,
             )
-        assert b'We can\'t process your CSV file' in response.content
+        assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @freeze_time('2021-01-01 01:01:01')
