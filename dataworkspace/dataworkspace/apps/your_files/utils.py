@@ -25,16 +25,17 @@ SCHEMA_POSTGRES_DATA_TYPE_MAP = {
 
 def get_s3_csv_column_types(path):
     client = boto3.client('s3')
-    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path)
 
     # Let's just read the first 100KiB of the file and assume that will give us enough lines to make reasonable
     # assumptions about data types. This is an alternative to reading the first ~10 lines, in which case the first line
     # could be incredibly long and possibly even crash the server?
     # Django's default permitted size for a request body is 2.5MiB, so reading 100KiB here doesn't feel like an
     # additional vector for denial-of-service.
-    read_bytes = 1024 * 100
+    file = client.get_object(
+        Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
+    )
 
-    head = file['Body'].read(read_bytes).decode('utf-8')
+    head = file['Body'].read().decode('utf-8')
     csv_data = head.splitlines()
 
     if len(csv_data) <= 10:
