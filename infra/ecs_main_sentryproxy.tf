@@ -65,7 +65,7 @@ data "template_file" "sentryproxy_container_definitions" {
   template = "${file("${path.module}/ecs_main_sentryproxy_container_definitions.json")}"
 
   vars = {
-    container_image  = "${var.sentryproxy_container_image}:${data.external.sentryproxy_current_tag.result.tag}"
+    container_image  = "${aws_ecr_repository.sentryproxy.repository_url}:${data.external.sentryproxy_current_tag.result.tag}"
     container_name   = "${local.sentryproxy_container_name}"
     container_cpu    = "${local.sentryproxy_container_cpu}"
     container_memory = "${local.sentryproxy_container_memory}"
@@ -125,6 +125,27 @@ data "aws_iam_policy_document" "sentryproxy_task_execution" {
 
     resources = [
       "${aws_cloudwatch_log_group.sentryproxy.arn}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.sentryproxy.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 }

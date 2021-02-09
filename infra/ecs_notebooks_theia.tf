@@ -49,7 +49,7 @@ data "template_file" "theia_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
   vars = {
-    container_image  = "${var.theia_container_image}:master"
+    container_image  = "${aws_ecr_repository.theia.repository_url}:master"
     container_name   = "${local.notebook_container_name}"
 
     log_group  = "${aws_cloudwatch_log_group.notebook.name}"
@@ -58,8 +58,8 @@ data "template_file" "theia_container_definitions" {
     sentry_dsn = "${var.sentry_dsn}"
     sentry_environment = "${var.sentry_environment}"
 
-    metrics_container_image = "${var.metrics_container_image}:master"
-    s3sync_container_image = "${var.s3sync_container_image}:master"
+    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:master"
+    s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:master"
 
     home_directory = "/home/theia"
   }

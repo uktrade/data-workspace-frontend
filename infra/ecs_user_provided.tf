@@ -38,7 +38,7 @@ data "template_file" "user_provided_container_definitions" {
 
     sentry_dsn = "${var.sentry_dsn}"
 
-    metrics_container_image = "${var.metrics_container_image}:master"
+    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:master"
   }
 }
 

@@ -78,7 +78,7 @@ data "template_file" "gitlab_container_definitions" {
   template = "${file("${path.module}/ecs_main_gitlab_container_definitions.json")}"
 
   vars = {
-    container_image   = "${var.gitlab_container_image}"
+    container_image   = "${aws_ecr_repository.gitlab.repository_url}:master"
     container_name    = "gitlab"
     log_group         = "${aws_cloudwatch_log_group.gitlab.name}"
     log_region        = "${data.aws_region.aws_region.name}"
@@ -165,6 +165,27 @@ data "aws_iam_policy_document" "gitlab_task_execution" {
 
     resources = [
       "${aws_cloudwatch_log_group.gitlab.arn}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.gitlab.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 }

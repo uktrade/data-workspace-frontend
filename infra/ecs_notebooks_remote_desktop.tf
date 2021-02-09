@@ -49,7 +49,7 @@ data "template_file" "remotedesktop_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
   vars = {
-    container_image  = "${var.remotedesktop_container_image}:${data.external.remotedesktop_current_tag.result.tag}"
+    container_image  = "${aws_ecr_repository.remotedesktop.repository_url}:${data.external.remotedesktop_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
 
     log_group  = "${aws_cloudwatch_log_group.notebook.name}"
@@ -58,8 +58,8 @@ data "template_file" "remotedesktop_container_definitions" {
     sentry_dsn = "${var.sentry_dsn}"
     sentry_environment = "${var.sentry_environment}"
 
-    metrics_container_image = "${var.metrics_container_image}:${data.external.remotedesktop_current_tag.result.tag}"
-    s3sync_container_image = "${var.s3sync_container_image}:${data.external.remotedesktop_current_tag.result.tag}"
+    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:${data.external.remotedesktop_current_tag.result.tag}"
+    s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:${data.external.remotedesktop_current_tag.result.tag}"
 
     home_directory = "/home/dw"
   }

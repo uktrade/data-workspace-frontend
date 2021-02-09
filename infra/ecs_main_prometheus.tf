@@ -75,7 +75,7 @@ data "template_file" "prometheus_container_definitions" {
   template = "${file("${path.module}/ecs_main_prometheus_container_definitions.json")}"
 
   vars = {
-    container_image   = "${var.prometheus_container_image}:${data.external.prometheus_current_tag.result.tag}"
+    container_image   = "${aws_ecr_repository.prometheus.repository_url}:${data.external.prometheus_current_tag.result.tag}"
     container_name    = "${local.prometheus_container_name}"
     container_port    = "${local.prometheus_container_port}"
     container_cpu     = "${local.prometheus_container_cpu}"
@@ -141,6 +141,27 @@ data "aws_iam_policy_document" "prometheus_task_execution" {
 
     resources = [
       "${aws_cloudwatch_log_group.prometheus.arn}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.prometheus.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 }

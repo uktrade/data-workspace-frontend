@@ -1,6 +1,6 @@
 locals {
   admin_container_vars = {
-    container_image   = "${var.admin_container_image}:${data.external.admin_current_tag.result.tag}"
+    container_image   = "${aws_ecr_repository.admin.repository_url}:${data.external.admin_current_tag.result.tag}"
     container_name    = "${local.admin_container_name}"
     container_port    = "${local.admin_container_port}"
     container_cpu     = "${local.admin_container_cpu}"
@@ -260,6 +260,27 @@ data "aws_iam_policy_document" "admin_task_execution" {
 
     resources = [
       "${aws_cloudwatch_log_group.admin.arn}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.admin.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 }

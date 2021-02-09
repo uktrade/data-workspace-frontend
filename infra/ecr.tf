@@ -2,6 +2,58 @@ resource "aws_ecr_repository" "user_provided" {
   name = "${var.prefix}-user-provided"
 }
 
+resource "aws_ecr_repository" "admin" {
+  name = "${var.prefix}-admin"
+}
+
+resource "aws_ecr_repository" "jupyterlab_python" {
+  name = "${var.prefix}-jupyterlab-python"
+}
+
+resource "aws_ecr_repository" "rstudio" {
+  name = "${var.prefix}-rstudio"
+}
+
+resource "aws_ecr_repository" "pgadmin" {
+  name = "${var.prefix}-pgadmin"
+}
+
+resource "aws_ecr_repository" "remotedesktop" {
+  name = "${var.prefix}-remotedesktop"
+}
+
+resource "aws_ecr_repository" "theia" {
+  name = "${var.prefix}-theia"
+}
+
+resource "aws_ecr_repository" "s3sync" {
+  name = "${var.prefix}-s3sync"
+}
+
+resource "aws_ecr_repository" "metrics" {
+  name = "${var.prefix}-metrics"
+}
+
+resource "aws_ecr_repository" "sentryproxy" {
+  name = "${var.prefix}-sentryproxy"
+}
+
+resource "aws_ecr_repository" "dns_rewrite_proxy" {
+  name = "${var.prefix}-dns-rewrite-proxy"
+}
+
+resource "aws_ecr_repository" "healthcheck" {
+  name = "${var.prefix}-healthcheck"
+}
+
+resource "aws_ecr_repository" "prometheus" {
+  name = "${var.prefix}-prometheus"
+}
+
+resource "aws_ecr_repository" "gitlab" {
+  name = "${var.prefix}-gitlab"
+}
+
 resource "aws_ecr_repository" "visualisation_base" {
   name = "${var.prefix}-visualisation-base"
 }
@@ -148,6 +200,35 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
 
     resources = [
       "*",
+    ]
+  }
+
+  /* For ECS to fetch images */
+  statement {
+    principals {
+      type = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.admin.arn}",
+      "${aws_ecr_repository.jupyterlab_python.arn}",
+      "${aws_ecr_repository.rstudio.arn}",
+      "${aws_ecr_repository.pgadmin.arn}",
+      "${aws_ecr_repository.remotedesktop.arn}",
+      "${aws_ecr_repository.theia.arn}",
+      "${aws_ecr_repository.s3sync.arn}",
+      "${aws_ecr_repository.metrics.arn}",
+      "${aws_ecr_repository.sentryproxy.arn}",
+      "${aws_ecr_repository.dns_rewrite_proxy.arn}",
+      "${aws_ecr_repository.healthcheck.arn}",
+      "${aws_ecr_repository.prometheus.arn}",
+      "${aws_ecr_repository.gitlab.arn}",
     ]
   }
 

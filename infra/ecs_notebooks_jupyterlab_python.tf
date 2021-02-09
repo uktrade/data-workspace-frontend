@@ -50,7 +50,7 @@ data "template_file" "jupyterlabpython_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
   vars = {
-    container_image  = "${var.jupyterlab_python_container_image}:${data.external.jupyterlabpython_current_tag.result.tag}"
+    container_image  = "${aws_ecr_repository.jupyterlab_python.repository_url}:${data.external.jupyterlabpython_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
 
     log_group  = "${aws_cloudwatch_log_group.notebook.name}"
@@ -59,8 +59,8 @@ data "template_file" "jupyterlabpython_container_definitions" {
     sentry_dsn = "${var.sentry_dsn}"
     sentry_environment = "${var.sentry_environment}"
 
-    metrics_container_image = "${var.metrics_container_image}:${data.external.jupyterlabpython_metrics_current_tag.result.tag}"
-    s3sync_container_image = "${var.s3sync_container_image}:${data.external.jupyterlabpython_s3sync_current_tag.result.tag}"
+    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:${data.external.jupyterlabpython_metrics_current_tag.result.tag}"
+    s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:${data.external.jupyterlabpython_s3sync_current_tag.result.tag}"
 
     home_directory = "/home/jovyan"
   }

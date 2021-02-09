@@ -50,7 +50,7 @@ data "template_file" "rstudio_container_definitions" {
   template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
 
   vars = {
-    container_image  = "${var.rstudio_container_image}:${data.external.rstudio_current_tag.result.tag}"
+    container_image  = "${aws_ecr_repository.rstudio.repository_url}:${data.external.rstudio_current_tag.result.tag}"
     container_name   = "${local.notebook_container_name}"
     container_cpu    = "${local.notebook_container_cpu}"
     container_memory = "${local.notebook_container_memory}"
@@ -61,8 +61,8 @@ data "template_file" "rstudio_container_definitions" {
     sentry_dsn = "${var.sentry_dsn}"
     sentry_environment = "${var.sentry_environment}"
 
-    metrics_container_image = "${var.metrics_container_image}:${data.external.rstudio_metrics_current_tag.result.tag}"
-    s3sync_container_image = "${var.s3sync_container_image}:${data.external.rstudio_s3sync_current_tag.result.tag}"
+    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:${data.external.rstudio_metrics_current_tag.result.tag}"
+    s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:${data.external.rstudio_s3sync_current_tag.result.tag}"
 
     home_directory = "/home/rstudio"
   }
