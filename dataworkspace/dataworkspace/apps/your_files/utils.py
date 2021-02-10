@@ -129,7 +129,7 @@ def get_dataflow_dag_status(execution_date):
     config = settings.DATAFLOW_API_CONFIG
     url = (
         f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
-        f'dags/{config["DATAFLOW_S3_IMPORT_DAG"]}/dag_runs/{execution_date}'
+        f'dags/{config["DATAFLOW_S3_IMPORT_DAG"]}/dag_runs/{execution_date.split("+")[0]}'
     )
     hawk_creds = {
         'id': config['DATAFLOW_HAWK_ID'],
