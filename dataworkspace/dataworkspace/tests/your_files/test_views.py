@@ -154,7 +154,8 @@ class TestCreateTableViews:
         execution_date = '02-05T13:33:49.266040+00:00'
         with requests_mock.Mocker() as rmock:
             rmock.get(
-                f'https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline/dag_runs/{execution_date}',
+                'https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline'
+                f'/dag_runs/{execution_date.split("+")[0]}',
                 status_code=status_code,
             )
             response = client.get(
@@ -167,7 +168,8 @@ class TestCreateTableViews:
         execution_date = '02-05T13:33:49.266040+00:00'
         with requests_mock.Mocker() as rmock:
             rmock.get(
-                f'https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline/dag_runs/{execution_date}',
+                'https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline'
+                f'/dag_runs/{execution_date.split("+")[0]}',
                 json={'state': 'success'},
             )
             response = client.get(
