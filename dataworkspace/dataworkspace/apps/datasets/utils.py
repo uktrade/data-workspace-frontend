@@ -53,6 +53,10 @@ def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
     }[dataset_type]
 
 
+def get_sql_snippet(schema, table_name, limit=50):
+    return f"""SELECT * FROM "{schema}"."{table_name}" LIMIT {limit}"""
+
+
 def get_code_snippets(source_table):
     if not hasattr(source_table, 'schema') or not hasattr(source_table, 'table'):
         return {}
@@ -88,6 +92,8 @@ while (!dbHasCompleted(res)) {{
     print(chunk)
 }}"""
 
-    sql_snippet = f"""SELECT * FROM "{schema}"."{table_name}" LIMIT 50"""
-
-    return {"python": python_snippet, "r": r_snippet, "sql": sql_snippet}
+    return {
+        "python": python_snippet,
+        "r": r_snippet,
+        "sql": get_sql_snippet(schema, table_name),
+    }

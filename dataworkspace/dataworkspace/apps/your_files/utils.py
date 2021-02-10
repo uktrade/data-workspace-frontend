@@ -67,6 +67,7 @@ def trigger_dataflow_dag(path, schema, table, column_definitions, dag_run_id):
     body = json.dumps(
         {
             'run_id': dag_run_id,
+            'replace_microseconds': "false",
             'conf': {
                 'db_role': schema,
                 'file_path': path,
@@ -92,6 +93,7 @@ def trigger_dataflow_dag(path, schema, table, column_definitions, dag_run_id):
         headers={'Authorization': header, 'Content-Type': content_type},
     )
     response.raise_for_status()
+    return response.json()
 
 
 def clean_db_identifier(identifier):
@@ -107,3 +109,20 @@ def copy_file_to_uploads_bucket(from_path, to_path):
         Bucket=settings.AWS_UPLOADS_BUCKET,
         Key=to_path,
     )
+
+
+def get_dataflow_dag_status(execution_date):
+    config = settings.DATAFLOW_API_CONFIG
+    url = (
+        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f'dags/{config["DATAFLOW_S3_IMPORT_DAG"]}/dag_runs/{execution_date}'
+    )
+    hawk_creds = {
+        'id': config['DATAFLOW_HAWK_ID'],
+        'key': config['DATAFLOW_HAWK_KEY'],
+        'algorithm': 'sha256',
+    }
+    header = Sender(hawk_creds, url, 'get', content='', content_type='',).request_header
+    response = requests.get(url, headers={'Authorization': header, 'Content-Type': ''},)
+    response.raise_for_status()
+    return response.json()
