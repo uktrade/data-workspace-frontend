@@ -54,7 +54,7 @@
                 {{ model.description | safe }}
             </div>
 
-            {% if data_links_with_link_toggle and not has_access %}
+            {% if datacut_links_info and not has_access %}
                 {% include 'partials/unauthorised_warning.html' with thing='these links' %}
             {% endif %}
         </div>
@@ -63,7 +63,7 @@
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-two-thirds">
             <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Links</h2>
-              {% if data_links_with_link_toggle and has_access and data_hosted_externally %}
+              {% if datacut_links_info and has_access and data_hosted_externally %}
                 <div class="govuk-warning-text">
                     <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
                     <div class="govuk-warning-text__text">
@@ -90,35 +90,35 @@
                 </thead>
                 <tbody>
 
-                {% for data_link, can_show_link, _ in data_links_with_link_toggle %}
+                {% for datacut, can_show_link in datacut_links_info %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell">
                             {% if has_access and can_show_link %}
-                            <a class="govuk-link" href="{{ data_link.get_absolute_url }}">
-                                {{ data_link.name }}
+                            <a class="govuk-link" href="{{ datacut.get_absolute_url }}">
+                                {{ datacut.name }}
                             </a>
                             {% else %}
-                                {{ data_link.name }}
+                                {{ datacut.name }}
                             {% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                          {% if data_link.format %}{{ data_link.format }}{% else %}CSV{% endif %}
+                          {% if datacut.format %}{{ datacut.format }}{% else %}CSV{% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                          {% if data_link.get_frequency_display %}
-                            {{ data_link.get_frequency_display }}
+                          {% if datacut.get_frequency_display %}
+                            {{ datacut.get_frequency_display }}
                           {% else %}
-                            {{ data_link.frequency }}
+                            {{ datacut.frequency }}
                           {% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                          {{ data_link.get_data_last_updated_date|default_if_none:"N/A" }}
+                          {{ datacut.get_data_last_updated_date|default_if_none:"N/A" }}
                         </td>
                         <td class="govuk-table__cell">
-                            {% if can_show_link and data_link.type == custom_dataset_query_type %}
+                            {% if can_show_link and datacut.type == custom_dataset_query_type %}
                                 {% if has_access %}
                                     <a class="govuk-link"
-                                        href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=data_link.id %}">
+                                        href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=datacut.id %}">
                                         Preview
                                     </a>
                                 {% else %}
@@ -131,7 +131,7 @@
                     </tr>
                 {% endfor %}
 
-                {% if not data_links_with_link_toggle %}
+                {% if not datacut_links_info %}
                     <tr class="govuk-table__row">
                         <td colspan="4" class="govuk-table__cell">
                             No data available
@@ -142,7 +142,7 @@
                 </tbody>
             </table>
 
-            {% if user.is_superuser and data_links_with_link_toggle %}
+            {% if user.is_superuser and datacut_links_info %}
                 <p class="govuk-body">*Only visible to superusers.</p>
             {% endif %}
         </div>

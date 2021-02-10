@@ -14,35 +14,6 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 
 
-def test_master_dataset_fields(client, dataset_db):
-    ds = factories.DataSetFactory.create(published=True)
-    factories.SourceTableFactory(
-        dataset=ds,
-        name='d1',
-        database=dataset_db,
-        schema='public',
-        table='dataset_test',
-    )
-    factories.SourceTableFactory(
-        dataset=ds,
-        name='d2',
-        database=dataset_db,
-        schema='public',
-        table='dataset_test2',
-    )
-
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert response.context["fields"] == [
-        'dataset_test.id',
-        'dataset_test.name',
-        'dataset_test.date',
-        'dataset_test2.id',
-        'dataset_test2.name',
-    ]
-
-
 def test_master_dataset_with_access_preview(client, dataset_db):
     ds = factories.DataSetFactory.create(
         type=DataSet.TYPE_MASTER_DATASET,

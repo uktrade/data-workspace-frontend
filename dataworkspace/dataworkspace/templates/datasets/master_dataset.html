@@ -38,7 +38,7 @@
         {{ model.description | safe }}
       </div>
 
-      {% if data_links_with_link_toggle and not has_access %}
+      {% if master_datasets_info and not has_access %}
         {% include 'partials/unauthorised_warning.html' with thing='this dataset' %}
       {% endif %}
     </div>
@@ -59,17 +59,17 @@
         </thead>
         <tbody>
 
-        {% for data_link, _, code_snippets in data_links_with_link_toggle %}
+        {% for master_dataset_info, code_snippets in master_datasets_info %}
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.name }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">"{{ data_link.schema }}"."{{ data_link.table }}"</td>
-            <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.get_frequency_display }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">{{ data_link.get_data_last_updated_date|default_if_none:"N/A" }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ master_dataset_info.name }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">"{{ master_dataset_info.schema }}"."{{ master_dataset_info.table }}"</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ master_dataset_info.get_frequency_display }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ master_dataset_info.get_data_last_updated_date|default_if_none:"N/A" }}</td>
             <td class="govuk-table__cell app-table_cell--no-border">
-              {% if data_link.type == source_table_type %}
+              {% if master_dataset_info.type == source_table_type %}
                 {% if has_access %}
                   <a class="govuk-link"
-                      href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=data_link.id %}">
+                      href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=master_dataset_info.id %}">
                       Preview
                   </a>
                 {% else %}
@@ -85,11 +85,11 @@
                   <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
                     <summary class="govuk-details__summary">
                       <span class="govuk-details__summary-text">
-                        Code snippets <span class="govuk-visually-hidden">for "{{ data_link.schema }}"."{{ data_link.table }}"</span>
+                        Code snippets <span class="govuk-visually-hidden">for "{{ master_dataset_info.schema }}"."{{ master_dataset_info.table }}"</span>
                       </span>
                     </summary>
                     <div class="govuk-details__text">
-                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets data_link=data_link %}
+                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets master_dataset_info=master_dataset_info %}
                     </div>
                   </details>
                 </td>
@@ -97,14 +97,14 @@
             {% endif %}
           </tr>
         {% endfor %}
-        {% if not data_links_with_link_toggle %}
+        {% if not master_datasets_info %}
           <tr class="govuk-table__row">
             <td colspan="4" class="govuk-table__cell">No data available</td>
           </tr>
         {% endif %}
         </tbody>
       </table>
-      {% if user.is_superuser and data_links_with_link_toggle %}
+      {% if user.is_superuser and master_datasets_info %}
         <p class="govuk-body">*Only visible to superusers.</p>
       {% endif %}
     </div>

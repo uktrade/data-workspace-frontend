@@ -5,22 +5,22 @@
   {% if code_snippets %}
   <link rel="stylesheet" href="{% static 'assets/vendor/highlight/styles/a11y-light.css' %}">
 
-  <h3 class="govuk-heading-l">Code snippets <span class="govuk-visually-hidden">for "{{ data_link.schema }}"."{{ data_link.table }}"</span></h3>
+  <h3 class="govuk-heading-l">Code snippets <span class="govuk-visually-hidden">for "{{ master_dataset_info.schema }}"."{{ master_dataset_info.table }}"</span></h3>
   <div class="govuk-tabs" data-module="govuk-tabs">
     <h2 class="govuk-tabs__title">Contents</h2>
     <ul class="govuk-tabs__list">
       <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
-        <a class="govuk-tabs__tab" href="#code-snippet-sql-{{ data_link.schema }}-{{ data_link.table }}">SQL</a>
+        <a class="govuk-tabs__tab" href="#code-snippet-sql-{{ master_dataset_info.schema }}-{{ master_dataset_info.table }}">SQL</a>
       </li>
       <li class="govuk-tabs__list-item">
-        <a class="govuk-tabs__tab" href="#code-snippet-python-{{ data_link.schema }}-{{ data_link.table }}">Python</a>
+        <a class="govuk-tabs__tab" href="#code-snippet-python-{{ master_dataset_info.schema }}-{{ master_dataset_info.table }}">Python</a>
       </li>
       <li class="govuk-tabs__list-item">
-        <a class="govuk-tabs__tab" href="#code-snippet-r-{{ data_link.schema }}-{{ data_link.table }}">R</a>
+        <a class="govuk-tabs__tab" href="#code-snippet-r-{{ master_dataset_info.schema }}-{{ master_dataset_info.table }}">R</a>
       </li>
     </ul>
 
-    <div class="govuk-tabs__panel" id="code-snippet-sql-{{ data_link.schema }}-{{ data_link.table }}">
+    <div class="govuk-tabs__panel" id="code-snippet-sql-{{ master_dataset_info.schema }}-{{ master_dataset_info.table }}">
       <h3 class="govuk-heading-m">SQL</h3>
       <div class="app-example__code">
         <pre data-module="app-copy" style="white-space: pre-wrap;">
@@ -28,10 +28,10 @@
         </pre>
       </div>
 
-      <a id="launch-data-explorer" class="govuk-button govuk-!-margin-top-5" href="{% url 'explorer:index' %}?sql={{ code_snippets.sql|quote_plus }}" target="_blank">Open <span class="govuk-visually-hidden">first 50 rows of "{{ data_link.schema }}"."{{ data_link.table }}" </span>in Data Explorer</a>
+      <a id="launch-data-explorer" class="govuk-button govuk-!-margin-top-5" href="{% url 'explorer:index' %}?sql={{ code_snippets.sql|quote_plus }}" target="_blank">Open <span class="govuk-visually-hidden">first 50 rows of "{{ master_dataset_info.schema }}"."{{ master_dataset_info.table }}" </span>in Data Explorer</a>
     </div>
 
-    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-python-{{ data_link.schema }}-{{ data_link.table }}">
+    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-python-{{ master_dataset_info.schema }}-{{ master_dataset_info.table }}">
       <h3 class="govuk-heading-m">Python</h3>
       <div class="app-example__code">
         <pre data-module="app-copy" style="white-space: pre-wrap;">
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-r-{{ data_link.schema }}-{{ data_link.table }}">
+    <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-r-{{ master_dataset_info.schema }}-{{ master_dataset_info.table }}">
       <h3 class="govuk-heading-m">R</h3>
       <div class="app-example__code">
         <pre data-module="app-copy" style="white-space: pre-wrap;">
