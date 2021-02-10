@@ -59,17 +59,17 @@
         </thead>
         <tbody>
 
-        {% for master_dataset_info, code_snippets in master_datasets_info %}
+        {% for source_table, code_snippets, columns in master_datasets_info %}
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell app-table_cell--no-border">{{ master_dataset_info.name }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">"{{ master_dataset_info.schema }}"."{{ master_dataset_info.table }}"</td>
-            <td class="govuk-table__cell app-table_cell--no-border">{{ master_dataset_info.get_frequency_display }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">{{ master_dataset_info.get_data_last_updated_date|default_if_none:"N/A" }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.name }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">"{{ source_table.schema }}"."{{ source_table.table }}"</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.get_frequency_display }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.get_data_last_updated_date|default_if_none:"N/A" }}</td>
             <td class="govuk-table__cell app-table_cell--no-border">
-              {% if master_dataset_info.type == source_table_type %}
+              {% if source_table.type == source_table_type %}
                 {% if has_access %}
                   <a class="govuk-link"
-                      href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=master_dataset_info.id %}">
+                      href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=source_table.id %}">
                       Preview
                   </a>
                 {% else %}
@@ -85,11 +85,28 @@
                   <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
                     <summary class="govuk-details__summary">
                       <span class="govuk-details__summary-text">
-                        Code snippets <span class="govuk-visually-hidden">for "{{ master_dataset_info.schema }}"."{{ master_dataset_info.table }}"</span>
+                        Code snippets and columns <span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
                       </span>
                     </summary>
                     <div class="govuk-details__text">
-                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets master_dataset_info=master_dataset_info %}
+                      <h3 class="govuk-heading-m">
+                        Column names and types <span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+                      </h3>
+                      <ul class="govuk-list govuk-list--bullet">
+                        {% for column, data_type in columns|slice:":12" %}
+                          <li>
+                            <strong>{{ column }}</strong> ({{ data_type }})
+                          </li>
+                        {% endfor %}
+                        {% if columns|length > 12 %}
+                          <a class="govuk-link" href="{% url 'datasets:source_table_column_details' dataset_uuid=dataset.id table_uuid=source_table.id %}">
+                            View all columns <span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+                          </a>
+                        {% endif %}
+                      </ul>
+                    </div>
+                    <div class="govuk-details__text">
+                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
                     </div>
                   </details>
                 </td>

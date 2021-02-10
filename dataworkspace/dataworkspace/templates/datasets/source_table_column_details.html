@@ -1,0 +1,29 @@
+{% extends '_main.html' %}
+{% load static core_tags %}
+
+{% block page_title %}Columns names and types for "{{ source_table.schema }}"."{{ source_table.table }}" - Data Workspace{% endblock %}
+
+{% block go_back %}
+  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
+    Back
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Column names and types</h1>
+      <h2 class="govuk-heading-m">{{ source_table.name }}</h2>
+      <p class="govuk-body">
+        "{{ source_table.schema }}"."{{ source_table.table }}"
+      </p>
+      <ul class="govuk-list govuk-!-margin-top-9">
+        {% for column, data_type in columns %}
+        <li>
+          <strong>{{ column }}</strong> ({{ data_type }})
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endblock %}

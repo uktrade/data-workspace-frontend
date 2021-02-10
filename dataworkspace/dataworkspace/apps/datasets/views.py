@@ -41,7 +41,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
-from django.views.generic import DetailView
+from django.views.generic import DetailView, View
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
@@ -535,13 +535,20 @@ class DatasetDetailView(DetailView):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
 
         MasterDatasetInfo = namedtuple(
-            'MasterDatasetInfo', ('dataset', 'code_snippets')
+            'MasterDatasetInfo', ('source_table', 'code_snippets', 'columns')
         )
         master_datasets_info = [
             MasterDatasetInfo(
-                dataset=dataset, code_snippets=get_code_snippets(dataset),
+                source_table=source_table,
+                code_snippets=get_code_snippets(source_table),
+                columns=datasets_db.get_columns(
+                    source_table.database.memorable_name,
+                    schema=source_table.schema,
+                    table=source_table.table,
+                    include_types=True,
+                ),
             )
-            for dataset in sorted(source_tables, key=lambda x: x.name)
+            for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
 
         ctx.update(
@@ -572,7 +579,12 @@ class DatasetDetailView(DetailView):
             columns = None
 
         datacuts = sorted(
-            chain(self.object.sourcelink_set.all(), source_views, custom_queries),
+            chain(
+                self.object.sourcetable_set.all(),
+                self.object.sourcelink_set.all(),
+                source_views,
+                custom_queries,
+            ),
             key=lambda x: x.name,
         )
 
@@ -1154,3 +1166,32 @@ class CustomDatasetQueryPreviewView(DatasetPreviewView):
         preview_query = query_object.query
 
         return query_object, columns, preview_query
+
+
+class SourceTableColumnDetails(View):
+    def get(self, request, dataset_uuid, table_uuid):
+        try:
+            dataset = DataSet.objects.get(
+                id=dataset_uuid, type=DataSetType.MASTER.value
+            )
+            source_table = SourceTable.objects.get(
+                id=table_uuid, dataset__id=dataset_uuid
+            )
+        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+            return HttpResponse(status=404)
+
+        columns = datasets_db.get_columns(
+            source_table.database.memorable_name,
+            schema=source_table.schema,
+            table=source_table.table,
+            include_types=True,
+        )
+        return render(
+            request,
+            'datasets/source_table_column_details.html',
+            context={
+                "dataset": dataset,
+                "source_table": source_table,
+                "columns": columns,
+            },
+        )

@@ -1391,6 +1391,36 @@ def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
     )
 
 
+@mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
+@pytest.mark.django_db
+def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
+    get_columns_mock, metadata_db
+):
+    ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
+    user = get_user_model().objects.create(is_superuser=False)
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+    st = factories.SourceTableFactory.create(
+        dataset=ds,
+        schema="public",
+        table="MY_LOVELY_TABLE",
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
+    get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(20)]
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+    response_body = response.content.decode(response.charset)
+    doc = html.fromstring(response_body)
+
+    assert response.status_code == 200
+    for i in range(12):
+        assert f"<strong>column_{i}</strong> (integer)" in response_body
+
+    assert (
+        len(doc.xpath(f"//a[@href = '/datasets/{ds.id}/table/{st.id}/columns']")) == 1
+    )
+
+
 @pytest.mark.django_db(transaction=True)
 def test_launch_master_dataset_in_data_explorer(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
@@ -1965,3 +1995,60 @@ class TestCustomQueryRelatedDataView:
         response = request_client.get(url)
         assert response.status_code == status
         assert len(response.context["related_masters"]) == 2
+
+
+class TestSourceTableColumnDetailsView:
+    @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
+    @pytest.mark.django_db
+    def test_page_shows_all_columns_for_dataset(self, get_columns_mock):
+        ds = factories.DataSetFactory.create(
+            type=DataSetType.MASTER.value, published=True
+        )
+        user = get_user_model().objects.create(is_superuser=False)
+        factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+        st = factories.SourceTableFactory.create(
+            dataset=ds,
+            schema="public",
+            table="MY_LOVELY_TABLE",
+            database=factories.DatabaseFactory(memorable_name='my_database'),
+        )
+        get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(100)]
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(
+            reverse(
+                'datasets:source_table_column_details',
+                kwargs=dict(dataset_uuid=ds.id, table_uuid=st.id),
+            )
+        )
+        response_body = response.content.decode(response.charset)
+
+        assert response.status_code == 200
+        for i in range(100):
+            assert f"<strong>column_{i}</strong> (integer)" in response_body
+
+    @pytest.mark.django_db
+    def test_404_if_wrong_dataset_for_source_table_in_url(self):
+        user = get_user_model().objects.create(is_superuser=False)
+        ds1 = factories.DataSetFactory.create(
+            type=DataSetType.MASTER.value, published=True
+        )
+        ds2 = factories.DataSetFactory.create(
+            type=DataSetType.MASTER.value, published=True
+        )
+        st = factories.SourceTableFactory.create(
+            dataset=ds2,
+            schema="public",
+            table="MY_LOVELY_TABLE",
+            database=factories.DatabaseFactory(memorable_name='my_database'),
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(
+            reverse(
+                'datasets:source_table_column_details',
+                kwargs=dict(dataset_uuid=ds1.id, table_uuid=st.id),
+            )
+        )
+
+        assert response.status_code == 404
