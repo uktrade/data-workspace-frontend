@@ -17,9 +17,9 @@ from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.utils import (
     get_user_explorer_connection_settings,
     tempory_query_table_name,
-    TYPE_CODES_REVERSED,
     user_explorer_connection,
 )
+from dataworkspace.utils import TYPE_CODES_REVERSED
 from dataworkspace.cel import celery_app
 from dataworkspace.settings.base import DATABASES_DATA
 

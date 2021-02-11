@@ -41,10 +41,9 @@ from django.http import (
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
-from django.views.generic import DetailView
+from django.views.generic import DetailView, View
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.applications.utils import get_quicksight_dashboard_name_url
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -532,54 +531,41 @@ class DatasetDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data()
-        ctx['model'] = self.object
-
-        if self._is_reference_dataset():
-            records = self.object.get_records()
-            total_record_count = records.count()
-            preview_limit = self.get_preview_limit(total_record_count)
-            records = records[:preview_limit]
-
-            ctx.update(
-                {
-                    'preview_limit': preview_limit,
-                    'record_count': total_record_count,
-                    'records': records,
-                }
-            )
-            return ctx
-
-        elif self._is_visualisation():
-            ctx.update(
-                {
-                    'has_access': self.object.user_has_access(self.request.user),
-                    "visualisation_links": self.object.get_visualisation_links(
-                        self.request
-                    ),
-                }
-            )
-            return ctx
-
+    def _get_context_data_for_master_dataset(self, ctx, **kwargs):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
+
+        MasterDatasetInfo = namedtuple(
+            'MasterDatasetInfo', ('source_table', 'code_snippets', 'columns')
+        )
+        master_datasets_info = [
+            MasterDatasetInfo(
+                source_table=source_table,
+                code_snippets=get_code_snippets(source_table),
+                columns=datasets_db.get_columns(
+                    source_table.database.memorable_name,
+                    schema=source_table.schema,
+                    table=source_table.table,
+                    include_types=True,
+                ),
+            )
+            for source_table in sorted(source_tables, key=lambda x: x.name)
+        ]
+
+        ctx.update(
+            {
+                'has_access': self.object.user_has_access(self.request.user),
+                'master_datasets_info': master_datasets_info,
+                'source_table_type': DataLinkType.SOURCE_TABLE.value,
+            }
+        )
+        return ctx
+
+    def _get_context_data_for_datacut_dataset(self, ctx, **kwargs):
         source_views = self.object.sourceview_set.all()
         custom_queries = self.object.customdatasetquery_set.all().prefetch_related(
             'tables'
         )
-
-        if source_tables:
-            columns = []
-            for table in source_tables:
-                columns += [
-                    "{}.{}".format(table.table, column)
-                    for column in datasets_db.get_columns(
-                        table.database.memorable_name,
-                        schema=table.schema,
-                        table=table.table,
-                    )
-                ]
-        elif source_views:
+        if source_views:
             columns = datasets_db.get_columns(
                 source_views[0].database.memorable_name,
                 schema=source_views[0].schema,
@@ -592,35 +578,24 @@ class DatasetDetailView(DetailView):
         else:
             columns = None
 
-        data_links = sorted(
+        datacuts = sorted(
             chain(
+                self.object.sourcetable_set.all(),
                 self.object.sourcelink_set.all(),
-                source_tables,
                 source_views,
                 custom_queries,
             ),
             key=lambda x: x.name,
         )
 
-        DataLinkWithLinkToggle = namedtuple(
-            'DataLinkWithLinkToggle', ('data_link', 'can_show_link', 'code_snippets')
-        )
-        data_links_with_link_toggle = [
-            DataLinkWithLinkToggle(
-                data_link=data_link,
-                can_show_link=data_link.can_show_link_for_user(self.request.user),
-                code_snippets=get_code_snippets(data_link),
+        DatacutLinkInfo = namedtuple('DatacutLinkInfo', ('datacut', 'can_show_link'))
+        datacut_links_info = [
+            DatacutLinkInfo(
+                datacut=datacut,
+                can_show_link=datacut.can_show_link_for_user(self.request.user),
             )
-            for data_link in data_links
+            for datacut in datacuts
         ]
-
-        quicksight_dashboard_id = self.request.GET.get("quicksight_dashboard_id", None)
-        if quicksight_dashboard_id:
-            _, dashboard_url = get_quicksight_dashboard_name_url(
-                quicksight_dashboard_id, self.request.user
-            )
-        else:
-            _, dashboard_url = None, None
 
         query_tables = []
         for query in custom_queries:
@@ -634,19 +609,65 @@ class DatasetDetailView(DetailView):
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
-                'data_links_with_link_toggle': data_links_with_link_toggle,
+                'datacut_links_info': datacut_links_info,
                 'fields': columns,
                 'data_hosted_externally': any(
                     not source_link.url.startswith('s3://')
                     for source_link in self.object.sourcelink_set.all()
                 ),
-                'visualisation_src': dashboard_url,
                 'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY.value,
-                'source_table_type': DataLinkType.SOURCE_TABLE.value,
                 'related_masters': set(related_masters),
             }
         )
         return ctx
+
+    def _get_context_data_for_reference_dataset(self, ctx, **kwargs):
+        records = self.object.get_records()
+        total_record_count = records.count()
+        preview_limit = self.get_preview_limit(total_record_count)
+        records = records[:preview_limit]
+
+        ctx.update(
+            {
+                'preview_limit': preview_limit,
+                'record_count': total_record_count,
+                'records': records,
+            }
+        )
+        return ctx
+
+    def _get_context_data_for_visualisation(self, ctx, **kwargs):
+        ctx.update(
+            {
+                'has_access': self.object.user_has_access(self.request.user),
+                "visualisation_links": self.object.get_visualisation_links(
+                    self.request
+                ),
+            }
+        )
+        return ctx
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data()
+        ctx['model'] = self.object
+
+        if self._is_reference_dataset():
+            return self._get_context_data_for_reference_dataset(ctx, **kwargs)
+
+        elif self._is_visualisation():
+            return self._get_context_data_for_visualisation(ctx, **kwargs)
+
+        elif self.object.type == DataSetType.MASTER.value:
+            return self._get_context_data_for_master_dataset(ctx, **kwargs)
+
+        elif self.object.type == DataSetType.DATACUT.value:
+            return self._get_context_data_for_datacut_dataset(ctx, **kwargs)
+
+        breakpoint()
+
+        raise ValueError(
+            f"Unknown dataset/type for {self.__class__.__name__}: {self.object}"
+        )
 
     def get_template_names(self):
         if self._is_reference_dataset():
@@ -1145,3 +1166,32 @@ class CustomDatasetQueryPreviewView(DatasetPreviewView):
         preview_query = query_object.query
 
         return query_object, columns, preview_query
+
+
+class SourceTableColumnDetails(View):
+    def get(self, request, dataset_uuid, table_uuid):
+        try:
+            dataset = DataSet.objects.get(
+                id=dataset_uuid, type=DataSetType.MASTER.value
+            )
+            source_table = SourceTable.objects.get(
+                id=table_uuid, dataset__id=dataset_uuid
+            )
+        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+            return HttpResponse(status=404)
+
+        columns = datasets_db.get_columns(
+            source_table.database.memorable_name,
+            schema=source_table.schema,
+            table=source_table.table,
+            include_types=True,
+        )
+        return render(
+            request,
+            'datasets/source_table_column_details.html',
+            context={
+                "dataset": dataset,
+                "source_table": source_table,
+                "columns": columns,
+            },
+        )
