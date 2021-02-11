@@ -64,7 +64,11 @@ pipeline {
                     -c ${env.WORKSPACE} \
                     --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/analysisworkspace-dev-admin:${params.GIT_COMMIT} \
                     --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/data-workspace-staging-admin:${params.GIT_COMMIT} \
-                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/jupyterhub-admin:${params.GIT_COMMIT}
+                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/jupyterhub-admin:${params.GIT_COMMIT} \
+                    --cache=true \
+                    --cache-repo=165562107270.dkr.ecr.eu-west-2.amazonaws.com/data-workspace-admin-cache \
+                    --skip-unused-stages=true \
+                    --target=live
                   """
               }
             }
