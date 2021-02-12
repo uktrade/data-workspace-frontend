@@ -72,8 +72,8 @@
                   </p>
                 </div>
                 <button type="button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation" aria-label="Show or hide Top Level Navigation">Menu</button>
-                <nav>
-                    <ul id="navigation" class="govuk-header__navigation" aria-label="Top Level Navigation">
+                <nav aria-label="Top Level Navigation">
+                    <ul id="navigation" class="govuk-header__navigation">
                         <li class="govuk-header__navigation-item{% if active_menu == 'home' %} govuk-header__navigation-item--active{% endif %}">
                             <a class="govuk-header__link" href="{% url 'explorer:index' %}">Home</a>
                         </li>
