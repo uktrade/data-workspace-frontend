@@ -569,6 +569,8 @@ resource "aws_launch_configuration" "gitlab_runner" {
   echo "concurrent = 10" >> /etc/gitlab-runner/config.toml
   echo "check_interval = 1" >> /etc/gitlab-runner/config.toml
 
+  echo "0 0 * * * /usr/bin/docker image prune -f -a --filter until=168h" >> /var/spool/cron/ec2-user
+
   gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
   gitlab-runner start
   # Connects via HTTP, but uses private ip, not public internet
