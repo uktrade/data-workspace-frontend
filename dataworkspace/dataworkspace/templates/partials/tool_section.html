@@ -12,7 +12,10 @@
     <p class="govuk-body">
       {{ application_summary }}
       {% if application_help_link %}
-      <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">Read&nbsp;more</a>
+      <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">
+        Read&nbsp;more
+        <span class="govuk-visually-hidden">about {{ application_name }}</span>
+      </a>
       {% endif %}
     </p>
   </div>
