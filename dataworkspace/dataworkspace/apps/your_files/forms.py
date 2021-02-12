@@ -6,15 +6,21 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
 from dataworkspace.apps.core.utils import get_s3_prefix, table_exists
+from dataworkspace.forms import (
+    GOVUKDesignSystemCharField,
+    GOVUKDesignSystemForm,
+    GOVUKDesignSystemTextWidget,
+)
 
 
-class CreateTableForm(forms.Form):
+class CreateTableForm(GOVUKDesignSystemForm):
     path = forms.CharField(required=True, widget=forms.HiddenInput())
     schema = forms.CharField(required=True, widget=forms.HiddenInput())
-    table_name = forms.CharField(
+    table_name = GOVUKDesignSystemCharField(
+        label='How do you want to name your table?',
+        help_text='This will be the name you will see your table with, in your personal database schema.',
         required=True,
-        label=False,
-        widget=forms.TextInput(attrs={"class": "govuk-input"}),
+        widget=GOVUKDesignSystemTextWidget(label_size='xl', label_is_heading=True),
         validators=[
             RegexValidator(
                 regex=r'^[a-zA-Z][a-zA-Z0-9_]*$',
