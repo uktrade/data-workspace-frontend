@@ -34,7 +34,7 @@
           {{ form.force_overwrite }}
         </div>
         <button type="submit" class="govuk-button">Yes, I understand - Continue</button>
-        <a href="{% url 'your_files:create-table-confirm-name' %}?path={{ request.GET.path }}&table_name={{ form.table_name.value }}" class="govuk-button govuk-button--secondary">
+        <a href="{% url 'your_files:create-table-confirm-name' %}?path={{ request.GET.path }}&table_name={{ form.table_name.value }}&schema={{ form.schema.value }}" class="govuk-button govuk-button--secondary">
           Cancel
         </a>
       </form>
