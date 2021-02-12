@@ -42,7 +42,7 @@ def get_s3_csv_column_types(path):
     head = file['Body'].read().decode('utf-8')
     csv_data = head.splitlines()
 
-    if len(csv_data) <= 10:
+    if len(csv_data) <= 3:
         raise ValueError("Unable to read enough lines of data from file", path)
 
     # Drop the last line, which might be incomplete
