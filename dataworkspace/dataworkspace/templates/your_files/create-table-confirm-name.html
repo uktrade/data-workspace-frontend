@@ -10,39 +10,10 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <form method="POST" novalidate>
-        <div class="govuk-form-group{% if form.table_name.errors %} govuk-form-group--error{% endif %}">
-          <h1 class="govuk-label-wrapper">
-            <label class="govuk-label govuk-label--xl" for="table">
-              {% if confirm_overwrite %}
-                Table already exists
-              {% else %}
-                How do you want to name your table?
-              {% endif %}
-            </label>
-          </h1>
-          <div class="table-hint">
-            <p class="govuk-body">
-              {% if confirm_overwrite %}
-                A table already exists in your personal database schema with the name "{{ form.table_name.value }}". Do you want to overwrite existing table?
-              {% else %}
-                This will be the name you will see your table with, in your personal database schema.
-              {% endif %}
-            </p>
-          </div>
-          {% csrf_token %}
-          {% if confirm_overwrite %}
-            {{ form }}
-          {% else %}
-            {% if form.table_name.errors %}
-              <span id="{{ form.table_name.id }}-error" class="govuk-error-message">
-                  <span class="govuk-visually-hidden">Error: </span>{{ form.table_name.errors.0 }}
-              </span>
-            {% endif %}
-            {{ form.table_name }}
-            {{ form.path }}
-            {{ form.schema }}
-          {% endif %}
-        </div>
+        {% csrf_token %}
+        {{ form.table_name }}
+        {{ form.path }}
+        {{ form.schema }}
         <button type="submit" class="govuk-button">Continue</button>
       </form>
     </div>
