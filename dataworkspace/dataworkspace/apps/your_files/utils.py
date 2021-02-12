@@ -11,6 +11,10 @@ from django.conf import settings
 from mohawk import Sender
 from tableschema import Schema
 
+from dataworkspace.apps.core.utils import (
+    USER_SCHEMA_STEM,
+    db_role_schema_suffix_for_user,
+)
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
@@ -140,3 +144,7 @@ def get_dataflow_dag_status(execution_date):
     response = requests.get(url, headers={'Authorization': header, 'Content-Type': ''},)
     response.raise_for_status()
     return response.json()
+
+
+def get_user_schema(request):
+    return f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(request.user)}'

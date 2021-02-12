@@ -1,0 +1,41 @@
+{% extends '_main.html' %}
+
+{% block page_title %}Table already exists{% endblock page_title %}
+
+{% block go_back %}
+  <a href="{% url 'your_files:create-table-confirm-name' %}?path={{ request.GET.path }}&table_name={{ form.table_name.value }}" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <form method="POST" action="{% url 'your_files:create-table-confirm-name' %}?{{ request.GET.urlencode }}" novalidate>
+        <div class="govuk-form-group{% if form.table_name.errors %} govuk-form-group--error{% endif %}">
+          <h1 class="govuk-label-wrapper">
+            <label class="govuk-label govuk-label--xl" for="table">
+              Table already exists
+            </label>
+          </h1>
+          <div class="table-hint">
+            <p class="govuk-body">
+              A table already exists in your personal database schema with the name "{{ form.table_name.value }}". Do you want to overwrite the existing table?
+            </p>
+          </div>
+        <div class="govuk-warning-text">
+          <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+          <strong class="govuk-warning-text__text">
+            <span class="govuk-warning-text__assistive">Warning</span>
+            If you overwrite the existing table, you will not be able to take the changes back.
+          </strong>
+        </div>
+          {% csrf_token %}
+          {{ form }}
+        </div>
+        <button type="submit" class="govuk-button">Yes, I understand - Continue</button>
+        <a href="{% url 'your_files:create-table-confirm-name' %}?path={{ request.GET.path }}&table_name={{ form.table_name.value }}" class="govuk-button govuk-button--secondary">
+          Cancel
+        </a>
+      </form>
+    </div>
+  </div>
+{% endblock %}

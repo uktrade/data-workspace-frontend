@@ -11,21 +11,31 @@ from waffle.testutils import override_flag
 
 
 class TestCreateTableViews:
-    url = reverse('your-files:create-table')
-
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     def test_get_with_csv_file(self, client):
-        response = client.get(self.url + "?path=user/federated/abc/i-am-a.csv")
+        response = client.get(
+            reverse('your-files:create-table-confirm')
+            + "?path=user/federated/abc/i-am-a.csv"
+        )
         assert response.status_code == 200
         assert "Create a table from i-am-a.csv" in response.content.decode(
             response.charset
         )
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
+    def test_get_without_csv_file(self, client):
+        response = client.get(reverse('your-files:create-table-confirm'))
+        assert response.status_code == 400
+
+    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_invalid_file_type(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
-        response = client.post(self.url, data={'path': 'not-a-csv.txt'}, follow=True,)
+        response = client.post(
+            reverse('your-files:create-table-confirm-name'),
+            data={'path': 'not-a-csv.txt'},
+            follow=True,
+        )
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
@@ -33,7 +43,9 @@ class TestCreateTableViews:
     def test_unauthorised_file(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         response = client.post(
-            self.url, data={'path': 'user/federated/def/a-csv.csv'}, follow=True,
+            reverse('your-files:create-table-confirm-name'),
+            data={'path': 'user/federated/def/a-csv.csv'},
+            follow=True,
         )
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
@@ -49,7 +61,9 @@ class TestCreateTableViews:
         ]
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         response = client.post(
-            self.url, data={'path': 'user/federated/abc/a-csv.csv'}, follow=True,
+            reverse('your-files:create-table-confirm-name'),
+            data={'path': 'user/federated/abc/a-csv.csv'},
+            follow=True,
         )
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
@@ -58,14 +72,17 @@ class TestCreateTableViews:
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
+    @mock.patch('dataworkspace.apps.your_files.forms.table_exists')
     def test_trigger_failed(
         self,
+        mock_table_exists,
         mock_get_s3_prefix,
         mock_boto_client,
         mock_get_column_types,
         mock_copy_file,
         client,
     ):
+        mock_table_exists.return_value = False
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         mock_get_column_types.return_value = {'field1': 'varchar'}
         with requests_mock.Mocker() as rmock:
@@ -74,10 +91,15 @@ class TestCreateTableViews:
                 status_code=500,
             )
             response = client.post(
-                self.url,
-                data={'path': 'user/federated/abc/not-a-csv.csv'},
+                reverse('your-files:create-table-confirm-name'),
+                data={
+                    'path': 'user/federated/abc/a-csv.csv',
+                    'table_name': 'test_table',
+                    'schema': 'test_schema',
+                },
                 follow=True,
             )
+
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
@@ -99,7 +121,13 @@ class TestCreateTableViews:
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         mock_get_column_types.return_value = {'field1': 'varchar'}
         response = client.post(
-            self.url, data={'path': 'user/federated/abc/a-csv.csv'}, follow=True,
+            reverse('your-files:create-table-confirm-name'),
+            data={
+                'path': 'user/federated/abc/a-csv.csv',
+                'schema': '_user_40e80e4e',
+                'table_name': 'a_csv',
+            },
+            follow=True,
         )
         assert b'Validating a-csv.csv' in response.content
         mock_get_column_types.assert_called_with('user/federated/abc/a-csv.csv')
@@ -107,6 +135,98 @@ class TestCreateTableViews:
             'user/federated/abc/a-csv.csv',
             'data-flow-imports/user/federated/abc/a-csv.csv',
         )
+        mock_trigger_dag.assert_called_with(
+            'data-flow-imports/user/federated/abc/a-csv.csv',
+            '_user_40e80e4e',
+            'a_csv',
+            {'field1': 'varchar'},
+            '_user_40e80e4e-a_csv-2021-01-01T01:01:01',
+        )
+
+    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
+    @freeze_time('2021-01-01 01:01:01')
+    @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
+    @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
+    @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
+    def test_invalid_table_name(
+        self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client,
+    ):
+        mock_get_s3_prefix.return_value = 'user/federated/abc'
+        mock_get_column_types.return_value = {'field1': 'varchar'}
+        response = client.post(
+            reverse('your-files:create-table-confirm-name'),
+            data={
+                'path': 'user/federated/abc/a-csv.csv',
+                'schema': '_user_40e80e4e',
+                'table_name': 'a csv with a space',
+            },
+            follow=True,
+        )
+        assert (
+            b'Table names can contain only letters, numbers and underscores'
+            in response.content
+        )
+
+    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
+    @freeze_time('2021-01-01 01:01:01')
+    @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
+    @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
+    @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
+    @mock.patch('dataworkspace.apps.your_files.forms.table_exists')
+    def test_table_exists(
+        self,
+        mock_table_exists,
+        mock_get_s3_prefix,
+        mock_boto_client,
+        mock_get_column_types,
+        client,
+    ):
+        mock_table_exists.return_value = True
+        mock_get_s3_prefix.return_value = 'user/federated/abc'
+        mock_get_column_types.return_value = {'field1': 'varchar'}
+        response = client.post(
+            reverse('your-files:create-table-confirm-name'),
+            data={
+                'path': 'user/federated/abc/a-csv.csv',
+                'schema': '_user_40e80e4e',
+                'table_name': 'a_csv',
+            },
+            follow=True,
+        )
+        assert b'Table already exists' in response.content
+
+    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
+    @freeze_time('2021-01-01 01:01:01')
+    @mock.patch('dataworkspace.apps.your_files.views.trigger_dataflow_dag')
+    @mock.patch('dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket')
+    @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
+    @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
+    @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
+    @mock.patch('dataworkspace.apps.your_files.forms.table_exists')
+    def test_table_exists_override(
+        self,
+        mock_table_exists,
+        mock_get_s3_prefix,
+        mock_boto_client,
+        mock_get_column_types,
+        mock_copy_file,
+        mock_trigger_dag,
+        client,
+    ):
+        mock_table_exists.return_value = True
+        mock_get_s3_prefix.return_value = 'user/federated/abc'
+        mock_get_column_types.return_value = {'field1': 'varchar'}
+        response = client.post(
+            reverse('your-files:create-table-confirm-name'),
+            data={
+                'path': 'user/federated/abc/a-csv.csv',
+                'schema': '_user_40e80e4e',
+                'table_name': 'a_csv',
+                'force_overwrite': True,
+            },
+            follow=True,
+        )
+        assert b'Validating a-csv.csv' in response.content
         mock_trigger_dag.assert_called_with(
             'data-flow-imports/user/federated/abc/a-csv.csv',
             '_user_40e80e4e',
