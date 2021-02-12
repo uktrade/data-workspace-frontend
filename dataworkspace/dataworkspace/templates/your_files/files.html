@@ -295,7 +295,7 @@ Modified by the Department for International Trade
                             {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
                               <td class="govuk-table__cell">
                                 <span ng-if="object.isCsv">
-                                  <a class="govuk-link" href="{% url 'your-files:create-table' %}?path={% verbatim %}{{ :: object.Key }}{% endverbatim %}">
+                                  <a class="govuk-link" href="{% url 'your-files:create-table-confirm' %}?path={% verbatim %}{{ :: object.Key }}{% endverbatim %}">
                                     Create table
                                   </a>
                                 </span>

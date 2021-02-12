@@ -3,16 +3,39 @@ from botocore.exceptions import ClientError
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
-from dataworkspace.apps.core.utils import get_s3_prefix
+from dataworkspace.apps.core.utils import get_s3_prefix, table_exists
+from dataworkspace.forms import (
+    GOVUKDesignSystemCharField,
+    GOVUKDesignSystemForm,
+    GOVUKDesignSystemTextWidget,
+)
 
 
-class CreateTableForm(forms.Form):
-    path = forms.CharField(required=True)
+class CreateTableForm(GOVUKDesignSystemForm):
+    path = forms.CharField(required=True, widget=forms.HiddenInput())
+    schema = forms.CharField(required=True, widget=forms.HiddenInput())
+    table_name = GOVUKDesignSystemCharField(
+        label='How do you want to name your table?',
+        help_text='This will be the name you will see your table with, in your personal database schema.',
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(label_size='xl', label_is_heading=True),
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Z][a-zA-Z0-9_]*$',
+                message='Table names can contain only letters, numbers and underscores',
+                code='invalid-table-name',
+            )
+        ],
+    )
+    force_overwrite = forms.BooleanField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
+        if self.initial.get('force_overwrite'):
+            self.fields['table_name'].widget = forms.HiddenInput()
 
     def clean_path(self):
         path = self.cleaned_data['path']
@@ -32,3 +55,20 @@ class CreateTableForm(forms.Form):
             raise ValidationError('This file does not exist in S3')
 
         return path
+
+    def clean(self):
+        table_name = self.cleaned_data.get('table_name')
+        if table_name:
+            if table_exists(
+                settings.EXPLORER_DEFAULT_CONNECTION,
+                self.cleaned_data['schema'],
+                table_name,
+            ) and not self.cleaned_data.get('force_overwrite'):
+                self.add_error(
+                    'table_name',
+                    ValidationError(
+                        'This table already exists', code='duplicate-table'
+                    ),
+                )
+
+        return super().clean()

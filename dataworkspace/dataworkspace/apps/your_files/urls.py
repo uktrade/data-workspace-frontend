@@ -6,6 +6,8 @@ from dataworkspace.apps.your_files.views import (
     CreateTableFailedView,
     CreateTableIngestingView,
     CreateTableSuccessView,
+    CreateTableTableExists,
+    CreateTableTableNameView,
     CreateTableValidatingView,
     CreateTableView,
     file_browser_html_view,
@@ -14,7 +16,14 @@ from dataworkspace.apps.your_files.views import (
 urlpatterns = [
     path('', login_required(file_browser_html_view), name='files'),
     path(
-        'create-table', login_required(CreateTableView.as_view()), name='create-table'
+        'create-table/confirm',
+        login_required(CreateTableView.as_view()),
+        name='create-table-confirm',
+    ),
+    path(
+        'create-table/create',
+        login_required(CreateTableTableNameView.as_view()),
+        name='create-table-confirm-name',
     ),
     path(
         'create-table/validating',
@@ -35,6 +44,11 @@ urlpatterns = [
         'create-table/failed',
         login_required(CreateTableFailedView.as_view()),
         name='create-table-failed',
+    ),
+    path(
+        'create-table/table-exists',
+        login_required(CreateTableTableExists.as_view()),
+        name='create-table-table-exists',
     ),
     path(
         'create-table/status/<str:execution_date>',

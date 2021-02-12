@@ -3,7 +3,7 @@
 {% block page_title %}Create table{% endblock page_title %}
 
 {% block go_back %}
-  <a href="{{ backlink }}" class="govuk-back-link">Back</a>
+  <a href="{% url 'your_files:files' %}" class="govuk-back-link">Back</a>
 {% endblock %}
 
 {% block content %}
@@ -17,11 +17,9 @@
         It will create a table in your private schema containing the data which can be queried using SQL and
         combined with other master datasets in Data Workspace tools.
       </p>
-      <form method="POST" novalidate>
-        {% csrf_token %}
-        <input type="hidden" name="path" value="{{ path }}">
-        <button type="submit" class="govuk-button">Continue</button>
-      </form>
+      <a href="{% url 'your_files:create-table-confirm-name' %}?{{ request.GET.urlencode }}&table_name={{ table_name }}" class="govuk-button">
+        Continue
+      </a>
     </div>
   </div>
 {% endblock %}
