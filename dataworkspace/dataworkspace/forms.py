@@ -119,7 +119,9 @@ class GOVUKDesignSystemModelForm(forms.ModelForm):
 
         if self.is_bound:
             for field in self:
-                if self.errors.get(field.name):
+                if self.errors.get(field.name) and not isinstance(
+                    self.fields[field.name].widget, forms.HiddenInput
+                ):
                     self.fields[field.name].widget.custom_context[
                         'errors'
                     ] = self.errors[field.name]
@@ -141,11 +143,14 @@ class GOVUKDesignSystemModelForm(forms.ModelForm):
 
 
 class GOVUKDesignSystemForm(forms.Form):
+    """This is duplicated from above because of issues using a mixin. Feels like it should be possible..."""
+
     def clean(self):
         """We need to attach errors to widgets so that the fields can be rendered correctly. This slightly breaks
         the Django model, which doesn't expose errors/validation to widgets as standard. We need to do this
         in order to render GOV.UK Design System validation correctly."""
         cleaned_data = super().clean()
+
         if self.is_bound:
             for field in self:
                 if self.errors.get(field.name) and not isinstance(
@@ -154,6 +159,7 @@ class GOVUKDesignSystemForm(forms.Form):
                     self.fields[field.name].widget.custom_context[
                         'errors'
                     ] = self.errors[field.name]
+
         return cleaned_data
 
     @property
@@ -166,4 +172,5 @@ class GOVUKDesignSystemForm(forms.Form):
             (field.id_for_label, field.errors[0]) for field in self if field.errors
         ]
         non_field_errors = [(None, e) for e in self.non_field_errors()]
+
         return non_field_errors + field_errors
