@@ -76,6 +76,9 @@
 </head>
   <body class="govuk-template__body">
     {% include 'partials/gtm_body.html' %}
+
+    <a href="{{ request.path }}#main-content" class="govuk-skip-link">Skip to main content</a>
+
     {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
       <div class="header-wrap">
         <header class="govuk-header" role="banner" data-module="govuk-header">
@@ -121,10 +124,12 @@
         </div>
       </div>
     {% endif %}
-    <div id="visualisation" class="visualisation-wrap">
-      {% block visualisation %}
-      {% endblock visualisation %}
-    </div>
+    <main id="main-content" role="main">
+      <div id="visualisation" class="visualisation-wrap">
+        {% block visualisation %}
+        {% endblock visualisation %}
+      </div>
+    </main>
     {% block javascript %}
     {% endblock javascript %}
   </body>
