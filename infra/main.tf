@@ -69,8 +69,6 @@ variable alb_logs_account {}
 variable cloudwatch_destination_arn {}
 
 variable mirrors_bucket_name {}
-variable mirrors_sync_container_image {}
-variable mirrors_sync_cran_binary_container_image {}
 variable mirrors_data_bucket_name {}
 
 variable sentry_dsn {}

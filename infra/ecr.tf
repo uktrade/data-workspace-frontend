@@ -62,6 +62,14 @@ resource "aws_ecr_repository" "visualisation_base_r" {
   name = "${var.prefix}-visualisation-base-r"
 }
 
+resource "aws_ecr_repository" "mirrors_sync" {
+  name = "${var.prefix}-mirrors-sync"
+}
+
+resource "aws_ecr_repository" "mirrors_sync_cran_binary" {
+  name = "${var.prefix}-mirrors-sync-cran-binary"
+}
+
 resource "aws_vpc_endpoint" "ecr_dkr" {
   vpc_id              = "${aws_vpc.main.id}"
   service_name        = "com.amazonaws.${data.aws_region.aws_region.name}.ecr.dkr"
@@ -229,6 +237,8 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
       "${aws_ecr_repository.healthcheck.arn}",
       "${aws_ecr_repository.prometheus.arn}",
       "${aws_ecr_repository.gitlab.arn}",
+      "${aws_ecr_repository.mirrors_sync.arn}",
+      "${aws_ecr_repository.mirrors_sync_cran_binary.arn}",
     ]
   }
 
