@@ -124,36 +124,37 @@
     </div>
     {% endfor %}
 
-    {% if datasets.paginator.count %}
-    <nav role="navigation" class="govuk-body">
+    <p class="govuk-body" style="display: inline">
       Displaying datasets {{ datasets.start_index  }}&ndash;{{ datasets.end_index }} of {{ datasets.paginator.count }}
+    </p>
+
+    {% if datasets.paginator.num_pages > 1 %}
+    <nav role="navigation" class="govuk-body" aria-label="Search result page navigation" style="display: inline">
       <ul class="pagination govuk-list">
         {% if datasets.has_previous %}
-          <li><a class="govuk-link" href="{% url_replace page=datasets.previous_page_number %}">Previous</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=datasets.previous_page_number %}" aria-label="Previous page">Previous</a></li>
         {% endif %}
 
         {% if datasets.number > 3 %}
-          <li><a class="govuk-link" href="{% url_replace page=1 %}">{{ 1 }}</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=1 %}" aria-label="Page 1">{{ 1 }}</a></li>
           {% if datasets.number > 4 %}<li>&hellip;</li>{% endif %}
         {% endif %}
 
-        {% if datasets.paginator.num_pages > 1 %}
         {% for i in datasets.paginator.page_range %}
           {% if datasets.number == i %}
             <li class="active">{{ i }}</li>
           {% elif i >= datasets.number|add:'-2' and i <= datasets.number|add:'2' %}
-            <li><a class="govuk-link" href="{% url_replace page=i %}">{{ i }}</a></li>
+            <li><a class="govuk-link" href="{% url_replace page=i %}" aria-label="Page {{ i }}">{{ i }}</a></li>
           {% endif %}
         {% endfor %}
-        {% endif %}
 
         {% if datasets.paginator.num_pages > datasets.number|add:'2' %}
           {% if datasets.paginator.num_pages > datasets.number|add:'3' %}<li>&hellip;</li>{% endif %}
-          <li><a class="govuk-link" href="{% url_replace page=datasets.paginator.num_pages %}">{{ datasets.paginator.num_pages }}</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=datasets.paginator.num_pages %}" aria-label="Page {{ datasets.paginator.num_pages }}">{{ datasets.paginator.num_pages }}</a></li>
         {% endif %}
 
         {% if datasets.has_next %}
-          <li><a class="govuk-link" href="{% url_replace page=datasets.next_page_number %}">Next</a></li>
+          <li><a class="govuk-link" href="{% url_replace page=datasets.next_page_number %}" aria-label="Next page">Next</a></li>
         {% endif %}
       </ul>
     </nav>
