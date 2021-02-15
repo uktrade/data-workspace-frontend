@@ -2,12 +2,13 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.your_files.views import (
+    CreateTableConfirmDataTypesView,
     CreateTableDAGStatusView,
     CreateTableFailedView,
     CreateTableIngestingView,
     CreateTableSuccessView,
     CreateTableTableExists,
-    CreateTableTableNameView,
+    CreateTableConfirmNameView,
     CreateTableValidatingView,
     CreateTableView,
     file_browser_html_view,
@@ -21,9 +22,14 @@ urlpatterns = [
         name='create-table-confirm',
     ),
     path(
-        'create-table/create',
-        login_required(CreateTableTableNameView.as_view()),
+        'create-table/confirm-name',
+        login_required(CreateTableConfirmNameView.as_view()),
         name='create-table-confirm-name',
+    ),
+    path(
+        'create-table/confirm-data-types',
+        login_required(CreateTableConfirmDataTypesView.as_view()),
+        name='create-table-confirm-data-types',
     ),
     path(
         'create-table/validating',

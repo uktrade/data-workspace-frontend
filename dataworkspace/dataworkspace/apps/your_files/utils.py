@@ -24,6 +24,7 @@ SCHEMA_POSTGRES_DATA_TYPE_MAP = {
     'datetime': PostgresDataTypes.TIMESTAMP.value,
     'number': PostgresDataTypes.NUMERIC.value,
     'text': PostgresDataTypes.TEXT.value,
+    'uuid': PostgresDataTypes.UUID.value,
 }
 
 
@@ -51,12 +52,14 @@ def get_s3_csv_column_types(path):
     # Pare down to a max of 10 lines so that inferring datatypes is quicker
     del csv_data[10:]
 
-    reader = csv.reader(StringIO('\n'.join(csv_data)))
+    fh = StringIO('\n'.join(csv_data))
+    reader = csv.reader(fh)
     schema = Schema()
     schema.infer(list(reader), confidence=1, headers=1)
 
     fields = []
-    for field in schema.descriptor['fields']:
+    for idx, field in enumerate(schema.descriptor['fields']):
+        fh.seek(0)
         fields.append(
             {
                 'header_name': field['name'],
@@ -64,6 +67,7 @@ def get_s3_csv_column_types(path):
                 'data_type': SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
                     field['type'], PostgresDataTypes.TEXT.value
                 ),
+                'sample_data': [row[idx] for row in reader][1:6],
             }
         )
     return fields

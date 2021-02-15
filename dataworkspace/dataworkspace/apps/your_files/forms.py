@@ -6,10 +6,13 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
 from dataworkspace.apps.core.utils import get_s3_prefix, table_exists
+from dataworkspace.apps.your_files.utils import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemChoiceField,
+    GOVUKDesignSystemSelectWidget,
 )
 
 
@@ -72,3 +75,30 @@ class CreateTableForm(GOVUKDesignSystemForm):
                 )
 
         return super().clean()
+
+
+class CreateTableDataTypesForm(CreateTableForm):
+    def __init__(self, *args, **kwargs):
+        self.column_definitions = kwargs.pop('column_definitions')
+        if not self.column_definitions:
+            raise ValueError('Definitions for at least one column must be provided')
+        super().__init__(*args, **kwargs)
+
+        for col_def in self.column_definitions:
+            self.fields[col_def['column_name']] = GOVUKDesignSystemChoiceField(
+                label=col_def['column_name'],
+                initial=col_def['data_type'],
+                choices=(
+                    (value, name.capitalize())
+                    for name, value in SCHEMA_POSTGRES_DATA_TYPE_MAP.items()
+                ),
+                widget=GOVUKDesignSystemSelectWidget(
+                    label_is_heading=False, extra_label_classes='govuk-visually-hidden',
+                ),
+            )
+
+    def get_data_type_fields(self):
+        for col_def in self.column_definitions:
+            yield self[col_def['column_name']], ', '.join(
+                map(str, col_def['sample_data'])
+            )

@@ -99,6 +99,14 @@ class GOVUKDesignSystemBooleanField(GOVUKDesignSystemFieldMixin, forms.BooleanFi
     widget = GOVUKDesignSystemSingleCheckboxWidget
 
 
+class GOVUKDesignSystemSelectWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.Select):
+    template_name = "design_system/select.html"
+
+
+class GOVUKDesignSystemChoiceField(GOVUKDesignSystemFieldMixin, forms.ChoiceField):
+    widget = GOVUKDesignSystemSelectWidget
+
+
 class GOVUKDesignSystemEmailValidationModelChoiceField(
     GOVUKDesignSystemFieldMixin, ModelChoiceField
 ):

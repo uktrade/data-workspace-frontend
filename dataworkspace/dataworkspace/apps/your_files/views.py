@@ -18,7 +18,11 @@ from requests import HTTPError
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.core.utils import get_s3_prefix
-from dataworkspace.apps.your_files.forms import CreateTableForm
+from dataworkspace.apps.your_files.constants import PostgresDataTypes
+from dataworkspace.apps.your_files.forms import (
+    CreateTableDataTypesForm,
+    CreateTableForm,
+)
 from dataworkspace.apps.your_files.utils import (
     copy_file_to_uploads_bucket,
     get_dataflow_dag_status,
@@ -26,6 +30,7 @@ from dataworkspace.apps.your_files.utils import (
     clean_db_identifier,
     get_user_schema,
     trigger_dataflow_dag,
+    SCHEMA_POSTGRES_DATA_TYPE_MAP,
 )
 
 
@@ -55,9 +60,20 @@ def file_browser_html_GET(request):
     )
 
 
-class CreateTableView(WaffleFlagMixin, TemplateView):
+class RequiredParameterGetRequestMixin:
+    required_parameters = []
+
+    def get(self, request, *args, **kwargs):
+        for param in self.required_parameters:
+            if param not in self.request.GET:
+                return HttpResponseBadRequest(f'Expected a `{param}` parameter')
+        return super().get(request, *args, **kwargs)
+
+
+class CreateTableView(WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView):
     template_name = 'your_files/create-table-confirm.html'
     waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
+    required_parameters = ['path']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -71,18 +87,14 @@ class CreateTableView(WaffleFlagMixin, TemplateView):
         )
         return context
 
-    def get(self, request, *args, **kwargs):
-        if 'path' not in self.request.GET:
-            return HttpResponseBadRequest(
-                "Expected a `path` parameter for the CSV file"
-            )
-        return super().get(request, *args, **kwargs)
 
-
-class CreateTableTableNameView(WaffleFlagMixin, FormView):
+class CreateTableConfirmNameView(
+    WaffleFlagMixin, RequiredParameterGetRequestMixin, FormView
+):
     template_name = 'your_files/create-table-confirm-name.html'
     waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     form_class = CreateTableForm
+    required_parameters = ['path']
 
     def get_initial(self):
         initial = super().get_initial()
@@ -97,45 +109,20 @@ class CreateTableTableNameView(WaffleFlagMixin, FormView):
             )
         return initial
 
-    def get(self, request, *args, **kwargs):
-        if 'path' not in self.request.GET:
-            return HttpResponseBadRequest(
-                "Expected a `path` parameter for the CSV file"
-            )
-        return super().get(request, *args, **kwargs)
-
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
     def form_valid(self, form):
-        cleaned = form.cleaned_data
-        column_definitions = get_s3_csv_column_types(cleaned['path'])
-        import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + '/' + cleaned['path']
-        copy_file_to_uploads_bucket(cleaned['path'], import_path)
-        filename = cleaned['path'].split('/')[-1]
-        try:
-            response = trigger_dataflow_dag(
-                import_path,
-                cleaned["schema"],
-                cleaned["table_name"],
-                column_definitions,
-                f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
-            )
-        except HTTPError:
-            return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-failed")}?' f'filename={filename}'
-            )
-
         params = {
-            'filename': filename,
-            'schema': cleaned['schema'],
-            'table_name': cleaned['table_name'],
-            'execution_date': response['execution_date'],
+            'path': form.cleaned_data['path'],
+            'schema': form.cleaned_data['schema'],
+            'table_name': form.cleaned_data['table_name'],
+            'overwrite': form.cleaned_data['force_overwrite'],
         }
         return HttpResponseRedirect(
-            f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
         )
 
     def form_invalid(self, form):
@@ -166,7 +153,77 @@ class CreateTableTableNameView(WaffleFlagMixin, FormView):
         return super().form_invalid(form)
 
 
-class BaseCreateTableTemplateView(WaffleFlagMixin, TemplateView):
+class CreateTableConfirmDataTypesView(WaffleFlagMixin, FormView):
+    template_name = 'your_files/create-table-confirm-data-types.html'
+    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
+    form_class = CreateTableDataTypesForm
+    required_parameters = [
+        'filename',
+        'schema',
+        'table_name',
+    ]
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.method == 'GET':
+            initial.update(
+                {
+                    'path': self.request.GET['path'],
+                    'schema': self.request.GET['schema'],
+                    'table_name': self.request.GET['table_name'],
+                    'force_overwrite': 'overwrite' in self.request.GET,
+                }
+            )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(
+            {
+                'user': self.request.user,
+                'column_definitions': get_s3_csv_column_types(self.request.GET['path']),
+            }
+        )
+        return kwargs
+
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        column_definitions = get_s3_csv_column_types(cleaned['path'])
+        for field in column_definitions:
+            field['data_type'] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
+                field['data_type'], PostgresDataTypes.TEXT.value
+            )
+
+        import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + '/' + cleaned['path']
+        copy_file_to_uploads_bucket(cleaned['path'], import_path)
+        filename = cleaned['path'].split('/')[-1]
+        try:
+            response = trigger_dataflow_dag(
+                import_path,
+                cleaned["schema"],
+                cleaned["table_name"],
+                column_definitions,
+                f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
+            )
+        except HTTPError:
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-failed")}?' f'filename={filename}'
+            )
+
+        params = {
+            'filename': filename,
+            'schema': cleaned['schema'],
+            'table_name': cleaned['table_name'],
+            'execution_date': response['execution_date'],
+        }
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
+        )
+
+
+class BaseCreateTableTemplateView(
+    WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView
+):
     waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     required_parameters = [
         'filename',
@@ -182,14 +239,6 @@ class BaseCreateTableTemplateView(WaffleFlagMixin, TemplateView):
         )
         return context
 
-    def get(self, request, *args, **kwargs):
-        for param in self.required_parameters:
-            if param not in self.request.GET:
-                return HttpResponseBadRequest(
-                    f'Expected a `{param}` parameter for the CSV file'
-                )
-        return super().get(request, *args, **kwargs)
-
 
 class CreateTableValidatingView(BaseCreateTableTemplateView):
     template_name = 'your_files/create-table-validating.html'
@@ -203,26 +252,25 @@ class CreateTableSuccessView(BaseCreateTableTemplateView):
     template_name = 'your_files/create-table-success.html'
 
 
-class CreateTableFailedView(WaffleFlagMixin, TemplateView):
+class CreateTableFailedView(
+    WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView
+):
     waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     template_name = 'your_files/create-table-failed.html'
+    required_parameters = ['filename']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filename'] = self.request.GET['filename']
         return context
 
-    def get(self, request, *args, **kwargs):
-        if 'filename' not in self.request.GET:
-            return HttpResponseBadRequest(
-                "Expected a `filename` parameter for the CSV file"
-            )
-        return super().get(request, *args, **kwargs)
 
-
-class CreateTableTableExists(WaffleFlagMixin, TemplateView):
+class CreateTableTableExists(
+    WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView
+):
     waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     template_name = 'your_files/create-table-table-exists.html'
+    required_parameters = ['path', 'table_name']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -236,17 +284,6 @@ class CreateTableTableExists(WaffleFlagMixin, TemplateView):
             user=self.request.user,
         )
         return context
-
-    def get(self, request, *args, **kwargs):
-        if 'path' not in self.request.GET:
-            return HttpResponseBadRequest(
-                "Expected a `path` parameter for the CSV file"
-            )
-        if 'table_name' not in self.request.GET:
-            return HttpResponseBadRequest(
-                "Expected a `table_name` parameter for the CSV file"
-            )
-        return super().get(request, *args, **kwargs)
 
 
 class CreateTableDAGStatusView(View):

@@ -1,0 +1,47 @@
+{% with id=widget.attrs.id %}
+<div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
+  {% if widget.label_is_heading %}
+    <{{ widget.heading }} class="govuk-label-wrapper">
+  {% endif %}
+  <label class="govuk-label {% if widget.label_is_heading %}govuk-label--{{ widget.label_size }}{% endif %} {{ widget.extra_label_classes }}" for="{{ id }}">
+    {{ widget.label }}
+  </label>
+  {% if widget.label_is_heading %}
+    </{{ widget.heading }}>
+  {% endif %}
+  {% if widget.help_html %}
+    <div id="{{ id }}-hint">
+      {{ widget.help_html }}
+    </div>
+  {% elif widget.help_text %}
+    <div id="{{ id }}-hint" class="govuk-hint">
+      {{ widget.help_text }}
+    </div>
+  {% endif %}
+
+  {% if widget.errors %}
+    <span id="{{ id }}-error" class="govuk-error-message">
+      <span class="govuk-visually-hidden">Error: </span>{{ widget.errors.0 }}
+    </span>
+  {% endif %}
+  <select
+    class="govuk-select"
+    id="{{ id }}"
+    name="{{ widget.name }}"
+    {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
+    {% include "django/forms/widgets/attrs.html" %}
+  >
+    {% for group_name, group_choices, group_index in widget.optgroups %}
+      {% if group_name %}
+        <optgroup label="{{ group_name }}">
+      {% endif %}
+      {% for option in group_choices %}
+        {% include option.template_name with widget=option %}
+      {% endfor %}
+      {% if group_name %}
+        </optgroup>
+      {% endif %}
+    {% endfor %}
+  </select>
+</div>
+{% endwith %}

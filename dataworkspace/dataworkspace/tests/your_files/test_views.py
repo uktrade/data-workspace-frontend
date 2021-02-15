@@ -84,18 +84,32 @@ class TestCreateTableViews:
     ):
         mock_table_exists.return_value = False
         mock_get_s3_prefix.return_value = 'user/federated/abc'
-        mock_get_column_types.return_value = {'field1': 'varchar'}
+        mock_get_column_types.return_value = [
+            {
+                'header_name': 'Field 1',
+                'column_name': 'field1',
+                'data_type': 'text',
+                'sample_data': ['a', 'b', 'c'],
+            }
+        ]
+
+        params = {
+            'path': 'user/federated/abc/a-csv.csv',
+            'table_name': 'test_table',
+            'schema': 'test_schema',
+        }
         with requests_mock.Mocker() as rmock:
             rmock.post(
                 'https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline/dag_runs',
                 status_code=500,
             )
             response = client.post(
-                reverse('your-files:create-table-confirm-name'),
+                f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}',
                 data={
                     'path': 'user/federated/abc/a-csv.csv',
                     'table_name': 'test_table',
                     'schema': 'test_schema',
+                    'field1': 'integer',
                 },
                 follow=True,
             )
@@ -119,13 +133,26 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
-        mock_get_column_types.return_value = {'field1': 'varchar'}
+        mock_get_column_types.return_value = [
+            {
+                'header_name': 'Field 1',
+                'column_name': 'field1',
+                'data_type': 'text',
+                'sample_data': [1, 2, 3],
+            }
+        ]
+        params = {
+            'path': 'user/federated/abc/a-csv.csv',
+            'table_name': 'test_table',
+            'schema': 'test_schema',
+        }
         response = client.post(
-            reverse('your-files:create-table-confirm-name'),
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}',
             data={
                 'path': 'user/federated/abc/a-csv.csv',
-                'schema': '_user_40e80e4e',
+                'schema': 'test_schema',
                 'table_name': 'a_csv',
+                'field1': 'integer',
             },
             follow=True,
         )
@@ -137,10 +164,17 @@ class TestCreateTableViews:
         )
         mock_trigger_dag.assert_called_with(
             'data-flow-imports/user/federated/abc/a-csv.csv',
-            '_user_40e80e4e',
+            'test_schema',
             'a_csv',
-            {'field1': 'varchar'},
-            '_user_40e80e4e-a_csv-2021-01-01T01:01:01',
+            [
+                {
+                    'header_name': 'Field 1',
+                    'column_name': 'field1',
+                    'data_type': 'text',
+                    'sample_data': [1, 2, 3],
+                }
+            ],
+            'test_schema-a_csv-2021-01-01T01:01:01',
         )
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
@@ -149,7 +183,11 @@ class TestCreateTableViews:
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_invalid_table_name(
-        self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client,
+        self,
+        mock_get_s3_prefix,
+        mock_boto_client,
+        mock_get_column_types,
+        client,
     ):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         mock_get_column_types.return_value = {'field1': 'varchar'}
@@ -215,7 +253,14 @@ class TestCreateTableViews:
     ):
         mock_table_exists.return_value = True
         mock_get_s3_prefix.return_value = 'user/federated/abc'
-        mock_get_column_types.return_value = {'field1': 'varchar'}
+        mock_get_column_types.return_value = [
+            {
+                'header_name': 'Field 1',
+                'column_name': 'field1',
+                'data_type': 'text',
+                'sample_data': ['a', 'b', 'c'],
+            }
+        ]
         response = client.post(
             reverse('your-files:create-table-confirm-name'),
             data={
@@ -226,14 +271,7 @@ class TestCreateTableViews:
             },
             follow=True,
         )
-        assert b'Validating a-csv.csv' in response.content
-        mock_trigger_dag.assert_called_with(
-            'data-flow-imports/user/federated/abc/a-csv.csv',
-            '_user_40e80e4e',
-            'a_csv',
-            {'field1': 'varchar'},
-            '_user_40e80e4e-a_csv-2021-01-01T01:01:01',
-        )
+        assert b'Choose data types for a_csv' in response.content
 
     @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @pytest.mark.parametrize(
