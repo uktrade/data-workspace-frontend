@@ -15,7 +15,7 @@ data "template_file" "mirrors_sync_container_definitions_conda" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}:latest"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -54,7 +54,7 @@ data "template_file" "mirrors_sync_container_definitions_cran" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}:latest"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -93,7 +93,7 @@ data "template_file" "mirrors_sync_container_definitions_cran_binary" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_cran_binary_container_definition.json")}"
 
   vars = {
-    container_image    = "${aws_ecr_repository.mirrors_sync_cran_binary.repository_url}"
+    container_image    = "${aws_ecr_repository.mirrors_sync_cran_binary.repository_url}:latest"
     container_name     = "${local.mirrors_sync_cran_binary_container_name}"
     container_cpu      = "${local.mirrors_sync_cran_binary_container_cpu}"
     container_memory   = "${local.mirrors_sync_cran_binary_container_memory}"
@@ -122,7 +122,7 @@ data "template_file" "mirrors_sync_container_definitions_pypi" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}:latest"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -161,7 +161,7 @@ data "template_file" "mirrors_sync_container_definitions_debian" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "quay.io/uktrade/data-workspace-mirrors-sync:master"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}:latest"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -200,7 +200,7 @@ data "template_file" "mirrors_sync_container_definitions_nltk" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}:latest"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -361,9 +361,9 @@ data "aws_iam_policy_document" "mirrors_sync_task" {
 }
 
 resource "aws_cloudwatch_event_rule" "daily_at_four_am" {
-  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  name                = "daily-four-am"
-  description         = "daily-four-am"
+  count = "${var.mirrors_bucket_name != "" ? 2 : 0}"
+  name                = "daily-four-am-${count.index}"
+  description         = "daily-four-am-${count.index}"
   schedule_expression = "cron(0 4 * * ? *)"
 }
 
@@ -371,7 +371,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_pypi_scheduled_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-pypi"
   arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
   role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
 
   ecs_target {
@@ -391,7 +391,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_conda_scheduled_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-conda"
   arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
   role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
 
   ecs_target {
@@ -411,7 +411,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_scheduled_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-cran"
   arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
   role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
 
   ecs_target {
@@ -431,7 +431,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_scheduled_task"
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-cran-binary"
   arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
   role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
 
   ecs_target {
@@ -451,7 +451,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_nltk_scheduled_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-nltk"
   arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
   role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
 
   ecs_target {
@@ -471,7 +471,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_debian_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-debian"
   arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[1].name}"
   role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
 
   ecs_target {
