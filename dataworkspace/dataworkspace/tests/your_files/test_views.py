@@ -183,11 +183,7 @@ class TestCreateTableViews:
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_invalid_table_name(
-        self,
-        mock_get_s3_prefix,
-        mock_boto_client,
-        mock_get_column_types,
-        client,
+        self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client
     ):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
         mock_get_column_types.return_value = {'field1': 'varchar'}
