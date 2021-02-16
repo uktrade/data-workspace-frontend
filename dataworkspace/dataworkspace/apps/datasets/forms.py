@@ -5,6 +5,13 @@ from django import forms
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from .models import Tag
+from ...forms import (
+    GOVUKDesignSystemForm,
+    GOVUKDesignSystemCharField,
+    GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextareaField,
+    GOVUKDesignSystemTextareaWidget,
+)
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
@@ -54,9 +61,44 @@ class SortSelectWidget(forms.widgets.Select):
         return context
 
 
-class RequestAccessForm(forms.Form):
-    email = forms.CharField(widget=forms.TextInput, required=True)
-    goal = forms.CharField(widget=forms.Textarea, required=True)
+class RequestAccessForm(GOVUKDesignSystemForm):
+    email = GOVUKDesignSystemCharField(
+        label="Contact email",
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes='govuk-!-font-weight-bold'
+        ),
+    )
+    goal = GOVUKDesignSystemTextareaField(
+        label="Why do you need this data?",
+        help_text=(
+            'For example, I need to create a report for my senior management team '
+            'to show performance trends and delivery against targets.'
+        ),
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            extra_label_classes='govuk-!-font-weight-bold',
+            attrs={"rows": 5},
+        ),
+        error_messages={"required": "You must provide details of why you need access."},
+    )
+
+    def __init__(self, *args, visualisation=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        initial_email = self.initial.get("email")
+        if initial_email:
+            self.fields['email'].help_text = f"You are logged in as {initial_email}"
+            self.fields['email'].widget.custom_context[
+                'help_text'
+            ] = f"You are logged in as {initial_email}"
+
+        if visualisation:
+            self.fields['goal'].label = "Why do you need this data visualisation?"
+            self.fields['goal'].widget.custom_context[
+                'label'
+            ] = "Why do you need this data visualisation?"
 
 
 class EligibilityCriteriaForm(forms.Form):

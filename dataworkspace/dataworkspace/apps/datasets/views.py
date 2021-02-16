@@ -723,9 +723,12 @@ def eligibility_criteria_not_met_view(request, dataset_uuid):
 @require_http_methods(['GET', 'POST'])
 def request_access_view(request, dataset_uuid):
     dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
+    form = RequestAccessForm(
+        request.POST if request.method == 'POST' else None,
+        initial={"email": request.user.email},
+    )
 
     if request.method == 'POST':
-        form = RequestAccessForm(request.POST)
         if form.is_valid():
             goal = form.cleaned_data['goal']
             contact_email = form.cleaned_data['email']
@@ -775,8 +778,8 @@ def request_access_view(request, dataset_uuid):
         'request_access.html',
         {
             'dataset': dataset,
-            'authenticated_user': request.user,
             'is_visualisation': isinstance(dataset, VisualisationCatalogueItem),
+            'form': form,
         },
     )
 
