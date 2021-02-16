@@ -10,7 +10,6 @@
     {{ block.super }}
     <script nonce="{{ request.csp_nonce }}" src="{% static 'jquery-3.4.1.min.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}" src="{% static 'gtm-support.js' %}"></script>
-    <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
 {% endblock %}
 
 {% block initialGTMDataLayer %}
@@ -52,7 +51,7 @@
       <div class="search-field govuk-!-margin-bottom-9">
         <label class="govuk-label search-field__label" for="search">Enter your search term(s)</label>
         <div class="search-field-wrapper">
-          <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="">
+          <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="search-summary-accessible-hint-wrapper">
           <div class="search-field-submit-wrapper search-field__item">
             <input class="search-field__submit" type="submit" value="Search">
           </div>
@@ -79,8 +78,11 @@
     {% endif %}
   </div>
   <div class="govuk-grid-column-two-thirds">
+    <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true" aria-live="polite" aria-relevant="additions text" role="status">
+      {{ datasets.paginator.count }} search results
+    </div>
     <h2 class="govuk-body">
-      <span id="search-results-count">{{ datasets.paginator.count }}</span> results
+      <span id="search-results-count">{{ datasets.paginator.count }}</span> search results
     </h2>
     <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
     {{ form.sort }}
@@ -185,4 +187,6 @@
   {% if form.source.field.choices %}
     {{ form.media }}
   {% endif %}
+
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
 {% endblock %}

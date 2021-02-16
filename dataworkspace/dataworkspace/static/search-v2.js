@@ -103,7 +103,7 @@
       pageUpdated.done(
         function(){
           if (typeof(this.GTM) !== 'undefined') {this.GTM.pushSearchEvent();}
-          
+
           var newPath = window.location.origin + this.$form.attr('action') + "?" + $.param(this.state);
           history.pushState(this.state, '', newPath);
         }.bind(this)
@@ -171,7 +171,11 @@
   }
 
   LiveSearch.prototype.replaceBlock = function replaceBlock(selector, html) {
+    var currentActiveElement = document.activeElement ? document.activeElement.id : null;
     $(selector).html(html);
+    if (currentActiveElement !== null) {
+      document.getElementById(currentActiveElement).focus();
+    }
   }
 
   LiveSearch.prototype.restoreBooleans = function restoreBooleans(){
