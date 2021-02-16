@@ -15,7 +15,7 @@ data "template_file" "mirrors_sync_container_definitions_conda" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${var.mirrors_sync_container_image}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -54,7 +54,7 @@ data "template_file" "mirrors_sync_container_definitions_cran" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${var.mirrors_sync_container_image}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -93,7 +93,7 @@ data "template_file" "mirrors_sync_container_definitions_cran_binary" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_cran_binary_container_definition.json")}"
 
   vars = {
-    container_image    = "${var.mirrors_sync_cran_binary_container_image}"
+    container_image    = "${aws_ecr_repository.mirrors_sync_cran_binary.repository_url}"
     container_name     = "${local.mirrors_sync_cran_binary_container_name}"
     container_cpu      = "${local.mirrors_sync_cran_binary_container_cpu}"
     container_memory   = "${local.mirrors_sync_cran_binary_container_memory}"
@@ -122,7 +122,7 @@ data "template_file" "mirrors_sync_container_definitions_pypi" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${var.mirrors_sync_container_image}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -200,7 +200,7 @@ data "template_file" "mirrors_sync_container_definitions_nltk" {
   template = "${file("${path.module}/ecs_main_mirrors_sync_container_definitions.json")}"
 
   vars = {
-    container_image    = "${var.mirrors_sync_container_image}"
+    container_image    = "${aws_ecr_repository.mirrors_sync.repository_url}"
     container_name     = "${local.mirrors_sync_container_name}"
     container_cpu      = "${local.mirrors_sync_container_cpu}"
     container_memory   = "${local.mirrors_sync_container_memory}"
@@ -278,6 +278,28 @@ data "aws_iam_policy_document" "mirrors_sync_task_execution" {
 
     resources = [
       "${aws_cloudwatch_log_group.mirrors_sync.*.arn[count.index]}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.mirrors_sync.arn}",
+      "${aws_ecr_repository.mirrors_sync_cran_binary.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
     ]
   }
 }
@@ -427,7 +449,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_scheduled_task"
 
 resource "aws_cloudwatch_event_target" "mirrors_sync_nltk_scheduled_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  target_id = "${var.prefix}-mirror-pypi"
+  target_id = "${var.prefix}-mirror-nltk"
   arn       = "${aws_ecs_cluster.main_cluster.arn}"
   rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
   role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
@@ -435,6 +457,26 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_nltk_scheduled_task" {
   ecs_target {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_nltk.*.arn[count.index]}"
+    launch_type = "FARGATE"
+    network_configuration {
+      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
+      subnets = "${aws_subnet.public.*.id}"
+      security_groups = ["${aws_security_group.mirrors_sync.id}"]
+      assign_public_ip = true
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_target" "mirrors_sync_debian_task" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  target_id = "${var.prefix}-mirror-debian"
+  arn       = "${aws_ecs_cluster.main_cluster.arn}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am.*.name[count.index]}"
+  role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_debian.*.arn[count.index]}"
     launch_type = "FARGATE"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
@@ -482,6 +524,7 @@ data "aws_iam_policy_document" "mirrors_sync_events_run_tasks" {
       "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_conda.*.family[count.index]}:*",
       "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_pypi.*.family[count.index]}:*",
       "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_nltk.*.family[count.index]}:*",
+      "arn:aws:ecs:*:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.mirrors_sync_debian.*.family[count.index]}:*",
     ]
   }
 
