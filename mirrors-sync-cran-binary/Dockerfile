@@ -27,13 +27,14 @@ RUN \
 	rm -rf /var/lib/apt/lists/* && \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
+		cargo=0.43.1-3~deb10u1 \
 		gdebi-core=0.9.5.7+nmu3 \
 		gfortran=4:8.3.0-1 \
 		git=1:2.20.1-2+deb10u3 \
 		libgit2-dev=0.27.7+dfsg.1-0.2 \
 		libgsl-dev=2.5+dfsg-6 \
-		libxml2-dev=2.9.4+dfsg1-7+b3 \
-		libpq-dev=11.7-0+deb10u1 \
+		libxml2-dev=2.9.4+dfsg1-7+deb10u1 \
+		libpq-dev=11.10-0+deb10u1 \
 		libgdal-dev=2.4.0+dfsg-1+b1 \
 		libudunits2-dev=2.2.26-5 \
 		libjq-dev=1.5+dfsg-2+b1 \
