@@ -8,3 +8,4 @@ class PostgresDataTypes(enum.Enum):
     TIMESTAMP = 'timestamp'
     NUMERIC = 'numeric'
     TEXT = 'text'
+    UUID = 'uuid'
