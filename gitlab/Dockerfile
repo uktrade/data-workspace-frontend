@@ -1,4 +1,4 @@
-FROM gitlab/gitlab-ce:12.7.9-ce.0
+FROM gitlab/gitlab-ce:12.10.14-ce.0
 
 RUN \
 	apt-get update && \
