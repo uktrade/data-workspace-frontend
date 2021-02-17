@@ -198,7 +198,7 @@ resource "aws_network_acl" "public_whitelisted_ingress" {
   }
 }
 
-resource "aws_network_acl_rule" "public_whitelisted_ingress_ingress_https" {
+resource "aws_network_acl_rule" "public_whitelisted_ingress_ingress_all" {
   network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
 
   count       = "${length(var.gitlab_ip_whitelist)}"
@@ -207,21 +207,8 @@ resource "aws_network_acl_rule" "public_whitelisted_ingress_ingress_https" {
   rule_number = "${count.index + 1}"
   rule_action = "allow"
   cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
-  from_port   = 443
-  to_port     = 443
-}
-
-resource "aws_network_acl_rule" "public_whitelisted_ingress_ingress_ssh" {
-  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
-
-  count       = "${length(var.gitlab_ip_whitelist)}"
-  egress      = false
-  protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 2 + count.index + 1}"
-  rule_action = "allow"
-  cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
-  from_port   = 22
-  to_port     = 22
+  from_port   = 0
+  to_port     = 65535
 }
 
 resource "aws_network_acl_rule" "public_whitelisted_ingress_egress_ephemeral" {
@@ -230,7 +217,7 @@ resource "aws_network_acl_rule" "public_whitelisted_ingress_egress_ephemeral" {
   count       = "${length(var.gitlab_ip_whitelist)}"
   egress      = true
   protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 3 + count.index + 1}"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 2 + count.index + 1}"
   rule_action = "allow"
   cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
   from_port   = 1024
@@ -243,7 +230,7 @@ resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_ingress" {
 
   egress      = false
   protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + 1}"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 3 + 1}"
   rule_action = "allow"
   cidr_block  = "${aws_vpc.main.cidr_block}"
   from_port   = 0
@@ -254,7 +241,7 @@ resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_egress" {
 
   egress      = true
   protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 4 + 2}"
+  rule_number = "${length(var.gitlab_ip_whitelist) * 3 + 2}"
   rule_action = "allow"
   cidr_block  = "${aws_vpc.main.cidr_block}"
   from_port   = 0
