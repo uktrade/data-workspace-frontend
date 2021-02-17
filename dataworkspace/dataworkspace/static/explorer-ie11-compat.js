@@ -926,14 +926,6 @@ angular.module('aws-js-s3-explorer').directive('modal', function () {
   return {
     link: function link(scope, element, attrs) {
       var name = attrs.modal;
-      element[0].addEventListener('click', function (event) {
-        event.stopPropagation(); // Don't close if clicking anywhere inside the modal, e.g. on a button
-
-        if (event.target == element[0]) {
-          close();
-        }
-      });
-
       function open() {
         scope.modalVisible = true;
         backdrop.classList.remove('modal-backdrop-out');
