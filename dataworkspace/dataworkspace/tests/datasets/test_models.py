@@ -3,6 +3,7 @@ from datetime import datetime
 import botocore
 import mock
 import pytest
+from pytz import UTC
 
 from dataworkspace.apps.datasets.models import SourceLink
 from dataworkspace.tests import factories
@@ -149,7 +150,9 @@ def test_source_table_data_last_updated(metadata_db):
     table = factories.SourceTableFactory(
         dataset=dataset, database=metadata_db, schema='public', table='table1'
     )
-    assert table.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0)
+    assert table.get_data_last_updated_date() == datetime(
+        2020, 9, 2, 0, 1, 0, tzinfo=UTC
+    )
 
     table = factories.SourceTableFactory(
         dataset=dataset, database=metadata_db, schema='public', table='doesntexist'
@@ -174,7 +177,9 @@ def test_custom_query_data_last_updated(metadata_db):
     factories.CustomDatasetQueryTableFactory(
         query=query, schema='public', table='table2'
     )
-    assert query.get_data_last_updated_date() == datetime(2020, 9, 1, 0, 1, 0)
+    assert query.get_data_last_updated_date() == datetime(
+        2020, 9, 1, 0, 1, 0, tzinfo=UTC
+    )
 
     # Ensure a single table returns the last update date
     query = factories.CustomDatasetQueryFactory(
@@ -183,7 +188,9 @@ def test_custom_query_data_last_updated(metadata_db):
     factories.CustomDatasetQueryTableFactory(
         query=query, schema='public', table='table1'
     )
-    assert query.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0)
+    assert query.get_data_last_updated_date() == datetime(
+        2020, 9, 2, 0, 1, 0, tzinfo=UTC
+    )
 
     # Ensure None is returned if we don't have any metadata for the tables
     query = factories.CustomDatasetQueryFactory(

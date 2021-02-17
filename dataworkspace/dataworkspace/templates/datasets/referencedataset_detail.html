@@ -63,7 +63,7 @@
               </td>
               <td class="govuk-table__cell">JSON</td>
               <td class="govuk-table__cell">{{ model.published_version }}</td>
-              <td class="govuk-table__cell">{{ model.data_last_updated }}</td>
+              <td class="govuk-table__cell">{{ model.data_last_updated|date_with_gmt_offset }}</td>
             </tr>
             <tr class="govuk-table__row">
               <td class="govuk-table__cell">
@@ -75,7 +75,7 @@
                 CSV
               </td>
               <td class="govuk-table__cell">{{ model.published_version }}</td>
-              <td class="govuk-table__cell">{{ model.data_last_updated }}</td>
+              <td class="govuk-table__cell">{{ model.data_last_updated|date_with_gmt_offset }}</td>
             </tr>
           </tbody>
         </table>
