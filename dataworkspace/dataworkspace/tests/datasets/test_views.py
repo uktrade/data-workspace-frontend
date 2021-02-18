@@ -275,6 +275,30 @@ def test_find_datasets_combines_results(client):
     )
 
 
+def test_find_datasets_does_not_show_deleted_entries(client, staff_client):
+    factories.DataSetFactory.create(
+        deleted=True, published=True, name='Unpublished search dataset'
+    )
+    factories.DataSetFactory.create(
+        deleted=True, published=True, name='A search dataset'
+    )
+    factories.ReferenceDatasetFactory.create(
+        deleted=True, published=True, name='A search reference dataset'
+    )
+    factories.VisualisationCatalogueItemFactory.create(
+        deleted=True, published=True, name='A search visualisation'
+    )
+
+    response = client.get(reverse('datasets:find_datasets'))
+    staff_response = staff_client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == []
+
+    assert staff_response.status_code == 200
+    assert list(staff_response.context["datasets"]) == []
+
+
 def test_find_datasets_filters_by_query(client):
     factories.DataSetFactory.create(published=True, name='A dataset')
     factories.ReferenceDatasetFactory.create(published=True, name='A reference dataset')

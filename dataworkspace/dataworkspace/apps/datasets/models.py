@@ -1638,6 +1638,8 @@ class ReferenceDatasetUploadLogRecord(TimeStampedModel):
 
 
 class VisualisationCatalogueItem(DeletableTimestampedUserModel):
+    objects = DeletableQuerySet()
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_template = models.OneToOneField(
         VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True

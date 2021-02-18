@@ -398,7 +398,7 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
     )
 
     visualisations = get_visualisations_data_for_user_matching_query(
-        VisualisationCatalogueItem.objects, query, user=user
+        VisualisationCatalogueItem.objects.live(), query, user=user
     )
 
     # Combine all datasets and visualisations and order them.
