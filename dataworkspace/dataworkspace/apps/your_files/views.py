@@ -15,8 +15,6 @@ from django.views import View
 from django.views.generic import FormView, TemplateView
 from requests import HTTPError
 
-from waffle.mixins import WaffleFlagMixin
-
 from dataworkspace.apps.core.utils import get_s3_prefix
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
 from dataworkspace.apps.your_files.forms import (
@@ -51,11 +49,7 @@ def file_browser_html_GET(request):
     return render(
         request,
         'your_files/files.html',
-        {
-            'prefix': prefix,
-            'bucket': settings.NOTEBOOKS_BUCKET,
-            'YOUR_FILES_CREATE_TABLE_FLAG': settings.YOUR_FILES_CREATE_TABLE_FLAG,
-        },
+        {'prefix': prefix, 'bucket': settings.NOTEBOOKS_BUCKET},
         status=200,
     )
 
@@ -70,9 +64,8 @@ class RequiredParameterGetRequestMixin:
         return super().get(request, *args, **kwargs)
 
 
-class CreateTableView(WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView):
+class CreateTableView(RequiredParameterGetRequestMixin, TemplateView):
     template_name = 'your_files/create-table-confirm.html'
-    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     required_parameters = ['path']
 
     def get_context_data(self, **kwargs):
@@ -88,11 +81,8 @@ class CreateTableView(WaffleFlagMixin, RequiredParameterGetRequestMixin, Templat
         return context
 
 
-class CreateTableConfirmNameView(
-    WaffleFlagMixin, RequiredParameterGetRequestMixin, FormView
-):
+class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
     template_name = 'your_files/create-table-confirm-name.html'
-    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     form_class = CreateTableForm
     required_parameters = ['path']
 
@@ -153,9 +143,8 @@ class CreateTableConfirmNameView(
         return super().form_invalid(form)
 
 
-class CreateTableConfirmDataTypesView(WaffleFlagMixin, FormView):
+class CreateTableConfirmDataTypesView(FormView):
     template_name = 'your_files/create-table-confirm-data-types.html'
-    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
     form_class = CreateTableDataTypesForm
     required_parameters = [
         'filename',
@@ -221,10 +210,7 @@ class CreateTableConfirmDataTypesView(WaffleFlagMixin, FormView):
         )
 
 
-class BaseCreateTableTemplateView(
-    WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView
-):
-    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
+class BaseCreateTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
     required_parameters = [
         'filename',
         'schema',
@@ -252,10 +238,7 @@ class CreateTableSuccessView(BaseCreateTableTemplateView):
     template_name = 'your_files/create-table-success.html'
 
 
-class CreateTableFailedView(
-    WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView
-):
-    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
+class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
     template_name = 'your_files/create-table-failed.html'
     required_parameters = ['filename']
 
@@ -265,10 +248,7 @@ class CreateTableFailedView(
         return context
 
 
-class CreateTableTableExists(
-    WaffleFlagMixin, RequiredParameterGetRequestMixin, TemplateView
-):
-    waffle_flag = settings.YOUR_FILES_CREATE_TABLE_FLAG
+class CreateTableTableExists(RequiredParameterGetRequestMixin, TemplateView):
     template_name = 'your_files/create-table-table-exists.html'
     required_parameters = ['path', 'table_name']
 

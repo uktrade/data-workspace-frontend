@@ -3,15 +3,12 @@ from urllib.parse import urlencode
 import botocore
 import pytest
 import requests_mock
-from django.conf import settings
 from django.urls import reverse
 from freezegun import freeze_time
 from mock import mock
-from waffle.testutils import override_flag
 
 
 class TestCreateTableViews:
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     def test_get_with_csv_file(self, client):
         response = client.get(
             reverse('your-files:create-table-confirm')
@@ -22,12 +19,10 @@ class TestCreateTableViews:
             response.charset
         )
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     def test_get_without_csv_file(self, client):
         response = client.get(reverse('your-files:create-table-confirm'))
         assert response.status_code == 400
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_invalid_file_type(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
@@ -38,7 +33,6 @@ class TestCreateTableViews:
         )
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_unauthorised_file(self, mock_get_s3_prefix, client):
         mock_get_s3_prefix.return_value = 'user/federated/abc'
@@ -49,7 +43,6 @@ class TestCreateTableViews:
         )
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.datasets.views.boto3.client')
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     def test_non_existent_file(self, mock_get_s3_prefix, mock_boto_client, client):
@@ -67,7 +60,6 @@ class TestCreateTableViews:
         )
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @mock.patch('dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
@@ -116,7 +108,6 @@ class TestCreateTableViews:
 
         assert 'We can’t process your CSV file' in response.content.decode('utf-8')
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.trigger_dataflow_dag')
     @mock.patch('dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket')
@@ -177,7 +168,6 @@ class TestCreateTableViews:
             'test_schema-a_csv-2021-01-01T01:01:01',
         )
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
@@ -201,7 +191,6 @@ class TestCreateTableViews:
             in response.content
         )
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
@@ -229,7 +218,6 @@ class TestCreateTableViews:
         )
         assert b'Table already exists' in response.content
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.trigger_dataflow_dag')
     @mock.patch('dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket')
@@ -269,7 +257,6 @@ class TestCreateTableViews:
         )
         assert b'Choose data types for a_csv' in response.content
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @pytest.mark.parametrize(
         'url, success_text',
         (
@@ -302,7 +289,6 @@ class TestCreateTableViews:
         if status_code == 200:
             assert success_text in response.content
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @pytest.mark.parametrize('status_code', (500, 404))
     def test_dag_status_invalid(self, status_code, client):
         execution_date = '02-05T13:33:49.266040+00:00'
@@ -317,7 +303,6 @@ class TestCreateTableViews:
             )
             assert response.status_code == status_code
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     def test_dag_status(self, client):
         execution_date = '02-05T13:33:49.266040+00:00'
         with requests_mock.Mocker() as rmock:
