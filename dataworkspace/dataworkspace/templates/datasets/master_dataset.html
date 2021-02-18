@@ -166,16 +166,17 @@
       {% endif %}
     </div>
   </div>
+{% endblock %}
+
+{% block footer_scripts %}
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+
+  <script src="{% static 'app-copy.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
     nodeListForEach($codeBlocks, function ($codeBlock) {
       new Copy($codeBlock).init()
     });
   </script>
-{% endblock %}
-
-{% block footer_scripts %}
-  <script src="{% static 'app-copy.js' %}"></script>
-  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
 {% endblock %}
