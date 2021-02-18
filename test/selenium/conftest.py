@@ -89,6 +89,7 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
                 database=Database.objects.get(memorable_name="{database}"),
                 schema="public",
                 table="{dataset_name}",
+                name="{dataset_name}",
             ),
         )
         with connections["{database}"].cursor() as cursor:
@@ -104,6 +105,30 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
     )
     stdout, stderr = give_perm.communicate(_code)
     code = give_perm.wait()
+    return stdout, stderr, code
+
+
+def make_superuser(email_address):
+    _code = textwrap.dedent(
+        f"""
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        user = User.objects.get(email="{email_address}")
+        user.is_superuser = True
+        user.save()
+    """
+    ).encode('ascii')
+    give_perm = subprocess.Popen(
+        ['django-admin', 'shell'],
+        env=os.environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+    )
+    stdout, stderr = give_perm.communicate(_code)
+    code = give_perm.wait()
+    print(stdout, stderr, code)
     return stdout, stderr, code
 
 
