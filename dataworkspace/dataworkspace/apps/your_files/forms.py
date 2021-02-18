@@ -65,14 +65,11 @@ class CreateTableForm(GOVUKDesignSystemForm):
     def clean(self):
         table_name = self.cleaned_data.get('table_name')
         if table_name:
-            if (
-                table_exists(
-                    settings.EXPLORER_DEFAULT_CONNECTION,
-                    self.cleaned_data['schema'],
-                    table_name,
-                )
-                and not self.cleaned_data.get('force_overwrite')
-            ):
+            if table_exists(
+                settings.EXPLORER_DEFAULT_CONNECTION,
+                self.cleaned_data['schema'],
+                table_name,
+            ) and not self.cleaned_data.get('force_overwrite'):
                 self.add_error(
                     'table_name',
                     ValidationError(
@@ -99,8 +96,7 @@ class CreateTableDataTypesForm(CreateTableForm):
                     for name, value in SCHEMA_POSTGRES_DATA_TYPE_MAP.items()
                 ),
                 widget=GOVUKDesignSystemSelectWidget(
-                    label_is_heading=False,
-                    extra_label_classes='govuk-visually-hidden',
+                    label_is_heading=False, extra_label_classes='govuk-visually-hidden',
                 ),
             )
 
