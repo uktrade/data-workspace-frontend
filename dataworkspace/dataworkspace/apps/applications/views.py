@@ -441,21 +441,25 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
             production_commit_id = host_basename_or_commit_id
             break
 
+    is_default_branch = current_branch['name'] == gitlab_project['default_branch']
     # It might not be good, UI-wise, to force the user to have to preview a
     # commit before it can be released. However, building a Docker image is
     # done via the preview link, so this is the quickest/easiest thing for
     # users to be able to release a new version of the visualisation
     must_preview_latest_commit_to_release = (
-        current_branch['name'] == gitlab_project['default_branch']
+        is_default_branch
         and not latest_commit_tag_exists
         and latest_commit['short_id'] != production_commit_id
     )
     can_release_latest_commit = (
-        current_branch['name'] == gitlab_project['default_branch']
+        is_default_branch
         and latest_commit_tag_exists
         and latest_commit['short_id'] != production_commit_id
     )
     latest_commit_is_released = latest_commit['short_id'] == production_commit_id
+    can_download_logs = can_release_latest_commit or (
+        not is_default_branch and latest_commit_tag_exists
+    )
 
     return _render_visualisation(
         request,
@@ -465,6 +469,8 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
         branches,
         current_menu_item='branches',
         template_specific_context={
+            'is_default_branch': is_default_branch,
+            'can_download_logs': can_download_logs,
             'production_link': production_link,
             'production_commit_id': production_commit_id,
             'current_branch': current_branch,
@@ -472,7 +478,6 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
             'latest_commit_link': latest_commit_link,
             'latest_commit_preview_link': latest_commit_preview_link,
             'latest_commit_date': latest_commit_date,
-            'latest_commit_tag_exists': latest_commit_tag_exists,
             'can_release_latest_commit': can_release_latest_commit,
             'must_preview_latest_commit_to_release': must_preview_latest_commit_to_release,
             'latest_commit_is_released': latest_commit_is_released,
