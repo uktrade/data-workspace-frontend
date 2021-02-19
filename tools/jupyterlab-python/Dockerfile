@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster
 
 RUN \
     apt-get update && \
@@ -17,12 +17,6 @@ ENV \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8 \
     LD_LIBRARY_PATH=/lib
-
-# Allow man pages to be installed: slim has hacks to exclude them, so we
-# hack the hacks https://unix.stackexchange.com/a/480460/361685
-RUN \
-    sed -i '/path-exclude \/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/docker && \
-    sed -i '/path-exclude \/usr\/share\/groff/d' /etc/dpkg/dpkg.cfg.d/docker
 
 RUN \
     apt-get update && \
@@ -48,14 +42,14 @@ RUN \
         git-man=1:2.20.1-2+deb10u3 \
         libxext6 \
         libxrender1 \
-        man-db=2.8.5-2 \
-        openssl=1.1.1d-0+deb10u4 \
+        openssl \
         openssh-client=1:7.9p1-10+deb10u2 \
         texlive-xetex=2018.20190227-2 \
         texlive-generic-extra=2018.20190227-2 \
         texlive-fonts-recommended=2018.20190227-2 \
         ttf-dejavu \
-        sudo=1.8.27-1+deb10u2 \
+        sudo \
+        man-db=2.8.5-2 \
         tini=0.18.0-1 && \
 	update-alternatives --install /usr/bin/python python /usr/bin/python3 2 && \
 	update-alternatives --install /usr/bin/python python /usr/bin/python2 1 && \
