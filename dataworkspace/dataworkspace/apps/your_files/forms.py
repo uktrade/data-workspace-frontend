@@ -3,7 +3,7 @@ from botocore.exceptions import ClientError
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MaxLengthValidator
 
 from dataworkspace.apps.core.utils import get_s3_prefix, table_exists
 from dataworkspace.apps.your_files.utils import SCHEMA_POSTGRES_DATA_TYPE_MAP
@@ -29,7 +29,10 @@ class CreateTableForm(GOVUKDesignSystemForm):
                 regex=r'^[a-zA-Z][a-zA-Z0-9_]*$',
                 message='Table names can contain only letters, numbers and underscores',
                 code='invalid-table-name',
-            )
+            ),
+            MaxLengthValidator(
+                42, message='Table names must be no longer than 42 characters long'
+            ),
         ],
     )
     force_overwrite = forms.BooleanField(required=False, widget=forms.HiddenInput())

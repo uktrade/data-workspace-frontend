@@ -206,6 +206,29 @@ class TestCreateTableViews:
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
     @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
+    def test_table_name_too_long(
+        self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client
+    ):
+        mock_get_s3_prefix.return_value = 'user/federated/abc'
+        mock_get_column_types.return_value = {'field1': 'varchar'}
+        response = client.post(
+            reverse('your-files:create-table-confirm-name'),
+            data={
+                'path': 'user/federated/abc/a-csv.csv',
+                'schema': '_user_40e80e4e',
+                'table_name': 'a_very_long_table_name_which_is_over_fourty_two_chars',
+            },
+            follow=True,
+        )
+        assert (
+            b'Table names must be no longer than 42 characters long' in response.content
+        )
+
+    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
+    @freeze_time('2021-01-01 01:01:01')
+    @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
+    @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
+    @mock.patch('dataworkspace.apps.your_files.forms.get_s3_prefix')
     @mock.patch('dataworkspace.apps.your_files.forms.table_exists')
     def test_table_exists(
         self,
