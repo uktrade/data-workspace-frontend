@@ -329,7 +329,7 @@ pycparser==2.20
     # via
     #   -r requirements.txt
     #   cffi
-pydevd-pycharm==211.4961.30
+pydevd-pycharm==211.6085.15
     # via -r requirements-dev.in
 pyee==8.1.0
     # via pyppeteer
