@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster
 
 RUN \
     apt-get update && \
@@ -21,12 +21,6 @@ ENV \
 
 ENV \
     PATH="$CONDA_DIR/bin:$PATH"
-
-# Allow man pages to be installed: slim has hacks to exclude them, so we
-# hack the hacks https://unix.stackexchange.com/a/480460/361685
-RUN \
-    sed -i '/path-exclude \/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/docker && \
-    sed -i '/path-exclude \/usr\/share\/groff/d' /etc/dpkg/dpkg.cfg.d/docker
 
 RUN \
     apt-get update && \

@@ -1,10 +1,4 @@
-FROM debian:buster-20200607-slim
-
-# Allow man pages to be installed: slim has hacks to exclude them, so we
-# hack the hacks https://unix.stackexchange.com/a/480460/361685
-RUN \
-    sed -i '/path-exclude \/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/docker && \
-    sed -i '/path-exclude \/usr\/share\/groff/d' /etc/dpkg/dpkg.cfg.d/docker
+FROM debian:buster
 
 RUN \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
@@ -49,8 +43,8 @@ RUN \
 		git=1:2.20.1-2+deb10u3 \
 		libgit2-dev=0.27.7+dfsg.1-0.2 \
 		libgsl-dev=2.5+dfsg-6 \
-		libxml2-dev=2.9.4+dfsg1-7+b3 \
-		libpq-dev=11.7-0+deb10u1 \
+		libxml2-dev \
+		libpq-dev \
 		lmodern=2.004.5-6 \
 		procps=2:3.3.15-2 \
 		r-base-dev=3.6.1-2~bustercran.0 \

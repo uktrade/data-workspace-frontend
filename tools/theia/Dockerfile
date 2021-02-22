@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster
 
 RUN \
 	apt-get update && \
@@ -33,6 +33,7 @@ RUN \
 		python3 \
 		python3-dev \
 		python3-pip \
+		man-db=2.8.5-2 \
 		sudo && \
 	curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y nodejs && \
