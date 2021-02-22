@@ -110,7 +110,7 @@
         <p class="govuk-body">
           Showing {% if preview_limit < record_count %}first {% endif %}<strong>{{ preview_limit }}</strong> record{{ preview_limit|pluralize }} {% if preview_limit < record_count %} of <strong>{{ record_count }}</strong>{% endif %}
         </p>
-        <div class="scrollable-table">
+        <div class="scrollable-table" tabindex="0">
           <table class="govuk-table govuk-!-font-size-16">
             <thead>
               <tr class="govuk-table__row">

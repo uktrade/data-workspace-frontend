@@ -29,6 +29,12 @@
     /*width: 100%;*/
     overflow-x: auto;
     max-height: 560px;
+    padding: 3px;
+}
+.scrollable-table:focus {
+    border: 3px solid #0b0c0c;
+    outline: 3px solid #fd0;
+    padding: 0;
 }
 /* add yellow box shadow to query editor on focus */
 .govuk-textarea:focus-within {

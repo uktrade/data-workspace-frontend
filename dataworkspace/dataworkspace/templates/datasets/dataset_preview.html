@@ -46,7 +46,7 @@
         <p class="govuk-body">
           Showing {% if record_count < preview_limit %}all {% else %}<strong>{{ preview_limit }}</strong> random {% endif %}rows from data.
         </p>
-        <div class="scrollable-table {% if record_count <= fixed_table_height_limit %}fixed-table-height{% endif %}">
+        <div class="scrollable-table {% if record_count <= fixed_table_height_limit %}fixed-table-height{% endif %}" tabindex="0">
           <table class="govuk-table govuk-!-font-size-16">
             <thead>
               <tr class="govuk-table__row">
