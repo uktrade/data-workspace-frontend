@@ -813,9 +813,9 @@ People finder link: {get_people_url(request.user.get_full_name())}
 Requestor’s response to why access is needed:
 {goal}
 
-Data visualisation owner: {dataset.enquiries_contact.email}
+Data visualisation owner: {dataset.enquiries_contact.email if dataset.enquiries_contact else 'Not set'}
 
-Secondary contact: {dataset.secondary_enquiries_contact.email}
+Secondary contact: {dataset.secondary_enquiries_contact.email if dataset.secondary_enquiries_contact else 'Not set'}
 
 If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
     """
