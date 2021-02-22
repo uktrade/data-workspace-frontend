@@ -136,7 +136,7 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
                 f'INSERT INTO {table_name} SELECT * FROM ({sql}) sq LIMIT {limit}{offset}'
             )
             cursor.execute(f'SELECT COUNT(*) FROM ({sql}) sq')
-        except psycopg2.ProgrammingError as e:
+        except (psycopg2.ProgrammingError, psycopg2.DataError) as e:
             _mark_query_log_failed(query_log, e)
             logger.warning('Failed to run query: %s', e)
             return
