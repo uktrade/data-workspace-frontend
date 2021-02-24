@@ -11,6 +11,7 @@ from dataworkspace.apps.request_data.views import (
     RequestDataOwnerOrManager,
     RequestDataCheckAnswers,
     RequestDataConfirmationPage,
+    RequestDataLicence,
 )
 
 urlpatterns = [
@@ -39,6 +40,11 @@ urlpatterns = [
         '<int:pk>/location',
         login_required(RequestDataLocation.as_view()),
         name='location-of-data',
+    ),
+    path(
+        '<int:pk>/licence',
+        login_required(RequestDataLicence.as_view()),
+        name='licence-of-data',
     ),
     path(
         '<int:pk>/owner-or-manager',

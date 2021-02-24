@@ -23,6 +23,7 @@ from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-orde
     RequestDataLocationPage,
     RequestDataCheckAnswersPage,
     SupportPage,
+    RequestDataLicencePage,
 )
 
 
@@ -116,7 +117,11 @@ class TestRequestData:
 
         # Answer the "location of data" question
         location_page.enter_location("It’s in this very easy to access API")
-        check_answers_page = location_page.click_continue(RequestDataCheckAnswersPage)
+        licence_page = location_page.click_continue(RequestDataLicencePage)
+
+        # Answer the "licence of data" question
+        licence_page.enter_location("Completely public, open data with no licence")
+        check_answers_page = licence_page.click_continue(RequestDataCheckAnswersPage)
 
         # Confirm that the answers are correct
         confirmation_page = check_answers_page.click_accept()
@@ -136,5 +141,8 @@ class TestRequestData:
             in ticket_data['description']
         )
         assert "It’s in this very easy to access API" in ticket_data['description']
+        assert (
+            "Completely public, open data with no licence" in ticket_data['description']
+        )
         assert "request-data@test.com" in ticket_data['description']
         assert "Iwantsome Lovelydata" in ticket_data['description']

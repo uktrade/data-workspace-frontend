@@ -134,6 +134,22 @@ class RequestDataLocationPage(_BaseWorkspacePage):
         return self._check_url_and_return_page(new_page_class)
 
 
+class RequestDataLicencePage(_BaseWorkspacePage):
+    _url_regex = r'/request-data/(?P<pk>\d+)/licence'
+
+    @property
+    def _url_path(self):
+        return f"/request-data/{self._url_data['pk']}/licence"
+
+    def enter_location(self, text):
+        textarea = self._get_input_field("How is the data licensed?")
+        textarea.send_keys(text)
+
+    def click_continue(self, new_page_class: Type[_PageClassType]) -> _PageClassType:
+        self._submit("Continue")
+        return self._check_url_and_return_page(new_page_class)
+
+
 class RequestDataCheckAnswersPage(_BaseWorkspacePage):
     _url_regex = r'/request-data/(?P<pk>\d+)/check-answers'
 

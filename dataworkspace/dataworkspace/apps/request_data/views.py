@@ -12,6 +12,7 @@ from dataworkspace.apps.request_data.forms import (  # pylint: disable=import-er
     RequestDataSecurityClassificationForm,
     RequestDataLocationForm,
     RequestDataOwnerOrManagerForm,
+    RequestDataLicenceForm,
 )
 from dataworkspace.apps.request_data.models import (  # pylint: disable=import-error
     DataRequest,
@@ -200,6 +201,33 @@ class RequestDataLocation(WaffleFlagMixin, UpdateView):
             )
         else:
             context['backlink'] = reverse(
+                'request-data:licence-of-data', kwargs={"pk": self.object.pk}
+            )
+
+        return context
+
+    def get_success_url(self):
+        if 'change' in self.request.GET:
+            return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
+
+        return reverse('request-data:licence-of-data', kwargs={"pk": self.object.pk})
+
+
+class RequestDataLicence(WaffleFlagMixin, UpdateView):
+    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+    model = DataRequest
+    template_name = 'request_data/data-licence.html'
+    form_class = RequestDataLicenceForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        if 'change' in self.request.GET:
+            context['backlink'] = reverse(
+                'request-data:check-answers', kwargs={"pk": self.object.pk}
+            )
+        else:
+            context['backlink'] = reverse(
                 'request-data:security-classification', kwargs={"pk": self.object.pk}
             )
 
@@ -262,6 +290,9 @@ A request for a new dataset on Data Workspace has been submitted. Here are the d
 
 ## Security classification
 {obj.get_security_classification_display() or '[not provided]'}
+
+## Licence of the data
+{obj.data_licence or '[not provided]'}
 
 # Personal details
 
