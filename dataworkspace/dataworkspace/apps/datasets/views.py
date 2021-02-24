@@ -838,9 +838,13 @@ If access has not been granted to the requestor within 5 working days, this will
         {'email': request.user.email, 'ticket': ticket_reference}
     ).decode('utf-8')
 
-    for contact in set(
-        [dataset.enquiries_contact.email, dataset.secondary_enquiries_contact.email]
-    ):
+    contacts = set()
+    if dataset.enquiries_contact:
+        contacts.add(dataset.enquiries_contact.email)
+    if dataset.secondary_enquiries_contact:
+        contacts.add(dataset.secondary_enquiries_contact.email)
+
+    for contact in contacts:
         send_email(
             settings.NOTIFY_VISUALISATION_ACCESS_REQUEST_TEMPLATE_ID,
             contact,
