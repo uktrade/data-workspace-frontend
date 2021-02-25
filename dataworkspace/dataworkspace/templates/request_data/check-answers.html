@@ -96,6 +96,19 @@
               </a>
             </dd>
           </div>
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+              How is the data licensed?
+            </dt>
+            <dd class="govuk-summary-list__value">
+              {{ object.data_licence }}
+            </dd>
+            <dd class="govuk-summary-list__actions">
+              <a class="govuk-link" href="{% url 'request_data:licence-of-data' pk=object.pk %}?change">
+                Change<span class="govuk-visually-hidden"> location</span>
+              </a>
+            </dd>
+          </div>
         </dl>
 
         <h2 class="govuk-heading-m">Personal details</h2>

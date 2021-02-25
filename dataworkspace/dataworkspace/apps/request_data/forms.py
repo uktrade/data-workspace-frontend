@@ -99,3 +99,18 @@ class RequestDataOwnerOrManagerForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
+
+
+class RequestDataLicenceForm(GOVUKDesignSystemModelForm):
+    class Meta:
+        model = DataRequest
+        fields = ['data_licence']
+
+    data_licence = GOVUKDesignSystemTextareaField(
+        label="How is the data licensed?",
+        help_text=(
+            "Provide details of any licence conditions regarding use of the data, "
+            "for example Creative Commons Attribution or Open Government Licence, "
+            "or restrictions on data scraping."
+        ),
+    )

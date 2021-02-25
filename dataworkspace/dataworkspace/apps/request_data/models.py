@@ -38,6 +38,7 @@ class DataRequest(TimeStampedModel):
     data_description = models.TextField()
     data_purpose = models.TextField()
     data_location = models.TextField(blank=True)
+    data_licence = models.TextField(blank=True)
     security_classification = models.CharField(
         max_length=256, choices=SecurityClassificationType.choices
     )
