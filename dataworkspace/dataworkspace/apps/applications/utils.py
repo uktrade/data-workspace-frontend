@@ -891,7 +891,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                 source_tables = source_tables_for_user(dw_user)
                 db_role_schema_suffix = stable_identification_suffix(
-                    user_arn, short=True
+                    str(dw_user.profile.sso_id), short=True
                 )
 
                 # This creates a DB user for each of our datasets DBs. These users are intended to be long-lived,
