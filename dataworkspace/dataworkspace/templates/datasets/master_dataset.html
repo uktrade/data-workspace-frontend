@@ -1,6 +1,5 @@
 {% extends '_main.html' %}
-{% load humanize %}
-{% load static %}
+{% load humanize static datasets_tags %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -64,7 +63,9 @@
             <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.name }}</td>
             <td class="govuk-table__cell app-table_cell--no-border">"{{ source_table.schema }}"."{{ source_table.table }}"</td>
             <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.get_frequency_display }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.get_data_last_updated_date|default_if_none:"N/A" }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">
+              {{ source_table.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+            </td>
             <td class="govuk-table__cell app-table_cell--no-border">
               {% if source_table.type == source_table_type %}
                 {% if has_access %}

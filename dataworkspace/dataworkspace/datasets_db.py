@@ -2,6 +2,7 @@ import logging
 from typing import Tuple
 
 import psycopg2
+import pytz
 from django.db import connections
 
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -41,7 +42,7 @@ def get_columns(
 
 def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, str]]):
     """
-    Return the earliest of the last updated dates for a list of tables.
+    Return the earliest of the last updated dates for a list of tables in UTC.
     """
     with connections[database_name].cursor() as cursor:
         cursor.execute(
@@ -59,4 +60,7 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
             ''',
             [tables],
         )
-        return cursor.fetchone()[0]
+        dt = cursor.fetchone()[0]
+        if dt is None:
+            return None
+        return dt.replace(tzinfo=pytz.UTC)

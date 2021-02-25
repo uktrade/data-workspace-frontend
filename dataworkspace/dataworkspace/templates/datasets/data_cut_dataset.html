@@ -1,6 +1,5 @@
 {% extends '_main.html' %}
-{% load humanize %}
-{% load static %}
+{% load humanize static datasets_tags %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -112,7 +111,7 @@
                           {% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                          {{ datacut.get_data_last_updated_date|default_if_none:"N/A" }}
+                          {{ datacut.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
                         </td>
                         <td class="govuk-table__cell">
                             {% if can_show_link and datacut.type == custom_dataset_query_type %}
