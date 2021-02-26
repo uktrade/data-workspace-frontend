@@ -5,8 +5,7 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core import validators
-from django.db import connections, transaction
-from django.db.utils import DatabaseError
+from django.db import transaction
 from django.forms.widgets import SelectMultiple
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
@@ -27,6 +26,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
     VisualisationLink,
 )
+from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 
 
 class ReferenceDatasetForm(forms.ModelForm):
@@ -601,21 +601,9 @@ class CustomDatasetQueryInlineForm(forms.ModelForm):
 
         instance = super().save(commit)
 
-        # Extract the queried tables from the FROM clause using temporary views
-        with connections[instance.database.memorable_name].cursor() as cursor:
-            try:
-                with transaction.atomic():
-                    cursor.execute(
-                        f"create temporary view get_tables as (select 1 from ({instance.query.strip().rstrip(';')}) sq)"
-                    )
-            except DatabaseError:
-                tables = []
-            else:
-                cursor.execute(
-                    "select table_schema, table_name from information_schema.view_table_usage where view_name = 'get_tables'"
-                )
-                tables = cursor.fetchall()
-                cursor.execute("drop view get_tables")
+        tables = extract_queried_tables_from_sql_query(
+            instance.database.memorable_name, instance.query
+        )
 
         # Save the extracted tables in a seperate model for later user
         instance.tables.all().delete()
