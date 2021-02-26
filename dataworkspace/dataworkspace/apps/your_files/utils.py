@@ -43,7 +43,7 @@ def get_s3_csv_column_types(path):
     head = file['Body'].read().decode('utf-8')
     csv_data = head.splitlines()
 
-    if len(csv_data) <= 3:
+    if len(csv_data) <= 2:
         raise ValueError("Unable to read enough lines of data from file", path)
 
     # Drop the last line, which might be incomplete
@@ -148,6 +148,24 @@ def get_dataflow_dag_status(execution_date):
     response = requests.get(url, headers={'Authorization': header, 'Content-Type': ''},)
     response.raise_for_status()
     return response.json()
+
+
+def get_dataflow_task_status(execution_date, task_id):
+    config = settings.DATAFLOW_API_CONFIG
+    url = (
+        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f'dags/{config["DATAFLOW_S3_IMPORT_DAG"]}/dag_runs/'
+        f'{execution_date.split("+")[0]}/tasks/{task_id}'
+    )
+    hawk_creds = {
+        'id': config['DATAFLOW_HAWK_ID'],
+        'key': config['DATAFLOW_HAWK_KEY'],
+        'algorithm': 'sha256',
+    }
+    header = Sender(hawk_creds, url, 'get', content='', content_type='').request_header
+    response = requests.get(url, headers={'Authorization': header, 'Content-Type': ''})
+    response.raise_for_status()
+    return response.json().get('state')
 
 
 def get_user_schema(request):

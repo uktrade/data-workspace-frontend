@@ -147,7 +147,7 @@ class TestCreateTableViews:
             },
             follow=True,
         )
-        assert b'Validating a-csv.csv' in response.content
+        assert b'Validating' in response.content
         mock_get_column_types.assert_called_with('user/federated/abc/a-csv.csv')
         mock_copy_file.assert_called_with(
             'user/federated/abc/a-csv.csv',
@@ -213,7 +213,6 @@ class TestCreateTableViews:
             b'Table names must be no longer than 42 characters long' in response.content
         )
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
@@ -283,8 +282,10 @@ class TestCreateTableViews:
     @pytest.mark.parametrize(
         'url, success_text',
         (
-            ('your_files:create-table-validating', b'Validating test.csv'),
-            ('your_files:create-table-ingesting', b'Importing test.csv'),
+            ('your_files:create-table-validating', b'Validating'),
+            ('your_files:create-table-creating-table', b'Creating temporary table'),
+            ('your_files:create-table-ingesting', b'Inserting data'),
+            ('your_files:create-table-renaming-table', b'Renaming temporary table'),
             ('your_files:create-table-success', b'Table created'),
         ),
     )
@@ -322,7 +323,7 @@ class TestCreateTableViews:
                 status_code=status_code,
             )
             response = client.get(
-                reverse('your_files:create-table-status', args=(execution_date,))
+                reverse('your_files:create-table-dag-status', args=(execution_date,))
             )
             assert response.status_code == status_code
 
@@ -335,7 +336,43 @@ class TestCreateTableViews:
                 json={'state': 'success'},
             )
             response = client.get(
-                reverse('your_files:create-table-status', args=(execution_date,))
+                reverse('your_files:create-table-dag-status', args=(execution_date,))
+            )
+            assert response.status_code == 200
+            assert response.json() == {'state': 'success'}
+
+    @pytest.mark.parametrize('status_code', (500, 404))
+    def test_task_status_invalid(self, status_code, client):
+        execution_date = '02-05T13:33:49.266040+00:00'
+        task_id = 'task-id'
+        with requests_mock.Mocker() as rmock:
+            rmock.get(
+                'https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline'
+                f'/dag_runs/{execution_date.split("+")[0]}/tasks/{task_id}',
+                status_code=status_code,
+            )
+            response = client.get(
+                reverse(
+                    'your_files:create-table-task-status',
+                    args=(execution_date, task_id),
+                )
+            )
+            assert response.status_code == status_code
+
+    def test_task_status(self, client):
+        execution_date = '02-05T13:33:49.266040+00:00'
+        task_id = 'task-id'
+        with requests_mock.Mocker() as rmock:
+            rmock.get(
+                'https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline'
+                f'/dag_runs/{execution_date.split("+")[0]}/tasks/{task_id}',
+                json={'state': 'success'},
+            )
+            response = client.get(
+                reverse(
+                    'your_files:create-table-task-status',
+                    args=(execution_date, task_id),
+                )
             )
             assert response.status_code == 200
             assert response.json() == {'state': 'success'}
