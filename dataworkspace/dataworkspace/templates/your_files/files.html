@@ -230,13 +230,9 @@ Modified by the Department for International Trade
                             <th scope="col" class="govuk-table__header">Name</th>
                             <th scope="col" class="govuk-table__header" style="width: 15em;" >Last modified</th>
                             <th scope="col" class="govuk-table__header" style="width: 5em;">Size</th>
-                            {% endverbatim %}
-                              {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
-                                <th scope="col" class="govuk-table__header" style="width: 8em;">
-                                  Details
-                                </th>
-                              {% endflag %}
-                            {% verbatim %}
+                            <th scope="col" class="govuk-table__header" style="width: 8em;">
+                              Details
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="s3objects-tbody">
@@ -247,11 +243,7 @@ Modified by the Department for International Trade
                             <td class="govuk-table__cell"><a href draggable="false" class="govuk-link govuk-link--no-visited" ng-click="setCurrentPrefix(bigdata.Prefix, $event)">{{ :: prefix2folder(bigdata.Prefix) }}</a></td>
                             <td class="govuk-table__cell"></td>
                             <td class="govuk-table__cell"></td>
-                            {% endverbatim %}
-                              {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
-                                <td class="govuk-table__cell"></td>
-                              {% endflag %}
-                            {% verbatim %}
+                            <td class="govuk-table__cell"></td>
                         </tr>
                         <tr class="govuk-table__row" ng-repeat="prefix in prefixes" ng-click="toggleSelected(prefix)">
                             <td class="govuk-table__cell govuk-table__cell--checkbox">
@@ -267,11 +259,7 @@ Modified by the Department for International Trade
                             <td class="govuk-table__cell"><a href draggable="false" class="govuk-link govuk-link--no-visited" ng-click="setCurrentPrefix(prefix.Prefix, $event)">{{ :: prefix2folder(prefix.Prefix) }}</a></td>
                             <td class="govuk-table__cell"></td>
                             <td class="govuk-table__cell"></td>
-                            {% endverbatim %}
-                              {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
-                                <td class="govuk-table__cell"></td>
-                              {% endflag %}
-                            {% verbatim %}
+                            <td class="govuk-table__cell"></td>
                         </tr>
                         <tr class="govuk-table__row" ng-repeat="object in objects" ng-click="toggleSelected(object)">
                             <td class="govuk-table__cell govuk-table__cell--checkbox">
@@ -291,17 +279,15 @@ Modified by the Department for International Trade
                             </td>
                             <td class="govuk-table__cell">{{ :: object.LastModified.toLocaleString() }}</td>
                             <td class="govuk-table__cell">{{ :: bytesToSize(object.Size) }}</td>
-                          {% endverbatim %}
-                            {% flag YOUR_FILES_CREATE_TABLE_FLAG %}
-                              <td class="govuk-table__cell">
-                                <span ng-if="object.isCsv">
+                            <td class="govuk-table__cell">
+                              <span ng-if="object.isCsv">
+                                {% endverbatim %}
                                   <a class="govuk-link" href="{% url 'your-files:create-table-confirm' %}?path={% verbatim %}{{ :: object.Key }}{% endverbatim %}">
                                     Create table
                                   </a>
-                                </span>
-                              </td>
-                            {% endflag %}
-                          {% verbatim %}
+                                {% verbatim %}
+                              </span>
+                            </td>
                         </tr>
                         <tr class="govuk-table__row" ng-if="!prefixes.length && !objects.length && !initialising && !bigdata">
                             <td class="govuk-table__cell" colspan="4">Folder is empty</td>
