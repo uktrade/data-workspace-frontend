@@ -1,4 +1,4 @@
-aiodnsresolver==0.0.149
+aiodnsresolver==0.0.151
 fifolock==0.0.20
 lowhaio-aws-sigv4-unsigned-payload==0.0.4
 lowhaio-retry>=0.0.5
