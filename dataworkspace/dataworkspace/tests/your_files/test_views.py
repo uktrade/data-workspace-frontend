@@ -213,7 +213,6 @@ class TestCreateTableViews:
             b'Table names must be no longer than 42 characters long' in response.content
         )
 
-    @override_flag(settings.YOUR_FILES_CREATE_TABLE_FLAG, active=True)
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
     @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
