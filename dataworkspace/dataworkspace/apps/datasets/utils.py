@@ -179,8 +179,7 @@ def update_quicksight_visualisations_last_updated_date():
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
                 logger.error('DashboardId %s not found', dashboard_id)
                 continue
-            else:
-                raise e
+            raise e
         else:
             data_set_arns = dashboard['Version']['DataSetArns']
             logger.info(
@@ -199,8 +198,7 @@ def update_quicksight_visualisations_last_updated_date():
                     if e.response['Error']['Code'] == 'ResourceNotFoundException':
                         logger.error('DataSetId %s not found', data_set_arn[50:])
                         continue
-                    else:
-                        raise e
+                    raise e
                 else:
                     logger.info(
                         'Fetching last updated date for %s DataSet %s',
