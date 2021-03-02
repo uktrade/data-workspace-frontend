@@ -1,6 +1,6 @@
 {% extends 'explorer/base.html' %}
 
-{% load explorer_tags static %}
+{% load explorer_tags static waffle_tags %}
 
 {% block title %}{% if form.errors %}Error: {% endif %}Data Explorer - Home{% endblock %}
 {% block main %}
@@ -146,6 +146,13 @@
                               data-module="govuk-button" type="button" id="format_button">
                         Format SQL
                       </button>
+
+                      {% flag DATA_EXPLORER_SHARE_QUERY_FLAG %}
+                        <button class="govuk-button govuk-button--secondary govuk-!-margin-left-3"
+                                data-module="govuk-button" name="action" value="share">
+                          Share
+                        </button>
+                      {% endflag %}
 
                     </div>
 

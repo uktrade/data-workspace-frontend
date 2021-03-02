@@ -19,6 +19,7 @@ def staff_user(db):
         email='bob.testerson@test.com',
         is_staff=True,
         is_superuser=True,
+        first_name='Bob',
     )
     staff_user.profile.sso_id = 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68'
     staff_user.profile.save()
@@ -45,7 +46,11 @@ def staff_client(staff_user_data):
 @pytest.fixture
 def user(db):
     user = get_user_model().objects.create(
-        username='frank.exampleson@test.com', is_staff=False, is_superuser=False
+        username='frank.exampleson@test.com',
+        is_staff=False,
+        is_superuser=False,
+        email='frank.exampleson@test.com',
+        first_name='Frank',
     )
 
     return user

@@ -2,15 +2,17 @@ import logging
 import re
 from urllib.parse import urlencode
 
+import waffle
 from psycopg2 import DatabaseError
 
-from django import http
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.template import loader
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.db.models import Count
 from django.http import (
+    Http404,
     HttpResponse,
     HttpResponseRedirect,
     HttpResponseBadRequest,
@@ -19,14 +21,16 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
-from django.views.generic.base import View
-from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic.base import TemplateView, View
+from django.views.generic.edit import CreateView, DeleteView, FormView
+from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.exporters import get_exporter_class
-from dataworkspace.apps.explorer.forms import QueryForm
+from dataworkspace.apps.explorer.forms import QueryForm, ShareQueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
+from dataworkspace.notify import send_email
 from dataworkspace.apps.explorer.schema import schema_info
 from dataworkspace.apps.explorer.tasks import submit_query_for_execution
 from dataworkspace.apps.explorer.utils import (
@@ -287,6 +291,7 @@ class PlayQueryView(View):
                 'form_action': self.get_form_action(request),
                 'schema': schema,
                 'schema_tables': tables_columns,
+                'DATA_EXPLORER_SHARE_QUERY_FLAG': settings.DATA_EXPLORER_SHARE_QUERY_FLAG,
             },
         )
 
@@ -322,9 +327,18 @@ class PlayQueryView(View):
 
         elif action in {'run', 'fetch-page'}:
             query.params = url_get_params(request)
-            response = self.render_with_sql(request, query, run_query=True)
+            return self.render_with_sql(request, query, run_query=True)
 
-            return response
+        elif action == 'share' and waffle.flag_is_active(
+            request, settings.DATA_EXPLORER_SHARE_QUERY_FLAG
+        ):
+            play_sql, _ = PlaygroundSQL.objects.get_or_create(
+                sql=sql, created_by_user=request.user
+            )
+            play_sql.save()
+            return HttpResponseRedirect(
+                reverse('explorer:share_query', args=(play_sql.id,))
+            )
 
         else:
             return HttpResponse(f"Unknown form action: {action}", 400)
@@ -376,6 +390,9 @@ class PlayQueryView(View):
         context['schema'] = schema
         context['schema_tables'] = tables_columns
         context['form_action'] = self.get_form_action(request)
+        context[
+            'DATA_EXPLORER_SHARE_QUERY_FLAG'
+        ] = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
 
         if download_failed and request.method == 'GET':
             context['extra_errors'] = [
@@ -543,7 +560,7 @@ class QueryLogResultView(View):
             query_log = get_object_or_404(
                 QueryLog, pk=querylog_id, run_by_user=self.request.user
             )
-        except http.Http404:
+        except Http404:
             state = QueryLog.STATE_FAILED
             error = 'Error fetching results. Please try running your query again.'
         else:
@@ -569,3 +586,70 @@ class QueryLogResultView(View):
         return JsonResponse(
             {'query_log_id': querylog_id, 'state': state, 'error': error, 'html': html}
         )
+
+
+class ShareQueryView(WaffleFlagMixin, FormView):
+    form_class = ShareQueryForm
+    template_name = 'explorer/share.html'
+    play_sql = None
+    waffle_flag = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
+
+    def dispatch(self, request, *args, **kwargs):
+        self.play_sql = get_object_or_404(
+            PlaygroundSQL, id=self.kwargs['play_id'], created_by_user=self.request.user,
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['play_sql'] = self.play_sql
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        email_template = loader.get_template('explorer/partials/share_email.txt')
+        initial.update(
+            {
+                'query': self.play_sql.sql,
+                'message': email_template.render(
+                    {'query': self.play_sql.sql}, self.request
+                ),
+            }
+        )
+        return initial
+
+    def form_valid(self, form):
+        form_data = form.cleaned_data
+        contacts = {form_data['to_user'].email}
+        if form_data['copy_sender']:
+            contacts.add(self.request.user.email)
+        for contact in contacts:
+            send_email(
+                settings.NOTIFY_SHARE_EXPLORER_QUERY_TEMPLATE_ID,
+                contact,
+                personalisation={
+                    'sharer_first_name': self.request.user.first_name,
+                    'message': form_data['message'],
+                },
+            )
+        return HttpResponseRedirect(
+            reverse(
+                'explorer:share_query_confirmation',
+                args=(self.play_sql.id, form_data['to_user'].id,),
+            )
+        )
+
+
+class ShareQueryConfirmationView(WaffleFlagMixin, TemplateView):
+    template_name = 'explorer/share_confirmation.html'
+    waffle_flag = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context['play_sql'] = get_object_or_404(
+            PlaygroundSQL, id=self.kwargs['play_id'], created_by_user=self.request.user,
+        )
+        context['user'] = get_object_or_404(
+            get_user_model(), id=self.kwargs['recipient_id']
+        )
+        return context
