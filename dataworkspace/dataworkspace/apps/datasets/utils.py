@@ -14,7 +14,6 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
-    extract_queried_tables_from_sql_query,
     get_tables_last_updated_date,
 )
 
@@ -131,7 +130,8 @@ def update_quicksight_visualisations_last_updated_date():
               = No
                 - Is it a CustomSql dataset?
                     = Yes
-                      Extract the tables from the query and use the most recent last updated date
+                      Use the max of Dashboard.LastPublishedTime, Dashboard.LastUpdatedTime,
+                      DataSet.LastUpdatedTime
                     = No
                       - Is it an S3Source dataset?
                         = Yes
@@ -141,17 +141,6 @@ def update_quicksight_visualisations_last_updated_date():
     both RelationalTable and CustomSql mappings. Therefore a list of potential last updated dates is made and
     the most recent date from this list is chosen for the VisualisationLink's modified_date.
     """
-
-    def get_last_updated_date_by_sql_query(query):
-        for _, database_data in settings.DATABASES_DATA.items():
-            tables = extract_queried_tables_from_sql_query(database_data['NAME'], query)
-            if tables:
-                date = get_tables_last_updated_date(
-                    database_data['NAME'], tuple(tables)
-                )
-                if date:
-                    return date
-        return None
 
     def get_last_updated_date_by_table_name(schema, table):
         for _, database_data in settings.DATABASES_DATA.items():
@@ -220,11 +209,10 @@ def update_quicksight_visualisations_last_updated_date():
                                     or data_set_last_updated_time
                                 )
                             elif data_set_type == 'CustomSql':
-                                last_updated_date_candidate = (
-                                    get_last_updated_date_by_sql_query(
-                                        table_map['CustomSql']['SqlQuery']
-                                    )
-                                    or data_set_last_updated_time
+                                last_updated_date_candidate = max(
+                                    dashboard['LastPublishedTime'],
+                                    dashboard['LastUpdatedTime'],
+                                    data_set['LastUpdatedTime'],
                                 )
                             elif data_set_type == 'S3Source':
                                 last_updated_date_candidate = data_set_last_updated_time

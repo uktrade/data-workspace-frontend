@@ -54,7 +54,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         mock_sts_client = MagicMock()
         self.mock_quicksight_client = MagicMock()
         self.mock_quicksight_client.describe_dashboard.return_value = {
-            'Dashboard': {'Version': {'DataSetArns': ['testArn']}}
+            'Dashboard': {'Version': {'DataSetArns': ['testArn']},}
         }
         boto3_patcher = patch('dataworkspace.apps.datasets.utils.boto3.client')
         mock_boto3_client = boto3_patcher.start()
@@ -107,9 +107,9 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
         update_quicksight_visualisations_last_updated_date()
 
-        mock_get_tables_last_updated_date.assert_called_once_with(
-            'test_datasets', (('public', 'bar'),)
-        )
+        assert mock_get_tables_last_updated_date.call_args_list == [
+            call('test_datasets', (('public', 'bar'),))
+        ]
 
         visualisation_link.refresh_from_db()
         # modified_date should be set to the table's last_updated_date
@@ -118,18 +118,19 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         ).replace(tzinfo=pytz.UTC)
 
     @pytest.mark.django_db
-    @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
-    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
-    def test_direct_query_visualisation_with_custom_sql(
-        self,
-        mock_get_tables_last_updated_date,
-        mock_extract_queried_tables_from_sql_query,
-    ):
+    def test_direct_query_visualisation_with_custom_sql(self):
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {
+                'Version': {'DataSetArns': ['testArn']},
+                'LastPublishedTime': datetime.datetime(2021, 1, 1),
+                'LastUpdatedTime': datetime.datetime(2021, 2, 1),
+            }
+        }
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'DIRECT_QUERY',
                 'DataSetId': '1',
-                'LastUpdatedTime': datetime.datetime(2021, 1, 1),
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
                         'CustomSql': {'SqlQuery': 'SELECT * FROM foo'}
@@ -137,23 +138,15 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
                 },
             }
         }
-        mock_extract_queried_tables_from_sql_query.return_value = [('public', 'foo')]
-        mock_get_tables_last_updated_date.return_value = datetime.date(2021, 1, 2)
 
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
         update_quicksight_visualisations_last_updated_date()
 
-        mock_extract_queried_tables_from_sql_query.assert_called_once_with(
-            'test_datasets', 'SELECT * FROM foo'
-        )
-        mock_get_tables_last_updated_date.assert_called_once_with(
-            'test_datasets', (('public', 'foo'),)
-        )
-
         visualisation_link.refresh_from_db()
-        # modified_date should be set to the query's extracted table's last_updated_date
+        # modified_date should be set to max of Dashboard.LastPublishedTime,
+        # Dashboard.LastUpdatedTime,DataSet.LastUpdatedTime
         assert visualisation_link.modified_date == datetime.datetime(
-            2021, 1, 2
+            2021, 3, 1
         ).replace(tzinfo=pytz.UTC)
 
     @pytest.mark.django_db
