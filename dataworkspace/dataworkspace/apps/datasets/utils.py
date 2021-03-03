@@ -13,9 +13,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.cel import celery_app
-from dataworkspace.datasets_db import (
-    get_tables_last_updated_date,
-)
+from dataworkspace.datasets_db import get_tables_last_updated_date
 
 
 logger = logging.getLogger('app')
@@ -118,7 +116,7 @@ while (!dbHasCompleted(res)) {{
 @celery_app.task()
 def update_quicksight_visualisations_last_updated_date():
     """
-    When setting the QuickSight VisualisationLink's modified_date, the following rules are applied:
+    When setting the QuickSight VisualisationLink's data_source_last_updated, the following rules are applied:
 
     - Is it a SPICE visualisation?
         = Yes
@@ -139,7 +137,7 @@ def update_quicksight_visualisations_last_updated_date():
 
     Each dashboard can have multiple DataSets and each DataSet can have multiple mappings, i.e it can have
     both RelationalTable and CustomSql mappings. Therefore a list of potential last updated dates is made and
-    the most recent date from this list is chosen for the VisualisationLink's modified_date.
+    the most recent date from this list is chosen for the VisualisationLink's data_source_last_updated.
     """
 
     def get_last_updated_date_by_table_name(schema, table):
@@ -224,9 +222,8 @@ def update_quicksight_visualisations_last_updated_date():
                 max(last_updated_dates).strftime('%d-%m-%Y %H:%M:%S'),
                 dashboard_id,
             )
-            VisualisationLink.objects.filter(pk=visualisation_link.pk).update(
-                modified_date=max(last_updated_dates)
-            )
+            visualisation_link.data_source_last_updated = max(last_updated_dates)
+            visualisation_link.save()
 
     logger.info(
         'Finished fetching last updated dates for QuickSight visualisation links'

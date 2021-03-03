@@ -54,7 +54,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         mock_sts_client = MagicMock()
         self.mock_quicksight_client = MagicMock()
         self.mock_quicksight_client.describe_dashboard.return_value = {
-            'Dashboard': {'Version': {'DataSetArns': ['testArn']},}
+            'Dashboard': {'Version': {'DataSetArns': ['testArn']}}
         }
         boto3_patcher = patch('dataworkspace.apps.datasets.utils.boto3.client')
         mock_boto3_client = boto3_patcher.start()
@@ -80,8 +80,8 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         update_quicksight_visualisations_last_updated_date()
 
         visualisation_link.refresh_from_db()
-        # modified_date should be set to the DataSet's LastUpdatedTime
-        assert visualisation_link.modified_date == datetime.datetime(
+        # data_source_last_updated should be set to the DataSet's LastUpdatedTime
+        assert visualisation_link.data_source_last_updated == datetime.datetime(
             2021, 1, 1
         ).replace(tzinfo=pytz.UTC)
 
@@ -112,8 +112,8 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         ]
 
         visualisation_link.refresh_from_db()
-        # modified_date should be set to the table's last_updated_date
-        assert visualisation_link.modified_date == datetime.datetime(
+        # data_source_last_updated should be set to the table's last_updated_date
+        assert visualisation_link.data_source_last_updated == datetime.datetime(
             2021, 1, 2
         ).replace(tzinfo=pytz.UTC)
 
@@ -143,9 +143,9 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         update_quicksight_visualisations_last_updated_date()
 
         visualisation_link.refresh_from_db()
-        # modified_date should be set to max of Dashboard.LastPublishedTime,
+        # data_source_last_updated should be set to max of Dashboard.LastPublishedTime,
         # Dashboard.LastUpdatedTime,DataSet.LastUpdatedTime
-        assert visualisation_link.modified_date == datetime.datetime(
+        assert visualisation_link.data_source_last_updated == datetime.datetime(
             2021, 3, 1
         ).replace(tzinfo=pytz.UTC)
 
@@ -165,8 +165,8 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         update_quicksight_visualisations_last_updated_date()
 
         visualisation_link.refresh_from_db()
-        # modified_date should be set to the DataSet's LastUpdatedTime
-        assert visualisation_link.modified_date == datetime.datetime(
+        # data_source_last_updated should be set to the DataSet's LastUpdatedTime
+        assert visualisation_link.data_source_last_updated == datetime.datetime(
             2021, 1, 1
         ).replace(tzinfo=pytz.UTC)
 
@@ -197,8 +197,8 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         update_quicksight_visualisations_last_updated_date()
 
         visualisation_link.refresh_from_db()
-        # modified_date should be set to the most recent DataSet LastUpdatedTime
-        assert visualisation_link.modified_date == datetime.datetime(
+        # data_source_last_updated should be set to the most recent DataSet LastUpdatedTime
+        assert visualisation_link.data_source_last_updated == datetime.datetime(
             2021, 1, 2
         ).replace(tzinfo=pytz.UTC)
 
@@ -234,7 +234,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
             call('test_datasets', (('public', 'baz'),)),
         ]
         visualisation_link.refresh_from_db()
-        # modified_date should be set to the most recent table last_updated_date
-        assert visualisation_link.modified_date == datetime.datetime(
+        # data_source_last_updated should be set to the most recent table last_updated_date
+        assert visualisation_link.data_source_last_updated == datetime.datetime(
             2021, 1, 3
         ).replace(tzinfo=pytz.UTC)
