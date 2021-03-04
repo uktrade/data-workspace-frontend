@@ -84,7 +84,7 @@ class ShareQueryForm(GOVUKDesignSystemForm):
         label='Message',
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, attrs={"rows": 5},
+            label_is_heading=False, attrs={"rows": 20},
         ),
     )
     query = CharField(required=True, widget=HiddenInput())
