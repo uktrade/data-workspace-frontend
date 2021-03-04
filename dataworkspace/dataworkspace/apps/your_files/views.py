@@ -24,6 +24,7 @@ from dataworkspace.apps.your_files.forms import (
 from dataworkspace.apps.your_files.utils import (
     copy_file_to_uploads_bucket,
     get_dataflow_dag_status,
+    get_dataflow_task_status,
     get_s3_csv_column_types,
     clean_db_identifier,
     get_user_schema,
@@ -217,25 +218,111 @@ class BaseCreateTableTemplateView(RequiredParameterGetRequestMixin, TemplateView
         'table_name',
         'execution_date',
     ]
+    steps = 5
+    step: int
+
+    def _get_query_parameters(self):
+        return {
+            param: self.request.GET.get(param) for param in self.required_parameters
+        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
-            {param: self.request.GET.get(param) for param in self.required_parameters}
+            **{'steps': self.steps, 'step': self.step}, **self._get_query_parameters()
         )
         return context
 
 
-class CreateTableValidatingView(BaseCreateTableTemplateView):
-    template_name = 'your_files/create-table-validating.html'
+class BaseCreateTableStepView(BaseCreateTableTemplateView):
+    template_name = 'your_files/create-table-processing.html'
+    task_name: str
+    next_step_url_name: str
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context.update(
+            {
+                'task_name': self.task_name,
+                'next_step': f'{reverse(self.next_step_url_name)}?{urlencode(self._get_query_parameters())}',
+            }
+        )
+        return context
 
 
-class CreateTableIngestingView(BaseCreateTableTemplateView):
-    template_name = 'your_files/create-table-ingesting.html'
+class CreateTableValidatingView(BaseCreateTableStepView):
+    task_name = 'get-table-config'
+    next_step_url_name = 'your-files:create-table-creating-table'
+    step = 1
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context.update(
+            {
+                'title': 'Validating',
+                'info_text': (
+                    'Your CSV file is being validated against your chosen columns and data types.'
+                ),
+            }
+        )
+        return context
+
+
+class CreateTableCreatingTableView(BaseCreateTableStepView):
+    task_name = 'create-temp-tables'
+    next_step_url_name = 'your-files:create-table-ingesting'
+    step = 2
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context.update(
+            {
+                'title': 'Creating temporary table',
+                'info_text': (
+                    'Data will be inserted into a temporary table and validated before '
+                    'it is made available in your private schema.'
+                ),
+            }
+        )
+        return context
+
+
+class CreateTableIngestingView(BaseCreateTableStepView):
+    task_name = 'insert-into-temp-table'
+    next_step_url_name = 'your-files:create-table-renaming-table'
+    step = 3
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context.update(
+            {
+                'title': 'Inserting data',
+                'info_text': 'Once complete, your data will be validated and your table will be '
+                'made available in your private schema.',
+            }
+        )
+        return context
+
+
+class CreateTableRenamingTableView(BaseCreateTableStepView):
+    task_name = 'swap-dataset-tables'
+    next_step_url_name = 'your-files:create-table-success'
+    step = 4
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context.update(
+            {
+                'title': 'Renaming temporary table',
+                'info_text': 'This is the last step, your table is almost ready.',
+            }
+        )
+        return context
 
 
 class CreateTableSuccessView(BaseCreateTableTemplateView):
     template_name = 'your_files/create-table-success.html'
+    step = 5
 
 
 class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
@@ -282,5 +369,15 @@ class CreateTableDAGStatusView(View):
     def get(self, request, execution_date):
         try:
             return JsonResponse(get_dataflow_dag_status(execution_date))
+        except HTTPError as e:
+            return JsonResponse({}, status=e.response.status_code)
+
+
+class CreateTableDAGTaskStatusView(View):
+    def get(self, request, execution_date, task_id):
+        try:
+            return JsonResponse(
+                {'state': get_dataflow_task_status(execution_date, task_id)}
+            )
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)

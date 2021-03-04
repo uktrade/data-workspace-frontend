@@ -1,30 +1,26 @@
-var DELAY_STEP = 250;
-var MAX_DELAY = 5000;
+var POLL_DELAY = 1000;
+var FAILURE_STATES = ['failed', 'upstream_failed'];
 
-function pollForDagStateChange(executionDate, successStates, successRedirectUrl, failureRedirectUrl, pollDelay) {
+function pollForDagStateChange(taskStatusUrl, successRedirectUrl, failureRedirectUrl) {
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', '/files/create-table/status/' + executionDate);
+  xhr.open('GET', taskStatusUrl);
   xhr.onreadystatechange = function() {
     if (this.readyState === XMLHttpRequest.DONE) {
       if (this.status === 200) {
         var resp = JSON.parse(xhr.responseText);
-        if (successStates.includes(resp.state)) {
+        if (resp.state === 'success') {
           window.location.href = successRedirectUrl;
         }
-        else if (resp.state === "failed") {
+        if (FAILURE_STATES.includes(resp.state)) {
           window.location.href = failureRedirectUrl;
         }
-        else {
-          setTimeout(function () {
-            pollForDagStateChange(
-                executionDate,
-                successStates,
-                successRedirectUrl,
-                failureRedirectUrl,
-                Math.min(pollDelay + DELAY_STEP, MAX_DELAY),
-            )
-          }, pollDelay);
-        }
+        setTimeout(function () {
+          pollForDagStateChange(
+              taskStatusUrl,
+              successRedirectUrl,
+              failureRedirectUrl
+          )
+        }, POLL_DELAY);
       }
       else {
         window.location.href = failureRedirectUrl;

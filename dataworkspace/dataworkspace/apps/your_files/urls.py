@@ -3,9 +3,12 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.your_files.views import (
     CreateTableConfirmDataTypesView,
+    CreateTableCreatingTableView,
     CreateTableDAGStatusView,
+    CreateTableDAGTaskStatusView,
     CreateTableFailedView,
     CreateTableIngestingView,
+    CreateTableRenamingTableView,
     CreateTableSuccessView,
     CreateTableTableExists,
     CreateTableConfirmNameView,
@@ -37,9 +40,19 @@ urlpatterns = [
         name='create-table-validating',
     ),
     path(
+        'create-table/creating-table',
+        login_required(CreateTableCreatingTableView.as_view()),
+        name='create-table-creating-table',
+    ),
+    path(
         'create-table/ingesting',
         login_required(CreateTableIngestingView.as_view()),
         name='create-table-ingesting',
+    ),
+    path(
+        'create-table/renaming-table',
+        login_required(CreateTableRenamingTableView.as_view()),
+        name='create-table-renaming-table',
     ),
     path(
         'create-table/success',
@@ -59,6 +72,11 @@ urlpatterns = [
     path(
         'create-table/status/<str:execution_date>',
         login_required(CreateTableDAGStatusView.as_view()),
-        name='create-table-status',
+        name='create-table-dag-status',
+    ),
+    path(
+        'create-table/status/<str:execution_date>/<str:task_id>',
+        login_required(CreateTableDAGTaskStatusView.as_view()),
+        name='create-table-task-status',
     ),
 ]
