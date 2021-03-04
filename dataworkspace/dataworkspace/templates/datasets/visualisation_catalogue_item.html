@@ -73,7 +73,7 @@
                             {% endif %}
                         </td>
                         <td class="govuk-table__cell">
-                            {{ visualisation_link.modified_date|date_with_gmt_offset|default_if_none:"N/A" }}
+                            {{ visualisation_link.data_source_last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
                         </td>
                         <td class="govuk-table__cell">
                           Web

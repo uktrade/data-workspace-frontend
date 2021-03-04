@@ -1,8 +1,22 @@
+import logging
+
+import boto3
+import botocore
+from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 
-from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import (
+    DataSet,
+    VisualisationCatalogueItem,
+    VisualisationLink,
+)
 from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.cel import celery_app
+from dataworkspace.datasets_db import get_tables_last_updated_date
+
+
+logger = logging.getLogger('app')
 
 
 def find_dataset(dataset_uuid, user):
@@ -97,3 +111,120 @@ while (!dbHasCompleted(res)) {{
         "r": r_snippet,
         "sql": get_sql_snippet(schema, table_name),
     }
+
+
+@celery_app.task()
+def update_quicksight_visualisations_last_updated_date():
+    """
+    When setting the QuickSight VisualisationLink's data_source_last_updated, the following rules are applied:
+
+    - Is it a SPICE visualisation?
+        = Yes
+          Use the DataSet's LastUpdatedTime
+        = No
+          - Is it a RelationalTable dataset?
+              = Yes
+                Use the table's last updated date
+              = No
+                - Is it a CustomSql dataset?
+                    = Yes
+                      Use the max of Dashboard.LastPublishedTime, Dashboard.LastUpdatedTime,
+                      DataSet.LastUpdatedTime
+                    = No
+                      - Is it an S3Source dataset?
+                        = Yes
+                          Use the DataSet's LastUpdatedTime
+
+    Each dashboard can have multiple DataSets and each DataSet can have multiple mappings, i.e it can have
+    both RelationalTable and CustomSql mappings. Therefore a list of potential last updated dates is made and
+    the most recent date from this list is chosen for the VisualisationLink's data_source_last_updated.
+    """
+
+    def get_last_updated_date_by_table_name(schema, table):
+        for _, database_data in settings.DATABASES_DATA.items():
+            date = get_tables_last_updated_date(
+                database_data['NAME'], ((schema, table),)
+            )
+            if date:
+                return date
+        return None
+
+    account_id = boto3.client('sts').get_caller_identity().get('Account')
+    quicksight_client = boto3.client('quicksight')
+    logger.info('Fetching last updated dates for QuickSight visualisation links')
+
+    for visualisation_link in VisualisationLink.objects.filter(
+        visualisation_type='QUICKSIGHT'
+    ):
+        dashboard_id = visualisation_link.identifier
+        logger.info('Fetching last updated date for DashboardId %s', dashboard_id)
+        try:
+            dashboard = quicksight_client.describe_dashboard(
+                AwsAccountId=account_id, DashboardId=dashboard_id
+            )['Dashboard']
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                logger.error('DashboardId %s not found', dashboard_id)
+                continue
+            raise e
+        else:
+            data_set_arns = dashboard['Version']['DataSetArns']
+            logger.info(
+                'Found %d DataSets for DashboardId %s',
+                len(data_set_arns),
+                dashboard_id,
+            )
+            last_updated_dates = []
+
+            for data_set_arn in data_set_arns:
+                try:
+                    data_set = quicksight_client.describe_data_set(
+                        AwsAccountId=account_id, DataSetId=data_set_arn[50:]
+                    )['DataSet']
+                except botocore.exceptions.ClientError as e:
+                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                        logger.error('DataSetId %s not found', data_set_arn[50:])
+                        continue
+                    raise e
+                else:
+                    logger.info(
+                        'Fetching last updated date for %s DataSet %s',
+                        data_set['ImportMode'],
+                        data_set['DataSetId'],
+                    )
+                    data_set_last_updated_time = data_set['LastUpdatedTime']
+                    if data_set['ImportMode'] == 'SPICE':
+                        last_updated_dates.append(data_set_last_updated_time)
+                    else:
+                        for table_map in data_set['PhysicalTableMap'].values():
+                            data_set_type = list(table_map)[0]
+                            if data_set_type == 'RelationalTable':
+                                last_updated_date_candidate = (
+                                    get_last_updated_date_by_table_name(
+                                        table_map['RelationalTable']['Schema'],
+                                        table_map['RelationalTable']['Name'],
+                                    )
+                                    or data_set_last_updated_time
+                                )
+                            elif data_set_type == 'CustomSql':
+                                last_updated_date_candidate = max(
+                                    dashboard['LastPublishedTime'],
+                                    dashboard['LastUpdatedTime'],
+                                    data_set['LastUpdatedTime'],
+                                )
+                            elif data_set_type == 'S3Source':
+                                last_updated_date_candidate = data_set_last_updated_time
+
+                            last_updated_dates.append(last_updated_date_candidate)
+
+            logger.info(
+                'Setting last updated date of %s for DashboardId %s',
+                max(last_updated_dates).strftime('%d-%m-%Y %H:%M:%S'),
+                dashboard_id,
+            )
+            visualisation_link.data_source_last_updated = max(last_updated_dates)
+            visualisation_link.save()
+
+    logger.info(
+        'Finished fetching last updated dates for QuickSight visualisation links'
+    )

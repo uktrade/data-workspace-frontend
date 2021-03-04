@@ -1800,6 +1800,7 @@ class VisualisationLink(TimeStampedModel):
     visualisation_catalogue_item = models.ForeignKey(
         VisualisationCatalogueItem, on_delete=models.CASCADE
     )
+    data_source_last_updated = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'app_visualisationlink'

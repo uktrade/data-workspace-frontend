@@ -3,7 +3,8 @@ from typing import Tuple
 
 import psycopg2
 import pytz
-from django.db import connections
+from django.db import connections, transaction
+from django.db.utils import DatabaseError
 
 from dataworkspace.utils import TYPE_CODES_REVERSED
 
@@ -64,3 +65,23 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
         if dt is None:
             return None
         return dt.replace(tzinfo=pytz.UTC)
+
+
+def extract_queried_tables_from_sql_query(database_name, query):
+    # Extract the queried tables from the FROM clause using temporary views
+    with connections[database_name].cursor() as cursor:
+        try:
+            with transaction.atomic():
+                cursor.execute(
+                    f"create temporary view get_tables as (select 1 from ({query.strip().rstrip(';')}) sq)"
+                )
+        except DatabaseError:
+            tables = []
+        else:
+            cursor.execute(
+                "select table_schema, table_name from information_schema.view_table_usage where view_name = 'get_tables'"
+            )
+            tables = cursor.fetchall()
+            cursor.execute("drop view get_tables")
+
+        return tables

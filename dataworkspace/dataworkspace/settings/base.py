@@ -318,6 +318,11 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
             'schedule': 60 * 5,
             'args': (),
         },
+        'update-quicksight-visualisations-last-updated-date': {
+            'task': 'dataworkspace.apps.datasets.utils.update_quicksight_visualisations_last_updated_date',
+            'schedule': 60 * 5,
+            'args': (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']
