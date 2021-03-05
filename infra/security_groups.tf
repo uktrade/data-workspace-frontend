@@ -709,6 +709,18 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_mirrors_sync" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_superset_multiuser" {
+  description = "ingress-https-from-superset-multiuser"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "cloudwatch_ingress_https_from_all" {
   description = "ingress-https-from-everywhere"
 
@@ -1237,6 +1249,20 @@ resource "aws_security_group" "superset_multiuser_db" {
   }
 }
 
+# Connections to ECR and CloudWatch. ECR needs S3, and its VPC endpoint type
+# does not have an IP range or security group to limit access to
+resource "aws_security_group_rule" "superset_multiuser_egress_https_all" {
+  description = "egress-https-to-all"
+
+  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "superset_multiuser_db_ingress_postgres_superset_service" {
   description = "ingress-postgress-superset-service"
 
@@ -1284,6 +1310,18 @@ resource "aws_security_group_rule" "superset_service_egress_postgres_superset_db
   type        = "egress"
   from_port   = "5432"
   to_port     = "5432"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "superset_multiuser_service_egress_https_to_ecr_api" {
+  description = "egress-https-to-ecr-api"
+
+  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.ecr_api.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
   protocol    = "tcp"
 }
 

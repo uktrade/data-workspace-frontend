@@ -336,12 +336,14 @@ async def async_main():
         except Exception as exception:  # pylint: disable=broad-except
             user_exception = isinstance(exception, UserException)
             if not user_exception or (user_exception and exception.args[1] == 500):
-                logger.exception(
-                    'Exception during %s %s %s',
-                    downstream_request.method,
-                    downstream_request.url,
-                    type(exception),
-                )
+                pass
+
+            logger.exception(
+                'Exception during %s %s %s',
+                downstream_request.method,
+                downstream_request.url,
+                type(exception),
+            )
 
             if is_websocket:
                 raise

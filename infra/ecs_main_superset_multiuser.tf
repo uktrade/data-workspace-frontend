@@ -45,7 +45,7 @@ data "template_file" "superset_multiuser_container_definitions" {
   template = "${file("${path.module}/ecs_main_superset_multiuser_container_definitions.json")}"
 
   vars = {
-    container_image = "${var.superset_multiuser_container_image}"
+    container_image = "${aws_ecr_repository.superset_multiuser.repository_url}:master"
     container_name  = "superset-multiuser"
     log_group       = "${aws_cloudwatch_log_group.superset_multiuser.name}"
     log_region      = "${data.aws_region.aws_region.name}"
@@ -114,6 +114,27 @@ data "aws_iam_policy_document" "superset_multiuser_task_execution" {
       "${aws_cloudwatch_log_group.superset_multiuser.arn}:*",
     ]
   }
+
+  statement {
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+
+    resources = [
+      "${aws_ecr_repository.superset_multiuser.arn}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
 }
 
 resource "aws_iam_role" "superset_multiuser_task" {
@@ -166,7 +187,7 @@ resource "aws_lb_target_group" "superset_multiuser_8000" {
     protocol = "HTTP"
     interval = 10
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 5
 
     path = "/health"
   }
