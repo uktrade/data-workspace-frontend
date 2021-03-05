@@ -1,0 +1,37 @@
+{% extends 'explorer/base.html' %}
+
+{% load explorer_tags static %}
+
+{% block title %}{% if form.errors %}Error: {% endif%}Data Explorer - Share query{% endblock %}
+
+{% block back_button %}
+  <a href="{% url 'explorer:index' %}?play_id={{ play_sql.id }}" class="govuk-back-link">Back</a>
+{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'assets/vendor/highlight/styles/a11y-light.css' %}">
+{% endblock styles %}
+{% block content %}
+  <div class="govuk-width-container">
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-panel govuk-panel--confirmation govuk-!-margin-bottom-6">
+          <h1 class="govuk-panel__title">Query shared</h1>
+        </div>
+        <h2 class="govuk-heading-m">What happens next</h2>
+        <p class="govuk-body">We’ve sent your query to {{ user.email }}</p>
+        <p class="govuk-body">
+          The person will receive your query and a direct link to the relevant page on Data Explorer along with your message.
+        </p>
+        <p class="govuk-body">
+          If the receiver does not have access to data, they will have to request access to be able to run it.
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block footer_scripts %}
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+{% endblock footer_scripts %}

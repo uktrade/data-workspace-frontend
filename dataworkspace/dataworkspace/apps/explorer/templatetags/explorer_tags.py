@@ -50,3 +50,8 @@ def format_duration_short(milli_seconds):
 @register.simple_tag
 def query_table_in_explorer_link(schema, table, *args, **kwargs):
     return f"{reverse('explorer:index')}?sql={quote(get_sql_snippet(schema, table))}"
+
+
+@register.simple_tag
+def open_query_in_explorer_link(query):
+    return f"{reverse('explorer:index')}?sql={quote(query)}"

@@ -11,6 +11,8 @@ from dataworkspace.apps.explorer.views import (
     PlayQueryView,
     QueryLogResultView,
     QueryView,
+    ShareQueryConfirmationView,
+    ShareQueryView,
 )
 
 urlpatterns = [
@@ -41,6 +43,16 @@ urlpatterns = [
         'logs/<int:querylog_id>/results-json/',
         login_required(QueryLogResultView.as_view()),
         name='querylog_results',
+    ),
+    path(
+        'queries/share/<int:play_id>',
+        login_required(ShareQueryView.as_view()),
+        name='share_query',
+    ),
+    path(
+        'queries/share/confirmation/<int:play_id>/<int:recipient_id>',
+        login_required(ShareQueryConfirmationView.as_view()),
+        name='share_query_confirmation',
     ),
 ]
 

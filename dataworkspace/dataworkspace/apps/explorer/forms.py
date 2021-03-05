@@ -1,8 +1,17 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.forms import CharField, Field, ModelForm, ValidationError
-from django.forms.widgets import Select
+from django.forms.widgets import HiddenInput, Select
 
 from dataworkspace.apps.explorer.models import Query
+from dataworkspace.forms import (
+    GOVUKDesignSystemBooleanField,
+    GOVUKDesignSystemEmailValidationModelChoiceField,
+    GOVUKDesignSystemForm,
+    GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextareaField,
+    GOVUKDesignSystemTextareaWidget,
+)
 
 
 class SqlField(Field):
@@ -56,3 +65,39 @@ class QueryForm(ModelForm):
     class Meta:
         model = Query
         fields = ['title', 'sql', 'description', 'connection']
+
+
+class ShareQueryForm(GOVUKDesignSystemForm):
+    to_user = GOVUKDesignSystemEmailValidationModelChoiceField(
+        label='Who would you like to share the query with?',
+        help_text='Recipient\'s email',
+        queryset=get_user_model().objects.all(),
+        to_field_name='email',
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+        required=True,
+        error_messages={
+            'invalid_email': 'Enter the email address in the correct format, for example name@digital.trade.gov.uk',
+            'invalid_choice': 'The user you are sharing with must have a DIT staff SSO account',
+        },
+    )
+    message = GOVUKDesignSystemTextareaField(
+        label='Message',
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, attrs={"rows": 20},
+        ),
+    )
+    query = CharField(required=True, widget=HiddenInput())
+    copy_sender = GOVUKDesignSystemBooleanField(
+        label='Send me a copy of the email', required=False,
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if len(cleaned_data['query']) > 1950:
+            raise ValidationError(
+                f"The character length of your query ({len(cleaned_data['query'])} characters), "
+                "is longer than the current shared query length limit (1950 characters).",
+                code="SQLTooLong",
+            )
+        return cleaned_data
