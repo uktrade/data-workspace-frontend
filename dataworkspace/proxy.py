@@ -1006,7 +1006,8 @@ async def async_main():
                 return await handler_with_sso_headers()
 
             async with client_session.get(
-                f'{sso_base_url}{me_path}', headers={'Authorization': f'Bearer {token}'}
+                f'{sso_base_url}{me_path}',
+                headers={'Authorization': f'Bearer {token}'},
             ) as me_response:
                 me_profile_full = (
                     await me_response.json() if me_response.status == 200 else None
@@ -1163,7 +1164,9 @@ async def async_main():
         return _authenticate_by_ip_whitelist
 
     async with aiohttp.ClientSession(
-        auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()
+        auto_decompress=False,
+        cookie_jar=aiohttp.DummyCookieJar(),
+        skip_auto_headers=['Accept-Encoding'],
     ) as client_session:
         app = web.Application(
             middlewares=[
