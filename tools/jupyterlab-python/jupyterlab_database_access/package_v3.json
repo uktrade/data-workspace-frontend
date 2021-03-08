@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "jupyterlab_database_access",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Buttons to inject code into the notebook to connect to databases",
   "author": "Department for International Trade",
   "main": "plugin.js",
@@ -19,9 +19,9 @@
   },
   "scripts": {},
   "dependencies": {
-    "@lumino/disposable": "^1.2.0",
-    "@jupyterlab/apputils": "^2.0.0",
-    "@jupyterlab/notebook": "^2.0.0"
+    "@lumino/disposable": "^1.4.3",
+    "@jupyterlab/apputils": "^3.0.5",
+    "@jupyterlab/notebook": "^3.0.6"
   },
   "devDependencies": {}
 }
