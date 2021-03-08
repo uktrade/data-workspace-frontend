@@ -2118,6 +2118,55 @@ class TestApplication(unittest.TestCase):
             )
             self.assertIn('SELECT * FROM query_log_test;', content)
 
+    @async_test
+    async def test_sso_token_endpoint_header(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        headers = {}
+
+        async def handle_authorize(request):
+            return web.HTTPFound(
+                f"{request.query['redirect_uri']}?state={request.query['state']}&code=xxx"
+            )
+
+        async def handle_me(_):
+            return web.json_response({}, status=403)
+
+        async def handle_token(request):
+            nonlocal headers
+            headers = request.headers
+            return web.json_response({}, status=403)
+
+        sso_app = web.Application()
+        sso_app.add_routes(
+            [
+                web.get('/o/authorize/', handle_authorize),
+                web.post('/o/token/', handle_token),
+                web.get('/api/v1/user/me/', handle_me),
+            ]
+        )
+
+        sso_runner = web.AppRunner(sso_app)
+        await sso_runner.setup()
+        sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
+        await sso_site.start()
+
+        async with session.request('GET', 'http://dataworkspace.test:8000/'):
+            assert (
+                headers['Accept-Encoding'] == 'identity'
+            ), 'Incorrect encoding sent to SSO token endpoint'
+
+        await sso_site.stop()
+
 
 def client_session():
     session = aiohttp.ClientSession()

@@ -946,6 +946,7 @@ async def async_main():
 
                 async with client_session.post(
                     f'{sso_base_url}{token_path}',
+                    headers={'Accept-Encoding': 'identity'},
                     data={
                         'grant_type': grant_type,
                         'code': code,
@@ -1006,7 +1007,11 @@ async def async_main():
                 return await handler_with_sso_headers()
 
             async with client_session.get(
-                f'{sso_base_url}{me_path}', headers={'Authorization': f'Bearer {token}'}
+                f'{sso_base_url}{me_path}',
+                headers={
+                    'Accept-Encoding': 'identity',
+                    'Authorization': f'Bearer {token}',
+                },
             ) as me_response:
                 me_profile_full = (
                     await me_response.json() if me_response.status == 200 else None
