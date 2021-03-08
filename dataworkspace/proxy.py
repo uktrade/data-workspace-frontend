@@ -946,7 +946,6 @@ async def async_main():
 
                 async with client_session.post(
                     f'{sso_base_url}{token_path}',
-                    headers={'Accept-Encoding': 'identity'},
                     data={
                         'grant_type': grant_type,
                         'code': code,
@@ -1008,10 +1007,7 @@ async def async_main():
 
             async with client_session.get(
                 f'{sso_base_url}{me_path}',
-                headers={
-                    'Accept-Encoding': 'identity',
-                    'Authorization': f'Bearer {token}',
-                },
+                headers={'Authorization': f'Bearer {token}'},
             ) as me_response:
                 me_profile_full = (
                     await me_response.json() if me_response.status == 200 else None
@@ -1168,7 +1164,9 @@ async def async_main():
         return _authenticate_by_ip_whitelist
 
     async with aiohttp.ClientSession(
-        auto_decompress=False, cookie_jar=aiohttp.DummyCookieJar()
+        auto_decompress=False,
+        cookie_jar=aiohttp.DummyCookieJar(),
+        skip_auto_headers=['Accept-Encoding'],
     ) as client_session:
         app = web.Application(
             middlewares=[

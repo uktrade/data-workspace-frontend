@@ -2162,8 +2162,8 @@ class TestApplication(unittest.TestCase):
 
         async with session.request('GET', 'http://dataworkspace.test:8000/'):
             assert (
-                headers['Accept-Encoding'] == 'identity'
-            ), 'Incorrect encoding sent to SSO token endpoint'
+                'Accept-Encoding' not in headers
+            ), 'Encoding incorrectly sent to SSO token endpoint'
 
         await sso_site.stop()
 
