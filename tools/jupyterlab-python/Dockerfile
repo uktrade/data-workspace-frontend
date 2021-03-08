@@ -81,8 +81,7 @@ RUN \
     jupyter serverextension enable --system --python jupyterlab_template_notebooks && \
     jupyter labextension install \
         /jupyterlab_database_access \
-        /jupyterlab_template_notebooks/browser \
-        @jupyter-widgets/jupyterlab-manager@2.0 && \
+        /jupyterlab_template_notebooks/browser && \
     npm cache clean --force && \
     echo '[global]' > /etc/pip.conf && \
     echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
