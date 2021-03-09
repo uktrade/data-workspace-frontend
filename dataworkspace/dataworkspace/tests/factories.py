@@ -1,3 +1,4 @@
+import string
 import uuid
 from datetime import datetime, timedelta
 
@@ -164,7 +165,7 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
 class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
     reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
     name = factory.fuzzy.FuzzyText()
-    column_name = factory.fuzzy.FuzzyText(length=65)
+    column_name = factory.fuzzy.FuzzyText(length=65, chars=string.ascii_lowercase)
     data_type = 1
 
     class Meta:
