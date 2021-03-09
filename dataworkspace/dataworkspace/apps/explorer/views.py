@@ -2,7 +2,6 @@ import logging
 import re
 from urllib.parse import urlencode
 
-import waffle
 from psycopg2 import DatabaseError
 
 from django.conf import settings
@@ -23,7 +22,6 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView
-from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -291,7 +289,6 @@ class PlayQueryView(View):
                 'form_action': self.get_form_action(request),
                 'schema': schema,
                 'schema_tables': tables_columns,
-                'DATA_EXPLORER_SHARE_QUERY_FLAG': settings.DATA_EXPLORER_SHARE_QUERY_FLAG,
             },
         )
 
@@ -329,9 +326,7 @@ class PlayQueryView(View):
             query.params = url_get_params(request)
             return self.render_with_sql(request, query, run_query=True)
 
-        elif action == 'share' and waffle.flag_is_active(
-            request, settings.DATA_EXPLORER_SHARE_QUERY_FLAG
-        ):
+        elif action == 'share':
             play_sql, _ = PlaygroundSQL.objects.get_or_create(
                 sql=sql, created_by_user=request.user
             )
@@ -390,9 +385,6 @@ class PlayQueryView(View):
         context['schema'] = schema
         context['schema_tables'] = tables_columns
         context['form_action'] = self.get_form_action(request)
-        context[
-            'DATA_EXPLORER_SHARE_QUERY_FLAG'
-        ] = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
 
         if download_failed and request.method == 'GET':
             context['extra_errors'] = [
@@ -588,11 +580,10 @@ class QueryLogResultView(View):
         )
 
 
-class ShareQueryView(WaffleFlagMixin, FormView):
+class ShareQueryView(FormView):
     form_class = ShareQueryForm
     template_name = 'explorer/share.html'
     query_object = None
-    waffle_flag = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
 
     def dispatch(self, request, *args, **kwargs):
         if 'query_id' in request.GET:
@@ -652,9 +643,8 @@ class ShareQueryView(WaffleFlagMixin, FormView):
         )
 
 
-class ShareQueryConfirmationView(WaffleFlagMixin, TemplateView):
+class ShareQueryConfirmationView(TemplateView):
     template_name = 'explorer/share_confirmation.html'
-    waffle_flag = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()

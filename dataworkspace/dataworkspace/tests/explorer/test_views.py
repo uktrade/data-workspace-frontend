@@ -1,7 +1,6 @@
 import time
 
 from mock import mock
-from waffle.testutils import override_flag
 
 from django.conf import settings
 from django.core.cache import cache
@@ -661,7 +660,6 @@ class TestQueryLogEndpoint:
 
 @pytest.mark.django_db
 class TestShareQuery:
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
     def test_homepage_redirects(self, mock_send_email, client):
         response = client.post(
@@ -673,7 +671,6 @@ class TestShareQuery:
         assert b'select 6870+2' in response.content
         mock_send_email.assert_not_called()
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
     @pytest.mark.parametrize(
         'query_param, query_factory',
         (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
@@ -697,7 +694,6 @@ class TestShareQuery:
         ) in response.content
         mock_send_email.assert_not_called()
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
     @pytest.mark.parametrize(
         'query_param, query_factory',
         (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
@@ -721,7 +717,6 @@ class TestShareQuery:
         )
         mock_send_email.assert_not_called()
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
     @pytest.mark.parametrize(
         'query_param, query_factory',
         (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
@@ -755,7 +750,6 @@ class TestShareQuery:
             ]
         )
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
     @pytest.mark.parametrize(
         'query_param, query_factory',
         (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
