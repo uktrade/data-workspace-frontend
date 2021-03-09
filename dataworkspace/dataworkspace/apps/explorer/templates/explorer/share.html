@@ -5,7 +5,7 @@
 {% block title %}{% if form.errors %}Error: {% endif%}Data Explorer - Share query{% endblock %}
 
 {% block back_button %}
-  <a href="{% url 'explorer:index' %}?play_id={{ play_sql.id }}" class="govuk-back-link">Back</a>
+  <a href="{{ query_object.get_absolute_url }}" class="govuk-back-link">Back</a>
 {% endblock %}
 
 {% block styles %}

@@ -44,8 +44,8 @@
       <thead class="govuk-table__head">
 	<tr class="govuk-table__row">
 	  <th scope="col" class="govuk-table__header" style="width: 30%">Query title</th>
-	  <th scope="col" class="govuk-table__header" style="width: 25%">Date created</th>
-	  <th scope="col" class="govuk-table__header" style="width: 25%">Run count</th>
+	  <th scope="col" class="govuk-table__header" style="width: 20%">Date created</th>
+	  <th scope="col" class="govuk-table__header" style="width: 20%">Run count</th>
 	  <th scope="col" class="govuk-table__header">Actions</th>
 	</tr>
       </thead>
@@ -65,6 +65,7 @@
         </td>
         <td class="govuk-table__cell">
           <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:index' %}?query_id={{ object.id }}">Run</a>
+          <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:share_query' %}?query_id={{ object.id }}">Share</a>
           <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:query_delete' object.id %}">Delete</a>
         </td>
 	</tr>

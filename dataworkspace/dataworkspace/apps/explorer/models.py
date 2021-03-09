@@ -57,6 +57,9 @@ class PlaygroundSQL(models.Model):
         settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE
     )
 
+    def get_absolute_url(self):
+        return f"{reverse('explorer:index')}?play_id={self.id}"
+
 
 class Query(models.Model):
     title = models.CharField(max_length=255)
