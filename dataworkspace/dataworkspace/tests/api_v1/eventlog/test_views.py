@@ -16,7 +16,7 @@ class TestEventLogAPIView(BaseAPIViewTest):
     url = reverse('api-v1:eventlog:events')
     factory = factories.DatasetLinkDownloadEventFactory
     pagination_class = (
-        'dataworkspace.apps.api_v1.eventlog.views.EventLogCursorPagination.page_size'
+        'dataworkspace.apps.api_v1.pagination.TimestampCursorPagination.page_size'
     )
 
     def expected_response(self, eventlog):
