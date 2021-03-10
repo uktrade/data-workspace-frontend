@@ -557,3 +557,40 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             ),
             self.expected_response(visualisation2, 'Visualisation'),
         ]
+
+
+@pytest.mark.django_db
+class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
+    url = reverse('api-v1:dataset:tool-query-audit-logs')
+    factory = factories.ToolQueryAuditLogFactory
+    pagination_class = (
+        'dataworkspace.apps.api_v1.pagination.TimestampCursorPagination.page_size'
+    )
+
+    def expected_response(
+        self, log,
+    ):
+        return {
+            'id': log.id,
+            'user': log.user_id,
+            'database': log.database.memorable_name,
+            'query_sql': log.query_sql,
+            'rolename': log.rolename,
+            'timestamp': log.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'tables': [
+                {'id': table.id, 'schema': table.schema, 'table': table.table}
+                for table in log.tables.all()
+            ],
+        }
+
+    def test_success(self, unauthenticated_client):
+        log_1 = factories.ToolQueryAuditLogFactory.create()
+        log_2 = factories.ToolQueryAuditLogFactory.create()
+        factories.ToolQueryAuditLogTableFactory.create(audit_log=log_2)
+        factories.ToolQueryAuditLogTableFactory.create(audit_log=log_2)
+        response = unauthenticated_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['results'] == [
+            self.expected_response(log_1),
+            self.expected_response(log_2),
+        ]

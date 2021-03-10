@@ -18,4 +18,9 @@ urlpatterns = [
         views.reference_dataset_api_view_GET,
         name='api-reference-dataset-view',
     ),
+    path(
+        'tool-query-audit-logs',
+        views.ToolQueryAuditLogViewSet.as_view({'get': 'list'}),
+        name='tool-query-audit-logs',
+    ),
 ]
