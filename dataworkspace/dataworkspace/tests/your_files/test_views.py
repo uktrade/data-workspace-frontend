@@ -161,7 +161,7 @@ class TestCreateTableViews:
                 {
                     'header_name': 'Field 1',
                     'column_name': 'field1',
-                    'data_type': 'text',
+                    'data_type': 'integer',
                     'sample_data': [1, 2, 3],
                 }
             ],

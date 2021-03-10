@@ -181,7 +181,7 @@ class CreateTableConfirmDataTypesView(FormView):
         column_definitions = get_s3_csv_column_types(cleaned['path'])
         for field in column_definitions:
             field['data_type'] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
-                field['data_type'], PostgresDataTypes.TEXT.value
+                cleaned[field['column_name']], PostgresDataTypes.TEXT.value
             )
 
         import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + '/' + cleaned['path']
