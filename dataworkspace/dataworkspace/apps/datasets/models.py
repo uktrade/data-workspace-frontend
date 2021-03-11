@@ -1288,8 +1288,9 @@ class ReferenceDatasetField(TimeStampedUserModel):
         'database. Leave blank for linked reference dataset fields',
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$',
-                message='Column names must start with a letter and contain only '
+                regex=r'^[a-z][a-z0-9_\.]*$',
+                message='Column names must be lowercase and must '
+                'start with a letter and contain only '
                 'letters, numbers, underscores and full stops.',
             )
         ],

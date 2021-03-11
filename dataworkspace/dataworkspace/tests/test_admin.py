@@ -323,8 +323,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(
             response,
-            'Column names must start with a letter and contain only '
-            'letters, numbers, underscores and full stops.',
+            'Column names must be lowercase and must start with a letter and contain '
+            'only letters, numbers, underscores and full stops.',
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
@@ -804,8 +804,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(
             response,
-            'Column names must start with a letter and '
-            'contain only letters, numbers, underscores and full stops.',
+            'Column names must be lowercase and must start with a letter and contain '
+            'only letters, numbers, underscores and full stops.',
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
