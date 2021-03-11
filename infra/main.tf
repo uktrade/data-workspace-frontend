@@ -42,6 +42,9 @@ variable registry_proxy_password {}
 variable registry_internal_domain {}
 
 variable admin_db_instance_class {}
+variable admin_db_instance_version {
+  default = "10.15"
+}
 
 variable admin_authbroker_client_id {}
 variable admin_authbroker_client_secret {}
