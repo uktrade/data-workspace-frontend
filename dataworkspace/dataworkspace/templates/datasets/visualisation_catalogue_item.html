@@ -37,7 +37,7 @@
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-xl">{{ model.name }}</h1>
             <div class="govuk-body">
-                {{ model.description | minimal_markdown }}
+                {{ model.description | safe }}
             </div>
 
             {% if not has_access %}
