@@ -367,3 +367,25 @@ class DatabaseUserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'core.DatabaseUser'
+
+
+class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
+    id = factory.Sequence(lambda n: n)
+    user = factory.SubFactory(UserFactory)
+    database = factory.SubFactory(DatabaseFactory)
+    rolename = factory.fuzzy.FuzzyText(length=10)
+    query_sql = 'select * from a_table'
+    timestamp = datetime.now()
+
+    class Meta:
+        model = 'datasets.ToolQueryAuditLog'
+
+
+class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
+    id = factory.Sequence(lambda n: n)
+    audit_log = factory.SubFactory(ToolQueryAuditLogFactory)
+    schema = factory.fuzzy.FuzzyText(length=10)
+    table = factory.fuzzy.FuzzyText(length=10)
+
+    class Meta:
+        model = 'datasets.ToolQueryAuditLogTable'

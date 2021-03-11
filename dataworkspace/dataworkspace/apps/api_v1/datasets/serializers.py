@@ -2,7 +2,11 @@ from django.utils.html import strip_tags
 from rest_framework import serializers
 
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import SourceTable
+from dataworkspace.apps.datasets.models import (
+    SourceTable,
+    ToolQueryAuditLog,
+    ToolQueryAuditLogTable,
+)
 
 _PURPOSES = {
     DataSetType.DATACUT.value: 'Data cut',
@@ -63,3 +67,26 @@ class CatalogueItemSerializer(serializers.Serializer):
                 SourceTable.objects.filter(dataset_id=instance['id']), many=True
             ).data
         return []
+
+
+class ToolQueryAuditLogTableSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ToolQueryAuditLogTable
+        fields = ['id', 'schema', 'table']
+
+
+class ToolQueryAuditLogSerializer(serializers.ModelSerializer):
+    database = serializers.StringRelatedField()
+    tables = ToolQueryAuditLogTableSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ToolQueryAuditLog
+        fields = [
+            'id',
+            'user',
+            'database',
+            'query_sql',
+            'rolename',
+            'timestamp',
+            'tables',
+        ]

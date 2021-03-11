@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
+from dataworkspace.apps.api_v1.pagination import TimestampCursorPagination
 from dataworkspace.apps.core.utils import (
     database_dsn,
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -19,10 +20,14 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     DataSet,
     ReferenceDataset,
+    ToolQueryAuditLog,
     VisualisationCatalogueItem,
     ReferenceDatasetField,
 )
-from dataworkspace.apps.api_v1.datasets.serializers import CatalogueItemSerializer
+from dataworkspace.apps.api_v1.datasets.serializers import (
+    CatalogueItemSerializer,
+    ToolQueryAuditLogSerializer,
+)
 
 
 def _get_dataset_columns(connection, source_table):
@@ -372,3 +377,13 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
     # PageNumberPagination is used instead of CursorPagination
     # as filters cannot be applied to a union-ed queryset.
     pagination_class = PageNumberPagination
+
+
+class ToolQueryAuditLogViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to list tool query audit logs for ingestion by data flow
+    """
+
+    queryset = ToolQueryAuditLog.objects.all()
+    serializer_class = ToolQueryAuditLogSerializer
+    pagination_class = TimestampCursorPagination
