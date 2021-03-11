@@ -1,7 +1,6 @@
 import time
 
 from mock import mock
-from waffle.testutils import override_flag
 
 from django.conf import settings
 from django.core.cache import cache
@@ -659,14 +658,8 @@ class TestQueryLogEndpoint:
         assert 'record2' in json_response['html']
 
 
-@pytest.fixture
-def play_sql(user):
-    return PlaygroundSQL.objects.create(sql='select 1+3400;', created_by_user=user)
-
-
 @pytest.mark.django_db
 class TestShareQuery:
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
     def test_homepage_redirects(self, mock_send_email, client):
         response = client.post(
@@ -678,11 +671,17 @@ class TestShareQuery:
         assert b'select 6870+2' in response.content
         mock_send_email.assert_not_called()
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
+    @pytest.mark.parametrize(
+        'query_param, query_factory',
+        (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
+    )
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
-    def test_share_query_too_long(self, mock_send_email, client, user, play_sql):
+    def test_share_query_too_long(
+        self, mock_send_email, query_param, query_factory, client, user,
+    ):
+        query_obj = query_factory.create(created_by_user=user)
         response = client.post(
-            reverse('explorer:share_query', args=(play_sql.id,)),
+            f"{reverse('explorer:share_query')}?{query_param}={query_obj.id}",
             data={
                 'query': '*' * 1951,
                 'to_user': user.email,
@@ -695,11 +694,17 @@ class TestShareQuery:
         ) in response.content
         mock_send_email.assert_not_called()
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
+    @pytest.mark.parametrize(
+        'query_param, query_factory',
+        (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
+    )
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
-    def test_invalid_recipient(self, mock_send_email, client, play_sql):
+    def test_invalid_recipient(
+        self, mock_send_email, query_param, query_factory, client, user
+    ):
+        query_obj = query_factory.create(created_by_user=user)
         response = client.post(
-            reverse('explorer:share_query', args=(play_sql.id,)),
+            f"{reverse('explorer:share_query')}?{query_param}={query_obj.id}",
             data={
                 'query': 'select 6870+2;',
                 'to_user': 'a-bad-email@somewhere.com',
@@ -712,11 +717,17 @@ class TestShareQuery:
         )
         mock_send_email.assert_not_called()
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
+    @pytest.mark.parametrize(
+        'query_param, query_factory',
+        (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
+    )
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
-    def test_share_query(self, mock_send_email, play_sql, client, user):
+    def test_share_query(
+        self, mock_send_email, query_param, query_factory, client, user
+    ):
+        query_obj = query_factory.create(created_by_user=user)
         response = client.post(
-            reverse('explorer:share_query', args=(play_sql.id,)),
+            f"{reverse('explorer:share_query')}?{query_param}={query_obj.id}",
             data={
                 'query': 'select 6870+2;',
                 'to_user': user.email,
@@ -739,13 +750,17 @@ class TestShareQuery:
             ]
         )
 
-    @override_flag(settings.DATA_EXPLORER_SHARE_QUERY_FLAG, active=True)
+    @pytest.mark.parametrize(
+        'query_param, query_factory',
+        (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
+    )
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
     def test_share_query_copy_sender(
-        self, mock_send_email, client, play_sql, user, staff_user
+        self, mock_send_email, query_param, query_factory, client, user, staff_user
     ):
+        query_obj = query_factory.create(created_by_user=user)
         response = client.post(
-            reverse('explorer:share_query', args=(play_sql.id,)),
+            f"{reverse('explorer:share_query')}?{query_param}={query_obj.id}",
             data={
                 'query': 'select 6870+2;',
                 'to_user': staff_user.email,

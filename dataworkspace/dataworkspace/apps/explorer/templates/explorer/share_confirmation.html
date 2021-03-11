@@ -2,10 +2,16 @@
 
 {% load explorer_tags static %}
 
-{% block title %}{% if form.errors %}Error: {% endif%}Data Explorer - Share query{% endblock %}
+{% block title %}Data Explorer - Share query{% endblock %}
 
 {% block back_button %}
-  <a href="{% url 'explorer:index' %}?play_id={{ play_sql.id }}" class="govuk-back-link">Back</a>
+  {% if request.GET.play_id %}
+    <a href="{% url 'explorer:index' %}?play_id={{ request.GET.play_id }}" class="govuk-back-link">Back</a>
+  {% elif request.GET.query_id %}
+    <a href="{% url 'explorer:query_detail' request.GET.query_id %}" class="govuk-back-link">Back</a>
+  {% else %}
+    <a href="{% url 'explorer:index' %}" class="govuk-back-link">Back</a>
+  {% endif %}
 {% endblock %}
 
 {% block styles %}

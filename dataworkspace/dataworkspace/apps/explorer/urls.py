@@ -45,12 +45,10 @@ urlpatterns = [
         name='querylog_results',
     ),
     path(
-        'queries/share/<int:play_id>',
-        login_required(ShareQueryView.as_view()),
-        name='share_query',
+        'queries/share/', login_required(ShareQueryView.as_view()), name='share_query',
     ),
     path(
-        'queries/share/confirmation/<int:play_id>/<int:recipient_id>',
+        'queries/share/confirmation/<int:recipient_id>',
         login_required(ShareQueryConfirmationView.as_view()),
         name='share_query_confirmation',
     ),

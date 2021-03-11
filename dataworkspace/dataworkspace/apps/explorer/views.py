@@ -2,7 +2,6 @@ import logging
 import re
 from urllib.parse import urlencode
 
-import waffle
 from psycopg2 import DatabaseError
 
 from django.conf import settings
@@ -23,7 +22,6 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView
-from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -291,7 +289,6 @@ class PlayQueryView(View):
                 'form_action': self.get_form_action(request),
                 'schema': schema,
                 'schema_tables': tables_columns,
-                'DATA_EXPLORER_SHARE_QUERY_FLAG': settings.DATA_EXPLORER_SHARE_QUERY_FLAG,
             },
         )
 
@@ -329,15 +326,13 @@ class PlayQueryView(View):
             query.params = url_get_params(request)
             return self.render_with_sql(request, query, run_query=True)
 
-        elif action == 'share' and waffle.flag_is_active(
-            request, settings.DATA_EXPLORER_SHARE_QUERY_FLAG
-        ):
+        elif action == 'share':
             play_sql, _ = PlaygroundSQL.objects.get_or_create(
                 sql=sql, created_by_user=request.user
             )
             play_sql.save()
             return HttpResponseRedirect(
-                reverse('explorer:share_query', args=(play_sql.id,))
+                f"{reverse('explorer:share_query')}?play_id={play_sql.id}"
             )
 
         else:
@@ -390,9 +385,6 @@ class PlayQueryView(View):
         context['schema'] = schema
         context['schema_tables'] = tables_columns
         context['form_action'] = self.get_form_action(request)
-        context[
-            'DATA_EXPLORER_SHARE_QUERY_FLAG'
-        ] = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
 
         if download_failed and request.method == 'GET':
             context['extra_errors'] = [
@@ -588,21 +580,32 @@ class QueryLogResultView(View):
         )
 
 
-class ShareQueryView(WaffleFlagMixin, FormView):
+class ShareQueryView(FormView):
     form_class = ShareQueryForm
     template_name = 'explorer/share.html'
-    play_sql = None
-    waffle_flag = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
+    query_object = None
 
     def dispatch(self, request, *args, **kwargs):
-        self.play_sql = get_object_or_404(
-            PlaygroundSQL, id=self.kwargs['play_id'], created_by_user=self.request.user,
-        )
+        if 'query_id' in request.GET:
+            self.query_object = get_object_or_404(
+                Query,
+                id=self.request.GET['query_id'],
+                created_by_user=self.request.user,
+            )
+        elif 'play_id' in request.GET:
+            self.query_object = get_object_or_404(
+                PlaygroundSQL,
+                id=self.request.GET['play_id'],
+                created_by_user=self.request.user,
+            )
+        else:
+            raise Http404
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['play_sql'] = self.play_sql
+        context['query_object'] = self.query_object
+        context['back_link'] = self.query_object.get_absolute_url()
         return context
 
     def get_initial(self):
@@ -610,9 +613,9 @@ class ShareQueryView(WaffleFlagMixin, FormView):
         email_template = loader.get_template('explorer/partials/share_email.txt')
         initial.update(
             {
-                'query': self.play_sql.sql,
+                'query': self.query_object.sql,
                 'message': email_template.render(
-                    {'query': self.play_sql.sql}, self.request
+                    {'query': self.query_object.sql}, self.request
                 ),
             }
         )
@@ -634,21 +637,17 @@ class ShareQueryView(WaffleFlagMixin, FormView):
             )
         return HttpResponseRedirect(
             reverse(
-                'explorer:share_query_confirmation',
-                args=(self.play_sql.id, form_data['to_user'].id,),
+                'explorer:share_query_confirmation', args=(form_data['to_user'].id,),
             )
+            + f'?{urlencode(self.request.GET)}'
         )
 
 
-class ShareQueryConfirmationView(WaffleFlagMixin, TemplateView):
+class ShareQueryConfirmationView(TemplateView):
     template_name = 'explorer/share_confirmation.html'
-    waffle_flag = settings.DATA_EXPLORER_SHARE_QUERY_FLAG
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context['play_sql'] = get_object_or_404(
-            PlaygroundSQL, id=self.kwargs['play_id'], created_by_user=self.request.user,
-        )
         context['user'] = get_object_or_404(
             get_user_model(), id=self.kwargs['recipient_id']
         )
