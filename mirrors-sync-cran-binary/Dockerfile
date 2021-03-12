@@ -42,7 +42,7 @@ RUN \
 		libjq-dev=1.5+dfsg-2+b1 \
 		libprotobuf-dev=3.6.1.3-2 \
 		protobuf-compiler=3.6.1.3-2 \
-		libnode-dev \
+		libnode-dev=10.24.0~dfsg-1~deb10u1 \
 		lmodern=2.004.5-6 \
 		procps=2:3.3.15-2 \
 		r-base-dev=3.6.1-2~bustercran.0 \
