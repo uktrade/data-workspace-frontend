@@ -20,7 +20,9 @@ RUN \
 		dirmngr \
 		gnupg2 && \
 	rm -rf /var/lib/apt/lists/* && \
-	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian-security/ buster/updates main" >> /etc/apt/sources.list && \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
 	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
 	until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
@@ -40,7 +42,7 @@ RUN \
 		libjq-dev=1.5+dfsg-2+b1 \
 		libprotobuf-dev=3.6.1.3-2 \
 		protobuf-compiler=3.6.1.3-2 \
-		libnode-dev=10.21.0~dfsg-1~deb10u1 \
+		libnode-dev=10.24.0~dfsg-1~deb10u1 \
 		lmodern=2.004.5-6 \
 		procps=2:3.3.15-2 \
 		r-base-dev=3.6.1-2~bustercran.0 \
