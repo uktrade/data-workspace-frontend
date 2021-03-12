@@ -1,7 +1,7 @@
 {% with id=widget.attrs.id %}
 <div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
   <fieldset{% if id %} id="{{ id }}"{% endif %} class="govuk-fieldset">
-      <legend class="govuk-fieldset__legend govuk-fieldset__legend--{{ widget.legend_size }}">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--{{ widget.label_size }}">
         <{{ widget.heading }} class="govuk-fieldset__heading">{{ widget.label }}</{{ widget.heading }}>
       </legend>
 
@@ -20,7 +20,7 @@
           <span class="govuk-visually-hidden">Error: </span>{{ widget.errors.0 }}
       </span>
       {% endif %}
-      <div class="govuk-checkboxes">
+      <div class="govuk-checkboxes {% if widget.small %}govuk-checkboxes--small{% endif %}">
       {% for group, options, index in widget.optgroups %}
         {% for option in options %}
           {% include option.template_name with widget=option %}
