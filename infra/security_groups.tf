@@ -1518,7 +1518,7 @@ resource "aws_security_group_rule" "elasticsearch_ingress_from_paas" {
   description = "ingress-elasticsearch-https-from-paas-ie-data-flow"
 
   security_group_id = "${aws_security_group.datasets.id}"
-  cidr_blocks       = ["10.0.0.0/16"]
+  cidr_blocks       = [var.paas_cidr_block]
 
   type        = "ingress"
   from_port   = "443"

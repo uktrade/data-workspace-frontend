@@ -6,7 +6,7 @@ resource "aws_iam_service_linked_role" "datasets_finder" {
 }
 
 resource "aws_elasticsearch_domain" "datasets_finder" {
-  domain_name           = var.prefix
+  domain_name           = "${var.prefix}-datasets-finder"
   elasticsearch_version = "7.9"
 
   cluster_config {
@@ -48,8 +48,15 @@ resource "aws_elasticsearch_domain" "datasets_finder" {
       "Principal": {
         "AWS": "${aws_iam_role.admin_task.arn}"
       },
-      "Action": "es:*",
-      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${var.prefix}/*"
+      "Action": ["es:ESHttpGet"],
+      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${var.prefix}/*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": [
+            "${aws_vpc.datasets.cidr_block}"
+          ]
+        }
+      }
     },
     {
       "Effect": "Allow",
@@ -57,7 +64,14 @@ resource "aws_elasticsearch_domain" "datasets_finder" {
         "AWS": "${aws_iam_user.datasets_finder_data_flow.arn}"
       },
       "Action": "es:*",
-      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${var.prefix}/*"
+      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${var.prefix}/*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": [
+            "${var.paas_cidr_block}"
+          ]
+        }
+      }
     }
   ]
 }
