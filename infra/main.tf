@@ -145,6 +145,12 @@ variable quicksight_subnet_availability_zone {}
 
 variable shared_keypair_public_key {}
 
+variable datasets_finder_instance_type {}
+variable datasets_finder_ebs_size {
+  type = number
+  default = 100
+}
+
 locals {
   registry_container_name    = "jupyterhub-registry"
   registry_container_port    = "5000"

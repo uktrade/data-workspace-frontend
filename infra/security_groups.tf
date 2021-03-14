@@ -1501,3 +1501,27 @@ resource "aws_security_group_rule" "datasets_db_egress_all_to_quicksight" {
   to_port     = "65535"
   protocol    = "tcp"
 }
+
+resource "aws_security_group_rule" "elasticsearch_ingress_from_admin" {
+  description = "ingress-elasticsearch-https-from-admin"
+
+  security_group_id = "${aws_security_group.datasets.id}"
+  source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "elasticsearch_ingress_from_paas" {
+  description = "ingress-elasticsearch-https-from-paas-ie-data-flow"
+
+  security_group_id = "${aws_security_group.datasets.id}"
+  cidr_blocks       = [var.paas_cidr_block]
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
