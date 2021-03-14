@@ -30,6 +30,11 @@
     "devDependencies": {
         "@theia/cli": "latest"
     },
+    "resolutions": {
+      "**/svgo/js-yaml": "3.14.1",
+      "**/mocha/js-yaml": "3.14.1",
+      "**/paged-request/axios": "0.21.1"
+    },
     "theiaPluginsDir": "plugins",
     "theiaPlugins": {
         "vscode-builtin-bat": "https://github.com/theia-ide/vscode-builtin-extensions/releases/download/v1.39.1-prel/bat-1.39.1-prel.vsix",
