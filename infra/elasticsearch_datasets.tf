@@ -1,3 +1,7 @@
+locals {
+  es_domain_name = "${var.prefix_short}-finder"
+}
+
 resource "aws_iam_service_linked_role" "datasets_finder" {
   # This is a shared resource between all envs ... couldn't find a way to have
   # one per env as it automatically assigns the same name (and custom suffixes aren't
@@ -6,7 +10,7 @@ resource "aws_iam_service_linked_role" "datasets_finder" {
 }
 
 resource "aws_elasticsearch_domain" "datasets_finder" {
-  domain_name           = "${var.prefix_short}-finder"
+  domain_name           = "${local.es_domain_name}"
   elasticsearch_version = "7.9"
 
   cluster_config {
@@ -49,7 +53,7 @@ resource "aws_elasticsearch_domain" "datasets_finder" {
         "AWS": "${aws_iam_role.admin_task.arn}"
       },
       "Action": ["es:ESHttpGet"],
-      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${var.prefix}/*"
+      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${local.es_domain_name}/*"
     },
     {
       "Effect": "Allow",
@@ -57,7 +61,7 @@ resource "aws_elasticsearch_domain" "datasets_finder" {
         "AWS": "${aws_iam_user.datasets_finder_data_flow.arn}"
       },
       "Action": "es:*",
-      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${var.prefix}/*"
+      "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${local.es_domain_name}/*"
     }
   ]
 }
