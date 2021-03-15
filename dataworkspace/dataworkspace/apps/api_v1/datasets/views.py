@@ -384,6 +384,6 @@ class ToolQueryAuditLogViewSet(viewsets.ModelViewSet):
     API endpoint to list tool query audit logs for ingestion by data flow
     """
 
-    queryset = ToolQueryAuditLog.objects.all()
+    queryset = ToolQueryAuditLog.objects.prefetch_related('tables')
     serializer_class = ToolQueryAuditLogSerializer
     pagination_class = TimestampCursorPagination

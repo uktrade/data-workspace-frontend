@@ -579,7 +579,7 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             'timestamp': log.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'tables': [
                 {'id': table.id, 'schema': table.schema, 'table': table.table}
-                for table in log.tables.all()
+                for table in log.tables.all().order_by('id')
             ],
         }
 
