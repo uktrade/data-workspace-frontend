@@ -1819,6 +1819,11 @@ class ToolQueryAuditLog(models.Model):
     query_sql = models.TextField(null=False, blank=False)
     timestamp = models.DateTimeField(null=False, blank=False)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=('timestamp', 'id')),
+        ]
+
 
 class ToolQueryAuditLogTable(models.Model):
     audit_log = models.ForeignKey(
