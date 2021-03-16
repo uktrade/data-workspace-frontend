@@ -13,6 +13,7 @@ from dataworkspace.apps.core.views import (
     healthcheck_view,
     SupportView,
     table_data_view,
+    UserSatisfactionSurveyView,
 )
 from dataworkspace.apps.datasets.views import find_datasets
 from dataworkspace.apps.appstream.views import (
@@ -98,6 +99,11 @@ urlpatterns = [
         'support/success/<str:ticket_id>',
         login_required(SupportView.as_view()),
         name='support-success',
+    ),
+    path(
+        'feedback/',
+        login_required(UserSatisfactionSurveyView.as_view()),
+        name='feedback',
     ),
     path(
         'table_data/<str:database>/<str:schema>/<str:table>',

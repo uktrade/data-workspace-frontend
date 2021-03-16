@@ -54,4 +54,8 @@ urlpatterns = [
             namespace='application-instance',
         ),
     ),
+    path(
+        'core/',
+        include(('dataworkspace.apps.api_v1.core.urls', 'core'), namespace='core',),
+    ),
 ]

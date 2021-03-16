@@ -1,6 +1,17 @@
 from django import forms
 from django.utils.safestring import mark_safe
 
+from dataworkspace.apps.core.models import HowSatisfiedType, TryingToDoType
+from dataworkspace.forms import (
+    GOVUKDesignSystemCheckboxesWidget,
+    GOVUKDesignSystemForm,
+    GOVUKDesignSystemMultipleChoiceField,
+    GOVUKDesignSystemRadioField,
+    GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemTextareaField,
+    GOVUKDesignSystemTextareaWidget,
+)
+
 
 class SupportForm(forms.Form):
     email = forms.EmailField(
@@ -29,4 +40,32 @@ class SupportForm(forms.Form):
 </ul>"""
             )
         ),
+    )
+
+
+class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
+    how_satisfied = GOVUKDesignSystemRadioField(
+        required=True,
+        label='1. Overall how satisfied are you with the current Data Workspace?',
+        widget=GOVUKDesignSystemRadiosWidget(heading='h2', label_size='m', small=True),
+        choices=[(t.value, t.label) for t in HowSatisfiedType],
+    )
+
+    trying_to_do = GOVUKDesignSystemMultipleChoiceField(
+        required=False,
+        label='2. What were you trying to do today? (optional)',
+        help_text='Select all options that are relevant to you.',
+        widget=GOVUKDesignSystemCheckboxesWidget(
+            heading='h2', label_size='m', small=True
+        ),
+        choices=[(t.value, t.label) for t in TryingToDoType],
+    )
+
+    improve_service = GOVUKDesignSystemTextareaField(
+        required=False,
+        label='3. How could we improve the service? (optional)',
+        help_text="""Do not include any personal information,
+                 like your name or email address. We'll delete any personal information you
+                 do include""",
+        widget=GOVUKDesignSystemTextareaWidget(heading='h2', label_size='m'),
     )

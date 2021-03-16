@@ -274,7 +274,7 @@ class TestHomePage:
         doc = html.fromstring(resp.content.decode(resp.charset))
         assert (
             doc.xpath('//a[normalize-space(text()) = "feedback"]/@href')[0]
-            == '/support-and-feedback/'
+            == '/feedback/'
         )
 
     def test_playground_renders_with_query_sql(self, staff_user, staff_client):

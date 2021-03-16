@@ -111,3 +111,32 @@ class DatabaseUser(TimeStampedModel):
     )
     username = models.CharField(max_length=256)
     deleted_date = models.DateTimeField(null=True, blank=True)
+
+
+class HowSatisfiedType(models.TextChoices):
+    very_satified = 'very-satified', 'Very satisfied'
+    satified = 'satified', 'Satisfied'
+    neither = 'neither', 'Neither satisfied or dissatisfied'
+    dissatisfied = 'dissatisfied', 'Dissatisfied'
+    very_dissatisfied = 'very-dissatisfied', 'Very dissatisfied'
+
+
+class TryingToDoType(models.TextChoices):
+    looking = 'looking', 'Looking for data'
+    access_data = 'access-data', 'Trying to access data'
+    analyse_data = 'analyse-data', 'Analyse data'
+    use_tool = 'use-tool', 'Use a tool'
+    create_visualisation = 'create-visualisation', 'Create a data visualisation'
+    share_date = 'share-date', 'Share data'
+    share_visualisation = 'share-visualisation', 'Share a data visualisation'
+    view_visualisation = 'view-visualisation', 'View a data visualisation'
+    other = 'other', 'Other'
+    dont_know = 'dont-know', 'Don’t know'
+
+
+class UserSatisfactionSurvey(TimeStampedModel):
+    how_satisfied = models.CharField(max_length=32, choices=HowSatisfiedType.choices)
+    trying_to_do = models.TextField(
+        null=True, blank=True, choices=TryingToDoType.choices
+    )
+    improve_service = models.TextField(null=True, blank=True)

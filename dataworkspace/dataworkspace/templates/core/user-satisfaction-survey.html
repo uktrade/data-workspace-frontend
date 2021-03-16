@@ -1,0 +1,34 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Leave feedback{% endblock page_title %}
+{% block go_back %}
+    {% if 'success' not in request.GET %}
+        <a href="{{ referer }}" class="govuk-back-link">Back</a>
+    {% endif %}
+{% endblock %}
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        {% if 'success' in request.GET %}
+            <h1 class="govuk-heading-l">Thank you for your feedback!</h1>
+            <p class="govuk-body-m">We are working hard to constantly improving our sevice and your feedback is valuable to us.</p>
+            <a class="govuk-button" href="{% url 'root' %}">Return home</a>
+        {% else %}
+            <h1 class="govuk-heading-xl">Leave feedback</h1>
+            <p class="govuk-body-m">Fill in this short survey to tell us about your experience of using this website.</p>
+            <p class="govuk-body-m">This survey has 3 questions. It should take you less than 3 minutes to complete.</p>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset class="govuk-fieldset">
+                    {{ form.how_satisfied }}
+                    {{ form.trying_to_do }}
+                    {{ form.improve_service }}
+                </fieldset>
+                <button type="submit" class="govuk-button">Leave feedback</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

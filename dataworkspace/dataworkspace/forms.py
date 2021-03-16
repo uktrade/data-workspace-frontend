@@ -13,6 +13,7 @@ class GOVUKDesignSystemWidgetMixin:
         heading='h1',
         label_size='l',
         extra_label_classes='',
+        small=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -21,6 +22,7 @@ class GOVUKDesignSystemWidgetMixin:
             heading=heading,
             label_size=label_size,
             extra_label_classes=extra_label_classes,
+            small=small,
         )
 
     def __deepcopy__(self, memo):
@@ -75,6 +77,19 @@ class GOVUKDesignSystemRadiosWidget(
 ):
     template_name = 'design_system/radio.html'
     option_template_name = "design_system/radio_option.html"
+
+
+class GOVUKDesignSystemCheckboxesWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.CheckboxSelectMultiple
+):
+    template_name = 'design_system/checkbox.html'
+    option_template_name = "design_system/checkbox_option.html"
+
+
+class GOVUKDesignSystemMultipleChoiceField(
+    GOVUKDesignSystemFieldMixin, forms.MultipleChoiceField
+):
+    widget = GOVUKDesignSystemCheckboxesWidget
 
 
 class GOVUKDesignSystemCharField(GOVUKDesignSystemFieldMixin, CharField):
