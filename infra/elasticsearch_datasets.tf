@@ -52,7 +52,7 @@ resource "aws_elasticsearch_domain" "datasets_finder" {
       "Principal": {
         "AWS": "${aws_iam_role.admin_task.arn}"
       },
-      "Action": ["es:ESHttpGet"],
+      "Action": ["es:ESHttp*"],
       "Resource": "arn:aws:es:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:domain/${local.es_domain_name}/*"
     },
     {
