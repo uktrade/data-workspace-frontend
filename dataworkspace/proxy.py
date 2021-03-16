@@ -250,6 +250,7 @@ async def async_main():
             or request.url.path.startswith('/api/v1/eventlog/')
             or request.url.path.startswith('/api/v1/account/')
             or request.url.path.startswith('/api/v1/application-instance/')
+            or request.url.path.startswith('/api/v1/core/')
             and request.url.host == root_domain_no_port
         )
 
