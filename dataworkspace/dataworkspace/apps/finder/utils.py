@@ -8,6 +8,7 @@ from django.db.models.functions import Concat
 
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.finder.elasticsearch import _TableMatchResult
+from dataworkspace.apps.finder.models import DatasetFinderQueryLog
 
 
 @dataclass
