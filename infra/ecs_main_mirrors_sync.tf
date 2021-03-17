@@ -378,6 +378,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_pypi_scheduled_task" {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_pypi.*.arn[count.index]}"
     launch_type = "FARGATE"
+    platform_version = "1.3.0"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
       subnets = "${aws_subnet.public.*.id}"
@@ -398,6 +399,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_conda_scheduled_task" {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_conda.*.arn[count.index]}"
     launch_type = "FARGATE"
+    platform_version = "1.3.0"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
       subnets = "${aws_subnet.public.*.id}"
@@ -418,6 +420,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_scheduled_task" {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran.*.arn[count.index]}"
     launch_type = "FARGATE"
+    platform_version = "1.3.0"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
       subnets = "${aws_subnet.public.*.id}"
@@ -438,6 +441,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_scheduled_task"
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran_binary.*.arn[count.index]}"
     launch_type = "FARGATE"
+    platform_version = "1.3.0"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
       subnets = "${aws_subnet.public.*.id}"
@@ -458,6 +462,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_nltk_scheduled_task" {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_nltk.*.arn[count.index]}"
     launch_type = "FARGATE"
+    platform_version = "1.3.0"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
       subnets = "${aws_subnet.public.*.id}"
@@ -478,6 +483,7 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_debian_task" {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_debian.*.arn[count.index]}"
     launch_type = "FARGATE"
+    platform_version = "1.3.0"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
       subnets = "${aws_subnet.public.*.id}"
