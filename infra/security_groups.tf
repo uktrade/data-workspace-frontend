@@ -697,6 +697,18 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_notebooks" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_mirrors_sync" {
+  description = "ingress-https-from-mirrors-sync"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.mirrors_sync.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "cloudwatch_ingress_https_from_all" {
   description = "ingress-https-from-everywhere"
 
