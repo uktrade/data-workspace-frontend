@@ -9,6 +9,7 @@ from django.db.models import ProtectedError
 from freezegun import freeze_time
 
 from dataworkspace.apps.core.models import Database
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
@@ -150,7 +151,7 @@ class TestDatasets(BaseModelsTests):
     @freeze_time('2019-02-01 02:00:00', as_kwarg='frozen_datetime')
     def test_create_master_dataset(self, frozen_datetime):
         dataset = DataSet.objects.create(
-            type=DataSet.TYPE_MASTER_DATASET,
+            type=DataSetType.MASTER,
             name='Test Dataset',
             slug='test-dataset',
             short_description='Short description',

@@ -7,8 +7,7 @@ import factory.fuzzy
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from dataworkspace.apps.datasets.constants import TagType
-from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.eventlog.models import EventLog
 
 
@@ -55,11 +54,11 @@ class TagFactory(factory.django.DjangoModelFactory):
 
 
 class SourceTagFactory(TagFactory):
-    type = TagType.SOURCE.value
+    type = TagType.SOURCE
 
 
 class TopicTagFactory(TagFactory):
-    type = TagType.TOPIC.value
+    type = TagType.TOPIC
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
@@ -68,18 +67,18 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     slug = factory.fuzzy.FuzzyText(length=10)
     published = True
     deleted = False
-    type = DataSet.TYPE_DATA_CUT
+    type = DataSetType.DATACUT
 
     class Meta:
         model = 'datasets.DataSet'
 
 
 class DatacutDataSetFactory(DataSetFactory):
-    type = DataSet.TYPE_DATA_CUT
+    type = DataSetType.DATACUT
 
 
 class MasterDataSetFactory(DataSetFactory):
-    type = DataSet.TYPE_MASTER_DATASET
+    type = DataSetType.MASTER
 
 
 class DataSetUserPermissionFactory(factory.django.DjangoModelFactory):

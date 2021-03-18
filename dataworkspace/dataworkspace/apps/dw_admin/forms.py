@@ -13,6 +13,7 @@ from django.utils.safestring import mark_safe
 from adminsortable2.admin import CustomInlineFormSet
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     SourceLink,
     DataSet,
@@ -530,12 +531,12 @@ class BaseDatasetForm(forms.ModelForm):
 
 
 class DataCutDatasetForm(BaseDatasetForm):
-    dataset_type = DataSet.TYPE_DATA_CUT
+    dataset_type = DataSetType.DATACUT
     can_change_user_permission_codename = 'datasets.change_datacutuserpermission'
 
 
 class MasterDatasetForm(BaseDatasetForm):
-    dataset_type = DataSet.TYPE_MASTER_DATASET
+    dataset_type = DataSetType.MASTER
     can_change_user_permission_codename = 'datasets.change_masterdatasetuserpermission'
 
 

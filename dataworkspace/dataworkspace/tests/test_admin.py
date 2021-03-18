@@ -2846,14 +2846,12 @@ class TestDatasetAdminPytest:
             (
                 "manage_unpublished_master_datasets",
                 'admin:datasets_masterdataset_change',
-                partial(factories.DataSetFactory.create, type=DataSetType.MASTER.value),
+                partial(factories.DataSetFactory.create, type=DataSetType.MASTER),
             ),
             (
                 "manage_unpublished_datacut_datasets",
                 'admin:datasets_datacutdataset_change',
-                partial(
-                    factories.DataSetFactory.create, type=DataSetType.DATACUT.value
-                ),
+                partial(factories.DataSetFactory.create, type=DataSetType.DATACUT),
             ),
             (
                 "manage_unpublished_reference_datasets",
@@ -2895,7 +2893,7 @@ class TestDatasetAdminPytest:
     @pytest.mark.django_db
     def test_manage_master_dataset_permission_allows_editing_unpublished_datasets(self):
         dataset = factories.DataSetFactory.create(
-            published=False, name='original', type=DataSet.TYPE_MASTER_DATASET
+            published=False, name='original', type=DataSetType.MASTER
         )
         user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename='manage_unpublished_master_datasets')
@@ -2933,7 +2931,7 @@ class TestDatasetAdminPytest:
         self,
     ):
         dataset = factories.DataSetFactory.create(
-            published=False, name='original', type=DataSet.TYPE_DATA_CUT
+            published=False, name='original', type=DataSetType.DATACUT
         )
         user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename='manage_unpublished_datacut_datasets')

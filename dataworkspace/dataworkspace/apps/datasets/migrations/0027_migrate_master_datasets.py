@@ -2,13 +2,13 @@
 
 from django.db import migrations
 
-from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.datasets.constants import DataSetType
 
 
 def migrate_data_cut_to_master_dataset(apps, _):
     model = apps.get_model('datasets', 'DataCutDataset')
     for dataset in model.objects.filter(sourcetable__isnull=False):
-        dataset.type = DataSet.TYPE_MASTER_DATASET
+        dataset.type = DataSetType.MASTER
         dataset.save()
 
 

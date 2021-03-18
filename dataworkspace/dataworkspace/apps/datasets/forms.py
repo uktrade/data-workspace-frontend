@@ -3,7 +3,7 @@ from functools import partial
 
 from django import forms
 
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from .models import Tag
 from ...forms import (
     GOVUKDesignSystemForm,
@@ -131,10 +131,10 @@ class DatasetSearchForm(forms.Form):
 
     use = forms.TypedMultipleChoiceField(
         choices=[
-            (DataSetType.DATACUT.value, 'Download'),
-            (DataSetType.MASTER.value, 'Analyse in tools'),
-            (DataSetType.REFERENCE.value, 'Use as reference data'),
-            (DataSetType.VISUALISATION.value, 'View data visualisation'),
+            (DataSetType.DATACUT, 'Download'),
+            (DataSetType.MASTER, 'Analyse in tools'),
+            (DataSetType.REFERENCE, 'Use as reference data'),
+            (DataSetType.VISUALISATION, 'View data visualisation'),
         ],
         coerce=int,
         required=False,
@@ -142,7 +142,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     source = SourceTagField(
-        queryset=Tag.objects.order_by('name').filter(type=Tag.TYPE_SOURCE),
+        queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
         required=False,
         widget=FilterWidget(
             "Source",
@@ -153,7 +153,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     topic = SourceTagField(
-        queryset=Tag.objects.order_by('name').filter(type=Tag.TYPE_TOPIC),
+        queryset=Tag.objects.order_by('name').filter(type=TagType.TOPIC),
         required=False,
         widget=FilterWidget(
             "Topics", limit_initial_options=10, show_more_label="Show more topics",

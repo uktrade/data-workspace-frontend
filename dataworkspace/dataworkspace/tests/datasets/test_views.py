@@ -249,7 +249,7 @@ def test_find_datasets_combines_results(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -264,7 +264,7 @@ def test_find_datasets_combines_results(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
         },
@@ -344,7 +344,7 @@ def test_find_datasets_filters_by_query(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -359,7 +359,7 @@ def test_find_datasets_filters_by_query(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
         },
@@ -403,7 +403,7 @@ def test_find_datasets_filters_by_use(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -450,7 +450,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
         },
@@ -521,7 +521,7 @@ def test_find_datasets_filters_by_source(client):
             'source_tag_ids': [source.id],
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -536,7 +536,7 @@ def test_find_datasets_filters_by_source(client):
             'source_tag_ids': [source.id],
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
         },
@@ -610,7 +610,7 @@ def test_find_datasets_filters_by_topic(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': [topic.name],
             'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -625,7 +625,7 @@ def test_find_datasets_filters_by_topic(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': [topic.name],
             'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
         },
@@ -670,7 +670,7 @@ def test_find_datasets_order_by_name_asc(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'has_access': True,
         },
         {
@@ -685,7 +685,7 @@ def test_find_datasets_order_by_name_asc(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'has_access': True,
         },
     ]
@@ -829,25 +829,25 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
 
     master = factories.DataSetFactory.create(
         published=True,
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         name='A master',
         user_access_type='REQUIRES_AUTHENTICATION',
     )
     master2 = factories.DataSetFactory.create(
         published=False,
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         name='A master',
         user_access_type='REQUIRES_AUTHORIZATION',
     )
     datacut = factories.DataSetFactory.create(
         published=False,
-        type=DataSetType.DATACUT.value,
+        type=DataSetType.DATACUT,
         name='A datacut',
         user_access_type='REQUIRES_AUTHENTICATION',
     )
     datacut2 = factories.DataSetFactory.create(
         published=True,
-        type=DataSetType.DATACUT.value,
+        type=DataSetType.DATACUT,
         name='A datacut',
         user_access_type='REQUIRES_AUTHORIZATION',
     )
@@ -906,7 +906,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     masters = [
         factories.DataSetFactory(
-            type=DataSetType.MASTER.value,
+            type=DataSetType.MASTER,
             published=True,
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -920,7 +920,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     datacuts = [
         factories.DataSetFactory(
-            type=DataSetType.DATACUT.value,
+            type=DataSetType.DATACUT,
             published=True,
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -984,8 +984,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     with django_assert_num_queries(10, exact=False):
         response = client.get(
-            reverse('datasets:find_datasets'),
-            {"purpose": str(DataSetType.MASTER.value)},
+            reverse('datasets:find_datasets'), {"purpose": str(DataSetType.MASTER)},
         )
         assert response.status_code == 200
 
@@ -1002,13 +1001,13 @@ def test_find_datasets_filters_by_access():
 
     public_master = factories.DataSetFactory.create(
         published=True,
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         name='Master - public',
         user_access_type='REQUIRES_AUTHENTICATION',
     )
     access_granted_master = factories.DataSetFactory.create(
         published=True,
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         name='Master - access granted',
         user_access_type='REQUIRES_AUTHORIZATION',
     )
@@ -1021,14 +1020,14 @@ def test_find_datasets_filters_by_access():
     )
     factories.DataSetFactory.create(
         published=True,
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         name='Master - access not granted',
         user_access_type='REQUIRES_AUTHORIZATION',
     )
 
     access_not_granted_datacut = factories.DataSetFactory.create(
         published=True,
-        type=DataSetType.DATACUT.value,
+        type=DataSetType.DATACUT,
         name='Datacut - access not granted',
         user_access_type='REQUIRES_AUTHORIZATION',
     )
@@ -1106,7 +1105,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -1121,7 +1120,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
         },
@@ -1136,7 +1135,7 @@ def test_find_datasets_filters_by_access():
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION.value,
+            'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
         },
@@ -1222,7 +1221,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
 
     access_granted_master = factories.DataSetFactory.create(
         published=True,
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         name='Master - access redundantly granted',
         user_access_type='REQUIRES_AUTHENTICATION',
     )
@@ -1235,7 +1234,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
 
     response = client.get(
         reverse('datasets:find_datasets'),
-        {"access": "yes", "use": str(DataSetType.MASTER.value)},
+        {"access": "yes", "use": str(DataSetType.MASTER)},
     )
 
     assert response.status_code == 200
@@ -1320,10 +1319,10 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
     client = Client(**get_http_sso_data(user))
 
     factories.DataSetFactory.create(
-        published=False, type=DataSetType.MASTER.value, name='Master dataset'
+        published=False, type=DataSetType.MASTER, name='Master dataset'
     )
     factories.DataSetFactory.create(
-        published=False, type=DataSetType.DATACUT.value, name='Datacut dataset'
+        published=False, type=DataSetType.DATACUT, name='Datacut dataset'
     )
     factories.ReferenceDatasetFactory.create(published=False, name='Reference dataset')
 
@@ -1383,7 +1382,7 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
 
 @pytest.mark.django_db
 def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
-    ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
+    ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
     user = get_user_model().objects.create(is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.SourceTableFactory.create(
@@ -1420,7 +1419,7 @@ def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
 def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
     get_columns_mock, metadata_db
 ):
-    ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
+    ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
     user = get_user_model().objects.create(is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     st = factories.SourceTableFactory.create(
@@ -1447,7 +1446,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
 
 @pytest.mark.django_db(transaction=True)
 def test_launch_master_dataset_in_data_explorer(metadata_db):
-    ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
+    ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
     user = get_user_model().objects.create(is_superuser=True)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.SourceTableFactory.create(
@@ -1648,7 +1647,7 @@ def test_find_datasets_search_by_source_name(client):
             'source_tag_ids': [source.id],
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -1700,7 +1699,7 @@ def test_find_datasets_search_by_topic_name(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': [topic.name],
             'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.REFERENCE.value,
+            'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
         },
@@ -1822,7 +1821,7 @@ class TestCustomQueryRelatedDataView:
         for _ in range(master_count):
             master = factories.DataSetFactory.create(
                 published=published,
-                type=DataSetType.MASTER.value,
+                type=DataSetType.MASTER,
                 name='A master 1',
                 user_access_type='REQUIRES_AUTHENTICATION',
             )
@@ -1835,7 +1834,7 @@ class TestCustomQueryRelatedDataView:
             masters.append(master)
         datacut = factories.DataSetFactory.create(
             published=True,
-            type=DataSetType.DATACUT.value,
+            type=DataSetType.DATACUT,
             name='A datacut',
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -1909,7 +1908,7 @@ class TestCustomQueryRelatedDataView:
     ):
         published_master = factories.DataSetFactory.create(
             published=True,
-            type=DataSetType.MASTER.value,
+            type=DataSetType.MASTER,
             name='Published master',
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -1921,7 +1920,7 @@ class TestCustomQueryRelatedDataView:
         )
         unpublished_master = factories.DataSetFactory.create(
             published=False,
-            type=DataSetType.MASTER.value,
+            type=DataSetType.MASTER,
             name='Unpublished master',
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -1934,7 +1933,7 @@ class TestCustomQueryRelatedDataView:
 
         datacut = factories.DataSetFactory.create(
             published=True,
-            type=DataSetType.DATACUT.value,
+            type=DataSetType.DATACUT,
             name='A datacut',
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -1962,7 +1961,7 @@ class TestCustomQueryRelatedDataView:
         self._setup_new_table()
         master1 = factories.DataSetFactory.create(
             published=True,
-            type=DataSetType.MASTER.value,
+            type=DataSetType.MASTER,
             name='A master 1',
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -1981,7 +1980,7 @@ class TestCustomQueryRelatedDataView:
 
         master2 = factories.DataSetFactory.create(
             published=True,
-            type=DataSetType.MASTER.value,
+            type=DataSetType.MASTER,
             name='A master 1',
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -1994,7 +1993,7 @@ class TestCustomQueryRelatedDataView:
 
         datacut = factories.DataSetFactory.create(
             published=True,
-            type=DataSetType.DATACUT.value,
+            type=DataSetType.DATACUT,
             name='A datacut',
             user_access_type='REQUIRES_AUTHENTICATION',
         )
@@ -2025,9 +2024,7 @@ class TestSourceTableColumnDetailsView:
     @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
     @pytest.mark.django_db
     def test_page_shows_all_columns_for_dataset(self, get_columns_mock):
-        ds = factories.DataSetFactory.create(
-            type=DataSetType.MASTER.value, published=True
-        )
+        ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
         user = get_user_model().objects.create(is_superuser=False)
         factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
         st = factories.SourceTableFactory.create(
@@ -2054,12 +2051,8 @@ class TestSourceTableColumnDetailsView:
     @pytest.mark.django_db
     def test_404_if_wrong_dataset_for_source_table_in_url(self):
         user = get_user_model().objects.create(is_superuser=False)
-        ds1 = factories.DataSetFactory.create(
-            type=DataSetType.MASTER.value, published=True
-        )
-        ds2 = factories.DataSetFactory.create(
-            type=DataSetType.MASTER.value, published=True
-        )
+        ds1 = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
+        ds2 = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
         st = factories.SourceTableFactory.create(
             dataset=ds2,
             schema="public",
