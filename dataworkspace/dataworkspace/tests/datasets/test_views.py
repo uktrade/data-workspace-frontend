@@ -1382,7 +1382,7 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
 
 
 @pytest.mark.django_db
-def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
+def test_master_dataset_shows_code_snippets_to_tool_user(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER.value, published=True)
     user = get_user_model().objects.create(is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
@@ -1413,6 +1413,33 @@ def test_dataset_shows_code_snippets_to_tool_user(metadata_db):
         """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
         in response.content.decode(response.charset)
     )
+
+
+@pytest.mark.django_db
+def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
+    ds = factories.DataSetFactory.create(type=DataSetType.DATACUT.value, published=True)
+    user = get_user_model().objects.create(is_superuser=False)
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+    factories.CustomDatasetQueryFactory.create(
+        dataset=ds,
+        query='SELECT * FROM foo',
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
+
+    user.is_superuser = True
+    user.save()
+
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
+
+    assert response.status_code == 200
+    assert """SELECT * FROM foo""" in response.content.decode(response.charset)
 
 
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
