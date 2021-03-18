@@ -39,7 +39,7 @@
       <div class="govuk-grid-column-two-thirds" style="margin: 0 auto; float: unset">
         {% if results %}
           <p class="govuk-body">
-            <strong>results</strong>
+            <strong>{{ results|length }} results</strong>
           </p>
 
           {% for result in results %}
@@ -55,7 +55,10 @@
               <strong>{{ table.count }}</strong> matching rows in "{{ table.schema }}"."{{ table.table }}"
               <br>
               <span class="govuk-hint govuk-!-margin-bottom-0">{{ table.name }}</span>
+
+              {% if table.has_access %}
               <a class="govuk-link" href="{% url 'finder:search_in_data_explorer' schema=table.schema table=table.table %}?q={{ search_term }}" target="_blank">Open in Data Explorer</a>
+              {% endif %}
             </p>
             {% endfor %}
           {% endfor %}
@@ -65,6 +68,13 @@
           </p>
           <p class="govuk-body">
             Please check your spelling, try a broader term, or consider reordering the words if applicable.
+          </p>
+        {% endif %}
+
+        {% if has_hidden_tables %}
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+          <p class="govuk-body">
+            Some results have been removed for data protection.
           </p>
         {% endif %}
       </div>

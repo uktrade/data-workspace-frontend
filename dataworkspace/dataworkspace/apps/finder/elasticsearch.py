@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
+
 from django.conf import settings
 
 from elasticsearch import Elasticsearch, RequestsHttpConnection
@@ -13,6 +14,7 @@ class _TableMatchResult:
     schema: str
     table: str
     count: int
+    has_access: bool = False
     name: Optional[str] = None
 
 
@@ -54,12 +56,16 @@ class ElasticsearchClient:
                 connection_class=RequestsHttpConnection,
             )
 
-    def find_tables_containing_term(self, term: str) -> List[_TableMatchResult]:
+    def search_for_phrase(
+        self, phrase: str, indexes: List[str]
+    ) -> List[_TableMatchResult]:
         resp = self._client.search(
             body={
-                "query": {"match_phrase": {"_all": term}},
+                "query": {"match_phrase": {"_all": phrase}},
                 "aggs": {"indexes": {"terms": {"field": "_index"}}},
             },
+            index=','.join(indexes),
+            ignore_unavailable=True,
             size=0,
         )
 

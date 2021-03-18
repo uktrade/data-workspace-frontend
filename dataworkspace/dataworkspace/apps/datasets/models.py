@@ -468,6 +468,15 @@ class SourceTable(BaseSource):
         blank=False,
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
+    dataset_finder_opted_in = models.BooleanField(
+        default=False,
+        null=False,
+        verbose_name="IAM/IAO opt-in for Dataset Finder",
+        help_text=(
+            "Should this dataset be discoverable through Dataset Finder for all users, "
+            "even if they haven’t been explicitly granted access?"
+        ),
+    )
 
     class Meta:
         db_table = 'app_sourcetable'
