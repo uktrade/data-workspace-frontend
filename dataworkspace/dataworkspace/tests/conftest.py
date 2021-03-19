@@ -189,3 +189,46 @@ def dataset_db(metadata_db):
         )
 
     return database
+
+
+@pytest.fixture
+def dataset_finder_db(metadata_db):
+    database = factories.DatabaseFactory(memorable_name='my_database')
+    with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
+        conn.cursor().execute(
+            '''
+            CREATE TABLE IF NOT EXISTS dataworkspace__source_tables (
+                id INT,
+                name VARCHAR(255),
+                dataset_id UUID,
+                schema VARCHAR(255),
+                "table" VARCHAR(255)
+            );
+
+            CREATE TABLE IF NOT EXISTS dataworkspace__catalogue_items (
+                id UUID,
+                name VARCHAR(255),
+                slug VARCHAR(255)
+            );
+
+            INSERT INTO dataworkspace__source_tables VALUES(
+                1, 'public.data', '0dea6147-d355-4b6d-a140-0304ef9cfeca', 'public', 'data'
+            );
+
+            INSERT INTO dataworkspace__catalogue_items VALUES(
+                '0dea6147-d355-4b6d-a140-0304ef9cfeca', 'public.data', '1'
+            );
+
+            CREATE SCHEMA IF NOT EXISTS public;
+            CREATE TABLE IF NOT EXISTS data (
+                id int,
+                name VARCHAR(255),
+                database VARCHAR(255),
+                schema VARCHAR(255),
+                frequency VARCHAR(255),
+                "table" VARCHAR(255)
+            );
+            '''
+        )
+
+    return database

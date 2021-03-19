@@ -51,7 +51,7 @@
       <div class="search-field govuk-!-margin-bottom-9">
         <label class="govuk-label search-field__label" for="search">Enter your search term(s)</label>
         <div class="search-field-wrapper">
-          <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="search-summary-accessible-hint-wrapper">
+          <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="">
           <div class="search-field-submit-wrapper search-field__item">
             <input class="search-field__submit" type="submit" value="Search">
           </div>
@@ -189,4 +189,10 @@
   {% endif %}
 
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    $(document).ready(function() {
+      var form = new LiveSearch('#live-search-form', '#live-search-wrapper', new GTMDatasetSearchSupport());
+      var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
+    });
+  </script>
 {% endblock %}
