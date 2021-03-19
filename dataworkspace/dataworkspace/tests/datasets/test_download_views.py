@@ -62,32 +62,6 @@ def test_master_dataset_no_access_preview(client, dataset_db):
     assert 'Preview' not in response.rendered_content
 
 
-def test_view_data_cut_fields(client, dataset_db):
-    ds = factories.DataSetFactory.create(published=True)
-    factories.SourceViewFactory(
-        dataset=ds, database=dataset_db, schema='public', view='dataset_view'
-    )
-
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert response.context["fields"] == ['id', 'name', 'date']
-
-
-def test_query_data_cut_fields(client, dataset_db):
-    ds = factories.DataSetFactory.create(published=True)
-    factories.CustomDatasetQueryFactory(
-        dataset=ds,
-        database=dataset_db,
-        query="SELECT id customid, name customname FROM dataset_test",
-    )
-
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert response.context["fields"] == ['customid', 'customname']
-
-
 def test_query_data_cut_preview(client, dataset_db):
     ds = factories.DataSetFactory.create(
         user_access_type='REQUIRES_AUTHENTICATION', published=True,
@@ -160,16 +134,6 @@ def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
         not in response.rendered_content
     )
     assert 'Preview' not in response.rendered_content
-
-
-def test_link_data_cut_doesnt_have_fields(client):
-    ds = factories.DataSetFactory.create(published=True)
-    factories.SourceLinkFactory(dataset=ds)
-
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert response.context["fields"] is None
 
 
 def test_link_data_cut_doesnt_have_preview(client):

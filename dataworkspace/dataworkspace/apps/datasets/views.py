@@ -73,7 +73,8 @@ from dataworkspace.apps.datasets.utils import (
     find_dataset,
     find_visualisation,
     find_dataset_or_visualisation,
-    get_code_snippets,
+    get_code_snippets_for_table,
+    get_code_snippets_for_query,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -540,7 +541,7 @@ class DatasetDetailView(DetailView):
         master_datasets_info = [
             MasterDatasetInfo(
                 source_table=source_table,
-                code_snippets=get_code_snippets(source_table),
+                code_snippets=get_code_snippets_for_table(source_table),
                 columns=datasets_db.get_columns(
                     source_table.database.memorable_name,
                     schema=source_table.schema,
@@ -561,40 +562,32 @@ class DatasetDetailView(DetailView):
         return ctx
 
     def _get_context_data_for_datacut_dataset(self, ctx, **kwargs):
-        source_views = self.object.sourceview_set.all()
         custom_queries = self.object.customdatasetquery_set.all().prefetch_related(
             'tables'
         )
-        if source_views:
-            columns = datasets_db.get_columns(
-                source_views[0].database.memorable_name,
-                schema=source_views[0].schema,
-                table=source_views[0].view,
-            )
-        elif custom_queries:
-            columns = datasets_db.get_columns(
-                custom_queries[0].database.memorable_name, query=custom_queries[0].query
-            )
-        else:
-            columns = None
-
-        datacuts = sorted(
+        datacut_links = sorted(
             chain(
                 self.object.sourcetable_set.all(),
                 self.object.sourcelink_set.all(),
-                source_views,
                 custom_queries,
             ),
             key=lambda x: x.name,
         )
 
-        DatacutLinkInfo = namedtuple('DatacutLinkInfo', ('datacut', 'can_show_link'))
+        DatacutLinkInfo = namedtuple(
+            'DatacutLinkInfo', ('datacut_link', 'can_show_link', 'code_snippets')
+        )
         datacut_links_info = [
             DatacutLinkInfo(
-                datacut=datacut,
-                can_show_link=datacut.can_show_link_for_user(self.request.user),
+                datacut_link=datacut_link,
+                can_show_link=datacut_link.can_show_link_for_user(self.request.user),
+                code_snippets=(
+                    get_code_snippets_for_query(datacut_link.query)
+                    if hasattr(datacut_link, 'query')
+                    else None
+                ),
             )
-            for datacut in datacuts
+            for datacut_link in datacut_links
         ]
 
         query_tables = []
@@ -610,7 +603,6 @@ class DatasetDetailView(DetailView):
             {
                 'has_access': self.object.user_has_access(self.request.user),
                 'datacut_links_info': datacut_links_info,
-                'fields': columns,
                 'data_hosted_externally': any(
                     not source_link.url.startswith('s3://')
                     for source_link in self.object.sourcelink_set.all()
