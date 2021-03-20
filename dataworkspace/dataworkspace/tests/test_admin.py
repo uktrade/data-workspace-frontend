@@ -3135,7 +3135,9 @@ class TestDatasetAdminPytest:
     def test_master_dataset_authorized_user_changes_calls_sync_job_and_clears_explorer_cache(
         self, mock_clear_cache, mock_sync, staff_client
     ):
-        user = factories.UserFactory()
+        user_1 = factories.UserFactory()
+        user_2 = factories.UserFactory()
+
         dataset = factories.MasterDataSetFactory.create(
             published=True, user_access_type='REQUIRES_AUTHORIZATION'
         )
@@ -3156,7 +3158,7 @@ class TestDatasetAdminPytest:
                 'description': 'test description',
                 'type': dataset.type,
                 'requires_authorization': 'on',
-                'authorized_users': str(user.id),
+                'authorized_users': [str(user_1.id), str(user_2.id)],
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '1',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3172,11 +3174,16 @@ class TestDatasetAdminPytest:
             follow=True,
         )
 
+        _, mock_sync_kwargs = mock_sync.delay.call_args_list[0]
+        mock_clear_cache_args = [args[0] for args, _ in mock_clear_cache.call_args_list]
+
         assert response.status_code == 200
-        assert mock_sync.delay.call_args_list == [
-            mock.call(user_sso_ids_to_update=(str(user.profile.sso_id),))
-        ]
-        assert mock_clear_cache.call_args_list == [mock.call(user)]
+        assert sorted(mock_sync_kwargs['user_sso_ids_to_update']) == sorted(
+            [str(user_1.profile.sso_id), str(user_2.profile.sso_id)]
+        )
+        assert sorted([u.id for u in mock_clear_cache_args]) == sorted(
+            [user_1.id, user_2.id]
+        )
 
     @mock.patch(
         "dataworkspace.apps.datasets.admin.remove_data_explorer_user_cached_credentials"
