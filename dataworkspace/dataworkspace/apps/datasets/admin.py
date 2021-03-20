@@ -294,7 +294,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
         changed_user_sso_ids = set()
 
-        clear_schema_info_cache = False
         for user in authorized_users - current_authorized_users:
             DataSetUserPermission.objects.create(dataset=obj, user=user)
             log_permission_change(
@@ -305,7 +304,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 f"Added dataset {obj} permission",
             )
             changed_user_sso_ids.add(str(user.profile.sso_id))
-            clear_schema_info_cache = True
+            clear_schema_info_cache_for_user(user)
 
         for user in current_authorized_users - authorized_users:
             DataSetUserPermission.objects.filter(dataset=obj, user=user).delete()
@@ -317,9 +316,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 f"Removed dataset {obj} permission",
             )
             changed_user_sso_ids.add(str(user.profile.sso_id))
-            clear_schema_info_cache = True
-
-        if clear_schema_info_cache:
             clear_schema_info_cache_for_user(user)
 
         if original_user_access_type != obj.user_access_type:
