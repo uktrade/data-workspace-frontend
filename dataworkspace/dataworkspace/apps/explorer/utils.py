@@ -121,8 +121,11 @@ class QueryException(Exception):
     pass
 
 
+cache_version = 1
+
+
 def user_cached_credentials_key(user):
-    return f"explorer_credentials_{user.profile.sso_id}"
+    return f"explorer_credentials_{cache_version}_{user.profile.sso_id}"
 
 
 def get_user_explorer_connection_settings(user, alias):
@@ -216,6 +219,11 @@ def remove_data_explorer_user_cached_credentials(user):
     logger.info("Clearing Data Explorer cached credentials for %s", user)
     cache_key = user_cached_credentials_key(user)
     cache.delete(cache_key)
+
+
+def invalidate_data_explorer_user_cached_credentials():
+    global cache_version  # pylint: disable=global-statement
+    cache_version += 1
 
 
 def tempory_query_table_name(user, query_log_id):

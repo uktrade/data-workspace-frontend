@@ -52,6 +52,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 from dataworkspace.apps.explorer.utils import (
+    invalidate_data_explorer_user_cached_credentials,
     remove_data_explorer_user_cached_credentials,
 )
 
@@ -296,7 +297,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         super().save_model(request, obj, form, change)
 
         changed_users = set()
-        unauthorized_users = set()
 
         for user in authorized_users - current_authorized_users:
             DataSetUserPermission.objects.create(dataset=obj, user=user)
@@ -332,15 +332,13 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             )
 
             # As the dataset's access type has changed, clear cached credentials for all
-            # unauthorised users to ensure they either:
+            # users to ensure they either:
             #   - lose access if it went from REQUIRES_AUTHENTICATION to REQUIRES_AUTHORIZATION
             #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION
-            unauthorized_users = set(
-                get_user_model().objects.exclude(datasetuserpermission__dataset=obj)
-            )
-
-        for user in changed_users | unauthorized_users:
-            remove_data_explorer_user_cached_credentials(user)
+            invalidate_data_explorer_user_cached_credentials()
+        else:
+            for user in changed_users:
+                remove_data_explorer_user_cached_credentials(user)
 
         if isinstance(self, MasterDatasetAdmin):
             if changed_users:

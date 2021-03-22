@@ -24,6 +24,7 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     CustomDatasetQuery,
 )
+from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
 
@@ -3186,14 +3187,14 @@ class TestDatasetAdminPytest:
         )
 
     @mock.patch(
-        "dataworkspace.apps.datasets.admin.remove_data_explorer_user_cached_credentials"
+        "dataworkspace.apps.explorer.connections.connections",
+        {'test_external_db': 'test_external_db'},
     )
     @pytest.mark.django_db
-    def test_dataset_access_type_change_clears_unauthorized_users_cached_credentials(
-        self, mock_remove_cached_credentials, staff_client
+    def test_dataset_access_type_change_invalidates_all_user_cached_credentials(
+        self, staff_client
     ):
-        user_1 = factories.UserFactory()
-        user_2 = factories.UserFactory()
+        user = factories.UserFactory()
 
         dataset = factories.MasterDataSetFactory.create(
             published=True, user_access_type='REQUIRES_AUTHENTICATION'
@@ -3204,7 +3205,10 @@ class TestDatasetAdminPytest:
 
         # Login to admin site
         staff_client.post(reverse('admin:index'), follow=True)
-        staff_user = get_user_model().objects.get(is_superuser=True)
+
+        original_connection = get_user_explorer_connection_settings(
+            user, 'test_external_db'
+        )
 
         response = staff_client.post(
             reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
@@ -3231,15 +3235,10 @@ class TestDatasetAdminPytest:
             follow=True,
         )
 
-        mock_remove_cached_credentials_args = [
-            args[0] for args, _ in mock_remove_cached_credentials.call_args_list
-        ]
+        new_connection = get_user_explorer_connection_settings(user, 'test_external_db')
 
-        # All users not authorized to access the dataset should get their cached credentials cleared
         assert response.status_code == 200
-        assert sorted([u.id for u in mock_remove_cached_credentials_args]) == sorted(
-            [staff_user.id, user_1.id, user_2.id]
-        )
+        assert original_connection != new_connection
 
     @mock.patch(
         "dataworkspace.apps.datasets.admin.remove_data_explorer_user_cached_credentials"
