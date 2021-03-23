@@ -194,10 +194,14 @@ async def async_main():
         )
 
     def application_headers(downstream_request):
-        return without_transfer_encoding(downstream_request) + (
-            (('x-scheme', downstream_request.headers['x-forwarded-proto']),)
-            if 'x-forwarded-proto' in downstream_request.headers
-            else ()
+        return (
+            without_transfer_encoding(downstream_request)
+            + (
+                (('x-scheme', downstream_request.headers['x-forwarded-proto']),)
+                if 'x-forwarded-proto' in downstream_request.headers
+                else ()
+            )
+            + downstream_request['sso_profile_headers']
         )
 
     async def superset_headers(downstream_request, path):
