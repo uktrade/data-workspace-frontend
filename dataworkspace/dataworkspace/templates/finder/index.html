@@ -39,7 +39,7 @@
       <div class="govuk-grid-column-two-thirds" style="margin: 0 auto; float: unset">
         {% if results %}
           <p class="govuk-body">
-            <strong>results</strong>
+            <strong>{{ results|length }} results</strong>
           </p>
 
           {% for result in results %}
