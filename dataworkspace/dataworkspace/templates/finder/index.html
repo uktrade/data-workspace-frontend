@@ -1,0 +1,93 @@
+{% extends '_main.html' %}
+{% load static %}
+
+{% block head %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'jquery-3.4.1.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'gtm-support.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<form id="ds-finder-search-form" action="{% url 'finder:find_datasets' %}" method="get">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds" style="margin: 0 auto; float: unset">
+      <div class="govuk-form-group">
+        <h1 class="govuk-label-wrapper govuk-!-margin-top-5" style="text-align: center"><label class="govuk-label govuk-label--xl" for="q">
+          Dataset finder
+        </label>
+        </h1>
+        <p class="govuk-body-l" style="text-align: center">
+          Search for master datasets in Data Workspace that contain a specific word or phrase.
+        </p>
+      </div>
+    </div>
+    <div class="govuk-grid-column-two-thirds govuk-!-margin-top-9" style="margin: 0 auto; float: unset">
+        <div class="search-field govuk-!-margin-bottom-9">
+          <label class="govuk-label search-field__label" for="search">Search a specific word or phrase</label>
+          <div class="search-field-wrapper">
+            <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ search_term }}">
+            <div class="search-field-submit-wrapper search-field__item">
+              <input class="search-field__submit" type="submit" value="Search">
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+
+  {% if search_term %}
+  <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds" style="margin: 0 auto; float: unset">
+        {% if results %}
+          <p class="govuk-body">
+            <strong>{{ results|length }} results</strong>
+          </p>
+
+          {% for result in results %}
+            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+            
+            <h2 class="govuk-heading-m">
+              <a class="govuk-link" href="{% url 'datasets:dataset_detail' dataset_uuid=result.id %}#{{ result.slug }}" target="_blank">
+                {{ result.name }}
+              </a>
+            </h2>
+            {% for table in result.table_matches %}
+            <p class="govuk-body">
+              <strong>{{ table.count }}</strong> matching rows in "{{ table.schema }}"."{{ table.table }}"
+              <br>
+              <span class="govuk-hint govuk-!-margin-bottom-0">{{ table.name }}</span>
+
+              {% if table.has_access %}
+              <a class="govuk-link" href="{% url 'finder:search_in_data_explorer' schema=table.schema table=table.table %}?q={{ search_term }}" target="_blank">Open in Data Explorer</a>
+              {% endif %}
+            </p>
+            {% endfor %}
+          {% endfor %}
+        {% else %}
+          <p class="govuk-body">
+            There are no matches for the phrase “{{ search_term }}”.
+          </p>
+          <p class="govuk-body">
+            Please check your spelling, try a broader term, or consider reordering the words if applicable.
+          </p>
+        {% endif %}
+
+        {% if has_hidden_tables %}
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+          <p class="govuk-body">
+            Some results have been removed for data protection.
+          </p>
+        {% endif %}
+      </div>
+  </div>
+  {% endif %}
+</form>
+{% endblock %}
+
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    $(document).ready(function() {
+      new ToggleInputClassOnFocus($("#ds-finder-search-form"))
+    });
+  </script>
+{% endblock %}

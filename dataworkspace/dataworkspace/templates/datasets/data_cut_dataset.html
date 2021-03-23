@@ -89,35 +89,35 @@
                 </thead>
                 <tbody>
 
-                {% for datacut, can_show_link in datacut_links_info %}
+                {% for datacut_link, can_show_link, code_snippets in datacut_links_info %}
                     <tr class="govuk-table__row">
-                        <td class="govuk-table__cell">
+                        <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
                             {% if has_access and can_show_link %}
-                            <a class="govuk-link" href="{{ datacut.get_absolute_url }}">
-                                {{ datacut.name }}
+                            <a class="govuk-link" href="{{ datacut_link.get_absolute_url }}">
+                                {{ datacut_link.name }}
                             </a>
                             {% else %}
-                                {{ datacut.name }}
+                                {{ datacut_link.name }}
                             {% endif %}
                         </td>
-                        <td class="govuk-table__cell">
-                          {% if datacut.format %}{{ datacut.format }}{% else %}CSV{% endif %}
+                        <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                          {% if datacut_link.format %}{{ datacut_link.format }}{% else %}CSV{% endif %}
                         </td>
-                        <td class="govuk-table__cell">
-                          {% if datacut.get_frequency_display %}
-                            {{ datacut.get_frequency_display }}
+                        <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                          {% if datacut_link.get_frequency_display %}
+                            {{ datacut_link.get_frequency_display }}
                           {% else %}
-                            {{ datacut.frequency }}
+                            {{ datacut_link.frequency }}
                           {% endif %}
                         </td>
-                        <td class="govuk-table__cell">
-                          {{ datacut.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+                        <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                          {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
                         </td>
-                        <td class="govuk-table__cell">
-                            {% if can_show_link and datacut.type == custom_dataset_query_type %}
+                        <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                            {% if can_show_link and datacut_link.type == custom_dataset_query_type %}
                                 {% if has_access %}
                                     <a class="govuk-link"
-                                        href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=datacut.id %}">
+                                        href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=datacut_link.id %}">
                                         Preview
                                     </a>
                                 {% else %}
@@ -127,6 +127,22 @@
                                 No preview available
                             {% endif %}
                         </td>
+                        {% if code_snippets %}
+                        <tr class="govuk-table__row">
+                            <td colspan="6" class="govuk-table__cell">
+                              <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
+                                <summary class="govuk-details__summary">
+                                  <span class="govuk-details__summary-text">
+                                    Code snippets<span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+                                  </span>
+                                </summary>
+                                <div class="govuk-details__text">
+                                  {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
+                                </div>
+                              </details>
+                            </td>
+                          </tr>
+                          {% endif %}
                     </tr>
                 {% endfor %}
 
@@ -215,4 +231,16 @@
             {% endif %}
         </div>
     </div>
+{% endblock %}
+{% block footer_scripts %}
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+
+  <script src="{% static 'app-copy.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
+    nodeListForEach($codeBlocks, function ($codeBlock) {
+      new Copy($codeBlock).init()
+    });
+  </script>
 {% endblock %}

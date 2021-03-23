@@ -389,3 +389,11 @@ class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'datasets.ToolQueryAuditLogTable'
+
+
+class DatasetFinderQueryLogFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    query = 'find something'
+
+    class Meta:
+        model = 'finder.DatasetFinderQueryLog'

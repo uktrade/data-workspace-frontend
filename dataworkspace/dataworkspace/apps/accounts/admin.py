@@ -31,6 +31,9 @@ from dataworkspace.apps.applications.utils import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
+from dataworkspace.apps.explorer.utils import (
+    remove_data_explorer_user_cached_credentials,
+)
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -422,7 +425,7 @@ class AppUserAdmin(UserAdmin):
         )
 
         update_quicksight_permissions = False
-        clear_schema_info_cache = False
+        clear_schema_info_and_credentials_cache = False
         for dataset in authorized_datasets - current_datasets:
             DataSetUserPermission.objects.create(dataset=dataset, user=obj)
             log_permission_change(
@@ -434,7 +437,7 @@ class AppUserAdmin(UserAdmin):
             )
             if dataset.type == DataSetType.MASTER:
                 update_quicksight_permissions = True
-            clear_schema_info_cache = True
+            clear_schema_info_and_credentials_cache = True
 
         for dataset in current_datasets - authorized_datasets:
             DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
@@ -447,10 +450,11 @@ class AppUserAdmin(UserAdmin):
             )
             if dataset.type == DataSetType.MASTER:
                 update_quicksight_permissions = True
-            clear_schema_info_cache = True
+            clear_schema_info_and_credentials_cache = True
 
-        if clear_schema_info_cache and obj.pk:
+        if clear_schema_info_and_credentials_cache and obj.pk:
             clear_schema_info_cache_for_user(obj)
+            remove_data_explorer_user_cached_credentials(obj)
 
         if 'authorized_visualisations' in form.cleaned_data:
             current_visualisations = VisualisationCatalogueItem.objects.filter(

@@ -189,4 +189,10 @@
   {% endif %}
 
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    $(document).ready(function() {
+      var form = new LiveSearch('#live-search-form', '#live-search-wrapper', new GTMDatasetSearchSupport());
+      var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
+    });
+  </script>
 {% endblock %}

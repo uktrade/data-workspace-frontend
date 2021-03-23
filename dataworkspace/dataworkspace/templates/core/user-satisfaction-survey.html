@@ -17,8 +17,8 @@
             <a class="govuk-button" href="{% url 'root' %}">Return home</a>
         {% else %}
             <h1 class="govuk-heading-xl">Leave feedback</h1>
-            <p class="govuk-body-m">Fill in this short survey to tell us about your experience of using this website.</p>
-            <p class="govuk-body-m">This survey has 3 questions. It should take you less than 3 minutes to complete.</p>
+            <p class="govuk-body-m">Fill in this short form to tell us about your experience of using this website.</p>
+            <p class="govuk-body-m">This form has 3 questions. It should take you less than 3 minutes to complete.</p>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <fieldset class="govuk-fieldset">

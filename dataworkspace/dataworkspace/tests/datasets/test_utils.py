@@ -7,7 +7,8 @@ import pytest
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
-    get_code_snippets,
+    get_code_snippets_for_query,
+    get_code_snippets_for_table,
     update_quicksight_visualisations_last_updated_date,
 )
 from dataworkspace.tests.factories import (
@@ -33,16 +34,23 @@ def test_dataset_type_to_manage_unpublished_permission_codename():
 
 
 @pytest.mark.django_db
-def test_get_code_snippets(metadata_db):
+def test_get_code_snippets_for_table(metadata_db):
     ds = DataSetFactory.create(type=DataSetType.MASTER)
     sourcetable = SourceTableFactory.create(
         dataset=ds, schema="public", table="MY_LOVELY_TABLE"
     )
 
-    snippets = get_code_snippets(sourcetable)
+    snippets = get_code_snippets_for_table(sourcetable)
     assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['python']
     assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['r']
     assert snippets['sql'] == """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50"""
+
+
+def test_get_code_snippets_for_query(metadata_db):
+    snippets = get_code_snippets_for_query('SELECT * FROM foo')
+    assert 'SELECT * FROM foo' in snippets['python']
+    assert 'SELECT * FROM foo' in snippets['r']
+    assert snippets['sql'] == 'SELECT * FROM foo'
 
 
 class TestUpdateQuickSightVisualisationsLastUpdatedDate:

@@ -16,6 +16,7 @@ services:
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"
+      - "data-workspace-es"
     extra_hosts:
       - "dataworkspace.test:127.0.0.1"
       - "testapplication-23b40dd9.dataworkspace.test:127.0.0.1"
@@ -44,6 +45,13 @@ services:
     image: data-workspace-redis
     ports:
       - "6379"
+  data-workspace-es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+      - http.port=9200
+    ports:
+      - "9200:9200"
 
 
 volumes:

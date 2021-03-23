@@ -18,6 +18,7 @@ services:
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"
+      - "data-workspace-es"
     volumes:
       - ./dataworkspace:/dataworkspace
   data-workspace-celery:
@@ -51,6 +52,13 @@ services:
     image: data-workspace-redis
     ports:
       - "6379:6379"
+  data-workspace-es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+      - http.port=9200
+    ports:
+      - "9200:9200"
 
 
 volumes:

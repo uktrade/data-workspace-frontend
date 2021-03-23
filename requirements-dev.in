@@ -1,4 +1,4 @@
--r requirements.txt
+-r requirements.in
 
 aiopg==1.1.0
 black==19.10b0

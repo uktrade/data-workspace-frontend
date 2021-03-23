@@ -3,4 +3,4 @@ fifolock==0.0.20
 lowhaio-aws-sigv4-unsigned-payload==0.0.4
 lowhaio-retry>=0.0.5
 lowhaio==0.0.88
-mobius3==0.0.34
+mobius3==0.0.35
