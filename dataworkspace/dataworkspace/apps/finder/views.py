@@ -16,6 +16,7 @@ from dataworkspace.apps.finder.utils import (
     group_tables_by_master_dataset,
     _enrich_and_suppress_matches,
     get_index_aliases_for_all_published_source_tables,
+    log_query,
 )
 
 
@@ -43,6 +44,8 @@ def find_datasets(request):
             )
             results = group_tables_by_master_dataset(visible_matches)
 
+        if search_term:
+            log_query(request.user, search_term)
     else:
         return HttpResponseRedirect(reverse("finder:find_datasets"))
 

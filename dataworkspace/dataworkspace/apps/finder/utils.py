@@ -8,6 +8,7 @@ from django.db.models.functions import Concat
 
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.finder.elasticsearch import _TableMatchResult
+from dataworkspace.apps.finder.models import DatasetFinderQueryLog
 
 
 @dataclass
@@ -129,3 +130,7 @@ def get_index_aliases_for_all_published_source_tables():
             dataset__published=True, dataset__deleted=False
         ).values(index_alias=Concat('schema', Value('--'), 'table'))
     )
+
+
+def log_query(user, query):
+    return DatasetFinderQueryLog.objects.create(user=user, query=query)
