@@ -51,29 +51,44 @@ class ElasticsearchClient:
                 connection_class=RequestsHttpConnection,
             )
 
-    def search_for_phrase(
-        self, phrase: str, indexes: List[str]
-    ) -> List[_TableMatchResult]:
-        resp = self._client.search(
-            body={
-                "query": {"match_phrase": {"_all": phrase}},
-                "aggs": {"indexes": {"terms": {"field": "_index"}}},
-            },
-            index=','.join(indexes),
-            ignore_unavailable=True,
-            size=0,
-        )
+    def _batch_indexes(self, index_aliases, batch_size=100):
+        lists_of_indexes = []
+        for i, alias in enumerate(index_aliases, start=0):
+            if i % batch_size == 0:
+                lists_of_indexes.append([])
+                i += 1
 
+            lists_of_indexes[-1].append(alias)
+
+        return lists_of_indexes
+
+    def search_for_phrase(
+        self, phrase: str, index_aliases: List[str]
+    ) -> List[_TableMatchResult]:
         results = []
 
-        if resp['hits']['total']['value'] > 0:
-            for r in resp["aggregations"]["indexes"]["buckets"]:
-                # The Elasticsearch index names have a structured format:
-                # {timestamp}--{schema}--{table}--{arbitrary_number}
-                _, schema, table, _ = r['key'].split('--')
-                results.append(
-                    _TableMatchResult(schema=schema, table=table, count=r["doc_count"])
-                )
+        for batch in self._batch_indexes(index_aliases):
+            print(batch)
+            resp = self._client.search(
+                body={
+                    "query": {"match_phrase": {"_all": phrase}},
+                    "aggs": {"indexes": {"terms": {"field": "_index"}}},
+                },
+                index=','.join(batch),
+                ignore_unavailable=True,
+                size=0,
+            )
+
+            if resp['hits']['total']['value'] > 0:
+                for r in resp["aggregations"]["indexes"]["buckets"]:
+                    # The Elasticsearch index names have a structured format:
+                    # {timestamp}--{schema}--{table}--{arbitrary_number}
+                    _, schema, table, _ = r['key'].split('--')
+                    results.append(
+                        _TableMatchResult(
+                            schema=schema, table=table, count=r["doc_count"]
+                        )
+                    )
 
         return sorted(results, key=lambda x: -x.count)
 
