@@ -68,7 +68,6 @@ class ElasticsearchClient:
         results = []
 
         for batch in self._batch_indexes(index_aliases):
-            print(batch)
             resp = self._client.search(
                 body={
                     "query": {"match_phrase": {"_all": phrase}},
