@@ -259,3 +259,29 @@ class DatasetSearchForm(forms.Form):
             for topic_id, topic_text in topic_choices
             if topic_id in selected_topic_ids or counts['topic'][topic_id] != 0
         ]
+
+
+class RelatedMastersSortForm(forms.Form):
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('dataset__name', 'A to Z'),
+            ('-dataset__name', 'Z to A'),
+            ('-dataset__published_at', 'Recently published'),
+        ],
+        initial="dataset__name",
+        widget=SortSelectWidget(label='Sort by'),
+    )
+
+
+class RelatedDataCutsSortForm(forms.Form):
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('query__dataset__name', 'A to Z'),
+            ('-query__dataset__name', 'Z to A'),
+            ('-query__dataset__published_at', 'Recently published'),
+        ],
+        initial="query__dataset__name",
+        widget=SortSelectWidget(label='Sort by'),
+    )

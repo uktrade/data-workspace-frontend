@@ -1,8 +1,10 @@
 import copy
+import operator
 import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from functools import reduce
 
 from typing import Optional, List
 
@@ -234,6 +236,55 @@ class DataSet(DeletableTimestampedUserModel):
                 copy.copy(obj) for obj in getattr(self, related_field + '_set').all()
             ]
         return related
+
+    def related_datasets(self, order=None):
+        if self.type == DataSetType.DATACUT:
+            custom_queries = self.customdatasetquery_set.all().prefetch_related(
+                'tables'
+            )
+
+            query_tables = []
+            for query in custom_queries:
+                query_tables.extend([qt.table for qt in query.tables.all()])
+
+            ds_tables = [
+                row.dataset
+                for row in SourceTable.objects.filter(
+                    dataset__published=True,
+                    dataset__deleted=False,
+                    table__in=query_tables,
+                )
+                .prefetch_related('dataset')
+                .only('dataset')
+                .distinct('dataset')
+                .order_by('dataset', order or 'dataset__name')
+            ]
+
+            return ds_tables
+
+        elif self.type == DataSetType.MASTER:
+            tables = self.sourcetable_set.all()
+
+            if len(tables) > 0:
+                filters = reduce(
+                    operator.or_,
+                    (Q(schema=table.schema, table=table.table) for table in tables),
+                )
+            else:
+                filters = Q()
+
+            datacuts = [
+                row.query.dataset
+                for row in CustomDatasetQueryTable.objects.filter(filters)
+                .only('query__dataset')
+                .distinct('query__dataset')
+                .order_by('query__dataset', order or 'query__dataset__name')
+            ]
+
+            return datacuts
+
+        else:
+            raise ValueError(f"Not implemented for {self.type}")
 
     def update_published_timestamp(self):
         if not self.published:
