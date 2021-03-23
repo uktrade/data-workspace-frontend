@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import quote
 
 from django.conf import settings
@@ -11,19 +12,37 @@ from waffle.decorators import waffle_flag
 
 from dataworkspace.apps.finder.elasticsearch import es_client
 from dataworkspace.apps.finder.forms import DatasetFindForm
-from dataworkspace.apps.finder.utils import group_matches_by_master
+from dataworkspace.apps.finder.utils import (
+    group_tables_by_master_dataset,
+    _enrich_and_suppress_matches,
+    get_index_aliases_for_all_published_source_tables,
+)
+
+
+logger = logging.getLogger('app')
 
 
 @waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
 @require_GET
 def find_datasets(request):
+    results = []
+    has_suppressed_tables = False
+
     form = DatasetFindForm(request.GET)
     if form.is_valid():
         search_term = form.cleaned_data.get("q")
+        index_aliases = get_index_aliases_for_all_published_source_tables()
         matches = (
-            es_client.find_tables_containing_term(search_term) if search_term else None
+            es_client.search_for_phrase(search_term, indexes=index_aliases)
+            if search_term
+            else None
         )
-        results = group_matches_by_master(matches) if matches else None
+        if matches:
+            visible_matches, has_suppressed_tables = _enrich_and_suppress_matches(
+                request, matches
+            )
+            results = group_tables_by_master_dataset(visible_matches)
+
     else:
         return HttpResponseRedirect(reverse("finder:find_datasets"))
 
@@ -35,6 +54,7 @@ def find_datasets(request):
             "request": request,
             "search_term": search_term,
             "results": results,
+            "has_hidden_tables": has_suppressed_tables,
         },
     )
 

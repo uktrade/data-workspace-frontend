@@ -10,10 +10,13 @@ import textwrap
 import unittest
 
 import aiohttp
+import elasticsearch
 from aiohttp import web
 import aiopg
 import aioredis
 import mohawk
+from django.conf import settings
+from elasticsearch import AsyncElasticsearch, helpers
 from lxml import html
 
 from test.pages import (  # pylint: disable=wrong-import-order
@@ -2167,6 +2170,128 @@ class TestApplication(unittest.TestCase):
 
         await sso_site.stop()
 
+    @async_test
+    async def test_dataset_finder(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code', 'some-other-code'])
+        tokens = iter(['token-1', 'token-2'])
+        auth_to_me = {
+            # No token-1
+            'Bearer token-2': {
+                'email': 'test@test.com',
+                'contact_email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds('http://data-workspace-es:9200/_cat/indices')
+        await setup_elasticsearch_indexes()
+
+        # Hit Data Workspace to create user
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/',
+        ) as response:
+            content = await response.text()
+
+        await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
+
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/finder',
+        ) as response:
+            content = await response.text()
+
+        self.assertEqual(response.status, 200)
+        self.assertIn("Dataset finder", content)
+
+        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'MASTER',
+            dataset_id_test_dataset,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Dataset not discoverable because IAO/IAM hasn't opted in
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/finder?q=data',
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('There are no matches for the phrase “data”.', content)
+
+        # Toggle the opt-in to make it discoverable even without the user having access
+        stdout, stderr, code = await dataset_finder_opt_in_dataset(
+            schema='public', table='test_dataset'
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Users can now see results for the dataset even if they don't have access
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/finder?q=data',
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('1 results', content)
+        self.assertIn(
+            '<strong>100</strong> matching rows in "public"."test_dataset"', content
+        )
+
+        # Revoke the opt-in but give them access - should still be visible in results
+        stdout, stderr, code = await dataset_finder_opt_in_dataset(
+            schema='public', table='test_dataset', opted_in=False
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        # Users can still see results for the dataset even if the IAO/IAM hasn't opted in - because they have explicit
+        # access
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/finder?q=data',
+        ) as response:
+            content = await response.text()
+
+        self.assertIn('1 results', content)
+        self.assertIn(
+            '<strong>100</strong> matching rows in "public"."test_dataset"', content
+        )
+
+        # Users shouldn't be able to see results for indexes that aren't covered by the correct alias (e.g. new indexes
+        # currently being written to by data-flow).
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/finder?q=new',
+        ) as response:
+            content = await response.text()
+        self.assertIn('There are no matches for the phrase “new”.', content)
+
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -2555,6 +2680,34 @@ async def give_user_dataset_perms(name):
             dataset=dataset,
             user=user,
         )
+        """
+    ).encode('ascii')
+
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def dataset_finder_opt_in_dataset(schema, table, opted_in=True):
+    python_code = textwrap.dedent(
+        f"""\
+        from dataworkspace.apps.datasets.models import (
+            SourceTable,
+        )
+        st = SourceTable.objects.get(
+            schema="{schema}",
+            table="{table}",
+        )
+        st.dataset_finder_opted_in = {opted_in}
+        st.save()
         """
     ).encode('ascii')
 
@@ -3021,3 +3174,58 @@ async def sync_query_logs():
     stdout, stderr = await shell.communicate(python_code)
     code = await shell.wait()
     return stdout, stderr, code
+
+
+async def setup_elasticsearch_indexes():
+    """
+    Setup some Elasticsearch indexes for Dataset Finder tests
+    """
+    client = AsyncElasticsearch(hosts=[{"host": "data-workspace-es", "port": 9200}])
+    known_index_name = '20200101t120000--public--test_dataset--1'
+    known_index_alias = 'public--test_dataset'
+    incoming_index_name = '20200101t120000--public--test_dataset--2'
+
+    try:
+        await client.indices.delete(known_index_name)
+    except elasticsearch.exceptions.NotFoundError:
+        pass
+
+    await client.indices.create(known_index_name)
+
+    success, failed = await helpers.async_bulk(
+        client,
+        (
+            {
+                "_index": known_index_name,
+                "_id": i,
+                "id": i,
+                "data": f"my data {i}",
+                "_all": f"my data {i}",
+            }
+            for i in range(100)
+        ),
+        stats_only=True,
+    )
+    assert success == 100
+    assert failed == 0
+
+    success, failed = await helpers.async_bulk(
+        client,
+        (
+            {
+                "_index": incoming_index_name,
+                "_id": i,
+                "id": i,
+                "data": f"new row {i}",
+                "_all": f"new row {i}",
+            }
+            for i in range(100)
+        ),
+        stats_only=True,
+    )
+    assert success == 100
+    assert failed == 0
+
+    await client.indices.put_alias(known_index_name, known_index_alias)
+
+    await asyncio.sleep(2)

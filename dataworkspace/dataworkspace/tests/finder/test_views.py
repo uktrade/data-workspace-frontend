@@ -31,7 +31,7 @@ def test_find_datasets_with_no_results(client, mocker):
     response = client.get(reverse('finder:find_datasets'), {"q": "search"})
 
     assert response.status_code == 200
-    assert response.context["results"] is None
+    assert response.context["results"] == []
 
     assert b"There are no matches for the phrase" in response.content
 
@@ -39,8 +39,15 @@ def test_find_datasets_with_no_results(client, mocker):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
 def test_find_datasets_with_results(client, mocker, dataset_finder_db):
-    master_dataset = factories.MasterDataSetFactory()
-    factories.SourceTableFactory(dataset=master_dataset, schema='public', table='data')
+    master_dataset = factories.MasterDataSetFactory.create(
+        published=True, deleted=False, name="master dataset"
+    )
+    factories.SourceTableFactory.create(
+        dataset=master_dataset,
+        schema='public',
+        table='data',
+        dataset_finder_opted_in=True,
+    )
 
     dataset_search = mocker.patch('elasticsearch.Elasticsearch.search')
     dataset_search.return_value = {
@@ -67,7 +74,7 @@ def test_find_datasets_with_results(client, mocker, dataset_finder_db):
     assert response.status_code == 200
     assert len(response.context["results"]) == 1
     result = response.context["results"][0]
-    assert result.name == 'public.data'
+    assert result.name == 'master dataset'
     assert result.table_matches[0].schema == 'public'
     assert result.table_matches[0].table == 'data'
     assert result.table_matches[0].count == 1260
