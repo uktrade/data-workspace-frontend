@@ -497,7 +497,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 {'id': str(x.id), 'name': x.name, 'schema': x.schema, 'table': x.table}
                 for x in dataset.sourcetable_set.all()
             ]
-            if dataset.type == DataSetType.MASTER.value
+            if dataset.type == DataSetType.MASTER
             else [],
             'slug': dataset.slug,
         }

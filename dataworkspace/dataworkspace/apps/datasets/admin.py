@@ -17,6 +17,7 @@ from django.utils.html import format_html
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
+from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
@@ -389,7 +390,7 @@ class TagAdmin(admin.ModelAdmin):
         queryset, use_distinct = super().get_search_results(
             request, queryset, search_term
         )
-        type_choices = {b.lower(): a for a, b in Tag._TYPE_CHOICES}
+        type_choices = {b.lower(): a for a, b in TagType.choices}
 
         if search_term in type_choices:
             queryset |= self.model.objects.filter(type=type_choices[search_term])

@@ -18,13 +18,13 @@ from dataworkspace.apps.core.utils import (
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
-    'integer': PostgresDataTypes.INTEGER.value,
-    'boolean': PostgresDataTypes.BOOLEAN.value,
-    'date': PostgresDataTypes.DATE.value,
-    'datetime': PostgresDataTypes.TIMESTAMP.value,
-    'number': PostgresDataTypes.NUMERIC.value,
-    'text': PostgresDataTypes.TEXT.value,
-    'uuid': PostgresDataTypes.UUID.value,
+    'integer': PostgresDataTypes.INTEGER,
+    'boolean': PostgresDataTypes.BOOLEAN,
+    'date': PostgresDataTypes.DATE,
+    'datetime': PostgresDataTypes.TIMESTAMP,
+    'number': PostgresDataTypes.NUMERIC,
+    'text': PostgresDataTypes.TEXT,
+    'uuid': PostgresDataTypes.UUID,
 }
 
 
@@ -65,7 +65,7 @@ def get_s3_csv_column_types(path):
                 'header_name': field['name'],
                 'column_name': clean_db_identifier(field['name']),
                 'data_type': SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
-                    field['type'], PostgresDataTypes.TEXT.value
+                    field['type'], PostgresDataTypes.TEXT
                 ),
                 'sample_data': [row[idx] for row in reader][1:6],
             }

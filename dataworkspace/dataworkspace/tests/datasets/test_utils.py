@@ -5,7 +5,6 @@ import pytz
 import pytest
 
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import DataSet
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     get_code_snippets_for_query,
@@ -25,20 +24,18 @@ def test_dataset_type_to_manage_unpublished_permission_codename():
         == 'datasets.manage_unpublished_reference_datasets'
     )
     assert (
-        dataset_type_to_manage_unpublished_permission_codename(DataSet.TYPE_DATA_CUT)
+        dataset_type_to_manage_unpublished_permission_codename(DataSetType.DATACUT)
         == 'datasets.manage_unpublished_datacut_datasets'
     )
     assert (
-        dataset_type_to_manage_unpublished_permission_codename(
-            DataSet.TYPE_MASTER_DATASET
-        )
+        dataset_type_to_manage_unpublished_permission_codename(DataSetType.MASTER)
         == 'datasets.manage_unpublished_master_datasets'
     )
 
 
 @pytest.mark.django_db
 def test_get_code_snippets_for_table(metadata_db):
-    ds = DataSetFactory.create(type=DataSetType.MASTER.value)
+    ds = DataSetFactory.create(type=DataSetType.MASTER)
     sourcetable = SourceTableFactory.create(
         dataset=ds, schema="public", table="MY_LOVELY_TABLE"
     )

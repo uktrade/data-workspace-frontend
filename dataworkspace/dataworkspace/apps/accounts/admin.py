@@ -435,7 +435,7 @@ class AppUserAdmin(UserAdmin):
                 serializers.serialize('python', [dataset])[0],
                 f"Added dataset {dataset} permission",
             )
-            if dataset.type == DataSetType.MASTER.value:
+            if dataset.type == DataSetType.MASTER:
                 update_quicksight_permissions = True
             clear_schema_info_and_credentials_cache = True
 
@@ -448,7 +448,7 @@ class AppUserAdmin(UserAdmin):
                 serializers.serialize('python', [dataset])[0],
                 f"Removed dataset {dataset} permission",
             )
-            if dataset.type == DataSetType.MASTER.value:
+            if dataset.type == DataSetType.MASTER:
                 update_quicksight_permissions = True
             clear_schema_info_and_credentials_cache = True
 

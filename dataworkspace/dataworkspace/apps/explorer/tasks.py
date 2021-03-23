@@ -13,6 +13,7 @@ from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
     db_role_schema_suffix_for_user,
 )
+from dataworkspace.apps.explorer.constants import QueryLogState
 from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.utils import (
     get_user_explorer_connection_settings,
@@ -89,7 +90,7 @@ def _mark_query_log_failed(query_log, exc):
     query_log.error = (
         str(exc).replace('SELECT * FROM (', '').replace(') sq LIMIT 0', '')
     )
-    query_log.state = QueryLog.STATE_FAILED
+    query_log.state = QueryLogState.FAILED
     query_log.save()
 
 
@@ -150,7 +151,7 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
 
         query_log.duration = duration
         query_log.rows = row_count
-        query_log.state = QueryLog.STATE_COMPLETE
+        query_log.state = QueryLogState.COMPLETE
         query_log.save()
 
     logger.info("Created table %s and stored results", table_name)

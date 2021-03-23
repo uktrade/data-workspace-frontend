@@ -5,7 +5,7 @@ from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.tests import factories
 
 
@@ -16,7 +16,7 @@ class TestCustomQueryPreviewView:
 
     def test_preview_forbidden_datacut(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSet.TYPE_DATA_CUT, user_access_type='REQUIRES_AUTHORIZATION',
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHORIZATION',
         )
         query = factories.CustomDatasetQueryFactory(
             dataset=dataset, database=test_db, query='SELECT * FROM a_table',
@@ -31,7 +31,7 @@ class TestCustomQueryPreviewView:
 
     def test_preview_invalid_datacut(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSet.TYPE_DATA_CUT, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
         )
         query = factories.CustomDatasetQueryFactory(
             dataset=dataset, database=test_db, query='SELECT * FROM invalid_table',
@@ -50,7 +50,7 @@ class TestCustomQueryPreviewView:
     @override_settings(DATASET_PREVIEW_NUM_OF_ROWS=20)
     def test_preview_valid_datacut(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSet.TYPE_DATA_CUT, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
         )
 
         # Check if sample data shown correctly
@@ -106,7 +106,7 @@ class TestCustomQueryPreviewView:
 
     def _preview_unreviewed_datacut(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSet.TYPE_DATA_CUT,
+            type=DataSetType.DATACUT,
             user_access_type='REQUIRES_AUTHENTICATION',
             published=True,
         )
@@ -150,7 +150,7 @@ class TestSourceTablePreviewView:
 
     def test_preview_forbidden_master_dataset(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSet.TYPE_MASTER_DATASET, user_access_type='REQUIRES_AUTHORIZATION'
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHORIZATION'
         )
         source_table = factories.SourceTableFactory(
             dataset=dataset,
@@ -170,7 +170,7 @@ class TestSourceTablePreviewView:
     @override_settings(DATASET_PREVIEW_NUM_OF_ROWS=10)
     def test_preview_table(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSet.TYPE_MASTER_DATASET, user_access_type='REQUIRES_AUTHENTICATION'
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION'
         )
 
         # Check if sample data shown correctly

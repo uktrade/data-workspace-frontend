@@ -2975,7 +2975,7 @@ VisualisationCatalogueItem.objects.all().delete()
 for dept in ('DIT', 'HMRC', 'ONS'):
     Tag.objects.get_or_create(name=dept)
 
-source_tags = {st.name: st for st in Tag.objects.filter(type=TagType.SOURCE.value)}
+source_tags = {st.name: st for st in Tag.objects.filter(type=TagType.SOURCE)}
 
 def paragraph(_):
     from faker import Faker
@@ -2987,7 +2987,7 @@ try:
         name="Master 1",
         slug="master-1",
         description=factory.LazyAttribute(paragraph),
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         published=True,
         user_access_type='REQUIRES_AUTHENTICATION',
     )
@@ -3002,7 +3002,7 @@ try:
         name="Master 2",
         slug="master-2",
         description=factory.LazyAttribute(paragraph),
-        type=DataSetType.MASTER.value,
+        type=DataSetType.MASTER,
         published=True,
         user_access_type='REQUIRES_AUTHORIZATION',
     )
@@ -3017,7 +3017,7 @@ try:
         name="Datacut 1",
         slug="datacut-1",
         description=factory.LazyAttribute(paragraph),
-        type=DataSetType.DATACUT.value,
+        type=DataSetType.DATACUT,
         published=True,
         user_access_type='REQUIRES_AUTHENTICATION',
     )

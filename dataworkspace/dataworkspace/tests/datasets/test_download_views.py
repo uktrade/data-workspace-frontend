@@ -9,6 +9,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import SourceLink, ReferenceDataset, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
@@ -16,7 +17,7 @@ from dataworkspace.tests import factories
 
 def test_master_dataset_with_access_preview(client, dataset_db):
     ds = factories.DataSetFactory.create(
-        type=DataSet.TYPE_MASTER_DATASET,
+        type=DataSetType.MASTER,
         user_access_type='REQUIRES_AUTHENTICATION',
         published=True,
     )
@@ -40,7 +41,7 @@ def test_master_dataset_with_access_preview(client, dataset_db):
 
 def test_master_dataset_no_access_preview(client, dataset_db):
     ds = factories.DataSetFactory.create(
-        type=DataSet.TYPE_MASTER_DATASET,
+        type=DataSetType.MASTER,
         user_access_type='REQUIRES_AUTHORIZATION',
         published=True,
     )

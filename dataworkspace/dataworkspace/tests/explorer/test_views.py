@@ -17,6 +17,7 @@ import pytest
 
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.explorer.constants import QueryLogState
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.tests.factories import UserFactory
 from dataworkspace.tests.explorer.factories import (
@@ -598,7 +599,7 @@ class TestQueryLogEndpoint:
 
     def test_query_running(self, staff_user, staff_client):
         query_log = QueryLogFactory(
-            sql="select 123", run_by_user=staff_user, state=QueryLog.STATE_RUNNING
+            sql="select 123", run_by_user=staff_user, state=QueryLogState.RUNNING
         )
         resp = staff_client.get(
             reverse('explorer:querylog_results', args=(query_log.id,))
@@ -617,7 +618,7 @@ class TestQueryLogEndpoint:
         query_log = QueryLogFactory(
             sql="select 123",
             run_by_user=staff_user,
-            state=QueryLog.STATE_FAILED,
+            state=QueryLogState.FAILED,
             error='This is an error message',
         )
         resp = staff_client.get(
@@ -642,7 +643,7 @@ class TestQueryLogEndpoint:
         query_log = QueryLogFactory(
             sql="select 123",
             run_by_user=staff_user,
-            state=QueryLog.STATE_COMPLETE,
+            state=QueryLogState.COMPLETE,
             rows=100,
         )
         resp = staff_client.get(

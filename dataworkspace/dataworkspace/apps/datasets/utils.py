@@ -40,7 +40,7 @@ def find_visualisation(visualisation_uuid, user):
 
     if user.has_perm(
         dataset_type_to_manage_unpublished_permission_codename(
-            DataSetType.VISUALISATION.value
+            DataSetType.VISUALISATION
         )
     ):
         return visualisation
@@ -60,10 +60,10 @@ def find_dataset_or_visualisation(model_id, user):
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
     return {
-        DataSetType.REFERENCE.value: 'datasets.manage_unpublished_reference_datasets',
-        DataSetType.MASTER.value: 'datasets.manage_unpublished_master_datasets',
-        DataSetType.DATACUT.value: 'datasets.manage_unpublished_datacut_datasets',
-        DataSetType.VISUALISATION.value: 'datasets.manage_unpublished_visualisations',
+        DataSetType.REFERENCE: 'datasets.manage_unpublished_reference_datasets',
+        DataSetType.MASTER: 'datasets.manage_unpublished_master_datasets',
+        DataSetType.DATACUT: 'datasets.manage_unpublished_datacut_datasets',
+        DataSetType.VISUALISATION: 'datasets.manage_unpublished_visualisations',
     }[dataset_type]
 
 

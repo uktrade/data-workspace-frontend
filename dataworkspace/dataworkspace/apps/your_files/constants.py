@@ -1,7 +1,7 @@
-import enum
+from django.db import models
 
 
-class PostgresDataTypes(enum.Enum):
+class PostgresDataTypes(models.TextChoices):
     INTEGER = 'integer'
     BOOLEAN = 'boolean'
     DATE = 'date'
