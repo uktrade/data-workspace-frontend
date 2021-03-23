@@ -3,10 +3,8 @@ from typing import List, Optional
 
 from django.conf import settings
 
+from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
-
-import boto3
 
 
 @dataclass
@@ -34,13 +32,10 @@ class ElasticsearchClient:
         else:
             region = settings.DATASET_FINDER_AWS_REGION
 
-            credentials = boto3.Session().get_credentials()
-            self._aws_auth = AWS4Auth(
-                credentials.access_key,
-                credentials.secret_key,
-                region,
-                'es',
-                session_token=credentials.token,
+            self._aws_auth = BotoAWSRequestsAuth(
+                aws_host=settings.DATASET_FINDER_ES_HOST,
+                aws_region=region,
+                aws_service='es',
             )
             self._client = Elasticsearch(
                 hosts=[
