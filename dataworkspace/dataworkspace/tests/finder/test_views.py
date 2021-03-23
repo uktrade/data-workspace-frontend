@@ -43,6 +43,9 @@ def test_find_datasets_with_no_results(client, mocker):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
 def test_find_datasets_with_results(client, mocker, dataset_finder_db):
+    user = get_user_model().objects.create(is_staff=True, is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
     master_dataset = factories.MasterDataSetFactory.create(
         published=True, deleted=False, name="master dataset"
     )
