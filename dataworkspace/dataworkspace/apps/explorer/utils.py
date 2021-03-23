@@ -121,11 +121,15 @@ class QueryException(Exception):
     pass
 
 
-cache_version = 1
+credentials_version_key = 'explorer_credentials_version'
 
 
-def user_cached_credentials_key(user):
-    return f"explorer_credentials_{cache_version}_{user.profile.sso_id}"
+def get_user_cached_credentials_key(user):
+    credentials_version = cache.get(credentials_version_key, None)
+    if not credentials_version:
+        credentials_version = 1
+        cache.set(credentials_version_key, credentials_version)
+    return f"explorer_credentials_{credentials_version}_{user.profile.sso_id}"
 
 
 def get_user_explorer_connection_settings(user, alias):
@@ -150,7 +154,7 @@ def get_user_explorer_connection_settings(user, alias):
         blocking_timeout=30,
         timeout=180,
     ):
-        cache_key = user_cached_credentials_key(user)
+        cache_key = get_user_cached_credentials_key(user)
         user_credentials = cache.get(cache_key, None)
 
         # Make sure that the connection settings are still valid
@@ -217,13 +221,17 @@ def get_total_pages(total_rows, page_size):
 
 def remove_data_explorer_user_cached_credentials(user):
     logger.info("Clearing Data Explorer cached credentials for %s", user)
-    cache_key = user_cached_credentials_key(user)
+    cache_key = get_user_cached_credentials_key(user)
     cache.delete(cache_key)
 
 
 def invalidate_data_explorer_user_cached_credentials():
-    global cache_version  # pylint: disable=global-statement
-    cache_version += 1
+    credentials_version = cache.get(credentials_version_key, 0)
+    with cache.lock(
+        'get_explorer_credentials_version', blocking_timeout=30, timeout=180,
+    ):
+        credentials_version += 1
+        cache.set(credentials_version_key, credentials_version)
 
 
 def tempory_query_table_name(user, query_log_id):
