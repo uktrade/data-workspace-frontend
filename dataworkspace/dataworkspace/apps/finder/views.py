@@ -33,7 +33,7 @@ def find_datasets(request):
         search_term = form.cleaned_data.get("q")
         index_aliases = get_index_aliases_for_all_published_source_tables()
         matches = (
-            es_client.search_for_phrase(search_term, indexes=index_aliases)
+            es_client.search_for_phrase(search_term, index_aliases=index_aliases)
             if search_term
             else None
         )
