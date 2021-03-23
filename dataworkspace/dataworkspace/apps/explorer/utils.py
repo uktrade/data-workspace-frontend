@@ -239,3 +239,7 @@ def fetch_query_results(query_log_id):
         headers = [d[0].strip() for d in description] if description else ['--']
         data = [list(r) for r in cursor]
     return headers, data, query_log
+
+
+def test_nothing():
+    pass
