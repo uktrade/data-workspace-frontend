@@ -113,7 +113,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         update_quicksight_visualisations_last_updated_date()
 
         assert mock_get_tables_last_updated_date.call_args_list == [
-            call('test_datasets', (('public', 'bar'),))
+            call('my_database', (('public', 'bar'),))
         ]
 
         visualisation_link.refresh_from_db()
@@ -235,8 +235,8 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
         update_quicksight_visualisations_last_updated_date()
         assert mock_get_tables_last_updated_date.call_args_list == [
-            call('test_datasets', (('public', 'bar'),)),
-            call('test_datasets', (('public', 'baz'),)),
+            call('my_database', (('public', 'bar'),)),
+            call('my_database', (('public', 'baz'),)),
         ]
         visualisation_link.refresh_from_db()
         # data_source_last_updated should be set to the most recent table last_updated_date
