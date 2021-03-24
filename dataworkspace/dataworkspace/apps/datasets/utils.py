@@ -152,10 +152,8 @@ def update_quicksight_visualisations_last_updated_date():
     """
 
     def get_last_updated_date_by_table_name(schema, table):
-        for _, database_data in settings.DATABASES_DATA.items():
-            date = get_tables_last_updated_date(
-                database_data['NAME'], ((schema, table),)
-            )
+        for connection_alias, _ in settings.DATABASES_DATA.items():
+            date = get_tables_last_updated_date(connection_alias, ((schema, table),))
             if date:
                 return date
         return None
