@@ -1,7 +1,7 @@
 {% extends '_main.html' %}
 {% load static core_tags %}
 
-{% block page_title %}Columns names and types for "{{ source_table.schema }}"."{{ source_table.table }}" - Data Workspace{% endblock %}
+{% block page_title %}Columns names and types for "{{ source_table.schema }}"."{{ source_table.table }}" - {{ block.super }}{% endblock %}
 
 {% block go_back %}
   <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">

@@ -1,6 +1,6 @@
 {% extends '_main.html' %}
 {% load your_files_tags %}
-{% block page_title %}How do you want to name your table?{% endblock page_title %}
+{% block page_title %}How do you want to name your table? - {{ block.super }}{% endblock page_title %}
 
 {% block go_back %}
   <a href="{% url 'your_files:create-table-confirm' %}?{% remove_query_params 'overwrite' %}" class="govuk-back-link">Back</a>

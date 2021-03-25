@@ -1,6 +1,6 @@
 {% extends 'your_files/create-table-base.html' %}
 {% load explorer_tags %}
-{% block page_title %}Table created{% endblock page_title %}
+{% block page_title %}Table created - {{ block.super }}{% endblock page_title %}
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
