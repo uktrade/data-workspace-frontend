@@ -125,6 +125,28 @@
     </div>
   </div>
 
+  {% if related_data %}
+  <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+          <h2 class="govuk-heading-l govuk-!-margin-top-8">Related data</h2>
+          <div class="govuk-grid-row">
+              {% for dataset in related_data|slice:":4" %}
+                {% include "partials/related_data.html" with dataset=dataset %}
+                  {% if forloop.counter|divisibleby:2 %}
+                      </div>
+                      <div class="govuk-grid-row">
+                  {% endif %}
+              {% endfor %}
+            </div>
+              {% if related_data|length > 4 %}
+                <a href="{% url "datasets:related_data" dataset_uuid=model.id %}" class="govuk-button govuk-button--secondary">
+                  Show all data cuts
+                </a>
+              {% endif %}
+          </div>
+      </div>
+  {% endif %}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>

@@ -1380,38 +1380,102 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
     ) is show_warning
 
 
-@pytest.mark.django_db
-def test_master_dataset_shows_code_snippets_to_tool_user(metadata_db):
-    ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-    user = get_user_model().objects.create(is_superuser=False)
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    factories.SourceTableFactory.create(
-        dataset=ds,
-        schema="public",
-        table="MY_LOVELY_TABLE",
-        database=factories.DatabaseFactory(memorable_name='my_database'),
-    )
+class TestMasterDatasetDetailView:
+    def _get_database(self):
+        return factories.DatabaseFactory.create(memorable_name='my_database')
 
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
+    def _create_master(self, schema='public', table='test_dataset'):
+        master = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.MASTER,
+            name='A master',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        factories.SourceTableFactory.create(
+            dataset=master, schema=schema, table=table, database=self._get_database(),
+        )
 
-    assert response.status_code == 200
-    assert (
-        """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
-        not in response.content.decode(response.charset)
-    )
+        return master
 
-    user.is_superuser = True
-    user.save()
+    def _create_related_data_cuts(self, schema='public', table='test_dataset', num=1):
+        datacuts = []
 
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
+        for i in range(num):
+            datacut = factories.DataSetFactory.create(
+                published=True,
+                type=DataSetType.DATACUT,
+                name=f'Datacut {i}',
+                user_access_type='REQUIRES_AUTHENTICATION',
+            )
+            query = factories.CustomDatasetQueryFactory.create(
+                dataset=datacut,
+                database=self._get_database(),
+                query=f'SELECT * FROM "{schema}"."{table}" order by id desc limit 10',
+            )
+            factories.CustomDatasetQueryTableFactory.create(
+                query=query, schema=schema, table=table
+            )
+            datacuts.append(datacut)
 
-    assert response.status_code == 200
-    assert (
-        """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
-        in response.content.decode(response.charset)
-    )
+        return datacuts
+
+    @pytest.mark.django_db
+    def test_master_dataset_shows_code_snippets_to_tool_user(self, metadata_db):
+        ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
+        user = get_user_model().objects.create(is_superuser=False)
+        factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+        factories.SourceTableFactory.create(
+            dataset=ds,
+            schema="public",
+            table="MY_LOVELY_TABLE",
+            database=factories.DatabaseFactory.create(memorable_name='my_database'),
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(ds.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
+            not in response.content.decode(response.charset)
+        )
+
+        user.is_superuser = True
+        user.save()
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(ds.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
+            in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.django_db
+    def test_master_dataset_detail_page_shows_related_data_cuts(
+        self, staff_client, metadata_db
+    ):
+        master = self._create_master()
+        self._create_related_data_cuts(num=2)
+
+        url = reverse('datasets:dataset_detail', args=(master.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["related_data"]) == 2
+
+    @pytest.mark.django_db
+    def test_master_dataset_detail_page_shows_link_to_related_data_cuts_if_more_than_four(
+        self, staff_client, metadata_db
+    ):
+        master = self._create_master()
+        self._create_related_data_cuts(num=5)
+
+        url = reverse('datasets:dataset_detail', args=(master.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["related_data"]) == 5
+        assert "Show all data cuts" in response.content.decode(response.charset)
 
 
 @pytest.mark.django_db
@@ -1909,11 +1973,11 @@ class TestCustomQueryRelatedDataView:
         url = reverse('datasets:dataset_detail', args=(datacut.id,))
         response = request_client.get(url)
         assert response.status_code == status
-        assert len(response.context["related_masters"]) == master_count
+        assert len(response.context["related_data"]) == master_count
         for master in masters:
             related_master = [
                 item
-                for item in response.context["related_masters"]
+                for item in response.context["related_data"]
                 if item.id == master.id
             ][0]
             assert related_master.id == master.id
@@ -1976,7 +2040,7 @@ class TestCustomQueryRelatedDataView:
         url = reverse('datasets:dataset_detail', args=(datacut.id,))
         response = request_client.get(url)
         assert response.status_code == status
-        assert len(response.context["related_masters"]) == 1
+        assert len(response.context["related_data"]) == 1
 
     @pytest.mark.parametrize(
         "request_client, status",
@@ -2044,7 +2108,7 @@ class TestCustomQueryRelatedDataView:
         url = reverse('datasets:dataset_detail', args=(datacut.id,))
         response = request_client.get(url)
         assert response.status_code == status
-        assert len(response.context["related_masters"]) == 2
+        assert len(response.context["related_data"]) == 2
 
 
 class TestSourceTableColumnDetailsView:
@@ -2096,3 +2160,57 @@ class TestSourceTableColumnDetailsView:
         )
 
         assert response.status_code == 404
+
+
+class TestRelatedDataView:
+    def _get_database(self):
+        return factories.DatabaseFactory.create(memorable_name='my_database')
+
+    def _create_master(self):
+        master = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.MASTER,
+            name='A master',
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        factories.SourceTableFactory.create(
+            dataset=master,
+            schema="public",
+            table="test_dataset",
+            database=self._get_database(),
+        )
+
+        return master
+
+    def _create_related_data_cuts(self, master, num=1):
+        datacuts = []
+
+        for i in range(num):
+            datacut = factories.DataSetFactory.create(
+                published=True,
+                type=DataSetType.DATACUT,
+                name=f'Datacut {i}',
+                user_access_type='REQUIRES_AUTHENTICATION',
+            )
+            query = factories.CustomDatasetQueryFactory.create(
+                dataset=datacut,
+                database=self._get_database(),
+                query='SELECT * FROM test_dataset order by id desc limit 10',
+            )
+            factories.CustomDatasetQueryTableFactory.create(
+                query=query, schema='public', table='test_dataset'
+            )
+            datacuts.append(datacut)
+
+        return datacuts
+
+    def test_view_shows_all_related_data_cuts(self, staff_client):
+        master = self._create_master()
+        datacuts = self._create_related_data_cuts(master, num=5)
+
+        url = reverse('datasets:related_data', args=(master.id,))
+        response = staff_client.get(url)
+        body = response.content.decode(response.charset)
+        assert response.status_code == 200
+        assert len(response.context["related_data"]) == 5
+        assert all(datacut.name in body for datacut in datacuts)

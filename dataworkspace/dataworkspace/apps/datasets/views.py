@@ -57,6 +57,8 @@ from dataworkspace.apps.datasets.forms import (
     DatasetSearchForm,
     EligibilityCriteriaForm,
     RequestAccessForm,
+    RelatedMastersSortForm,
+    RelatedDataCutsSortForm,
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -557,6 +559,7 @@ class DatasetDetailView(DetailView):
                 'has_access': self.object.user_has_access(self.request.user),
                 'master_datasets_info': master_datasets_info,
                 'source_table_type': DataLinkType.SOURCE_TABLE,
+                'related_data': self.object.related_datasets(),
             }
         )
         return ctx
@@ -590,15 +593,6 @@ class DatasetDetailView(DetailView):
             for datacut_link in datacut_links
         ]
 
-        query_tables = []
-        for query in custom_queries:
-            query_tables.extend([qt.table for qt in query.tables.all()])
-
-        ds_tables = SourceTable.objects.filter(
-            dataset__published=True, table__in=query_tables,
-        ).prefetch_related('dataset')
-        related_masters = [ds_table.dataset for ds_table in ds_tables]
-
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
@@ -608,7 +602,7 @@ class DatasetDetailView(DetailView):
                     for source_link in self.object.sourcelink_set.all()
                 ),
                 'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY,
-                'related_masters': set(related_masters),
+                'related_data': self.object.related_datasets(),
             }
         )
         return ctx
@@ -1192,3 +1186,37 @@ class SourceTableColumnDetails(View):
                 "columns": columns,
             },
         )
+
+
+class RelatedDataView(View):
+    def get(self, request, dataset_uuid):
+        try:
+            dataset = DataSet.objects.get(id=dataset_uuid)
+        except DataSet.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if dataset.type == DataSetType.DATACUT:
+            form = RelatedMastersSortForm(request.GET)
+
+        elif dataset.type == DataSetType.MASTER:
+            form = RelatedDataCutsSortForm(request.GET)
+
+        else:
+            return HttpResponse(status=404)
+
+        if form.is_valid():
+            related_datasets = dataset.related_datasets(
+                order=form.cleaned_data.get('sort') or form.fields['sort'].initial
+            )
+
+            return render(
+                request,
+                'datasets/related_data.html',
+                context={
+                    "dataset": dataset,
+                    "related_data": related_datasets,
+                    'form': form,
+                },
+            )
+
+        return HttpResponse(status=500)
