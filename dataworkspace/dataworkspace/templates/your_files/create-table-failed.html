@@ -1,5 +1,5 @@
 {% extends 'your_files/create-table-base.html' %}
-{% block page_title %}Table creation failed{% endblock page_title %}
+{% block page_title %}Table creation failed - {{ block.super }}{% endblock page_title %}
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
