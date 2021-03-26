@@ -9,6 +9,7 @@ from elasticsearch import Elasticsearch, RequestsHttpConnection
 
 @dataclass
 class _TableMatchResult:
+    index: str
     schema: str
     table: str
     count: int
@@ -51,6 +52,10 @@ class ElasticsearchClient:
                 connection_class=RequestsHttpConnection,
             )
 
+    @property
+    def client(self):
+        return self._client
+
     def _batch_indexes(self, index_aliases, batch_size=100):
         lists_of_indexes = []
         for i, alias in enumerate(index_aliases, start=0):
@@ -62,27 +67,31 @@ class ElasticsearchClient:
 
         return lists_of_indexes
 
+    def search(self, phrase: str, index_aliases: List[str], from_: int, size: int):
+        return self._client.search(
+            body={
+                "query": {
+                    "simple_query_string": {
+                        "query": phrase,
+                        "fields": ["_all"],
+                        "flags": "FUZZY|PHRASE",
+                    }
+                },
+                "aggs": {"indexes": {"terms": {"field": "_index"}}},
+            },
+            index=','.join(index_aliases),
+            ignore_unavailable=True,
+            from_=from_,
+            size=size,
+        )
+
     def search_for_phrase(
         self, phrase: str, index_aliases: List[str]
     ) -> List[_TableMatchResult]:
         results = []
 
         for batch in self._batch_indexes(index_aliases):
-            resp = self._client.search(
-                body={
-                    "query": {
-                        "simple_query_string": {
-                            "query": phrase,
-                            "fields": ["_all"],
-                            "flags": "FUZZY|PHRASE",
-                        }
-                    },
-                    "aggs": {"indexes": {"terms": {"field": "_index"}}},
-                },
-                index=','.join(batch),
-                ignore_unavailable=True,
-                size=0,
-            )
+            resp = self.search(phrase, batch, 0, 0)
 
             if resp['hits']['total']['value'] > 0:
                 for r in resp["aggregations"]["indexes"]["buckets"]:
@@ -91,11 +100,20 @@ class ElasticsearchClient:
                     _, schema, table, _ = r['key'].split('--')
                     results.append(
                         _TableMatchResult(
-                            schema=schema, table=table, count=r["doc_count"]
+                            index=r['key'],
+                            schema=schema,
+                            table=table,
+                            count=r["doc_count"],
                         )
                     )
 
         return sorted(results, key=lambda x: -x.count)
+
+    def get_count(self, phrase, index_alias):
+        matches = self.search_for_phrase(phrase, [index_alias])
+        if matches:
+            return matches[0].count
+        return 0
 
 
 es_client = ElasticsearchClient()

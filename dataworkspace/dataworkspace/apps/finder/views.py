@@ -1,8 +1,7 @@
 import logging
-from urllib.parse import quote
 
 from django.conf import settings
-from django.db import connections
+from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -17,6 +16,7 @@ from dataworkspace.apps.finder.utils import (
     _enrich_and_suppress_matches,
     get_index_aliases_for_all_published_source_tables,
     log_query,
+    ResultsProxy,
 )
 
 
@@ -64,38 +64,35 @@ def find_datasets(request):
 
 @waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
 @require_GET
-def search_in_data_explorer(request, schema, table):
-    q = request.GET.get("q")
-
-    with connections[settings.DATASET_FINDER_DB_NAME].cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT attname AS column, atttypid::regtype AS datatype
-            FROM pg_attribute
-            WHERE attrelid = %s::regclass
-            AND attnum > 0
-            AND NOT attisdropped
-            AND atttypid::regtype IN ('text', 'text[]', 'json', 'character varying', 'character varying[]')
-            ORDER BY attnum;""",
-            [f'"{schema}"."{table}"'],
-        )
-
-        tsvector_fragments = []
-        for column, datatype in cursor.fetchall():
-            if datatype in ('text[]', 'character varying[]'):
-                tsvector_fragments.append(f"array_to_string(\"{column}\", ', ')")
-            elif datatype == "json":
-                tsvector_fragments.append(f'"{column}"::text')
-            else:
-                tsvector_fragments.append(f'"{column}"')
-
-    tsvector_fragment = ", ".join(tsvector_fragments)
-    phrase_fragment = " <-> ".join(q.split(" "))
-
-    condition = f"to_tsvector(concat_ws(',', {tsvector_fragment})) @@ to_tsquery('{phrase_fragment}')"
-
-    query = f"""SELECT *
-FROM "{schema}"."{table}"
-WHERE {condition}"""
-
-    return HttpResponseRedirect(f"{reverse('explorer:index')}?sql={quote(query)}")
+def show_results(request, schema, table):
+    search_term = request.GET.get("q")
+    index_alias = f"{schema}--{table}"
+    results_proxy = ResultsProxy(
+        es_client=es_client,
+        index_alias=index_alias,
+        phrase=search_term,
+        count=es_client.get_count(search_term, index_alias),
+    )
+    paginator = Paginator(
+        results_proxy, settings.DATASET_FINDER_SEARCH_RESULTS_PER_PAGE
+    )
+    results = paginator.get_page(request.GET.get("page"))
+    records = []
+    fields = []
+    if len(results) > 0 and "_source" in results[0]:
+        records = [result['_source'] for result in results]
+        fields = list(records[0].keys())
+    return render(
+        request,
+        'finder/results.html',
+        {
+            "request": request,
+            "schema": schema,
+            "table": table,
+            "search_term": search_term,
+            "fields": fields,
+            "records": records,
+            "results": results,
+            "backlink": f'{reverse("finder:find_datasets")}?q={search_term}',
+        },
+    )
