@@ -70,7 +70,13 @@ class ElasticsearchClient:
         for batch in self._batch_indexes(index_aliases):
             resp = self._client.search(
                 body={
-                    "query": {"match_phrase": {"_all": phrase}},
+                    "query": {
+                        "simple_query_string": {
+                            "query": phrase,
+                            "fields": ["_all"],
+                            "flags": "FUZZY|PHRASE",
+                        }
+                    },
                     "aggs": {"indexes": {"terms": {"field": "_index"}}},
                 },
                 index=','.join(batch),
