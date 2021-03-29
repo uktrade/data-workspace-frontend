@@ -1,0 +1,103 @@
+{% extends '_main.html' %}
+{% load static %}
+{% load datasets_tags %}
+
+{% block go_back %}
+  {% if backlink %}
+    <a href="{{ backlink }}" class="govuk-back-link">Back</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full" style="margin: 0 auto; float: unset">
+        <div class="govuk-form-group">
+        <h1 class="govuk-label-wrapper govuk-!-margin-top-5" style="text-align: left"><label class="govuk-label govuk-label--xl" for="q">
+            Dataset finder - results
+        </label>
+        </h1>
+        </div>
+    </div>
+</div>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <p class="govuk-body-l">
+        Showing results in "{{ schema }}"."{{ table }}" for "{{ search_term }}"
+      </p>
+      {% if records %}
+      <h2 class="govuk-body">
+        <span id="search-results-count">{{ results.paginator.count }}</span> search results
+      </h2>
+            <div class="scrollable-table {% if record_count <= fixed_table_height_limit %}fixed-table-height{% endif %}" tabindex="0">
+          <table class="govuk-table govuk-!-font-size-16">
+            <thead>
+              <tr class="govuk-table__row">
+              {% for field in fields %}
+                  <th class="govuk-table__header">
+                    {{ field }}
+                  </th>
+              {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+            {% for record in records %}
+              <tr class="govuk-table__row">
+                {% for key, value in record.items %}
+                    <td class="govuk-table__cell">
+                    {{ value }}
+                    </td>
+                {% endfor %}
+            </tr>
+            {% empty %}
+              <tr class="govuk-table__row">
+                <td colspan="{{ fields|length }}">
+                    No data available.
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <br/>
+      {% else %}
+        <p class="govuk-body">No data available</p>
+      {% endif %}
+    </div>
+</div>
+<p class="govuk-body" style="display: inline">
+    Showing results {{ results.start_index  }}&ndash;{{ results.end_index }} of {{ results.paginator.count }}
+</p>
+
+  {% if results.paginator.num_pages > 1 %}
+<nav role="navigation" class="govuk-body" aria-label="Search result page navigation" style="display: inline">
+  <ul class="pagination govuk-list">
+    {% if results.has_previous %}
+      <li><a class="govuk-link" href="{% url_replace page=results.previous_page_number %}" aria-label="Previous page">Previous</a></li>
+    {% endif %}
+
+    {% if results.number > 3 %}
+      <li><a class="govuk-link" href="{% url_replace page=1 %}" aria-label="Page 1">{{ 1 }}</a></li>
+      {% if results.number > 4 %}<li>&hellip;</li>{% endif %}
+    {% endif %}
+
+    {% for i in results.paginator.page_range %}
+      {% if results.number == i %}
+        <li class="active">{{ i }}</li>
+      {% elif i >= results.number|add:'-2' and i <= results.number|add:'2' %}
+        <li><a class="govuk-link" href="{% url_replace page=i %}" aria-label="Page {{ i }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+
+    {% if results.paginator.num_pages > results.number|add:'2' %}
+      {% if results.paginator.num_pages > results.number|add:'3' %}<li>&hellip;</li>{% endif %}
+      <li><a class="govuk-link" href="{% url_replace page=results.paginator.num_pages %}" aria-label="Page {{ results.paginator.num_pages }}">{{ results.paginator.num_pages }}</a></li>
+    {% endif %}
+
+    {% if results.has_next %}
+      <li><a class="govuk-link" href="{% url_replace page=results.next_page_number %}" aria-label="Next page">Next</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}
+

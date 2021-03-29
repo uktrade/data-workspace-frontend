@@ -59,7 +59,9 @@
               <span class="govuk-hint govuk-!-margin-bottom-0">{{ table.name }}</span>
 
               {% if table.has_access %}
-              <a class="govuk-link" href="{% url 'finder:search_in_data_explorer' schema=table.schema table=table.table %}?q={{ search_term }}" target="_blank">Open in Data Explorer</a>
+              <a class="govuk-link" href="{% url 'finder:show_results' schema=table.schema table=table.table %}?q={{ search_term }}">
+                Show results<span class="govuk-visually-hidden"> for {{table.schema }}.{{ table.table }}</span>
+              </a>
               {% endif %}
             </p>
             {% endfor %}

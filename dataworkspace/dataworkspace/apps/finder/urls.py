@@ -6,8 +6,8 @@ from dataworkspace.apps.finder import views
 urlpatterns = [
     path('', login_required(views.find_datasets), name='find_datasets'),
     path(
-        "search-in-data-explorer/<str:schema>/<str:table>",
-        login_required(views.search_in_data_explorer),
-        name='search_in_data_explorer',
+        "show-results/<str:schema>/<str:table>",
+        login_required(views.show_results),
+        name='show_results',
     ),
 ]

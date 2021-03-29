@@ -134,3 +134,32 @@ def get_index_aliases_for_all_published_source_tables():
 
 def log_query(user, query):
     return DatasetFinderQueryLog.objects.create(user=user, query=query)
+
+
+class ResultsProxy:
+    """
+    A proxy object for returning Elasticsearch results that is able to be
+    passed to a Paginator.
+    """
+
+    def __init__(self, es_client, index_alias, phrase, count):
+        super(ResultsProxy, self).__init__()
+        self._client = es_client
+        self.index_alias = index_alias
+        self.phrase = phrase
+        self.count = count
+
+    def __len__(self):
+        return self.count
+
+    def __getitem__(self, item):
+        assert isinstance(item, slice)
+
+        resp = self._client.search(
+            phrase=self.phrase,
+            index_aliases=[self.index_alias],
+            from_=item.start,
+            size=item.stop - item.start,
+        )
+
+        return resp['hits']['hits']

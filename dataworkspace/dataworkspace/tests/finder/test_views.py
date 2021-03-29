@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from waffle.testutils import override_flag
 
-from django.test import Client
+from django.test import Client, override_settings
 from dataworkspace.apps.finder.models import DatasetFinderQueryLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -96,17 +96,144 @@ def test_find_datasets_with_results(client, mocker, dataset_finder_db):
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
-def test_search_in_data_explorer(client, mocker, dataset_finder_db):
-    master_dataset = factories.MasterDataSetFactory()
-    factories.SourceTableFactory(dataset=master_dataset, schema='public', table='data')
+def test_get_results_for_index(client, mocker, dataset_finder_db):
+    dataset_search = mocker.patch('elasticsearch.Elasticsearch.search')
+    dataset_search.side_effect = [
+        {
+            'took': 11,
+            'timed_out': False,
+            '_shards': {'total': 45, 'successful': 45, 'skipped': 0, 'failed': 0},
+            'hits': {
+                'total': {'value': 1260, 'relation': 'eq'},
+                'max_score': None,
+                'hits': [],
+            },
+            'aggregations': {
+                'indexes': {
+                    'doc_count_error_upper_bound': 0,
+                    'sum_other_doc_count': 0,
+                    'buckets': [
+                        {'key': '20210316t070000--public--data--1', 'doc_count': 3},
+                    ],
+                }
+            },
+        },
+        {
+            'took': 11,
+            'timed_out': False,
+            '_shards': {'total': 1, 'successful': 1, 'skipped': 0, 'failed': 0},
+            'hits': {
+                'total': {'value': 3, 'relation': 'eq'},
+                'max_score': None,
+                'hits': [
+                    {
+                        "_index": "20210316t070000--public--data--1",
+                        "_type": "_doc",
+                        "_id": "1",
+                        "_score": 1.0,
+                        "_source": {
+                            "country": "Albania",
+                            "date": "2020-01-13",
+                            "driving": 0.0,
+                        },
+                    },
+                    {
+                        "_index": "20210316t070000--public--data--1",
+                        "_type": "_doc",
+                        "_id": "1",
+                        "_score": 1.0,
+                        "_source": {
+                            "country": "Albania",
+                            "date": "2020-01-14",
+                            "driving": 1.5,
+                        },
+                    },
+                    {
+                        "_index": "20210316t070000--public--data--1",
+                        "_type": "_doc",
+                        "_id": "1",
+                        "_score": 1.0,
+                        "_source": {
+                            "country": "Albania",
+                            "date": "2020-01-15",
+                            "driving": 6.7,
+                        },
+                    },
+                ],
+            },
+        },
+    ]
 
     response = client.get(
-        reverse(
-            'finder:search_in_data_explorer',
-            kwargs={'schema': 'public', 'table': 'data'},
-        ),
-        {"q": "search"},
+        reverse('finder:show_results', kwargs={'schema': 'public', 'table': 'data'}),
+        {"q": "albania"},
     )
 
-    assert response.status_code == 302
-    assert reverse('explorer:index') in response['Location']
+    assert response.status_code == 200
+    assert len(response.context["records"]) == 3
+    assert len(response.context["fields"]) == 3
+    assert response.context["fields"] == ["country", "date", "driving"]
+    assert response.context["records"] == [
+        {"country": "Albania", "date": "2020-01-13", "driving": 0.0},
+        {"country": "Albania", "date": "2020-01-14", "driving": 1.5},
+        {"country": "Albania", "date": "2020-01-15", "driving": 6.7},
+    ]
+    assert response.context["results"].paginator.num_pages == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
+@override_settings(DATASET_FINDER_SEARCH_RESULTS_PER_PAGE=1)
+def test_paging_get_results_for_index(client, mocker, dataset_finder_db):
+    dataset_search = mocker.patch('elasticsearch.Elasticsearch.search')
+    dataset_search.side_effect = [
+        {
+            'took': 11,
+            'timed_out': False,
+            '_shards': {'total': 45, 'successful': 45, 'skipped': 0, 'failed': 0},
+            'hits': {
+                'total': {'value': 1260, 'relation': 'eq'},
+                'max_score': None,
+                'hits': [],
+            },
+            'aggregations': {
+                'indexes': {
+                    'doc_count_error_upper_bound': 0,
+                    'sum_other_doc_count': 0,
+                    'buckets': [
+                        {'key': '20210316t070000--public--data--1', 'doc_count': 3},
+                    ],
+                }
+            },
+        },
+        {
+            'took': 11,
+            'timed_out': False,
+            '_shards': {'total': 1, 'successful': 1, 'skipped': 0, 'failed': 0},
+            'hits': {
+                'total': {'value': 3, 'relation': 'eq'},
+                'max_score': None,
+                'hits': [
+                    {
+                        "_index": "20210316t070000--public--data--1",
+                        "_type": "_doc",
+                        "_id": "1",
+                        "_score": 1.0,
+                        "_source": {
+                            "country": "Albania",
+                            "date": "2020-01-13",
+                            "driving": 0.0,
+                        },
+                    },
+                ],
+            },
+        },
+    ]
+
+    response = client.get(
+        reverse('finder:show_results', kwargs={'schema': 'public', 'table': 'data'}),
+        {"q": "albania"},
+    )
+
+    assert response.status_code == 200
+    assert response.context["results"].paginator.num_pages == 3
