@@ -338,9 +338,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         .annotate(purpose=models.F('type'))
         .annotate(
             source_tags=ArrayAgg(
-                'tags__name',
-                filter=models.Q(tags__type=TagType.SOURCE.value),
-                distinct=True,
+                'tags__name', filter=models.Q(tags__type=TagType.SOURCE), distinct=True,
             )
         )
         .values(*fields)
@@ -349,11 +347,11 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             .annotate(personal_data=_static_char(None))
             .annotate(retention_policy=_static_char(None))
             .annotate(eligibility_criteria=_static_char(None))
-            .annotate(purpose=_static_int(DataSetType.REFERENCE.value))
+            .annotate(purpose=_static_int(DataSetType.REFERENCE))
             .annotate(
                 source_tags=ArrayAgg(
                     'tags__name',
-                    filter=models.Q(tags__type=TagType.SOURCE.value),
+                    filter=models.Q(tags__type=TagType.SOURCE),
                     distinct=True,
                 )
             )
@@ -361,11 +359,11 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .union(
             VisualisationCatalogueItem.objects.live()
-            .annotate(purpose=_static_int(DataSetType.VISUALISATION.value))
+            .annotate(purpose=_static_int(DataSetType.VISUALISATION))
             .annotate(
                 source_tags=ArrayAgg(
                     'tags__name',
-                    filter=models.Q(tags__type=TagType.SOURCE.value),
+                    filter=models.Q(tags__type=TagType.SOURCE),
                     distinct=True,
                 )
             )

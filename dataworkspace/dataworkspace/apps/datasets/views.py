@@ -57,6 +57,8 @@ from dataworkspace.apps.datasets.forms import (
     DatasetSearchForm,
     EligibilityCriteriaForm,
     RequestAccessForm,
+    RelatedMastersSortForm,
+    RelatedDataCutsSortForm,
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -73,7 +75,8 @@ from dataworkspace.apps.datasets.utils import (
     find_dataset,
     find_visualisation,
     find_dataset_or_visualisation,
-    get_code_snippets,
+    get_code_snippets_for_table,
+    get_code_snippets_for_query,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -103,7 +106,7 @@ def get_datasets_data_for_user_matching_query(
 
     if user:
         if is_reference_query:
-            reference_type = DataSetType.REFERENCE.value
+            reference_type = DataSetType.REFERENCE
             reference_perm = dataset_type_to_manage_unpublished_permission_codename(
                 reference_type
             )
@@ -113,8 +116,8 @@ def get_datasets_data_for_user_matching_query(
 
         if datasets.model is DataSet:
             master_type, datacut_type = (
-                DataSetType.MASTER.value,
-                DataSetType.DATACUT.value,
+                DataSetType.MASTER,
+                DataSetType.DATACUT,
             )
             master_perm = dataset_type_to_manage_unpublished_permission_codename(
                 master_type
@@ -173,31 +176,31 @@ def get_datasets_data_for_user_matching_query(
     # Pull in the source tag IDs for the dataset
     datasets = datasets.annotate(
         source_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+            'tags', filter=Q(tags__type=TagType.SOURCE), distinct=True
         )
     )
     datasets = datasets.annotate(
         source_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+            'tags__name', filter=Q(tags__type=TagType.SOURCE), distinct=True
         )
     )
 
     # Pull in the topic tag IDs for the dataset
     datasets = datasets.annotate(
         topic_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+            'tags', filter=Q(tags__type=TagType.TOPIC), distinct=True
         )
     )
     datasets = datasets.annotate(
         topic_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+            'tags__name', filter=Q(tags__type=TagType.TOPIC), distinct=True
         )
     )
 
     # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
         datasets = datasets.annotate(
-            purpose=Value(DataSetType.REFERENCE.value, IntegerField())
+            purpose=Value(DataSetType.REFERENCE, IntegerField())
         )
     else:
         datasets = datasets.annotate(purpose=F('type'))
@@ -253,7 +256,7 @@ def get_visualisations_data_for_user_matching_query(
         user
         and user.has_perm(
             dataset_type_to_manage_unpublished_permission_codename(
-                DataSetType.VISUALISATION.value
+                DataSetType.VISUALISATION
             )
         )
     ):
@@ -298,32 +301,32 @@ def get_visualisations_data_for_user_matching_query(
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
         source_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+            'tags', filter=Q(tags__type=TagType.SOURCE), distinct=True
         )
     )
 
     visualisations = visualisations.annotate(
         source_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.SOURCE.value), distinct=True
+            'tags__name', filter=Q(tags__type=TagType.SOURCE), distinct=True
         )
     )
 
     # Pull in the topic tag IDs for the dataset
     visualisations = visualisations.annotate(
         topic_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+            'tags', filter=Q(tags__type=TagType.TOPIC), distinct=True
         )
     )
 
     visualisations = visualisations.annotate(
         topic_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.TOPIC.value), distinct=True
+            'tags__name', filter=Q(tags__type=TagType.TOPIC), distinct=True
         )
     )
 
     # Define a `purpose` column denoting the dataset type
     visualisations = visualisations.annotate(
-        purpose=Value(DataSetType.VISUALISATION.value, IntegerField())
+        purpose=Value(DataSetType.VISUALISATION, IntegerField())
     )
 
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
@@ -540,7 +543,7 @@ class DatasetDetailView(DetailView):
         master_datasets_info = [
             MasterDatasetInfo(
                 source_table=source_table,
-                code_snippets=get_code_snippets(source_table),
+                code_snippets=get_code_snippets_for_table(source_table),
                 columns=datasets_db.get_columns(
                     source_table.database.memorable_name,
                     schema=source_table.schema,
@@ -555,68 +558,51 @@ class DatasetDetailView(DetailView):
             {
                 'has_access': self.object.user_has_access(self.request.user),
                 'master_datasets_info': master_datasets_info,
-                'source_table_type': DataLinkType.SOURCE_TABLE.value,
+                'source_table_type': DataLinkType.SOURCE_TABLE,
+                'related_data': self.object.related_datasets(),
             }
         )
         return ctx
 
     def _get_context_data_for_datacut_dataset(self, ctx, **kwargs):
-        source_views = self.object.sourceview_set.all()
         custom_queries = self.object.customdatasetquery_set.all().prefetch_related(
             'tables'
         )
-        if source_views:
-            columns = datasets_db.get_columns(
-                source_views[0].database.memorable_name,
-                schema=source_views[0].schema,
-                table=source_views[0].view,
-            )
-        elif custom_queries:
-            columns = datasets_db.get_columns(
-                custom_queries[0].database.memorable_name, query=custom_queries[0].query
-            )
-        else:
-            columns = None
-
-        datacuts = sorted(
+        datacut_links = sorted(
             chain(
                 self.object.sourcetable_set.all(),
                 self.object.sourcelink_set.all(),
-                source_views,
                 custom_queries,
             ),
             key=lambda x: x.name,
         )
 
-        DatacutLinkInfo = namedtuple('DatacutLinkInfo', ('datacut', 'can_show_link'))
+        DatacutLinkInfo = namedtuple(
+            'DatacutLinkInfo', ('datacut_link', 'can_show_link', 'code_snippets')
+        )
         datacut_links_info = [
             DatacutLinkInfo(
-                datacut=datacut,
-                can_show_link=datacut.can_show_link_for_user(self.request.user),
+                datacut_link=datacut_link,
+                can_show_link=datacut_link.can_show_link_for_user(self.request.user),
+                code_snippets=(
+                    get_code_snippets_for_query(datacut_link.query)
+                    if hasattr(datacut_link, 'query')
+                    else None
+                ),
             )
-            for datacut in datacuts
+            for datacut_link in datacut_links
         ]
-
-        query_tables = []
-        for query in custom_queries:
-            query_tables.extend([qt.table for qt in query.tables.all()])
-
-        ds_tables = SourceTable.objects.filter(
-            dataset__published=True, table__in=query_tables,
-        ).prefetch_related('dataset')
-        related_masters = [ds_table.dataset for ds_table in ds_tables]
 
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
                 'datacut_links_info': datacut_links_info,
-                'fields': columns,
                 'data_hosted_externally': any(
                     not source_link.url.startswith('s3://')
                     for source_link in self.object.sourcelink_set.all()
                 ),
-                'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY.value,
-                'related_masters': set(related_masters),
+                'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY,
+                'related_data': self.object.related_datasets(),
             }
         )
         return ctx
@@ -657,10 +643,10 @@ class DatasetDetailView(DetailView):
         elif self._is_visualisation():
             return self._get_context_data_for_visualisation(ctx, **kwargs)
 
-        elif self.object.type == DataSetType.MASTER.value:
+        elif self.object.type == DataSetType.MASTER:
             return self._get_context_data_for_master_dataset(ctx, **kwargs)
 
-        elif self.object.type == DataSetType.DATACUT.value:
+        elif self.object.type == DataSetType.DATACUT:
             return self._get_context_data_for_datacut_dataset(ctx, **kwargs)
 
         breakpoint()
@@ -672,9 +658,9 @@ class DatasetDetailView(DetailView):
     def get_template_names(self):
         if self._is_reference_dataset():
             return ['datasets/referencedataset_detail.html']
-        elif self.object.type == DataSet.TYPE_MASTER_DATASET:
+        elif self.object.type == DataSetType.MASTER:
             return ['datasets/master_dataset.html']
-        elif self.object.type == DataSet.TYPE_DATA_CUT:
+        elif self.object.type == DataSetType.DATACUT:
             return ['datasets/data_cut_dataset.html']
         elif self._is_visualisation():
             return ['datasets/visualisation_catalogue_item.html']
@@ -1178,9 +1164,7 @@ class CustomDatasetQueryPreviewView(DatasetPreviewView):
 class SourceTableColumnDetails(View):
     def get(self, request, dataset_uuid, table_uuid):
         try:
-            dataset = DataSet.objects.get(
-                id=dataset_uuid, type=DataSetType.MASTER.value
-            )
+            dataset = DataSet.objects.get(id=dataset_uuid, type=DataSetType.MASTER)
             source_table = SourceTable.objects.get(
                 id=table_uuid, dataset__id=dataset_uuid
             )
@@ -1202,3 +1186,37 @@ class SourceTableColumnDetails(View):
                 "columns": columns,
             },
         )
+
+
+class RelatedDataView(View):
+    def get(self, request, dataset_uuid):
+        try:
+            dataset = DataSet.objects.get(id=dataset_uuid)
+        except DataSet.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if dataset.type == DataSetType.DATACUT:
+            form = RelatedMastersSortForm(request.GET)
+
+        elif dataset.type == DataSetType.MASTER:
+            form = RelatedDataCutsSortForm(request.GET)
+
+        else:
+            return HttpResponse(status=404)
+
+        if form.is_valid():
+            related_datasets = dataset.related_datasets(
+                order=form.cleaned_data.get('sort') or form.fields['sort'].initial
+            )
+
+            return render(
+                request,
+                'datasets/related_data.html',
+                context={
+                    "dataset": dataset,
+                    "related_data": related_datasets,
+                    'form': form,
+                },
+            )
+
+        return HttpResponse(status=500)

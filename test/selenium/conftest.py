@@ -78,7 +78,7 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
                 slug="{dataset_name}",
                 published=True,
                 reference_code=reference_code,
-                type=DataSetType.MASTER.value,
+                type=DataSetType.MASTER,
                 user_access_type="{user_access_type}"
             ),
         )

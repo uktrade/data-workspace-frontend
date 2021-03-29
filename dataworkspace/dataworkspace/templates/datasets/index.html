@@ -38,7 +38,7 @@
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
-    <h1 class="govuk-heading-xl">Welcome to Data Workspace</h1>
+    <h1 class="govuk-heading-xl">Search Data Workspace</h1>
     <p class="govuk-body-l">
       Data Workspace is where DIT staff and partners can access, analyse and securely share data and data visualisations relevant to DIT.
     </p>
@@ -51,7 +51,7 @@
       <div class="search-field govuk-!-margin-bottom-9">
         <label class="govuk-label search-field__label" for="search">Enter your search term(s)</label>
         <div class="search-field-wrapper">
-          <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="">
+          <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="search-summary-accessible-hint-wrapper">
           <div class="search-field-submit-wrapper search-field__item">
             <input class="search-field__submit" type="submit" value="Search">
           </div>
@@ -177,7 +177,6 @@
         <li><a class="govuk-link" href="{% url 'request_data:index' %}?tag=data-request">ask for us to add the dataset</a></li>
       </ul>
     </div>
-
   </div>
 </div>
 </form>

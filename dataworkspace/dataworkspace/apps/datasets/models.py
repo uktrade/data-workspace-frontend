@@ -1,8 +1,10 @@
 import copy
+import operator
 import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from functools import reduce
 
 from typing import Optional, List
 
@@ -109,19 +111,12 @@ class DataGrouping(DeletableTimestampedUserModel):
 
 
 class Tag(TimeStampedModel):
-    TYPE_SOURCE = TagType.SOURCE.value
-    TYPE_TOPIC = TagType.TOPIC.value
-    _TYPE_CHOICES = (
-        (TYPE_SOURCE, 'Source'),
-        (TYPE_TOPIC, 'Topic'),
-    )
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    type = models.IntegerField(choices=_TYPE_CHOICES, default=TYPE_SOURCE)
+    type = models.IntegerField(choices=TagType.choices, default=TagType.SOURCE)
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        return f'{dict(self._TYPE_CHOICES)[self.type]}: {self.name}'
+        return f'{dict(TagType.choices).get(self.type)}: {self.name}'
 
 
 class DatasetReferenceCode(TimeStampedModel):
@@ -148,14 +143,15 @@ class DatasetReferenceCode(TimeStampedModel):
 
 
 class DataSet(DeletableTimestampedUserModel):
-    TYPE_MASTER_DATASET = DataSetType.MASTER.value
-    TYPE_DATA_CUT = DataSetType.DATACUT.value
-    _DATASET_TYPE_CHOICES = (
-        (TYPE_MASTER_DATASET, 'Master Dataset'),
-        (TYPE_DATA_CUT, 'Data Cut'),
-    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    type = models.IntegerField(choices=_DATASET_TYPE_CHOICES, default=TYPE_DATA_CUT)
+    type = models.IntegerField(
+        choices=[
+            # pylint: disable=maybe-no-member
+            (t, t.label)
+            for t in [DataSetType.MASTER, DataSetType.DATACUT]
+        ],
+        default=DataSetType.DATACUT,
+    )
     name = models.CharField(blank=False, null=False, max_length=128)
     slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
     short_description = models.CharField(blank=False, null=False, max_length=256)
@@ -241,6 +237,55 @@ class DataSet(DeletableTimestampedUserModel):
             ]
         return related
 
+    def related_datasets(self, order=None):
+        if self.type == DataSetType.DATACUT:
+            custom_queries = self.customdatasetquery_set.all().prefetch_related(
+                'tables'
+            )
+
+            query_tables = []
+            for query in custom_queries:
+                query_tables.extend([qt.table for qt in query.tables.all()])
+
+            ds_tables = [
+                row.dataset
+                for row in SourceTable.objects.filter(
+                    dataset__published=True,
+                    dataset__deleted=False,
+                    table__in=query_tables,
+                )
+                .prefetch_related('dataset')
+                .only('dataset')
+                .distinct('dataset')
+                .order_by('dataset', order or 'dataset__name')
+            ]
+
+            return ds_tables
+
+        elif self.type == DataSetType.MASTER:
+            tables = self.sourcetable_set.all()
+
+            if len(tables) > 0:
+                filters = reduce(
+                    operator.or_,
+                    (Q(schema=table.schema, table=table.table) for table in tables),
+                )
+            else:
+                filters = Q()
+
+            datacuts = [
+                row.query.dataset
+                for row in CustomDatasetQueryTable.objects.filter(filters)
+                .only('query__dataset')
+                .distinct('query__dataset')
+                .order_by('query__dataset', order or 'query__dataset__name')
+            ]
+
+            return datacuts
+
+        else:
+            raise ValueError(f"Not implemented for {self.type}")
+
     def update_published_timestamp(self):
         if not self.published:
             return
@@ -283,7 +328,7 @@ class DataSet(DeletableTimestampedUserModel):
         return clone
 
     def get_admin_edit_url(self):
-        if self.type == self.TYPE_MASTER_DATASET:
+        if self.type == DataSetType.MASTER:
             return reverse('admin:datasets_masterdataset_change', args=(self.id,))
         return reverse('admin:datasets_datacutdataset_change', args=(self.id,))
 
@@ -315,7 +360,7 @@ class DataSetApplicationTemplatePermission(models.Model):
 
 class MasterDatasetManager(DeletableQuerySet):
     def get_queryset(self):
-        return super().get_queryset().filter(type=DataSet.TYPE_MASTER_DATASET)
+        return super().get_queryset().filter(type=DataSetType.MASTER)
 
 
 class MasterDataset(DataSet):
@@ -347,7 +392,7 @@ class MasterDatasetUserPermission(DataSetUserPermission):
 
 class DataCutDatasetManager(DeletableQuerySet):
     def get_queryset(self):
-        return super().get_queryset().filter(type=DataSet.TYPE_DATA_CUT)
+        return super().get_queryset().filter(type=DataSetType.DATACUT)
 
 
 class DataCutDataset(DataSet):
@@ -468,6 +513,15 @@ class SourceTable(BaseSource):
         blank=False,
         validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
+    dataset_finder_opted_in = models.BooleanField(
+        default=False,
+        null=False,
+        verbose_name="IAM/IAO opt-in for Dataset Finder",
+        help_text=(
+            "Should this dataset be discoverable through Dataset Finder for all users, "
+            "even if they haven’t been explicitly granted access?"
+        ),
+    )
 
     class Meta:
         db_table = 'app_sourcetable'
@@ -480,7 +534,7 @@ class SourceTable(BaseSource):
 
     @property
     def type(self):
-        return DataLinkType.SOURCE_TABLE.value
+        return DataLinkType.SOURCE_TABLE
 
     def get_data_last_updated_date(self):
         return get_tables_last_updated_date(
@@ -505,7 +559,7 @@ class SourceView(BaseSource):
 
     @property
     def type(self):
-        return DataLinkType.SOURCE_VIEW.value
+        return DataLinkType.SOURCE_VIEW
 
 
 class SourceLink(ReferenceNumberedDatasetSource):
@@ -588,7 +642,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
 
     @property
     def type(self):
-        return DataLinkType.SOURCE_LINK.value
+        return DataLinkType.SOURCE_LINK
 
     def get_data_last_updated_date(self):
         if self.link_type == self.TYPE_LOCAL:
@@ -641,7 +695,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     @property
     def type(self):
-        return DataLinkType.CUSTOM_QUERY.value
+        return DataLinkType.CUSTOM_QUERY
 
     def get_data_last_updated_date(self):
         tables = CustomDatasetQueryTable.objects.filter(query=self)
@@ -753,7 +807,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
-    type = DataSetType.REFERENCE.value
+    type = DataSetType.REFERENCE
 
     class Meta:
         db_table = 'app_referencedataset'
@@ -1701,7 +1755,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
-    type = DataSetType.VISUALISATION.value
+    type = DataSetType.VISUALISATION
 
     class Meta:
         permissions = [

@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from typing import List, Optional
+
 from django.conf import settings
 
+from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 from elasticsearch import Elasticsearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
-
-import boto3
 
 
 @dataclass
@@ -13,6 +12,7 @@ class _TableMatchResult:
     schema: str
     table: str
     count: int
+    has_access: bool = False
     name: Optional[str] = None
 
 
@@ -32,13 +32,10 @@ class ElasticsearchClient:
         else:
             region = settings.DATASET_FINDER_AWS_REGION
 
-            credentials = boto3.Session().get_credentials()
-            self._aws_auth = AWS4Auth(
-                credentials.access_key,
-                credentials.secret_key,
-                region,
-                'es',
-                session_token=credentials.token,
+            self._aws_auth = BotoAWSRequestsAuth(
+                aws_host=settings.DATASET_FINDER_ES_HOST,
+                aws_region=region,
+                aws_service='es',
             )
             self._client = Elasticsearch(
                 hosts=[
@@ -54,25 +51,49 @@ class ElasticsearchClient:
                 connection_class=RequestsHttpConnection,
             )
 
-    def find_tables_containing_term(self, term: str) -> List[_TableMatchResult]:
-        resp = self._client.search(
-            body={
-                "query": {"match_phrase": {"_all": term}},
-                "aggs": {"indexes": {"terms": {"field": "_index"}}},
-            },
-            size=0,
-        )
+    def _batch_indexes(self, index_aliases, batch_size=100):
+        lists_of_indexes = []
+        for i, alias in enumerate(index_aliases, start=0):
+            if i % batch_size == 0:
+                lists_of_indexes.append([])
+                i += 1
 
+            lists_of_indexes[-1].append(alias)
+
+        return lists_of_indexes
+
+    def search_for_phrase(
+        self, phrase: str, index_aliases: List[str]
+    ) -> List[_TableMatchResult]:
         results = []
 
-        if resp['hits']['total']['value'] > 0:
-            for r in resp["aggregations"]["indexes"]["buckets"]:
-                # The Elasticsearch index names have a structured format:
-                # {timestamp}--{schema}--{table}--{arbitrary_number}
-                _, schema, table, _ = r['key'].split('--')
-                results.append(
-                    _TableMatchResult(schema=schema, table=table, count=r["doc_count"])
-                )
+        for batch in self._batch_indexes(index_aliases):
+            resp = self._client.search(
+                body={
+                    "query": {
+                        "simple_query_string": {
+                            "query": phrase,
+                            "fields": ["_all"],
+                            "flags": "FUZZY|PHRASE",
+                        }
+                    },
+                    "aggs": {"indexes": {"terms": {"field": "_index"}}},
+                },
+                index=','.join(batch),
+                ignore_unavailable=True,
+                size=0,
+            )
+
+            if resp['hits']['total']['value'] > 0:
+                for r in resp["aggregations"]["indexes"]["buckets"]:
+                    # The Elasticsearch index names have a structured format:
+                    # {timestamp}--{schema}--{table}--{arbitrary_number}
+                    _, schema, table, _ = r['key'].split('--')
+                    results.append(
+                        _TableMatchResult(
+                            schema=schema, table=table, count=r["doc_count"]
+                        )
+                    )
 
         return sorted(results, key=lambda x: -x.count)
 

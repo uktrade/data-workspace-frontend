@@ -13,6 +13,8 @@ pre code {
   display: block;
   padding: 20px;
   overflow-x: auto;
+  overflow-y: scroll;
+  max-height: 345px;
   background-color: #f3f2f1 !important;
   margin-bottom: -1em;
   font-size: 19px;

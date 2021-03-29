@@ -11,9 +11,7 @@ def _migrate(apps, model_name):
 
     for dataset in Dataset.objects.all():
         for source_tag in dataset.source_tags.all():
-            t, _ = Tag.objects.get_or_create(
-                name=source_tag.name, type=TagType.SOURCE.value
-            )
+            t, _ = Tag.objects.get_or_create(name=source_tag.name, type=TagType.SOURCE)
             dataset.tags.add(t)
 
 

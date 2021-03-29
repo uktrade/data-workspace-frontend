@@ -49,6 +49,10 @@
     position: relative;
 }
 
+.ace_editor.ace_autocomplete {
+    width: 500px!important;
+}
+
 .list {
     -webkit-padding-start: 0px;
     list-style: none;

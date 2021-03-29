@@ -1,6 +1,6 @@
 {% extends '_main.html' %}
 
-{% block page_title %}Create table{% endblock page_title %}
+{% block page_title %}Create table - {{ block.super }}{% endblock page_title %}
 
 {% block go_back %}
   <a href="{% url 'your_files:files' %}" class="govuk-back-link">Back</a>

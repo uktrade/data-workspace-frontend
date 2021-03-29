@@ -5,10 +5,10 @@ import pytz
 import pytest
 
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import DataSet
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
-    get_code_snippets,
+    get_code_snippets_for_query,
+    get_code_snippets_for_table,
     update_quicksight_visualisations_last_updated_date,
 )
 from dataworkspace.tests.factories import (
@@ -24,28 +24,33 @@ def test_dataset_type_to_manage_unpublished_permission_codename():
         == 'datasets.manage_unpublished_reference_datasets'
     )
     assert (
-        dataset_type_to_manage_unpublished_permission_codename(DataSet.TYPE_DATA_CUT)
+        dataset_type_to_manage_unpublished_permission_codename(DataSetType.DATACUT)
         == 'datasets.manage_unpublished_datacut_datasets'
     )
     assert (
-        dataset_type_to_manage_unpublished_permission_codename(
-            DataSet.TYPE_MASTER_DATASET
-        )
+        dataset_type_to_manage_unpublished_permission_codename(DataSetType.MASTER)
         == 'datasets.manage_unpublished_master_datasets'
     )
 
 
 @pytest.mark.django_db
-def test_get_code_snippets(metadata_db):
-    ds = DataSetFactory.create(type=DataSetType.MASTER.value)
+def test_get_code_snippets_for_table(metadata_db):
+    ds = DataSetFactory.create(type=DataSetType.MASTER)
     sourcetable = SourceTableFactory.create(
         dataset=ds, schema="public", table="MY_LOVELY_TABLE"
     )
 
-    snippets = get_code_snippets(sourcetable)
+    snippets = get_code_snippets_for_table(sourcetable)
     assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['python']
     assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['r']
     assert snippets['sql'] == """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50"""
+
+
+def test_get_code_snippets_for_query(metadata_db):
+    snippets = get_code_snippets_for_query('SELECT * FROM foo')
+    assert 'SELECT * FROM foo' in snippets['python']
+    assert 'SELECT * FROM foo' in snippets['r']
+    assert snippets['sql'] == 'SELECT * FROM foo'
 
 
 class TestUpdateQuickSightVisualisationsLastUpdatedDate:
@@ -108,7 +113,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         update_quicksight_visualisations_last_updated_date()
 
         assert mock_get_tables_last_updated_date.call_args_list == [
-            call('test_datasets', (('public', 'bar'),))
+            call('my_database', (('public', 'bar'),))
         ]
 
         visualisation_link.refresh_from_db()
@@ -230,8 +235,8 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
         update_quicksight_visualisations_last_updated_date()
         assert mock_get_tables_last_updated_date.call_args_list == [
-            call('test_datasets', (('public', 'bar'),)),
-            call('test_datasets', (('public', 'baz'),)),
+            call('my_database', (('public', 'bar'),)),
+            call('my_database', (('public', 'baz'),)),
         ]
         visualisation_link.refresh_from_db()
         # data_source_last_updated should be set to the most recent table last_updated_date

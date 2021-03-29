@@ -27,7 +27,7 @@ class TestGitlabHasDeveloperAccess:
             published=False, visualisation_template__gitlab_project_id=1
         )
         perm_codename = dataset_type_to_manage_unpublished_permission_codename(
-            DataSetType.VISUALISATION.value
+            DataSetType.VISUALISATION
         )
         assert user.has_perm(perm_codename) is False
 

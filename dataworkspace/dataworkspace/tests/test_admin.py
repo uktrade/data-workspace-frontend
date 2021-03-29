@@ -24,6 +24,7 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     CustomDatasetQuery,
 )
+from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
 
@@ -2846,14 +2847,12 @@ class TestDatasetAdminPytest:
             (
                 "manage_unpublished_master_datasets",
                 'admin:datasets_masterdataset_change',
-                partial(factories.DataSetFactory.create, type=DataSetType.MASTER.value),
+                partial(factories.DataSetFactory.create, type=DataSetType.MASTER),
             ),
             (
                 "manage_unpublished_datacut_datasets",
                 'admin:datasets_datacutdataset_change',
-                partial(
-                    factories.DataSetFactory.create, type=DataSetType.DATACUT.value
-                ),
+                partial(factories.DataSetFactory.create, type=DataSetType.DATACUT),
             ),
             (
                 "manage_unpublished_reference_datasets",
@@ -2895,7 +2894,7 @@ class TestDatasetAdminPytest:
     @pytest.mark.django_db
     def test_manage_master_dataset_permission_allows_editing_unpublished_datasets(self):
         dataset = factories.DataSetFactory.create(
-            published=False, name='original', type=DataSet.TYPE_MASTER_DATASET
+            published=False, name='original', type=DataSetType.MASTER
         )
         user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename='manage_unpublished_master_datasets')
@@ -2933,7 +2932,7 @@ class TestDatasetAdminPytest:
         self,
     ):
         dataset = factories.DataSetFactory.create(
-            published=False, name='original', type=DataSet.TYPE_DATA_CUT
+            published=False, name='original', type=DataSetType.DATACUT
         )
         user = get_user_model().objects.create(is_staff=True)
         perm = Permission.objects.get(codename='manage_unpublished_datacut_datasets')
@@ -3092,7 +3091,7 @@ class TestDatasetAdminPytest:
         self, mock_sync, staff_client
     ):
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='AUTHENTICATION'
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
         )
         source_table = factories.SourceTableFactory(
             name='my-source', table='my_table', dataset=dataset,
@@ -3135,9 +3134,11 @@ class TestDatasetAdminPytest:
     def test_master_dataset_authorized_user_changes_calls_sync_job_and_clears_explorer_cache(
         self, mock_clear_cache, mock_sync, staff_client
     ):
-        user = factories.UserFactory()
+        user_1 = factories.UserFactory()
+        user_2 = factories.UserFactory()
+
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='AUTHORIZATION'
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
         )
         source_table = factories.SourceTableFactory(
             name='my-source', table='my_table', dataset=dataset,
@@ -3156,6 +3157,114 @@ class TestDatasetAdminPytest:
                 'description': 'test description',
                 'type': dataset.type,
                 'requires_authorization': 'on',
+                'authorized_users': [str(user_1.id), str(user_2.id)],
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '1',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-id': source_table.id,
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': source_table.name,
+                'sourcetable_set-0-database': str(source_table.database.id),
+                'sourcetable_set-0-schema': source_table.schema,
+                'sourcetable_set-0-frequency': source_table.frequency,
+                'sourcetable_set-0-table': source_table.table,
+            },
+            follow=True,
+        )
+
+        _, mock_sync_kwargs = mock_sync.delay.call_args_list[0]
+        mock_clear_cache_args = [args[0] for args, _ in mock_clear_cache.call_args_list]
+
+        assert response.status_code == 200
+        assert sorted(mock_sync_kwargs['user_sso_ids_to_update']) == sorted(
+            [str(user_1.profile.sso_id), str(user_2.profile.sso_id)]
+        )
+        assert sorted([u.id for u in mock_clear_cache_args]) == sorted(
+            [user_1.id, user_2.id]
+        )
+
+    @mock.patch(
+        "dataworkspace.apps.explorer.connections.connections",
+        {'test_external_db': 'test_external_db'},
+    )
+    @pytest.mark.django_db
+    def test_dataset_access_type_change_invalidates_all_user_cached_credentials(
+        self, staff_client
+    ):
+        user = factories.UserFactory()
+
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+        )
+        source_table = factories.SourceTableFactory(
+            name='my-source', table='my_table', dataset=dataset,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        original_connection = get_user_explorer_connection_settings(
+            user, 'test_external_db'
+        )
+
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '1',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-id': source_table.id,
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': source_table.name,
+                'sourcetable_set-0-database': str(source_table.database.id),
+                'sourcetable_set-0-schema': source_table.schema,
+                'sourcetable_set-0-frequency': source_table.frequency,
+                'sourcetable_set-0-table': source_table.table,
+            },
+            follow=True,
+        )
+
+        new_connection = get_user_explorer_connection_settings(user, 'test_external_db')
+
+        assert response.status_code == 200
+        assert original_connection != new_connection
+
+    @mock.patch(
+        "dataworkspace.apps.datasets.admin.remove_data_explorer_user_cached_credentials"
+    )
+    @pytest.mark.django_db
+    def test_master_dataset_permission_changes_clears_authorized_users_cached_credentials(
+        self, mock_remove_cached_credentials, staff_client
+    ):
+        user = factories.UserFactory()
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+        )
+        source_table = factories.SourceTableFactory(
+            name='my-source', table='my_table', dataset=dataset,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
                 'authorized_users': str(user.id),
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '1',
@@ -3173,7 +3282,6 @@ class TestDatasetAdminPytest:
         )
 
         assert response.status_code == 200
-        assert mock_sync.delay.call_args_list == [
-            mock.call(user_sso_ids_to_update=(str(user.profile.sso_id),))
-        ]
-        assert mock_clear_cache.call_args_list == [mock.call(user)]
+        # As the user has just been authorized to access the dataset, their cached
+        # data explorer credentials should be cleared
+        assert mock_remove_cached_credentials.call_args_list == [mock.call(user)]

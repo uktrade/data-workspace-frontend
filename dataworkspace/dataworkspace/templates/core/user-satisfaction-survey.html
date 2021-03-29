@@ -2,7 +2,7 @@
 
 {% load waffle_tags %}
 
-{% block page_title %}Leave feedback{% endblock page_title %}
+{% block page_title %}Leave feedback - {{ block.super }}{% endblock page_title %}
 {% block go_back %}
     {% if 'success' not in request.GET %}
         <a href="{{ referer }}" class="govuk-back-link">Back</a>

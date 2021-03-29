@@ -25,6 +25,7 @@ from django.views.generic.edit import CreateView, DeleteView, FormView
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.apps.explorer.constants import QueryLogState
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm, ShareQueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
@@ -553,15 +554,15 @@ class QueryLogResultView(View):
                 QueryLog, pk=querylog_id, run_by_user=self.request.user
             )
         except Http404:
-            state = QueryLog.STATE_FAILED
+            state = QueryLogState.FAILED
             error = 'Error fetching results. Please try running your query again.'
         else:
             state = query_log.state
             error = query_log.error
-            if query_log.state == QueryLog.STATE_RUNNING:
+            if query_log.state == QueryLogState.RUNNING:
                 template = loader.get_template('explorer/partials/query_executing.html')
                 html = template.render({}, request)
-            elif query_log.state == QueryLog.STATE_COMPLETE:
+            elif query_log.state == QueryLogState.COMPLETE:
                 template = loader.get_template('explorer/partials/query_results.html')
                 headers, data, _ = fetch_query_results(querylog_id)
                 context = {

@@ -40,7 +40,7 @@ def find_visualisation(visualisation_uuid, user):
 
     if user.has_perm(
         dataset_type_to_manage_unpublished_permission_codename(
-            DataSetType.VISUALISATION.value
+            DataSetType.VISUALISATION
         )
     ):
         return visualisation
@@ -60,34 +60,51 @@ def find_dataset_or_visualisation(model_id, user):
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
     return {
-        DataSetType.REFERENCE.value: 'datasets.manage_unpublished_reference_datasets',
-        DataSetType.MASTER.value: 'datasets.manage_unpublished_master_datasets',
-        DataSetType.DATACUT.value: 'datasets.manage_unpublished_datacut_datasets',
-        DataSetType.VISUALISATION.value: 'datasets.manage_unpublished_visualisations',
+        DataSetType.REFERENCE: 'datasets.manage_unpublished_reference_datasets',
+        DataSetType.MASTER: 'datasets.manage_unpublished_master_datasets',
+        DataSetType.DATACUT: 'datasets.manage_unpublished_datacut_datasets',
+        DataSetType.VISUALISATION: 'datasets.manage_unpublished_visualisations',
     }[dataset_type]
 
 
-def get_sql_snippet(schema, table_name, limit=50):
-    return f"""SELECT * FROM "{schema}"."{table_name}" LIMIT {limit}"""
-
-
-def get_code_snippets(source_table):
+def get_code_snippets_for_table(source_table):
     if not hasattr(source_table, 'schema') or not hasattr(source_table, 'table'):
-        return {}
+        return {'python': '', 'r': '', 'sql': ''}
+    query = get_sql_snippet(source_table.schema, source_table.table, 50)
+    return {
+        "python": get_python_snippet(query),
+        "r": get_r_snippet(query),
+        "sql": query,
+    }
 
-    schema, table_name = source_table.schema, source_table.table
-    python_snippet = f"""import os
+
+def get_code_snippets_for_query(query):
+    return {
+        "python": get_python_snippet(query),
+        "r": get_r_snippet(query),
+        "sql": query,
+    }
+
+
+def get_sql_snippet(schema, table_name, limit=50):
+    return f'SELECT * FROM "{schema}"."{table_name}" LIMIT {limit}'
+
+
+def get_python_snippet(query):
+    return f"""import os
 import pandas
 import psycopg2
 import sqlalchemy
 
 conn = psycopg2.connect(os.environ['DATABASE_DSN__datasets_1'])
 engine = sqlalchemy.create_engine('postgresql://', creator=lambda: conn, execution_options={{"stream_results": True}})
-chunks = pandas.read_sql('SELECT * FROM "{schema}"."{table_name}" LIMIT 50', engine, chunksize=10000)
+chunks = pandas.read_sql('{query}', engine, chunksize=10000)
 for chunk in chunks:
     display(chunk)"""
 
-    r_snippet = f"""library(stringr)
+
+def get_r_snippet(query):
+    return f"""library(stringr)
 library(DBI)
 getConn <- function(dsn) {{
     user <- str_match(dsn, "user=([a-z0-9_]+)")[2]
@@ -100,17 +117,11 @@ getConn <- function(dsn) {{
 }}
 conn <- getConn(Sys.getenv('DATABASE_DSN__datasets_1'))
 
-res <- dbSendQuery(conn, 'SELECT * FROM "{schema}"."{table_name}" LIMIT 50')
+res <- dbSendQuery(conn, '{query}')
 while (!dbHasCompleted(res)) {{
     chunk <- dbFetch(res, n = 50)
     print(chunk)
 }}"""
-
-    return {
-        "python": python_snippet,
-        "r": r_snippet,
-        "sql": get_sql_snippet(schema, table_name),
-    }
 
 
 @celery_app.task()
@@ -141,10 +152,8 @@ def update_quicksight_visualisations_last_updated_date():
     """
 
     def get_last_updated_date_by_table_name(schema, table):
-        for _, database_data in settings.DATABASES_DATA.items():
-            date = get_tables_last_updated_date(
-                database_data['NAME'], ((schema, table),)
-            )
+        for connection_alias, _ in settings.DATABASES_DATA.items():
+            date = get_tables_last_updated_date(connection_alias, ((schema, table),))
             if date:
                 return date
         return None

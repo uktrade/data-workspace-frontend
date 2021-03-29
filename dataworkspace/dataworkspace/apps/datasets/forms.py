@@ -3,7 +3,7 @@ from functools import partial
 
 from django import forms
 
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from .models import Tag
 from ...forms import (
     GOVUKDesignSystemForm,
@@ -131,10 +131,10 @@ class DatasetSearchForm(forms.Form):
 
     use = forms.TypedMultipleChoiceField(
         choices=[
-            (DataSetType.DATACUT.value, 'Download'),
-            (DataSetType.MASTER.value, 'Analyse in tools'),
-            (DataSetType.REFERENCE.value, 'Use as reference data'),
-            (DataSetType.VISUALISATION.value, 'View data visualisation'),
+            (DataSetType.DATACUT, 'Download'),
+            (DataSetType.MASTER, 'Analyse in tools'),
+            (DataSetType.REFERENCE, 'Use as reference data'),
+            (DataSetType.VISUALISATION, 'View data visualisation'),
         ],
         coerce=int,
         required=False,
@@ -142,7 +142,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     source = SourceTagField(
-        queryset=Tag.objects.order_by('name').filter(type=Tag.TYPE_SOURCE),
+        queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
         required=False,
         widget=FilterWidget(
             "Source",
@@ -153,7 +153,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     topic = SourceTagField(
-        queryset=Tag.objects.order_by('name').filter(type=Tag.TYPE_TOPIC),
+        queryset=Tag.objects.order_by('name').filter(type=TagType.TOPIC),
         required=False,
         widget=FilterWidget(
             "Topics", limit_initial_options=10, show_more_label="Show more topics",
@@ -259,3 +259,29 @@ class DatasetSearchForm(forms.Form):
             for topic_id, topic_text in topic_choices
             if topic_id in selected_topic_ids or counts['topic'][topic_id] != 0
         ]
+
+
+class RelatedMastersSortForm(forms.Form):
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('dataset__name', 'A to Z'),
+            ('-dataset__name', 'Z to A'),
+            ('-dataset__published_at', 'Recently published'),
+        ],
+        initial="dataset__name",
+        widget=SortSelectWidget(label='Sort by'),
+    )
+
+
+class RelatedDataCutsSortForm(forms.Form):
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('query__dataset__name', 'A to Z'),
+            ('-query__dataset__name', 'Z to A'),
+            ('-query__dataset__published_at', 'Recently published'),
+        ],
+        initial="query__dataset__name",
+        widget=SortSelectWidget(label='Sort by'),
+    )

@@ -9,10 +9,10 @@ from dataworkspace.apps.datasets.models import (
 )
 
 _PURPOSES = {
-    DataSetType.DATACUT.value: 'Data cut',
-    DataSetType.MASTER.value: 'Master dataset',
-    DataSetType.REFERENCE.value: 'Reference data',
-    DataSetType.VISUALISATION.value: 'Visualisation',
+    DataSetType.DATACUT: 'Data cut',
+    DataSetType.MASTER: 'Master dataset',
+    DataSetType.REFERENCE: 'Reference data',
+    DataSetType.VISUALISATION: 'Visualisation',
 }
 
 
@@ -62,7 +62,7 @@ class CatalogueItemSerializer(serializers.Serializer):
         return instance
 
     def get_source_tables(self, instance):
-        if instance['purpose'] == DataSetType.MASTER.value:
+        if instance['purpose'] == DataSetType.MASTER:
             return SourceTableSerializer(
                 SourceTable.objects.filter(dataset_id=instance['id']), many=True
             ).data

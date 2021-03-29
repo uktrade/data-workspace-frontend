@@ -4,6 +4,7 @@ CREATE ROLE rds_pgaudit;
 
 CREATE DATABASE dataworkspace;
 CREATE DATABASE datasets;
+CREATE DATABASE airflow;
 
 CREATE DATABASE testdb1;
 CREATE DATABASE testdb2;
@@ -14,14 +15,6 @@ INSERT INTO test_dataset(id, data)
 SELECT i, concat('test data ', i::text)
 FROM generate_series(1, 20000) AS t(i);
 CREATE SCHEMA dataflow;
-CREATE TABLE dataflow.metadata
-(
-    id SERIAL NOT NULL CONSTRAINT metadata_pkey PRIMARY KEY,
-    table_schema TEXT NOT NULL,
-    table_name TEXT NOT NULL,
-    source_data_modified_utc TIMESTAMP,
-    dataflow_swapped_tables_utc TIMESTAMP NOT NULL
-);
 
 \c testdb1;
 CREATE TABLE dataset_1 (id int primary key, data text);

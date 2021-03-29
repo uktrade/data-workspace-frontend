@@ -1,6 +1,6 @@
 {% extends '_main.html' %}
 
-{% block page_title %}Table already exists{% endblock page_title %}
+{% block page_title %}Table already exists - {{ block.super }}{% endblock page_title %}
 
 {% block go_back %}
   <a href="{% url 'your_files:create-table-confirm-name' %}?path={{ request.GET.path }}&table_name={{ form.table_name.value }}" class="govuk-back-link">Back</a>

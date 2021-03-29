@@ -126,7 +126,7 @@ def gitlab_has_developer_access(user, gitlab_project_id):
 def _ensure_user_has_manage_unpublish_perm(user):
     # Update the django permission controlling whether the user can preview unpublished visualisation catalogue pages.
     perm_codename = dataset_type_to_manage_unpublished_permission_codename(
-        DataSetType.VISUALISATION.value
+        DataSetType.VISUALISATION
     )
     app_label, codename = perm_codename.split('.')
     perm = Permission.objects.get(content_type__app_label=app_label, codename=codename)
