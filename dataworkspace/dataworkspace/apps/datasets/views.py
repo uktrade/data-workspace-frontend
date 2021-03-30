@@ -42,6 +42,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.generic import DetailView, View
+from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
@@ -636,6 +637,7 @@ class DatasetDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
         ctx['model'] = self.object
+        ctx['DATA_CUT_ENHANCED_PREVIEW_FLAG'] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
@@ -648,8 +650,6 @@ class DatasetDetailView(DetailView):
 
         elif self.object.type == DataSetType.DATACUT:
             return self._get_context_data_for_datacut_dataset(ctx, **kwargs)
-
-        breakpoint()
 
         raise ValueError(
             f"Unknown dataset/type for {self.__class__.__name__}: {self.object}"
@@ -1155,7 +1155,7 @@ class CustomDatasetQueryPreviewView(DatasetPreviewView):
             raise PermissionDenied()
 
         database_name = query_object.database.memorable_name
-        columns = datasets_db.get_columns(database_name, query=query_object.query,)
+        columns = datasets_db.get_columns(database_name, query=query_object.query)
         preview_query = query_object.query
 
         return query_object, columns, preview_query
@@ -1220,3 +1220,41 @@ class RelatedDataView(View):
             )
 
         return HttpResponse(status=500)
+
+
+class DataCutPreviewView(WaffleFlagMixin, DetailView):
+    waffle_flag = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
+    template_name = 'datasets/data_cut_preview.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self.get_object().dataset.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            self.kwargs['model_class'], pk=self.kwargs['object_id']
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        model = self.get_object()
+        ctx.update(
+            {
+                'can_download': model.can_show_link_for_user(self.request.user),
+                'truncate_limit': 100,
+                'fixed_table_height_limit': 10,
+            }
+        )
+        if model.user_can_preview(self.request.user):
+            columns, records = model.get_preview_data()
+            ctx.update(
+                {
+                    'columns': columns,
+                    'records': records,
+                    'preview_limit': min(
+                        [len(records), settings.REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS]
+                    ),
+                }
+            )
+        return ctx

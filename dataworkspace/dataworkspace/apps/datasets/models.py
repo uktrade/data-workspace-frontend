@@ -34,6 +34,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.text import slugify
 from django.utils import timezone
 
+from dataworkspace import datasets_db
 from dataworkspace.apps.core.models import (
     TimeStampedModel,
     DeletableTimestampedUserModel,
@@ -629,6 +630,11 @@ class SourceLink(ReferenceNumberedDatasetSource):
             'datasets:dataset_source_link_download', args=(self.dataset.id, self.id)
         )
 
+    def get_preview_url(self):
+        return reverse(
+            'datasets:data_cut_source_link_preview', args=(self.dataset.id, self.id)
+        )
+
     def can_show_link_for_user(self, user):
         return True
 
@@ -654,6 +660,13 @@ class SourceLink(ReferenceNumberedDatasetSource):
             except ClientError:
                 pass
         return None
+
+    def user_can_preview(self, user):
+        return self.dataset.user_has_access(user)
+
+    def get_preview_data(self):
+        # Preview data to be added in a later PR
+        return None, []
 
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):
@@ -687,6 +700,11 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
             'datasets:dataset_query_download', args=(self.dataset.id, self.id)
         )
 
+    def get_preview_url(self):
+        return reverse(
+            'datasets:data_cut_query_preview', args=(self.dataset.id, self.id)
+        )
+
     def can_show_link_for_user(self, user):
         if user.is_superuser:
             return True
@@ -705,6 +723,31 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
                 tuple((table.schema, table.table) for table in tables),
             )
         return None
+
+    def user_can_preview(self, user):
+        return self.dataset.user_has_access(user) and (
+            self.reviewed or user.is_superuser
+        )
+
+    def get_preview_data(self):
+        from dataworkspace.apps.core.utils import (  # pylint: disable=import-outside-toplevel
+            get_random_data_sample,
+        )
+
+        database_name = self.database.memorable_name
+        columns = datasets_db.get_columns(database_name, query=self.query)
+        records = []
+        sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
+        if columns:
+            rows = get_random_data_sample(
+                self.database.memorable_name, sql.SQL(self.query), sample_size,
+            )
+            for row in rows:
+                record_data = {}
+                for i, column in enumerate(columns):
+                    record_data[column] = row[i]
+                records.append(record_data)
+        return columns, records
 
 
 class CustomDatasetQueryTable(models.Model):
