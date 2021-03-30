@@ -70,8 +70,8 @@ resource "aws_ecr_repository" "mirrors_sync_cran_binary" {
   name = "${var.prefix}-mirrors-sync-cran-binary"
 }
 
-resource "aws_ecr_repository" "superset_multiuser" {
-  name = "${var.prefix}-superset-multiuser"
+resource "aws_ecr_repository" "superset" {
+  name = "${var.prefix}-superset"
 }
 
 resource "aws_vpc_endpoint" "ecr_dkr" {
@@ -243,7 +243,7 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
       "${aws_ecr_repository.gitlab.arn}",
       "${aws_ecr_repository.mirrors_sync.arn}",
       "${aws_ecr_repository.mirrors_sync_cran_binary.arn}",
-      "${aws_ecr_repository.superset_multiuser.arn}",
+      "${aws_ecr_repository.superset.arn}",
     ]
   }
 

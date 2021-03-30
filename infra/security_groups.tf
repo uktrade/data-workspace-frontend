@@ -124,11 +124,11 @@ resource "aws_security_group_rule" "registry_alb_ingress_https_from_notebooks" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "registry_alb_ingress_https_from_superset_multiuser_service" {
+resource "aws_security_group_rule" "registry_alb_ingress_https_from_superset_service" {
   description = "ingress-https-from-superset"
 
   security_group_id = "${aws_security_group.registry_alb.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.superset_service.id}"
 
   type        = "ingress"
   from_port   = "443"
@@ -317,7 +317,7 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_superset_lb" {
   description = "egress-http-to-gitlab-service"
 
   security_group_id = "${aws_security_group.admin_service.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
+  source_security_group_id = "${aws_security_group.superset_lb.id}"
 
   type        = "egress"
   from_port   = "443"
@@ -709,11 +709,11 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_mirrors_sync" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "ecr_api_ingress_https_from_superset_multiuser" {
-  description = "ingress-https-from-superset-multiuser"
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_superset" {
+  description = "ingress-https-from-superset"
 
   security_group_id = "${aws_security_group.ecr_api.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  source_security_group_id = "${aws_security_group.superset_service.id}"
 
   type        = "ingress"
   from_port   = "443"
@@ -1235,13 +1235,13 @@ resource "aws_security_group_rule" "gitlab_runner_egress_https" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group" "superset_multiuser_db" {
-  name        = "${var.prefix}-superset-multiuser-db"
-  description = "${var.prefix}-superset-multiuser-db"
+resource "aws_security_group" "superset_db" {
+  name        = "${var.prefix}-superset-db"
+  description = "${var.prefix}-superset-db"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
   tags = {
-    Name = "${var.prefix}-superset-multiuser-db"
+    Name = "${var.prefix}-superset-db"
   }
 
   lifecycle {
@@ -1251,10 +1251,10 @@ resource "aws_security_group" "superset_multiuser_db" {
 
 # Connections to ECR and CloudWatch. ECR needs S3, and its VPC endpoint type
 # does not have an IP range or security group to limit access to
-resource "aws_security_group_rule" "superset_multiuser_egress_https_all" {
+resource "aws_security_group_rule" "superset_egress_https_all" {
   description = "egress-https-to-all"
 
-  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  security_group_id = "${aws_security_group.superset_service.id}"
   cidr_blocks = ["0.0.0.0/0"]
 
   type        = "egress"
@@ -1263,11 +1263,11 @@ resource "aws_security_group_rule" "superset_multiuser_egress_https_all" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "superset_multiuser_db_ingress_postgres_superset_service" {
+resource "aws_security_group_rule" "superset_db_ingress_postgres_superset_service" {
   description = "ingress-postgress-superset-service"
 
-  security_group_id = "${aws_security_group.superset_multiuser_db.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  security_group_id = "${aws_security_group.superset_db.id}"
+  source_security_group_id = "${aws_security_group.superset_service.id}"
 
   type        = "ingress"
   from_port   = "5432"
@@ -1275,13 +1275,13 @@ resource "aws_security_group_rule" "superset_multiuser_db_ingress_postgres_super
   protocol    = "tcp"
 }
 
-resource "aws_security_group" "superset_multiuser_service" {
-  name        = "${var.prefix}-superset-multiuser-service"
-  description = "${var.prefix}-superset-multiuser-service"
+resource "aws_security_group" "superset_service" {
+  name        = "${var.prefix}-superset-service"
+  description = "${var.prefix}-superset-service"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
   tags = {
-    Name = "${var.prefix}-superset-multiuser-service"
+    Name = "${var.prefix}-superset-service"
   }
 
   lifecycle {
@@ -1292,8 +1292,8 @@ resource "aws_security_group" "superset_multiuser_service" {
 resource "aws_security_group_rule" "superset_service_ingress_http_superset_lb" {
   description = "ingress-superset-lb"
 
-  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
+  security_group_id = "${aws_security_group.superset_service.id}"
+  source_security_group_id = "${aws_security_group.superset_lb.id}"
 
   type        = "ingress"
   from_port   = "8000"
@@ -1304,8 +1304,8 @@ resource "aws_security_group_rule" "superset_service_ingress_http_superset_lb" {
 resource "aws_security_group_rule" "superset_service_egress_postgres_superset_db" {
   description = "egress-postgress-superset-db"
 
-  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_db.id}"
+  security_group_id = "${aws_security_group.superset_service.id}"
+  source_security_group_id = "${aws_security_group.superset_db.id}"
 
   type        = "egress"
   from_port   = "5432"
@@ -1313,10 +1313,10 @@ resource "aws_security_group_rule" "superset_service_egress_postgres_superset_db
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "superset_multiuser_service_egress_https_to_ecr_api" {
+resource "aws_security_group_rule" "superset_service_egress_https_to_ecr_api" {
   description = "egress-https-to-ecr-api"
 
-  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  security_group_id = "${aws_security_group.superset_service.id}"
   source_security_group_id = "${aws_security_group.ecr_api.id}"
 
   type        = "egress"
@@ -1325,10 +1325,10 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_https_to_e
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "superset_multiuser_service_egress_https_registry_alb" {
+resource "aws_security_group_rule" "superset_service_egress_https_registry_alb" {
   description = "egress-https-to-registry"
 
-  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  security_group_id = "${aws_security_group.superset_service.id}"
   source_security_group_id = "${aws_security_group.registry_alb.id}"
 
   type        = "egress"
@@ -1337,10 +1337,10 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_https_regi
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "superset_multiuser_service_egress_https_to_cloudwatch" {
+resource "aws_security_group_rule" "superset_service_egress_https_to_cloudwatch" {
   description = "egress-https-to-cloudwatch"
 
-  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  security_group_id = "${aws_security_group.superset_service.id}"
   source_security_group_id = "${aws_security_group.cloudwatch.id}"
 
   type        = "egress"
@@ -1349,10 +1349,10 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_https_to_c
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to_dns_rewrite_proxy" {
+resource "aws_security_group_rule" "superset_service_egress_dns_udp_to_dns_rewrite_proxy" {
   description = "egress-dns-to-dns-rewrite-proxy"
 
-  security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  security_group_id = "${aws_security_group.superset_service.id}"
   cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
@@ -1361,13 +1361,13 @@ resource "aws_security_group_rule" "superset_multiuser_service_egress_dns_udp_to
   protocol    = "udp"
 }
 
-resource "aws_security_group" "superset_multiuser_lb" {
-  name        = "${var.prefix}-superset-multiuser-lb"
-  description = "${var.prefix}-superset-multiuser-lb"
+resource "aws_security_group" "superset_lb" {
+  name        = "${var.prefix}-superset-lb"
+  description = "${var.prefix}-superset-lb"
   vpc_id      = "${aws_vpc.notebooks.id}"
 
   tags = {
-    Name = "${var.prefix}-superset-multiuser-lb"
+    Name = "${var.prefix}-superset-lb"
   }
 
   lifecycle {
@@ -1378,7 +1378,7 @@ resource "aws_security_group" "superset_multiuser_lb" {
 resource "aws_security_group_rule" "superset_lb_ingress_http_admin_service" {
   description = "ingress-http-admin-service"
 
-  security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
+  security_group_id = "${aws_security_group.superset_lb.id}"
   source_security_group_id = "${aws_security_group.admin_service.id}"
 
   type        = "ingress"
@@ -1390,8 +1390,8 @@ resource "aws_security_group_rule" "superset_lb_ingress_http_admin_service" {
 resource "aws_security_group_rule" "superset_lb_egress_http_superset_service" {
   description = "egress-http-superset-service"
 
-  security_group_id = "${aws_security_group.superset_multiuser_lb.id}"
-  source_security_group_id = "${aws_security_group.superset_multiuser_service.id}"
+  security_group_id = "${aws_security_group.superset_lb.id}"
+  source_security_group_id = "${aws_security_group.superset_service.id}"
 
   type        = "egress"
   from_port   = "8000"

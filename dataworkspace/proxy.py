@@ -214,7 +214,11 @@ async def async_main():
         )
 
     def is_superset_requested(request):
-        return request.url.host == f'superset.{root_domain_no_port}'
+        return (
+            request.url.host == f'superset.{root_domain_no_port}'
+            or request.url.host == f'superset-edit.{root_domain_no_port}'
+            or request.url.host == f'superset-admin.{root_domain_no_port}'
+        )
 
     def is_data_explorer_requested(request):
         return (
@@ -336,14 +340,12 @@ async def async_main():
         except Exception as exception:  # pylint: disable=broad-except
             user_exception = isinstance(exception, UserException)
             if not user_exception or (user_exception and exception.args[1] == 500):
-                pass
-
-            logger.exception(
-                'Exception during %s %s %s',
-                downstream_request.method,
-                downstream_request.url,
-                type(exception),
-            )
+                logger.exception(
+                    'Exception during %s %s %s',
+                    downstream_request.method,
+                    downstream_request.url,
+                    type(exception),
+                )
 
             if is_websocket:
                 raise
