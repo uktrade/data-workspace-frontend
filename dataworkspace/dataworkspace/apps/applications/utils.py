@@ -1201,7 +1201,7 @@ def _do_sync_activity_stream_sso_users():
 
             user_id = obj['dit:StaffSSO:User:userId']
             emails = obj['dit:emailAddress']
-            primary_email = emails[0]
+            primary_email = obj['dit:StaffSSO:User:contactEmailAddress'] or emails[0]
 
             try:
                 create_user_from_sso(
