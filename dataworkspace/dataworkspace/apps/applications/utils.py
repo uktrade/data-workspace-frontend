@@ -1043,7 +1043,7 @@ def create_user_from_sso(
         user = User.objects.get(profile__sso_id=sso_id)
     except User.DoesNotExist:
         user, _ = User.objects.get_or_create(
-            email__in=other_emails,
+            email__in=[primary_email] + other_emails,
             defaults={'email': primary_email, 'username': primary_email},
         )
 
