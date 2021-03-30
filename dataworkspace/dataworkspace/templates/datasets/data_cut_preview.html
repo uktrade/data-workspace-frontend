@@ -1,0 +1,78 @@
+{% extends '_main.html' %}
+{% load static core_tags %}
+
+{% block page_title %}Preview {{ object.name }} - {{ block.super }}{% endblock %}
+
+{% block go_back %}
+  <a class="govuk-back-link" href="{{ object.dataset.get_absolute_url }}">
+    Back
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l govuk-!-margin-bottom-2">{{ object.name }}</span>
+      <h1 class="govuk-heading-l">Preview</h1>
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      {% if columns %}
+        <p class="govuk-body">
+          Showing <strong>{{ records|length }}</strong> record{{ records|length|pluralize }}.
+        </p>
+        <div class="scrollable-table {% if records|length <= fixed_table_height_limit %}fixed-table-height{% endif %}" tabindex="0">
+          <table class="govuk-table govuk-!-font-size-16">
+            <thead>
+              <tr class="govuk-table__row">
+              {% for column in columns %}
+                  <th class="govuk-table__header">{{ column }}</th>
+              {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+            {% for record in records %}
+              <tr class="govuk-table__row">
+                {% for column in columns %}
+                  {% with record|get_key:column as value %}
+                    <td class="govuk-table__cell">
+                      {{ value|not_set_if_none|truncatechars:truncate_limit }}
+                    </td>
+                  {% endwith %}
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr class="govuk-table__row">
+                <td colspan="{{ columns|length }}">
+                  This dataset doesn't have any data yet.
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <br/>
+      {% else %}
+        <p class="govuk-body">No preview available</p>
+      {% endif %}
+      {% if can_download %}
+        <a class="govuk-button" href="{{ object.get_absolute_url }}">
+          Download as CSV
+        </a>
+        <br />
+      {% endif %}
+      <a class="govuk-link govuk-link--no-visited-state" href="{{ object.dataset.get_absolute_url }}">
+        Cancel
+      </a>
+    </div>
+  </div>
+  {% if object.dataset.enquiries_contact %}
+    <div class="govuk-grid-row govuk-!-margin-top-9">
+      <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-l">Contact</h2>
+        {% include 'partials/contact.html' with model=object.dataset.enquiries_contact as_section=False only %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
