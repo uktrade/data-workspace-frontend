@@ -70,6 +70,7 @@ class ElasticsearchClient:
     def search(self, phrase: str, index_aliases: List[str], from_: int, size: int):
         return self._client.search(
             body={
+                "sort": [{"_id": {"order": "asc"}}],
                 "query": {
                     "simple_query_string": {
                         "query": phrase,
