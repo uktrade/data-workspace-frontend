@@ -214,7 +214,11 @@ async def async_main():
         )
 
     def is_superset_requested(request):
-        return request.url.host == f'superset.{root_domain_no_port}'
+        return (
+            request.url.host == f'superset.{root_domain_no_port}'
+            or request.url.host == f'superset-edit.{root_domain_no_port}'
+            or request.url.host == f'superset-admin.{root_domain_no_port}'
+        )
 
     def is_data_explorer_requested(request):
         return (

@@ -26,10 +26,7 @@ RUN \
         python3-dev \
         python3-pip
 
-# Needed for S3 sync, even though we're not using it
-RUN \
-    addgroup --system --gid 4356 superset && \
-    adduser --disabled-password --gecos '' --ingroup superset --uid 4357 superset
+RUN adduser --disabled-password --gecos '' superset
 
 COPY requirements.txt /
 
@@ -43,5 +40,7 @@ ENV \
 
 COPY superset_config.py /etc/superset/
 COPY start.sh /
+
+USER superset
 
 CMD ["/start.sh"]

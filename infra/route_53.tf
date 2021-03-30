@@ -158,15 +158,15 @@ resource "aws_route53_record" "gitlab" {
   }
 }
 
-resource "aws_route53_record" "superset_multiuser_internal" {
+resource "aws_route53_record" "superset_internal" {
   provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "${var.superset_internal_domain}"
   type    = "A"
 
   alias {
-    name                   = "${aws_lb.superset_multiuser.dns_name}"
-    zone_id                = "${aws_lb.superset_multiuser.zone_id}"
+    name                   = "${aws_lb.superset.dns_name}"
+    zone_id                = "${aws_lb.superset.zone_id}"
     evaluate_target_health = false
   }
 
@@ -175,8 +175,8 @@ resource "aws_route53_record" "superset_multiuser_internal" {
   }
 }
 
-resource "aws_acm_certificate" "superset_multiuser_internal" {
-  domain_name       = "${aws_route53_record.superset_multiuser_internal.name}"
+resource "aws_acm_certificate" "superset_internal" {
+  domain_name       = "${aws_route53_record.superset_internal.name}"
   validation_method = "DNS"
 
   lifecycle {
@@ -184,8 +184,8 @@ resource "aws_acm_certificate" "superset_multiuser_internal" {
   }
 }
 
-resource "aws_acm_certificate_validation" "superset_multiuser_internal" {
-  certificate_arn = "${aws_acm_certificate.superset_multiuser_internal.arn}"
+resource "aws_acm_certificate_validation" "superset_internal" {
+  certificate_arn = "${aws_acm_certificate.superset_internal.arn}"
 }
 
 # resource "aws_route53_record" "jupyterhub" {

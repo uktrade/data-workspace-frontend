@@ -116,9 +116,8 @@ variable gitlab_sso_id {}
 variable gitlab_sso_secret {}
 variable gitlab_sso_domain {}
 
-variable superset_multiuser_admin_users {}
-variable superset_multiuser_db_instance_class {}
-variable superset_multiuser_container_image {}
+variable superset_admin_users {}
+variable superset_db_instance_class {}
 variable superset_internal_domain {}
 
 variable datasets_rds_cluster_backup_retention_period {}
@@ -212,6 +211,6 @@ locals {
   prometheus_container_memory     = 512
   prometheus_container_cpu        = 256
 
-  superset_multiuser_container_memory = 8192
-  superset_multiuser_container_cpu    = 1024
+  superset_container_memory = 8192
+  superset_container_cpu    = 1024
 }
