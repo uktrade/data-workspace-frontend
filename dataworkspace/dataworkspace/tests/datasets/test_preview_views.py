@@ -1,5 +1,8 @@
+import io
+
 import psycopg2
 import pytest
+from botocore.response import StreamingBody
 
 from django.conf import settings
 from django.test import override_settings
@@ -240,15 +243,43 @@ class TestDataCutPreviewDownloadView:
         assert response.status_code == 403
 
     @override_flag(settings.DATA_CUT_ENHANCED_PREVIEW_FLAG, active=True)
-    def test_authorised_link(self, client):
+    def test_authorised_link(self, client, mocker):
         dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
-        link = factories.SourceLinkFactory(dataset=dataset)
+        link = factories.SourceLinkFactory(
+            id='158776ec-5c40-4c58-ba7c-a3425905ec45',
+            dataset=dataset,
+            url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.csv',
+        )
+        mock_client = mocker.patch('dataworkspace.apps.datasets.models.boto3.client')
+        mock_client().head_object.return_value = {'ContentType': 'text/csv'}
+        csv_content = b'header1,header2\nrow1 col1, row1 col2\nrow2 col1, row2 col2\n'
+        mock_client().get_object.return_value = {
+            'ContentType': 'text/plain',
+            'ContentLength': len(csv_content),
+            'Body': StreamingBody(io.BytesIO(csv_content), len(csv_content)),
+        }
         response = client.get(
             reverse('datasets:data_cut_source_link_preview', args=(dataset.id, link.id))
         )
         assert response.status_code == 200
         content = response.content.decode('utf-8')
-        assert 'No preview available' in content
+        assert (
+            '<thead>'
+            '<tr class="govuk-table__row">'
+            '<th class="govuk-table__header">header1</th>'
+            '<th class="govuk-table__header">header2</th>'
+            '</tr>'
+            '</thead><tbody>'
+            '<tr class="govuk-table__row">'
+            '<td class="govuk-table__cell">row1 col1</td>'
+            '<td class="govuk-table__cell">row1 col2</td>'
+            '</tr>'
+            '<tr class="govuk-table__row">'
+            '<td class="govuk-table__cell">row2 col1</td>'
+            '<td class="govuk-table__cell">row2 col2</td>'
+            '</tr></tbody>'
+        ) in ''.join([s.strip() for s in content.splitlines() if s.strip()])
+        assert 'Showing <strong>2</strong> records.' in content
         assert 'Download as CSV' in content
 
     @override_flag(settings.DATA_CUT_ENHANCED_PREVIEW_FLAG, active=True)
