@@ -8,6 +8,16 @@ resource "aws_s3_bucket" "uploads" {
       }
     }
   }
+
+  versioning {
+    enabled    = true
+    mfa_delete = false
+  }
+
+  logging {
+    target_bucket = "${aws_s3_bucket.logging.id}"
+  }
+
 }
 
 resource "aws_s3_bucket_policy" "uploads" {
@@ -36,4 +46,9 @@ data "aws_iam_policy_document" "uploads_bucket" {
       ]
     }
   }
+}
+
+resource "aws_s3_bucket" "logging" {
+  bucket = "${var.uploads_bucket}-logging"
+  acl    = "log-delivery-write"
 }
