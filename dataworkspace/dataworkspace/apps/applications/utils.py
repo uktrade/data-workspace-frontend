@@ -482,6 +482,7 @@ def _do_delete_unused_datasets_users():
                     AND usename NOT LIKE '%_qs'
                     AND usename NOT LIKE '%_quicksight'
                     AND usename NOT LIKE '%_explorer'
+                    AND usename NOT LIKE '%_superset'
                 )
                 OR
                 (
@@ -491,6 +492,7 @@ def _do_delete_unused_datasets_users():
                     (
                         usename LIKE '%_qs'
                         OR usename LIKE '%_explorer'
+                        OR usename LIKE '%_superset'
                     )
                 )
                 ORDER BY usename;

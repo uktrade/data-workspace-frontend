@@ -19,7 +19,7 @@ UPLOAD_FOLDER = '/tmp/superset-uploads/'
 
 base_role_names = {
     'superset': 'Public',
-    'superset-edit': 'Gamma',
+    'superset-edit': 'Editor',
     'superset-admin': 'Admin',
 }
 
@@ -34,11 +34,12 @@ class DataWorkspaceRemoteUserView(AuthView):
             return redirect(self.appbuilder.get_url_for_index)
 
         app = self.appbuilder.get_app
-        is_admin = (
-            request.environ["HTTP_SSO_PROFILE_EMAIL"] in app.config['ADMIN_USERS']
-        )
-        if not is_admin:
-            return make_response({}, 401)
+        if role_name == 'Admin':
+            is_admin = (
+                request.environ["HTTP_SSO_PROFILE_EMAIL"] in app.config['ADMIN_USERS']
+            )
+            if not is_admin:
+                return make_response({}, 401)
 
         security_manager = self.appbuilder.sm
         username = f'{request.environ["HTTP_SSO_PROFILE_USER_ID"]}--{role_name}'
@@ -74,6 +75,15 @@ class DataWorkspaceSecurityManager(SupersetSecurityManager):
     # The Flask AppBuilder Security Manager, from which the Superset Security Manager
     # inherits, uses this if AUTH_TYPE == AUTH_REMOTE_USER
     authremoteuserview = DataWorkspaceRemoteUserView
+
+
+def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
+    uri.host = request.headers['Credentials-Db-Host']
+    uri.username = request.headers['Credentials-Db-User']
+    uri.database = request.headers['Credentials-Db-Name']
+    uri.password = request.headers['Credentials-Db-Password']
+    uri.port = request.headers['Credentials-Db-Port']
+    return uri, params
 
 
 CUSTOM_SECURITY_MANAGER = DataWorkspaceSecurityManager

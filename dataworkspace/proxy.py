@@ -200,9 +200,24 @@ async def async_main():
             else ()
         )
 
-    def superset_headers(downstream_request):
-        return (
+    async def superset_headers(downstream_request):
+        host_api_url = admin_root + '/api/v1/core/get-superset-role-credentials'
+
+        async with client_session.request(
+            'GET',
+            host_api_url,
+            headers=CIMultiDict(admin_headers_request(downstream_request)),
+        ) as response:
+            if response.status == 200:
+                credentials = await response.json()
+            else:
+                raise UserException(
+                    'Unable to fetch credentials for superset', response.status
+                )
+
+        return CIMultiDict(
             without_transfer_encoding(downstream_request)
+            + (tuple([(f'credentials-{k}', v) for k, v in credentials.items()]))
             + downstream_request['sso_profile_headers']
         )
 
@@ -624,7 +639,7 @@ async def async_main():
         return await handle_http(
             downstream_request,
             method,
-            CIMultiDict(superset_headers(downstream_request)),
+            await superset_headers(downstream_request),
             upstream_url,
             query,
             await get_data(downstream_request),
