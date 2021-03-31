@@ -43,6 +43,24 @@ resource "aws_elasticsearch_domain" "datasets_finder" {
     automated_snapshot_start_hour = 23
   }
 
+  log_publishing_options {
+    enabled = true
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.dataset_finder_index_slow_logs.arn
+    log_type = "INDEX_SLOW_LOGS"
+  }
+
+  log_publishing_options {
+    enabled = true
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.dataset_finder_search_slow_logs.arn
+    log_type = "SEARCH_SLOW_LOGS"
+  }
+
+  log_publishing_options {
+    enabled = true
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.dataset_finder_application_logs.arn
+    log_type = "ES_APPLICATION_LOGS"
+  }
+
   access_policies = <<CONFIG
 {
   "Version": "2012-10-17",
@@ -70,6 +88,47 @@ CONFIG
   depends_on = [aws_iam_service_linked_role.datasets_finder]
 }
 
+resource "aws_cloudwatch_log_group" "dataset_finder_index_slow_logs" {
+  name = "${var.prefix}-datasets-finder-index-slow-logs"
+  retention_in_days = 365
+}
+
+resource "aws_cloudwatch_log_group" "dataset_finder_search_slow_logs" {
+  name = "${var.prefix}-datasets-finder-search-slow-logs"
+  retention_in_days = 365
+}
+
+resource "aws_cloudwatch_log_group" "dataset_finder_application_logs" {
+  name = "${var.prefix}-datasets-finder-application-logs"
+  retention_in_days = 365
+}
+
+
+resource "aws_cloudwatch_log_resource_policy" "dataset_finder" {
+  policy_document = data.aws_iam_policy_document.dataset_finder.json
+  policy_name     = "${var.prefix}-dataset-finder"
+}
+
+data "aws_iam_policy_document" "dataset_finder" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:PutLogEventsBatch",
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.dataset_finder_index_slow_logs.arn}:*",
+      "${aws_cloudwatch_log_group.dataset_finder_search_slow_logs.arn}:*",
+      "${aws_cloudwatch_log_group.dataset_finder_application_logs.arn}:*",
+    ]
+
+    principals {
+      identifiers = ["es.amazonaws.com"]
+      type = "Service"
+    }
+  }
+}
 
 resource "aws_iam_user" "datasets_finder_data_flow" {
   name = "${var.prefix}-datasets-finder"
