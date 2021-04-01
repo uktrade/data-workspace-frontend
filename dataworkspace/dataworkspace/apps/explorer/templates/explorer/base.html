@@ -55,8 +55,17 @@
                 </style>
                 <![endif]-->
         {% endblock styles %}
+        {% if not debug and gtm_container_id %}
+          {% block initialGTMDataLayer %}
+            <script nonce="{{ request.csp_nonce }}">
+              window.dataLayer = window.dataLayer || [];
+            </script>
+          {% endblock %}
+        {% endif %}
+        {% include 'partials/gtm_head.html' %}
     </head>
     <body class="govuk-template__body">
+      {% include 'partials/gtm_body.html' %}
         <script nonce="{{ request.csp_nonce }}">
             document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled')
         </script>
