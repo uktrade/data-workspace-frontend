@@ -6,6 +6,7 @@ from django.urls import path, include
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.core.views import (
+    TechnicalSupportView,
     about_page_view,
     public_error_403_html_view,
     public_error_404_html_view,
@@ -103,6 +104,11 @@ urlpatterns = [
         'support/success/<str:ticket_id>',
         login_required(SupportView.as_view()),
         name='support-success',
+    ),
+    path(
+        'support/technical/',
+        login_required(TechnicalSupportView.as_view()),
+        name='technical-support',
     ),
     path(
         'feedback/',
