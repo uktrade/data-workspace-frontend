@@ -51,13 +51,13 @@ RUN \
 	adduser --disabled-password --gecos '' --ingroup theia --uid 4357 theia
 
 RUN \
-    chown -R theia:theia /usr/local && \
-    /root/python-setup.sh
-
-RUN \
     echo '[global]' > /etc/pip.conf && \
     echo 'index-url = https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/pypi/' >> /etc/pip.conf && \
     echo 'no-cache-dir = false' >> /etc/pip.conf
+
+RUN \
+    chown -R theia:theia /usr/local && \
+    /root/python-setup.sh
 
 WORKDIR /root
 RUN \
