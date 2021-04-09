@@ -1,0 +1,90 @@
+[
+  {
+    "name": "${container_name}",
+    "image": "${container_image}",
+    "essential": true,
+    "ulimits": [{
+          "softLimit": 4096,
+          "hardLimit": 4096,
+          "name": "nofile"
+    }],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${log_region}",
+        "awslogs-stream-prefix": "${container_name}"
+      }
+    },
+    "environment": [{
+      "name": "SENTRY_DSN",
+      "value": "${sentry_dsn}"
+    },{
+      "name": "SENTRY_ENVIRONMENT",
+      "value": "${sentry_environment}"
+    }],
+    "mountPoints": [
+      {
+        "sourceVolume": "home_directory",
+        "containerPath": "/home/theia"
+      },
+      {
+        "sourceVolume": "dags",
+        "containerPath": "/dataflow"
+      }
+    ]
+  },
+  {
+    "name": "metrics",
+    "image": "${metrics_container_image}",
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${log_region}",
+        "awslogs-stream-prefix": "metrics"
+      }
+    },
+    "environment": [{
+      "name": "PORT",
+      "value": "8889"
+    }]
+  },
+  {
+    "name": "s3sync",
+    "image": "${s3sync_container_image}",
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${log_region}",
+        "awslogs-stream-prefix": "s3sync"
+      }
+    },
+    "mountPoints": [
+      {
+      "sourceVolume": "home_directory",
+      "containerPath": "/home/s3sync/data/data-flow-ide/theia"
+      }
+    ]    
+  },
+  {
+    "name": "data_flow",
+    "image": "${data_flow_container_image}",
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${log_region}",
+        "awslogs-stream-prefix": "data-flow"
+      }
+    },
+    "mountPoints": [{
+      "sourceVolume": "dags",
+      "containerPath": "/home/vcap/app/dataflow/dags"
+    }]
+  }
+]

@@ -60,6 +60,7 @@ locals {
     fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
     fargate_spawner__remotedesktop_task_definition_arn  = "${aws_ecs_task_definition.remotedesktop.family}"
     fargate_spawner__theia_task_definition_arn  = "${aws_ecs_task_definition.theia.family}"
+    fargate_spawner__dataflowide_task_definition_arn  = "${aws_ecs_task_definition.data_flow_ide.family}"
     fargate_spawner__superset_task_definition_arn  = "${aws_ecs_task_definition.superset.family}"
 
     fargate_spawner__user_provided_task_definition_arn                        = "${aws_ecs_task_definition.user_provided.family}"
@@ -419,6 +420,8 @@ data "aws_iam_policy_document" "admin_run_tasks" {
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.remotedesktop.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.theia.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.theia.family}-*",
+      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.data_flow_ide.family}",
+      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.data_flow_ide.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.superset.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.superset.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.user_provided.family}-*",

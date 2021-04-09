@@ -55,6 +55,9 @@ def spawn(
 ):
     user = get_user_model().objects.get(pk=user_id)
     application_instance = ApplicationInstance.objects.get(id=application_instance_id)
+    set_search_path = (
+        application_instance.application_template.host_basename == 'data-flow-ide'
+    )
 
     (source_tables, db_role_schema_suffix, db_user) = (
         (
@@ -76,6 +79,7 @@ def spawn(
         db_user,
         user,
         valid_for=datetime.timedelta(days=31),
+        set_search_path=set_search_path,
     )
 
     if application_instance.application_template.application_type == 'TOOL':
@@ -223,6 +227,7 @@ class FargateSpawner:
             env = options.get('ENV', {})
             port = options['PORT']
             s3_sync = options['S3_SYNC'] == 'true'
+            data_flow = options.get('DATA_FLOW', 'false') == 'true'
 
             s3_region = options['S3_REGION']
             s3_host = options['S3_HOST']
@@ -246,6 +251,10 @@ class FargateSpawner:
                 f'user={database["db_user"]} password={database["db_password"]}'
                 for database in credentials
             }
+            for database in credentials:
+                database_env[
+                    'DATABASE_URL'
+                ] = f'postgresql+psycopg2://{database["db_user"]}:{database["db_password"]}@{database["db_host"]}:{database["db_port"]}/{database["db_name"]}'
 
             schema_env = {'APP_SCHEMA': app_schema}
 
@@ -340,6 +349,7 @@ class FargateSpawner:
                         cmd,
                         {**s3_env, **database_env, **schema_env, **env},
                         s3_sync,
+                        data_flow,
                         platform_version,
                     )
                 except ClientError:
@@ -673,6 +683,7 @@ def _fargate_task_run(
     command_and_args,
     env,
     s3_sync,
+    data_flow,
     platform_version,
 ):
     client = boto3.client('ecs')
@@ -704,6 +715,19 @@ def _fargate_task_run(
                     }
                 ]
                 if s3_sync
+                else []
+            )
+            + (
+                [
+                    {
+                        'name': 'data_flow',
+                        'environment': [
+                            {'name': name, 'value': value}
+                            for name, value in env.items()
+                        ],
+                    }
+                ]
+                if data_flow
                 else []
             ),
         },
