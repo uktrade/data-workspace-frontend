@@ -42,7 +42,7 @@
     "vue-rx": "^6.2.0",
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.10",
-    "webpack": "^4.39.3",
+    "webpack": "^5.31.2",
     "webpack-bundle-tracker": "^0.4.2-beta",
     "webpack-cli": "^3.3.8"
   },
