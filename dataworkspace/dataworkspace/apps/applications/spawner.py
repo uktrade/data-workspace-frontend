@@ -252,9 +252,10 @@ class FargateSpawner:
                 for database in credentials
             }
             for database in credentials:
-                database_env[
-                    'DATABASE_URL'
-                ] = f'postgresql+psycopg2://{database["db_user"]}:{database["db_password"]}@{database["db_host"]}:{database["db_port"]}/{database["db_name"]}'
+                database_env['DATABASE_URL'] = (
+                    f'postgresql+psycopg2://{database["db_user"]}:{database["db_password"]}@'
+                    f'{database["db_host"]}:{database["db_port"]}/{database["db_name"]}'
+                )
 
             schema_env = {'APP_SCHEMA': app_schema}
 
