@@ -33,7 +33,10 @@
     "resolutions": {
       "**/svgo/js-yaml": "3.14.1",
       "**/mocha/js-yaml": "3.14.1",
-      "**/paged-request/axios": "0.21.1"
+      "**/paged-request/axios": "0.21.1",
+      "**/ssri": "^8.0.1",
+      "**/postcss-svgo/is-svg": "^4.3.1",
+      "**/y18n": "^5.0.8"
     },
     "theiaPluginsDir": "plugins",
     "theiaPlugins": {
