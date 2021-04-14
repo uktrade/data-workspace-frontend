@@ -14,6 +14,9 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
 
+from dataworkspace.apps.api_v1.core.views import (
+    invalidate_superset_user_cached_credentials,
+)
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
@@ -337,6 +340,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             #   - lose access if it went from REQUIRES_AUTHENTICATION to REQUIRES_AUTHORIZATION
             #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION
             invalidate_data_explorer_user_cached_credentials()
+            invalidate_superset_user_cached_credentials()
         else:
             for user in changed_users:
                 remove_data_explorer_user_cached_credentials(user)

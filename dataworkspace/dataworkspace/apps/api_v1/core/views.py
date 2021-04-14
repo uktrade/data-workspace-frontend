@@ -1,6 +1,6 @@
 from datetime import timedelta
-import logging
 
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
@@ -29,33 +29,34 @@ class UserSatisfactionSurveyViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
 
-logger = logging.getLogger('app')
 credentials_version_key = 'superset_credentials_version'
 
 
-def get_cached_credentials_key(user):
+def get_cached_credentials_key(user_profile_sso_id):
     credentials_version = cache.get(credentials_version_key, None)
     if not credentials_version:
         credentials_version = 1
         cache.set(credentials_version_key, credentials_version)
-    return f"superset_credentials_{credentials_version}_{user.profile.sso_id}"
+    return f"superset_credentials_{credentials_version}_{user_profile_sso_id}"
 
 
 def get_superset_credentials(request):
-    dw_user = request.user
-    if not dw_user.user_permissions.filter(
-        codename='start_all_applications',
-        content_type=ContentType.objects.get_for_model(ApplicationInstance),
-    ).exists():
-        return HttpResponse('Unauthorized', status=401)
-
-    duration = timedelta(hours=24)
-    cache_duration = (duration - timedelta(minutes=15)).total_seconds()
-
-    cache_key = get_cached_credentials_key(dw_user)
+    cache_key = get_cached_credentials_key(request.headers['sso-profile-user-id'])
     credentials = cache.get(cache_key, None)
 
     if not credentials:
+        dw_user = get_user_model().objects.get(
+            profile__sso_id=request.headers['sso-profile-user-id']
+        )
+        if not dw_user.user_permissions.filter(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists():
+            return HttpResponse('Unauthorized', status=401)
+
+        duration = timedelta(hours=24)
+        cache_duration = (duration - timedelta(minutes=15)).total_seconds()
+
         source_tables = source_tables_for_user(dw_user)
         db_role_schema_suffix = stable_identification_suffix(
             str(dw_user.profile.sso_id), short=True
@@ -72,9 +73,8 @@ def get_superset_credentials(request):
     return JsonResponse(credentials[0])
 
 
-def remove_superset_user_cached_credentials(user):
-    logger.info("Clearing Superset cached credentials for %s", user)
-    cache_key = get_cached_credentials_key(user)
+def remove_superset_user_cached_credentials(user_profile_sso_id):
+    cache_key = get_cached_credentials_key(user_profile_sso_id)
     cache.delete(cache_key)
 
 
