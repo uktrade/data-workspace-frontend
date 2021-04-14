@@ -3241,9 +3241,15 @@ class TestDatasetAdminPytest:
     @mock.patch(
         "dataworkspace.apps.datasets.admin.remove_data_explorer_user_cached_credentials"
     )
+    @mock.patch(
+        "dataworkspace.apps.datasets.admin.remove_superset_user_cached_credentials"
+    )
     @pytest.mark.django_db
     def test_master_dataset_permission_changes_clears_authorized_users_cached_credentials(
-        self, mock_remove_cached_credentials, staff_client
+        self,
+        mock_remove_superset_cached_credentials,
+        mock_remove_explorer_cached_credentials,
+        staff_client,
     ):
         user = factories.UserFactory()
         dataset = factories.MasterDataSetFactory.create(
@@ -3284,4 +3290,9 @@ class TestDatasetAdminPytest:
         assert response.status_code == 200
         # As the user has just been authorized to access the dataset, their cached
         # data explorer credentials should be cleared
-        assert mock_remove_cached_credentials.call_args_list == [mock.call(user)]
+        assert mock_remove_explorer_cached_credentials.call_args_list == [
+            mock.call(user)
+        ]
+        assert mock_remove_superset_cached_credentials.call_args_list == [
+            mock.call(user)
+        ]

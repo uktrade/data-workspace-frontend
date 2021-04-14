@@ -16,6 +16,7 @@ from django.utils.html import format_html
 
 from dataworkspace.apps.api_v1.core.views import (
     invalidate_superset_user_cached_credentials,
+    remove_superset_user_cached_credentials,
 )
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
@@ -344,6 +345,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         else:
             for user in changed_users:
                 remove_data_explorer_user_cached_credentials(user)
+                remove_superset_user_cached_credentials(user)
 
         if isinstance(self, MasterDatasetAdmin):
             if changed_users:

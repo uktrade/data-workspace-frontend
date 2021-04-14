@@ -10,6 +10,7 @@ from flask_appbuilder import expose
 from flask import g, make_response, redirect, request
 
 SQLALCHEMY_DATABASE_URI = f'postgresql+psycopg2://{os.environ["DB_USER"]}:{os.environ["DB_PASSWORD"]}@{os.environ["DB_HOST"]}/{os.environ["DB_NAME"]}'
+
 LANGUAGES = {'en': {'flag': 'gb', 'name': 'English'}}
 SESSION_COOKIE_NAME = 'superset_session'
 

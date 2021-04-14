@@ -73,8 +73,8 @@ def get_superset_credentials(request):
     return JsonResponse(credentials[0])
 
 
-def remove_superset_user_cached_credentials(user_profile_sso_id):
-    cache_key = get_cached_credentials_key(user_profile_sso_id)
+def remove_superset_user_cached_credentials(user):
+    cache_key = get_cached_credentials_key(user.profile.sso_id)
     cache.delete(cache_key)
 
 
