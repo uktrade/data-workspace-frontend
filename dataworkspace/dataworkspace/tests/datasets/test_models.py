@@ -1,8 +1,11 @@
+import io
+from collections import OrderedDict
 from datetime import datetime
 
 import botocore
 import mock
 import pytest
+from botocore.response import StreamingBody
 from pytz import UTC
 
 from dataworkspace.apps.datasets.models import SourceLink
@@ -238,3 +241,46 @@ def test_source_link_data_last_updated(mock_client):
         url='http://www.example.com',
     )
     assert external_link.get_data_last_updated_date() is None
+
+
+@pytest.mark.django_db
+class TestSourceLinkPreview:
+    @pytest.fixture
+    def mock_client(self, mocker):
+        return mocker.patch('dataworkspace.apps.datasets.models.boto3.client')
+
+    def test_not_s3_link(self):
+        link = factories.SourceLinkFactory(url='http://example.com/a-file.csv')
+        assert link.get_preview_data() == (None, [])
+
+    def test_failed_reading_from_s3(self, mock_client):
+        link = factories.SourceLinkFactory(url='s3://a/path/to/a/file.csv')
+        mock_client().head_object.side_effect = [
+            botocore.exceptions.ClientError(
+                error_response={'Error': {'Message': 'it failed'}},
+                operation_name='head_object',
+            )
+        ]
+        assert link.get_preview_data() == (None, [])
+
+    def test_file_not_csv(self, mock_client):
+        link = factories.SourceLinkFactory(url='s3://a/path/to/a/file.txt')
+        mock_client().head_object.return_value = {'ContentType': 'text/csv'}
+        assert link.get_preview_data() == (None, [])
+
+    def test_preview_csv(self, mock_client):
+        link = factories.SourceLinkFactory(url='s3://a/path/to/a/file.csv')
+        mock_client().head_object.return_value = {'ContentType': 'text/csv'}
+        csv_content = b'col1,col2\nrow1-col1, row1-col2\nrow2-col1, row2-col2\ntrailing'
+        mock_client().get_object.return_value = {
+            'ContentType': 'text/plain',
+            'ContentLength': len(csv_content),
+            'Body': StreamingBody(io.BytesIO(csv_content), len(csv_content)),
+        }
+        assert link.get_preview_data() == (
+            ['col1', 'col2'],
+            [
+                OrderedDict([('col1', 'row1-col1'), ('col2', ' row1-col2')]),
+                OrderedDict([('col1', 'row2-col1'), ('col2', ' row2-col2')]),
+            ],
+        )

@@ -1,10 +1,12 @@
 import copy
+import csv
 import operator
 import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
+from io import StringIO
 
 from typing import Optional, List
 
@@ -590,6 +592,9 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def __str__(self):
         return self.name
 
+    def _is_s3_link(self):
+        return self.url.startswith('s3://')
+
     def local_file_is_accessible(self):
         """
         Check whether we can access the file on s3
@@ -611,7 +616,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
         # Allow users to change a url from local to external and vice versa
-        is_s3_link = self.url.startswith('s3://')
+        is_s3_link = self._is_s3_link()
         was_s3_link = self._original_url.startswith('s3://')
         if self.id is not None and self._original_url != self.url:
             self.link_type = self.TYPE_LOCAL if is_s3_link else self.TYPE_EXTERNAL
@@ -665,8 +670,37 @@ class SourceLink(ReferenceNumberedDatasetSource):
         return self.dataset.user_has_access(user)
 
     def get_preview_data(self):
-        # Preview data to be added in a later PR
-        return None, []
+        """
+        Returns column names and preview data for an s3 hosted csv.
+        """
+        if (
+            not self._is_s3_link()
+            or not self.local_file_is_accessible()
+            or not self.url.endswith('.csv')
+        ):
+            return None, []
+
+        client = boto3.client('s3')
+
+        # Only read a maximum of 100Kb in for preview purposes. This should stop us getting
+        # denial-of-service'd by files with a massive amount of data in the first few columns
+        file = client.get_object(
+            Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url, Range="bytes=0-102400"
+        )
+        head = file['Body'].read().decode('utf-8')
+        # Drop anything after the rightmost newline in case we only got a partial row
+        head = head[: head.rindex('\n') + 1]
+        csv_data = head.splitlines()
+        del csv_data[settings.DATASET_PREVIEW_NUM_OF_ROWS :]
+        fh = StringIO('\n'.join(csv_data))
+        reader = csv.DictReader(fh)
+        records = []
+        for row in reader:
+            records.append(row)
+            if len(records) >= settings.DATASET_PREVIEW_NUM_OF_ROWS:
+                break
+
+        return reader.fieldnames, records
 
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):
