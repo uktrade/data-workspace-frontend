@@ -1,7 +1,7 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.datasets import views
+from dataworkspace.apps.datasets import models, views
 
 urlpatterns = [
     path('', login_required(views.find_datasets), name='find_datasets'),
@@ -69,5 +69,17 @@ urlpatterns = [
         '<uuid:dataset_uuid>/related-data',
         login_required(views.RelatedDataView.as_view()),
         name='related_data',
+    ),
+    path(
+        '<uuid:dataset_uuid>/preview/<int:object_id>',
+        login_required(views.DataCutPreviewView.as_view()),
+        {'model_class': models.CustomDatasetQuery},
+        name='data_cut_query_preview',
+    ),
+    path(
+        '<uuid:dataset_uuid>/preview/<uuid:object_id>',
+        login_required(views.DataCutPreviewView.as_view()),
+        {'model_class': models.SourceLink},
+        name='data_cut_source_link_preview',
     ),
 ]
