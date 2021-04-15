@@ -34,13 +34,11 @@ credentials_version_key = 'superset_credentials_version'
 
 def get_cached_credentials_key(user_profile_sso_id):
     credentials_version = cache.get(credentials_version_key, None)
-    if not credentials_version:
-        credentials_version = 1
-        cache.set(credentials_version_key, credentials_version)
     return f"superset_credentials_{credentials_version}_{user_profile_sso_id}"
 
 
 def get_superset_credentials(request):
+    cache.set(credentials_version_key, 1, nx=True)
     cache_key = get_cached_credentials_key(request.headers['sso-profile-user-id'])
     credentials = cache.get(cache_key, None)
 
@@ -74,14 +72,12 @@ def get_superset_credentials(request):
 
 
 def remove_superset_user_cached_credentials(user):
+    cache.set(credentials_version_key, 1, nx=True)
     cache_key = get_cached_credentials_key(user.profile.sso_id)
     cache.delete(cache_key)
 
 
 def invalidate_superset_user_cached_credentials():
-    credentials_version = cache.get(credentials_version_key, 0)
-    with cache.lock(
-        'get_superset_credentials_version', blocking_timeout=30, timeout=180,
-    ):
-        credentials_version += 1
-        cache.set(credentials_version_key, credentials_version)
+    credentials_version = cache.get(credentials_version_key, None)
+    if credentials_version:
+        cache.incr(credentials_version_key)

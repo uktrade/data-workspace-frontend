@@ -1463,26 +1463,26 @@ class TestApplication(unittest.TestCase):
             self.assertEqual(response.status, 200)
 
         assert (
-            superset_requests[0].headers['credentials-memorable_name'] == 'my_database'
+            superset_requests[0].headers['Credentials-Memorable-Name'] == 'my_database'
         )
-        assert superset_requests[0].headers['credentials-db_name'] == 'datasets'
+        assert superset_requests[0].headers['Credentials-Db-Name'] == 'datasets'
         assert (
-            superset_requests[0].headers['credentials-db_host']
+            superset_requests[0].headers['Credentials-Db-Host']
             == 'data-workspace-postgres'
         )
-        assert superset_requests[0].headers['credentials-db_port'] == '5432'
+        assert superset_requests[0].headers['Credentials-Db-Port'] == '5432'
         assert (
-            superset_requests[0].headers['credentials-db_persistent_role']
+            superset_requests[0].headers['Credentials-Db-Persistent-Role']
             == '_user_23b40dd9'
         )
         assert (
             superset_requests[0]
-            .headers['credentials-db_user']
+            .headers['Credentials-Db-User']
             .startswith('user_test_test_com_')
         )
-        assert superset_requests[0].headers['credentials-db_user'].endswith('superset')
-        assert 'credentials-db_password' in superset_requests[0].headers
-        assert 'credentials-db_id' in superset_requests[0].headers
+        assert superset_requests[0].headers['Credentials-Db-User'].endswith('superset')
+        assert 'Credentials-Db-Password' in superset_requests[0].headers
+        assert 'Credentials-Db-Id' in superset_requests[0].headers
 
     @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
