@@ -244,11 +244,13 @@ paste==3.4.3
     # via -r requirements.in
 pathspec==0.8.1
     # via black
+pep517==0.10.0
+    # via pip-tools
 pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pip-tools==5.5.0
+pip-tools==6.0.1
     # via -r requirements-dev.in
 pluggy==0.13.1
     # via pytest
@@ -410,6 +412,7 @@ toml==0.10.2
     # via
     #   black
     #   ipdb
+    #   pep517
     #   pylint
     #   pytest
 tqdm==4.56.0
