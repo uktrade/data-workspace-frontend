@@ -18,8 +18,6 @@ appdirs==1.4.4
     # via
     #   black
     #   pyppeteer
-appnope==0.1.2
-    # via ipython
 asgiref==3.2.10
     # via django
 astroid==2.4.2
@@ -152,7 +150,7 @@ factory_boy==3.2.0
     # via -r requirements-dev.in
 faker==5.8.0
     # via factory-boy
-flake8-bugbear==20.11.1
+flake8-bugbear==21.4.3
     # via -r requirements-dev.in
 flake8==3.8.4
     # via
@@ -178,15 +176,6 @@ idna==2.10
     #   yarl
 ijson==3.1.3
     # via tabulator
-importlib-metadata==2.1.1
-    # via
-    #   flake8
-    #   jsonschema
-    #   kombu
-    #   markdown
-    #   pluggy
-    #   pyppeteer
-    #   pytest
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.7
@@ -428,11 +417,7 @@ tqdm==4.56.0
 traitlets==5.0.5
     # via ipython
 typed-ast==1.4.2
-    # via
-    #   astroid
-    #   black
-typing-extensions==3.7.4.3
-    # via yarl
+    # via black
 unicodecsv==0.14.1
     # via
     #   tableschema
@@ -468,8 +453,6 @@ yarl==1.5.1
     # via aiohttp
 zenpy==2.0.21
     # via -r requirements.in
-zipp==3.4.1
-    # via importlib-metadata
 zope.event==4.5.0
     # via gevent
 zope.interface==5.1.0
