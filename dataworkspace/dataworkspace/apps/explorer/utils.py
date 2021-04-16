@@ -226,12 +226,9 @@ def remove_data_explorer_user_cached_credentials(user):
 
 
 def invalidate_data_explorer_user_cached_credentials():
-    credentials_version = cache.get(credentials_version_key, 0)
-    with cache.lock(
-        'get_explorer_credentials_version', blocking_timeout=30, timeout=180,
-    ):
-        credentials_version += 1
-        cache.set(credentials_version_key, credentials_version)
+    credentials_version = cache.get(credentials_version_key, None)
+    if credentials_version:
+        cache.incr(credentials_version_key)
 
 
 def tempory_query_table_name(user, query_log_id):

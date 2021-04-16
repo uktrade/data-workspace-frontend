@@ -8,4 +8,9 @@ urlpatterns = [
         views.UserSatisfactionSurveyViewSet.as_view({'get': 'list'}),
         name='user-satisfaction-surveys',
     ),
+    path(
+        'get-superset-role-credentials',
+        views.get_superset_credentials,
+        name='get-superset-role-credentials',
+    ),
 ]

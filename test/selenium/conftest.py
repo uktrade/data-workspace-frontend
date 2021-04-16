@@ -133,9 +133,9 @@ def reset_data_explorer_credentials(user_sso_id):
         f"""
         import mock
         from django.contrib.auth.models import User
-        from dataworkspace.apps.explorer.admin import clear_data_explorer_cached_credentials
+        from dataworkspace.apps.explorer.admin import clear_tool_cached_credentials
 
-        clear_data_explorer_cached_credentials(
+        clear_tool_cached_credentials(
             modeladmin=mock.Mock(),
             request=mock.Mock(),
             queryset=User.objects.filter(
