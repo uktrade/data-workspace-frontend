@@ -640,6 +640,10 @@ class SourceLink(ReferenceNumberedDatasetSource):
             'datasets:data_cut_source_link_preview', args=(self.dataset_id, self.id)
         )
 
+    def show_column_filter(self):
+        # this will be enabled in subsequent PR
+        return False
+
     def can_show_link_for_user(self, user):
         return True
 
@@ -738,6 +742,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         return reverse(
             'datasets:data_cut_query_preview', args=(self.dataset_id, self.id)
         )
+
+    def show_column_filter(self):
+        return True
 
     def can_show_link_for_user(self, user):
         if user.is_superuser:

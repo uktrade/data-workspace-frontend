@@ -1065,10 +1065,15 @@ class CustomDatasetQueryDownloadView(DetailView):
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])
 
+        filtered_query = query.query
+        columns = request.GET.getlist('columns')
+        if columns:
+            filtered_query = f"SELECT {','.join(columns)} FROM ({query.query.rstrip().rstrip(';')}) as data;"
+
         return streaming_query_response(
             request.user.email,
             query.database.memorable_name,
-            sql.SQL(query.query),
+            sql.SQL(filtered_query),
             query.get_filename(),
         )
 
@@ -1242,6 +1247,8 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
         ctx.update(
             {
                 'can_download': model.can_show_link_for_user(self.request.user),
+                'form_action': model.get_absolute_url(),
+                'can_filter_columns': model.show_column_filter(),
                 'truncate_limit': 100,
                 'fixed_table_height_limit': 10,
             }
