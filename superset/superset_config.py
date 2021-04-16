@@ -1,6 +1,8 @@
 import os
 
 from superset.security import SupersetSecurityManager
+from superset import db
+
 from flask_appbuilder.security.manager import AUTH_REMOTE_USER
 from flask_appbuilder.security.views import AuthView
 from flask_login import login_user
@@ -23,6 +25,30 @@ base_role_names = {
     'superset-edit': 'Editor',
     'superset-admin': 'Admin',
 }
+
+PUBLIC_ROLE_PERMISSIONS = [
+    ('can_csrf_token', 'Superset'),
+    ('can_dashboard', 'Superset'),
+    ('can_explore', 'Superset'),
+    ('can_explore_json', 'Superset'),
+    ('can_fave_dashboards', 'Superset'),
+    ('can_favstar', 'Superset'),
+    ('can_list', 'CssTemplateAsyncModelView'),
+    ('can_list', 'Dashboard'),
+    ('can_log', 'Superset'),
+    ('can_read', 'Annotation'),
+    ('can_read', 'Chart'),
+    ('can_read', 'CssTemplate'),
+    ('can_read', 'Dashboard'),
+    ('can_read', 'Dataset'),
+    ('can_read', 'Log'),
+    ('can_read', 'Query'),
+    ('can_read', 'SavedQuery'),
+    ('can_recent_activity', 'Superset'),
+    ('can_show', 'CssTemplateAsyncModelView'),
+    ('can_slice', 'Superset'),
+    ('can_warm_up_cache', 'Superset'),
+]
 
 
 class DataWorkspaceRemoteUserView(AuthView):
@@ -47,6 +73,7 @@ class DataWorkspaceRemoteUserView(AuthView):
         email_parts = request.environ["HTTP_SSO_PROFILE_EMAIL"].split('@')
         email_parts[0] += f'+{role_name.lower()}'
         email = '@'.join(email_parts)
+        user_role_name = f'{username}-Role'
 
         # ... else if user exists but not logged in, update details, log in, and redirect to index
         user = security_manager.find_user(username=username)
@@ -57,6 +84,8 @@ class DataWorkspaceRemoteUserView(AuthView):
             )
             user.email = email
             security_manager.update_user(user)
+            if role_name == 'Public':
+                apply_public_role_permissions(security_manager, user, user_role_name)
             login_user(user)
             return redirect(self.appbuilder.get_url_for_index)
 
@@ -68,8 +97,40 @@ class DataWorkspaceRemoteUserView(AuthView):
             email=email,
             role=security_manager.find_role(role_name),
         )
+
+        if role_name == 'Public':
+            apply_public_role_permissions(security_manager, user, user_role_name)
+
         login_user(user)
         return redirect(self.appbuilder.get_url_for_index)
+
+
+def apply_public_role_permissions(sm, user, role_name):
+    """
+    Given a user and role name
+    1. Get or create a private role for the user
+    2. Assign minimum level of permissions to the role
+    3. Give user read access to all data sources
+        - This allows them to view all dashboards on the site
+    """
+    from superset.models.slice import Slice  # pylint: disable=import-outside-toplevel
+
+    role = sm.add_role(role_name)
+    if not role:
+        role = sm.find_role(role_name)
+
+    for perm in PUBLIC_ROLE_PERMISSIONS:
+        permission_view_menu = sm.find_permission_view_menu(perm[0], perm[1])
+        sm.add_permission_role(role, permission_view_menu)
+
+    for datasource in db.session.query(Slice):
+        permission_view_menu = sm.add_permission_view_menu(
+            'datasource_access', datasource.perm
+        )
+        sm.add_permission_role(role, permission_view_menu)
+
+    user.roles.append(role)
+    sm.get_session.commit()
 
 
 class DataWorkspaceSecurityManager(SupersetSecurityManager):
