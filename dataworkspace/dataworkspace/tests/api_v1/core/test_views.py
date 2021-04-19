@@ -22,6 +22,10 @@ class TestGetSupersetCredentialsAPIView:
         mock_cache,
         unauthenticated_client,
     ):
+        visualisation = factories.VisualisationLinkFactory(
+            visualisation_type='SUPERSET',
+            visualisation_catalogue_item__user_access_type='REQUIRES_AUTHENTICATION',
+        )
         credentials = [{'db_user': 'foo', 'db_password': 'bar'}]
         mock_cache.get.side_effect = [
             1,  # cache.get(credentials_version_key, None)
@@ -41,14 +45,18 @@ class TestGetSupersetCredentialsAPIView:
             reverse('api-v1:core:get-superset-role-credentials'), **header
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == credentials[0]
+        assert response.json()['credentials'] == credentials[0]
+        assert response.json()['dashboards'] == [visualisation.identifier]
 
         assert mock_new_credentials.called
         assert mock_cache.set.call_args_list == [
             mock.call('superset_credentials_version', 1, nx=True),
             mock.call(
                 f'superset_credentials_1_{user.profile.sso_id}',
-                credentials,
+                {
+                    'credentials': credentials[0],
+                    'dashboards': [visualisation.identifier],
+                },
                 timeout=mock.ANY,
             ),
         ]
@@ -94,10 +102,17 @@ class TestGetSupersetCredentialsAPIView:
         mock_cache,
         unauthenticated_client,
     ):
+        visualisation = factories.VisualisationLinkFactory(
+            visualisation_type='SUPERSET',
+            visualisation_catalogue_item__user_access_type='REQUIRES_AUTHENTICATION',
+        )
         credentials = [{'db_user': 'foo', 'db_password': 'bar'}]
         mock_cache.get.side_effect = [
             1,  # cache.get(credentials_version_key, None)
-            credentials,  # cache.get(cache_key, None)
+            {
+                'credentials': credentials[0],
+                'dashboards': [visualisation.identifier],
+            },  # cache.get(cache_key, None)
         ]
         mock_new_credentials.return_value = credentials
 
@@ -108,7 +123,8 @@ class TestGetSupersetCredentialsAPIView:
             reverse('api-v1:core:get-superset-role-credentials'), **header
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json() == credentials[0]
+        assert response.json()['credentials'] == credentials[0]
+        assert response.json()['dashboards'] == [visualisation.identifier]
 
         assert not mock_new_credentials.called
         assert mock_cache.set.call_args_list == [

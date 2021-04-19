@@ -1,7 +1,7 @@
 import os
 
-from superset.security import SupersetSecurityManager
 from superset import db
+from superset.security import SupersetSecurityManager
 
 from flask_appbuilder.security.manager import AUTH_REMOTE_USER
 from flask_appbuilder.security.views import AuthView
@@ -71,19 +71,15 @@ class DataWorkspaceRemoteUserView(AuthView):
 
         app = self.appbuilder.get_app
         if role_name == 'Admin':
-            is_admin = (
-                request.environ["HTTP_SSO_PROFILE_EMAIL"] in app.config['ADMIN_USERS']
-            )
+            is_admin = request.headers["Sso-Profile-Email"] in app.config['ADMIN_USERS']
             if not is_admin:
                 return make_response({}, 401)
 
         # ... else if user exists but not logged in, update details, log in, and redirect to index
         user = security_manager.find_user(username=username)
         if user is not None:
-            user.first_name = request.environ["HTTP_SSO_PROFILE_FIRST_NAME"]
-            user.last_name = (
-                f'{request.environ["HTTP_SSO_PROFILE_LAST_NAME"]} ({role_name})'
-            )
+            user.first_name = request.headers["Sso-Profile-First-Name"]
+            user.last_name = f'{request.headers["Sso-Profile-Last-Name"]} ({role_name})'
             user.email = email
             security_manager.update_user(user)
             if role_name == 'Public':
@@ -94,8 +90,8 @@ class DataWorkspaceRemoteUserView(AuthView):
         # ... else create user, login, and redirect to index
         user = security_manager.add_user(
             username=username,
-            first_name=request.environ["HTTP_SSO_PROFILE_FIRST_NAME"],
-            last_name=f'{request.environ["HTTP_SSO_PROFILE_LAST_NAME"]} ({role_name})',
+            first_name=request.headers["Sso-Profile-First-Name"],
+            last_name=f'{request.headers["Sso-Profile-Last-Name"]} ({role_name})',
             email=email,
             role=security_manager.find_role(role_name),
         )
@@ -115,7 +111,9 @@ def apply_public_role_permissions(sm, user, role_name):
     3. Give user read access to all data sources
         - This allows them to view all dashboards on the site
     """
-    from superset.models.slice import Slice  # pylint: disable=import-outside-toplevel
+    from superset.models.dashboard import (
+        Dashboard,
+    )  # pylint: disable=import-outside-toplevel
 
     role = sm.add_role(role_name)
     if not role:
@@ -125,11 +123,21 @@ def apply_public_role_permissions(sm, user, role_name):
         permission_view_menu = sm.find_permission_view_menu(perm[0], perm[1])
         sm.add_permission_role(role, permission_view_menu)
 
-    for datasource in db.session.query(Slice):
-        permission_view_menu = sm.add_permission_view_menu(
-            'datasource_access', datasource.perm
-        )
-        sm.add_permission_role(role, permission_view_menu)
+    # Delete permissions to existing dashboards
+    for perm in role.permissions:
+        if perm.permission.name == 'datasource_access':
+            sm.del_permission_role(role, perm)
+
+    # Add permissions for datasources in dashboards that the user has access to
+    for dashboard_id in request.headers['Dashboards'].split(','):
+        if not dashboard_id:
+            continue
+        dashboard = db.session.query(Dashboard).get(dashboard_id)
+        for datasource in dashboard.slices:
+            permission_view_menu = sm.add_permission_view_menu(
+                'datasource_access', datasource.perm
+            )
+            sm.add_permission_role(role, permission_view_menu)
 
     user.roles.append(role)
     sm.get_session.commit()

@@ -294,6 +294,10 @@ def visualisation_link_html_view(request, link_id):
         return _get_embedded_quicksight_dashboard(
             request, identifier, visualisation_link.visualisation_catalogue_item
         )
+    elif visualisation_link.visualisation_type == 'SUPERSET':
+        return redirect(
+            f'https://superset.{settings.APPLICATION_ROOT_DOMAIN}/superset/dashboard/{identifier}'
+        )
 
     return HttpResponse(
         status=500,

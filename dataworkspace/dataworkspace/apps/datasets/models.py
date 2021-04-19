@@ -1923,7 +1923,7 @@ class VisualisationLink(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_type = models.CharField(
         max_length=64,
-        choices=(('QUICKSIGHT', 'AWS QuickSight'),),
+        choices=(('QUICKSIGHT', 'AWS QuickSight'), ('SUPERSET', 'Superset'),),
         null=False,
         blank=False,
     )
