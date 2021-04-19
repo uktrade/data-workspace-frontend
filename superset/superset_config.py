@@ -55,10 +55,18 @@ PUBLIC_ROLE_PERMISSIONS = [
 class DataWorkspaceRemoteUserView(AuthView):
     @expose('/login/')
     def login(self):
+        security_manager = self.appbuilder.sm
         role_name = base_role_names[request.host.split('.')[0]]
+        username = f'{request.environ["HTTP_SSO_PROFILE_USER_ID"]}--{role_name}'
+        email_parts = request.environ["HTTP_SSO_PROFILE_EMAIL"].split('@')
+        email_parts[0] += f'+{role_name.lower()}'
+        email = '@'.join(email_parts)
+        user_role_name = f'{username}-Role'
 
         # If user already logged in, redirect to index...
         if g.user is not None and g.user.is_authenticated:
+            if role_name == 'Public':
+                apply_public_role_permissions(security_manager, g.user, user_role_name)
             return redirect(self.appbuilder.get_url_for_index)
 
         app = self.appbuilder.get_app
@@ -68,13 +76,6 @@ class DataWorkspaceRemoteUserView(AuthView):
             )
             if not is_admin:
                 return make_response({}, 401)
-
-        security_manager = self.appbuilder.sm
-        username = f'{request.environ["HTTP_SSO_PROFILE_USER_ID"]}--{role_name}'
-        email_parts = request.environ["HTTP_SSO_PROFILE_EMAIL"].split('@')
-        email_parts[0] += f'+{role_name.lower()}'
-        email = '@'.join(email_parts)
-        user_role_name = f'{username}-Role'
 
         # ... else if user exists but not logged in, update details, log in, and redirect to index
         user = security_manager.find_user(username=username)
