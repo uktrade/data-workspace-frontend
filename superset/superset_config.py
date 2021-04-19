@@ -5,6 +5,7 @@ from flask_appbuilder.security.manager import AUTH_REMOTE_USER
 from flask_appbuilder.security.views import AuthView
 from flask_login import login_user
 from flask_appbuilder import expose
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Semi-magical request-local proxy objects
 from flask import g, make_response, redirect, request
@@ -89,3 +90,4 @@ def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
 
 CUSTOM_SECURITY_MANAGER = DataWorkspaceSecurityManager
 AUTH_TYPE = AUTH_REMOTE_USER
+ADDITIONAL_MIDDLEWARE = [lambda app: ProxyFix(app, x_proto=1)]
