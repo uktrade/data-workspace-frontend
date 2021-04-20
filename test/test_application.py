@@ -1455,6 +1455,13 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
+        stdout, stderr, code = await create_visusalisation(
+            'test_visualisation', 'REQUIRES_AUTHENTICATION', 'SUPERSET', 1
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
         async with session.request(
             'GET',
             'http://superset.dataworkspace.test:8000/',
@@ -1483,6 +1490,7 @@ class TestApplication(unittest.TestCase):
         assert superset_requests[0].headers['Credentials-Db-User'].endswith('superset')
         assert 'Credentials-Db-Password' in superset_requests[0].headers
         assert 'Credentials-Db-Id' in superset_requests[0].headers
+        assert superset_requests[0].headers['Dashboards'] == '1'
 
     @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
@@ -2761,6 +2769,45 @@ async def create_private_dataset(
             database=Database.objects.get(memorable_name="{database}"),
             schema="public",
             table="{table_name}",
+        )
+        """
+    ).encode('ascii')
+
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def create_visusalisation(
+    visualisation_name, user_access_type, link_type, link_identifier
+):
+    python_code = textwrap.dedent(
+        f"""\
+        from dataworkspace.apps.core.models import Database
+        from dataworkspace.apps.datasets.models import (
+            VisualisationCatalogueItem, VisualisationLink
+        )
+        visualisation = VisualisationCatalogueItem.objects.create(
+            name="{visualisation_name}",
+            description="test_desc",
+            short_description="test_short_desc",
+            slug="{visualisation_name}",
+            published=True,
+            user_access_type="{user_access_type}",
+        )
+        VisualisationLink.objects.create(
+            name="{visualisation_name}_link",
+            identifier="{link_identifier}",
+            visualisation_catalogue_item=visualisation,
+            visualisation_type="{link_type}",
         )
         """
     ).encode('ascii')

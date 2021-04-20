@@ -202,6 +202,7 @@ async def async_main():
 
     async def superset_headers(downstream_request, path):
         credentials = {}
+        dashboards = []
 
         if not path.startswith('/static/'):
             host_api_url = admin_root + '/api/v1/core/get-superset-role-credentials'
@@ -212,7 +213,9 @@ async def async_main():
                 headers=CIMultiDict(admin_headers_request(downstream_request)),
             ) as response:
                 if response.status == 200:
-                    credentials = await response.json()
+                    response_json = await response.json()
+                    credentials = response_json['credentials']
+                    dashboards = response_json['dashboards']
                 else:
                     raise UserException(
                         'Unable to fetch credentials for superset', response.status
@@ -234,6 +237,7 @@ async def async_main():
                     ]
                 )
             )
+            + (tuple([('Dashboards', ','.join(dashboards))]))
             + downstream_request['sso_profile_headers']
         )
 
