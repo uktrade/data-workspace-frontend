@@ -4,40 +4,6 @@
 
 {% block page_title %}Tools - {{ block.super }}{% endblock %}
 
-{% block head %}
-    {{ block.super }}
-{#    <style>#}
-{#        .tool-launch-button {#}
-{#            display: inline-block;#}
-{#            min-width: 12.8em;#}
-{#        }#}
-{#        .tool-stop-button {#}
-{#            display: inline-block;#}
-{#        }#}
-{#        .govuk-summary-list__key {#}
-{#            vertical-align: middle;#}
-{#        }#}
-{#        @media (min-width: 40.0625em) {#}
-{#            .inline-form-group {#}
-{#                display: inline-block;#}
-{#                margin-bottom: 0;#}
-{#            }#}
-{#        }#}
-{#        @media (min-width: 40.0625em) {#}
-{#            .tool-launch-button,#}
-{#            .tool-stop-button {#}
-{#                margin-bottom: 0;#}
-{#            }#}
-{#            .govuk-summary-list__key {#}
-{#                width: 20%;#}
-{#            }#}
-{#            .govuk-summary-list__actions {#}
-{#                width: 80%;#}
-{#            }#}
-{#        }#}
-{#    </style>#}
-{% endblock %}
-
 {% block breadcrumbs %}
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
@@ -67,11 +33,23 @@
           Find out more about the tools and how to start using them in
           <a class="govuk-link" href="https://data-services-help.trade.gov.uk">the Help Centre.</a>
         </p>
+
+        <p class="govuk-body">
+          <a class="govuk-link" href="{{ request.path }}#access-request">
+            How to request access to the tools?
+          </a>
+        </p>
       </div>
     </div>
 
     <div>
       <h2 class="govuk-visually-hidden">Available tools</h2>
+
+      {% flag SUPERSET_FLAG %}
+        {% with application_summary='Superset is a data exploration and visualisation platform using SQL for all skill sets to produce everything from simple line charts to highly detailed geospatial charts.' %}
+          {% include 'partials/tool_section.html' with application_name="Superset" application_summary=application_summary application_help_link=None instance=None application_url=superset_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True new=True %}
+        {% endwith %}
+        {% endflag %}
 
       {% with application_summary='The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.' %}
         {% url 'explorer:index' as data_explorer_url %}
@@ -107,7 +85,7 @@
 
     <div class="govuk-grid-row govuk-!-margin-top-9">
       <div class="govuk-grid-column-two-thirds">
-        <h2 class="govuk-heading-l">Access requirements and request workflow</h2>
+        <h2 class="govuk-heading-l" id="access-request">Access requirements and request workflow</h2>
         <p class="govuk-body">
           Users will need to have completed the
           <a class="govuk-link" href="https://app.ihasco.co.uk/lgjg02" target="_blank" rel="noopener noreferrer">GDPR Essentials</a> and

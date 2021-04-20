@@ -627,6 +627,7 @@ MAX_QUICKSIGHT_THROTTLE_RETRIES = env.get('MAX_QUICKSIGHT_THROTTLE_RETRIES', 5)
 FILTER_BY_TOPIC_FLAG = 'FILTER-SEARCH-BY-TOPIC'
 DATASET_FINDER_ADMIN_ONLY_FLAG = 'DATASET_FINDER_ADMIN_ONLY_FLAG'
 DATA_CUT_ENHANCED_PREVIEW_FLAG = 'DATA-CUT-ENHANCED-PREVIEW'
+SUPERSET_FLAG = 'SUPERSET-ACCESSIBLE'
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
 
@@ -648,3 +649,6 @@ DATAFLOW_API_CONFIG = {
 # and granting a single group permissions on a dataset. For our admin dataset permissions, django sends one form field
 # per user granted, rather than a single field with e.g. comma-separated users.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+
+SUPERSET_VIEW_URL = f'https://superset.{APPLICATION_ROOT_DOMAIN}'
+SUPERSET_EDIT_URL = f'https://superset-edit.{APPLICATION_ROOT_DOMAIN}'
