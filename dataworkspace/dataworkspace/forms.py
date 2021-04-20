@@ -2,7 +2,7 @@ import copy
 
 from django import forms
 from django.core.validators import EmailValidator
-from django.forms import CheckboxInput, CharField, ModelChoiceField
+from django.forms import CheckboxInput, CharField, EmailField, ModelChoiceField
 
 
 class GOVUKDesignSystemWidgetMixin:
@@ -66,6 +66,12 @@ class GOVUKDesignSystemTextWidget(
     template_name = 'design_system/textinput.html'
 
 
+class GOVUKDesignSystemEmailWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.EmailInput
+):
+    template_name = 'design_system/textinput.html'
+
+
 class GOVUKDesignSystemTextareaWidget(
     GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea
 ):
@@ -93,6 +99,10 @@ class GOVUKDesignSystemMultipleChoiceField(
 
 
 class GOVUKDesignSystemCharField(GOVUKDesignSystemFieldMixin, CharField):
+    widget = GOVUKDesignSystemTextWidget
+
+
+class GOVUKDesignSystemEmailField(GOVUKDesignSystemFieldMixin, EmailField):
     widget = GOVUKDesignSystemTextWidget
 
 

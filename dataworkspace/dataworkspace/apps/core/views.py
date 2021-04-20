@@ -2,6 +2,7 @@ import logging
 
 from django.http import (
     HttpResponse,
+    HttpResponseBadRequest,
     HttpResponseRedirect,
     HttpResponseForbidden,
     HttpResponseNotAllowed,
@@ -11,7 +12,11 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import FormView
 
-from dataworkspace.apps.core.forms import SupportForm, UserSatisfactionSurveyForm
+from dataworkspace.apps.core.forms import (
+    SupportForm,
+    TechnicalSupportForm,
+    UserSatisfactionSurveyForm,
+)
 from dataworkspace.apps.core.models import UserSatisfactionSurvey
 from dataworkspace.apps.core.utils import (
     can_access_schema_table,
@@ -58,13 +63,21 @@ class SupportView(FormView):
         ctx['ticket_id'] = self.kwargs.get('ticket_id')
         return ctx
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['initial'] = {'email': self.request.user.email}
-        return kwargs
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['email'] = self.request.user.email
+        return initial
 
     def form_valid(self, form):
         cleaned = form.cleaned_data
+
+        if cleaned['support_type'] == form.SupportTypes.NEW_DATASET:
+            return HttpResponseRedirect(reverse('request_data:index'))
+
+        if cleaned['support_type'] == form.SupportTypes.TECH_SUPPORT:
+            return HttpResponseRedirect(
+                f'{reverse("technical-support")}?email={cleaned["email"]}'
+            )
 
         tag = self.ZENDESK_TAGS.get(self.request.GET.get('tag'))
         ticket_id = create_support_request(
@@ -125,3 +138,30 @@ def table_data_view(request, database, schema, table):
         return HttpResponseNotFound()
     else:
         return table_data(request.user.email, database, schema, table)
+
+
+class TechnicalSupportView(FormView):
+    form_class = TechnicalSupportForm
+    template_name = 'core/technical_support.html'
+
+    def get(self, request, *args, **kwargs):
+        if 'email' not in self.request.GET:
+            return HttpResponseBadRequest('Expected an `email` parameter')
+        return super().get(request, *args, **kwargs)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['email'] = self.request.GET['email']
+        return initial
+
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        message = (
+            f'What were you trying to do?\n{cleaned["what_were_you_doing"]}\n\n'
+            f'What happened?\n{cleaned["what_happened"]}\n\n'
+            f'What should have happened?\n{cleaned["what_should_have_happened"]}'
+        )
+        ticket_id = create_support_request(self.request.user, cleaned['email'], message)
+        return HttpResponseRedirect(
+            reverse('support-success', kwargs={'ticket_id': ticket_id})
+        )

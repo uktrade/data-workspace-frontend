@@ -1,9 +1,7 @@
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.urls import reverse
 from django.views.generic import TemplateView, UpdateView, DetailView
-from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.request_data.forms import (  # pylint: disable=import-error
     RequestDataWhoAreYouForm,
@@ -22,8 +20,7 @@ from dataworkspace.apps.request_data.models import (  # pylint: disable=import-e
 from dataworkspace.zendesk import create_support_request  # pylint: disable=import-error
 
 
-class RequestData(WaffleFlagMixin, TemplateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestData(TemplateView):
     template_name = 'request_data/index.html'
 
     def post(self, request):
@@ -33,8 +30,7 @@ class RequestData(WaffleFlagMixin, TemplateView):
         )
 
 
-class RequestDataWhoAreYou(WaffleFlagMixin, UpdateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataWhoAreYou(UpdateView):
     model = DataRequest
     template_name = 'request_data/who-are-you.html'
     form_class = RequestDataWhoAreYouForm
@@ -72,8 +68,7 @@ class RequestDataWhoAreYou(WaffleFlagMixin, UpdateView):
         return reverse('request-data:owner-or-manager', kwargs={"pk": self.object.pk})
 
 
-class RequestDataOwnerOrManager(WaffleFlagMixin, UpdateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataOwnerOrManager(UpdateView):
     model = DataRequest
     template_name = 'request_data/data-owner-or-manager.html'
     form_class = RequestDataOwnerOrManagerForm
@@ -99,8 +94,7 @@ class RequestDataOwnerOrManager(WaffleFlagMixin, UpdateView):
         return reverse('request-data:describe-data', kwargs={"pk": self.object.pk})
 
 
-class RequestDataDescription(WaffleFlagMixin, UpdateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataDescription(UpdateView):
     model = DataRequest
     template_name = 'request_data/data-description.html'
     form_class = RequestDataDescriptionForm
@@ -130,8 +124,7 @@ class RequestDataDescription(WaffleFlagMixin, UpdateView):
         return reverse('request-data:purpose-of-data', kwargs={"pk": self.object.pk})
 
 
-class RequestDataPurpose(WaffleFlagMixin, UpdateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataPurpose(UpdateView):
     model = DataRequest
     template_name = 'request_data/data-purpose.html'
     form_class = RequestDataPurposeForm
@@ -159,8 +152,7 @@ class RequestDataPurpose(WaffleFlagMixin, UpdateView):
         )
 
 
-class RequestDataSecurityClassification(WaffleFlagMixin, UpdateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataSecurityClassification(UpdateView):
     model = DataRequest
     template_name = 'request_data/security-classification.html'
     form_class = RequestDataSecurityClassificationForm
@@ -186,8 +178,7 @@ class RequestDataSecurityClassification(WaffleFlagMixin, UpdateView):
         return reverse('request-data:location-of-data', kwargs={"pk": self.object.pk})
 
 
-class RequestDataLocation(WaffleFlagMixin, UpdateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataLocation(UpdateView):
     model = DataRequest
     template_name = 'request_data/data-location.html'
     form_class = RequestDataLocationForm
@@ -213,8 +204,7 @@ class RequestDataLocation(WaffleFlagMixin, UpdateView):
         return reverse('request-data:licence-of-data', kwargs={"pk": self.object.pk})
 
 
-class RequestDataLicence(WaffleFlagMixin, UpdateView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataLicence(UpdateView):
     model = DataRequest
     template_name = 'request_data/data-licence.html'
     form_class = RequestDataLicenceForm
@@ -237,8 +227,7 @@ class RequestDataLicence(WaffleFlagMixin, UpdateView):
         return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
 
 
-class RequestDataCheckAnswers(WaffleFlagMixin, DetailView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataCheckAnswers(DetailView):
     model = DataRequest
     template_name = 'request_data/check-answers.html'
 
@@ -320,7 +309,6 @@ A request for a new dataset on Data Workspace has been submitted. Here are the d
         )
 
 
-class RequestDataConfirmationPage(WaffleFlagMixin, DetailView):
-    waffle_flag = settings.REQUEST_DATA_JOURNEY_FLAG
+class RequestDataConfirmationPage(DetailView):
     model = DataRequest
     template_name = 'request_data/confirmation-page.html'

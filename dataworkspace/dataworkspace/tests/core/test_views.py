@@ -15,26 +15,50 @@ from dataworkspace.tests.common import (
 from dataworkspace.tests.factories import UserFactory
 
 
-class TestSupportView(BaseTestCase):
-    def test_create_support_request_invalid_email(self):
-        response = self._authenticated_post(
-            reverse('support'), {'email': 'x', 'message': 'test message'}
-        )
-        self.assertContains(response, 'Enter a valid email address')
+class TestSupportViews(BaseTestCase):
+    def test_landing_page(self):
+        response = self._authenticated_get(reverse('support'))
+        assert response.status_code == 200
+        self.assertContains(response, 'I would like to have technical support')
+        self.assertContains(response, 'I would like to add a new dataset')
+        self.assertContains(response, 'Other')
 
-    def test_create_support_request_invalid_message(self):
+    def test_invalid_email(self):
         response = self._authenticated_post(
-            reverse('support'), {'email': 'noreply@example.com', 'message': ''}
+            reverse('support'), {'email': 'notanemail', 'support_type': 'tech'}
         )
-        self.assertContains(response, 'This field is required')
+        assert response.status_code == 200
+        self.assertContains(response, 'Enter a valid email address.')
+
+    def test_missing_email(self):
+        response = self._authenticated_post(
+            reverse('support'), {'email': '', 'support_type': 'tech'}
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'Please enter your email address')
+
+    def test_tech_support_redirect(self):
+        response = self._authenticated_post(
+            reverse('support'), {'email': 'a@b.com', 'support_type': 'tech'}
+        )
+        self.assertRedirects(response, reverse('technical-support') + '?email=a@b.com')
+
+    def test_add_new_dataset_redirect(self):
+        response = self._authenticated_post(
+            reverse('support'), {'email': 'a@b.com', 'support_type': 'dataset'}
+        )
+        self.assertRedirects(response, reverse('request-data:index'))
 
     @mock.patch('dataworkspace.apps.core.views.create_support_request')
-    def test_create_support_request(self, mock_create_request):
+    def test_other(self, mock_create_request):
         mock_create_request.return_value = 999
         response = self._authenticated_post(
             reverse('support'),
-            data={'email': 'noreply@example.com', 'message': 'A test message'},
-            post_format='multipart',
+            data={
+                'email': 'noreply@example.com',
+                'message': 'A test message',
+                'support_type': 'other',
+            },
         )
         self.assertContains(
             response,
@@ -49,8 +73,11 @@ class TestSupportView(BaseTestCase):
         mock_create_request.return_value = 999
         response = self._authenticated_post(
             reverse('support') + '?tag=data-request',
-            data={'email': 'noreply@example.com', 'message': 'A test message'},
-            post_format='multipart',
+            data={
+                'email': 'noreply@example.com',
+                'message': 'A test message',
+                'support_type': 'other',
+            },
         )
         self.assertContains(
             response,
@@ -67,7 +94,11 @@ class TestSupportView(BaseTestCase):
         mock_create_request.return_value = 999
         response = self._authenticated_post(
             reverse('support') + '?tag=invalid-tag',
-            data={'email': 'noreply@example.com', 'message': 'A test message'},
+            data={
+                'email': 'noreply@example.com',
+                'message': 'A test message',
+                'support_type': 'other',
+            },
             post_format='multipart',
         )
         self.assertContains(
@@ -78,6 +109,59 @@ class TestSupportView(BaseTestCase):
         )
         mock_create_request.assert_called_once_with(
             mock.ANY, 'noreply@example.com', 'A test message', tag=None
+        )
+
+    def test_tech_support_page(self):
+        response = self._authenticated_get(
+            reverse('technical-support') + '?email=a@b.com'
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'What were you trying to do?')
+        self.assertContains(response, 'What happened?')
+        self.assertContains(response, 'What should have happened?')
+
+    def test_tech_support_no_email(self):
+        response = self._authenticated_get(reverse('technical-support'))
+        assert response.status_code == 400
+
+    def test_tech_support_invalid_message(self):
+        response = self._authenticated_post(
+            reverse('technical-support') + '?email=a@b.com',
+            {
+                'email': 'a@b.com',
+                'what_were_you_doing': '',
+                'what_happened': '',
+                'what_should_have_happened': '',
+            },
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'Please add some detail to the support request')
+
+    @mock.patch('dataworkspace.apps.core.views.create_support_request')
+    def test_tech_support_ticket(self, mock_create_request):
+        mock_create_request.return_value = 999
+        response = self._authenticated_post(
+            reverse('technical-support') + '?email=a@b.com',
+            {
+                'email': 'a@b.com',
+                'what_were_you_doing': 'Something',
+                'what_happened': 'Nothing',
+                'what_should_have_happened': 'Something else',
+            },
+        )
+        assert response.status_code == 200
+        self.assertContains(
+            response,
+            'Your request has been received. Your reference is: '
+            '<strong>999</strong>.',
+            html=True,
+        )
+        mock_create_request.assert_called_once_with(
+            mock.ANY,
+            'a@b.com',
+            'What were you trying to do?\nSomething\n\n'
+            'What happened?\nNothing\n\n'
+            'What should have happened?\nSomething else',
         )
 
 
@@ -109,7 +193,7 @@ def test_header_links(request_client):
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
         ("About", "/about/"),
-        ("Support and feedback", "/support-and-feedback/"),
+        ("Support", "/support-and-feedback/"),
         (
             "Help centre (opens in a new tab)",
             "https://data-services-help.trade.gov.uk/data-workspace",
@@ -134,7 +218,7 @@ def test_footer_links(request_client):
         ('Home', 'http://dataworkspace.test:8000/'),
         ("Tools", "/tools/"),
         ('About', '/about/'),
-        ("Support and feedback", "/support-and-feedback/"),
+        ("Support", "/support-and-feedback/"),
         (
             'Help centre (opens in a new tab)',
             'https://data-services-help.trade.gov.uk/data-workspace',

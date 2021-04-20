@@ -9,8 +9,7 @@
       <li class="govuk-breadcrumbs__list-item">
         <a class="govuk-breadcrumbs__link" href="{% url 'root' %}">Home</a>
       </li>
-      <li class="govuk-breadcrumbs__list-item">Support and feedback
-      </li>
+      <li class="govuk-breadcrumbs__list-item">Support</li>
     </ol>
   </div>
 {% endblock %}
@@ -25,23 +24,19 @@
         <p class="govuk-body">
           You will receive a confirmation email to the address you provided.
         </p>
-        <a class="govuk-button" href="{% url 'root' %}">Go home</a>
+        <a class="govuk-button" href="{% url 'root' %}">Back</a>
       {% else %}
-        <h1 class="govuk-heading-l">Support and feedback</h1>
-        <p class="govuk-body-l">Tell us how we can help.</p>
-        {% flag REQUEST_DATA_JOURNEY_FLAG %}
-        <p class="govuk-body">
-          <a class="govuk-link" href="{% url 'request_data:index' %}">Tell us about a new dataset</a>
-          that you’d like to add to Data Workspace.
-        </p>
-        {% endflag %}
-        <form method="post" enctype="multipart/form-data">
+        {% include 'design_system/error_summary.html' with form=form %}
+        <form method="post">
           {% csrf_token %}
-          <fieldset class="govuk-fieldset">
-            {% include 'partials/form_field.html' with field=form.message %}
-            {% include 'partials/form_field.html' with field=form.email %}
-          </fieldset>
-          <button type="submit" class="govuk-button">Send</button>
+          <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
+            {{ form.support_type }}
+            <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-message">
+              {{ form.message }}
+            </div>
+          </div>
+          {{ form.email }}
+          <button type="submit" class="govuk-button">Continue</button>
         </form>
       {% endif %}
     </div>
