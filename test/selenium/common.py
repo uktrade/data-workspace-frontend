@@ -110,3 +110,6 @@ class _BasePage:
             return self._check_url_and_return_page(new_page_class)
 
         return None
+
+    def select_radio_button(self, button_id):
+        self._driver.find_element_by_id(button_id).click()

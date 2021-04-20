@@ -7,6 +7,7 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
+from dataworkspace.apps.api_v1.core.serializers import UserSatisfactionSurveySerializer
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.models import UserSatisfactionSurvey
 from dataworkspace.apps.core.utils import (
@@ -15,8 +16,7 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     stable_identification_suffix,
 )
-
-from dataworkspace.apps.api_v1.core.serializers import UserSatisfactionSurveySerializer
+from dataworkspace.apps.datasets.models import VisualisationLink
 
 
 class UserSatisfactionSurveyViewSet(viewsets.ModelViewSet):
@@ -40,9 +40,9 @@ def get_cached_credentials_key(user_profile_sso_id):
 def get_superset_credentials(request):
     cache.set(credentials_version_key, 1, nx=True)
     cache_key = get_cached_credentials_key(request.headers['sso-profile-user-id'])
-    credentials = cache.get(cache_key, None)
+    response = cache.get(cache_key, None)
 
-    if not credentials:
+    if not response:
         dw_user = get_user_model().objects.get(
             profile__sso_id=request.headers['sso-profile-user-id']
         )
@@ -66,9 +66,24 @@ def get_superset_credentials(request):
             dw_user,
             valid_for=duration,
         )
-        cache.set(cache_key, credentials, timeout=cache_duration)
 
-    return JsonResponse(credentials[0])
+        superset_dashboards = VisualisationLink.objects.filter(
+            visualisation_type='SUPERSET'
+        )
+        dashboards_user_can_access = [
+            d.identifier
+            for d in superset_dashboards
+            if d.visualisation_catalogue_item.user_has_access(dw_user)
+        ]
+
+        response = {
+            'credentials': credentials[0],
+            'dashboards': dashboards_user_can_access,
+        }
+
+        cache.set(cache_key, response, timeout=cache_duration)
+
+    return JsonResponse(response)
 
 
 def remove_superset_user_cached_credentials(user):
