@@ -262,6 +262,17 @@ def _get_embedded_quicksight_dashboard(request, dashboard_id, catalogue_item):
     return render(request, 'quicksight_running.html', context, status=200)
 
 
+@csp_update(frame_src=settings.SUPERSET_VIEW_URL)
+def _get_embedded_superset_dashboard(request, dashboard_id, catalogue_item):
+    context = {
+        'dashboard_url': f'{settings.SUPERSET_VIEW_URL}/superset/dashboard/{dashboard_id}?standalone=true',
+        'nice_name': catalogue_item,
+        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
+        'catalogue_item': catalogue_item,
+    }
+    return render(request, 'superset_running.html', context, status=200)
+
+
 @require_GET
 def quicksight_start_polling_sync_and_redirect(request):
     if not request.user.has_perm('applications.access_quicksight'):
@@ -298,8 +309,8 @@ def visualisation_link_html_view(request, link_id):
             request, identifier, visualisation_link.visualisation_catalogue_item
         )
     elif visualisation_link.visualisation_type == 'SUPERSET':
-        return redirect(
-            f'https://superset.{settings.APPLICATION_ROOT_DOMAIN}/superset/dashboard/{identifier}'
+        return _get_embedded_superset_dashboard(
+            request, identifier, visualisation_link.visualisation_catalogue_item
         )
 
     return HttpResponse(
