@@ -204,11 +204,14 @@ def tools_html_GET(request):
                 }
                 for application_template in ApplicationTemplate.objects.all()
                 .filter(visible=True, application_type='TOOL')
+                .exclude(nice_name='Superset')
                 .order_by('nice_name')
             ],
             'appstream_url': settings.APPSTREAM_URL,
             'quicksight_url': reverse('applications:quicksight_redirect'),
+            'superset_url': settings.SUPERSET_EDIT_URL,
             'your_files_enabled': settings.YOUR_FILES_ENABLED,
+            'SUPERSET_FLAG': settings.SUPERSET_FLAG,
         },
     )
 
