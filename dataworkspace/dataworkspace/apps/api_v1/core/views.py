@@ -32,20 +32,16 @@ class UserSatisfactionSurveyViewSet(viewsets.ModelViewSet):
 credentials_version_key = 'superset_credentials_version'
 
 
-def initialise_credentials_version_key():
+def get_cached_credentials_key(user_profile_sso_id):
     # Set to never expire as reverting to a previous version will cause
     # potentially invalid cached credentials to be used if the user loses
     # or gains access to a dashboard
     cache.set(credentials_version_key, 1, nx=True, timeout=None)
-
-
-def get_cached_credentials_key(user_profile_sso_id):
     credentials_version = cache.get(credentials_version_key, None)
     return f"superset_credentials_{credentials_version}_{user_profile_sso_id}"
 
 
 def get_superset_credentials(request):
-    initialise_credentials_version_key()
     cache_key = get_cached_credentials_key(request.headers['sso-profile-user-id'])
     response = cache.get(cache_key, None)
 
@@ -94,7 +90,6 @@ def get_superset_credentials(request):
 
 
 def remove_superset_user_cached_credentials(user):
-    initialise_credentials_version_key()
     cache_key = get_cached_credentials_key(user.profile.sso_id)
     cache.delete(cache_key)
 
