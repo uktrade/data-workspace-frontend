@@ -1,6 +1,6 @@
 import os
 
-from superset import db
+from superset import db, security_manager
 from superset.security import SupersetSecurityManager
 
 from flask_appbuilder.security.manager import AUTH_REMOTE_USER
@@ -55,18 +55,14 @@ PUBLIC_ROLE_PERMISSIONS = [
 class DataWorkspaceRemoteUserView(AuthView):
     @expose('/login/')
     def login(self):
-        security_manager = self.appbuilder.sm
         role_name = base_role_names[request.host.split('.')[0]]
         username = f'{request.environ["HTTP_SSO_PROFILE_USER_ID"]}--{role_name}'
         email_parts = request.environ["HTTP_SSO_PROFILE_EMAIL"].split('@')
         email_parts[0] += f'+{role_name.lower()}'
         email = '@'.join(email_parts)
-        user_role_name = f'{username}-Role'
 
         # If user already logged in, redirect to index...
         if g.user is not None and g.user.is_authenticated:
-            if role_name == 'Public':
-                apply_public_role_permissions(security_manager, g.user, user_role_name)
             return redirect(self.appbuilder.get_url_for_index)
 
         app = self.appbuilder.get_app
@@ -82,8 +78,6 @@ class DataWorkspaceRemoteUserView(AuthView):
             user.last_name = f'{request.headers["Sso-Profile-Last-Name"]} ({role_name})'
             user.email = email
             security_manager.update_user(user)
-            if role_name == 'Public':
-                apply_public_role_permissions(security_manager, user, user_role_name)
             login_user(user)
             return redirect(self.appbuilder.get_url_for_index)
 
@@ -95,9 +89,6 @@ class DataWorkspaceRemoteUserView(AuthView):
             email=email,
             role=security_manager.find_role(role_name),
         )
-
-        if role_name == 'Public':
-            apply_public_role_permissions(security_manager, user, user_role_name)
 
         login_user(user)
         return redirect(self.appbuilder.get_url_for_index)
@@ -158,6 +149,18 @@ def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
     return uri, params
 
 
+def data_workspace_permission_handler(app):
+    @app.before_request
+    def before_request():  # pylint: disable=unused-variable
+        if g.user is not None and g.user.is_authenticated:
+            role_name = base_role_names[request.host.split('.')[0]]
+            if role_name == 'Public':
+                apply_public_role_permissions(
+                    security_manager, g.user, f'{g.user.username}-Role'
+                )
+
+
+FLASK_APP_MUTATOR = data_workspace_permission_handler
 CUSTOM_SECURITY_MANAGER = DataWorkspaceSecurityManager
 AUTH_TYPE = AUTH_REMOTE_USER
 ADDITIONAL_MIDDLEWARE = [lambda app: ProxyFix(app, x_proto=1)]
