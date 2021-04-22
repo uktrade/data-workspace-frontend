@@ -707,6 +707,8 @@ class VisualisationCatalogueItemAdmin(
 
         super().save_model(request, obj, form, change)
 
+        changed_users = set()
+
         for user in authorized_users - current_authorized_users:
             VisualisationUserPermission.objects.create(visualisation=obj, user=user)
             log_permission_change(
@@ -716,6 +718,7 @@ class VisualisationCatalogueItemAdmin(
                 {'for_user_id': user.id},
                 f"Added visualisation {obj} permission",
             )
+            changed_users.add(user)
 
         for user in current_authorized_users - authorized_users:
             VisualisationUserPermission.objects.filter(
@@ -728,6 +731,7 @@ class VisualisationCatalogueItemAdmin(
                 {'for_user_id': user.id},
                 f"Removed visualisation {obj} permission",
             )
+            changed_users.add(user)
 
         if original_user_access_type != obj.user_access_type:
             log_permission_change(
@@ -737,6 +741,15 @@ class VisualisationCatalogueItemAdmin(
                 {"access_type": obj.user_access_type},
                 f"user_access_type set to {obj.user_access_type}",
             )
+
+            # As the visualisation's access type has changed, clear cached credentials for all
+            # users to ensure they either:
+            #   - lose access if it went from REQUIRES_AUTHENTICATION to REQUIRES_AUTHORIZATION
+            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION
+            invalidate_superset_user_cached_credentials()
+        else:
+            for user in changed_users:
+                remove_superset_user_cached_credentials(user)
 
 
 @admin.register(DatasetReferenceCode)
