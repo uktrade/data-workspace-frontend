@@ -50,7 +50,7 @@ class TestGetSupersetCredentialsAPIView:
 
         assert mock_new_credentials.called
         assert mock_cache.set.call_args_list == [
-            mock.call('superset_credentials_version', 1, nx=True),
+            mock.call('superset_credentials_version', 1, nx=True, timeout=None),
             mock.call(
                 f'superset_credentials_1_{user.profile.sso_id}',
                 {
@@ -88,7 +88,7 @@ class TestGetSupersetCredentialsAPIView:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert not mock_new_credentials.called
         assert mock_cache.set.call_args_list == [
-            mock.call('superset_credentials_version', 1, nx=True),
+            mock.call('superset_credentials_version', 1, nx=True, timeout=None),
         ]
 
     @pytest.mark.django_db
@@ -128,5 +128,5 @@ class TestGetSupersetCredentialsAPIView:
 
         assert not mock_new_credentials.called
         assert mock_cache.set.call_args_list == [
-            mock.call('superset_credentials_version', 1, nx=True),
+            mock.call('superset_credentials_version', 1, nx=True, timeout=None),
         ]
