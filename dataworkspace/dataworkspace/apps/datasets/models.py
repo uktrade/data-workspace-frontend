@@ -302,6 +302,18 @@ class DataSet(DeletableTimestampedUserModel):
             or self.datasetuserpermission_set.filter(user=user).exists()
         )
 
+    def user_has_bookmarked(self, user):
+        return self.datasetbookmark_set.filter(user=user).exists()
+
+    def toggle_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            self.datasetbookmark_set.filter(user=user).delete()
+        else:
+            self.datasetbookmark_set.create(user=user)
+
+    def bookmark_count(self):
+        return self.datasetbookmark_set.count()
+
     def clone(self):
         """Create a copy of the dataset and any related objects.
 
@@ -347,6 +359,15 @@ class DataSetUserPermission(models.Model):
 
     class Meta:
         db_table = 'app_datasetuserpermission'
+        unique_together = ('user', 'dataset')
+
+
+class DataSetBookmark(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'app_datasetbookmark'
         unique_together = ('user', 'dataset')
 
 
@@ -1319,6 +1340,27 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         return 'Reference Dataset'
 
+    def user_has_bookmarked(self, user):
+        return self.referencedatasetbookmark_set.filter(user=user).exists()
+
+    def toggle_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            self.referencedatasetbookmark_set.filter(user=user).delete()
+        else:
+            self.referencedatasetbookmark_set.create(user=user)
+
+    def bookmark_count(self):
+        return self.referencedatasetbookmark_set.count()
+
+
+class ReferenceDataSetBookmark(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    reference_dataset = models.ForeignKey(ReferenceDataset, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'app_referencedatasetbookmark'
+        unique_together = ('user', 'reference_dataset')
+
 
 class ReferenceDatasetRecordBase(models.Model):
     reference_dataset = models.ForeignKey(
@@ -1904,6 +1946,18 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             or self.visualisationuserpermission_set.filter(user=user).exists()
         )
 
+    def user_has_bookmarked(self, user):
+        return self.visualisationbookmark_set.filter(user=user).exists()
+
+    def toggle_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            self.visualisationbookmark_set.filter(user=user).delete()
+        else:
+            self.visualisationbookmark_set.create(user=user)
+
+    def bookmark_count(self):
+        return self.visualisationbookmark_set.count()
+
     def __str__(self):
         return self.name
 
@@ -1916,6 +1970,17 @@ class VisualisationUserPermission(models.Model):
 
     class Meta:
         db_table = 'app_visualisationuserpermission'
+        unique_together = ('user', 'visualisation')
+
+
+class VisualisationBookmark(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    visualisation = models.ForeignKey(
+        VisualisationCatalogueItem, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        db_table = 'app_visualisationbookmark'
         unique_together = ('user', 'visualisation')
 
 

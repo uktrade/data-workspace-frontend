@@ -10,6 +10,7 @@ from django.contrib import admin
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Count, F
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
@@ -26,14 +27,17 @@ from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
     DataSetUserPermission,
+    DataSetBookmark,
     DatasetReferenceCode,
     MasterDataset,
     ReferenceDataset,
+    ReferenceDataSetBookmark,
     ReferenceDatasetField,
     SourceLink,
     SourceTable,
     SourceView,
     Tag,
+    VisualisationBookmark,
     VisualisationCatalogueItem,
     VisualisationUserPermission,
     VisualisationLink,
@@ -224,6 +228,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         'get_tags',
         'published',
         'number_of_downloads',
+        'get_bookmarks',
     )
     list_filter = ('tags',)
     search_fields = ['name']
@@ -281,6 +286,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         return ', '.join([x.name for x in obj.tags.all()])
 
     get_tags.short_description = 'Tags'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'datasetbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -458,6 +469,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         'get_published_version',
         'published_at',
         'published',
+        'get_bookmarks',
     )
     inlines = [ReferenceDataFieldInline]
     autocomplete_fields = ['tags']
@@ -499,6 +511,12 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         return obj.published_version
 
     get_published_version.short_description = 'Version'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'referencedatasetbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     class Media:
         js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')
@@ -618,6 +636,7 @@ class VisualisationCatalogueItemAdmin(
         'short_description',
         'published',
         'get_tags',
+        'get_bookmarks',
     )
     list_filter = ('tags',)
     search_fields = ['name']
@@ -675,6 +694,12 @@ class VisualisationCatalogueItemAdmin(
         return ', '.join([x.name for x in obj.tags.all()])
 
     get_tags.short_description = 'Tags'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'visualisationbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "visualisation_template":
@@ -860,3 +885,51 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         return self._get_related_datasets(obj, '<br />')
 
     get_detail_related_datasets.short_description = 'Related Datasets'
+
+
+@admin.register(DataSetBookmark, ReferenceDataSetBookmark, VisualisationBookmark)
+class BookmarksAdmin(admin.ModelAdmin):
+    list_display = ('name', 'total')
+    fields = ('name', 'total')
+    list_per_page = 50
+
+    def name(self, obj):
+        return obj.name
+
+    name.short_description = "Dataset name"
+
+    def total(self, obj):
+        return obj.total
+
+    total.short_description = "# total"
+
+    def get_queryset(self, request):
+        datasets_qs = (
+            DataSetBookmark.objects.all()
+            .annotate(name=F('dataset_id'))
+            .annotate(total=Count('name'))
+            .order_by('total')[:10]
+        )
+        ref_qs = (
+            ReferenceDataSetBookmark.objects.all()
+            .annotate(name=F('reference_dataset_id'))
+            .annotate(total=Count('name'))
+            .order_by('total')[:10]
+        )
+        vis_qs = (
+            VisualisationBookmark.objects.all()
+            .annotate(name=F('visualisation_id'))
+            .annotate(total=Count('name'))
+            .order_by('total')[:10]
+        )
+
+        return datasets_qs | ref_qs | vis_qs
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

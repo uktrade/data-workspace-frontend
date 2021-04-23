@@ -82,4 +82,9 @@ urlpatterns = [
         {'model_class': models.SourceLink},
         name='data_cut_source_link_preview',
     ),
+    path(
+        '<uuid:dataset_uuid>/toggle-bookmark',
+        login_required(views.toggle_bookmark),
+        name='toggle_bookmark',
+    ),
 ]
