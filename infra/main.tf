@@ -75,6 +75,7 @@ variable mirrors_bucket_name {}
 variable mirrors_data_bucket_name {}
 
 variable sentry_dsn {}
+variable sentry_notebooks_dsn {}
 variable sentry_environment {}
 
 variable notebook_task_role_prefix {}
