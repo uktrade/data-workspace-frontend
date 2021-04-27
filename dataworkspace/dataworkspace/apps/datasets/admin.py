@@ -10,7 +10,6 @@ from django.contrib import admin
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count, F
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
@@ -27,17 +26,14 @@ from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
     DataSetUserPermission,
-    DataSetBookmark,
     DatasetReferenceCode,
     MasterDataset,
     ReferenceDataset,
-    ReferenceDataSetBookmark,
     ReferenceDatasetField,
     SourceLink,
     SourceTable,
     SourceView,
     Tag,
-    VisualisationBookmark,
     VisualisationCatalogueItem,
     VisualisationUserPermission,
     VisualisationLink,
@@ -885,51 +881,3 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         return self._get_related_datasets(obj, '<br />')
 
     get_detail_related_datasets.short_description = 'Related Datasets'
-
-
-@admin.register(DataSetBookmark, ReferenceDataSetBookmark, VisualisationBookmark)
-class BookmarksAdmin(admin.ModelAdmin):
-    list_display = ('name', 'total')
-    fields = ('name', 'total')
-    list_per_page = 50
-
-    def name(self, obj):
-        return obj.name
-
-    name.short_description = "Dataset name"
-
-    def total(self, obj):
-        return obj.total
-
-    total.short_description = "# total"
-
-    def get_queryset(self, request):
-        datasets_qs = (
-            DataSetBookmark.objects.all()
-            .annotate(name=F('dataset_id'))
-            .annotate(total=Count('name'))
-            .order_by('total')[:10]
-        )
-        ref_qs = (
-            ReferenceDataSetBookmark.objects.all()
-            .annotate(name=F('reference_dataset_id'))
-            .annotate(total=Count('name'))
-            .order_by('total')[:10]
-        )
-        vis_qs = (
-            VisualisationBookmark.objects.all()
-            .annotate(name=F('visualisation_id'))
-            .annotate(total=Count('name'))
-            .order_by('total')[:10]
-        )
-
-        return datasets_qs | ref_qs | vis_qs
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
