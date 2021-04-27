@@ -89,6 +89,14 @@ class DataSetUserPermissionFactory(factory.django.DjangoModelFactory):
         model = 'datasets.DataSetUserPermission'
 
 
+class DataSetBookmarkFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    dataset = factory.SubFactory(DataSetFactory)
+
+    class Meta:
+        model = 'datasets.DataSetBookmark'
+
+
 class SourceLinkFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     dataset = factory.SubFactory(DataSetFactory)
@@ -159,6 +167,14 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'datasets.ReferenceDataset'
+
+
+class ReferenceDataSetBookmarkFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
+
+    class Meta:
+        model = 'datasets.ReferenceDataSetBookmark'
 
 
 class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
@@ -307,6 +323,7 @@ class VisualisationApprovalFactory(factory.django.DjangoModelFactory):
 
 
 class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     visualisation_template = factory.SubFactory(VisualisationTemplateFactory)
     name = factory.LazyAttribute(
         lambda o: o.visualisation_template.name
@@ -327,6 +344,14 @@ class VisualisationUserPermissionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'datasets.VisualisationUserPermission'
+
+
+class VisualisationBookmarkFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    visualisation = factory.SubFactory(VisualisationCatalogueItemFactory)
+
+    class Meta:
+        model = 'datasets.VisualisationBookmark'
 
 
 class VisualisationLinkFactory(factory.django.DjangoModelFactory):

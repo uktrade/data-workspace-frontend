@@ -40,7 +40,10 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import (
+    require_GET,
+    require_http_methods,
+)
 from django.views.generic import DetailView, View
 from waffle.mixins import WaffleFlagMixin
 
@@ -76,6 +79,7 @@ from dataworkspace.apps.datasets.utils import (
     find_dataset,
     find_visualisation,
     find_dataset_or_visualisation,
+    find_dataset_or_visualisation_for_bookmark,
     get_code_snippets_for_table,
     get_code_snippets_for_query,
 )
@@ -154,6 +158,7 @@ def get_datasets_data_for_user_matching_query(
 
     # Mark up whether the user can access the data in the dataset.
     access_filter = Q()
+    bookmark_filter = Q(referencedatasetbookmark__user=user)
 
     if user and datasets.model is not ReferenceDataset:
         access_filter &= (
@@ -166,11 +171,23 @@ def get_datasets_data_for_user_matching_query(
             user_access_type='REQUIRES_AUTHORIZATION', datasetuserpermission__user=user
         )
 
+        bookmark_filter = Q(datasetbookmark__user=user)
+
     datasets = datasets.annotate(
         _has_access=Case(
             When(access_filter, then=True), default=False, output_field=BooleanField(),
         )
         if access_filter
+        else Value(True, BooleanField()),
+    )
+
+    datasets = datasets.annotate(
+        _is_bookmarked=Case(
+            When(bookmark_filter, then=True),
+            default=False,
+            output_field=BooleanField(),
+        )
+        if bookmark_filter
         else Value(True, BooleanField()),
     )
 
@@ -209,20 +226,24 @@ def get_datasets_data_for_user_matching_query(
     # We are joining on the user permissions table to determine `_has_access`` to the dataset, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
     # of the records say that access is available.
-    datasets = datasets.values(
-        id_field,
-        'name',
-        'slug',
-        'short_description',
-        'search_rank',
-        'source_tag_names',
-        'source_tag_ids',
-        'topic_tag_names',
-        'topic_tag_ids',
-        'purpose',
-        'published',
-        'published_at',
-    ).annotate(has_access=BoolOr('_has_access'))
+    datasets = (
+        datasets.values(
+            id_field,
+            'name',
+            'slug',
+            'short_description',
+            'search_rank',
+            'source_tag_names',
+            'source_tag_ids',
+            'topic_tag_names',
+            'topic_tag_ids',
+            'purpose',
+            'published',
+            'published_at',
+        )
+        .annotate(has_access=BoolOr('_has_access'))
+        .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
+    )
 
     return datasets.values(
         id_field,
@@ -238,6 +259,7 @@ def get_datasets_data_for_user_matching_query(
         'published',
         'published_at',
         'has_access',
+        'is_bookmarked',
     )
 
 
@@ -299,6 +321,17 @@ def get_visualisations_data_for_user_matching_query(
         else Value(True, BooleanField()),
     )
 
+    bookmark_filter = Q(visualisationbookmark__user=user)
+    visualisations = visualisations.annotate(
+        _is_bookmarked=Case(
+            When(bookmark_filter, then=True),
+            default=False,
+            output_field=BooleanField(),
+        )
+        if bookmark_filter
+        else Value(True, BooleanField()),
+    )
+
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
         source_tag_ids=ArrayAgg(
@@ -333,20 +366,24 @@ def get_visualisations_data_for_user_matching_query(
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
     # of the records say that access is available.
-    visualisations = visualisations.values(
-        'id',
-        'name',
-        'slug',
-        'short_description',
-        'search_rank',
-        'source_tag_names',
-        'source_tag_ids',
-        'topic_tag_names',
-        'topic_tag_ids',
-        'purpose',
-        'published',
-        'published_at',
-    ).annotate(has_access=BoolOr('_has_access'))
+    visualisations = (
+        visualisations.values(
+            'id',
+            'name',
+            'slug',
+            'short_description',
+            'search_rank',
+            'source_tag_names',
+            'source_tag_ids',
+            'topic_tag_names',
+            'topic_tag_ids',
+            'purpose',
+            'published',
+            'published_at',
+        )
+        .annotate(has_access=BoolOr('_has_access'))
+        .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
+    )
 
     return visualisations.values(
         'id',
@@ -362,12 +399,14 @@ def get_visualisations_data_for_user_matching_query(
         'published',
         'published_at',
         'has_access',
+        'is_bookmarked',
     )
 
 
 def _matches_filters(
     data,
     access: bool,
+    bookmark: bool,
     unpublished: bool,
     use: Set,
     source_ids: Set,
@@ -376,6 +415,7 @@ def _matches_filters(
 ):
     return (
         (not access or data['has_access'])
+        and (not bookmark or data['is_bookmarked'])
         and (unpublished or data['published'])
         and (not use or use == [None] or data['purpose'] in use)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
@@ -437,7 +477,7 @@ def find_datasets(request):
 
     if form.is_valid():
         query = form.cleaned_data.get("q")
-        access = form.cleaned_data.get("access")
+        status = form.cleaned_data.get("status")
         unpublished = form.cleaned_data.get("unpublished")
         use = set(form.cleaned_data.get("use"))
         sort = form.cleaned_data.get("sort")
@@ -458,7 +498,8 @@ def find_datasets(request):
         filter(
             lambda d: _matches_filters(
                 d,
-                bool(access),
+                bool('access' in status),
+                bool('bookmark' in status),
                 bool(unpublished),
                 use,
                 source_ids,
@@ -558,6 +599,7 @@ class DatasetDetailView(DetailView):
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
+                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 'master_datasets_info': master_datasets_info,
                 'source_table_type': DataLinkType.SOURCE_TABLE,
                 'related_data': self.object.related_datasets(),
@@ -597,6 +639,7 @@ class DatasetDetailView(DetailView):
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
+                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 'datacut_links_info': datacut_links_info,
                 'data_hosted_externally': any(
                     not source_link.url.startswith('s3://')
@@ -619,6 +662,7 @@ class DatasetDetailView(DetailView):
                 'preview_limit': preview_limit,
                 'record_count': total_record_count,
                 'records': records,
+                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
             }
         )
         return ctx
@@ -627,6 +671,7 @@ class DatasetDetailView(DetailView):
         ctx.update(
             {
                 'has_access': self.object.user_has_access(self.request.user),
+                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 "visualisation_links": self.object.get_visualisation_links(
                     self.request
                 ),
@@ -704,6 +749,14 @@ def eligibility_criteria_not_met_view(request, dataset_uuid):
             'is_visualisation': isinstance(dataset, VisualisationCatalogueItem),
         },
     )
+
+
+@require_GET
+def toggle_bookmark(request, dataset_uuid):
+    dataset = find_dataset_or_visualisation_for_bookmark(dataset_uuid)
+    dataset.toggle_bookmark(request.user)
+
+    return HttpResponseRedirect(dataset.get_absolute_url())
 
 
 @require_http_methods(['GET', 'POST'])

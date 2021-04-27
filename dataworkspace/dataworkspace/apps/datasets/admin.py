@@ -224,6 +224,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         'get_tags',
         'published',
         'number_of_downloads',
+        'get_bookmarks',
     )
     list_filter = ('tags',)
     search_fields = ['name']
@@ -281,6 +282,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         return ', '.join([x.name for x in obj.tags.all()])
 
     get_tags.short_description = 'Tags'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'datasetbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -458,6 +465,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         'get_published_version',
         'published_at',
         'published',
+        'get_bookmarks',
     )
     inlines = [ReferenceDataFieldInline]
     autocomplete_fields = ['tags']
@@ -499,6 +507,12 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         return obj.published_version
 
     get_published_version.short_description = 'Version'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'referencedatasetbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     class Media:
         js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')
@@ -618,6 +632,7 @@ class VisualisationCatalogueItemAdmin(
         'short_description',
         'published',
         'get_tags',
+        'get_bookmarks',
     )
     list_filter = ('tags',)
     search_fields = ['name']
@@ -675,6 +690,12 @@ class VisualisationCatalogueItemAdmin(
         return ', '.join([x.name for x in obj.tags.all()])
 
     get_tags.short_description = 'Tags'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'visualisationbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "visualisation_template":
