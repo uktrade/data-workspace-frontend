@@ -201,9 +201,44 @@ async def async_main():
             else ()
         )
 
-    def superset_headers(downstream_request):
-        return (
+    async def superset_headers(downstream_request, path):
+        credentials = {}
+        dashboards = []
+
+        if not path.startswith('/static/'):
+            host_api_url = admin_root + '/api/v1/core/get-superset-role-credentials'
+
+            async with client_session.request(
+                'GET',
+                host_api_url,
+                headers=CIMultiDict(admin_headers_request(downstream_request)),
+            ) as response:
+                if response.status == 200:
+                    response_json = await response.json()
+                    credentials = response_json['credentials']
+                    dashboards = response_json['dashboards']
+                else:
+                    raise UserException(
+                        'Unable to fetch credentials for superset', response.status
+                    )
+
+        def standardise_header(header):
+            # converts 'multi_word_header' to 'Multi-Word-Header'
+            return '-'.join(
+                [s.capitalize() for s in header.replace('_', '-').split('-')]
+            )
+
+        return CIMultiDict(
             without_transfer_encoding(downstream_request)
+            + (
+                tuple(
+                    [
+                        (f'Credentials-{standardise_header(k)}', v)
+                        for k, v in credentials.items()
+                    ]
+                )
+            )
+            + (tuple([('Dashboards', ','.join(dashboards))]))
             + downstream_request['sso_profile_headers']
         )
 
@@ -625,7 +660,7 @@ async def async_main():
         return await handle_http(
             downstream_request,
             method,
-            CIMultiDict(superset_headers(downstream_request)),
+            await superset_headers(downstream_request, path),
             upstream_url,
             query,
             await get_data(downstream_request),

@@ -1,10 +1,12 @@
 import copy
+import csv
 import operator
 import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
+from io import StringIO
 
 from typing import Optional, List
 
@@ -34,6 +36,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils.text import slugify
 from django.utils import timezone
 
+from dataworkspace import datasets_db
 from dataworkspace.apps.core.models import (
     TimeStampedModel,
     DeletableTimestampedUserModel,
@@ -299,6 +302,18 @@ class DataSet(DeletableTimestampedUserModel):
             or self.datasetuserpermission_set.filter(user=user).exists()
         )
 
+    def user_has_bookmarked(self, user):
+        return self.datasetbookmark_set.filter(user=user).exists()
+
+    def toggle_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            self.datasetbookmark_set.filter(user=user).delete()
+        else:
+            self.datasetbookmark_set.create(user=user)
+
+    def bookmark_count(self):
+        return self.datasetbookmark_set.count()
+
     def clone(self):
         """Create a copy of the dataset and any related objects.
 
@@ -344,6 +359,15 @@ class DataSetUserPermission(models.Model):
 
     class Meta:
         db_table = 'app_datasetuserpermission'
+        unique_together = ('user', 'dataset')
+
+
+class DataSetBookmark(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'app_datasetbookmark'
         unique_together = ('user', 'dataset')
 
 
@@ -589,6 +613,9 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def __str__(self):
         return self.name
 
+    def _is_s3_link(self):
+        return self.url.startswith('s3://')
+
     def local_file_is_accessible(self):
         """
         Check whether we can access the file on s3
@@ -610,7 +637,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
         # Allow users to change a url from local to external and vice versa
-        is_s3_link = self.url.startswith('s3://')
+        is_s3_link = self._is_s3_link()
         was_s3_link = self._original_url.startswith('s3://')
         if self.id is not None and self._original_url != self.url:
             self.link_type = self.TYPE_LOCAL if is_s3_link else self.TYPE_EXTERNAL
@@ -626,8 +653,17 @@ class SourceLink(ReferenceNumberedDatasetSource):
 
     def get_absolute_url(self):
         return reverse(
-            'datasets:dataset_source_link_download', args=(self.dataset.id, self.id)
+            'datasets:dataset_source_link_download', args=(self.dataset_id, self.id)
         )
+
+    def get_preview_url(self):
+        return reverse(
+            'datasets:data_cut_source_link_preview', args=(self.dataset_id, self.id)
+        )
+
+    def show_column_filter(self):
+        # this will be enabled in subsequent PR
+        return False
 
     def can_show_link_for_user(self, user):
         return True
@@ -654,6 +690,42 @@ class SourceLink(ReferenceNumberedDatasetSource):
             except ClientError:
                 pass
         return None
+
+    def user_can_preview(self, user):
+        return self.dataset.user_has_access(user)
+
+    def get_preview_data(self):
+        """
+        Returns column names and preview data for an s3 hosted csv.
+        """
+        if (
+            not self._is_s3_link()
+            or not self.local_file_is_accessible()
+            or not self.url.endswith('.csv')
+        ):
+            return None, []
+
+        client = boto3.client('s3')
+
+        # Only read a maximum of 100Kb in for preview purposes. This should stop us getting
+        # denial-of-service'd by files with a massive amount of data in the first few columns
+        file = client.get_object(
+            Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url, Range="bytes=0-102400"
+        )
+        head = file['Body'].read().decode('utf-8')
+        # Drop anything after the rightmost newline in case we only got a partial row
+        head = head[: head.rindex('\n') + 1]
+        csv_data = head.splitlines()
+        del csv_data[settings.DATASET_PREVIEW_NUM_OF_ROWS :]
+        fh = StringIO('\n'.join(csv_data))
+        reader = csv.DictReader(fh)
+        records = []
+        for row in reader:
+            records.append(row)
+            if len(records) >= settings.DATASET_PREVIEW_NUM_OF_ROWS:
+                break
+
+        return reader.fieldnames, records
 
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):
@@ -684,8 +756,16 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_absolute_url(self):
         return reverse(
-            'datasets:dataset_query_download', args=(self.dataset.id, self.id)
+            'datasets:dataset_query_download', args=(self.dataset_id, self.id)
         )
+
+    def get_preview_url(self):
+        return reverse(
+            'datasets:data_cut_query_preview', args=(self.dataset_id, self.id)
+        )
+
+    def show_column_filter(self):
+        return True
 
     def can_show_link_for_user(self, user):
         if user.is_superuser:
@@ -705,6 +785,31 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
                 tuple((table.schema, table.table) for table in tables),
             )
         return None
+
+    def user_can_preview(self, user):
+        return self.dataset.user_has_access(user) and (
+            self.reviewed or user.is_superuser
+        )
+
+    def get_preview_data(self):
+        from dataworkspace.apps.core.utils import (  # pylint: disable=cyclic-import,import-outside-toplevel
+            get_random_data_sample,
+        )
+
+        database_name = self.database.memorable_name
+        columns = datasets_db.get_columns(database_name, query=self.query)
+        records = []
+        sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
+        if columns:
+            rows = get_random_data_sample(
+                self.database.memorable_name, sql.SQL(self.query), sample_size,
+            )
+            for row in rows:
+                record_data = {}
+                for i, column in enumerate(columns):
+                    record_data[column] = row[i]
+                records.append(record_data)
+        return columns, records
 
 
 class CustomDatasetQueryTable(models.Model):
@@ -1234,6 +1339,27 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         Allow for reference dataset type name display in api responses to match datasets.
         """
         return 'Reference Dataset'
+
+    def user_has_bookmarked(self, user):
+        return self.referencedatasetbookmark_set.filter(user=user).exists()
+
+    def toggle_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            self.referencedatasetbookmark_set.filter(user=user).delete()
+        else:
+            self.referencedatasetbookmark_set.create(user=user)
+
+    def bookmark_count(self):
+        return self.referencedatasetbookmark_set.count()
+
+
+class ReferenceDataSetBookmark(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    reference_dataset = models.ForeignKey(ReferenceDataset, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'app_referencedatasetbookmark'
+        unique_together = ('user', 'reference_dataset')
 
 
 class ReferenceDatasetRecordBase(models.Model):
@@ -1820,6 +1946,18 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             or self.visualisationuserpermission_set.filter(user=user).exists()
         )
 
+    def user_has_bookmarked(self, user):
+        return self.visualisationbookmark_set.filter(user=user).exists()
+
+    def toggle_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            self.visualisationbookmark_set.filter(user=user).delete()
+        else:
+            self.visualisationbookmark_set.create(user=user)
+
+    def bookmark_count(self):
+        return self.visualisationbookmark_set.count()
+
     def __str__(self):
         return self.name
 
@@ -1835,11 +1973,22 @@ class VisualisationUserPermission(models.Model):
         unique_together = ('user', 'visualisation')
 
 
+class VisualisationBookmark(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    visualisation = models.ForeignKey(
+        VisualisationCatalogueItem, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        db_table = 'app_visualisationbookmark'
+        unique_together = ('user', 'visualisation')
+
+
 class VisualisationLink(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_type = models.CharField(
         max_length=64,
-        choices=(('QUICKSIGHT', 'AWS QuickSight'),),
+        choices=(('QUICKSIGHT', 'AWS QuickSight'), ('SUPERSET', 'Superset'),),
         null=False,
         blank=False,
     )

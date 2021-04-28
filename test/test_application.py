@@ -1387,6 +1387,112 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(response.status, 403)
 
     @async_test
+    async def test_superset_headers(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_superset, superset_requests = await create_superset()
+        self.add_async_cleanup(cleanup_superset)
+
+        cleanup_application = await create_application(
+            env=lambda: {
+                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
+                'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
+                'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
+                'SUPERSET_ROOT': 'http://localhost:8008/',
+            }
+        )
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'contact_email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        # Ensure user created
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
+            await response.text()
+
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'MASTER',
+            dataset_id_test_dataset,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await create_visusalisation(
+            'test_visualisation', 'REQUIRES_AUTHENTICATION', 'SUPERSET', 1
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET',
+            'http://superset.dataworkspace.test:8000/',
+            headers={'x-forwarded-for': '1.2.3.4'},
+        ) as response:
+            self.assertEqual(response.status, 200)
+
+        assert (
+            superset_requests[0].headers['Credentials-Memorable-Name'] == 'my_database'
+        )
+        assert superset_requests[0].headers['Credentials-Db-Name'] == 'datasets'
+        assert (
+            superset_requests[0].headers['Credentials-Db-Host']
+            == 'data-workspace-postgres'
+        )
+        assert superset_requests[0].headers['Credentials-Db-Port'] == '5432'
+        assert (
+            superset_requests[0].headers['Credentials-Db-Persistent-Role']
+            == '_user_23b40dd9'
+        )
+        assert (
+            superset_requests[0]
+            .headers['Credentials-Db-User']
+            .startswith('user_test_test_com_')
+        )
+        assert superset_requests[0].headers['Credentials-Db-User'].endswith('superset')
+        assert 'Credentials-Db-Password' in superset_requests[0].headers
+        assert 'Credentials-Db-Id' in superset_requests[0].headers
+        assert superset_requests[0].headers['Dashboards'] == '1'
+
+    @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
         await flush_database()
         await flush_redis()
@@ -2403,6 +2509,24 @@ async def create_sentry():
     return sentry_runner.cleanup, sentry_requests
 
 
+async def create_superset():
+    superset_requests = []
+
+    async def handle(request):
+        nonlocal superset_requests
+        superset_requests.append(request)
+        return web.Response(text='OK', status=200)
+
+    superset_app = web.Application()
+    superset_app.add_routes([web.get('/{path:.*}', handle)])
+    superset_runner = web.AppRunner(superset_app)
+    await superset_runner.setup()
+    superset_site = web.TCPSite(superset_runner, '0.0.0.0', 8008)
+    await superset_site.start()
+
+    return superset_runner.cleanup, superset_requests
+
+
 # Run the application proper in a way that is as possible to production
 # The environment must be the same as in the Dockerfile
 async def create_application(env=lambda: {}):
@@ -2645,6 +2769,45 @@ async def create_private_dataset(
             database=Database.objects.get(memorable_name="{database}"),
             schema="public",
             table="{table_name}",
+        )
+        """
+    ).encode('ascii')
+
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def create_visusalisation(
+    visualisation_name, user_access_type, link_type, link_identifier
+):
+    python_code = textwrap.dedent(
+        f"""\
+        from dataworkspace.apps.core.models import Database
+        from dataworkspace.apps.datasets.models import (
+            VisualisationCatalogueItem, VisualisationLink
+        )
+        visualisation = VisualisationCatalogueItem.objects.create(
+            name="{visualisation_name}",
+            description="test_desc",
+            short_description="test_short_desc",
+            slug="{visualisation_name}",
+            published=True,
+            user_access_type="{user_access_type}",
+        )
+        VisualisationLink.objects.create(
+            name="{visualisation_name}_link",
+            identifier="{link_identifier}",
+            visualisation_catalogue_item=visualisation,
+            visualisation_type="{link_type}",
         )
         """
     ).encode('ascii')

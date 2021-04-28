@@ -3241,9 +3241,15 @@ class TestDatasetAdminPytest:
     @mock.patch(
         "dataworkspace.apps.datasets.admin.remove_data_explorer_user_cached_credentials"
     )
+    @mock.patch(
+        "dataworkspace.apps.datasets.admin.remove_superset_user_cached_credentials"
+    )
     @pytest.mark.django_db
     def test_master_dataset_permission_changes_clears_authorized_users_cached_credentials(
-        self, mock_remove_cached_credentials, staff_client
+        self,
+        mock_remove_superset_cached_credentials,
+        mock_remove_explorer_cached_credentials,
+        staff_client,
     ):
         user = factories.UserFactory()
         dataset = factories.MasterDataSetFactory.create(
@@ -3284,4 +3290,86 @@ class TestDatasetAdminPytest:
         assert response.status_code == 200
         # As the user has just been authorized to access the dataset, their cached
         # data explorer credentials should be cleared
-        assert mock_remove_cached_credentials.call_args_list == [mock.call(user)]
+        assert mock_remove_explorer_cached_credentials.call_args_list == [
+            mock.call(user)
+        ]
+        assert mock_remove_superset_cached_credentials.call_args_list == [
+            mock.call(user)
+        ]
+
+    @mock.patch(
+        "dataworkspace.apps.datasets.admin.remove_superset_user_cached_credentials"
+    )
+    @pytest.mark.django_db
+    def test_visualisation_permission_changes_clears_authorized_users_cached_credentials(
+        self, mock_remove_superset_user_cached_credentials, staff_client,
+    ):
+        user = factories.UserFactory()
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse(
+                'admin:datasets_visualisationcatalogueitem_change',
+                args=(visualisation.id,),
+            ),
+            {
+                'published': True,
+                'name': visualisation.name,
+                'slug': visualisation.slug,
+                'short_description': 'test short description',
+                'authorized_users': str(user.id),
+                'visualisationlink_set-TOTAL_FORMS': '1',
+                'visualisationlink_set-INITIAL_FORMS': '0',
+                'visualisationlink_set-MIN_NUM_FORMS': '0',
+                'visualisationlink_set-MAX_NUM_FORMS': '1000',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        # As the user has just been authorized to access the visualisation, their cached
+        # superset credentials should be cleared
+        assert mock_remove_superset_user_cached_credentials.call_args_list == [
+            mock.call(user)
+        ]
+
+    @mock.patch(
+        "dataworkspace.apps.datasets.admin.invalidate_superset_user_cached_credentials"
+    )
+    @pytest.mark.django_db
+    def test_visualisation_access_type_change_invalidates_all_user_cached_credentials(
+        self, mock_invalidate_superset_user_cached_credentials, staff_client
+    ):
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+        )
+
+        # Login to admin site
+        staff_client.post(reverse('admin:index'), follow=True)
+
+        response = staff_client.post(
+            reverse(
+                'admin:datasets_visualisationcatalogueitem_change',
+                args=(visualisation.id,),
+            ),
+            {
+                'published': True,
+                'name': visualisation.name,
+                'slug': visualisation.slug,
+                'short_description': 'test short description',
+                'requires_authorization': 'on',
+                'visualisationlink_set-TOTAL_FORMS': '1',
+                'visualisationlink_set-INITIAL_FORMS': '0',
+                'visualisationlink_set-MIN_NUM_FORMS': '0',
+                'visualisationlink_set-MAX_NUM_FORMS': '1000',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert mock_invalidate_superset_user_cached_credentials.called

@@ -55,7 +55,7 @@ data "template_file" "superset_container_definitions" {
     log_group  = "${aws_cloudwatch_log_group.notebook.name}"
     log_region = "${data.aws_region.aws_region.name}"
 
-    sentry_dsn = "${var.sentry_dsn}"
+    sentry_dsn = "${var.sentry_notebooks_dsn}"
     sentry_environment = "${var.sentry_environment}"
 
     metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:master"

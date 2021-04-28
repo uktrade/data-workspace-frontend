@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from dataworkspace.apps.datasets.models import (
     DataSet,
+    ReferenceDataset,
     VisualisationCatalogueItem,
     VisualisationLink,
 )
@@ -52,10 +53,20 @@ def find_visualisation(visualisation_uuid, user):
 
 
 def find_dataset_or_visualisation(model_id, user):
-    if DataSet.objects.filter(pk=model_id):
+    if DataSet.objects.filter(pk=model_id).exists():
         return find_dataset(model_id, user)
 
     return find_visualisation(model_id, user)
+
+
+def find_dataset_or_visualisation_for_bookmark(model_id):
+    if DataSet.objects.filter(pk=model_id).exists():
+        return get_object_or_404(DataSet.objects.live(), id=model_id)
+
+    if ReferenceDataset.objects.filter(uuid=model_id).exists():
+        return get_object_or_404(ReferenceDataset.objects.live(), uuid=model_id)
+
+    return get_object_or_404(VisualisationCatalogueItem.objects.live(), id=model_id)
 
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):

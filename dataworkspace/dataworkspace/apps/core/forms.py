@@ -1,46 +1,72 @@
 from django import forms
-from django.utils.safestring import mark_safe
+from django.db import models
 
 from dataworkspace.apps.core.models import HowSatisfiedType, TryingToDoType
 from dataworkspace.forms import (
+    GOVUKDesignSystemCharField,
     GOVUKDesignSystemCheckboxesWidget,
+    GOVUKDesignSystemEmailField,
+    GOVUKDesignSystemEmailWidget,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemMultipleChoiceField,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemWidgetMixin,
 )
 
 
-class SupportForm(forms.Form):
-    email = forms.EmailField(
-        required=True,
+class ConditionalSupportTypeRadioWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect
+):
+    template_name = 'design_system/radio.html'
+    option_template_name = "core/partial/support_type_radio_option.html"
+
+
+class SupportForm(GOVUKDesignSystemForm):
+    class SupportTypes(models.TextChoices):
+        TECH_SUPPORT = 'tech', 'I would like to have technical support'
+        NEW_DATASET = 'dataset', 'I would like to add a new dataset'
+        OTHER = 'other', 'Other'
+
+    email = GOVUKDesignSystemEmailField(
         label='Your email address',
-        widget=forms.EmailInput(attrs={'class': 'govuk-input'}),
+        required=False,
+        widget=GOVUKDesignSystemEmailWidget(label_is_heading=False),
     )
-    message = forms.CharField(
-        required=True,
-        label='Description',
-        widget=forms.Textarea(attrs={'class': 'govuk-textarea'}),
-        #
-        # If you're here because you want to copy the help text (i.e. bullets as form hints), then please don't. If
-        # this needs to be reused, we should probably do something else (e.g. convert it to markdown and add a markdown
-        # filter that can output GOV.UK Design System-aware elements). So this HTML-in-code should either remain an
-        # exception or eventually disappear.
-        help_text=(
-            mark_safe(
-                """
-<p class="govuk-hint">Please use this form to give us feedback or report a technical issue on Data Workspace.</p>
-<p class="govuk-hint">If you had a technical issue, briefly explain:</p>
-<ul class="govuk-list govuk-list--bullet govuk-hint">
-  <li>what you did</li>
-  <li>what happened</li>
-  <li>what you expected to happen</li>
-</ul>"""
-            )
+    support_type = GOVUKDesignSystemRadioField(
+        label='How can we help you?',
+        help_text='Please choose one of the options below for help.',
+        choices=SupportTypes.choices,
+        widget=ConditionalSupportTypeRadioWidget(heading='h2'),
+        error_messages={"required": "Please select the type of support you require."},
+    )
+    message = GOVUKDesignSystemTextareaField(
+        required=False,
+        label='Tell us how we can help you',
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, attrs={"rows": 5},
         ),
     )
+
+    def clean(self):
+        cleaned = super().clean()
+
+        if cleaned['support_type'] in [
+            self.SupportTypes.TECH_SUPPORT,
+            self.SupportTypes.OTHER,
+        ] and not cleaned.get('email'):
+            raise forms.ValidationError({'email': 'Please enter your email address'})
+
+        if (
+            cleaned['support_type'] == self.SupportTypes.OTHER
+            and not cleaned['message']
+        ):
+            raise forms.ValidationError(
+                {'message': 'Please enter your support message'}
+            )
 
 
 class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
@@ -69,3 +95,35 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
                  do include""",
         widget=GOVUKDesignSystemTextareaWidget(heading='h2', label_size='m'),
     )
+
+
+class TechnicalSupportForm(GOVUKDesignSystemForm):
+    email = forms.EmailField(widget=forms.HiddenInput())
+    what_were_you_doing = GOVUKDesignSystemCharField(
+        required=False,
+        label='What were you trying to do?',
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+    )
+    what_happened = GOVUKDesignSystemTextareaField(
+        required=False,
+        label='What happened?',
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, attrs={"rows": 5},
+        ),
+    )
+    what_should_have_happened = GOVUKDesignSystemTextareaField(
+        required=False,
+        label='What should have happened?',
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, attrs={"rows": 5},
+        ),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if (
+            not cleaned['what_were_you_doing']
+            and not cleaned['what_happened']
+            and not cleaned['what_should_have_happened']
+        ):
+            raise forms.ValidationError('Please add some detail to the support request')

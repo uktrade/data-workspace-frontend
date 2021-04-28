@@ -3,7 +3,6 @@ import time
 import pytest
 import requests
 
-from django.conf import settings
 from django.core.cache import cache
 
 from dataworkspace.apps.request_data.models import RoleType, SecurityClassificationType
@@ -11,11 +10,9 @@ from test.selenium.common import get_driver  # pylint: disable=wrong-import-orde
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
     create_zendesk,
-    set_waffle_flag,
 )
 from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-order
     HomePage,
-    RequestDataPage,
     RequestDataOwnerOrManagerPage,
     RequestDataDescriptionPage,
     RequestDataPurposePage,
@@ -70,16 +67,14 @@ class TestRequestData:
             yield
 
     def test_happy_path(self, _application):
-        set_waffle_flag(settings.REQUEST_DATA_JOURNEY_FLAG, everyone=True)
 
         home_page = HomePage(self.driver)
         home_page.open()
 
         # Get to the "Request data" starting page
-        support_page = home_page.click_header_link('Support and feedback', SupportPage)
-        request_data_page = support_page.click_link(
-            "Tell us about a new dataset", new_page_class=RequestDataPage
-        )
+        support_page = home_page.click_header_link('Support', SupportPage)
+        request_data_page = support_page.select_new_dataset_option()
+
         who_are_you_page = request_data_page.click_start()
 
         # Answer the "who are you" question - we aren't IAM/IAO so will need to say who one of them is in next

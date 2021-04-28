@@ -26,6 +26,12 @@ class HomePage(_BaseWorkspacePage):
 class SupportPage(_BaseWorkspacePage):
     _url_path = '/support-and-feedback/'
 
+    def select_new_dataset_option(self) -> "RequestDataPage":
+        self.select_radio_button('id_support_type_1')
+        self._submit("Continue")
+
+        return self._check_url_and_return_page(RequestDataPage)
+
 
 class RequestDataPage(_BaseWorkspacePage):
     _url_path = '/request-data/'

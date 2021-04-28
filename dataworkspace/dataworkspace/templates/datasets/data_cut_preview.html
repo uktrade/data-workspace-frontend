@@ -1,0 +1,131 @@
+{% extends '_main.html' %}
+{% load static core_tags %}
+
+{% block page_title %}Preview {{ object.name }} - {{ block.super }}{% endblock %}
+
+{% block go_back %}
+  <a class="govuk-back-link" href="{{ object.dataset.get_absolute_url }}">
+    Back
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l govuk-!-margin-bottom-2">{{ object.name }}</span>
+      <h1 class="govuk-heading-l">Preview</h1>
+    </div>
+  </div>
+  <form method="get" action="{{ form_action }}">
+    {% csrf_token %}
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        {% if columns %}
+          <p class="govuk-body">
+            Showing <strong>{{ records|length }}</strong> record{{ records|length|pluralize }}.
+          </p>
+          <div class="scrollable-table {% if records|length <= fixed_table_height_limit %}fixed-table-height{% endif %}" tabindex="0">
+            <table class="govuk-table govuk-!-font-size-16">
+              <thead>
+                <tr class="govuk-table__row">
+                {% for column in columns %}
+                    <th class="govuk-table__header">{{ column }}</th>
+                {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+              {% for record in records %}
+                <tr class="govuk-table__row">
+                  {% for column in columns %}
+                    {% with record|get_key:column as value %}
+                      <td class="govuk-table__cell">
+                        {{ value|not_set_if_none|truncatechars:truncate_limit }}
+                      </td>
+                    {% endwith %}
+                  {% endfor %}
+                </tr>
+              {% empty %}
+                <tr class="govuk-table__row">
+                  <td colspan="{{ columns|length }}">
+                    This dataset doesn't have any data yet.
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if can_filter_columns %}
+          </br>
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+              <p class="govuk-body">You can select the columns you would like to download by clicking Filter columns below, then using the check boxes to filter the columns from the list. Limiting the number of columns will decrease file size of data downloaded and removes data you do not require.</p>
+            </div>
+          </div>
+          <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
+            <summary class="govuk-details__summary">
+              <span class="govuk-details__summary-text">
+                Filter columns<span class="govuk-visually-hidden">for "{{ object.name }}"</span>
+              </span>
+            </summary>
+            <div class="govuk-details__text">
+              <div class="govuk-checkboxes__item">
+                <input class="govuk-checkboxes__input" id="toggle-columns" name="toggle-columns" type="checkbox" checked>
+                <label class="govuk-label govuk-checkboxes__label" for="toggle-columns">
+                  Select all
+                </label>
+              </div>
+              <br/>
+              <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset" aria-describedby="filter-hint">
+                  <div class="govuk-checkboxes">
+                    {% for column in columns %}
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-{{ column }}" name="columns" type="checkbox" value="{{ column }}" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-{{ column }}">
+                        {{ column }}
+                      </label>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+          </details>
+          {% endif %}
+          <br/>
+        {% else %}
+          <p class="govuk-body">No preview available</p>
+        {% endif %}
+        {% if can_download %}
+        <button type="submit" class="govuk-button">Download as CSV</button>
+        <br />
+        {% endif %}
+        <a class="govuk-link govuk-link--no-visited-state" href="{{ object.dataset.get_absolute_url }}">
+          Cancel
+        </a>
+      </div>
+    </div>
+  </form>
+  {% if object.dataset.enquiries_contact %}
+    <div class="govuk-grid-row govuk-!-margin-top-9">
+      <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-l">Contact</h2>
+        {% include 'partials/contact.html' with model=object.dataset.enquiries_contact as_section=False only %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    let toggle_columns = document.getElementById('toggle-columns');
+    if (toggle_columns !== null) {
+      toggle_columns.addEventListener('change', function (e) {
+        checkboxes = document.getElementsByName('columns');
+        for(var i=0, n=checkboxes.length;i<n;i++)
+        {
+          checkboxes[i].checked = toggle_columns.checked;
+        }
+      });
+    }
+  </script>
+{% endblock %}

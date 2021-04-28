@@ -117,10 +117,10 @@ class SourceTagField(forms.ModelMultipleChoiceField):
 class DatasetSearchForm(forms.Form):
     q = forms.CharField(required=False)
 
-    access = forms.MultipleChoiceField(
-        choices=[('yes', 'You have access')],
+    status = forms.TypedMultipleChoiceField(
+        choices=[('access', 'You have access'), ('bookmark', 'Your bookmarks')],
         required=False,
-        widget=FilterWidget("Access status"),
+        widget=FilterWidget("Status"),
     )
 
     unpublished = forms.MultipleChoiceField(
@@ -185,20 +185,22 @@ class DatasetSearchForm(forms.Form):
         self, datasets, matcher, number_of_matches, topic_flag_active
     ):
         counts = {
-            "access": defaultdict(int),
+            "status": defaultdict(int),
             "unpublished": defaultdict(int),
             "use": defaultdict(int),
             "source": defaultdict(int),
             "topic": defaultdict(int),
         }
 
-        selected_access = bool(self.cleaned_data['access'])
+        selected_access = 'access' in self.cleaned_data['status']
+        selected_bookmark = 'bookmark' in self.cleaned_data['status']
         selected_unpublished = bool(self.cleaned_data['unpublished'])
         selected_uses = set(self.cleaned_data['use'])
         selected_source_ids = set(source.id for source in self.cleaned_data['source'])
         selected_topic_ids = set(topic.id for topic in self.cleaned_data['topic'])
 
         # Cache these locally for performance. The source model choice field can end up hitting the DB each time.
+        status_choices = list(self.fields['status'].choices)
         use_choices = list(self.fields['use'].choices)
         source_choices = list(self.fields['source'].choices)
         topic_choices = list(self.fields['topic'].choices)
@@ -208,6 +210,7 @@ class DatasetSearchForm(forms.Form):
                 matcher,
                 data=dataset,
                 access=selected_access,
+                bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
                 use=selected_uses,
                 source_ids=selected_source_ids,
@@ -216,7 +219,10 @@ class DatasetSearchForm(forms.Form):
             )
 
             if dataset_matcher(access=True):
-                counts['access']['yes'] += 1
+                counts['status']['access'] += 1
+
+            if dataset_matcher(bookmark=True):
+                counts['status']['bookmark'] += 1
 
             if dataset_matcher(unpublished=True):
                 counts['unpublished']['yes'] += 1
@@ -233,9 +239,9 @@ class DatasetSearchForm(forms.Form):
                 if dataset_matcher(topic_ids={topic_id}):
                     counts['topic'][topic_id] += 1
 
-        self.fields['access'].choices = [
-            (access_id, access_text + f" ({counts['access'][access_id]})")
-            for access_id, access_text in self.fields['access'].choices
+        self.fields['status'].choices = [
+            (status_id, status_text + f" ({counts['status'][status_id]})")
+            for status_id, status_text in status_choices
         ]
 
         self.fields['unpublished'].choices = [

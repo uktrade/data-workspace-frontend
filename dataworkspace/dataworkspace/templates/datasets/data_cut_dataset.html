@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load humanize static datasets_tags %}
+{% load humanize static datasets_tags waffle_tags %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -24,6 +24,8 @@
 {% endblock %}
 
 {% block breadcrumbs %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-three-quarters">
     <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
             <li class="govuk-breadcrumbs__list-item">
@@ -40,6 +42,21 @@
             {% endif %}
         </ol>
     </div>
+  </div>
+  <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
+  {% if is_bookmarked %}
+    {% include 'partials/bookmark-yes.html' %}
+    <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.id %}">
+        Bookmark
+    </a>
+  {% else %}
+    {% include 'partials/bookmark-no.html' %}
+    <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.id %}">
+      Bookmark
+    </a>
+  {% endif %}
+  </div>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -84,7 +101,11 @@
                     <th class="govuk-table__header">Format</th>
                     <th class="govuk-table__header">Frequency</th>
                     <th class="govuk-table__header">Last updated</th>
-                    <th class="govuk-table__header">Details</th>
+                    {% flag DATA_CUT_ENHANCED_PREVIEW_FLAG %}
+                      {# Do not show details column #}
+                    {% else %}
+                      <th class="govuk-table__header">Details</th>
+                    {% endflag %}
                 </tr>
                 </thead>
                 <tbody>
@@ -92,13 +113,19 @@
                 {% for datacut_link, can_show_link, code_snippets in datacut_links_info %}
                     <tr class="govuk-table__row">
                         <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-                            {% if has_access and can_show_link %}
-                            <a class="govuk-link" href="{{ datacut_link.get_absolute_url }}">
+                          {% if has_access and can_show_link %}
+                            {% flag DATA_CUT_ENHANCED_PREVIEW_FLAG %}
+                              <a class="govuk-link" href="{{ datacut_link.get_preview_url }}">
                                 {{ datacut_link.name }}
-                            </a>
+                              </a>
                             {% else %}
+                              <a class="govuk-link" href="{{ datacut_link.get_absolute_url }}">
                                 {{ datacut_link.name }}
-                            {% endif %}
+                              </a>
+                            {% endflag %}
+                          {% else %}
+                            {{ datacut_link.name }}
+                          {% endif %}
                         </td>
                         <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
                           {% if datacut_link.format %}{{ datacut_link.format }}{% else %}CSV{% endif %}
@@ -113,7 +140,10 @@
                         <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
                           {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
                         </td>
-                        <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                        {% flag DATA_CUT_ENHANCED_PREVIEW_FLAG %}
+                          {# Do not show details column #}
+                        {% else %}
+                          <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
                             {% if can_show_link and datacut_link.type == custom_dataset_query_type %}
                                 {% if has_access %}
                                     <a class="govuk-link"
@@ -126,7 +156,8 @@
                             {% else %}
                                 No preview available
                             {% endif %}
-                        </td>
+                          </td>
+                        {% endflag %}
                         {% if code_snippets %}
                         <tr class="govuk-table__row">
                             <td colspan="6" class="govuk-table__cell">

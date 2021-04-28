@@ -98,6 +98,102 @@ def test_submit_eligibility_criteria(client, test_case, meet_criteria, redirect_
     )
 
 
+@pytest.mark.django_db
+def test_toggle_bookmark_on_dataset():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.DataSetFactory.create(published=True)
+
+    response = client.get(
+        reverse('datasets:toggle_bookmark', kwargs={'dataset_uuid': ds.id}),
+    )
+    assert response.status_code == 302
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is True
+
+
+@pytest.mark.django_db
+def test_toggle_bookmark_off_dataset():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.DataSetFactory.create(published=True)
+    factories.DataSetBookmarkFactory.create(user=user, dataset=ds)
+    assert ds.user_has_bookmarked(user) is True
+
+    response = client.get(
+        reverse('datasets:toggle_bookmark', kwargs={'dataset_uuid': ds.id}),
+    )
+    assert response.status_code == 302
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is False
+
+
+@pytest.mark.django_db
+def test_toggle_bookmark_on_reference():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.ReferenceDatasetFactory.create(published=True)
+
+    response = client.get(
+        reverse('datasets:toggle_bookmark', kwargs={'dataset_uuid': ds.uuid}),
+    )
+    assert response.status_code == 302
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is True
+
+
+@pytest.mark.django_db
+def test_toggle_bookmark_off_reference():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.ReferenceDatasetFactory.create(published=True)
+    factories.ReferenceDataSetBookmarkFactory.create(user=user, reference_dataset=ds)
+    assert ds.user_has_bookmarked(user) is True
+
+    response = client.get(
+        reverse('datasets:toggle_bookmark', kwargs={'dataset_uuid': ds.uuid}),
+    )
+    assert response.status_code == 302
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is False
+
+
+@pytest.mark.django_db
+def test_toggle_bookmark_on_visualisation():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.VisualisationCatalogueItemFactory.create(published=True)
+
+    response = client.get(
+        reverse('datasets:toggle_bookmark', kwargs={'dataset_uuid': ds.id}),
+    )
+    assert response.status_code == 302
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is True
+
+
+@pytest.mark.django_db
+def test_toggle_bookmark_off_visualisation():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.VisualisationCatalogueItemFactory.create(published=True)
+    factories.VisualisationBookmarkFactory.create(user=user, visualisation=ds)
+    assert ds.user_has_bookmarked(user) is True
+
+    response = client.get(
+        reverse('datasets:toggle_bookmark', kwargs={'dataset_uuid': ds.id}),
+    )
+    assert response.status_code == 302
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is False
+
+
 def test_request_access_form(client, mocker):
     create_zendesk_ticket = mocker.patch(
         'dataworkspace.apps.datasets.views.create_zendesk_ticket'
@@ -237,6 +333,7 @@ def test_find_datasets_combines_results(client):
             'purpose': ds.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -252,6 +349,7 @@ def test_find_datasets_combines_results(client):
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': vis.id,
@@ -267,6 +365,7 @@ def test_find_datasets_combines_results(client):
             'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -332,6 +431,7 @@ def test_find_datasets_filters_by_query(client):
             'purpose': ds.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -347,6 +447,7 @@ def test_find_datasets_filters_by_query(client):
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': vis.id,
@@ -362,6 +463,7 @@ def test_find_datasets_filters_by_query(client):
             'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -391,6 +493,7 @@ def test_find_datasets_filters_by_use(client):
             'purpose': ds.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -406,6 +509,7 @@ def test_find_datasets_filters_by_use(client):
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -438,6 +542,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'purpose': ds.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': vis.id,
@@ -453,6 +558,7 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -509,6 +615,7 @@ def test_find_datasets_filters_by_source(client):
             'purpose': ds.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -524,6 +631,7 @@ def test_find_datasets_filters_by_source(client):
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': vis.id,
@@ -539,6 +647,7 @@ def test_find_datasets_filters_by_source(client):
             'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -598,6 +707,7 @@ def test_find_datasets_filters_by_topic(client):
             'purpose': ds.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -613,6 +723,7 @@ def test_find_datasets_filters_by_topic(client):
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': vis.id,
@@ -628,6 +739,7 @@ def test_find_datasets_filters_by_topic(client):
             'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -657,6 +769,7 @@ def test_find_datasets_order_by_name_asc(client):
             'topic_tag_ids': mock.ANY,
             'purpose': ds1.type,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -672,6 +785,7 @@ def test_find_datasets_order_by_name_asc(client):
             'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.REFERENCE,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': vis.id,
@@ -687,6 +801,7 @@ def test_find_datasets_order_by_name_asc(client):
             'topic_tag_ids': mock.ANY,
             'purpose': DataSetType.VISUALISATION,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -718,6 +833,7 @@ def test_find_datasets_order_by_newest_first(client):
             'topic_tag_ids': mock.ANY,
             'purpose': ads1.type,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': ads2.id,
@@ -733,6 +849,7 @@ def test_find_datasets_order_by_newest_first(client):
             'topic_tag_ids': mock.ANY,
             'purpose': ads2.type,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': ads3.id,
@@ -748,6 +865,7 @@ def test_find_datasets_order_by_newest_first(client):
             'topic_tag_ids': mock.ANY,
             'purpose': ads3.type,
             'has_access': False,
+            'is_bookmarked': False,
         },
     ]
 
@@ -781,6 +899,7 @@ def test_find_datasets_order_by_oldest_first(client):
             'topic_tag_ids': mock.ANY,
             'purpose': ads3.type,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': ads2.id,
@@ -796,6 +915,7 @@ def test_find_datasets_order_by_oldest_first(client):
             'topic_tag_ids': mock.ANY,
             'purpose': ads2.type,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': ads1.id,
@@ -811,6 +931,7 @@ def test_find_datasets_order_by_oldest_first(client):
             'topic_tag_ids': mock.ANY,
             'purpose': ads1.type,
             'has_access': False,
+            'is_bookmarked': False,
         },
     ]
 
@@ -1060,7 +1181,7 @@ def test_find_datasets_filters_by_access():
         user_access_type='REQUIRES_AUTHENTICATION',
     )
 
-    response = client.get(reverse('datasets:find_datasets'), {"access": "yes"})
+    response = client.get(reverse('datasets:find_datasets'), {"status": ["access"]})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -1078,6 +1199,7 @@ def test_find_datasets_filters_by_access():
             'purpose': access_granted_master.type,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': public_master.id,
@@ -1093,6 +1215,7 @@ def test_find_datasets_filters_by_access():
             'purpose': public_master.type,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': public_reference.uuid,
@@ -1108,6 +1231,7 @@ def test_find_datasets_filters_by_access():
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': access_vis.id,
@@ -1123,6 +1247,7 @@ def test_find_datasets_filters_by_access():
             'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
         {
             'id': public_vis.id,
@@ -1138,6 +1263,269 @@ def test_find_datasets_filters_by_access():
             'purpose': DataSetType.VISUALISATION,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_bookmark_single():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    bookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - access granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
+
+    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': bookmarked_master.id,
+            'name': bookmarked_master.name,
+            'slug': bookmarked_master.slug,
+            'search_rank': mock.ANY,
+            'short_description': bookmarked_master.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': bookmarked_master.type,
+            'published': True,
+            'has_access': False,
+            'is_bookmarked': True,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_bookmark_master():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    bookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - access granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name='Datacut - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
+
+    factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': bookmarked_master.id,
+            'name': bookmarked_master.name,
+            'slug': bookmarked_master.slug,
+            'search_rank': mock.ANY,
+            'short_description': bookmarked_master.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': bookmarked_master.type,
+            'published': True,
+            'has_access': False,
+            'is_bookmarked': True,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_bookmark_reference():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - access granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name='Datacut - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    public_reference = factories.ReferenceDatasetFactory.create(
+        published=True, name='Reference - public'
+    )
+    factories.ReferenceDataSetBookmarkFactory.create(
+        user=user, reference_dataset=public_reference
+    )
+
+    factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': public_reference.uuid,
+            'name': public_reference.name,
+            'slug': public_reference.slug,
+            'search_rank': mock.ANY,
+            'short_description': public_reference.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': DataSetType.REFERENCE,
+            'published': True,
+            'has_access': True,
+            'is_bookmarked': True,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_bookmark_visualisation():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - access granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name='Datacut - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
+
+    public_vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.VisualisationBookmarkFactory.create(user=user, visualisation=public_vis)
+
+    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': public_vis.id,
+            'name': public_vis.name,
+            'slug': public_vis.slug,
+            'search_rank': mock.ANY,
+            'short_description': public_vis.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': DataSetType.VISUALISATION,
+            'published': True,
+            'has_access': True,
+            'is_bookmarked': True,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_bookmark_datacut():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - access granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    public_datacut = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name='Datacut - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.DataSetBookmarkFactory.create(user=user, dataset=public_datacut)
+
+    factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
+
+    factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': public_datacut.id,
+            'name': public_datacut.name,
+            'slug': public_datacut.slug,
+            'search_rank': mock.ANY,
+            'short_description': public_datacut.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'published': True,
+            'has_access': False,
+            'is_bookmarked': True,
         },
     ]
 
@@ -1170,6 +1558,7 @@ def test_find_datasets_filters_by_show_unpublished():
             'purpose': publshed_master.type,
             'published': True,
             'has_access': mock.ANY,
+            'is_bookmarked': False,
         },
     ]
 
@@ -1191,6 +1580,7 @@ def test_find_datasets_filters_by_show_unpublished():
             'purpose': publshed_master.type,
             'published': True,
             'has_access': mock.ANY,
+            'is_bookmarked': False,
         },
         {
             'id': unpublished_master.id,
@@ -1206,6 +1596,7 @@ def test_find_datasets_filters_by_show_unpublished():
             'purpose': unpublished_master.type,
             'published': False,
             'has_access': mock.ANY,
+            'is_bookmarked': False,
         },
     ]
 
@@ -1253,6 +1644,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
             'purpose': access_granted_master.type,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         }
     ]
 
@@ -1589,7 +1981,9 @@ class TestVisualisationsDetailView:
             in response.content.decode(response.charset)
         ) is not has_access
 
-    def test_shows_links_to_visualisations(self, client):
+    @pytest.mark.django_db
+    def test_shows_links_to_visualisations(self):
+        user = UserFactory.create()
         vis = VisualisationCatalogueItemFactory.create(
             visualisation_template__host_basename='visualisation'
         )
@@ -1600,6 +1994,7 @@ class TestVisualisationsDetailView:
             identifier='5d75e131-20f4-48f8-b0eb-f4ebf36434f4',
         )
 
+        client = Client(**get_http_sso_data(user))
         response = client.get(vis.get_absolute_url())
         body = response.content.decode(response.charset)
 
@@ -1726,6 +2121,7 @@ def test_find_datasets_search_by_source_name(client):
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -1741,6 +2137,7 @@ def test_find_datasets_search_by_source_name(client):
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -1778,6 +2175,7 @@ def test_find_datasets_search_by_topic_name(client):
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': rds.uuid,
@@ -1793,6 +2191,7 @@ def test_find_datasets_search_by_topic_name(client):
             'purpose': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
+            'is_bookmarked': False,
         },
     ]
 
@@ -1834,6 +2233,7 @@ def test_find_datasets_name_weighting(client):
             'purpose': ds4.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': ds1.id,
@@ -1849,6 +2249,7 @@ def test_find_datasets_name_weighting(client):
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
         {
             'id': ds2.id,
@@ -1864,6 +2265,7 @@ def test_find_datasets_name_weighting(client):
             'purpose': ds2.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         },
     ]
 
@@ -1896,6 +2298,7 @@ def test_find_datasets_matches_both_source_and_name(client):
             'purpose': ds1.type,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
         }
     ]
 

@@ -14,6 +14,10 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
 
+from dataworkspace.apps.api_v1.core.views import (
+    invalidate_superset_user_cached_credentials,
+    remove_superset_user_cached_credentials,
+)
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
@@ -220,6 +224,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         'get_tags',
         'published',
         'number_of_downloads',
+        'get_bookmarks',
     )
     list_filter = ('tags',)
     search_fields = ['name']
@@ -277,6 +282,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         return ', '.join([x.name for x in obj.tags.all()])
 
     get_tags.short_description = 'Tags'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'datasetbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -337,9 +348,11 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             #   - lose access if it went from REQUIRES_AUTHENTICATION to REQUIRES_AUTHORIZATION
             #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION
             invalidate_data_explorer_user_cached_credentials()
+            invalidate_superset_user_cached_credentials()
         else:
             for user in changed_users:
                 remove_data_explorer_user_cached_credentials(user)
+                remove_superset_user_cached_credentials(user)
 
         if isinstance(self, MasterDatasetAdmin):
             if changed_users:
@@ -452,6 +465,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         'get_published_version',
         'published_at',
         'published',
+        'get_bookmarks',
     )
     inlines = [ReferenceDataFieldInline]
     autocomplete_fields = ['tags']
@@ -493,6 +507,12 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         return obj.published_version
 
     get_published_version.short_description = 'Version'
+
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'referencedatasetbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
 
     class Media:
         js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')
@@ -612,6 +632,7 @@ class VisualisationCatalogueItemAdmin(
         'short_description',
         'published',
         'get_tags',
+        'get_bookmarks',
     )
     list_filter = ('tags',)
     search_fields = ['name']
@@ -670,6 +691,12 @@ class VisualisationCatalogueItemAdmin(
 
     get_tags.short_description = 'Tags'
 
+    def get_bookmarks(self, obj):
+        return obj.bookmark_count()
+
+    get_bookmarks.admin_order_field = 'visualisationbookmark'
+    get_bookmarks.short_description = 'Bookmarks'
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "visualisation_template":
             kwargs["queryset"] = VisualisationTemplate.objects.filter(
@@ -701,6 +728,8 @@ class VisualisationCatalogueItemAdmin(
 
         super().save_model(request, obj, form, change)
 
+        changed_users = set()
+
         for user in authorized_users - current_authorized_users:
             VisualisationUserPermission.objects.create(visualisation=obj, user=user)
             log_permission_change(
@@ -710,6 +739,7 @@ class VisualisationCatalogueItemAdmin(
                 {'for_user_id': user.id},
                 f"Added visualisation {obj} permission",
             )
+            changed_users.add(user)
 
         for user in current_authorized_users - authorized_users:
             VisualisationUserPermission.objects.filter(
@@ -722,6 +752,7 @@ class VisualisationCatalogueItemAdmin(
                 {'for_user_id': user.id},
                 f"Removed visualisation {obj} permission",
             )
+            changed_users.add(user)
 
         if original_user_access_type != obj.user_access_type:
             log_permission_change(
@@ -731,6 +762,15 @@ class VisualisationCatalogueItemAdmin(
                 {"access_type": obj.user_access_type},
                 f"user_access_type set to {obj.user_access_type}",
             )
+
+            # As the visualisation's access type has changed, clear cached credentials for all
+            # users to ensure they either:
+            #   - lose access if it went from REQUIRES_AUTHENTICATION to REQUIRES_AUTHORIZATION
+            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION
+            invalidate_superset_user_cached_credentials()
+        else:
+            for user in changed_users:
+                remove_superset_user_cached_credentials(user)
 
 
 @admin.register(DatasetReferenceCode)

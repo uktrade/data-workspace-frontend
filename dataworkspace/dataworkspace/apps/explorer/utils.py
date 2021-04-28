@@ -125,10 +125,11 @@ credentials_version_key = 'explorer_credentials_version'
 
 
 def get_user_cached_credentials_key(user):
+    # Set to never expire as reverting to a previous version will cause
+    # potentially invalid cached credentials to be used if the user loses
+    # or gains access to a dashboard
+    cache.set(credentials_version_key, 1, nx=True, timeout=None)
     credentials_version = cache.get(credentials_version_key, None)
-    if not credentials_version:
-        credentials_version = 1
-        cache.set(credentials_version_key, credentials_version)
     return f"explorer_credentials_{credentials_version}_{user.profile.sso_id}"
 
 
@@ -198,6 +199,17 @@ def get_user_explorer_connection_settings(user, alias):
     return db_aliases_to_credentials[alias]
 
 
+def remove_data_explorer_user_cached_credentials(user):
+    cache_key = get_user_cached_credentials_key(user)
+    cache.delete(cache_key)
+
+
+def invalidate_data_explorer_user_cached_credentials():
+    credentials_version = cache.get(credentials_version_key, None)
+    if credentials_version:
+        cache.incr(credentials_version_key)
+
+
 @contextmanager
 def user_explorer_connection(connection_settings):
     with psycopg2.connect(
@@ -217,21 +229,6 @@ def get_total_pages(total_rows, page_size):
     if remainder:
         remainder = 1
     return int(total_rows / page_size) + remainder
-
-
-def remove_data_explorer_user_cached_credentials(user):
-    logger.info("Clearing Data Explorer cached credentials for %s", user)
-    cache_key = get_user_cached_credentials_key(user)
-    cache.delete(cache_key)
-
-
-def invalidate_data_explorer_user_cached_credentials():
-    credentials_version = cache.get(credentials_version_key, 0)
-    with cache.lock(
-        'get_explorer_credentials_version', blocking_timeout=30, timeout=180,
-    ):
-        credentials_version += 1
-        cache.set(credentials_version_key, credentials_version)
 
 
 def tempory_query_table_name(user, query_log_id):
