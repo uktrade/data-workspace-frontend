@@ -276,7 +276,7 @@ pycodestyle==2.7.0
     # via flake8
 pycparser==2.20
     # via cffi
-pydevd-pycharm==211.6085.15
+pydevd-pycharm==211.7142.13
     # via -r requirements-dev.in
 pyee==8.1.0
     # via pyppeteer
