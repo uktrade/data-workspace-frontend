@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import mock
 
 from django.conf import settings
@@ -716,6 +716,83 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         ref_dataset.save()
         ids = [x.auto_id for x in ref_dataset.get_records()]
         self.assertEqual(ids, list(reversed(sorted(ids))))
+
+    def test_data_grid_column_config(self):
+        ds = factories.ReferenceDatasetFactory.create()
+        field1 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_CHAR
+        )
+        field2 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_INT
+        )
+        field3 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_DATE
+        )
+        assert ds.get_column_config() == [
+            {
+                'headerName': field3.name,
+                'field': field3.column_name,
+                'sortable': True,
+                'filter': 'agDateColumnFilter',
+                'floatingFilter': True,
+            },
+            {
+                'headerName': field2.name,
+                'field': field2.column_name,
+                'sortable': True,
+                'filter': 'agNumberColumnFilter',
+                'floatingFilter': True,
+            },
+            {
+                'headerName': field1.name,
+                'field': field1.column_name,
+                'sortable': True,
+                'filter': 'agTextColumnFilter',
+                'floatingFilter': True,
+            },
+        ]
+
+    def test_data_grid_data(self):
+        ds = factories.ReferenceDatasetFactory.create()
+        field1 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_CHAR
+        )
+        field2 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_INT
+        )
+        field3 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_DATE
+        )
+        ds.save_record(
+            None,
+            {
+                'reference_dataset': ds,
+                field1.column_name: 'Some text',
+                field2.column_name: 123,
+                field3.column_name: date(2020, 1, 1),
+            },
+        )
+        ds.save_record(
+            None,
+            {
+                'reference_dataset': ds,
+                field1.column_name: 'More text',
+                field2.column_name: 321,
+                field3.column_name: date(2019, 12, 31),
+            },
+        )
+        assert ds.get_grid_data() == [
+            {
+                field1.column_name: 'Some text',
+                field2.column_name: 123,
+                field3.column_name: date(2020, 1, 1),
+            },
+            {
+                field1.column_name: 'More text',
+                field2.column_name: 321,
+                field3.column_name: date(2019, 12, 31),
+            },
+        ]
 
 
 class TestSourceLinkModel(BaseTestCase):

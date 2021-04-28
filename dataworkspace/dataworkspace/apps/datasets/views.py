@@ -663,6 +663,7 @@ class DatasetDetailView(DetailView):
                 'record_count': total_record_count,
                 'records': records,
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
+                'DATA_GRID_REFERENCE_DATASET_FLAG': settings.DATA_GRID_REFERENCE_DATASET_FLAG,
             }
         )
         return ctx
