@@ -304,6 +304,9 @@ def test_find_datasets_has_search_result_count_span_for_live_search_and_gtm(clie
     ), "There must be a node with the 'search-results-count' id for live search/GTM to work correctly."
     assert elem[0].text.isnumeric(), "The contents of the node should be numeric only"
 
+    assert "role" in elem[0].keys()
+    assert "status" == elem[0].get("role")
+
 
 def test_find_datasets_combines_results(client):
     factories.DataSetFactory.create(published=False, name='Unpublished search dataset')
