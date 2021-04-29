@@ -305,7 +305,7 @@ def test_find_datasets_has_search_result_count_span_for_live_search_and_gtm(clie
     assert elem[0].text.isnumeric(), "The contents of the node should be numeric only"
 
     assert "role" in elem[0].keys()
-    assert elem[0].get("role") is "status"
+    assert elem[0].get("role") == "status"
 
 
 def test_find_datasets_combines_results(client):
