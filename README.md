@@ -77,6 +77,15 @@ make docker-test-integration-local
 make docker-test-local
 ```
 
+To run specific tests pass `-e TARGET=<test>` into make
+```bash
+make docker-test-unit-local -e TARGET=dataworkspace/dataworkspace/tests/test_admin.py::TestCustomAdminSite::test_non_admin_access
+ ```
+
+```bash
+make docker-test-integration-local -e TARGET=test/test_application.py
+ ```
+
 ### Running selenium tests locally
 
 We have some selenium integration tests that launch a (headless) browser in order to interact with a running instance of Data Workspace to assure some core flows (only Data Explorer at the time of writing). It is sometimes desirable to watch these tests run, e.g. in order to debug where it is failing. To run the selenium tests through docker-compose using a local browser, do the following:

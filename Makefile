@@ -52,11 +52,19 @@ save-requirements:
 
 .PHONY: docker-test-unit-local
 docker-test-unit-local:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace
+	TEST_DIR="$(TARGET)" ; \
+	if [ -z "$$TEST_DIR" ]; \
+		then TEST_DIR="/dataworkspace/dataworkspace"; \
+ 	fi; \
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR
 
 .PHONY: docker-test-integration-local
 docker-test-integration-local:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest /test
+	TEST_DIR="$(TARGET)" ; \
+	if [ -z "$$TEST_DIR" ]; \
+		then TEST_DIR="/test"; \
+ 	fi; \
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR
 
 .PHONY: docker-test-local
 docker-test-local: docker-test-unit-local docker-test-integration-local
