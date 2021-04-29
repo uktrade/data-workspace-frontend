@@ -61,6 +61,22 @@ Django tests
 make docker-test-unit
 ```
 
+### Running unit and integration tests locally
+
+To run the tests locally without having to rebuild the containers every time append `-local` to the test make commands
+
+```bash
+make docker-test-unit-local
+```
+
+```bash
+make docker-test-integration-local
+```
+
+```bash
+make docker-test-local
+```
+
 ### Running selenium tests locally
 
 We have some selenium integration tests that launch a (headless) browser in order to interact with a running instance of Data Workspace to assure some core flows (only Data Explorer at the time of writing). It is sometimes desirable to watch these tests run, e.g. in order to debug where it is failing. To run the selenium tests through docker-compose using a local browser, do the following:

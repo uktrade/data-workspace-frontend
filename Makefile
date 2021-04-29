@@ -49,3 +49,14 @@ format:
 save-requirements:
 	pip-compile requirements.in
 	pip-compile requirements-dev.in
+
+.PHONY: docker-test-unit-local
+docker-test-unit-local:
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace
+
+.PHONY: docker-test-integration-local
+docker-test-integration-local:
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest /test
+
+.PHONY: docker-test-local
+docker-test-local: docker-test-unit-local docker-test-integration-local
