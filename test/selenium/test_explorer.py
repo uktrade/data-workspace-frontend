@@ -4,7 +4,6 @@ from uuid import uuid4
 import pytest
 import requests
 from django.core.cache import cache
-from selenium.common.exceptions import ElementNotInteractableException
 
 from test.selenium.common import get_driver  # pylint: disable=wrong-import-order
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
