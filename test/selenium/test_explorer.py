@@ -4,7 +4,6 @@ from uuid import uuid4
 import pytest
 import requests
 from django.core.cache import cache
-from selenium.common.exceptions import ElementNotInteractableException
 
 from test.selenium.common import get_driver  # pylint: disable=wrong-import-order
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
@@ -270,43 +269,3 @@ class TestDataExplorer:
         assert "permission denied for relation" in home_page.get_html()
         assert "Columns in public.explorer_dataset" not in home_page.get_html()
         assert "Columns in public.explorer_2_dataset" in home_page.get_html()
-
-    def test_page_width_toggles(self, _application):
-        home_page = HomePage(driver=self.driver)
-        home_page.open()
-
-        # Check that "normal width" toggle is hidden
-        self.driver.implicitly_wait(0)
-        try:
-            home_page.click_normal_width()
-        except ElementNotInteractableException:
-            pass
-        else:
-            raise AssertionError(
-                "Normal width link should not be visible at this point."
-            )
-        finally:
-            self.driver.implicitly_wait(5)
-
-        # Click the toggle to expand the query box
-        before_size = self.driver.find_element_by_id('ace-sql-editor').size
-        before_width = before_size['width']
-
-        home_page.click_full_width()
-
-        after_size = self.driver.find_element_by_id('ace-sql-editor').size
-        assert after_size['width'] > before_width
-
-        # Check the "full width" toggle has been hidden
-        self.driver.implicitly_wait(1)
-        try:
-            home_page.click_full_width()
-        except ElementNotInteractableException:
-            pass
-        else:
-            raise AssertionError("Full width link should not be visible at this point.")
-        finally:
-            self.driver.implicitly_wait(5)
-
-        # And that the "normal width" toggle is now click-able.
-        home_page.click_normal_width()

@@ -110,12 +110,6 @@
                             Your SQL query
                           </p>
                         </div>
-                        <div id="width-toggle-container" class="govuk-grid-column-one-half govuk-!-display-none">
-                          <p class="govuk-label">
-                            <a id="full-width" class="govuk-link govuk-link--no-visited-state app-page-width-toggle" href="#" style="float: right">Use full page width</a>
-                            <a id="normal-width" class="govuk-link govuk-link--no-visited-state govuk-!-display-none app-page-width-toggle" href="#" style="float: right">Use normal page width</a>
-                          </p>
-                        </div>
                       </div>
                     </div>
                     <div id="inline-error"{% if not form.sql.errors %} class="govuk-!-display-none"{% endif %}>
@@ -191,7 +185,6 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_schema.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_query.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    document.getElementById('width-toggle-container').classList.remove('govuk-!-display-none');
     window.initSchemaSearch();
   </script>
   {% if query_log %}
