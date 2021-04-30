@@ -510,7 +510,7 @@ def _table_exists(cur, schema, table):
     return bool(cur.fetchone())
 
 
-def streaming_query_response(user_email, database, query, filename):
+def streaming_query_response(user_email, database, query, filename, query_params=None):
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
     batch_size = 1000
     query_timeout = 300 * 1000
@@ -542,7 +542,7 @@ def streaming_query_response(user_email, database, query, filename):
             cur.itersize = batch_size
             cur.arraysize = batch_size
 
-            cur.execute(query)
+            cur.execute(query, query_params if query_params else {})
 
             i = 0
             while True:

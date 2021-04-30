@@ -2864,3 +2864,347 @@ class TestDataCutUsageHistory:
             'extra__fields__name': 'Test SQLQuery',
             'count': 1,
         } in response.context['rows']
+
+
+class TestSourceTableDataView:
+    def _get_url(self, source_table):
+        return reverse(
+            'datasets:source_table_data',
+            args=(source_table.dataset.id, source_table.id),
+        )
+
+    def _create_source_table(self):
+        with psycopg2.connect(
+            database_dsn(settings.DATABASES_DATA['my_database'])
+        ) as conn, conn.cursor() as cursor:
+            cursor.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS source_data_test (
+                    id UUID primary key,
+                    name VARCHAR(255),
+                    num NUMERIC,
+                    date DATE
+                );
+                TRUNCATE TABLE source_data_test;
+                INSERT INTO source_data_test
+                VALUES('896b4dde-f787-41be-a7bf-82be91805f24', 'the first record', 1, NULL);
+                INSERT INTO source_data_test
+                VALUES('488d06b6-032b-467a-b2c5-2820610b0ca6', 'the second record', 2, '2019-01-01');
+                INSERT INTO source_data_test
+                VALUES('a41da88b-ffa3-4102-928c-b3937fa5b58f', 'the last record', NULL, '2020-01-01');
+                '''
+            )
+        dataset = factories.DataSetFactory(
+            user_access_type='REQUIRES_AUTHENTICATION', published=True
+        )
+        return factories.SourceTableFactory(
+            dataset=dataset,
+            schema='public',
+            table='source_data_test',
+            database=factories.DatabaseFactory(memorable_name='my_database'),
+            data_grid_enabled=True,
+            data_grid_column_config=[
+                {
+                    'field': 'id',
+                    'filter': True,
+                    'dataType': 'uuid',
+                    'sortable': True,
+                    'primaryKey': True,
+                },
+                {'field': 'name', 'filter': True, 'sortable': True},
+                {
+                    'field': 'num',
+                    'filter': True,
+                    'dataType': 'numeric',
+                    'sortable': True,
+                },
+                {
+                    'field': 'date',
+                    'filter': True,
+                    'dataType': 'date',
+                    'sortable': True,
+                },
+            ],
+        )
+
+    @pytest.mark.django_db
+    def test_download_reporting_disabled(self, client):
+        source_table = self._create_source_table()
+        source_table.data_grid_enabled = False
+        source_table.save()
+        response = client.post(
+            self._get_url(source_table) + '?download=1',
+            data={'columns': ['id', 'name', 'num', 'date']},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.django_db
+    def test_source_table_download_disabled(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table) + '?download=1',
+            data={'columns': ['id', 'name', 'num', 'date']},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.django_db
+    def test_contains_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            {
+                'filters': {
+                    'name': {
+                        'filter': 'last',
+                        'filterType': 'text',
+                        'type': 'contains',
+                    }
+                },
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'name': 'the last record',
+                    'num': None,
+                    'date': '2020-01-01',
+                    'id': 'a41da88b-ffa3-4102-928c-b3937fa5b58f',
+                }
+            ]
+        }
+
+    @pytest.mark.django_db
+    def test_not_contains_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'name': {
+                        'filter': 'last',
+                        'filterType': 'text',
+                        'type': 'notContains',
+                    }
+                }
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': '2019-01-01',
+                    'id': '488d06b6-032b-467a-b2c5-2820610b0ca6',
+                    'name': 'the second record',
+                    'num': '2',
+                },
+                {
+                    'date': None,
+                    'id': '896b4dde-f787-41be-a7bf-82be91805f24',
+                    'name': 'the first record',
+                    'num': '1',
+                },
+            ]
+        }
+
+    def test_equals_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'date': {
+                        'dateFrom': '2019-01-01 00:00:00',
+                        'dateTo': None,
+                        'filterType': 'date',
+                        'type': 'equals',
+                    }
+                }
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': '2019-01-01',
+                    'id': '488d06b6-032b-467a-b2c5-2820610b0ca6',
+                    'name': 'the second record',
+                    'num': '2',
+                }
+            ]
+        }
+
+    def test_not_equals_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'date': {
+                        'dateFrom': '2019-01-01 00:00:00',
+                        'dateTo': None,
+                        'filterType': 'date',
+                        'type': 'notEqual',
+                    }
+                }
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': None,
+                    'id': '896b4dde-f787-41be-a7bf-82be91805f24',
+                    'name': 'the first record',
+                    'num': '1',
+                },
+                {
+                    'date': '2020-01-01',
+                    'id': 'a41da88b-ffa3-4102-928c-b3937fa5b58f',
+                    'name': 'the last record',
+                    'num': None,
+                },
+            ]
+        }
+
+    def test_starts_with_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'name': {
+                        'filter': 'the last',
+                        'filterType': 'text',
+                        'type': 'startsWith',
+                    }
+                }
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': '2020-01-01',
+                    'id': 'a41da88b-ffa3-4102-928c-b3937fa5b58f',
+                    'name': 'the last record',
+                    'num': None,
+                }
+            ]
+        }
+
+    def test_ends_with_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'name': {
+                        'filter': 'first record',
+                        'filterType': 'text',
+                        'type': 'endsWith',
+                    }
+                }
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': None,
+                    'id': '896b4dde-f787-41be-a7bf-82be91805f24',
+                    'name': 'the first record',
+                    'num': '1',
+                }
+            ]
+        }
+
+    def test_range_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'date': {
+                        'dateFrom': '2018-12-31 00:00:00',
+                        'dateTo': '2019-01-03 00:00:00',
+                        'filterType': 'date',
+                        'type': 'inRange',
+                    }
+                }
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': '2019-01-01',
+                    'id': '488d06b6-032b-467a-b2c5-2820610b0ca6',
+                    'name': 'the second record',
+                    'num': '2',
+                }
+            ]
+        }
+
+    def test_less_than_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'date': {
+                        'dateFrom': '2019-12-31 00:00:00',
+                        'dateTo': None,
+                        'filterType': 'date',
+                        'type': 'lessThan',
+                    }
+                }
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': '2019-01-01',
+                    'id': '488d06b6-032b-467a-b2c5-2820610b0ca6',
+                    'name': 'the second record',
+                    'num': '2',
+                }
+            ]
+        }
+
+    def test_greater_than_filter(self, client):
+        source_table = self._create_source_table()
+        response = client.post(
+            self._get_url(source_table),
+            data={
+                'filters': {
+                    'date': {
+                        'dateFrom': '2019-12-31 00:00:00',
+                        'dateTo': None,
+                        'filterType': 'date',
+                        'type': 'greaterThan',
+                    }
+                },
+            },
+            content_type='application/json',
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            'records': [
+                {
+                    'date': '2020-01-01',
+                    'id': 'a41da88b-ffa3-4102-928c-b3937fa5b58f',
+                    'name': 'the last record',
+                    'num': None,
+                }
+            ]
+        }

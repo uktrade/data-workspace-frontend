@@ -1,0 +1,44 @@
+{% extends '_main.html' %}
+{% load static core_tags %}
+{% block page_title %}View {{ source_object.name }} - {{ block.super }}{% endblock %}
+{% block go_back %}
+  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=source_table.dataset.id %}#{{ source_table.dataset.slug }}">
+    Back
+  </a>
+{% endblock %}
+{% block footer_scripts %}
+  <script src="{% static 'ag-grid-community.min.js' %}"></script>
+  <script src="{% static 'dayjs.min.js' %}"></script>
+  <script src="{% static 'data-grid.js' %}"></script>
+  {{ source_table.get_column_config|json_script:"column_data" }}
+  <script nonce="{{ request.csp_nonce }}">
+    window.initDataGrid(
+        JSON.parse(document.getElementById('column_data').textContent),
+        '{% url 'datasets:source_table_data' source_table.dataset.id source_table.id %}',
+        null,
+        '{{ source_table.name }}-custom-export.csv'
+    );
+  </script>
+{% endblock footer_scripts %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-l">
+        {{ source_table.name }}
+      </h2>
+      <p class="govuk-body">
+        Filter and sort your data. Drag a column off the table to remove it.
+      </p>
+      <div id="data-grid" class="ag-theme-alpine"></div>
+      <div class="govuk-!-margin-top-4">
+        <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
+          Reset filters
+        </button>
+        &nbsp;
+        <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
+          Reset columns
+        </button>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -549,6 +549,21 @@ class SourceTable(BaseSource):
             "even if they haven’t been explicitly granted access?"
         ),
     )
+    data_grid_enabled = models.BooleanField(
+        default=False,
+        help_text='Allow users to filter, sort and export data from within the browser',
+    )
+    data_grid_column_config = JSONField(
+        blank=True,
+        null=True,
+        help_text=(
+            'Must be a list of json objects defining:\n\n'
+            '- "field": "[column name]" (required)\n'
+            '- "headerName": "[pretty column name]" (optional, defaults to "field")\n'
+            '- "sortable": [true|false] (optional, default: true)\n'
+            '- "filter": "[true|false|ag-grid filter name]" (optional, default: true)'
+        ),
+    )
 
     class Meta:
         db_table = 'app_sourcetable'
@@ -557,7 +572,7 @@ class SourceTable(BaseSource):
         return f'{self.name} ({self.id})'
 
     def can_show_link_for_user(self, user):
-        return False
+        return user.is_superuser
 
     @property
     def type(self):
@@ -567,6 +582,47 @@ class SourceTable(BaseSource):
         return get_tables_last_updated_date(
             self.database.memorable_name, ((self.schema, self.table),)
         )
+
+    def get_column_config(self):
+        """
+        Return column configuration for the source table in the format expected by ag-grid.
+        """
+        # Map some postgres data types to types ag-grid can filter against.
+        # If not set falls back to `text` on the frontend
+        grid_data_type_map = {
+            'smallint': 'numeric',
+            'integer': 'numeric',
+            'bigint': 'numeric',
+            'decimal': 'numeric',
+            'numeric': 'numeric',
+            'real': 'numeric',
+            'timestamp': 'date',
+            'timestamp with time zone': 'date',
+            'timestamp without time zone': 'date',
+            'date': 'date',
+        }
+
+        # Read postgres column names and types in from the db
+        postgres_column_data_types = {
+            col[0]: col[1]
+            for col in datasets_db.get_columns(
+                self.database.memorable_name,
+                schema=self.schema,
+                table=self.table,
+                include_types=True,
+            )
+        }
+
+        col_defs = []
+        for col_def in self.data_grid_column_config:
+            if col_def.get('field') in postgres_column_data_types:
+                col_def['filter'] = col_def.get('filter', True)
+                col_def['sortable'] = col_def.get('sortable', True)
+                pg_data_type = postgres_column_data_types[col_def['field']]
+                col_def['dataType'] = grid_data_type_map.get(pg_data_type, pg_data_type)
+                col_defs.append(col_def)
+
+        return col_defs
 
 
 class SourceView(BaseSource):
@@ -1377,7 +1433,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 'field': column_name,
                 'sortable': True,
                 'filter': 'agTextColumnFilter',
-                'floatingFilter': True,
             }
             if data_type in [
                 field.DATA_TYPE_INT,
