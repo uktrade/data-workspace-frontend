@@ -1352,6 +1352,57 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def bookmark_count(self):
         return self.referencedatasetbookmark_set.count()
 
+    def get_column_config(self):
+        """
+        Return column configuration for the reference dataset in the
+        format expected by ag-grid.
+        """
+        col_defs = []
+        for field in self.fields.all():
+            col_def = {
+                'headerName': field.name,
+                'field': field.column_name,
+                'sortable': True,
+                'filter': 'agTextColumnFilter',
+                'floatingFilter': True,
+            }
+            if field.data_type in [
+                field.DATA_TYPE_INT,
+                field.DATA_TYPE_FLOAT,
+                field.DATA_TYPE_AUTO_ID,
+            ]:
+                col_def['filter'] = 'agNumberColumnFilter'
+            elif field.data_type in [field.DATA_TYPE_DATE, field.DATA_TYPE_DATETIME]:
+                col_def['filter'] = 'agDateColumnFilter'
+            col_defs.append(col_def)
+        return col_defs
+
+    def get_grid_data(self):
+        """
+        Return all records of this reference dataset in a JSON
+        serializable format for use by ag-grid.
+        """
+        fields = self.fields.exclude(
+            data_type__in=ReferenceDatasetField.PROPERTY_DATA_TYPES
+        )
+        records = []
+        for record in self.get_records():
+            record_data = {}
+            for field in fields:
+                if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                    record_data[field.column_name] = getattr(record, field.column_name)
+                    # ISO format dates for js compatibility
+                    if isinstance(record_data[field.column_name], datetime):
+                        record_data[field.column_name] = record_data[
+                            field.column_name
+                        ].isoformat()
+                else:
+                    record_data[field.relationship_name] = getattr(
+                        record, field.relationship_name
+                    )
+            records.append(record_data)
+        return records
+
 
 class ReferenceDataSetBookmark(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)

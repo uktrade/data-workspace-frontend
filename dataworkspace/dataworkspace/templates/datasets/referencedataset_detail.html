@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load static humanize core_tags datasets_tags %}
+{% load static humanize core_tags datasets_tags waffle_tags %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -7,7 +7,23 @@
   {{ block.super }}
   <script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "reference"})</script>
 {% endblock %}
-
+{% block footer_scripts %}
+  {% flag DATA_GRID_REFERENCE_DATASET_FLAG %}
+    <script src="{% static 'ag-grid-community.min.js' %}"></script>
+    <script src="{% static 'dayjs.min.js' %}"></script>
+    <script src="{% static 'data-grid.js' %}"></script>
+    {{ model.get_column_config|json_script:"column_data" }}
+    {{ model.get_grid_data|json_script:"grid_data" }}
+    <script nonce="{{ request.csp_nonce }}">
+      window.initDataGrid(
+          JSON.parse(document.getElementById('column_data').textContent),
+          null,
+          JSON.parse(document.getElementById('grid_data').textContent),
+          '{{ model.slug }}-{{ model.published_version }}-custom-export.csv'
+      );
+    </script>
+  {% endflag %}
+{% endblock footer_scripts %}
 {% block breadcrumbs %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-three-quarters">
@@ -119,68 +135,97 @@
       </div>
     </div>
 
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-l govuk-!-margin-top-8">
-          Data preview
-        </h2>
-        <p class="govuk-body">
-          Showing {% if preview_limit < record_count %}first {% endif %}<strong>{{ preview_limit }}</strong> record{{ preview_limit|pluralize }} {% if preview_limit < record_count %} of <strong>{{ record_count }}</strong>{% endif %}
-        </p>
-        <div class="scrollable-table" tabindex="0">
-          <table class="govuk-table govuk-!-font-size-16">
-            <thead>
-              <tr class="govuk-table__row">
-                {% for field in fields %}
-                  <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
-                    {{ field.name }}
-                  </th>
-                {% endfor %}
-                {% if perms.datasets_referencedataset.change %}
-                  <th class="govuk-table__header">Admin</th>
-                {% endif %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for record in records %}
+    {% flag DATA_GRID_REFERENCE_DATASET_FLAG %}
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          <h2 class="govuk-heading-l govuk-!-margin-top-8">
+            Reference data
+          </h2>
+          <p class="govuk-body">
+            Filter and sort your data before downloading.
+            Drag a column off the table to remove it.
+          </p>
+          <div id="data-grid" class="ag-theme-alpine"></div>
+          <div class="govuk-!-margin-top-4">
+            <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
+              Download this data
+            </button>
+            &nbsp;
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
+              Reset filters
+            </button>
+            &nbsp;
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
+              Reset columns
+            </button>
+
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          <h2 class="govuk-heading-l govuk-!-margin-top-8">
+            Data preview
+          </h2>
+          <p class="govuk-body">
+            Showing {% if preview_limit < record_count %}first {% endif %}<strong>{{ preview_limit }}</strong> record{{ preview_limit|pluralize }} {% if preview_limit < record_count %} of <strong>{{ record_count }}</strong>{% endif %}
+          </p>
+          <div class="scrollable-table" tabindex="0">
+            <table class="govuk-table govuk-!-font-size-16">
+              <thead>
                 <tr class="govuk-table__row">
                   {% for field in fields %}
-                    {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
-                      {% with record|get_attr:field.relationship_name as relationship %}
-                        {% with relationship|get_attr:field.linked_reference_dataset_field.column_name as value %}
+                    <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
+                      {{ field.name }}
+                    </th>
+                  {% endfor %}
+                  {% if perms.datasets_referencedataset.change %}
+                    <th class="govuk-table__header">Admin</th>
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for record in records %}
+                  <tr class="govuk-table__row">
+                    {% for field in fields %}
+                      {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
+                        {% with record|get_attr:field.relationship_name as relationship %}
+                          {% with relationship|get_attr:field.linked_reference_dataset_field.column_name as value %}
+                            <td class="govuk-table__cell">
+                              {{ value|not_set_if_none }}
+                            </td>
+                          {% endwith %}
+                        {% endwith %}
+                      {% else %}
+                        {% with record|get_attr:field.column_name as value %}
                           <td class="govuk-table__cell">
                             {{ value|not_set_if_none }}
                           </td>
                         {% endwith %}
-                      {% endwith %}
-                    {% else %}
-                      {% with record|get_attr:field.column_name as value %}
-                        <td class="govuk-table__cell">
-                          {{ value|not_set_if_none }}
-                        </td>
-                      {% endwith %}
+                      {% endif %}
+                    {% endfor %}
+                    {% if perms.datasets_referencedataset.change %}
+                      <td class="govuk-table__cell">
+                        <a href="{% url 'dw-admin:reference-dataset-record-edit' model.id record.id %}">
+                          Edit
+                        </a>
+                      </td>
                     {% endif %}
-                  {% endfor %}
-                  {% if perms.datasets_referencedataset.change %}
-                    <td class="govuk-table__cell">
-                      <a href="{% url 'dw-admin:reference-dataset-record-edit' model.id record.id %}">
-                        Edit
-                      </a>
+                  </tr>
+                {% empty %}
+                  <tr class="govuk-table__row">
+                    <td colspan="{{ model.field_names|length }}">
+                      This reference dataset doesn't have any data yet.
                     </td>
-                  {% endif %}
-                </tr>
-              {% empty %}
-                <tr class="govuk-table__row">
-                  <td colspan="{{ model.field_names|length }}">
-                    This reference dataset doesn't have any data yet.
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+    {% endflag %}
 
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
