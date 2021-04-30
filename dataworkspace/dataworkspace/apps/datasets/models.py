@@ -534,7 +534,28 @@ class BaseSource(ReferenceNumberedDatasetSource):
         return self.name
 
 
-class SourceTable(BaseSource):
+class BaseSourceDataGridConfig(models.Model):
+    data_grid_enabled = models.BooleanField(
+        default=False,
+        help_text='Allow users to filter, sort and export data from within the browser',
+    )
+    data_grid_column_config = JSONField(
+        blank=True,
+        null=True,
+        help_text=(
+            'Must be a list of json objects defining:\n\n'
+            '- "field": "[column name]" (required)\n'
+            '- "headerName": "[pretty column name]" (optional, defaults to "field")\n'
+            '- "sortable": [true|false] (optional, default: true)\n'
+            '- "filter": "[true|false|ag-grid filter name]" (optional, default: true)'
+        ),
+    )
+
+    class Meta:
+        abstract = True
+
+
+class SourceTable(BaseSource, BaseSourceDataGridConfig):
     table = models.CharField(
         max_length=1024,
         blank=False,
