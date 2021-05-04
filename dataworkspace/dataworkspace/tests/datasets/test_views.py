@@ -1,4 +1,4 @@
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime, timezone
 import random
 from urllib.parse import quote_plus
 from uuid import uuid4
@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.urls import reverse
 from django.test import Client
+from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
 
@@ -2620,3 +2621,209 @@ class TestRelatedDataView:
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
         assert all(datacut.name in body for datacut in datacuts)
+
+
+class TestDataCutUsageHistory:
+    @pytest.mark.django_db
+    def test_one_event_by_one_user_on_the_same_day(self, staff_client):
+        datacut = factories.DataSetFactory.create(
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        user = factories.UserFactory(email='test-user@example.com')
+        with freeze_time("2021-01-01"):
+            factories.DatasetLinkDownloadEventFactory(
+                content_object=datacut,
+                user=user,
+                extra={'fields': {'name': 'Test SourceLink'}},
+            )
+
+        url = reverse('datasets:usage_history', args=(datacut.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 1
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SourceLink',
+            'count': 1,
+        } in response.context['rows']
+
+    @pytest.mark.django_db
+    def test_multiple_events_by_one_user_on_the_same_day(self, staff_client):
+        datacut = factories.DataSetFactory.create(
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        user = factories.UserFactory(email='test-user@example.com')
+        with freeze_time("2021-01-01"):
+            factories.DatasetLinkDownloadEventFactory(
+                content_object=datacut,
+                user=user,
+                extra={'fields': {'name': 'Test SourceLink'}},
+            )
+            for _ in range(2):
+                factories.DatasetQueryDownloadEventFactory(
+                    content_object=datacut,
+                    user=user,
+                    extra={'fields': {'name': 'Test SQLQuery'}},
+                )
+
+        url = reverse('datasets:usage_history', args=(datacut.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 2
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SourceLink',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SQLQuery',
+            'count': 2,
+        } in response.context['rows']
+
+    @pytest.mark.django_db
+    def test_multiple_events_by_multiple_users_on_the_same_day(self, staff_client):
+        datacut = factories.DataSetFactory.create(
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        user = factories.UserFactory(email='test-user@example.com')
+        user_2 = factories.UserFactory(email='test-user-2@example.com')
+        with freeze_time("2021-01-01"):
+            factories.DatasetLinkDownloadEventFactory(
+                content_object=datacut,
+                user=user,
+                extra={'fields': {'name': 'Test SourceLink'}},
+            )
+            for _ in range(3):
+                factories.DatasetQueryDownloadEventFactory(
+                    content_object=datacut,
+                    user=user,
+                    extra={'fields': {'name': 'Test SQLQuery'}},
+                )
+            factories.DatasetQueryDownloadEventFactory(
+                content_object=datacut,
+                user=user_2,
+                extra={'fields': {'name': 'Test SQLQuery'}},
+            )
+
+        url = reverse('datasets:usage_history', args=(datacut.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 3
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SourceLink',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SQLQuery',
+            'count': 3,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user-2@example.com',
+            'extra__fields__name': 'Test SQLQuery',
+            'count': 1,
+        } in response.context['rows']
+
+    @pytest.mark.django_db
+    def test_multiple_events_by_multiple_users_on_different_days(self, staff_client):
+        datacut = factories.DataSetFactory.create(
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        user = factories.UserFactory(email='test-user@example.com')
+        user_2 = factories.UserFactory(email='test-user-2@example.com')
+        with freeze_time("2021-01-01"):
+            factories.DatasetLinkDownloadEventFactory(
+                content_object=datacut,
+                user=user,
+                extra={'fields': {'name': 'Test SourceLink'}},
+            )
+            for _ in range(2):
+                factories.DatasetQueryDownloadEventFactory(
+                    content_object=datacut,
+                    user=user,
+                    extra={'fields': {'name': 'Test SQLQuery'}},
+                )
+            factories.DatasetQueryDownloadEventFactory(
+                content_object=datacut,
+                user=user_2,
+                extra={'fields': {'name': 'Test SQLQuery'}},
+            )
+
+        with freeze_time("2021-01-02"):
+            factories.DatasetLinkDownloadEventFactory(
+                content_object=datacut,
+                user=user,
+                extra={'fields': {'name': 'Test SourceLink'}},
+            )
+            for _ in range(4):
+                factories.DatasetLinkDownloadEventFactory(
+                    content_object=datacut,
+                    user=user_2,
+                    extra={'fields': {'name': 'Test SourceLink'}},
+                )
+
+            factories.DatasetQueryDownloadEventFactory(
+                content_object=datacut,
+                user=user,
+                extra={'fields': {'name': 'Test SQLQuery'}},
+            )
+
+        url = reverse('datasets:usage_history', args=(datacut.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 6
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SourceLink',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SQLQuery',
+            'count': 2,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'user__email': 'test-user-2@example.com',
+            'extra__fields__name': 'Test SQLQuery',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SourceLink',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
+            'user__email': 'test-user-2@example.com',
+            'extra__fields__name': 'Test SourceLink',
+            'count': 4,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
+            'user__email': 'test-user@example.com',
+            'extra__fields__name': 'Test SQLQuery',
+            'count': 1,
+        } in response.context['rows']

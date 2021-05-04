@@ -87,4 +87,9 @@ urlpatterns = [
         login_required(views.toggle_bookmark),
         name='toggle_bookmark',
     ),
+    path(
+        '<uuid:dataset_uuid>/usage-history',
+        login_required(views.DataCutUsageHistoryView.as_view()),
+        name='usage_history',
+    ),
 ]

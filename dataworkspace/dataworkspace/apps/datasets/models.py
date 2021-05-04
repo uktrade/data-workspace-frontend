@@ -28,6 +28,7 @@ from django.db import (
 )
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.urls import reverse
@@ -50,6 +51,7 @@ from dataworkspace.apps.applications.models import (
 )
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType, TagType
 from dataworkspace.apps.datasets.model_utils import external_model_class
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.datasets_db import get_tables_last_updated_date
 
 
@@ -197,6 +199,7 @@ class DataSet(DeletableTimestampedUserModel):
     reference_code = models.ForeignKey(
         DatasetReferenceCode, null=True, blank=True, on_delete=models.SET_NULL
     )
+    events = GenericRelation(EventLog)
 
     class Meta:
         db_table = 'app_dataset'
