@@ -80,13 +80,13 @@
 
 .schema-cell-left {
     font-size: 0.8rem;
-    padding: 5px 5px 5px 5;
+    padding: 5px 5px 5px 5px;
     word-break: break-word;
 }
 
 .schema-cell-right {
     font-size: 0.8rem;
-    padding: 5px 5px 5px 5;
+    padding: 5px 5px 5px 5px;
 }
 
 .schema-collapse {
@@ -111,13 +111,10 @@
     background-color: #F0F0F0
 }
 
-.app-page-width-toggle {
-    display: none
-}
-
 @media only screen and (min-width: 1020px) {
-    .app-page-width-toggle {
-        display: block
+    /* Tablet and mobile displays already use full width */
+    .govuk-width-container {
+        max-width: 95%;
     }
 }
 .loading-spinner {
@@ -138,3 +135,4 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+

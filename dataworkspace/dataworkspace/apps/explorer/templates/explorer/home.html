@@ -72,7 +72,7 @@
             </ul>
 
             <div class="govuk-tabs__panel" id="query-tab">
-              <h3 class="govuk-heading-m">Query</h3>
+
 
               <form role="form" action="{{ form_action }}" method="post" id="editor">
                 {% csrf_token %}
@@ -107,13 +107,7 @@
                       <div class="govuk-grid-row">
                         <div class="govuk-grid-column-one-half">
                           <p class="govuk-label">
-                            Your SQL query
-                          </p>
-                        </div>
-                        <div id="width-toggle-container" class="govuk-grid-column-one-half govuk-!-display-none">
-                          <p class="govuk-label">
-                            <a id="full-width" class="govuk-link govuk-link--no-visited-state app-page-width-toggle" href="#" style="float: right">Use full page width</a>
-                            <a id="normal-width" class="govuk-link govuk-link--no-visited-state govuk-!-display-none app-page-width-toggle" href="#" style="float: right">Use normal page width</a>
+                            Enter your SQL query and click the Run button
                           </p>
                         </div>
                       </div>
@@ -166,7 +160,7 @@
               </form>
             </div>
             <div class="govuk-tabs__panel" id="database-tab">
-              <h3 class="govuk-heading-m">Database</h3>
+             
               <p class="govuk-body">
                 You can see the database tables you have access to here.
               </p>
@@ -191,7 +185,6 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_schema.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_query.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    document.getElementById('width-toggle-container').classList.remove('govuk-!-display-none');
     window.initSchemaSearch();
   </script>
   {% if query_log %}

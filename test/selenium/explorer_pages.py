@@ -87,14 +87,6 @@ class HomePage(_BaseExplorerPage):
         )
         fetch_page.click()
 
-    def click_full_width(self):
-        toggle = self._driver.find_element_by_id('full-width')
-        toggle.click()
-
-    def click_normal_width(self):
-        toggle = self._driver.find_element_by_id('normal-width')
-        toggle.click()
-
 
 class CreateQueryPage(_BaseExplorerPage):
     _url_regex = r'/data-explorer/queries/create/\?play_id=(?P<play_id>\d+)'
