@@ -161,13 +161,7 @@ def get_datasets_data_for_user_matching_query(
     bookmark_filter = Q(referencedatasetbookmark__user=user)
 
     if user and datasets.model is not ReferenceDataset:
-        access_filter &= (
-            Q(user_access_type='REQUIRES_AUTHENTICATION')
-            & (
-                Q(datasetuserpermission__user=user)
-                | Q(datasetuserpermission__isnull=True)
-            )
-        ) | Q(
+        access_filter &= (Q(user_access_type='REQUIRES_AUTHENTICATION')) | Q(
             user_access_type='REQUIRES_AUTHORIZATION', datasetuserpermission__user=user
         )
 
