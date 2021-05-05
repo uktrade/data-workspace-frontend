@@ -1272,6 +1272,43 @@ def test_find_datasets_filters_by_access():
 
 
 @pytest.mark.django_db
+def test_find_datasets_filters_by_access_requires_authenticate():
+    user = factories.UserFactory.create(is_superuser=False)
+    user2 = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    public_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+
+    factories.DataSetUserPermissionFactory.create(user=user2, dataset=public_master)
+    response = client.get(reverse('datasets:find_datasets'), {"status": ["access"]})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        {
+            'id': public_master.id,
+            'name': public_master.name,
+            'slug': public_master.slug,
+            'search_rank': mock.ANY,
+            'short_description': public_master.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': public_master.type,
+            'published': True,
+            'has_access': True,
+            'is_bookmarked': False,
+        },
+    ]
+
+
+@pytest.mark.django_db
 def test_find_datasets_filters_by_bookmark_single():
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
