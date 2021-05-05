@@ -1397,8 +1397,14 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                             field.column_name
                         ].isoformat()
                 else:
-                    record_data[field.relationship_name] = getattr(
-                        record, field.relationship_name
+                    relationship = getattr(record, field.relationship_name)
+                    record_data[field.relationship_name] = (
+                        getattr(
+                            relationship,
+                            field.linked_reference_dataset_field.column_name,
+                        )
+                        if relationship
+                        else None
                     )
             records.append(record_data)
         return records
