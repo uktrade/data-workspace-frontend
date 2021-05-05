@@ -728,7 +728,32 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         field3 = factories.ReferenceDatasetFieldFactory(
             reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_DATE
         )
+        linked_to_dataset = self._create_reference_dataset(
+            table_name='linked_to_external_dataset'
+        )
+        ReferenceDatasetField.objects.create(
+            reference_dataset=linked_to_dataset,
+            name='field1',
+            column_name='field1',
+            data_type=ReferenceDatasetField.DATA_TYPE_INT,
+            is_identifier=True,
+        )
+        field4 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds,
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            relationship_name='link',
+            linked_reference_dataset_field=linked_to_dataset.fields.get(
+                is_identifier=True
+            ),
+        )
         assert ds.get_column_config() == [
+            {
+                'headerName': field4.name,
+                'field': field4.linked_reference_dataset_field.column_name,
+                'sortable': True,
+                'filter': 'agNumberColumnFilter',
+                'floatingFilter': True,
+            },
             {
                 'headerName': field3.name,
                 'field': field3.column_name,
@@ -788,8 +813,15 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         field4 = factories.ReferenceDatasetFieldFactory(
             reference_dataset=ds,
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            name='link',
-            relationship_name='link',
+            relationship_name='link1',
+            linked_reference_dataset_field=linked_to_dataset.fields.get(
+                is_identifier=True
+            ),
+        )
+        field5 = factories.ReferenceDatasetFieldFactory(
+            reference_dataset=ds,
+            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+            relationship_name='link2',
             linked_reference_dataset_field=linked_to_dataset.fields.get(
                 is_display_name=True
             ),
@@ -801,7 +833,8 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 field1.column_name: 'Some text',
                 field2.column_name: 123,
                 field3.column_name: date(2020, 1, 1),
-                'link_id': None,
+                'link1_id': None,
+                'link2_id': None,
             },
         )
         ds.save_record(
@@ -811,7 +844,8 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 field1.column_name: 'More text',
                 field2.column_name: 321,
                 field3.column_name: date(2019, 12, 31),
-                'link_id': linked_to_record.id,
+                'link1_id': linked_to_record.id,
+                'link2_id': linked_to_record.id,
             },
         )
         assert ds.get_grid_data() == [
@@ -819,13 +853,15 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 field1.column_name: 'Some text',
                 field2.column_name: 123,
                 field3.column_name: date(2020, 1, 1),
-                field4.relationship_name: None,
+                field4.linked_reference_dataset_field.column_name: None,
+                field5.linked_reference_dataset_field.column_name: None,
             },
             {
                 field1.column_name: 'More text',
                 field2.column_name: 321,
                 field3.column_name: date(2019, 12, 31),
-                field4.relationship_name: 'a record',
+                field4.linked_reference_dataset_field.column_name: 1,
+                field5.linked_reference_dataset_field.column_name: 'a record',
             },
         ]
 

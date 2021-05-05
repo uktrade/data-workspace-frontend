@@ -1359,20 +1359,30 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         col_defs = []
         for field in self.fields.all():
+            column_name = (
+                field.column_name
+                if field.data_type != field.DATA_TYPE_FOREIGN_KEY
+                else field.linked_reference_dataset_field.column_name
+            )
+            data_type = (
+                field.data_type
+                if field.data_type != field.DATA_TYPE_FOREIGN_KEY
+                else field.linked_reference_dataset_field.data_type
+            )
             col_def = {
                 'headerName': field.name,
-                'field': field.column_name,
+                'field': column_name,
                 'sortable': True,
                 'filter': 'agTextColumnFilter',
                 'floatingFilter': True,
             }
-            if field.data_type in [
+            if data_type in [
                 field.DATA_TYPE_INT,
                 field.DATA_TYPE_FLOAT,
                 field.DATA_TYPE_AUTO_ID,
             ]:
                 col_def['filter'] = 'agNumberColumnFilter'
-            elif field.data_type in [field.DATA_TYPE_DATE, field.DATA_TYPE_DATETIME]:
+            elif data_type in [field.DATA_TYPE_DATE, field.DATA_TYPE_DATETIME]:
                 col_def['filter'] = 'agDateColumnFilter'
             col_defs.append(col_def)
         return col_defs
@@ -1398,7 +1408,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                         ].isoformat()
                 else:
                     relationship = getattr(record, field.relationship_name)
-                    record_data[field.relationship_name] = (
+                    record_data[field.linked_reference_dataset_field.column_name] = (
                         getattr(
                             relationship,
                             field.linked_reference_dataset_field.column_name,
