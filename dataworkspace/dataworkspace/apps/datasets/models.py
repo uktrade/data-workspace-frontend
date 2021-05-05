@@ -534,28 +534,7 @@ class BaseSource(ReferenceNumberedDatasetSource):
         return self.name
 
 
-class BaseSourceDataGridConfig(models.Model):
-    data_grid_enabled = models.BooleanField(
-        default=False,
-        help_text='Allow users to filter, sort and export data from within the browser',
-    )
-    data_grid_column_config = JSONField(
-        blank=True,
-        null=True,
-        help_text=(
-            'Must be a list of json objects defining:\n\n'
-            '- "field": "[column name]" (required)\n'
-            '- "headerName": "[pretty column name]" (optional, defaults to "field")\n'
-            '- "sortable": [true|false] (optional, default: true)\n'
-            '- "filter": "[true|false|ag-grid filter name]" (optional, default: true)'
-        ),
-    )
-
-    class Meta:
-        abstract = True
-
-
-class SourceTable(BaseSource, BaseSourceDataGridConfig):
+class SourceTable(BaseSource):
     table = models.CharField(
         max_length=1024,
         blank=False,
@@ -882,7 +861,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
         if columns:
             rows = get_random_data_sample(
-                self.database.memorable_name, sql.SQL(self.query), sample_size,
+                self.database.memorable_name,
+                sql.SQL(self.query),
+                sample_size,
             )
             for row in rows:
                 record_data = {}
@@ -2135,7 +2116,10 @@ class VisualisationLink(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_type = models.CharField(
         max_length=64,
-        choices=(('QUICKSIGHT', 'AWS QuickSight'), ('SUPERSET', 'Superset'),),
+        choices=(
+            ('QUICKSIGHT', 'AWS QuickSight'),
+            ('SUPERSET', 'Superset'),
+        ),
         null=False,
         blank=False,
     )
@@ -2146,7 +2130,8 @@ class VisualisationLink(TimeStampedModel):
         help_text='Used as the displayed text in the download link',
     )
     identifier = models.CharField(
-        max_length=256, help_text='For QuickSight, the dashboard ID.',
+        max_length=256,
+        help_text='For QuickSight, the dashboard ID.',
     )
     visualisation_catalogue_item = models.ForeignKey(
         VisualisationCatalogueItem, on_delete=models.CASCADE
@@ -2185,5 +2170,6 @@ class ToolQueryAuditLogTable(models.Model):
         default='public',
     )
     table = models.CharField(
-        max_length=63, validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        max_length=63,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
