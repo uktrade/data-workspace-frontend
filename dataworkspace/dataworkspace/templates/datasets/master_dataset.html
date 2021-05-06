@@ -88,7 +88,7 @@
                 {% if has_access %}
                   {% if source_table.data_grid_enabled %}
                     <a class="govuk-link"
-                        href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id table_uuid=source_table.id %}">
+                        href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id object_id=source_table.id %}">
                         View table
                     </a>
                   {% else %}

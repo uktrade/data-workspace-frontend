@@ -252,7 +252,7 @@ def update_quicksight_visualisations_last_updated_date():
     )
 
 
-def build_filtered_dataset_query(schema, table, column_config, params):
+def build_filtered_dataset_query(inner_query, column_config, params):
     column_map = {x['field']: x for x in column_config}
     query_params = {
         'offset': int(params.get('start', 0)),
@@ -365,7 +365,7 @@ def build_filtered_dataset_query(schema, table, column_config, params):
     query = SQL(
         f'''
         SELECT {{}}
-        FROM {{}}.{{}}
+        FROM ({{}}) a
         {{}}
         ORDER BY {{}} {sort_dir}
         LIMIT %(limit)s
@@ -373,8 +373,7 @@ def build_filtered_dataset_query(schema, table, column_config, params):
         '''
     ).format(
         SQL(',').join(map(Identifier, column_map)),
-        Identifier(schema),
-        Identifier(table),
+        inner_query,
         SQL(' ').join(where_clause),
         SQL(',').join(map(Identifier, sort_fields)),
     )
