@@ -1,5 +1,4 @@
 from datetime import timedelta, date, datetime, timezone
-import json
 import random
 from urllib.parse import quote_plus
 from uuid import uuid4
