@@ -2,152 +2,166 @@
 
 {% load explorer_tags static %}
 
-{% block title %}{% if form.errors %}Error: {% endif%}Data Explorer - New query{% endblock %}
+{% block title %}{% if form.errors %}Error: {% endif %}Data Explorer - New query{% endblock %}
 
 {% block back_button %}
-  {% if backlink %}
-    <a href="{{ backlink }}" class="govuk-back-link">Back</a>
-  {% endif %}
+    {% if backlink %}
+        <a href="{{ backlink }}" class="govuk-back-link">Back</a>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="govuk-width-container">
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full" id="query_area">
-            {% if form.errors %}
-                <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
-                    <h2 class="govuk-error-summary__title" id="error-summary-title">
-                        There is a problem
-                    </h2>
-                    <div class="govuk-error-summary__body">
-                        <ul class="govuk-list govuk-error-summary__list">
-                            {% for field, errors in form.errors.items %}
-                                {% for error in errors %}
-                                    <li>
-                                        <a href="#id_{{ field }}">{{ error }}</a>
-                                    </li>
+    <div class="govuk-width-container">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-full" id="query_area">
+                {% if form.errors %}
+                    <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1"
+                         data-module="govuk-error-summary">
+                        <h2 class="govuk-error-summary__title" id="error-summary-title">
+                            There is a problem
+                        </h2>
+                        <div class="govuk-error-summary__body">
+                            <ul class="govuk-list govuk-error-summary__list">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>
+                                            <a href="#id_{{ field }}">{{ error }}</a>
+                                        </li>
+                                    {% endfor %}
                                 {% endfor %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            {% endif %}
-            <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">
-                {% if query %}
-                    {{ query.title }}
-                {% else %}
-                    New Query
-                {% endif %}
-            </h1>
-
-            {% if not backlink %}
-            <p class="govuk-body">
-                <a class="govuk-link" href="{% url 'explorer:explorer_logs' %}?query_id={{ query.id }}">View logs for this query</a>
-            </p>
-            {% endif %}
-
-            <fieldset class="govuk-fieldset">
-                {% if message %}
-                    <div class="govuk-warning-text">
-                        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-                        <strong class="govuk-warning-text__text">
-                            {{ message }}
-                        </strong>
+                            </ul>
+                        </div>
                     </div>
                 {% endif %}
-
-
-                <form action="{{ form_action }}" method="post" id="editor">
-                  {% csrf_token %}
-
-                <div class="govuk-form-group{% if form.title.errors %} govuk-form-group--error {% endif %}">
-                    <label class="govuk-label" for="id_title">
-                        Title
-                    </label>
-                    {% if form.title.errors %}
-                        {% for error in form.title.errors %}
-                            <span id="title-error" class="govuk-error-message">
-                                <span class="govuk-visually-hidden">Error:</span> {{ error|escape }}
-                            </span>
-                        {% endfor %}
-                    {% endif %}
-                    <input class="govuk-input govuk-input--width-30" id="id_title" name="title" type="text" value="{{ form.title.value|default_if_none:"" }}" />
-                </div>
-
-                <div class="govuk-form-group">
-                    {% if form.connections|length > 1 %}
-                        <label class="govuk-label" for="id_connection">
-                            Connection
-                        </label>
-                        <select class="govuk-select" id="id_connection" name="connection">
-                            {% for value, label in form.connections %}
-                                <option value="{{ value }}"{% if form.connection.value == value %} selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
+                <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">
+                    {% if query %}
+                        {{ query.title }}
                     {% else %}
-                        {# still need to submit the connection, just hide the UI element #}
-                        <div style="display: none">
-                          {{ form.connection }}
+                        New Query
+                    {% endif %}
+                </h1>
+
+                {% if not backlink %}
+                    <p class="govuk-body">
+                        <a class="govuk-link" href="{% url 'explorer:explorer_logs' %}?query_id={{ query.id }}">View
+                            logs for this query</a>
+                    </p>
+                {% endif %}
+
+                <fieldset class="govuk-fieldset">
+                    {% if message %}
+                        <div class="govuk-warning-text">
+                            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+                            <strong class="govuk-warning-text__text">
+                                {{ message }}
+                            </strong>
                         </div>
                     {% endif %}
-                </div>
 
-                <div class="govuk-form-group">
-                    <label class="govuk-label" for="id_description">
-                        Description
-                    </label>
-                    <textarea class="govuk-textarea" id="id_description" name="description" cols="40" rows="2">{{ form.description.value|default_if_none:"" }}</textarea>
-                </div>
-                <input type="hidden" id="id_created_by_user" name="created_by_user" value="{{ form.created_by_user_email }}" />
 
-                {# We apply `id_sql` to the form group here to match the structure in `home.html` #}
-                <div id="id_sql" class="govuk-form-group {% if form.sql.errors %} govuk-form-group--error {% endif %}">
-                    <label class="govuk-label" for="original-sql">
-                        SQL
-                    </label>
-                    {% if form.sql.errors %}
-                        {% for error in form.sql.errors %}
-                            <span id="sql-error" class="govuk-error-message">
+                    <form action="{{ form_action }}" method="post" id="editor">
+                        {% csrf_token %}
+
+                        <div class="govuk-form-group{% if form.title.errors %} govuk-form-group--error {% endif %}">
+                            <label class="govuk-label" for="id_title">
+                                Title
+                            </label>
+                            {% if form.title.errors %}
+                                {% for error in form.title.errors %}
+                                    <span id="title-error" class="govuk-error-message">
                                 <span class="govuk-visually-hidden">Error:</span> {{ error|escape }}
                             </span>
-                        {% endfor %}
-                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            <input class="govuk-input govuk-input--width-30" id="id_title" name="title" type="text"
+                                   value="{{ form.title.value|default_if_none:"" }}"/>
+                        </div>
 
-                    {# We include the ACE editor here, but hidden, in order to use ACE's formatting.  #}
-                    <div class="govuk-textarea" id="gov-uk-sql-wrapper" style="display: none;">
-                        <div id="ace-sql-editor" data-disabled="true">{% if form.sql.value %}{{ form.sql.value }}{% endif %}</div>
-                    </div>
-                    <textarea class="govuk-textarea app-readonly-sql" aria-label="Sql" name="sql" id="original-sql" rows="15" readonly>{% if form.sql.value %}{{ form.sql.value }}{% endif %}</textarea>
-                </div>
+                        <div class="govuk-form-group">
+                            {% if form.connections|length > 1 %}
+                                <label class="govuk-label" for="id_connection">
+                                    Connection
+                                </label>
+                                <select class="govuk-select" id="id_connection" name="connection">
+                                    {% for value, label in form.connections %}
+                                        <option value="{{ value }}"{% if form.connection.value == value %}
+                                                selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% else %}
+                                {# still need to submit the connection, just hide the UI element #}
+                                <div style="display: none">
+                                    {{ form.connection }}
+                                </div>
+                            {% endif %}
+                        </div>
 
-                <div class="govuk-form-group">
-                    <button class="govuk-button" data-module="govuk-button" name="action" value="save">
-                        Save
-                    </button>
-                    <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" type="button" id="format_button">
-                        Format SQL
-                    </button>
-                    <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" type="button" id="unformat_button">
-                        Reset format
-                    </button>
-                    <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4" data-module="govuk-button" name="action" value="edit">
-                        Edit SQL
-                    </button>
+                        <div class="govuk-form-group">
+                            <label class="govuk-label" for="id_description">
+                                Description
+                            </label>
+                            <textarea class="govuk-textarea" id="id_description" name="description" cols="40"
+                                      rows="2">{{ form.description.value|default_if_none:"" }}</textarea>
+                        </div>
+                        <input type="hidden" id="id_created_by_user" name="created_by_user"
+                               value="{{ form.created_by_user_email }}"/>
 
-                </div>
-                </form>
-            </fieldset>
-        </div>
+                        {# We apply `id_sql` to the form group here to match the structure in `home.html` #}
+                        <div id="id_sql"
+                             class="govuk-form-group {% if form.sql.errors %} govuk-form-group--error {% endif %}">
+                            <label class="govuk-label" for="original-sql">
+                                SQL
+                            </label>
+                            {% if form.sql.errors %}
+                                {% for error in form.sql.errors %}
+                                    <span id="sql-error" class="govuk-error-message">
+                                <span class="govuk-visually-hidden">Error:</span> {{ error|escape }}
+                            </span>
+                                {% endfor %}
+                            {% endif %}
 
-        <div id="schema" style="display: none;">
-            <iframe src="about:blank" height="828px" frameBorder="0" id="schema_frame"></iframe>
+                            {# We include the ACE editor here, but hidden, in order to use ACE's formatting.  #}
+                            <div class="govuk-textarea" id="gov-uk-sql-wrapper" style="display: none;">
+                                <div id="ace-sql-editor" data-disabled="true">
+                                    {% if form.sql.value %}{{ form.sql.value }}{% endif %}</div>
+                            </div>
+                            <textarea class="govuk-textarea app-readonly-sql" aria-label="Sql" name="sql"
+                                      id="original-sql" rows="15" readonly>{% if form.sql.value %}
+                                {{ form.sql.value }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="govuk-form-group">
+                            <button class="govuk-button" data-module="govuk-button" name="action" value="save">
+                                Save
+                            </button>
+                            <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
+                                    data-module="govuk-button" type="button" id="format_button">
+                                Format SQL
+                            </button>
+                            <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
+                                    data-module="govuk-button" type="button" id="unformat_button">
+                                Reset format
+                            </button>
+                            <button class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
+                                    data-module="govuk-button" name="action" value="edit">
+                                Edit SQL
+                            </button>
+
+                        </div>
+                    </form>
+                </fieldset>
+            </div>
+
+            <div id="schema" style="display: none;">
+                <iframe src="about:blank" height="828px" frameBorder="0" id="schema_frame"></iframe>
+            </div>
         </div>
     </div>
-</div>
 {% endblock content %}
 
 {% block footer_additions %}
-  <script nonce="{{ request.csp_nonce }}" src="{% static 'assets/vendor/ace/ace-multiple-1.4.12.min.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% static 'assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_query.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'assets/vendor/ace/ace-multiple-1.4.12.min.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}"
+            src="{% static 'assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_query.js' %}"></script>
 {% endblock %}
