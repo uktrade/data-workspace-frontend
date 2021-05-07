@@ -165,6 +165,15 @@
   {% endif %}
 
   <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-l govuk-!-margin-top-8">Usage history</h2>
+        <div class="govuk-body">
+          <a class="govuk-link" href="{% url "datasets:usage_history" dataset_uuid=dataset.id %}">View history</a> to see how often this data is accessed.
+        </div>
+      </div>
+  </div>
+
+  <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
       <dl class="govuk-summary-list">
