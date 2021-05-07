@@ -1,10 +1,12 @@
 import logging
+from uuid import UUID
 
 import boto3
 import botocore
 from django.conf import settings
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from psycopg2.sql import Identifier, SQL
 
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -248,3 +250,133 @@ def update_quicksight_visualisations_last_updated_date():
     logger.info(
         'Finished fetching last updated dates for QuickSight visualisation links'
     )
+
+
+def build_filtered_dataset_query(schema, table, column_config, params):
+    column_map = {x['field']: x for x in column_config}
+    query_params = {
+        'offset': int(params.get('start', 0)),
+        'limit': params.get('limit'),
+    }
+    sort_dir = 'DESC' if params.get('sortDir', '').lower() == 'desc' else 'ASC'
+    sort_fields = [column_config[0]['field']]
+    if params.get('sortField') and params.get('sortField') in column_map:
+        sort_fields = [params.get('sortField')]
+
+    where_clause = []
+    for field, filter_data in params.get('filters', {}).items():
+        terms = [filter_data.get('filter'), filter_data.get('filterTo')]
+        if filter_data['filterType'] == 'date':
+            terms = [filter_data['dateFrom'], filter_data['dateTo']]
+
+        if field in column_map:
+            data_type = column_map[field].get('dataType', filter_data['filterType'])
+
+            # Searching on invalid uuids will raise an exception.
+            # To get around that, if the uuid is invalid we
+            # force the query to return no results (`where 1 = 2`)
+            if data_type == 'uuid':
+                try:
+                    UUID(terms[0], version=4)
+                except ValueError:
+                    where_clause.append(SQL('1 = 2'))
+                    break
+
+            # Booleans are passed as integers
+            if data_type == 'boolean':
+                terms[0] = bool(int(terms[0]))
+
+            if data_type == 'text' and filter_data['type'] == 'contains':
+                query_params[field] = f'%{terms[0]}%'
+                where_clause.append(
+                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(
+                        Identifier(field)
+                    )
+                )
+            elif data_type == 'text' and filter_data['type'] == 'notContains':
+                query_params[field] = f'%{terms[0]}%'
+                where_clause.append(
+                    SQL(f'lower({{}}) NOT LIKE lower(%({field})s)').format(
+                        Identifier(field)
+                    )
+                )
+            elif filter_data['type'] == 'equals':
+                query_params[field] = terms[0]
+                if data_type == 'text':
+                    where_clause.append(
+                        SQL(f'lower({{}}) = lower(%({field})s)').format(
+                            Identifier(field)
+                        )
+                    )
+                else:
+                    where_clause.append(
+                        SQL(f'{{}} = %({field})s').format(Identifier(field))
+                    )
+
+            elif filter_data['type'] == 'notEqual':
+                query_params[field] = terms[0]
+                if data_type == 'text':
+                    where_clause.append(
+                        SQL(f'lower({{}}) != lower(%({field})s)').format(
+                            Identifier(field)
+                        )
+                    )
+                else:
+                    where_clause.append(
+                        SQL(f'{{}} is distinct from %({field})s').format(
+                            Identifier(field)
+                        )
+                    )
+            elif filter_data['type'] in ['startsWith', 'endsWith']:
+                query_params[field] = (
+                    f'{terms[0]}%'
+                    if filter_data['type'] == 'startsWith'
+                    else f'%{terms[0]}'
+                )
+                where_clause.append(
+                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(
+                        Identifier(field)
+                    )
+                )
+            elif filter_data['type'] == 'inRange':
+                where_clause.append(
+                    SQL(f'{{}} BETWEEN %({field}_from)s AND %({field}_to)s').format(
+                        Identifier(field)
+                    )
+                )
+                query_params[f'{field}_from'] = terms[0]
+                query_params[f'{field}_to'] = terms[1]
+            elif filter_data['type'] in ['greaterThan', 'greaterThanOrEqual']:
+                operator = '>' if filter_data['type'] == 'greaterThan' else '>='
+                where_clause.append(
+                    SQL(f'{{}} {operator} %({field})s').format(Identifier(field))
+                )
+                query_params[field] = terms[0]
+            elif filter_data['type'] in ['lessThan', 'lessThanOrEqual']:
+                query_params[field] = terms[0]
+                operator = '<' if filter_data['type'] == 'lessThan' else '<='
+                where_clause.append(
+                    SQL(f'{{}} {operator} %({field})s').format(Identifier(field))
+                )
+
+    if where_clause:
+        where_clause = SQL('WHERE') + SQL(' AND ').join(where_clause)
+
+    query = SQL(
+        f'''
+        SELECT {{}}
+        FROM {{}}.{{}}
+        {{}}
+        ORDER BY {{}} {sort_dir}
+        LIMIT %(limit)s
+        OFFSET %(offset)s
+        '''
+    ).format(
+        SQL(',').join(map(Identifier, column_map)),
+        Identifier(schema),
+        Identifier(table),
+        SQL(' ').join(where_clause),
+        SQL(',').join(map(Identifier, sort_fields)),
+    )
+
+    return query, query_params
