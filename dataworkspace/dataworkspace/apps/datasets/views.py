@@ -21,6 +21,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import (
+    Count,
     F,
     IntegerField,
     Q,
@@ -30,6 +31,7 @@ from django.db.models import (
     BooleanField,
     QuerySet,
 )
+from django.db.models.functions import TruncDay
 from django.http import (
     Http404,
     HttpResponse,
@@ -73,6 +75,7 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
     VisualisationCatalogueItem,
     SourceTable,
+    DataCutDataset,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
@@ -1313,3 +1316,31 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
                 }
             )
         return ctx
+
+
+class DataCutUsageHistoryView(View):
+    model = DataCutDataset
+
+    def get(self, request, dataset_uuid):
+        try:
+            dataset = DataSet.objects.get(id=dataset_uuid)
+        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+            return HttpResponse(status=404)
+
+        return render(
+            request,
+            'datasets/data_cut_usage_history.html',
+            context={
+                "dataset": dataset,
+                "rows": dataset.events.filter(
+                    event_type__in=[
+                        EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
+                        EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                    ]
+                )
+                .annotate(day=TruncDay('timestamp'))
+                .order_by('-day')
+                .values('day', 'user__email', 'extra__fields__name')
+                .annotate(count=Count('id'))[:100],
+            },
+        )

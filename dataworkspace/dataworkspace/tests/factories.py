@@ -211,7 +211,7 @@ class RelatedObjectEventFactory(factory.django.DjangoModelFactory):
 
 
 class DatasetLinkDownloadEventFactory(RelatedObjectEventFactory):
-    event_type = EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
+    event_type = EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
     content_object = factory.SubFactory(DataSetFactory)
     extra = {
         'url': 'http://google.com',
