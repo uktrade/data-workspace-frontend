@@ -11,7 +11,7 @@ mock==4.0.3
 mohawk==1.1.0
 pip-tools
 pylint==2.5.3
-pylint-django==2.3.0
+pylint-django==2.4.4
 pytest==6.2.4
 pytest-cov==2.11.1
 pytest-mock==3.5.1
