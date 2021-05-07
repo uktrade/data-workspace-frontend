@@ -207,7 +207,7 @@ lazy-object-proxy==1.4.3
     # via astroid
 linear-tsv==1.1.0
     # via tabulator
-lxml==4.6.2
+lxml==4.6.3
     # via -r requirements-dev.in
 markdown==3.2.2
     # via -r requirements.in
