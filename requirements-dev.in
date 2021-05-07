@@ -1,6 +1,6 @@
 -r requirements.in
 
-aiopg==1.1.0
+aiopg==1.2.1
 black==19.10b0
 factory_boy==3.2.0
 flake8==3.9.1
