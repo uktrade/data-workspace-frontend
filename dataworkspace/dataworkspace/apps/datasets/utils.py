@@ -174,7 +174,7 @@ def update_quicksight_visualisations_last_updated_date():
     logger.info('Fetching last updated dates for QuickSight visualisation links')
 
     for visualisation_link in VisualisationLink.objects.filter(
-        visualisation_type='QUICKSIGHT'
+        visualisation_type='QUICKSIGHT', visualisation_catalogue_item__deleted=False
     ):
         dashboard_id = visualisation_link.identifier
         logger.info('Fetching last updated date for DashboardId %s', dashboard_id)
