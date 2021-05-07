@@ -107,7 +107,7 @@ django-csp==3.6
     # via -r requirements.in
 django-db-geventpool==3.2.2
     # via -r requirements.in
-django-debug-toolbar==3.2
+django-debug-toolbar==3.2.1
     # via -r requirements-dev.in
 django-dynamic-models-readonly==0.1.1
     # via -r requirements.in
