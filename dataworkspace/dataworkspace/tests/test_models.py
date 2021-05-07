@@ -752,28 +752,24 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 'field': field4.linked_reference_dataset_field.column_name,
                 'sortable': True,
                 'filter': 'agNumberColumnFilter',
-                'floatingFilter': True,
             },
             {
                 'headerName': field3.name,
                 'field': field3.column_name,
                 'sortable': True,
                 'filter': 'agDateColumnFilter',
-                'floatingFilter': True,
             },
             {
                 'headerName': field2.name,
                 'field': field2.column_name,
                 'sortable': True,
                 'filter': 'agNumberColumnFilter',
-                'floatingFilter': True,
             },
             {
                 'headerName': field1.name,
                 'field': field1.column_name,
                 'sortable': True,
                 'filter': 'agTextColumnFilter',
-                'floatingFilter': True,
             },
         ]
 

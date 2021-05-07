@@ -23,6 +23,7 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetUploadLog,
     DataSet,
     CustomDatasetQuery,
+    SourceTable,
 )
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 from dataworkspace.tests import factories
@@ -3241,15 +3242,9 @@ class TestDatasetAdminPytest:
     @mock.patch(
         "dataworkspace.apps.datasets.admin.remove_data_explorer_user_cached_credentials"
     )
-    @mock.patch(
-        "dataworkspace.apps.datasets.admin.remove_superset_user_cached_credentials"
-    )
     @pytest.mark.django_db
     def test_master_dataset_permission_changes_clears_authorized_users_cached_credentials(
-        self,
-        mock_remove_superset_cached_credentials,
-        mock_remove_explorer_cached_credentials,
-        staff_client,
+        self, mock_remove_cached_credentials, staff_client
     ):
         user = factories.UserFactory()
         dataset = factories.MasterDataSetFactory.create(
@@ -3290,86 +3285,246 @@ class TestDatasetAdminPytest:
         assert response.status_code == 200
         # As the user has just been authorized to access the dataset, their cached
         # data explorer credentials should be cleared
-        assert mock_remove_explorer_cached_credentials.call_args_list == [
-            mock.call(user)
-        ]
-        assert mock_remove_superset_cached_credentials.call_args_list == [
-            mock.call(user)
-        ]
+        assert mock_remove_cached_credentials.call_args_list == [mock.call(user)]
 
-    @mock.patch(
-        "dataworkspace.apps.datasets.admin.remove_superset_user_cached_credentials"
-    )
     @pytest.mark.django_db
-    def test_visualisation_permission_changes_clears_authorized_users_cached_credentials(
-        self, mock_remove_superset_user_cached_credentials, staff_client,
-    ):
-        user = factories.UserFactory()
-        visualisation = factories.VisualisationCatalogueItemFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHENTICATION'
-        )
-
-        # Login to admin site
+    def test_source_table_data_grid_enabled_without_config(self, staff_client):
         staff_client.post(reverse('admin:index'), follow=True)
-
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        database = factories.DatabaseFactory()
+        num_tables = SourceTable.objects.count()
         response = staff_client.post(
-            reverse(
-                'admin:datasets_visualisationcatalogueitem_change',
-                args=(visualisation.id,),
-            ),
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
             {
                 'published': True,
-                'name': visualisation.name,
-                'slug': visualisation.slug,
+                'name': dataset.name,
+                'slug': dataset.slug,
                 'short_description': 'test short description',
-                'authorized_users': str(user.id),
-                'visualisationlink_set-TOTAL_FORMS': '1',
-                'visualisationlink_set-INITIAL_FORMS': '0',
-                'visualisationlink_set-MIN_NUM_FORMS': '0',
-                'visualisationlink_set-MAX_NUM_FORMS': '1000',
-            },
-            follow=True,
-        )
-
-        assert response.status_code == 200
-        # As the user has just been authorized to access the visualisation, their cached
-        # superset credentials should be cleared
-        assert mock_remove_superset_user_cached_credentials.call_args_list == [
-            mock.call(user)
-        ]
-
-    @mock.patch(
-        "dataworkspace.apps.datasets.admin.invalidate_superset_user_cached_credentials"
-    )
-    @pytest.mark.django_db
-    def test_visualisation_access_type_change_invalidates_all_user_cached_credentials(
-        self, mock_invalidate_superset_user_cached_credentials, staff_client
-    ):
-        visualisation = factories.VisualisationCatalogueItemFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHENTICATION'
-        )
-
-        # Login to admin site
-        staff_client.post(reverse('admin:index'), follow=True)
-
-        response = staff_client.post(
-            reverse(
-                'admin:datasets_visualisationcatalogueitem_change',
-                args=(visualisation.id,),
-            ),
-            {
-                'published': True,
-                'name': visualisation.name,
-                'slug': visualisation.slug,
-                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
                 'requires_authorization': 'on',
-                'visualisationlink_set-TOTAL_FORMS': '1',
-                'visualisationlink_set-INITIAL_FORMS': '0',
-                'visualisationlink_set-MIN_NUM_FORMS': '0',
-                'visualisationlink_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': 'reporting table',
+                'sourcetable_set-0-database': str(database.id),
+                'sourcetable_set-0-schema': 'test_schema',
+                'sourcetable_set-0-frequency': 1,
+                'sourcetable_set-0-table': 'test_table',
+                'sourcetable_set-0-data_grid_enabled': 'on',
+                'sourcetable_set-0-data_grid_column_config': '',
             },
             follow=True,
         )
 
         assert response.status_code == 200
-        assert mock_invalidate_superset_user_cached_credentials.called
+        assert SourceTable.objects.count() == num_tables
+        assert (
+            'This field is required if reporting is enabled'
+            in response.content.decode('utf-8')
+        )
+
+    @pytest.mark.django_db
+    def test_source_table_data_grid_enabled_invalid_config(self, staff_client):
+        staff_client.post(reverse('admin:index'), follow=True)
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        database = factories.DatabaseFactory()
+        num_tables = SourceTable.objects.count()
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': 'reporting table',
+                'sourcetable_set-0-database': str(database.id),
+                'sourcetable_set-0-schema': 'test_schema',
+                'sourcetable_set-0-frequency': 1,
+                'sourcetable_set-0-table': 'test_table',
+                'sourcetable_set-0-data_grid_enabled': 'on',
+                'sourcetable_set-0-data_grid_column_config': '{"field": "test"}',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert SourceTable.objects.count() == num_tables
+        assert (
+            'Column config must be a list of column definitions'
+            in response.content.decode('utf-8')
+        )
+
+    @pytest.mark.django_db
+    def test_source_table_data_grid_enabled_invalid_config_item(self, staff_client):
+        staff_client.post(reverse('admin:index'), follow=True)
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        database = factories.DatabaseFactory()
+        num_tables = SourceTable.objects.count()
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': 'reporting table',
+                'sourcetable_set-0-database': str(database.id),
+                'sourcetable_set-0-schema': 'test_schema',
+                'sourcetable_set-0-frequency': 1,
+                'sourcetable_set-0-table': 'test_table',
+                'sourcetable_set-0-data_grid_enabled': 'on',
+                'sourcetable_set-0-data_grid_column_config': '[{"field": "test"}, []]',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert SourceTable.objects.count() == num_tables
+        assert (
+            'All items in the config must be json objects'
+            in response.content.decode('utf-8')
+        )
+
+    @pytest.mark.django_db
+    def test_source_table_data_grid_enabled_missing_config_field_name(
+        self, staff_client
+    ):
+        staff_client.post(reverse('admin:index'), follow=True)
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        database = factories.DatabaseFactory()
+        num_tables = SourceTable.objects.count()
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': 'reporting table',
+                'sourcetable_set-0-database': str(database.id),
+                'sourcetable_set-0-schema': 'test_schema',
+                'sourcetable_set-0-frequency': 1,
+                'sourcetable_set-0-table': 'test_table',
+                'sourcetable_set-0-data_grid_enabled': 'on',
+                'sourcetable_set-0-data_grid_column_config': '[{"field": "test"}, {"sortable": false}]',
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert SourceTable.objects.count() == num_tables
+        assert (
+            'Each config item must contain a `field` identifier'
+            in response.content.decode('utf-8')
+        )
+
+    @pytest.mark.django_db
+    def test_source_table_data_grid_enabled(self, staff_client):
+        staff_client.post(reverse('admin:index'), follow=True)
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        database = factories.DatabaseFactory()
+        num_tables = SourceTable.objects.count()
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': 'reporting table',
+                'sourcetable_set-0-database': str(database.id),
+                'sourcetable_set-0-schema': 'test_schema',
+                'sourcetable_set-0-frequency': 1,
+                'sourcetable_set-0-table': 'test_table',
+                'sourcetable_set-0-data_grid_enabled': 'on',
+                'sourcetable_set-0-data_grid_column_config': (
+                    '[{"field": "test"}, ' '{"field": "test2", "sortable": true}]'
+                ),
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert SourceTable.objects.count() == num_tables + 1
+
+    @pytest.mark.django_db
+    def test_source_table_reporting_disabled(self, staff_client):
+        staff_client.post(reverse('admin:index'), follow=True)
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        database = factories.DatabaseFactory()
+        num_tables = SourceTable.objects.count()
+        response = staff_client.post(
+            reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
+            {
+                'published': True,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': dataset.type,
+                'requires_authorization': 'on',
+                'sourcetable_set-TOTAL_FORMS': '1',
+                'sourcetable_set-INITIAL_FORMS': '0',
+                'sourcetable_set-MIN_NUM_FORMS': '0',
+                'sourcetable_set-MAX_NUM_FORMS': '1000',
+                'sourcetable_set-0-dataset': dataset.id,
+                'sourcetable_set-0-name': 'reporting table',
+                'sourcetable_set-0-database': str(database.id),
+                'sourcetable_set-0-schema': 'test_schema',
+                'sourcetable_set-0-frequency': 1,
+                'sourcetable_set-0-table': 'test_table',
+                'sourcetable_set-0-data_grid_column_config': '[{"field": "test"}]',
+            },
+            follow=True,
+        )
+
+        # raise Exception(response.content.decode('utf-8'))
+        assert response.status_code == 200
+        assert SourceTable.objects.count() == num_tables + 1

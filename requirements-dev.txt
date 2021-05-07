@@ -207,7 +207,7 @@ lazy-object-proxy==1.4.3
     # via astroid
 linear-tsv==1.1.0
     # via tabulator
-lxml==4.6.2
+lxml==4.6.3
     # via -r requirements-dev.in
 markdown==3.2.2
     # via -r requirements.in
@@ -277,7 +277,7 @@ pycodestyle==2.7.0
     # via flake8
 pycparser==2.20
     # via cffi
-pydevd-pycharm==211.6085.15
+pydevd-pycharm==211.7142.13
     # via -r requirements-dev.in
 pyee==8.1.0
     # via pyppeteer
@@ -306,13 +306,13 @@ pyrsistent==0.17.3
     # via jsonschema
 pytest-cov==2.11.1
     # via -r requirements-dev.in
-pytest-django==4.1.0
+pytest-django==4.2.0
     # via -r requirements-dev.in
 pytest-mock==3.5.1
     # via -r requirements-dev.in
 pytest-timeout==1.4.2
     # via -r requirements-dev.in
-pytest==6.2.2
+pytest==6.2.4
     # via
     #   -r requirements-dev.in
     #   pytest-cov

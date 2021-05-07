@@ -8,6 +8,7 @@ import json
 from typing import Set
 
 import boto3
+import psycopg2
 import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
@@ -40,6 +41,7 @@ from django.http import (
     HttpResponseNotFound,
     HttpResponseRedirect,
     HttpResponseServerError,
+    JsonResponse,
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -54,6 +56,7 @@ from dataworkspace import datasets_db
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
+    database_dsn,
     streaming_query_response,
     table_data,
     view_exists,
@@ -76,10 +79,10 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
     VisualisationCatalogueItem,
     SourceTable,
-    DataCutDataset,
     ToolQueryAuditLogTable,
 )
 from dataworkspace.apps.datasets.utils import (
+    build_filtered_dataset_query,
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
     find_visualisation,
@@ -1321,7 +1324,6 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
 
 
 class DataCutUsageHistoryView(View):
-    model = DataCutDataset
 
     def get(self, request, dataset_uuid):
         try:
@@ -1374,3 +1376,118 @@ class DataCutUsageHistoryView(View):
                     .annotate(count=Count('id'))[:100],
                 },
             )
+
+
+class SourceTableDetailView(DetailView):
+    def _user_can_access(self, source_table):
+        return (
+            source_table.dataset.user_has_access(self.request.user)
+            and source_table.data_grid_enabled
+        )
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            SourceTable,
+            dataset__id=self.kwargs.get('dataset_uuid'),
+            id=self.kwargs.get('table_uuid'),
+            **{'dataset__published': True}
+            if not self.request.user.is_superuser
+            else {},
+        )
+
+    def get(self, request, *args, **kwargs):
+        source_table = self.get_object()
+        if not self._user_can_access(source_table):
+            return HttpResponseForbidden()
+
+        return render(
+            request,
+            'datasets/source_table_detail.html',
+            {
+                'source_table': source_table,
+                'can_download': source_table.can_show_link_for_user(self.request.user),
+            },
+        )
+
+
+class DataGridDataView(DetailView):
+    def _user_can_access(self):
+        source = self.get_object()
+        return (
+            source.dataset.user_has_access(self.request.user)
+            and source.data_grid_enabled
+        )
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            self.kwargs['model_class'],
+            dataset__id=self.kwargs.get('dataset_uuid'),
+            pk=self.kwargs['object_id'],
+            **{'dataset__published': True}
+            if not self.request.user.is_superuser
+            else {},
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self._user_can_access():
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+    @staticmethod
+    def _get_rows(source, query, query_params):
+        with psycopg2.connect(
+            database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
+        ) as connection:
+            with connection.cursor(
+                name='source-table-grid-data',
+                cursor_factory=psycopg2.extras.RealDictCursor,
+            ) as cursor:
+                cursor.execute(query, query_params)
+                return cursor.fetchall()
+
+    def post(self, request, *args, **kwargs):
+        source_table = self.get_object()
+
+        if request.GET.get('download'):
+            filters = {}
+            for filter_data in [json.loads(x) for x in request.POST.getlist('filters')]:
+                filters.update(filter_data)
+            column_config = [
+                x
+                for x in source_table.get_column_config()
+                if x['field'] in request.POST.getlist('columns', [])
+            ]
+            if not column_config:
+                return JsonResponse({}, status=400)
+
+            post_data = {
+                'filters': filters,
+                'limit': None,
+                'sortDir': request.POST.get('sortDir', 'ASC'),
+                'sortField': request.POST.get('sortField', column_config[0]['field']),
+            }
+        else:
+            post_data = json.loads(request.body.decode('utf-8'))
+            post_data['limit'] = min(post_data.get('limit', 100), 100)
+            column_config = source_table.get_column_config()
+
+        query, params = build_filtered_dataset_query(
+            source_table.schema, source_table.table, column_config, post_data,
+        )
+
+        if request.GET.get('download'):
+            if not self.kwargs['download_enabled']:
+                return HttpResponseForbidden()
+
+            return streaming_query_response(
+                request.user.email,
+                source_table.database.memorable_name,
+                query,
+                request.POST.get(
+                    'export_file_name', f'custom-{source_table.dataset.slug}-export.csv'
+                ),
+                params,
+            )
+
+        records = self._get_rows(source_table, query, params)
+        return JsonResponse({'records': records})

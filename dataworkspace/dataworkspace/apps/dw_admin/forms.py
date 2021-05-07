@@ -628,6 +628,42 @@ class SourceTableForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['dataset'].queryset = MasterDataset.objects.live()
 
+    def clean_data_grid_column_config(self):
+        if self.cleaned_data['data_grid_column_config'] is None:
+            return None
+
+        # Ensure column config is a dict
+        if not isinstance(self.cleaned_data['data_grid_column_config'], list):
+            raise forms.ValidationError(
+                'Column config must be a list of column definitions'
+            )
+
+        # Ensure each item in the config has the required fields
+        for column in self.cleaned_data['data_grid_column_config']:
+            if not isinstance(column, dict):
+                raise forms.ValidationError(
+                    'All items in the config must be json objects'
+                )
+            if 'field' not in column:
+                raise forms.ValidationError(
+                    'Each config item must contain a `field` identifier'
+                )
+        return self.cleaned_data['data_grid_column_config']
+
+    def clean(self):
+        cleaned = self.cleaned_data
+        if (
+            'data_grid_column_config' in cleaned
+            and cleaned['data_grid_enabled']
+            and cleaned['data_grid_column_config'] is None
+        ):
+            raise forms.ValidationError(
+                {
+                    'data_grid_column_config': 'This field is required if reporting is enabled'
+                }
+            )
+        return cleaned
+
 
 class VisualisationCatalogueItemForm(forms.ModelForm):
     eligibility_criteria = DynamicArrayField(
