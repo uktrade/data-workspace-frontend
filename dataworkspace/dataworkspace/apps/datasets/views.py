@@ -1324,7 +1324,6 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
 
 
 class DataCutUsageHistoryView(View):
-
     def get(self, request, dataset_uuid):
         try:
             dataset = DataSet.objects.get(id=dataset_uuid)
