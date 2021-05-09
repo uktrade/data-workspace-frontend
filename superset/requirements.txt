@@ -230,7 +230,7 @@ pytz==2019.3
     #   convertdate
     #   flask-babel
     #   pandas
-pyyaml==5.3.1
+pyyaml==5.4
     # via
     #   apache-superset
     #   apispec
