@@ -16,10 +16,10 @@ appnope==0.1.2
     #   ipython
 argon2-cffi==20.1.0
     # via notebook
-astor==0.8.1
-    # via tensorflow
 astroid==2.4.2
     # via pylint
+astunparse==1.6.3
+    # via tensorflow
 async-generator==1.10
     # via nbclient
 attrs==20.3.0
@@ -34,6 +34,8 @@ blis==0.2.4
     #   thinc
 bokeh==0.13.0
     # via -r requirements.in
+cachetools==4.2.2
+    # via google-auth
 certifi==2020.11.8
     # via
     #   requests
@@ -55,18 +57,26 @@ defusedxml==0.6.0
     # via nbconvert
 entrypoints==0.3
     # via nbconvert
-gast==0.2.2
+flatbuffers==1.12
+    # via tensorflow
+gast==0.3.3
     # via tensorflow
 gensim==3.5.0
     # via -r requirements.in
+google-auth-oauthlib==0.4.4
+    # via tensorboard
+google-auth==1.30.0
+    # via
+    #   google-auth-oauthlib
+    #   tensorboard
 google-pasta==0.2.0
     # via tensorflow
-grpcio==1.33.2
+grpcio==1.32.0
     # via
     #   tensorboard
     #   tensorflow
 h5py==2.10.0
-    # via keras-applications
+    # via tensorflow
 idna==2.10
     # via requests
 importlib-metadata==2.0.0
@@ -134,8 +144,6 @@ jupyterlab-server==1.0.9
     # via jupyterlab
 jupyterlab==2.0.0
     # via -r requirements.in
-keras-applications==1.0.8
-    # via tensorflow
 keras-preprocessing==1.1.2
     # via tensorflow
 kiwisolver==1.3.1
@@ -179,14 +187,13 @@ notebook==6.1.4
     #   jupyterlab
     #   jupyterlab-server
     #   widgetsnbextension
-numpy==1.17.2
+numpy==1.19.5
     # via
     #   -r requirements.in
     #   blis
     #   bokeh
     #   gensim
     #   h5py
-    #   keras-applications
     #   keras-preprocessing
     #   matplotlib
     #   opt-einsum
@@ -198,13 +205,15 @@ numpy==1.17.2
     #   tensorboard
     #   tensorflow
     #   thinc
+oauthlib==3.1.0
+    # via requests-oauthlib
 opt-einsum==3.3.0
     # via tensorflow
 packaging==20.4
     # via
     #   bleach
     #   bokeh
-pandas==0.23.4
+pandas==1.2.4
     # via
     #   -r requirements.in
     #   seaborn
@@ -240,6 +249,12 @@ ptyprocess==0.6.0
     # via
     #   pexpect
     #   terminado
+pyasn1-modules==0.2.8
+    # via google-auth
+pyasn1==0.4.8
+    # via
+    #   pyasn1-modules
+    #   rsa
 pycparser==2.20
     # via cffi
 pygments==2.7.2
@@ -269,10 +284,16 @@ pyzmq==20.0.0
     # via
     #   jupyter-client
     #   notebook
+requests-oauthlib==1.3.0
+    # via google-auth-oauthlib
 requests==2.25.0
     # via
+    #   requests-oauthlib
     #   smart-open
     #   spacy
+    #   tensorboard
+rsa==4.7.2
+    # via google-auth
 scikit-learn==0.21.3
     # via -r requirements.in
 scipy==1.3.1
@@ -294,10 +315,12 @@ six==1.15.0
     #   absl-py
     #   argon2-cffi
     #   astroid
+    #   astunparse
     #   bleach
     #   bokeh
     #   cycler
     #   gensim
+    #   google-auth
     #   google-pasta
     #   grpcio
     #   h5py
@@ -309,7 +332,6 @@ six==1.15.0
     #   prompt-toolkit
     #   protobuf
     #   python-dateutil
-    #   tensorboard
     #   tensorflow
 smart-open==3.0.0
     # via gensim
@@ -325,11 +347,15 @@ srsly==1.0.4
     # via
     #   spacy
     #   thinc
-tensorboard==1.15.0
+tensorboard-data-server==0.6.1
+    # via tensorboard
+tensorboard-plugin-wit==1.8.0
+    # via tensorboard
+tensorboard==2.5.0
     # via tensorflow
-tensorflow-estimator==1.15.1
+tensorflow-estimator==2.4.0
     # via tensorflow
-tensorflow==1.15.4
+tensorflow==2.4.1
     # via -r requirements.in
 termcolor==1.1.0
     # via tensorflow
@@ -365,6 +391,8 @@ traitlets==5.0.5
     #   notebook
 typed-ast==1.4.1
     # via astroid
+typing-extensions==3.7.4.3
+    # via tensorflow
 urllib3==1.26.4
     # via
     #   requests
@@ -383,6 +411,7 @@ werkzeug==1.0.1
     # via tensorboard
 wheel==0.35.1
     # via
+    #   astunparse
     #   tensorboard
     #   tensorflow
 widgetsnbextension==3.5.1
