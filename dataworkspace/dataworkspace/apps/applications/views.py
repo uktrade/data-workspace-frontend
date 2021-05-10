@@ -16,6 +16,7 @@ from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core import serializers
 from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import IntegrityError, transaction
@@ -52,7 +53,6 @@ from dataworkspace.apps.applications.utils import (
     fetch_visualisation_log_events,
     get_quicksight_dashboard_name_url,
     sync_quicksight_permissions,
-    log_visualisation_view,
 )
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
@@ -70,6 +70,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLink,
 )
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
 
@@ -300,19 +301,21 @@ def visualisation_link_html_view(request, link_id):
 
     identifier = visualisation_link.identifier
     if visualisation_link.visualisation_type == 'QUICKSIGHT':
-        log_visualisation_view(
-            visualisation_link,
+        log_event(
             request.user,
-            event_type=EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+            EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+            visualisation_link.visualisation_catalogue_item,
+            serializers.serialize('python', [visualisation_link])[0],
         )
         return _get_embedded_quicksight_dashboard(
             request, identifier, visualisation_link.visualisation_catalogue_item
         )
     elif visualisation_link.visualisation_type == 'SUPERSET':
-        log_visualisation_view(
-            visualisation_link,
+        log_event(
             request.user,
-            event_type=EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
+            EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
+            visualisation_link.visualisation_catalogue_item,
+            serializers.serialize('python', [visualisation_link])[0],
         )
         return _get_embedded_superset_dashboard(
             request, identifier, visualisation_link.visualisation_catalogue_item
