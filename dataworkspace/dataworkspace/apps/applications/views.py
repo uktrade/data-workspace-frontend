@@ -309,6 +309,11 @@ def visualisation_link_html_view(request, link_id):
             request, identifier, visualisation_link.visualisation_catalogue_item
         )
     elif visualisation_link.visualisation_type == 'SUPERSET':
+        log_visualisation_view(
+            visualisation_link,
+            request.user,
+            event_type=EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
+        )
         return _get_embedded_superset_dashboard(
             request, identifier, visualisation_link.visualisation_catalogue_item
         )
