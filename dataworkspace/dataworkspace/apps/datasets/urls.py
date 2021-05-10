@@ -103,4 +103,9 @@ urlpatterns = [
         {'model_class': models.SourceTable, 'download_enabled': False},
         name='source_table_data',
     ),
+    path(
+        '<uuid:dataset_uuid>/visualisation/<uuid:visualisation_template_id>/redirect',
+        login_required(views.VisualisationTemplateRedirectView.as_view()),
+        name='visualisation_template_redirect',
+    ),
 ]

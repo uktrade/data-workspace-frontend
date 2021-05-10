@@ -49,7 +49,7 @@ from django.views.decorators.http import (
     require_GET,
     require_http_methods,
 )
-from django.views.generic import DetailView, View
+from django.views.generic import DetailView, RedirectView, View
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
@@ -1490,3 +1490,33 @@ class DataGridDataView(DetailView):
 
         records = self._get_rows(source_table, query, params)
         return JsonResponse({'records': records})
+
+
+class VisualisationTemplateRedirectView(RedirectView):
+    """
+    Log a "view" event to the event log for a visualisation before redirecting
+    to the visualisation itself
+    """
+
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        visualisation_catalogue_item = get_object_or_404(
+            VisualisationCatalogueItem,
+            id=kwargs['dataset_uuid'],
+            visualisation_template_id=kwargs['visualisation_template_id'],
+            **{'published': True} if not self.request.user.is_superuser else {},
+        )
+        if not visualisation_catalogue_item.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+
+        log_event(
+            self.request.user,
+            EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
+            visualisation_catalogue_item,
+            serializers.serialize(
+                'python', [visualisation_catalogue_item.visualisation_template]
+            )[0],
+        )
+
+        return visualisation_catalogue_item.visualisation_template.get_absolute_url()
