@@ -589,7 +589,7 @@ class SourceTable(BaseSource):
         )
 
     def get_grid_data_url(self):
-        return reverse('datasets:source_table_data', args=(self.dataset.id, self.id))
+        return reverse('datasets:source_table_data', args=(self.dataset_id, self.id))
 
     def get_data_grid_query(self):
         return sql.SQL('SELECT * from {}.{}').format(
@@ -875,7 +875,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_grid_data_url(self):
         return reverse(
-            'datasets:custom_dataset_query_data', args=(self.dataset.id, self.id)
+            'datasets:custom_dataset_query_data', args=(self.dataset_id, self.id)
         )
 
     def get_data_grid_query(self):
