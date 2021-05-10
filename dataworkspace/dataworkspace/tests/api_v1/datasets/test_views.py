@@ -574,7 +574,13 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             'id': log.id,
             'user': log.user_id,
             'database': log.database.memorable_name,
-            'query_sql': log.query_sql,
+            'query_sql': log.query_sql[
+                : settings.TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH
+            ]
+            + '...'
+            if len(log.query_sql)
+            > settings.TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH
+            else log.query_sql,
             'rolename': log.rolename,
             'timestamp': log.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'tables': [
@@ -593,4 +599,15 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
         assert response.json()['results'] == [
             self.expected_response(log_1),
             self.expected_response(log_2),
+        ]
+
+    def test_massive_query(self, unauthenticated_client):
+        log = factories.ToolQueryAuditLogFactory.create(
+            query_sql='X'
+            * (settings.TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH + 1),
+        )
+        response = unauthenticated_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['results'] == [
+            self.expected_response(log),
         ]

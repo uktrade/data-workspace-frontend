@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.html import strip_tags
 from rest_framework import serializers
 
@@ -78,6 +79,7 @@ class ToolQueryAuditLogTableSerializer(serializers.ModelSerializer):
 class ToolQueryAuditLogSerializer(serializers.ModelSerializer):
     database = serializers.StringRelatedField()
     tables = ToolQueryAuditLogTableSerializer(many=True, read_only=True)
+    query_sql = serializers.SerializerMethodField()
 
     class Meta:
         model = ToolQueryAuditLog
@@ -90,3 +92,11 @@ class ToolQueryAuditLogSerializer(serializers.ModelSerializer):
             'timestamp',
             'tables',
         ]
+
+    def get_query_sql(self, obj):
+        if len(obj.query_sql) > settings.TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH:
+            return (
+                obj.query_sql[: settings.TOOL_QUERY_LOG_ADMIN_DETAIL_QUERY_TRUNC_LENGTH]
+                + '...'
+            )
+        return obj.query_sql
