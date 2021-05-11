@@ -1323,42 +1323,15 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
         return ctx
 
 
-class DataCutUsageHistoryView(View):
-    def get(self, request, dataset_uuid):
+class DatasetUsageHistoryView(View):
+    def get(self, request, dataset_uuid, **kwargs):
+        model_class = kwargs['model_class']
         try:
-            dataset = DataSet.objects.get(id=dataset_uuid)
-        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+            dataset = model_class.objects.get(id=dataset_uuid)
+        except model_class.DoesNotExist:
             return HttpResponse(status=404)
 
-        if dataset.type == DataSetType.DATACUT:
-            return render(
-                request,
-                'datasets/dataset_usage_history.html',
-                context={
-                    "dataset": dataset,
-                    "event_description": "Downloaded",
-                    "rows": dataset.events.filter(
-                        event_type__in=[
-                            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
-                            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                        ]
-                    )
-                    .annotate(day=TruncDay('timestamp'))
-                    .annotate(email=F('user__email'))
-                    .annotate(
-                        object=Func(
-                            F('extra'),
-                            Value('fields'),
-                            Value('name'),
-                            function='jsonb_extract_path_text',
-                        )
-                    )
-                    .order_by('-day')
-                    .values('day', 'email', 'object')
-                    .annotate(count=Count('id'))[:100],
-                },
-            )
-        else:
+        if dataset.type == DataSetType.MASTER:
             tables = list(dataset.sourcetable_set.values_list('table', flat=True))
             return render(
                 request,
@@ -1375,6 +1348,39 @@ class DataCutUsageHistoryView(View):
                     .annotate(count=Count('id'))[:100],
                 },
             )
+
+        return render(
+            request,
+            'datasets/dataset_usage_history.html',
+            context={
+                "dataset": dataset,
+                "event_description": "Viewed"
+                if dataset.type == DataSetType.VISUALISATION
+                else "Downloaded",
+                "rows": dataset.events.filter(
+                    event_type__in=[
+                        EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
+                        EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                        EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
+                        EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
+                        EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+                    ]
+                )
+                .annotate(day=TruncDay('timestamp'))
+                .annotate(email=F('user__email'))
+                .annotate(
+                    object=Func(
+                        F('extra'),
+                        Value('fields'),
+                        Value('name'),
+                        function='jsonb_extract_path_text',
+                    )
+                )
+                .order_by('-day')
+                .values('day', 'email', 'object')
+                .annotate(count=Count('id'))[:100],
+            },
+        )
 
 
 class SourceTableDetailView(DetailView):

@@ -940,7 +940,9 @@ def test_find_datasets_order_by_oldest_first(client):
     ]
 
 
-def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_client,):
+def test_datasets_and_visualisations_doesnt_return_duplicate_results(
+    staff_client,
+):
     normal_user = get_user_model().objects.create(
         username='bob.user@test.com', is_staff=False, is_superuser=False
     )
@@ -1054,7 +1056,12 @@ def test_finding_datasets_doesnt_query_database_excessively(
     for datacut in datacuts:
         datacut.tags.set(random.sample(source_tags, 1) + random.sample(topic_tags, 1))
 
-    references = [factories.ReferenceDatasetFactory(published=True,) for _ in range(10)]
+    references = [
+        factories.ReferenceDatasetFactory(
+            published=True,
+        )
+        for _ in range(10)
+    ]
     for reference in references:
         reference.tags.set(
             random.sample(source_tags, random.randint(1, 3))
@@ -1062,7 +1069,9 @@ def test_finding_datasets_doesnt_query_database_excessively(
         )
 
     visualisations = [
-        factories.VisualisationCatalogueItemFactory.create(published=True,)
+        factories.VisualisationCatalogueItemFactory.create(
+            published=True,
+        )
         for _ in range(random.randint(10, 50))
     ]
 
@@ -1109,7 +1118,8 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     with django_assert_num_queries(10, exact=False):
         response = client.get(
-            reverse('datasets:find_datasets'), {"purpose": str(DataSetType.MASTER)},
+            reverse('datasets:find_datasets'),
+            {"purpose": str(DataSetType.MASTER)},
         )
         assert response.status_code == 200
 
@@ -1830,7 +1840,10 @@ class DatasetsCommon:
             user_access_type=user_access_type,
         )
         factories.SourceTableFactory.create(
-            dataset=master, schema=schema, table=table, database=self._get_database(),
+            dataset=master,
+            schema=schema,
+            table=table,
+            database=self._get_database(),
         )
 
         return master
@@ -2456,7 +2469,9 @@ class TestCustomQueryRelatedDataView:
             user_access_type='REQUIRES_AUTHENTICATION',
         )
         query = factories.CustomDatasetQueryFactory(
-            dataset=datacut, database=self._get_database(), query=sql,
+            dataset=datacut,
+            database=self._get_database(),
+            query=sql,
         )
         factories.CustomDatasetQueryTableFactory(
             query=query, schema='public', table='test_dataset'
@@ -2570,7 +2585,10 @@ class TestCustomQueryRelatedDataView:
 
     @pytest.mark.parametrize(
         "request_client, status",
-        (("sme_client", 200), ("staff_client", 200),),
+        (
+            ("sme_client", 200),
+            ("staff_client", 200),
+        ),
         indirect=["request_client"],
     )
     @pytest.mark.django_db
@@ -2742,51 +2760,98 @@ class TestRelatedDataView:
         assert all(datacut.name in body for datacut in datacuts)
 
 
-class TestDataCutUsageHistory:
-    @pytest.mark.django_db
-    def test_one_event_by_one_user_on_the_same_day(self, staff_client):
-        datacut = factories.DataSetFactory.create(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+class TestDatasetUsageHistory:
+    @pytest.fixture
+    def dataset(self):
+        return factories.DataSetFactory.create(
+            type=DataSetType.DATACUT,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
+
+    @pytest.fixture
+    def visualisation(self):
+        return factories.VisualisationCatalogueItemFactory(
+            visualisation_template__gitlab_project_id=1,
+        )
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        'url_name, fixture_name, event_factory',
+        (
+            ('usage_history', 'dataset', factories.DatasetLinkDownloadEventFactory),
+            (
+                'visualisation_usage_history',
+                'visualisation',
+                factories.VisualisationViewedEventFactory,
+            ),
+        ),
+    )
+    def test_one_event_by_one_user_on_the_same_day(
+        self, url_name, fixture_name, event_factory, staff_client, request
+    ):
+        catalogue_item = request.getfixturevalue(fixture_name)
         user = factories.UserFactory(email='test-user@example.com')
         with freeze_time("2021-01-01"):
-            factories.DatasetLinkDownloadEventFactory(
-                content_object=datacut,
+            event_factory(
+                content_object=catalogue_item,
                 user=user,
-                extra={'fields': {'name': 'Test SourceLink'}},
+                extra={'fields': {'name': 'Test Event'}},
             )
 
-        url = reverse('datasets:usage_history', args=(datacut.id,))
+        url = reverse(f'datasets:{url_name}', args=(catalogue_item.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["rows"]) == 1
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SourceLink',
+            'object': 'Test Event',
             'count': 1,
         } in response.context['rows']
 
     @pytest.mark.django_db
-    def test_multiple_events_by_one_user_on_the_same_day(self, staff_client):
-        datacut = factories.DataSetFactory.create(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
-        )
+    @pytest.mark.parametrize(
+        'url_name, fixture_name, event_factory1, event_factory2',
+        (
+            (
+                'usage_history',
+                'dataset',
+                factories.DatasetLinkDownloadEventFactory,
+                factories.DatasetQueryDownloadEventFactory,
+            ),
+            (
+                'visualisation_usage_history',
+                'visualisation',
+                factories.VisualisationViewedEventFactory,
+                factories.SupersetVisualisationViewedEventFactory,
+            ),
+        ),
+    )
+    def test_multiple_events_by_one_user_on_the_same_day(
+        self,
+        url_name,
+        fixture_name,
+        event_factory1,
+        event_factory2,
+        staff_client,
+        request,
+    ):
+        catalogue_item = request.getfixturevalue(fixture_name)
         user = factories.UserFactory(email='test-user@example.com')
         with freeze_time("2021-01-01"):
-            factories.DatasetLinkDownloadEventFactory(
-                content_object=datacut,
+            event_factory1(
+                content_object=catalogue_item,
                 user=user,
-                extra={'fields': {'name': 'Test SourceLink'}},
+                extra={'fields': {'name': 'Test Event 1'}},
             )
-            for _ in range(2):
-                factories.DatasetQueryDownloadEventFactory(
-                    content_object=datacut,
-                    user=user,
-                    extra={'fields': {'name': 'Test SQLQuery'}},
-                )
+            event_factory2.create_batch(
+                2,
+                content_object=catalogue_item,
+                user=user,
+                extra={'fields': {'name': 'Test Event 2'}},
+            )
 
-        url = reverse('datasets:usage_history', args=(datacut.id,))
+        url = reverse(f'datasets:{url_name}', args=(catalogue_item.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["rows"]) == 2
@@ -2794,43 +2859,66 @@ class TestDataCutUsageHistory:
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SourceLink',
+            'object': 'Test Event 1',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SQLQuery',
+            'object': 'Test Event 2',
             'count': 2,
         } in response.context['rows']
 
     @pytest.mark.django_db
-    def test_multiple_events_by_multiple_users_on_the_same_day(self, staff_client):
-        datacut = factories.DataSetFactory.create(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
-        )
+    @pytest.mark.parametrize(
+        'url_name, fixture_name, event_factory1, event_factory2',
+        (
+            (
+                'usage_history',
+                'dataset',
+                factories.DatasetLinkDownloadEventFactory,
+                factories.DatasetQueryDownloadEventFactory,
+            ),
+            (
+                'visualisation_usage_history',
+                'visualisation',
+                factories.VisualisationViewedEventFactory,
+                factories.SupersetVisualisationViewedEventFactory,
+            ),
+        ),
+    )
+    def test_multiple_events_by_multiple_users_on_the_same_day(
+        self,
+        url_name,
+        fixture_name,
+        event_factory1,
+        event_factory2,
+        staff_client,
+        request,
+    ):
+        catalogue_item = request.getfixturevalue(fixture_name)
         user = factories.UserFactory(email='test-user@example.com')
         user_2 = factories.UserFactory(email='test-user-2@example.com')
         with freeze_time("2021-01-01"):
-            factories.DatasetLinkDownloadEventFactory(
-                content_object=datacut,
+            event_factory1(
+                content_object=catalogue_item,
                 user=user,
-                extra={'fields': {'name': 'Test SourceLink'}},
+                extra={'fields': {'name': 'Test Event 1'}},
             )
-            for _ in range(3):
-                factories.DatasetQueryDownloadEventFactory(
-                    content_object=datacut,
-                    user=user,
-                    extra={'fields': {'name': 'Test SQLQuery'}},
-                )
-            factories.DatasetQueryDownloadEventFactory(
-                content_object=datacut,
+            event_factory2.create_batch(
+                3,
+                content_object=catalogue_item,
+                user=user,
+                extra={'fields': {'name': 'Test Event 2'}},
+            )
+            event_factory2(
+                content_object=catalogue_item,
                 user=user_2,
-                extra={'fields': {'name': 'Test SQLQuery'}},
+                extra={'fields': {'name': 'Test Event 2'}},
             )
 
-        url = reverse('datasets:usage_history', args=(datacut.id,))
+        url = reverse(f'datasets:{url_name}', args=(catalogue_item.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["rows"]) == 3
@@ -2838,69 +2926,92 @@ class TestDataCutUsageHistory:
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SourceLink',
+            'object': 'Test Event 1',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SQLQuery',
+            'object': 'Test Event 2',
             'count': 3,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user-2@example.com',
-            'object': 'Test SQLQuery',
+            'object': 'Test Event 2',
             'count': 1,
         } in response.context['rows']
 
     @pytest.mark.django_db
-    def test_multiple_events_by_multiple_users_on_different_days(self, staff_client):
-        datacut = factories.DataSetFactory.create(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
-        )
+    @pytest.mark.parametrize(
+        'url_name, fixture_name, event_factory1, event_factory2',
+        (
+            (
+                'usage_history',
+                'dataset',
+                factories.DatasetLinkDownloadEventFactory,
+                factories.DatasetQueryDownloadEventFactory,
+            ),
+            (
+                'visualisation_usage_history',
+                'visualisation',
+                factories.VisualisationViewedEventFactory,
+                factories.SupersetVisualisationViewedEventFactory,
+            ),
+        ),
+    )
+    def test_multiple_events_by_multiple_users_on_different_days(
+        self,
+        url_name,
+        fixture_name,
+        event_factory1,
+        event_factory2,
+        staff_client,
+        request,
+    ):
+        catalogue_item = request.getfixturevalue(fixture_name)
         user = factories.UserFactory(email='test-user@example.com')
         user_2 = factories.UserFactory(email='test-user-2@example.com')
         with freeze_time("2021-01-01"):
-            factories.DatasetLinkDownloadEventFactory(
-                content_object=datacut,
+            event_factory1(
+                content_object=catalogue_item,
                 user=user,
-                extra={'fields': {'name': 'Test SourceLink'}},
+                extra={'fields': {'name': 'Test Event 1'}},
             )
-            for _ in range(3):
-                factories.DatasetQueryDownloadEventFactory(
-                    content_object=datacut,
-                    user=user,
-                    extra={'fields': {'name': 'Test SQLQuery'}},
-                )
-            factories.DatasetQueryDownloadEventFactory(
-                content_object=datacut,
+            event_factory2.create_batch(
+                3,
+                content_object=catalogue_item,
+                user=user,
+                extra={'fields': {'name': 'Test Event 2'}},
+            )
+            event_factory2(
+                content_object=catalogue_item,
                 user=user_2,
-                extra={'fields': {'name': 'Test SQLQuery'}},
+                extra={'fields': {'name': 'Test Event 2'}},
             )
 
         with freeze_time("2021-01-02"):
-            factories.DatasetLinkDownloadEventFactory(
-                content_object=datacut,
+            event_factory1(
+                content_object=catalogue_item,
                 user=user,
-                extra={'fields': {'name': 'Test SourceLink'}},
+                extra={'fields': {'name': 'Test Event 1'}},
             )
-            for _ in range(4):
-                factories.DatasetLinkDownloadEventFactory(
-                    content_object=datacut,
-                    user=user_2,
-                    extra={'fields': {'name': 'Test SourceLink'}},
-                )
-
-            factories.DatasetQueryDownloadEventFactory(
-                content_object=datacut,
-                user=user,
-                extra={'fields': {'name': 'Test SQLQuery'}},
+            event_factory1.create_batch(
+                4,
+                content_object=catalogue_item,
+                user=user_2,
+                extra={'fields': {'name': 'Test Event 1'}},
             )
 
-        url = reverse('datasets:usage_history', args=(datacut.id,))
+            event_factory2(
+                content_object=catalogue_item,
+                user=user,
+                extra={'fields': {'name': 'Test Event 2'}},
+            )
+
+        url = reverse(f'datasets:{url_name}', args=(catalogue_item.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["rows"]) == 6
@@ -2908,42 +3019,42 @@ class TestDataCutUsageHistory:
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SourceLink',
+            'object': 'Test Event 1',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SQLQuery',
+            'object': 'Test Event 2',
             'count': 3,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
             'email': 'test-user-2@example.com',
-            'object': 'Test SQLQuery',
+            'object': 'Test Event 2',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SourceLink',
+            'object': 'Test Event 1',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
             'email': 'test-user-2@example.com',
-            'object': 'Test SourceLink',
+            'object': 'Test Event 1',
             'count': 4,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
             'email': 'test-user@example.com',
-            'object': 'Test SQLQuery',
+            'object': 'Test Event 2',
             'count': 1,
         } in response.context['rows']
 
@@ -2952,7 +3063,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_one_event_by_one_user_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         user = factories.UserFactory(email='test-user@example.com')
@@ -2977,7 +3089,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_one_user_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3019,7 +3132,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_multiple_users_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3075,7 +3189,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_multiple_users_on_different_days(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
