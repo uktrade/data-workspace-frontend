@@ -2057,7 +2057,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         if self.visualisation_template:
             links.append(
                 _Link(
-                    id=self.visualisation_template.id,
+                    id=self.visualisation_template_id,
                     name=self.visualisation_template.nice_name,
                     get_absolute_url=reverse(
                         'datasets:visualisation_template_redirect',
