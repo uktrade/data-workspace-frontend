@@ -31,6 +31,7 @@ from django.db.models import (
     When,
     BooleanField,
     QuerySet,
+    Func,
 )
 from django.db.models.functions import TruncDay
 from django.http import (
@@ -78,7 +79,7 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
     VisualisationCatalogueItem,
     SourceTable,
-    DataCutDataset,
+    ToolQueryAuditLogTable,
 )
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
@@ -1323,31 +1324,57 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
 
 
 class DataCutUsageHistoryView(View):
-    model = DataCutDataset
-
     def get(self, request, dataset_uuid):
         try:
             dataset = DataSet.objects.get(id=dataset_uuid)
         except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
             return HttpResponse(status=404)
 
-        return render(
-            request,
-            'datasets/data_cut_usage_history.html',
-            context={
-                "dataset": dataset,
-                "rows": dataset.events.filter(
-                    event_type__in=[
-                        EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
-                        EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                    ]
-                )
-                .annotate(day=TruncDay('timestamp'))
-                .order_by('-day')
-                .values('day', 'user__email', 'extra__fields__name')
-                .annotate(count=Count('id'))[:100],
-            },
-        )
+        if dataset.type == DataSetType.DATACUT:
+            return render(
+                request,
+                'datasets/dataset_usage_history.html',
+                context={
+                    "dataset": dataset,
+                    "event_description": "Downloaded",
+                    "rows": dataset.events.filter(
+                        event_type__in=[
+                            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
+                            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                        ]
+                    )
+                    .annotate(day=TruncDay('timestamp'))
+                    .annotate(email=F('user__email'))
+                    .annotate(
+                        object=Func(
+                            F('extra'),
+                            Value('fields'),
+                            Value('name'),
+                            function='jsonb_extract_path_text',
+                        )
+                    )
+                    .order_by('-day')
+                    .values('day', 'email', 'object')
+                    .annotate(count=Count('id'))[:100],
+                },
+            )
+        else:
+            tables = list(dataset.sourcetable_set.values_list('table', flat=True))
+            return render(
+                request,
+                'datasets/dataset_usage_history.html',
+                context={
+                    "dataset": dataset,
+                    "event_description": "Queried",
+                    "rows": ToolQueryAuditLogTable.objects.filter(table__in=tables)
+                    .annotate(day=TruncDay('audit_log__timestamp'))
+                    .annotate(email=F('audit_log__user__email'))
+                    .annotate(object=F('table'))
+                    .order_by('-day')
+                    .values('day', 'email', 'object')
+                    .annotate(count=Count('id'))[:100],
+                },
+            )
 
 
 class SourceTableDetailView(DetailView):
