@@ -186,7 +186,7 @@ LOGGING = {
     'loggers': {
         'django': {'handlers': ['console'], 'level': 'INFO'},
         'app': {'handlers': ['console'], 'level': 'INFO'},
-        'dataworkspace': {'handlers': ['console'], 'level': 'INFO'},
+        'dataworkspace': {'handlers': ['console'], 'level': 'DEBUG'},
         'celery': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
