@@ -78,6 +78,7 @@ class ToolQueryAuditLogTableSerializer(serializers.ModelSerializer):
 class ToolQueryAuditLogSerializer(serializers.ModelSerializer):
     database = serializers.StringRelatedField()
     tables = ToolQueryAuditLogTableSerializer(many=True, read_only=True)
+    query_sql = serializers.CharField(source='truncated_query_sql')
 
     class Meta:
         model = ToolQueryAuditLog
