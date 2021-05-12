@@ -35,6 +35,7 @@ from dataworkspace.tests.factories import (
     UserFactory,
     VisualisationUserPermissionFactory,
     VisualisationLinkFactory,
+    MasterDataSetFactory,
 )
 
 
@@ -1817,12 +1818,12 @@ class TestMasterDatasetDetailView:
     def _get_database(self):
         return factories.DatabaseFactory.create(memorable_name='my_database')
 
-    def _create_master(self, schema='public', table='test_dataset'):
+    def _create_master(self, schema='public', table='test_dataset', user_access_type='REQUIRES_AUTHENTICATION'):
         master = factories.DataSetFactory.create(
             published=True,
             type=DataSetType.MASTER,
             name='A master',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=user_access_type,
         )
         factories.SourceTableFactory.create(
             dataset=master, schema=schema, table=table, database=self._get_database(),
@@ -1910,6 +1911,16 @@ class TestMasterDatasetDetailView:
         assert len(response.context["related_data"]) == 5
         assert "Show all data cuts" in response.content.decode(response.charset)
 
+    @pytest.mark.django_db
+    def test_unauthorised_dataset(self, staff_client, metadata_db):
+        master = self._create_master(user_access_type='REQUIRES_AUTHORIZATION')
+        self._create_related_data_cuts(num=5)
+
+        url = reverse('datasets:dataset_detail', args=(master.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert "You do not have permission to access this dataset" in response.content.decode(response.charset)
+        assert "You will also need tools access to use the data" in response.content.decode(response.charset)
 
 @pytest.mark.django_db
 def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
