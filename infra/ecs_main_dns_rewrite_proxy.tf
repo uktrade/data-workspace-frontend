@@ -34,8 +34,9 @@ resource "aws_lb_target_group" "dns_rewrite_proxy" {
   target_type          = "ip"
 
   health_check {
-    protocol           = "TCP"
+    protocol           = "HTTP"
     port               = "8888"
+    path               = "/"
   }
 
   depends_on = ["aws_lb.dns_rewrite_proxy"]
