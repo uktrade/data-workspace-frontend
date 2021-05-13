@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements-dev.in
 #
-aiohttp==3.6.2
+aiohttp==3.7.4
     # via
     #   -r requirements.in
     #   elasticsearch
@@ -422,6 +422,8 @@ traitlets==5.0.5
     # via ipython
 typed-ast==1.4.2
     # via black
+typing-extensions==3.10.0.0
+    # via aiohttp
 unicodecsv==0.14.1
     # via
     #   tableschema
