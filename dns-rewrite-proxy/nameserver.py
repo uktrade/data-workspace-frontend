@@ -72,8 +72,12 @@ async def async_main():
     logger.info('DNS server started')
 
     async def handle_client(reader, writer):
+        async def get_nameservers(_, __):
+            yield (1.0, ('127.0.0.1', 53))
+
         await reader.read(100)
-        resolve, _ = get_resolver()
+        resolve, _ = Resolver(get_nameservers=get_nameservers)
+
         try:
             await resolve('s3.eu-west-2.amazonaws.com', TYPES.A)
         except DnsError:
