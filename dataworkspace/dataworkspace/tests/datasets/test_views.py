@@ -1927,7 +1927,6 @@ class TestMasterDatasetDetailView:
         url = reverse('datasets:dataset_detail', args=(datacut.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
-        print(response.content.decode(response.charset))
         assert (
             "You do not have permission to access these links"
             in response.content.decode(response.charset)
