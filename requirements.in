@@ -20,7 +20,7 @@ django-redis==4.12.1
 django-staff-sso-client==2.1.0
 django-waffle==2.0.0
 django==3.0.12
-djangorestframework==3.11.1
+djangorestframework==3.11.2
 ecs-logging==0.5.0
 elastic-apm==5.8.1
 elasticsearch[async]>=7.8.0
