@@ -109,6 +109,6 @@ workflows:
   version: 2
   build:
     jobs:
-      - check-linting
       - docker-test-unit
       - docker-test-integration
+      - check-linting
