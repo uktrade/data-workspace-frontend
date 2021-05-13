@@ -55,7 +55,7 @@
       </div>
 
       {% if master_datasets_info and not has_access %}
-        {% include 'partials/unauthorised_warning.html' with thing='this dataset' %}
+        {% include 'partials/unauthorised_warning.html' with thing='this dataset' show_tools_message=True %}
       {% endif %}
     </div>
   </div>
