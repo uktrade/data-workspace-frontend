@@ -1813,16 +1813,21 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
     ) is show_warning
 
 
-class TestMasterDatasetDetailView:
+class DatasetsCommon:
     def _get_database(self):
         return factories.DatabaseFactory.create(memorable_name='my_database')
 
-    def _create_master(self, schema='public', table='test_dataset'):
+    def _create_master(
+        self,
+        schema='public',
+        table='test_dataset',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    ):
         master = factories.DataSetFactory.create(
             published=True,
             type=DataSetType.MASTER,
             name='A master',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=user_access_type,
         )
         factories.SourceTableFactory.create(
             dataset=master, schema=schema, table=table, database=self._get_database(),
@@ -1852,6 +1857,8 @@ class TestMasterDatasetDetailView:
 
         return datacuts
 
+
+class TestMasterDatasetDetailView(DatasetsCommon):
     @pytest.mark.django_db
     def test_master_dataset_shows_code_snippets_to_tool_user(self, metadata_db):
         ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
@@ -1909,6 +1916,55 @@ class TestMasterDatasetDetailView:
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
         assert "Show all data cuts" in response.content.decode(response.charset)
+
+
+class TestRequestAccess(DatasetsCommon):
+    @pytest.mark.django_db
+    def test_unauthorised_dataset(self, staff_client, metadata_db):
+        master = self._create_master(user_access_type='REQUIRES_AUTHORIZATION')
+
+        url = reverse('datasets:dataset_detail', args=(master.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert (
+            "You do not have permission to access this dataset"
+            in response.content.decode(response.charset)
+        )
+        assert (
+            "You will also need tools access to use the data"
+            in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.django_db
+    def test_unauthorised_datacut(self, staff_client, metadata_db):
+        self._create_master(user_access_type='REQUIRES_AUTHORIZATION')
+        datacuts = self._create_related_data_cuts(num=1)
+
+        datacut = datacuts[0]
+        datacut.user_access_type = 'REQUIRES_AUTHORIZATION'
+        datacut.save()
+
+        url = reverse('datasets:dataset_detail', args=(datacut.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert (
+            "You do not have permission to access these links"
+            in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.django_db
+    def test_unauthorised_visualisation(self, staff_client, metadata_db):
+        ds = factories.VisualisationCatalogueItemFactory.create(
+            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+        )
+
+        url = reverse('datasets:dataset_detail', args=(ds.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert (
+            "You do not have permission to access this data visualisation"
+            in response.content.decode(response.charset)
+        )
 
 
 @pytest.mark.django_db
