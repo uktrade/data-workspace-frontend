@@ -2720,8 +2720,8 @@ class TestDataCutUsageHistory:
         assert len(response.context["rows"]) == 1
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SourceLink',
+            'email': 'test-user@example.com',
+            'object': 'Test SourceLink',
             'count': 1,
         } in response.context['rows']
 
@@ -2751,15 +2751,15 @@ class TestDataCutUsageHistory:
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SourceLink',
+            'email': 'test-user@example.com',
+            'object': 'Test SourceLink',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SQLQuery',
+            'email': 'test-user@example.com',
+            'object': 'Test SQLQuery',
             'count': 2,
         } in response.context['rows']
 
@@ -2795,22 +2795,22 @@ class TestDataCutUsageHistory:
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SourceLink',
+            'email': 'test-user@example.com',
+            'object': 'Test SourceLink',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SQLQuery',
+            'email': 'test-user@example.com',
+            'object': 'Test SQLQuery',
             'count': 3,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user-2@example.com',
-            'extra__fields__name': 'Test SQLQuery',
+            'email': 'test-user-2@example.com',
+            'object': 'Test SQLQuery',
             'count': 1,
         } in response.context['rows']
 
@@ -2827,7 +2827,7 @@ class TestDataCutUsageHistory:
                 user=user,
                 extra={'fields': {'name': 'Test SourceLink'}},
             )
-            for _ in range(2):
+            for _ in range(3):
                 factories.DatasetQueryDownloadEventFactory(
                     content_object=datacut,
                     user=user,
@@ -2865,43 +2865,264 @@ class TestDataCutUsageHistory:
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SourceLink',
+            'email': 'test-user@example.com',
+            'object': 'Test SourceLink',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SQLQuery',
-            'count': 2,
+            'email': 'test-user@example.com',
+            'object': 'Test SQLQuery',
+            'count': 3,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
-            'user__email': 'test-user-2@example.com',
-            'extra__fields__name': 'Test SQLQuery',
+            'email': 'test-user-2@example.com',
+            'object': 'Test SQLQuery',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SourceLink',
+            'email': 'test-user@example.com',
+            'object': 'Test SourceLink',
             'count': 1,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
-            'user__email': 'test-user-2@example.com',
-            'extra__fields__name': 'Test SourceLink',
+            'email': 'test-user-2@example.com',
+            'object': 'Test SourceLink',
             'count': 4,
         } in response.context['rows']
 
         assert {
             'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
-            'user__email': 'test-user@example.com',
-            'extra__fields__name': 'Test SQLQuery',
+            'email': 'test-user@example.com',
+            'object': 'Test SQLQuery',
+            'count': 1,
+        } in response.context['rows']
+
+
+class TestMasterDatasetUsageHistory:
+    @pytest.mark.django_db
+    def test_one_event_by_one_user_on_the_same_day(self, staff_client):
+        dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
+        user = factories.UserFactory(email='test-user@example.com')
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table.table,
+            audit_log__user=user,
+            audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+
+        url = reverse('datasets:usage_history', args=(dataset.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 1
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table',
+            'count': 1,
+        } in response.context['rows']
+
+    @pytest.mark.django_db
+    def test_multiple_events_by_one_user_on_the_same_day(self, staff_client):
+        dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
+        table_2 = factories.SourceTableFactory.create(
+            dataset=dataset, table='test_table_2'
+        )
+        user = factories.UserFactory(email='test-user@example.com')
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table.table,
+            audit_log__user=user,
+            audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+
+        for _ in range(2):
+            factories.ToolQueryAuditLogTableFactory(
+                table=table_2.table,
+                audit_log__user=user,
+                audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+            )
+
+        url = reverse('datasets:usage_history', args=(dataset.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 2
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table_2',
+            'count': 2,
+        } in response.context['rows']
+
+    @pytest.mark.django_db
+    def test_multiple_events_by_multiple_users_on_the_same_day(self, staff_client):
+        dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
+        table_2 = factories.SourceTableFactory.create(
+            dataset=dataset, table='test_table_2'
+        )
+        user = factories.UserFactory(email='test-user@example.com')
+        user_2 = factories.UserFactory(email='test-user-2@example.com')
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table.table,
+            audit_log__user=user,
+            audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+
+        for _ in range(3):
+            factories.ToolQueryAuditLogTableFactory(
+                table=table_2.table,
+                audit_log__user=user,
+                audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+            )
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table_2.table,
+            audit_log__user=user_2,
+            audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+
+        url = reverse('datasets:usage_history', args=(dataset.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 3
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table_2',
+            'count': 3,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user-2@example.com',
+            'object': 'test_table_2',
+            'count': 1,
+        } in response.context['rows']
+
+    @pytest.mark.django_db
+    def test_multiple_events_by_multiple_users_on_different_days(self, staff_client):
+        dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
+        table_2 = factories.SourceTableFactory.create(
+            dataset=dataset, table='test_table_2'
+        )
+        user = factories.UserFactory(email='test-user@example.com')
+        user_2 = factories.UserFactory(email='test-user-2@example.com')
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table.table,
+            audit_log__user=user,
+            audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+
+        for _ in range(3):
+            factories.ToolQueryAuditLogTableFactory(
+                table=table_2.table,
+                audit_log__user=user,
+                audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+            )
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table_2.table,
+            audit_log__user=user_2,
+            audit_log__timestamp=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table.table,
+            audit_log__user=user,
+            audit_log__timestamp=datetime(2021, 1, 2, tzinfo=timezone.utc),
+        )
+
+        for _ in range(4):
+            factories.ToolQueryAuditLogTableFactory(
+                table=table.table,
+                audit_log__user=user_2,
+                audit_log__timestamp=datetime(2021, 1, 2, tzinfo=timezone.utc),
+            )
+
+        factories.ToolQueryAuditLogTableFactory(
+            table=table_2.table,
+            audit_log__user=user,
+            audit_log__timestamp=datetime(2021, 1, 2, tzinfo=timezone.utc),
+        )
+
+        url = reverse('datasets:usage_history', args=(dataset.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["rows"]) == 6
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table_2',
+            'count': 3,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 1, tzinfo=timezone.utc),
+            'email': 'test-user-2@example.com',
+            'object': 'test_table_2',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table',
+            'count': 1,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
+            'email': 'test-user-2@example.com',
+            'object': 'test_table',
+            'count': 4,
+        } in response.context['rows']
+
+        assert {
+            'day': datetime(2021, 1, 2, tzinfo=timezone.utc),
+            'email': 'test-user@example.com',
+            'object': 'test_table_2',
             'count': 1,
         } in response.context['rows']
 

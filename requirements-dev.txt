@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements-dev.in
 #
-aiohttp==3.6.2
+aiohttp==3.7.4
     # via
     #   -r requirements.in
     #   elasticsearch

@@ -5,6 +5,7 @@ import psycopg2
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db import models
+from django.db.models.functions import Substr
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -382,6 +383,16 @@ class ToolQueryAuditLogViewSet(viewsets.ModelViewSet):
     API endpoint to list tool query audit logs for ingestion by data flow
     """
 
-    queryset = ToolQueryAuditLog.objects.prefetch_related('tables')
+    # Due to there being a few queries in the logs with > 1 million chars
+    # we truncate the query at the db level before it gets to the serializer
+    queryset = (
+        ToolQueryAuditLog.objects.defer('query_sql')
+        .annotate(
+            truncated_query_sql=Substr(
+                'query_sql', 1, settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
+            )
+        )
+        .prefetch_related('tables')
+    )
     serializer_class = ToolQueryAuditLogSerializer
     pagination_class = TimestampCursorPagination

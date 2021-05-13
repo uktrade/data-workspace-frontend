@@ -574,7 +574,9 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             'id': log.id,
             'user': log.user_id,
             'database': log.database.memorable_name,
-            'query_sql': log.query_sql,
+            'query_sql': log.query_sql[
+                : settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
+            ],
             'rolename': log.rolename,
             'timestamp': log.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'tables': [
@@ -594,3 +596,13 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             self.expected_response(log_1),
             self.expected_response(log_2),
         ]
+
+    def test_large_query(self, unauthenticated_client):
+        chars = settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
+        log = factories.ToolQueryAuditLogFactory.create(
+            query_sql=f'SELECT {",".join(["X" for _ in range(chars)])} FROM a_table;'
+        )
+        factories.ToolQueryAuditLogTableFactory.create(audit_log=log)
+        response = unauthenticated_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['results'] == [self.expected_response(log)]
