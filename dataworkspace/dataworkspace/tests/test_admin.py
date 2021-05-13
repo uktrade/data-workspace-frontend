@@ -3202,7 +3202,6 @@ class TestDatasetAdminPytest:
             name='my-source', table='my_table', dataset=dataset,
         )
 
-        print("before login to admin")
         # Login to admin site
         staff_client.post(reverse('admin:index'), follow=True)
 
@@ -3210,7 +3209,6 @@ class TestDatasetAdminPytest:
             user, 'test_external_db'
         )
 
-        print("before datasets_masterdataset_change")
         response = staff_client.post(
             reverse('admin:datasets_masterdataset_change', args=(dataset.id,)),
             {
