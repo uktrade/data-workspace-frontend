@@ -2047,7 +2047,6 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     def get_visualisation_links(self, request):
         @dataclass
         class _Link:
-            id: uuid.UUID
             name: str
             get_absolute_url: str
             modified_date: datetime
@@ -2057,12 +2056,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         if self.visualisation_template:
             links.append(
                 _Link(
-                    id=self.visualisation_template_id,
                     name=self.visualisation_template.nice_name,
-                    get_absolute_url=reverse(
-                        'datasets:visualisation_template_redirect',
-                        args=(self.id, self.visualisation_template_id),
-                    ),
+                    get_absolute_url=self.visualisation_template.get_absolute_url(),
                     modified_date=self.visualisation_template.modified_date,
                 )
             )

@@ -2096,10 +2096,7 @@ class TestVisualisationsDetailView:
         body = response.content.decode(response.charset)
 
         assert response.status_code == 200
-        assert (
-            f'/datasets/{vis.id}/visualisation/{vis.visualisation_template.id}/redirect'
-            in body
-        )
+        assert '//visualisation.dataworkspace.test:8000/' in body
         assert f'/visualisations/link/{link1.id}' in body
 
 
@@ -2187,29 +2184,6 @@ class TestVisualisationLinkView:
             )
         )
         assert response.status_code == 404
-
-    @pytest.mark.django_db
-    def test_visualisation_template_redirect_view(self):
-        log_count = EventLog.objects.count()
-        user = UserFactory.create()
-        vis = VisualisationCatalogueItemFactory.create(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )
-        VisualisationUserPermissionFactory.create(visualisation=vis, user=user)
-        client = Client(**get_http_sso_data(user))
-        response = client.get(
-            reverse(
-                'datasets:visualisation_template_redirect',
-                args=(vis.id, vis.visualisation_template.id),
-            )
-        )
-        assert response.status_code == 302
-        assert response['Location'] == vis.visualisation_template.get_absolute_url()
-        assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE
-        )
 
 
 def test_find_datasets_search_by_source_name(client):
