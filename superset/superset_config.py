@@ -1,18 +1,22 @@
 import os
 
-from superset import db, security_manager
-from superset.security import SupersetSecurityManager
-
 from flask_appbuilder.security.manager import AUTH_REMOTE_USER
 from flask_appbuilder.security.views import AuthView
-from flask_login import login_user
 from flask_appbuilder import expose
+from flask_login import login_user
+
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Semi-magical request-local proxy objects
 from flask import g, make_response, redirect, request
 
-SQLALCHEMY_DATABASE_URI = f'postgresql+psycopg2://{os.environ["DB_USER"]}:{os.environ["DB_PASSWORD"]}@{os.environ["DB_HOST"]}/{os.environ["DB_NAME"]}'
+from superset import db, security_manager
+from superset.security import SupersetSecurityManager
+
+SQLALCHEMY_DATABASE_URI = (
+    f'postgresql+psycopg2://{os.environ["DB_USER"]}:{os.environ["DB_PASSWORD"]}'
+    f'@{os.environ["DB_HOST"]}/{os.environ["DB_NAME"]}'
+)
 
 LANGUAGES = {'en': {'flag': 'gb', 'name': 'English'}}
 SESSION_COOKIE_NAME = 'superset_session'
@@ -102,9 +106,9 @@ def apply_public_role_permissions(sm, user, role_name):
     3. Give user read access to all data sources
         - This allows them to view all dashboards on the site
     """
-    from superset.models.dashboard import (
+    from superset.models.dashboard import (  # pylint: disable=import-outside-toplevel
         Dashboard,
-    )  # pylint: disable=import-outside-toplevel
+    )
 
     role = sm.add_role(role_name)
     if not role:
@@ -134,6 +138,44 @@ def apply_public_role_permissions(sm, user, role_name):
     sm.get_session.commit()
 
 
+def apply_editor_role_permissions(sm, user, role_name):
+    """
+    Given a user and role name
+    1. Get or create a private "editor" role for the user
+    2. Give the private editor role access to all datasources the user has created
+      - This allows us to restrict the datasources/charts the user can see to only those they created
+    """
+    from superset.models.slice import Slice  # pylint: disable=import-outside-toplevel
+
+    role = sm.add_role(role_name)
+    if not role:
+        role = sm.find_role(role_name)
+
+    for datasource in db.session.query(Slice).filter_by(created_by_fk=user.get_id()):
+        permission_view_menu = sm.add_permission_view_menu(
+            'datasource_access', datasource.perm
+        )
+        sm.add_permission_role(role, permission_view_menu)
+
+    user.roles.append(role)
+    sm.get_session.commit()
+
+
+def data_workspace_permission_handler(app):
+    @app.before_request
+    def before_request():  # pylint: disable=unused-variable
+        if g.user is not None and g.user.is_authenticated:
+            role_name = base_role_names[request.host.split('.')[0]]
+            if role_name == 'Public':
+                apply_public_role_permissions(
+                    security_manager, g.user, f'{g.user.username}-Role'
+                )
+            elif role_name == 'Editor':
+                apply_editor_role_permissions(
+                    security_manager, g.user, f'{g.user.username}-Role'
+                )
+
+
 class DataWorkspaceSecurityManager(SupersetSecurityManager):
     # The Flask AppBuilder Security Manager, from which the Superset Security Manager
     # inherits, uses this if AUTH_TYPE == AUTH_REMOTE_USER
@@ -147,17 +189,6 @@ def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
     uri.password = request.headers['Credentials-Db-Password']
     uri.port = request.headers['Credentials-Db-Port']
     return uri, params
-
-
-def data_workspace_permission_handler(app):
-    @app.before_request
-    def before_request():  # pylint: disable=unused-variable
-        if g.user is not None and g.user.is_authenticated:
-            role_name = base_role_names[request.host.split('.')[0]]
-            if role_name == 'Public':
-                apply_public_role_permissions(
-                    security_manager, g.user, f'{g.user.username}-Role'
-                )
 
 
 FLASK_APP_MUTATOR = data_workspace_permission_handler
