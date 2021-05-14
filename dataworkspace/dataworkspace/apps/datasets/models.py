@@ -572,7 +572,7 @@ class SourceTable(BaseSource):
         return f'{self.name} ({self.id})'
 
     def can_show_link_for_user(self, user):
-        return user.is_superuser
+        return False
 
     @property
     def type(self):
