@@ -7,7 +7,7 @@ import aiopg
 from aiohttp import web
 import psycopg2.sql
 
-
+# TODO - Team schema
 async def async_main():
 
     stdout_handler = logging.StreamHandler(sys.stdout)
