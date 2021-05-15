@@ -33,13 +33,14 @@
     "resolutions": {
       "**/axios": "^0.21.1",
       "**/debug": "^4.3.1",
+      "**/is-svg": "^4.3.1",
       "**/js-yaml": "^3.14.1",
       "**/postcss": "^8.2.10",
       "**/sanitize-html": "^2.3.3",
       "**/ssri": "^8.0.1",
       "**/underscore": "^1.13.1",
-      "**/yargs-parser": "^20.2.7",
-      "**/y18n": "^5.0.8"
+      "**/y18n": "^5.0.8",
+      "**/yargs-parser": "^20.2.7"
     },
     "theiaPluginsDir": "plugins",
     "theiaPlugins": {
