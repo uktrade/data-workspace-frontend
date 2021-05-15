@@ -27,7 +27,7 @@
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.6",
     "copy-webpack-plugin": "^6.0.3",
-    "css-loader": "^3.2.0",
+    "css-loader": "^5.2.4",
     "eslint": "^6.8.0",
     "glob": "^7.1.4",
     "govuk-frontend": "^3.6.0",
@@ -38,7 +38,7 @@
     "rxjs": "^6.5.3",
     "sql-formatter": "^2.3.3",
     "vue": "^2.6.10",
-    "vue-loader": "^15.7.1",
+    "vue-loader": "^16.2.0",
     "vue-rx": "^6.2.0",
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.10",
@@ -46,7 +46,6 @@
     "webpack-bundle-tracker": "^0.4.2-beta",
     "webpack-cli": "^3.3.8"
   },
-  "devDependencies": {},
   "eslintConfig": {
     "root": true,
     "env": {
