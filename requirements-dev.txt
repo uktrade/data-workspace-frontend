@@ -44,7 +44,7 @@ billiard==3.6.3.0
     # via celery
 black==19.10b0
     # via -r requirements-dev.in
-bleach==3.3.0
+bleach==3.1.5
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -93,7 +93,7 @@ decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
     # via -r requirements.in
-django-admin-sortable2==0.7.7
+django-admin-sortable2==1.0
     # via -r requirements.in
 django-appconf==1.0.4
     # via django-compressor
