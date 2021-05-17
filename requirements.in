@@ -30,7 +30,7 @@ hawk-server-asyncio==0.0.13
 Markdown==3.2.2
 MarkupSafe==1.1.1
 mohawk==1.1.0
-notifications-python-client==5.7.0
+notifications-python-client==6.1.0
 paste==3.4.3
 psutil==5.7.2
 psycogreen==1.0.2
