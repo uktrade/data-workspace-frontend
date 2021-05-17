@@ -44,7 +44,7 @@ billiard==3.6.3.0
     # via celery
 black==19.10b0
     # via -r requirements-dev.in
-bleach==3.3.0
+bleach==3.1.5
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -453,7 +453,7 @@ wrapt==1.12.1
     # via astroid
 xlrd==2.0.1
     # via tabulator
-xlsxwriter==1.2.8
+xlsxwriter==1.4.3
     # via -r requirements.in
 yarl==1.5.1
     # via aiohttp
