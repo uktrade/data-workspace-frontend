@@ -61,7 +61,10 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     stable_identification_suffix,
 )
-from dataworkspace.apps.core.views import public_error_500_html_view
+from dataworkspace.apps.core.views import (
+    public_error_404_html_view,
+    public_error_500_html_view,
+)
 from dataworkspace.apps.datasets.models import (
     MasterDataset,
     DataSetApplicationTemplatePermission,
@@ -148,6 +151,23 @@ def application_running_html_GET(request, public_host):
         )
     except ApplicationInstance.DoesNotExist:
         return public_error_500_html_view(request)
+
+    if application_instance.application_template.application_type == 'VISUALISATION':
+        try:
+            visualisation_catalogue_item = VisualisationCatalogueItem.objects.get(
+                visualisation_template=application_instance.application_template
+            )
+        except VisualisationCatalogueItem.DoesNotExist:
+            return public_error_404_html_view(request)
+
+        log_event(
+            request.user,
+            EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
+            visualisation_catalogue_item,
+            serializers.serialize(
+                'python', [visualisation_catalogue_item.visualisation_template]
+            )[0],
+        )
 
     port = urlsplit(application_instance.proxy_url).port
     context = {
