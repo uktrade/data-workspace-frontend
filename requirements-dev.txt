@@ -30,7 +30,6 @@ async-timeout==3.0.1
 attrs==20.2.0
     # via
     #   aiohttp
-    #   black
     #   flake8-bugbear
     #   jsonschema
     #   pytest
@@ -42,9 +41,9 @@ beautifulsoup4==4.9.3
     # via -r requirements-dev.in
 billiard==3.6.3.0
     # via celery
-black==19.10b0
+black==21.5b1
     # via -r requirements-dev.in
-bleach==3.3.0
+bleach==3.1.5
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -229,6 +228,8 @@ multidict==4.7.6
     # via
     #   aiohttp
     #   yarl
+mypy-extensions==0.4.3
+    # via black
 notifications-python-client==5.7.0
     # via -r requirements.in
 oauthlib==3.1.0
@@ -420,8 +421,6 @@ tqdm==4.56.0
     # via pyppeteer
 traitlets==5.0.5
     # via ipython
-typed-ast==1.4.2
-    # via black
 typing-extensions==3.10.0.0
     # via aiohttp
 unicodecsv==0.14.1
