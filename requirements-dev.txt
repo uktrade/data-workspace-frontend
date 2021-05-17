@@ -44,7 +44,7 @@ billiard==3.6.3.0
     # via celery
 black==19.10b0
     # via -r requirements-dev.in
-bleach==3.3.0
+bleach==3.1.5
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -58,7 +58,7 @@ cached-property==1.5.2
     # via tableschema
 cachetools==4.1.1
     # via zenpy
-celery-redbeat==1.0.0
+celery-redbeat==2.0.0
     # via -r requirements.in
 celery==4.4.7
     # via
