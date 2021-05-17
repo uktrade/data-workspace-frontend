@@ -359,17 +359,3 @@ class UserToolConfiguration(models.Model):
         return self.SIZE_CONFIGS[self.size]
 
 
-class Team(TimeStampedModel):
-    # something
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(blank=False, null=False, max_length=256, unique=True)
-
-    # TODO - check on_delete protect?
-    member = models.ManyToManyField(get_user_model())
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Team"
-        verbose_name_plural = "Teams"
