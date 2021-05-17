@@ -61,10 +61,7 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     stable_identification_suffix,
 )
-from dataworkspace.apps.core.views import (
-    public_error_404_html_view,
-    public_error_500_html_view,
-)
+from dataworkspace.apps.core.views import public_error_500_html_view
 from dataworkspace.apps.datasets.models import (
     MasterDataset,
     DataSetApplicationTemplatePermission,
@@ -158,7 +155,7 @@ def application_running_html_GET(request, public_host):
                 visualisation_template=application_instance.application_template
             )
         except VisualisationCatalogueItem.DoesNotExist:
-            return public_error_404_html_view(request)
+            return public_error_500_html_view(request)
 
         log_event(
             request.user,
