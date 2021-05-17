@@ -19,7 +19,6 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     ToolTemplate,
     VisualisationTemplate,
-
 )
 from dataworkspace.apps.datasets.models import (
     DataSet,

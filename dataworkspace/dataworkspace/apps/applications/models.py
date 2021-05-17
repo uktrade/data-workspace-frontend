@@ -357,5 +357,3 @@ class UserToolConfiguration(models.Model):
     @property
     def size_config(self):
         return self.SIZE_CONFIGS[self.size]
-
-

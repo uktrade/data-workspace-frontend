@@ -19,30 +19,54 @@ class Migration(migrations.Migration):
             fields=[
                 ('created_date', models.DateTimeField(auto_now_add=True)),
                 ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                (
+                    'id',
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
                 ('name', models.CharField(max_length=256, unique=True)),
             ],
-            options={
-                'verbose_name': 'Team',
-                'verbose_name_plural': 'Teams',
-            },
+            options={'verbose_name': 'Team', 'verbose_name_plural': 'Teams',},
         ),
         migrations.CreateModel(
             name='TeamMembership',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('created_date', models.DateTimeField(auto_now_add=True)),
                 ('modified_date', models.DateTimeField(auto_now=True)),
-                ('team_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.Team')),
-                ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    'team_id',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to='core.Team'
+                    ),
+                ),
+                (
+                    'user_id',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.AddField(
             model_name='team',
             name='member',
-            field=models.ManyToManyField(through='core.TeamMembership', to=settings.AUTH_USER_MODEL),
+            field=models.ManyToManyField(
+                through='core.TeamMembership', to=settings.AUTH_USER_MODEL
+            ),
         ),
     ]

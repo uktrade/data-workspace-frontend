@@ -5,6 +5,7 @@ from dataworkspace.apps.core.models import (
     TeamMembership,
 )
 
+
 class TimeStampedUserAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.pk:
@@ -36,8 +37,7 @@ class TeamMembershipAdmin(admin.TabularInline):
     model = TeamMembership
     extra = 1
 
+
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     inlines = (TeamMembershipAdmin,)
-
-

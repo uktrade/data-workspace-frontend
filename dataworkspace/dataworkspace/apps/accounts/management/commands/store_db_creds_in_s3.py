@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
-           new_private_database_credentials,
+    new_private_database_credentials,
     postgres_user,
     source_tables_for_user,
     write_credentials_to_bucket,

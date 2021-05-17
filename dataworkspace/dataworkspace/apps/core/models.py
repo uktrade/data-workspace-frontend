@@ -143,7 +143,6 @@ class UserSatisfactionSurvey(TimeStampedModel):
     improve_service = models.TextField(null=True, blank=True)
 
 
-
 class Team(TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
