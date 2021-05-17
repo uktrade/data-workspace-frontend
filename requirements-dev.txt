@@ -44,7 +44,7 @@ billiard==3.6.3.0
     # via celery
 black==19.10b0
     # via -r requirements-dev.in
-bleach==3.3.0
+bleach==3.1.5
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -163,9 +163,9 @@ future==0.18.2
     # via notifications-python-client
 geoalchemy2==0.8.4
     # via -r requirements.in
-gevent==20.6.2
+gevent==21.1.2
     # via -r requirements.in
-greenlet==0.4.16
+greenlet==1.1.0
     # via gevent
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
