@@ -26,7 +26,7 @@ aws-requests-auth==0.4.3
     # via -r requirements.in
 billiard==3.6.3.0
     # via celery
-bleach==3.3.0
+bleach==3.1.5
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -85,7 +85,7 @@ django-dynamic-models-readonly==0.1.1
     # via -r requirements.in
 django-environ==0.4.5
     # via -r requirements.in
-django-extensions==2.2.9
+django-extensions==3.1.3
     # via -r requirements.in
 django-js-asset==1.2.2
     # via django-ckeditor
@@ -103,6 +103,7 @@ django==3.0.14
     #   django-csp
     #   django-db-geventpool
     #   django-dynamic-models-readonly
+    #   django-extensions
     #   django-redis
     #   django-staff-sso-client
     #   djangorestframework
@@ -236,7 +237,6 @@ six==1.15.0
     #   bleach
     #   cryptography
     #   django-compressor
-    #   django-extensions
     #   isodate
     #   jsonschema
     #   linear-tsv
