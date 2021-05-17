@@ -44,7 +44,7 @@ billiard==3.6.3.0
     # via celery
 black==19.10b0
     # via -r requirements-dev.in
-bleach==3.3.0
+bleach==3.1.5
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -119,7 +119,7 @@ django-js-asset==1.2.2
     # via django-ckeditor
 django-redis==4.12.1
     # via -r requirements.in
-django-staff-sso-client==2.1.0
+django-staff-sso-client==3.1.0
     # via -r requirements.in
 django-waffle==2.0.0
     # via -r requirements.in
