@@ -185,7 +185,7 @@ LOGGING = {
     'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'ecs'}},
     'loggers': {
         'django': {'handlers': ['console'], 'level': 'INFO'},
-        'app': {'handlers': ['console'], 'level': 'INFO'},
+        'app': {'handlers': ['console'], 'level': 'DEBUG'},
         'dataworkspace': {'handlers': ['console'], 'level': 'INFO'},
         'celery': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },

@@ -19,6 +19,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     ToolTemplate,
     VisualisationTemplate,
+    Team
 )
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -33,6 +34,11 @@ from dataworkspace.apps.applications.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
+
+
+# @admin.register(Team)
+# class TeamAdmin(admin.ModelAdmin):
+#     pass
 
 
 @admin.register(ApplicationInstance)
