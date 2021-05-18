@@ -6,7 +6,7 @@ from faker import Faker
 logger = logging.getLogger(__name__)
 
 
-async def create_user_and_launch_sso(is_logged_in: bool, SSO_USER_ID: str):
+async def create_sso_with_auth(is_logged_in: bool, sso_user_id: str):
     fake = Faker(["en-GB"])
     email = fake.email()
     auth_to_me = {
@@ -16,7 +16,7 @@ async def create_user_and_launch_sso(is_logged_in: bool, SSO_USER_ID: str):
             "related_emails": [],
             "first_name": fake.first_name(),
             "last_name": fake.last_name(),
-            "user_id": SSO_USER_ID,
+            "user_id": sso_user_id,
         }
     }
     return await create_sso(

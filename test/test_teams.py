@@ -2,11 +2,12 @@ import asyncio
 import logging
 import unittest
 
-from test.sso import create_user_and_launch_sso
+from test.sso import create_sso_with_auth
 from test.test_application import until_succeeds, create_application, client_session
 
 logger = logging.getLogger(__name__)
 SSO_USER_ID = "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
+
 
 def async_test(func):
     def wrapper(*args, **kwargs):
@@ -32,9 +33,7 @@ class TestTeams(unittest.TestCase):
         cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
-        sso_cleanup, _ = await create_user_and_launch_sso(
-            True, SSO_USER_ID
-        )
+        sso_cleanup, _ = await create_sso_with_auth(True, SSO_USER_ID)
         self.add_async_cleanup(sso_cleanup)
 
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
