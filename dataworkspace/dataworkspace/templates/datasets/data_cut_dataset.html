@@ -155,7 +155,7 @@
                                 {% if has_access %}
                                   {% if datacut_link.data_grid_enabled %}
                                     <a class="govuk-link"
-                                        href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id query_uuid=datacut_link.id %}">
+                                        href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id object_id=datacut_link.id %}">
                                         View data
                                     </a>
                                   {% else %}
