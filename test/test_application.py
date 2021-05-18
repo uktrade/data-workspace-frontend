@@ -9,6 +9,8 @@ import signal
 import textwrap
 import unittest
 
+import logging
+
 import aiohttp
 import elasticsearch
 from aiohttp import web
@@ -23,6 +25,11 @@ from test.pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_browser,
 )
+
+from test.sso import create_sso, create_user_and_launch_sso
+
+logger = logging.getLogger(__name__)
+SSO_USER_ID = "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
 
 
 def async_test(func):
@@ -63,10 +70,15 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
-        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+
+        sso_cleanup, _ = await create_user_and_launch_sso(
+            True, SSO_USER_ID
+        )
+
+        # sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
@@ -268,7 +280,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -425,7 +437,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -549,7 +561,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -922,7 +934,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1094,7 +1106,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1288,7 +1300,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1417,7 +1429,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1514,7 +1526,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, number_of_times_at_sso = await create_sso(
@@ -1553,7 +1565,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1692,7 +1704,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1790,7 +1802,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1833,7 +1845,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1950,9 +1962,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 200)
 
-        self.assertEqual(
-            users_query['extern_uid'], '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2'
-        )
+        self.assertEqual(users_query['extern_uid'], SSO_USER_ID)
         self.assertEqual(projects_query['sudo'], '1234')
         self.assertNotIn('not-a-vis', content)
         self.assertIn('is-a-vis', content)
@@ -2053,7 +2063,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -2189,7 +2199,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -2298,7 +2308,7 @@ class TestApplication(unittest.TestCase):
                 'related_emails': [],
                 'first_name': 'Peter',
                 'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                'user_id': SSO_USER_ID,
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -2409,63 +2419,6 @@ def client_session():
     return session, _cleanup_session
 
 
-async def create_sso(is_logged_in, codes, tokens, auth_to_me):
-    number_of_times = 0
-    latest_code = None
-
-    async def handle_authorize(request):
-        nonlocal number_of_times
-        nonlocal latest_code
-
-        number_of_times += 1
-
-        if not is_logged_in:
-            return web.Response(status=200, text='This is the login page')
-
-        state = request.query['state']
-        latest_code = next(codes)
-        return web.Response(
-            status=302,
-            headers={
-                'Location': request.query['redirect_uri']
-                + f'?state={state}&code={latest_code}'
-            },
-        )
-
-    async def handle_token(request):
-        if (await request.post())['code'] != latest_code:
-            return web.json_response({}, status=403)
-
-        token = next(tokens)
-        return web.json_response({'access_token': token}, status=200)
-
-    async def handle_me(request):
-        if request.headers['authorization'] in auth_to_me:
-            return web.json_response(
-                auth_to_me[request.headers['authorization']], status=200
-            )
-
-        return web.json_response({}, status=403)
-
-    sso_app = web.Application()
-    sso_app.add_routes(
-        [
-            web.get('/o/authorize/', handle_authorize),
-            web.post('/o/token/', handle_token),
-            web.get('/api/v1/user/me/', handle_me),
-        ]
-    )
-    sso_runner = web.AppRunner(sso_app)
-    await sso_runner.setup()
-    sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
-    await sso_site.start()
-
-    def get_number_of_times():
-        return number_of_times
-
-    return sso_runner.cleanup, get_number_of_times
-
-
 async def create_server(port, routes):
     app = web.Application()
     app.add_routes(routes)
@@ -2530,6 +2483,7 @@ async def create_superset():
 # Run the application proper in a way that is as possible to production
 # The environment must be the same as in the Dockerfile
 async def create_application(env=lambda: {}):
+    logger.debug("create_application")
     proc = await asyncio.create_subprocess_exec(
         '/dataworkspace/start-test.sh',
         env={**os.environ, **env()},
@@ -2538,6 +2492,7 @@ async def create_application(env=lambda: {}):
 
     async def _cleanup_application():
         try:
+            logger.debug(f"killing {os.getpgid(proc.pid)}")
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             await asyncio.sleep(3)
             if os.path.exists('/home/django/celerybeat.pid'):
@@ -2576,6 +2531,7 @@ async def make_all_tools_visible():
 
 
 async def until_succeeds(url):
+    logger.debug(f"waiting for {url}")
     loop = asyncio.get_running_loop()
     fail_if_later = loop.time() + 120
     async with aiohttp.ClientSession(
@@ -2583,6 +2539,7 @@ async def until_succeeds(url):
     ) as session:
         while True:
             try:
+                logger.debug(f"until_succeeds tick {url}")
                 async with session.request('GET', url) as response:
                     response.raise_for_status()
             except (aiohttp.ClientConnectorError, aiohttp.ClientResponseError):
@@ -2622,10 +2579,12 @@ async def give_user_superuser_perms():
         from django.contrib.auth.models import (
             User,
         )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = User.objects.get(profile__sso_id="{sso_id}")
         user.is_superuser = True
         user.save()
-        """
+        """.format(
+            sso_id=SSO_USER_ID
+        )
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
         'django-admin shell',
@@ -2641,6 +2600,7 @@ async def give_user_superuser_perms():
 
 
 async def give_user_app_perms():
+    logger.debug("give_user_app_perms")
     python_code = textwrap.dedent(
         """\
         from django.contrib.auth.models import (
@@ -2659,9 +2619,11 @@ async def give_user_app_perms():
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = User.objects.get(profile__sso_id="{sso_id}")
         user.user_permissions.add(permission)
-        """
+        """.format(
+            sso_id=SSO_USER_ID
+        )
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
         'django-admin shell',
@@ -2695,9 +2657,11 @@ async def give_user_visualisation_developer_perms():
             codename='develop_visualisations',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = User.objects.get(profile__sso_id="{sso_id}")
         user.user_permissions.add(permission)
-        """
+        """.format(
+            sso_id=SSO_USER_ID
+        )
     ).encode('ascii')
     give_perm = await asyncio.create_subprocess_shell(
         'django-admin shell',
@@ -2835,7 +2799,7 @@ async def give_user_dataset_perms(name):
             DataSet,
             DataSetUserPermission,
         )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = User.objects.get(profile__sso_id="{SSO_USER_ID}")
         dataset = DataSet.objects.get(
             name="{name}",
         )
@@ -2895,7 +2859,7 @@ async def give_user_visualisation_perms(name):
         )
         from dataworkspace.apps.applications.models import VisualisationTemplate
         from dataworkspace.apps.datasets.models import VisualisationUserPermission, VisualisationCatalogueItem
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = User.objects.get(profile__sso_id="{SSO_USER_ID}")
         visualisationtemplate = VisualisationTemplate.objects.get(
             host_basename="{name}",
         )
@@ -3248,7 +3212,7 @@ async def create_application_db_user():
             from dataworkspace.apps.datasets.models import Database
             from dataworkspace.apps.applications.utils import create_user_from_sso
             user = create_user_from_sso(
-                '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+                '{sso_id}',
                 'test@test.com',
                 [],
                 'Peter',
@@ -3272,7 +3236,9 @@ async def create_application_db_user():
                     ALTER USER postgres SET pgaudit.log_catalog = off;
                     """
                 )
-        '''
+        '''.format(
+            sso_id=SSO_USER_ID
+        )
     ).encode('ascii')
     shell = await asyncio.create_subprocess_shell(
         'django-admin shell',

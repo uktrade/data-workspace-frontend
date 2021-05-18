@@ -26,6 +26,7 @@ async def async_main():
         async with aiopg.create_pool(dsn) as pool:
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
+                    # This will fail fi credentials non exist
                     await cur.execute(
                         psycopg2.sql.SQL('SELECT * FROM {}').format(
                             psycopg2.sql.Identifier(table)
@@ -37,6 +38,7 @@ async def async_main():
 
     upstream = web.Application()
     upstream.add_routes([web.post('/stop', handle_stop)])
+    # handle_stop
     upstream.add_routes([web.get('/{database}/{table}', handle_dataset)])
     upstream_runner = web.AppRunner(upstream)
     await upstream_runner.setup()
