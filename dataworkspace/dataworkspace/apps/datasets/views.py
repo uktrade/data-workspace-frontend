@@ -1383,36 +1383,37 @@ class DatasetUsageHistoryView(View):
         )
 
 
-class SourceTableDetailView(DetailView):
-    def _user_can_access(self, source_table):
+class DataCutSourceDetailView(DetailView):
+    template_name = 'datasets/data_cut_source_detail.html'
+
+    def _user_can_access(self):
+        source = self.get_object()
         return (
-            source_table.dataset.user_has_access(self.request.user)
-            and source_table.data_grid_enabled
+            source.dataset.user_has_access(self.request.user)
+            and source.data_grid_enabled
         )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self._user_can_access():
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         return get_object_or_404(
-            SourceTable,
+            self.kwargs['model_class'],
             dataset__id=self.kwargs.get('dataset_uuid'),
-            id=self.kwargs.get('table_uuid'),
+            pk=self.kwargs['object_id'],
             **{'dataset__published': True}
             if not self.request.user.is_superuser
             else {},
         )
 
-    def get(self, request, *args, **kwargs):
-        source_table = self.get_object()
-        if not self._user_can_access(source_table):
-            return HttpResponseForbidden()
-
-        return render(
-            request,
-            'datasets/source_table_detail.html',
-            {
-                'source_table': source_table,
-                'can_download': source_table.can_show_link_for_user(self.request.user),
-            },
-        )
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['can_download'] = self.get_object().can_show_link_for_user(
+            self.request.user
+        ) and self.kwargs.get('download_enabled', False)
+        return ctx
 
 
 class DataGridDataView(DetailView):
@@ -1444,14 +1445,13 @@ class DataGridDataView(DetailView):
             database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
         ) as connection:
             with connection.cursor(
-                name='source-table-grid-data',
-                cursor_factory=psycopg2.extras.RealDictCursor,
+                name='data-grid-data', cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
                 return cursor.fetchall()
 
     def post(self, request, *args, **kwargs):
-        source_table = self.get_object()
+        source = self.get_object()
 
         if request.GET.get('download'):
             filters = {}
@@ -1459,7 +1459,7 @@ class DataGridDataView(DetailView):
                 filters.update(filter_data)
             column_config = [
                 x
-                for x in source_table.get_column_config()
+                for x in source.get_column_config()
                 if x['field'] in request.POST.getlist('columns', [])
             ]
             if not column_config:
@@ -1474,10 +1474,10 @@ class DataGridDataView(DetailView):
         else:
             post_data = json.loads(request.body.decode('utf-8'))
             post_data['limit'] = min(post_data.get('limit', 100), 100)
-            column_config = source_table.get_column_config()
+            column_config = source.get_column_config()
 
         query, params = build_filtered_dataset_query(
-            source_table.schema, source_table.table, column_config, post_data,
+            source.get_data_grid_query(), column_config, post_data,
         )
 
         if request.GET.get('download'):
@@ -1486,13 +1486,13 @@ class DataGridDataView(DetailView):
 
             return streaming_query_response(
                 request.user.email,
-                source_table.database.memorable_name,
+                source.database.memorable_name,
                 query,
                 request.POST.get(
-                    'export_file_name', f'custom-{source_table.dataset.slug}-export.csv'
+                    'export_file_name', f'custom-{source.dataset.slug}-export.csv'
                 ),
                 params,
             )
 
-        records = self._get_rows(source_table, query, params)
+        records = self._get_rows(source, query, params)
         return JsonResponse({'records': records})

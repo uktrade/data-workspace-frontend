@@ -1,4 +1,5 @@
 from datetime import timedelta, date, datetime, timezone
+import json
 import random
 from urllib.parse import quote_plus
 from uuid import uuid4
@@ -3235,14 +3236,8 @@ class TestMasterDatasetUsageHistory:
         } in response.context['rows']
 
 
-class TestSourceTableDataView:
-    def _get_url(self, source_table):
-        return reverse(
-            'datasets:source_table_data',
-            args=(source_table.dataset.id, source_table.id),
-        )
-
-    def _create_source_table(self):
+class TestGridDataView:
+    def _create_test_data(self):
         with psycopg2.connect(
             database_dsn(settings.DATABASES_DATA['my_database'])
         ) as conn, conn.cursor() as cursor:
@@ -3263,6 +3258,23 @@ class TestSourceTableDataView:
                 VALUES('a41da88b-ffa3-4102-928c-b3937fa5b58f', 'the last record', NULL, '2020-01-01');
                 '''
             )
+
+    @pytest.fixture
+    def custom_query(self):
+        self._create_test_data()
+        dataset = factories.DataSetFactory(
+            user_access_type='REQUIRES_AUTHENTICATION', published=True
+        )
+        return factories.CustomDatasetQueryFactory(
+            dataset=dataset,
+            database=factories.DatabaseFactory(memorable_name='my_database'),
+            data_grid_enabled=True,
+            query='SELECT * FROM source_data_test',
+        )
+
+    @pytest.fixture
+    def source_table(self):
+        self._create_test_data()
         dataset = factories.DataSetFactory(
             user_access_type='REQUIRES_AUTHENTICATION', published=True
         )
@@ -3297,30 +3309,43 @@ class TestSourceTableDataView:
         )
 
     @pytest.mark.django_db
-    def test_download_reporting_disabled(self, client):
-        source_table = self._create_source_table()
-        source_table.data_grid_enabled = False
-        source_table.save()
+    def test_download_reporting_disabled(self, client, custom_query):
+        custom_query.data_grid_enabled = False
+        custom_query.save()
         response = client.post(
-            self._get_url(source_table) + '?download=1',
+            reverse(
+                'datasets:custom_dataset_query_data',
+                args=(custom_query.dataset.id, custom_query.id),
+            )
+            + '?download=1',
             data={'columns': ['id', 'name', 'num', 'date']},
         )
         assert response.status_code == 403
 
     @pytest.mark.django_db
-    def test_source_table_download_disabled(self, client):
-        source_table = self._create_source_table()
+    def test_source_table_download_disabled(self, client, source_table):
         response = client.post(
-            self._get_url(source_table) + '?download=1',
+            reverse(
+                'datasets:source_table_data',
+                args=(source_table.dataset.id, source_table.id),
+            )
+            + '?download=1',
             data={'columns': ['id', 'name', 'num', 'date']},
         )
         assert response.status_code == 403
 
     @pytest.mark.django_db
-    def test_contains_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_contains_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             {
                 'filters': {
                     'name': {
@@ -3345,10 +3370,17 @@ class TestSourceTableDataView:
         }
 
     @pytest.mark.django_db
-    def test_not_contains_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_not_contains_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'name': {
@@ -3378,10 +3410,17 @@ class TestSourceTableDataView:
             ]
         }
 
-    def test_equals_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_equals_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'date': {
@@ -3406,10 +3445,17 @@ class TestSourceTableDataView:
             ]
         }
 
-    def test_not_equals_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_not_equals_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'date': {
@@ -3440,10 +3486,17 @@ class TestSourceTableDataView:
             ]
         }
 
-    def test_starts_with_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_starts_with_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'name': {
@@ -3467,10 +3520,17 @@ class TestSourceTableDataView:
             ]
         }
 
-    def test_ends_with_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_ends_with_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'name': {
@@ -3494,10 +3554,17 @@ class TestSourceTableDataView:
             ]
         }
 
-    def test_range_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_range_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'date': {
@@ -3522,10 +3589,17 @@ class TestSourceTableDataView:
             ]
         }
 
-    def test_less_than_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_less_than_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'date': {
@@ -3550,10 +3624,17 @@ class TestSourceTableDataView:
             ]
         }
 
-    def test_greater_than_filter(self, client):
-        source_table = self._create_source_table()
+    @pytest.mark.parametrize(
+        'fixture_name, url_name',
+        (
+            ('source_table', 'source_table_data'),
+            ('custom_query', 'custom_dataset_query_data'),
+        ),
+    )
+    def test_greater_than_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
         response = client.post(
-            self._get_url(source_table),
+            reverse(f'datasets:{url_name}', args=(source.dataset.id, source.id)),
             data={
                 'filters': {
                     'date': {
@@ -3577,3 +3658,46 @@ class TestSourceTableDataView:
                 }
             ]
         }
+
+    def test_download_filtered(self, client, custom_query):
+        response = client.post(
+            reverse(
+                'datasets:custom_dataset_query_data',
+                args=(custom_query.dataset.id, custom_query.id),
+            )
+            + '?download=1',
+            data={
+                'columns': ['name', 'num', 'date'],
+                'filters': [
+                    json.dumps(
+                        {
+                            'date': {
+                                'dateFrom': '2019-12-31 00:00:00',
+                                'dateTo': None,
+                                'filterType': 'date',
+                                'type': 'greaterThan',
+                            }
+                        }
+                    )
+                ],
+            },
+        )
+        assert response.status_code == 200
+        assert b''.join(response.streaming_content) == (
+            b'"name","num","date"\r\n"the last record","","2020-01-01"\r\n"Number of rows: 1"\r\n'
+        )
+
+    def test_download_full(self, client, custom_query):
+        response = client.post(
+            reverse(
+                'datasets:custom_dataset_query_data',
+                args=(custom_query.dataset.id, custom_query.id),
+            )
+            + '?download=1',
+            data={'columns': ['name', 'num', 'date'], 'filters': {}},
+        )
+        assert response.status_code == 200
+        assert b''.join(response.streaming_content) == (
+            b'"name","num","date"\r\n"the first record",1,""\r\n"the last record","","2020'
+            b'-01-01"\r\n"the second record",2,"2019-01-01"\r\n"Number of rows: 3"\r\n'
+        )

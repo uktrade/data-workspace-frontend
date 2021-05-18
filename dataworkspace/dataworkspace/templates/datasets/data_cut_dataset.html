@@ -115,9 +115,16 @@
                         <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
                           {% if has_access and can_show_link %}
                             {% flag DATA_CUT_ENHANCED_PREVIEW_FLAG %}
-                              <a class="govuk-link" href="{{ datacut_link.get_preview_url }}">
-                                {{ datacut_link.name }}
-                              </a>
+                              {% if datacut_link.data_grid_enabled %}
+                                <a class="govuk-link"
+                                    href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id object_id=datacut_link.id %}">
+                                    {{ datacut_link.name }}
+                                </a>
+                              {% else %}
+                                <a class="govuk-link" href="{{ datacut_link.get_preview_url }}">
+                                  {{ datacut_link.name }}
+                                </a>
+                              {% endif %}
                             {% else %}
                               <a class="govuk-link" href="{{ datacut_link.get_absolute_url }}">
                                 {{ datacut_link.name }}
@@ -146,10 +153,17 @@
                           <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
                             {% if can_show_link and datacut_link.type == custom_dataset_query_type %}
                                 {% if has_access %}
+                                  {% if datacut_link.data_grid_enabled %}
+                                    <a class="govuk-link"
+                                        href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id query_uuid=datacut_link.id %}">
+                                        View data
+                                    </a>
+                                  {% else %}
                                     <a class="govuk-link"
                                         href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=datacut_link.id %}">
                                         Preview
                                     </a>
+                                  {% endif %}
                                 {% else %}
                                     <p class="govuk-body">No preview available</p>
                                 {% endif %}

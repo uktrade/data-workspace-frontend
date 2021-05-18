@@ -541,7 +541,7 @@ def streaming_query_response(user_email, database, query, filename, query_params
 
             cur.itersize = batch_size
             cur.arraysize = batch_size
-            cur.execute(query, **query_params if query_params else {})
+            cur.execute(query, vars=query_params)
 
             i = 0
             while True:
