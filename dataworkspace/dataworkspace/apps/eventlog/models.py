@@ -25,6 +25,8 @@ class EventLog(models.Model):
     TYPE_SET_DATASET_USER_ACCESS_TYPE = 16
     TYPE_VIEW_QUICKSIGHT_VISUALISATION = 17
     TYPE_DATA_EXPLORER_SAVED_QUERY = 19
+    TYPE_VIEW_SUPERSET_VISUALISATION = 20
+    TYPE_VIEW_VISUALISATION_TEMPLATE = 21
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, 'Dataset source link download'),
@@ -45,6 +47,8 @@ class EventLog(models.Model):
         (TYPE_SET_DATASET_USER_ACCESS_TYPE, 'Set dataset user access type'),
         (TYPE_VIEW_QUICKSIGHT_VISUALISATION, 'View AWS QuickSight visualisation'),
         (TYPE_DATA_EXPLORER_SAVED_QUERY, 'Saved a query in Data Explorer'),
+        (TYPE_VIEW_SUPERSET_VISUALISATION, 'View Superset visualisation'),
+        (TYPE_VIEW_VISUALISATION_TEMPLATE, 'View visualisation'),
     )
     user = models.ForeignKey(
         get_user_model(), on_delete=models.DO_NOTHING, related_name='events'

@@ -49,9 +49,7 @@ from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLog,
     VisualisationCatalogueItem,
-    VisualisationLink,
 )
-from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger('app')
@@ -1225,19 +1223,6 @@ def _do_sync_activity_stream_sso_users():
         query['search_after'] = records[-1]['sort']
 
     cache.set('activity_stream_sync_last_published', last_published)
-
-
-def log_visualisation_view(visualisation_link, user, event_type):
-    EventLog.objects.create(
-        user=user,
-        event_type=event_type,
-        content_type=ContentType.objects.get_for_model(VisualisationLink),
-        object_id=visualisation_link.id,
-        extra={
-            "name": visualisation_link.name,
-            "visualisation_identifier": visualisation_link.identifier,
-        },
-    ).save()
 
 
 def fetch_visualisation_log_events(log_group, log_stream):

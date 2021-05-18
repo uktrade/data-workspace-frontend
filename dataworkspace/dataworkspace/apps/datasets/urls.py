@@ -88,9 +88,16 @@ urlpatterns = [
         name='toggle_bookmark',
     ),
     path(
-        '<uuid:dataset_uuid>/usage-history',
-        login_required(views.DataCutUsageHistoryView.as_view()),
+        '<uuid:dataset_uuid>/data-cut-usage-history',
+        login_required(views.DatasetUsageHistoryView.as_view()),
+        {'model_class': models.DataSet},
         name='usage_history',
+    ),
+    path(
+        '<uuid:dataset_uuid>/visualisation-usage-history',
+        login_required(views.DatasetUsageHistoryView.as_view()),
+        {'model_class': models.VisualisationCatalogueItem},
+        name='visualisation_usage_history',
     ),
     path(
         '<uuid:dataset_uuid>/table/<uuid:table_uuid>/grid',

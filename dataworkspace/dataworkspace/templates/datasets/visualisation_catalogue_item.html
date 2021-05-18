@@ -99,6 +99,14 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="govuk-grid-row">
+                <div class="govuk-grid-column-full">
+                    <h2 class="govuk-heading-l govuk-!-margin-top-8">Usage history</h2>
+                    <div class="govuk-body">
+                        <a class="govuk-link" href="{% url "datasets:visualisation_usage_history" dataset_uuid=model.id %}">View history</a> to see how often this data is accessed.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
