@@ -1027,6 +1027,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
     that the number of queries executed by the search page remains stable. This is potentially a flaky test, given
     that the inputs are indeterminate, but it would at least highlight at some point that we have an unknown issue.
     """
+    expected_num_queries = 12
     source_tags = [factories.SourceTagFactory() for _ in range(10)]
     topic_tags = [factories.TopicTagFactory() for _ in range(10)]
 
@@ -1076,15 +1077,15 @@ def test_finding_datasets_doesnt_query_database_excessively(
     # Log into site (triggers the queries related to setting up the user).
     client.get(reverse('root'))
 
-    with django_assert_num_queries(10, exact=False):
+    with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(reverse('datasets:find_datasets'), follow=True)
         assert response.status_code == 200
 
-    with django_assert_num_queries(10, exact=False):
+    with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(reverse('datasets:find_datasets'), {"q": "potato"})
         assert response.status_code == 200
 
-    with django_assert_num_queries(11, exact=False):
+    with django_assert_num_queries(expected_num_queries + 1, exact=False):
         response = client.get(
             reverse('datasets:find_datasets'),
             {
@@ -1096,7 +1097,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
         )
         assert response.status_code == 200
 
-    with django_assert_num_queries(11, exact=False):
+    with django_assert_num_queries(expected_num_queries + 1, exact=False):
         response = client.get(
             reverse('datasets:find_datasets'),
             {
@@ -1108,13 +1109,14 @@ def test_finding_datasets_doesnt_query_database_excessively(
         )
         assert response.status_code == 200
 
-    with django_assert_num_queries(10, exact=False):
+    with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(
-            reverse('datasets:find_datasets'), {"purpose": str(DataSetType.MASTER)},
+            reverse('datasets:find_datasets'),
+            {"purpose": str(DataSetType.MASTER)},
         )
         assert response.status_code == 200
 
-    with django_assert_num_queries(10, exact=False):
+    with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(reverse('datasets:find_datasets'), {"access": "yes"})
         assert response.status_code == 200
 
@@ -1831,7 +1833,10 @@ class DatasetsCommon:
             user_access_type=user_access_type,
         )
         factories.SourceTableFactory.create(
-            dataset=master, schema=schema, table=table, database=self._get_database(),
+            dataset=master,
+            schema=schema,
+            table=table,
+            database=self._get_database(),
         )
 
         return master
@@ -2431,7 +2436,9 @@ class TestCustomQueryRelatedDataView:
             user_access_type='REQUIRES_AUTHENTICATION',
         )
         query = factories.CustomDatasetQueryFactory(
-            dataset=datacut, database=self._get_database(), query=sql,
+            dataset=datacut,
+            database=self._get_database(),
+            query=sql,
         )
         factories.CustomDatasetQueryTableFactory(
             query=query, schema='public', table='test_dataset'
@@ -2721,7 +2728,8 @@ class TestDatasetUsageHistory:
     @pytest.fixture
     def dataset(self):
         return factories.DataSetFactory.create(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
 
     @pytest.fixture
@@ -3019,7 +3027,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_one_event_by_one_user_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         user = factories.UserFactory(email='test-user@example.com')
@@ -3044,7 +3053,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_one_user_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3086,7 +3096,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_multiple_users_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3142,7 +3153,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_multiple_users_on_different_days(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER,
+            user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3701,3 +3713,142 @@ class TestGridDataView:
             b'"name","num","date"\r\n"the first record",1,""\r\n"the last record","","2020'
             b'-01-01"\r\n"the second record",2,"2019-01-01"\r\n"Number of rows: 3"\r\n'
         )
+
+
+@pytest.mark.django_db
+@override_flag(settings.SEARCH_FILTERS_TESTING_FLAG, active=True)
+def test_filter_datasets_by_access_search_v2():
+    user = factories.UserFactory.create(is_superuser=False)
+    user2 = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    access_granted_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - access granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    factories.DataSetUserPermissionFactory.create(
+        user=user, dataset=access_granted_master
+    )
+    factories.DataSetUserPermissionFactory.create(
+        user=user2, dataset=access_granted_master
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+
+    access_not_granted_datacut = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name='Datacut - access not granted',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.DataSetUserPermissionFactory.create(
+        user=user2, dataset=access_not_granted_datacut
+    )
+
+    factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
+
+    access_vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name='Visualisation', user_access_type='REQUIRES_AUTHORIZATION'
+    )
+    factories.VisualisationUserPermissionFactory(user=user, visualisation=access_vis)
+    factories.VisualisationUserPermissionFactory(user=user2, visualisation=access_vis)
+
+    no_access_vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - hidden',
+        user_access_type='REQUIRES_AUTHORIZATION',
+    )
+    factories.VisualisationUserPermissionFactory(
+        user=user2, visualisation=no_access_vis
+    )
+
+    factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name='Visualisation - public',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+
+    # No access filter set
+    response = client.get(reverse('datasets:find_datasets'), {"user_access": []})
+    assert response.status_code == 200
+    assert len(response.context["datasets"]) == 8
+
+    # Find only accessible datasets
+    response = client.get(reverse('datasets:find_datasets'), {"user_access": ["yes"]})
+    assert response.status_code == 200
+    assert len(response.context["datasets"]) == 5
+
+    # Find only non-accessible datasets
+    response = client.get(reverse('datasets:find_datasets'), {"user_access": ["no"]})
+    assert response.status_code == 200
+    assert len(response.context["datasets"]) == 3
+
+    # Find both accessible and non-accessible datasets
+    response = client.get(
+        reverse('datasets:find_datasets'), {"user_access": ["yes", "no"]}
+    )
+    assert response.status_code == 200
+    assert len(response.context["datasets"]) == 8
+
+
+@pytest.mark.django_db
+@override_flag(settings.SEARCH_FILTERS_TESTING_FLAG, active=True)
+def test_filter_reference_datasets_search_v2():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name='Datacut',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.ReferenceDatasetFactory.create(published=True, name='Reference')
+    response = client.get(
+        reverse('datasets:find_datasets'), {"use": [DataSetType.DATACUT]}
+    )
+    assert response.status_code == 200
+    assert len(response.context["datasets"]) == 2
+
+
+@pytest.mark.django_db
+@override_flag(settings.SEARCH_FILTERS_TESTING_FLAG, active=True)
+def test_filter_bookmarked_search_v2():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    bookmarked = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name='Datacut',
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked)
+
+    factories.ReferenceDatasetFactory.create(published=True, name='Reference')
+    response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
+    assert response.status_code == 200
+    assert len(response.context["datasets"]) == 1
