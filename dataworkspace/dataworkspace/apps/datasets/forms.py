@@ -267,6 +267,159 @@ class DatasetSearchForm(forms.Form):
         ]
 
 
+class DatasetSearchFormV2(DatasetSearchForm):
+    user_access = forms.TypedMultipleChoiceField(
+        choices=[
+            ('yes', 'Data I have access to'),
+            ('no', 'Data I don\'t have access to'),
+        ],
+        required=False,
+        widget=FilterWidget("Choose data access", hint_text="You can choose 1 or more"),
+    )
+
+    bookmarked = forms.MultipleChoiceField(
+        choices=[('yes', 'My bookmarks')],
+        required=False,
+        widget=FilterWidget("Bookmarks"),
+    )
+
+    use = forms.TypedMultipleChoiceField(
+        choices=[
+            (DataSetType.DATACUT, 'Download data'),
+            (DataSetType.MASTER, 'Analyse data'),
+            (DataSetType.VISUALISATION, 'View dashboard'),
+        ],
+        coerce=int,
+        required=False,
+        widget=FilterWidget(
+            "What do you want to do?", hint_text="You can choose 1 or more"
+        ),
+    )
+
+    source = SourceTagField(
+        queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
+        required=False,
+        widget=FilterWidget(
+            "Choose data source",
+            hint_text="You can choose 1 or more",
+            limit_initial_options=10,
+            show_more_label="Show more sources",
+        ),
+    )
+
+    topic = SourceTagField(
+        queryset=Tag.objects.order_by('name').filter(type=TagType.TOPIC),
+        required=False,
+        widget=FilterWidget(
+            "Choose data topic",
+            limit_initial_options=10,
+            show_more_label="Show more topics",
+            hint_text="You can choose 1 or more",
+        ),
+    )
+
+    def annotate_and_update_filters(
+        self, datasets, matcher, number_of_matches, topic_flag_active
+    ):
+        counts = {
+            "status": defaultdict(int),
+            "bookmarked": defaultdict(int),
+            "unpublished": defaultdict(int),
+            "use": defaultdict(int),
+            "source": defaultdict(int),
+            "topic": defaultdict(int),
+            "user_access": defaultdict(int),
+        }
+
+        user_access = set(self.cleaned_data['user_access'])
+        selected_bookmark = bool(self.cleaned_data['bookmarked'])
+        selected_unpublished = bool(self.cleaned_data['unpublished'])
+        selected_uses = set(self.cleaned_data['use'])
+        selected_source_ids = set(source.id for source in self.cleaned_data['source'])
+        selected_topic_ids = set(topic.id for topic in self.cleaned_data['topic'])
+
+        # Cache these locally for performance. The source model choice field can end up hitting the DB each time.
+        user_access_choices = list(self.fields['user_access'].choices)
+        use_choices = list(self.fields['use'].choices)
+        source_choices = list(self.fields['source'].choices)
+        topic_choices = list(self.fields['topic'].choices)
+
+        for dataset in datasets:
+            dataset_matcher = partial(
+                matcher,
+                data=dataset,
+                access=None,
+                bookmark=selected_bookmark,
+                unpublished=selected_unpublished,
+                use=selected_uses,
+                source_ids=selected_source_ids,
+                topic_ids=selected_topic_ids,
+                topic_flag_active=topic_flag_active,
+                user_accessible=user_access == {'yes'},
+                user_inaccessible=user_access == {'no'},
+                search_testing_flag_active=True,
+            )
+
+            if dataset_matcher(user_accessible=True, user_inaccessible=False):
+                counts['user_access']['yes'] += 1
+
+            if dataset_matcher(user_inaccessible=True, user_accessible=False):
+                counts['user_access']['no'] += 1
+
+            if dataset_matcher(bookmark=True):
+                counts['bookmarked']['yes'] += 1
+
+            if dataset_matcher(unpublished=True):
+                counts['unpublished']['yes'] += 1
+
+            for use_id, _ in use_choices:
+                if dataset_matcher(use={use_id}):
+                    counts['use'][use_id] += 1
+
+            for source_id, _ in source_choices:
+                if dataset_matcher(source_ids={source_id}):
+                    counts['source'][source_id] += 1
+
+            for topic_id, _ in topic_choices:
+                if dataset_matcher(topic_ids={topic_id}):
+                    counts['topic'][topic_id] += 1
+
+        self.fields['user_access'].choices = [
+            (access_id, access_text + f" ({counts['user_access'][access_id]})")
+            for access_id, access_text in user_access_choices
+        ]
+
+        self.fields['bookmarked'].choices = [
+            (
+                bookmarked_id,
+                bookmarked_text + f" ({counts['bookmarked'][bookmarked_id]})",
+            )
+            for bookmarked_id, bookmarked_text in self.fields['bookmarked'].choices
+        ]
+
+        self.fields['unpublished'].choices = [
+            (unpub_id, unpub_text + f" ({counts['unpublished'][unpub_id]})")
+            for unpub_id, unpub_text in self.fields['unpublished'].choices
+        ]
+
+        self.fields['use'].choices = [
+            (use_id, use_text + f" ({counts['use'][use_id]})")
+            for use_id, use_text in use_choices
+        ]
+
+        self.fields['source'].choices = [
+            (source_id, source_text + f" ({counts['source'][source_id]})")
+            for source_id, source_text in source_choices
+            if source_id in selected_source_ids or counts['source'][source_id] != 0
+        ]
+
+        self.fields['topic'].choices = [
+            (topic_id, topic_text + f" ({counts['topic'][topic_id]})")
+            for topic_id, topic_text in topic_choices
+            if topic_id in selected_topic_ids or counts['topic'][topic_id] != 0
+        ]
+
+
 class RelatedMastersSortForm(forms.Form):
     sort = forms.ChoiceField(
         required=False,

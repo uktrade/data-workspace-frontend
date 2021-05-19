@@ -18,4 +18,5 @@ def common(request):
         'gtm_container_id': settings.GTM_CONTAINER_ID,
         'gtm_container_environment_params': settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
         'FILTER_BY_TOPIC_FLAG': settings.FILTER_BY_TOPIC_FLAG,
+        'SEARCH_FILTERS_TESTING_FLAG': settings.SEARCH_FILTERS_TESTING_FLAG,
     }
