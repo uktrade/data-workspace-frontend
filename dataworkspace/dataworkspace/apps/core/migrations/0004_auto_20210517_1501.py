@@ -7,7 +7,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('core', '0003_usersatisfactionsurvey'),
@@ -30,7 +29,7 @@ class Migration(migrations.Migration):
                 ),
                 ('name', models.CharField(max_length=256, unique=True)),
             ],
-            options={'verbose_name': 'Team', 'verbose_name_plural': 'Teams',},
+            options={'verbose_name': 'Team', 'verbose_name_plural': 'Teams', },
         ),
         migrations.CreateModel(
             name='TeamMembership',
@@ -60,7 +59,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={'abstract': False,},
+            options={'abstract': False, },
         ),
         migrations.AddField(
             model_name='team',
