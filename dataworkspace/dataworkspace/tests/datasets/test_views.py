@@ -1111,8 +1111,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(
-            reverse('datasets:find_datasets'),
-            {"purpose": str(DataSetType.MASTER)},
+            reverse('datasets:find_datasets'), {"purpose": str(DataSetType.MASTER)},
         )
         assert response.status_code == 200
 
@@ -1833,10 +1832,7 @@ class DatasetsCommon:
             user_access_type=user_access_type,
         )
         factories.SourceTableFactory.create(
-            dataset=master,
-            schema=schema,
-            table=table,
-            database=self._get_database(),
+            dataset=master, schema=schema, table=table, database=self._get_database(),
         )
 
         return master
@@ -2436,9 +2432,7 @@ class TestCustomQueryRelatedDataView:
             user_access_type='REQUIRES_AUTHENTICATION',
         )
         query = factories.CustomDatasetQueryFactory(
-            dataset=datacut,
-            database=self._get_database(),
-            query=sql,
+            dataset=datacut, database=self._get_database(), query=sql,
         )
         factories.CustomDatasetQueryTableFactory(
             query=query, schema='public', table='test_dataset'
@@ -2728,8 +2722,7 @@ class TestDatasetUsageHistory:
     @pytest.fixture
     def dataset(self):
         return factories.DataSetFactory.create(
-            type=DataSetType.DATACUT,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
         )
 
     @pytest.fixture
@@ -3027,8 +3020,7 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_one_event_by_one_user_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         user = factories.UserFactory(email='test-user@example.com')
@@ -3053,8 +3045,7 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_one_user_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3096,8 +3087,7 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_multiple_users_on_the_same_day(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3153,8 +3143,7 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_multiple_events_by_multiple_users_on_different_days(self, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
