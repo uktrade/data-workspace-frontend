@@ -128,11 +128,12 @@ def apply_public_role_permissions(sm, user, role_name):
         if not dashboard_id:
             continue
         dashboard = db.session.query(Dashboard).get(dashboard_id)
-        for datasource in dashboard.slices:
-            permission_view_menu = sm.add_permission_view_menu(
-                'datasource_access', datasource.perm
-            )
-            sm.add_permission_role(role, permission_view_menu)
+        if dashboard is not None:
+            for datasource in dashboard.slices:
+                permission_view_menu = sm.add_permission_view_menu(
+                    'datasource_access', datasource.perm
+                )
+                sm.add_permission_role(role, permission_view_menu)
 
     user.roles.append(role)
     sm.get_session.commit()
