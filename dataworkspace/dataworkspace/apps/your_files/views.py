@@ -50,11 +50,7 @@ def file_browser_html_GET(request):
     return render(
         request,
         'your_files/files.html',
-        {
-            'prefix': prefix,
-            'bucket': settings.NOTEBOOKS_BUCKET,
-            'YOUR_FILES_BULK_DELETE_FLAG': settings.YOUR_FILES_BULK_DELETE_FLAG,
-        },
+        {'prefix': prefix, 'bucket': settings.NOTEBOOKS_BUCKET},
         status=200,
     )
 
