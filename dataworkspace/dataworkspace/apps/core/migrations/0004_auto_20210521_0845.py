@@ -9,17 +9,17 @@ import uuid
 class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0003_usersatisfactionsurvey'),
+        ("core", "0003_usersatisfactionsurvey"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Team',
+            name="Team",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -27,45 +27,45 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('name', models.CharField(max_length=256, unique=True)),
+                ("name", models.CharField(max_length=256, unique=True)),
             ],
-            options={'verbose_name': 'Team', 'verbose_name_plural': 'Teams',},
+            options={"verbose_name": "Team", "verbose_name_plural": "Teams"},
         ),
         migrations.CreateModel(
-            name='TeamMembership',
+            name="TeamMembership",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'team_id',
+                    "team_id",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to='core.Team'
+                        on_delete=django.db.models.deletion.CASCADE, to="core.Team"
                     ),
                 ),
                 (
-                    'user_id',
+                    "user_id",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
-            options={'unique_together': {('team_id', 'user_id')},},
+            options={"unique_together": {("team_id", "user_id")}},
         ),
         migrations.AddField(
-            model_name='team',
-            name='member',
+            model_name="team",
+            name="member",
             field=models.ManyToManyField(
-                through='core.TeamMembership', to=settings.AUTH_USER_MODEL
+                through="core.TeamMembership", to=settings.AUTH_USER_MODEL
             ),
         ),
     ]
