@@ -1,12 +1,10 @@
-function _instanceof(left, right) { if (right != null && typeof Symbol !== "undefined" && right[Symbol.hasInstance]) { return !!right[Symbol.hasInstance](left); } else { return left instanceof right; } }
-
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
@@ -18,7 +16,7 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { var _i = arr && (typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]); if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
@@ -26,7 +24,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function _classCallCheck(instance, Constructor) { if (!_instanceof(instance, Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
@@ -42,7 +40,7 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
@@ -916,6 +914,317 @@ angular.module('aws-js-s3-explorer').controller('TrashController', function (s3,
       }
     }, _callee7);
   }));
+  /*
+   * Given a model and list of objects, attempt to bulk delete all the objects.
+   * Loop through the successes/errors in the response and update the object accordingly.
+   * If prefix is provided update it's status as well.
+   */
+
+  $scope.deleteObjects = /*#__PURE__*/function () {
+    var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(model, objects, prefix) {
+      var objectKeys, i, response, updateObject, _i4, _i5, error;
+
+      return regeneratorRuntime.wrap(function _callee8$(_context10) {
+        while (1) {
+          switch (_context10.prev = _context10.next) {
+            case 0:
+              if (!(objects.length === 0)) {
+                _context10.next = 2;
+                break;
+              }
+
+              return _context10.abrupt("return");
+
+            case 2:
+              // Build an array of keys
+              objectKeys = [];
+
+              for (i = 0; i < objects.length; i++) {
+                objectKeys.push({
+                  Key: objects[i].Key
+                });
+              } // Attempt to bulk delete all the objects
+
+
+              _context10.prev = 4;
+              _context10.next = 7;
+              return s3.deleteObjects({
+                Bucket: model.bucket,
+                Delete: {
+                  Objects: objectKeys
+                }
+              }).promise();
+
+            case 7:
+              response = _context10.sent;
+              _context10.next = 13;
+              break;
+
+            case 10:
+              _context10.prev = 10;
+              _context10.t0 = _context10["catch"](4);
+
+              if (!model.aborted) {
+                (function () {
+                  var errorMessage = _context10.t0.code || _context10.t0.message || _context10.t0;
+
+                  var _loop3 = function _loop3(_i3) {
+                    $scope.$apply(function () {
+                      objects[_i3].deleteError = errorMessage;
+                    });
+                  };
+
+                  for (var _i3 = 0; _i3 < objects.length; _i3++) {
+                    _loop3(_i3);
+                  }
+
+                  if (typeof prefix !== 'undefined') {
+                    $scope.$apply(function () {
+                      prefix.deleteError = errorMessage;
+                    });
+                  }
+                })();
+              }
+
+            case 13:
+              // Given a key for an object, find the object in the objects array
+              // and set the `messageKey` to `messageValue`
+              updateObject = function updateObject(objectKey, messageKey, messageValue) {
+                var objs = objects.filter(function (o) {
+                  return o.Key === objectKey;
+                });
+
+                if (objs.length > 0) {
+                  $scope.$apply(function () {
+                    objs[0][messageKey] = messageValue;
+                  });
+                }
+              }; // Update objects that were successfully deleted
+
+
+              for (_i4 = 0; _i4 < response.Deleted.length; _i4++) {
+                updateObject(response.Deleted[_i4].Key, 'deleteFinished', true);
+              } // Update objects that had errors
+
+
+              for (_i5 = 0; _i5 < response.Errors.length; _i5++) {
+                updateObject(response.Errors[_i5].Key, 'deleteError', response.Errors[_i5].Code || response.Errors[_i5].Message);
+              } // Return an error message for the ui if one or more deletes failed
+
+
+              if (!model.aborted && response.Errors.length > 0) {
+                error = response.Errors.length[0];
+                $scope.$apply(function () {
+                  prefix.deleteError = error.Code || error.Message;
+                });
+              }
+
+            case 17:
+            case "end":
+              return _context10.stop();
+          }
+        }
+      }, _callee8, null, [[4, 10]]);
+    }));
+
+    return function (_x5, _x6, _x7) {
+      return _ref8.apply(this, arguments);
+    };
+  }();
+
+  $scope.bulkDeleteFiles = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9() {
+    var bulkDeleteMaxFiles, model, _loop4, i, _ret, objectsToDelete, _i6;
+
+    return regeneratorRuntime.wrap(function _callee9$(_context12) {
+      while (1) {
+        switch (_context12.prev = _context12.next) {
+          case 0:
+            bulkDeleteMaxFiles = 1000;
+            model = $scope.model;
+            model.trashing = true; // Slight hack to ensure that we are no longer in a digest, to make
+            // each iteration of the below loop able to assume it's not in a digest
+
+            _context12.next = 5;
+            return new Promise(function (resolve) {
+              return window.setTimeout(resolve);
+            });
+
+          case 5:
+            _loop4 = /*#__PURE__*/regeneratorRuntime.mark(function _loop4(i) {
+              var toDelete, prefix, continuationToken, response, j;
+              return regeneratorRuntime.wrap(function _loop4$(_context11) {
+                while (1) {
+                  switch (_context11.prev = _context11.next) {
+                    case 0:
+                      toDelete = [];
+                      prefix = model.prefixes[i];
+                      continuationToken = null;
+                      $scope.$apply(function () {
+                        prefix.deleteStarted = true;
+                      }); // Attempt to list objects under the prefix. If the list objects
+                      // call fails, update the model and try the next prefix.
+
+                      response = void 0;
+                      _context11.prev = 5;
+                      _context11.next = 8;
+                      return s3.listObjectsV2({
+                        Bucket: model.bucket,
+                        Prefix: prefix.Prefix,
+                        ContinuationToken: continuationToken
+                      }).promise();
+
+                    case 8:
+                      response = _context11.sent;
+                      continuationToken = response.NextContinuationToken;
+                      _context11.next = 16;
+                      break;
+
+                    case 12:
+                      _context11.prev = 12;
+                      _context11.t0 = _context11["catch"](5);
+
+                      if (!model.aborted) {
+                        $scope.$apply(function () {
+                          prefix.deleteError = _context11.t0.code || _context11.t0.message || _context11.t0;
+                        });
+                      }
+
+                      return _context11.abrupt("return", "continue");
+
+                    case 16:
+                      j = 0;
+
+                    case 17:
+                      if (!(j < response.Contents.length && !model.aborted)) {
+                        _context11.next = 26;
+                        break;
+                      }
+
+                      toDelete.push(response.Contents[j]);
+
+                      if (!(toDelete.length >= bulkDeleteMaxFiles)) {
+                        _context11.next = 23;
+                        break;
+                      }
+
+                      _context11.next = 22;
+                      return $scope.deleteObjects(model, toDelete, prefix);
+
+                    case 22:
+                      toDelete = [];
+
+                    case 23:
+                      ++j;
+                      _context11.next = 17;
+                      break;
+
+                    case 26:
+                      _context11.next = 28;
+                      return $scope.deleteObjects(model, toDelete, prefix);
+
+                    case 28:
+                      if (response.IsTruncated) {
+                        _context11.next = 31;
+                        break;
+                      }
+
+                      if (!model.aborted) {
+                        $scope.$apply(function () {
+                          prefix.deleteFinished = true;
+                        });
+                      }
+
+                      return _context11.abrupt("return", "break");
+
+                    case 31:
+                    case "end":
+                      return _context11.stop();
+                  }
+                }
+              }, _loop4, null, [[5, 12]]);
+            });
+            i = 0;
+
+          case 7:
+            if (!(i < model.prefixes.length && !model.aborted)) {
+              _context12.next = 17;
+              break;
+            }
+
+            return _context12.delegateYield(_loop4(i), "t0", 9);
+
+          case 9:
+            _ret = _context12.t0;
+
+            if (!(_ret === "continue")) {
+              _context12.next = 12;
+              break;
+            }
+
+            return _context12.abrupt("continue", 14);
+
+          case 12:
+            if (!(_ret === "break")) {
+              _context12.next = 14;
+              break;
+            }
+
+            return _context12.abrupt("break", 17);
+
+          case 14:
+            ++i;
+            _context12.next = 7;
+            break;
+
+          case 17:
+            // Delete objects
+            objectsToDelete = [];
+            _i6 = 0;
+
+          case 19:
+            if (!(_i6 < model.objects.length && !model.aborted)) {
+              _context12.next = 28;
+              break;
+            }
+
+            objectsToDelete.push(model.objects[_i6]);
+
+            if (!(objectsToDelete.length >= bulkDeleteMaxFiles)) {
+              _context12.next = 25;
+              break;
+            }
+
+            _context12.next = 24;
+            return $scope.deleteObjects(model, objectsToDelete);
+
+          case 24:
+            objectsToDelete = [];
+
+          case 25:
+            ++_i6;
+            _context12.next = 19;
+            break;
+
+          case 28:
+            _context12.next = 30;
+            return $scope.deleteObjects(model, objectsToDelete);
+
+          case 30:
+            if (!model.aborted) {
+              $scope.$apply(function () {
+                $scope.model.finished = true;
+              });
+            }
+
+            $rootScope.$broadcast('reload-object-list');
+
+          case 32:
+          case "end":
+            return _context12.stop();
+        }
+      }
+    }, _callee9);
+  }));
 });
 angular.module('aws-js-s3-explorer').directive('modal', function () {
   var backdrop = document.createElement('div');
@@ -926,6 +1235,14 @@ angular.module('aws-js-s3-explorer').directive('modal', function () {
   return {
     link: function link(scope, element, attrs) {
       var name = attrs.modal;
+      element[0].addEventListener('click', function (event) {
+        event.stopPropagation(); // Don't close if clicking anywhere inside the modal, e.g. on a button
+
+        if (event.target == element[0]) {
+          close();
+        }
+      });
+
       function open() {
         scope.modalVisible = true;
         backdrop.classList.remove('modal-backdrop-out');
@@ -1032,104 +1349,104 @@ angular.module('aws-js-s3-explorer').directive('focusOn', function () {
   };
 });
 angular.module('aws-js-s3-explorer').directive('dropzone', function () {
-  function entries(_x5) {
+  function entries(_x8) {
     return _entries.apply(this, arguments);
   }
 
   function _entries() {
-    _entries = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(directoryReader) {
+    _entries = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(directoryReader) {
       var entries, latestEntries;
-      return regeneratorRuntime.wrap(function _callee9$(_context11) {
+      return regeneratorRuntime.wrap(function _callee11$(_context14) {
         while (1) {
-          switch (_context11.prev = _context11.next) {
+          switch (_context14.prev = _context14.next) {
             case 0:
               entries = [];
 
             case 1:
               if (!true) {
-                _context11.next = 10;
+                _context14.next = 10;
                 break;
               }
 
-              _context11.next = 4;
+              _context14.next = 4;
               return new Promise(function (resolve, reject) {
                 directoryReader.readEntries(resolve, reject);
               });
 
             case 4:
-              latestEntries = _context11.sent;
+              latestEntries = _context14.sent;
 
               if (!(latestEntries.length == 0)) {
-                _context11.next = 7;
+                _context14.next = 7;
                 break;
               }
 
-              return _context11.abrupt("break", 10);
+              return _context14.abrupt("break", 10);
 
             case 7:
               entries = entries.concat(latestEntries);
-              _context11.next = 1;
+              _context14.next = 1;
               break;
 
             case 10:
-              return _context11.abrupt("return", entries);
+              return _context14.abrupt("return", entries);
 
             case 11:
             case "end":
-              return _context11.stop();
+              return _context14.stop();
           }
         }
-      }, _callee9);
+      }, _callee11);
     }));
     return _entries.apply(this, arguments);
   }
 
-  function file(_x6) {
+  function file(_x9) {
     return _file.apply(this, arguments);
   }
 
   function _file() {
-    _file = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(fileEntry) {
+    _file = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(fileEntry) {
       var file;
-      return regeneratorRuntime.wrap(function _callee10$(_context12) {
+      return regeneratorRuntime.wrap(function _callee12$(_context15) {
         while (1) {
-          switch (_context12.prev = _context12.next) {
+          switch (_context15.prev = _context15.next) {
             case 0:
-              _context12.next = 2;
+              _context15.next = 2;
               return new Promise(function (resolve, reject) {
                 fileEntry.file(resolve, reject);
               });
 
             case 2:
-              file = _context12.sent;
+              file = _context15.sent;
               // We monkey-patch the file to include its FileSystemEntry fullPath,
               // which is a path relative to the root of the pseudo-filesystem of
               // a dropped folder
               file.relativePath = fileEntry.fullPath.substring(1); // Remove leading slash
 
-              return _context12.abrupt("return", file);
+              return _context15.abrupt("return", file);
 
             case 5:
             case "end":
-              return _context12.stop();
+              return _context15.stop();
           }
         }
-      }, _callee10);
+      }, _callee12);
     }));
     return _file.apply(this, arguments);
   }
 
-  function getFiles(_x7) {
+  function getFiles(_x10) {
     return _getFiles.apply(this, arguments);
   }
 
   function _getFiles() {
-    _getFiles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(dataTransferItemList) {
+    _getFiles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(dataTransferItemList) {
       var files, i, entry, _fileAndDirectoryEntr;
 
-      return regeneratorRuntime.wrap(function _callee11$(_context13) {
+      return regeneratorRuntime.wrap(function _callee13$(_context16) {
         while (1) {
-          switch (_context13.prev = _context13.next) {
+          switch (_context16.prev = _context16.next) {
             case 0:
               files = []; // DataTransferItemList does not support map
 
@@ -1142,60 +1459,60 @@ angular.module('aws-js-s3-explorer').directive('dropzone', function () {
 
             case 3:
               if (!(fileAndDirectoryEntryQueue.length > 0)) {
-                _context13.next = 24;
+                _context16.next = 24;
                 break;
               }
 
               entry = fileAndDirectoryEntryQueue.shift();
 
               if (!entry.isFile) {
-                _context13.next = 13;
+                _context16.next = 13;
                 break;
               }
 
-              _context13.t0 = files;
-              _context13.next = 9;
+              _context16.t0 = files;
+              _context16.next = 9;
               return file(entry);
 
             case 9:
-              _context13.t1 = _context13.sent;
+              _context16.t1 = _context16.sent;
 
-              _context13.t0.push.call(_context13.t0, _context13.t1);
+              _context16.t0.push.call(_context16.t0, _context16.t1);
 
-              _context13.next = 22;
+              _context16.next = 22;
               break;
 
             case 13:
               if (!entry.isDirectory) {
-                _context13.next = 22;
+                _context16.next = 22;
                 break;
               }
 
-              _context13.t2 = (_fileAndDirectoryEntr = fileAndDirectoryEntryQueue).push;
-              _context13.t3 = _fileAndDirectoryEntr;
-              _context13.t4 = _toConsumableArray;
-              _context13.next = 19;
+              _context16.t2 = (_fileAndDirectoryEntr = fileAndDirectoryEntryQueue).push;
+              _context16.t3 = _fileAndDirectoryEntr;
+              _context16.t4 = _toConsumableArray;
+              _context16.next = 19;
               return entries(entry.createReader());
 
             case 19:
-              _context13.t5 = _context13.sent;
-              _context13.t6 = (0, _context13.t4)(_context13.t5);
+              _context16.t5 = _context16.sent;
+              _context16.t6 = (0, _context16.t4)(_context16.t5);
 
-              _context13.t2.apply.call(_context13.t2, _context13.t3, _context13.t6);
+              _context16.t2.apply.call(_context16.t2, _context16.t3, _context16.t6);
 
             case 22:
-              _context13.next = 3;
+              _context16.next = 3;
               break;
 
             case 24:
-              return _context13.abrupt("return", files);
+              return _context16.abrupt("return", files);
 
             case 25:
             case "end":
-              return _context13.stop();
+              return _context16.stop();
           }
         }
-      }, _callee11);
+      }, _callee13);
     }));
     return _getFiles.apply(this, arguments);
   }
@@ -1221,34 +1538,34 @@ angular.module('aws-js-s3-explorer').directive('dropzone', function () {
         element[0].classList.remove('dragover');
       }
 
-      function broadcastFiles(_x8) {
+      function broadcastFiles(_x11) {
         return _broadcastFiles.apply(this, arguments);
       }
 
       function _broadcastFiles() {
-        _broadcastFiles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(event) {
+        _broadcastFiles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(event) {
           var files;
-          return regeneratorRuntime.wrap(function _callee8$(_context10) {
+          return regeneratorRuntime.wrap(function _callee10$(_context13) {
             while (1) {
-              switch (_context10.prev = _context10.next) {
+              switch (_context13.prev = _context13.next) {
                 case 0:
                   event.stopPropagation();
                   event.preventDefault();
-                  _context10.next = 4;
+                  _context13.next = 4;
                   return getFiles(event.dataTransfer.items);
 
                 case 4:
-                  files = _context10.sent;
+                  files = _context13.sent;
                   scope.$apply(function () {
                     scope.$broadcast('dropzone::files', files);
                   });
 
                 case 6:
                 case "end":
-                  return _context10.stop();
+                  return _context13.stop();
               }
             }
-          }, _callee8);
+          }, _callee10);
         }));
         return _broadcastFiles.apply(this, arguments);
       }
