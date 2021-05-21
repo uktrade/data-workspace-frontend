@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import sys
+from http import HTTPStatus
 
 import aiopg
 from aiohttp import web
@@ -9,7 +10,6 @@ import psycopg2.sql
 
 
 async def async_main():
-
     stdout_handler = logging.StreamHandler(sys.stdout)
     for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access']:
         logger = logging.getLogger(logger_name)
@@ -35,9 +35,21 @@ async def async_main():
 
         return web.json_response({'data': rows}, status=200)
 
+    async def handle_teams_schema(request):
+        database = request.match_info['database']
+        schema = request.match_info['schema']
+        table = request.match_info['table']
+
+        print(database)
+        print(schema)
+        print(table)
+
+        return web.json_response({'data': []}, status=HTTPStatus.OK, headers={})
+
     upstream = web.Application()
     upstream.add_routes([web.post('/stop', handle_stop)])
     upstream.add_routes([web.get('/{database}/{table}', handle_dataset)])
+    upstream.add_routes([web.get('/{database}/{schema}/{table}', handle_teams_schema)])
     upstream_runner = web.AppRunner(upstream)
     await upstream_runner.setup()
     upstream_site = web.TCPSite(upstream_runner, '0.0.0.0', 8888)
