@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
@@ -140,3 +141,26 @@ class UserSatisfactionSurvey(TimeStampedModel):
         null=True, blank=True, choices=TryingToDoType.choices
     )
     improve_service = models.TextField(null=True, blank=True)
+
+
+class Team(TimeStampedModel):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(blank=False, null=False, max_length=256, unique=True)
+
+    member = models.ManyToManyField(get_user_model(), through="TeamMembership")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Team"
+        verbose_name_plural = "Teams"
+
+
+class TeamMembership(TimeStampedModel):
+    team_id = models.ForeignKey(Team, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ("team_id", "user_id")
