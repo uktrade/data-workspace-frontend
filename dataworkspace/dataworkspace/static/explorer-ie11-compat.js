@@ -781,7 +781,6 @@ angular.module('aws-js-s3-explorer').controller('TrashController', function (s3,
               Bucket: model.bucket,
               Prefix: prefix.Prefix,
               ContinuationToken: continuationToken,
-              MaxKeys: 1
             }).promise();
 
           case 17:

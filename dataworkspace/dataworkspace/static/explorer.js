@@ -465,7 +465,6 @@ angular.module('aws-js-s3-explorer').controller('TrashController', (s3, $scope, 
                         Bucket: model.bucket,
                         Prefix: prefix.Prefix,
                         ContinuationToken: continuationToken,
-                        MaxKeys: 1
                     }).promise()
                     continuationToken = response.NextContinuationToken;
                     isTruncated = response.IsTruncated;
