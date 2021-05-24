@@ -191,7 +191,7 @@ angular.module('aws-js-s3-explorer').controller('ViewController', (Config, s3, $
                 $scope.objects = response.Contents.filter((object) => {
                     return object.Key != prefix;
                 }).map(object => {
-                    object.isCsv = object.Key.substr(object.Key.length - 3, object.Key.length) === 'csv';;
+                    object.isCsv = object.Key.substr(object.Key.length - 3, object.Key.length) === 'csv';
                     return object;
                 });
                 $scope.initialising = false;
@@ -433,74 +433,103 @@ angular.module('aws-js-s3-explorer').controller('TrashController', (s3, $scope, 
     });
 
     $scope.deleteFiles = async () => {
-        var model = $scope.model;
+        let model = $scope.model;
         model.trashing = true;
+        let [scheduleDelete, flushDelete] = Deleter(s3, model.bucket);
 
         // Slight hack to ensure that we are no longer in a digest, to make
         // each iteration of the below loop able to assume it's not in a digest
         await new Promise((resolve) => window.setTimeout(resolve));
 
+        const setObjectMessage = function(obj, messageKey, messageText) {
+            if (!model.aborted) {
+                $scope.$apply(() => {
+                    obj[messageKey] = messageText;
+                });
+            }
+        }
+
         // Delete prefixes: fetch all keys under them, deleting as we go to avoid storing in memory
         for (let i = 0; i < model.prefixes.length && !model.aborted; ++i) {
             let prefix = model.prefixes[i];
-            try {
-                $scope.$apply(() => {
-                    prefix.deleteStarted = true;
-                });
-                let isTruncated = true;
-                let continuationToken = null;
-                while (isTruncated) {
+            setObjectMessage(prefix, 'deleteStarted', true);
+
+            // Attempt to list objects under the prefix. If the list objects
+            // call fails, update the model and try the next prefix.
+            let continuationToken = null;
+            let isTruncated = true;
+            while (isTruncated && !model.aborted) {
+                let response;
+                try {
                     response = await s3.listObjectsV2({
                         Bucket: model.bucket,
                         Prefix: prefix.Prefix,
-                        ContinuationToken: continuationToken
+                        ContinuationToken: continuationToken,
                     }).promise()
-                    isTruncated = response.IsTruncated;
                     continuationToken = response.NextContinuationToken;
-                    for (let j = 0; j < response.Contents.length && !model.aborted; ++j) {
-                        await s3.deleteObject({ Bucket: model.bucket, Key: response.Contents[j].Key }).promise();
+                    isTruncated = response.IsTruncated;
+                } catch (err) {
+                    console.error(err);
+                    setObjectMessage(prefix, 'deleteError', err.code || err.message || err);
+                    continue;
+                }
+
+                // Loop through the objects within the prefix and bulk delete them
+                for (let j = 0; j < response.Contents.length && !model.aborted; ++j) {
+                    try {
+                        await scheduleDelete(response.Contents[j].Key);
+                    } catch(err) {
+                        setObjectMessage(prefix, 'deleteError', err.code || err.message || err);
+                        break;
                     }
                 }
-                if (!model.aborted) {
-                    $scope.$apply(() => {
-                        prefix.deleteFinished = true;
-                    });
-                }
-            } catch(err) {
-                console.error(err);
-                if (!model.aborted) {
-                    $scope.$apply(() => {
-                        prefix.deleteError = err.code || err.message || err;
-                    });
-                }
             }
+
+            try {
+                await flushDelete();
+            } catch(err) {
+                setObjectMessage(prefix, 'deleteError', err.code || err.message || err);
+                continue;
+            }
+
+            setObjectMessage(prefix, 'deleteFinished', true);
         }
 
         // Delete objects
-        for (let i = 0; i < model.objects.length && !model.aborted; ++i) {
-            let object = model.objects[i];
-            try {
-                await s3.deleteObject({ Bucket: model.bucket, Key: object.Key }).promise();
-                if (!model.aborted) {
-                    $scope.$apply(() => {
-                        object.deleteFinished = true;
-                    });
-                }
-            } catch(err) {
-                console.error(err);
-                if (!model.aborted) {
-                    $scope.$apply(() => {
-                        object.deleteError = err.code || err.message || err;
-                    });
-                }
+
+        // Find an object by key in the model's list of objects
+        const updateObject = function(key, messageKey, message) {
+            let objs = model.objects.filter(function (o) {
+                return o.Key === key;
+            });
+            if (objs.length > 0) {
+                setObjectMessage(objs[0], messageKey, message);
             }
         }
 
-        if (!model.aborted) {
-            $scope.$apply(() => {
-                $scope.model.finished = true;
-            });
+        // Process the bulk delete response from s3.
+        // Sets the `deleteFinished` or `deleteError` attribute accordingly
+        const processResponse = function(response) {
+            if (typeof response === 'undefined') return;
+
+            // Update objects that were successfully deleted
+            for (let i=0; i<response.Deleted.length; i++) {
+                updateObject(response.Deleted[i].Key, 'deleteFinished', true);
+            }
+
+            // Update objects that had errors
+            for (let i=0; i<response.Errors.length; i++) {
+                updateObject(response.Errors[i].Key, 'deleteError', response.Errors[i].Code || response.Errors[i].Message);
+            }
         }
+
+        for (let i = 0; i < model.objects.length && !model.aborted; ++i) {
+            processResponse(await scheduleDelete(model.objects[i].Key));
+        }
+
+        processResponse(await flushDelete());
+
+        setObjectMessage($scope.model, 'finished', true);
         $rootScope.$broadcast('reload-object-list');
     };
 });
@@ -714,3 +743,32 @@ angular.module('aws-js-s3-explorer').directive('spinner', () => {
         }
     };
 });
+
+function Deleter(s3, bucket) {
+    const bulkDeleteMaxFiles = 1000;
+    let keys = [];
+
+    async function deleteKeys() {
+        let response;
+        try {
+            response = await s3.deleteObjects({Bucket: bucket, Delete: {Objects: keys}}).promise();
+        } catch(err) {
+            console.error(err);
+            throw(err);
+        } finally {
+            keys = [];
+        }
+        return response;
+    }
+
+    async function scheduleDelete(key) {
+        keys.push({Key: key});
+        if (keys.length >= bulkDeleteMaxFiles) return await deleteKeys();
+    }
+
+    async function flushDelete() {
+        if (keys.length) return await deleteKeys();
+    }
+
+    return [scheduleDelete, flushDelete];
+}
