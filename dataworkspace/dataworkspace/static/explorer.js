@@ -458,7 +458,7 @@ angular.module('aws-js-s3-explorer').controller('TrashController', (s3, $scope, 
             // call fails, update the model and try the next prefix.
             let continuationToken = null;
             let isTruncated = true;
-            while(isTruncated) {
+            while (isTruncated && !model.aborted) {
                 let response;
                 try {
                     response = await s3.listObjectsV2({

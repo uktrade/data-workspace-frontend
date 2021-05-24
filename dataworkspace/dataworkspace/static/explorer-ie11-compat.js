@@ -769,7 +769,7 @@ angular.module('aws-js-s3-explorer').controller('TrashController', function (s3,
             isTruncated = true;
 
           case 12:
-            if (!isTruncated) {
+            if (!(isTruncated && !model.aborted)) {
               _context7.next = 43;
               break;
             }
@@ -780,7 +780,7 @@ angular.module('aws-js-s3-explorer').controller('TrashController', function (s3,
             return s3.listObjectsV2({
               Bucket: model.bucket,
               Prefix: prefix.Prefix,
-              ContinuationToken: continuationToken,
+              ContinuationToken: continuationToken
             }).promise();
 
           case 17:
