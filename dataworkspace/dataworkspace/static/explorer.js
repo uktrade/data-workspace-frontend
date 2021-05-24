@@ -432,94 +432,27 @@ angular.module('aws-js-s3-explorer').controller('TrashController', (s3, $scope, 
         $scope.model.objects = [];
     });
 
-    /*
-     * Given a model and list of objects, attempt to bulk delete all the objects.
-     * Loop through the successes/errors in the response and update the object accordingly.
-     * If prefix is provided update it's status as well.
-     */
-    $scope.deleteObjects = async (model, objects, prefix) => {
-        if (objects.length === 0) return;
-
-        // Build an array of keys
-        let objectKeys = [];
-        for (let i=0; i<objects.length; i++) {
-            objectKeys.push({Key: objects[i].Key});
-        }
-
-        // Attempt to bulk delete all the objects
-        let response;
-        try {
-            response = await s3.deleteObjects({Bucket: model.bucket, Delete: {Objects: objectKeys}}).promise();
-        }
-
-        // If the api call failed mark all objects as failed
-        // and return the error message
-        catch (err) {
-            if (!model.aborted) {
-                let errorMessage = err.code || err.message || err;
-                for (let i = 0; i < objects.length; i++) {
-                    $scope.$apply(() => {
-                        objects[i].deleteError = errorMessage;
-                    });
-                }
-                if (typeof prefix !== 'undefined') {
-                    $scope.$apply(() => {
-                        prefix.deleteError = errorMessage;
-                    });
-                }
-            }
-        }
-
-        // Given a key for an object, find the object in the objects array
-        // and set the `messageKey` to `messageValue`
-        const updateObject = function(objectKey, messageKey, messageValue) {
-            let objs = objects.filter(function (o) {
-                return o.Key === objectKey;
-            });
-            if (objs.length > 0) {
-                $scope.$apply(() => {
-                    objs[0][messageKey] = messageValue
-                });
-            }
-        }
-
-        // Update objects that were successfully deleted
-        for (let i=0; i<response.Deleted.length; i++) {
-            updateObject(response.Deleted[i].Key, 'deleteFinished', true);
-        }
-
-        // Update objects that had errors
-        for (let i=0; i<response.Errors.length; i++) {
-            updateObject(
-                response.Errors[i].Key,
-                'deleteError',
-                response.Errors[i].Code || response.Errors[i].Message
-            );
-        }
-
-        // Return an error message for the ui if one or more deletes failed
-        if ((!model.aborted) && (response.Errors.length > 0)) {
-            let error = response.Errors.length[0];
-            $scope.$apply(() => {
-                prefix.deleteError = error.Code || error.Message;
-            });
-        }
-    }
-
-    $scope.bulkDeleteFiles = async () => {
-        let bulkDeleteMaxFiles = 1000
+    $scope.deleteFiles = async () => {
         let model = $scope.model;
         model.trashing = true;
+        let [scheduleDelete, flushDelete] = Deleter(s3, model.bucket);
 
         // Slight hack to ensure that we are no longer in a digest, to make
         // each iteration of the below loop able to assume it's not in a digest
         await new Promise((resolve) => window.setTimeout(resolve));
 
+        const setObjectMessage = function(obj, messageKey, messageText) {
+            if (!model.aborted) {
+                $scope.$apply(() => {
+                    obj[messageKey] = messageText;
+                });
+            }
+        }
+
         // Delete prefixes: fetch all keys under them, deleting as we go to avoid storing in memory
         for (let i = 0; i < model.prefixes.length && !model.aborted; ++i) {
-            let toDelete = [];
             let prefix = model.prefixes[i];
-            $scope.$apply(() => { prefix.deleteStarted = true });
+            setObjectMessage(prefix, 'deleteStarted', true);
 
             // Attempt to list objects under the prefix. If the list objects
             // call fails, update the model and try the next prefix.
@@ -537,47 +470,67 @@ angular.module('aws-js-s3-explorer').controller('TrashController', (s3, $scope, 
                     continuationToken = response.NextContinuationToken;
                     isTruncated = response.IsTruncated;
                 } catch (err) {
-                    if (!model.aborted) {
-                        $scope.$apply(() => {
-                            prefix.deleteError = err.code || err.message || err;
-                        });
-                    }
+                    console.error(err);
+                    setObjectMessage(prefix, 'deleteError', err.code || err.message || err);
                     continue;
                 }
 
                 // Loop through the objects within the prefix and bulk delete them
                 for (let j = 0; j < response.Contents.length && !model.aborted; ++j) {
-                    toDelete.push(response.Contents[j]);
-                    if (toDelete.length >= bulkDeleteMaxFiles) {
-                        await $scope.deleteObjects(model, toDelete, prefix);
-                        toDelete = [];
+                    try {
+                        await scheduleDelete(response.Contents[j].Key);
+                    } catch(err) {
+                        setObjectMessage(prefix, 'deleteError', err.code || err.message || err);
+                        break;
                     }
                 }
-                await $scope.deleteObjects(model, toDelete, prefix);
             }
-            if (!model.aborted) {
-                $scope.$apply(() => {
-                    prefix.deleteFinished = true;
-                });
+
+            try {
+                await flushDelete();
+            } catch(err) {
+                setObjectMessage(prefix, 'deleteError', err.code || err.message || err);
+                continue;
             }
+
+            setObjectMessage(prefix, 'deleteFinished', true);
         }
 
         // Delete objects
-        let objectsToDelete = [];
-        for (let i = 0; i < model.objects.length && !model.aborted; ++i) {
-            objectsToDelete.push(model.objects[i]);
-            if (objectsToDelete.length >= bulkDeleteMaxFiles) {
-                await $scope.deleteObjects(model, objectsToDelete)
-                objectsToDelete = [];
+
+        // Find an object by key in the model's list of objects
+        const updateObject = function(key, messageKey, message) {
+            let objs = model.objects.filter(function (o) {
+                return o.Key === key;
+            });
+            if (objs.length > 0) {
+                setObjectMessage(objs[0], messageKey, message);
             }
         }
-        await $scope.deleteObjects(model, objectsToDelete)
 
-        if (!model.aborted) {
-            $scope.$apply(() => {
-                $scope.model.finished = true;
-            });
+        // Process the bulk delete response from s3.
+        // Sets the `deleteFinished` or `deleteError` attribute accordingly
+        const processResponse = function(response) {
+            if (typeof response === 'undefined') return;
+
+            // Update objects that were successfully deleted
+            for (let i=0; i<response.Deleted.length; i++) {
+                updateObject(response.Deleted[i].Key, 'deleteFinished', true);
+            }
+
+            // Update objects that had errors
+            for (let i=0; i<response.Errors.length; i++) {
+                updateObject(response.Errors[i].Key, 'deleteError', response.Errors[i].Code || response.Errors[i].Message);
+            }
         }
+
+        for (let i = 0; i < model.objects.length && !model.aborted; ++i) {
+            processResponse(await scheduleDelete(model.objects[i].Key));
+        }
+
+        processResponse(await flushDelete());
+
+        setObjectMessage($scope.model, 'finished', true);
         $rootScope.$broadcast('reload-object-list');
     };
 });
@@ -791,3 +744,32 @@ angular.module('aws-js-s3-explorer').directive('spinner', () => {
         }
     };
 });
+
+function Deleter(s3, bucket) {
+    const bulkDeleteMaxFiles = 1000;
+    let keys = [];
+
+    async function deleteKeys() {
+        let response;
+        try {
+            response = await s3.deleteObjects({Bucket: bucket, Delete: {Objects: keys}}).promise();
+        } catch(err) {
+            console.error(err);
+            throw(err);
+        } finally {
+            keys = [];
+        }
+        return response;
+    }
+
+    async function scheduleDelete(key) {
+        keys.push({Key: key});
+        if (keys.length >= bulkDeleteMaxFiles) return await deleteKeys();
+    }
+
+    async function flushDelete() {
+        if (keys.length) return await deleteKeys();
+    }
+
+    return [scheduleDelete, flushDelete];
+}
