@@ -12,6 +12,7 @@ from test.test_application import (
     until_non_202,
     give_user_visualisation_perms,
     create_visualisation_dataset,
+    create_private_dataset,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,6 @@ class TestTeams(unittest.TestCase):
 
     @async_test
     async def test_launch_tool_sets_teams_schema(self):
-
         visualisation_name = "testvisualisation"
 
         # BEGIN TEST BOILERPLATE ....
@@ -58,7 +58,6 @@ class TestTeams(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        logger.debug(content)
         self.assertNotIn("Test Application", content)
 
         stdout, stderr, code = await create_visualisation_dataset(visualisation_name, 3)
@@ -66,26 +65,9 @@ class TestTeams(unittest.TestCase):
         self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        # Ensure the user doesn't see the visualisation link on the home page
-        async with session.request(
-            "GET", "http://dataworkspace.test:8000/"
-        ) as response:
-            content = await response.text()
-        self.assertNotIn(visualisation_name, content)
-
-        # Ensure the user doesn't have access to the application
-        async with session.request(
-            "GET", "http://testvisualisation.dataworkspace.test:8000/"
-        ) as response:
-            content = await response.text()
-
-        self.assertIn("You are not allowed to access this page", content)
-        self.assertEqual(response.status, 403)
-
-        # Ensure that the user can't see a visualisation which is unpublished, even if if they have authorization
         stdout, stderr, code = await give_user_visualisation_perms(visualisation_name)
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"")
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
         async with session.request(
@@ -101,11 +83,11 @@ class TestTeams(unittest.TestCase):
 
         # END BOILERPLATE
         # Actual teams specific tests here ...
-        
+
         sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
             "GET",
-            f"http://{visualisation_name}.dataworkspace.test:8000/my_database/schema_name/table_name",
+            f"http://{visualisation_name}.dataworkspace.test:8000/test_external_db/table_name",
             headers=sent_headers,
         ) as response:
             # received_content = await response.json()
@@ -113,5 +95,3 @@ class TestTeams(unittest.TestCase):
 
         # self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_status_code, 200)
-
-
