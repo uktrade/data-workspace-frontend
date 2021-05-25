@@ -14,7 +14,7 @@ resource "aws_rds_cluster" "datasets" {
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
   lifecycle {
-    ignore_changes = ["master_password"]
+    ignore_changes = ["master_password", "engine_version"]
   }
 }
 
