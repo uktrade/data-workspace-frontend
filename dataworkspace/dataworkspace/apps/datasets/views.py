@@ -65,6 +65,7 @@ from dataworkspace.apps.core.utils import (
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
     DatasetSearchForm,
+    DatasetSearchFormV2,
     EligibilityCriteriaForm,
     RequestAccessForm,
     RelatedMastersSortForm,
@@ -102,7 +103,12 @@ from dataworkspace.zendesk import (
 
 
 def get_datasets_data_for_user_matching_query(
-    datasets: QuerySet, query, use=None, user=None, id_field='id'
+    datasets: QuerySet,
+    query,
+    use=None,
+    user=None,
+    id_field='id',
+    search_testing_flag_active=False,
 ):
     """
     Filters the dataset queryset for:
@@ -220,7 +226,12 @@ def get_datasets_data_for_user_matching_query(
     # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
         datasets = datasets.annotate(
-            purpose=Value(DataSetType.REFERENCE, IntegerField())
+            purpose=Value(
+                DataSetType.DATACUT
+                if search_testing_flag_active
+                else DataSetType.REFERENCE,
+                IntegerField(),
+            )
         )
     else:
         datasets = datasets.annotate(purpose=F('type'))
@@ -414,6 +425,9 @@ def _matches_filters(
     source_ids: Set,
     topic_ids: Set,
     topic_flag_active,
+    user_accessible: bool = False,
+    user_inaccessible: bool = False,
+    search_testing_flag_active: bool = False,
 ):
     return (
         (not access or data['has_access'])
@@ -425,11 +439,19 @@ def _matches_filters(
             not topic_flag_active
             or (not topic_ids or topic_ids.intersection(set(data['topic_tag_ids'])))
         )
+        and (
+            not search_testing_flag_active
+            or (not user_accessible or data['has_access'])
+        )
+        and (
+            not search_testing_flag_active
+            or (not user_inaccessible or not data['has_access'])
+        )
     )
 
 
 def sorted_datasets_and_visualisations_matching_query_for_user(
-    query, use, user, sort_by
+    query, use, user, sort_by, search_testing_flag_active=False,
 ):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
@@ -440,7 +462,11 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
     )
 
     reference_datasets = get_datasets_data_for_user_matching_query(
-        ReferenceDataset.objects.live(), query, user=user, id_field='uuid'
+        ReferenceDataset.objects.live(),
+        query,
+        user=user,
+        id_field='uuid',
+        search_testing_flag_active=search_testing_flag_active,
     )
 
     visualisations = get_visualisations_data_for_user_matching_query(
@@ -472,7 +498,14 @@ def has_unpublished_dataset_access(user):
 
 @require_GET
 def find_datasets(request):
-    form = DatasetSearchForm(request.GET)
+    search_testing_flag_active = waffle.flag_is_active(
+        request, settings.SEARCH_FILTERS_TESTING_FLAG
+    )
+    if search_testing_flag_active:
+        form = DatasetSearchFormV2(request.GET)
+    else:
+        form = DatasetSearchForm(request.GET)
+
     purposes = form.fields[
         'use'
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
@@ -485,11 +518,18 @@ def find_datasets(request):
         sort = form.cleaned_data.get("sort")
         source_ids = set(source.id for source in form.cleaned_data.get("source"))
         topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
+        bookmarked = form.cleaned_data.get("bookmarked")
+        user_accessible = set(form.cleaned_data.get("user_access", [])) == {'yes'}
+        user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {'no'}
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
     all_datasets_visible_to_user_matching_query = sorted_datasets_and_visualisations_matching_query_for_user(
-        query=query, use=use, user=request.user, sort_by=sort,
+        query=query,
+        use=use,
+        user=request.user,
+        sort_by=sort,
+        search_testing_flag_active=search_testing_flag_active,
     )
 
     # Filter out any records that don't match the selected filters. We do this in Python, not the DB, because we need
@@ -501,12 +541,17 @@ def find_datasets(request):
             lambda d: _matches_filters(
                 d,
                 bool('access' in status),
-                bool('bookmark' in status),
+                bool('bookmark' in status)
+                if not search_testing_flag_active
+                else bookmarked,
                 bool(unpublished),
                 use,
                 source_ids,
                 topic_ids,
                 waffle.flag_is_active(request, settings.FILTER_BY_TOPIC_FLAG),
+                user_accessible,
+                user_inaccessible,
+                search_testing_flag_active,
             ),
             all_datasets_visible_to_user_matching_query,
         )
@@ -1323,42 +1368,15 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
         return ctx
 
 
-class DataCutUsageHistoryView(View):
-    def get(self, request, dataset_uuid):
+class DatasetUsageHistoryView(View):
+    def get(self, request, dataset_uuid, **kwargs):
+        model_class = kwargs['model_class']
         try:
-            dataset = DataSet.objects.get(id=dataset_uuid)
-        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+            dataset = model_class.objects.get(id=dataset_uuid)
+        except model_class.DoesNotExist:
             return HttpResponse(status=404)
 
-        if dataset.type == DataSetType.DATACUT:
-            return render(
-                request,
-                'datasets/dataset_usage_history.html',
-                context={
-                    "dataset": dataset,
-                    "event_description": "Downloaded",
-                    "rows": dataset.events.filter(
-                        event_type__in=[
-                            EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
-                            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                        ]
-                    )
-                    .annotate(day=TruncDay('timestamp'))
-                    .annotate(email=F('user__email'))
-                    .annotate(
-                        object=Func(
-                            F('extra'),
-                            Value('fields'),
-                            Value('name'),
-                            function='jsonb_extract_path_text',
-                        )
-                    )
-                    .order_by('-day')
-                    .values('day', 'email', 'object')
-                    .annotate(count=Count('id'))[:100],
-                },
-            )
-        else:
+        if dataset.type == DataSetType.MASTER:
             tables = list(dataset.sourcetable_set.values_list('table', flat=True))
             return render(
                 request,
@@ -1376,37 +1394,71 @@ class DataCutUsageHistoryView(View):
                 },
             )
 
-
-class SourceTableDetailView(DetailView):
-    def _user_can_access(self, source_table):
-        return (
-            source_table.dataset.user_has_access(self.request.user)
-            and source_table.data_grid_enabled
+        return render(
+            request,
+            'datasets/dataset_usage_history.html',
+            context={
+                "dataset": dataset,
+                "event_description": "Viewed"
+                if dataset.type == DataSetType.VISUALISATION
+                else "Downloaded",
+                "rows": dataset.events.filter(
+                    event_type__in=[
+                        EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
+                        EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                        EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
+                        EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
+                        EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+                    ]
+                )
+                .annotate(day=TruncDay('timestamp'))
+                .annotate(email=F('user__email'))
+                .annotate(
+                    object=Func(
+                        F('extra'),
+                        Value('fields'),
+                        Value('name'),
+                        function='jsonb_extract_path_text',
+                    )
+                )
+                .order_by('-day')
+                .values('day', 'email', 'object')
+                .annotate(count=Count('id'))[:100],
+            },
         )
+
+
+class DataCutSourceDetailView(DetailView):
+    template_name = 'datasets/data_cut_source_detail.html'
+
+    def _user_can_access(self):
+        source = self.get_object()
+        return (
+            source.dataset.user_has_access(self.request.user)
+            and source.data_grid_enabled
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self._user_can_access():
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         return get_object_or_404(
-            SourceTable,
+            self.kwargs['model_class'],
             dataset__id=self.kwargs.get('dataset_uuid'),
-            id=self.kwargs.get('table_uuid'),
+            pk=self.kwargs['object_id'],
             **{'dataset__published': True}
             if not self.request.user.is_superuser
             else {},
         )
 
-    def get(self, request, *args, **kwargs):
-        source_table = self.get_object()
-        if not self._user_can_access(source_table):
-            return HttpResponseForbidden()
-
-        return render(
-            request,
-            'datasets/source_table_detail.html',
-            {
-                'source_table': source_table,
-                'can_download': source_table.can_show_link_for_user(self.request.user),
-            },
-        )
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['can_download'] = self.get_object().can_show_link_for_user(
+            self.request.user
+        ) and self.kwargs.get('download_enabled', False)
+        return ctx
 
 
 class DataGridDataView(DetailView):
@@ -1438,14 +1490,13 @@ class DataGridDataView(DetailView):
             database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
         ) as connection:
             with connection.cursor(
-                name='source-table-grid-data',
-                cursor_factory=psycopg2.extras.RealDictCursor,
+                name='data-grid-data', cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
                 return cursor.fetchall()
 
     def post(self, request, *args, **kwargs):
-        source_table = self.get_object()
+        source = self.get_object()
 
         if request.GET.get('download'):
             filters = {}
@@ -1453,7 +1504,7 @@ class DataGridDataView(DetailView):
                 filters.update(filter_data)
             column_config = [
                 x
-                for x in source_table.get_column_config()
+                for x in source.get_column_config()
                 if x['field'] in request.POST.getlist('columns', [])
             ]
             if not column_config:
@@ -1468,10 +1519,10 @@ class DataGridDataView(DetailView):
         else:
             post_data = json.loads(request.body.decode('utf-8'))
             post_data['limit'] = min(post_data.get('limit', 100), 100)
-            column_config = source_table.get_column_config()
+            column_config = source.get_column_config()
 
         query, params = build_filtered_dataset_query(
-            source_table.schema, source_table.table, column_config, post_data,
+            source.get_data_grid_query(), column_config, post_data,
         )
 
         if request.GET.get('download'):
@@ -1480,13 +1531,13 @@ class DataGridDataView(DetailView):
 
             return streaming_query_response(
                 request.user.email,
-                source_table.database.memorable_name,
+                source.database.memorable_name,
                 query,
                 request.POST.get(
-                    'export_file_name', f'custom-{source_table.dataset.slug}-export.csv'
+                    'export_file_name', f'custom-{source.dataset.slug}-export.csv'
                 ),
                 params,
             )
 
-        records = self._get_rows(source_table, query, params)
+        records = self._get_rows(source, query, params)
         return JsonResponse({'records': records})

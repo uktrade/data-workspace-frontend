@@ -283,6 +283,24 @@ class DatasetAccessRevokedEventFactory(RelatedObjectEventFactory):
     }
 
 
+class VisualisationViewedEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE
+    content_object = factory.SubFactory(DataSetFactory)
+    extra = {
+        'id': 1,
+        'name': 'A test visualisation',
+    }
+
+
+class SupersetVisualisationViewedEventFactory(RelatedObjectEventFactory):
+    event_type = EventLog.TYPE_VIEW_SUPERSET_VISUALISATION
+    content_object = factory.SubFactory(DataSetFactory)
+    extra = {
+        'id': 1,
+        'name': 'A test superset visualisation',
+    }
+
+
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True

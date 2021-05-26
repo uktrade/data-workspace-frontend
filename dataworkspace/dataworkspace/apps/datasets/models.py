@@ -49,7 +49,12 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
-from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType, TagType
+from dataworkspace.apps.datasets.constants import (
+    DataSetType,
+    DataLinkType,
+    GRID_DATA_TYPE_MAP,
+    TagType,
+)
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.datasets_db import get_tables_last_updated_date
@@ -572,7 +577,7 @@ class SourceTable(BaseSource):
         return f'{self.name} ({self.id})'
 
     def can_show_link_for_user(self, user):
-        return user.is_superuser
+        return False
 
     @property
     def type(self):
@@ -583,24 +588,18 @@ class SourceTable(BaseSource):
             self.database.memorable_name, ((self.schema, self.table),)
         )
 
+    def get_grid_data_url(self):
+        return reverse('datasets:source_table_data', args=(self.dataset_id, self.id))
+
+    def get_data_grid_query(self):
+        return sql.SQL('SELECT * from {}.{}').format(
+            sql.Identifier(self.schema), sql.Identifier(self.table)
+        )
+
     def get_column_config(self):
         """
         Return column configuration for the source table in the format expected by ag-grid.
         """
-        # Map some postgres data types to types ag-grid can filter against.
-        # If not set falls back to `text` on the frontend
-        grid_data_type_map = {
-            'smallint': 'numeric',
-            'integer': 'numeric',
-            'bigint': 'numeric',
-            'decimal': 'numeric',
-            'numeric': 'numeric',
-            'real': 'numeric',
-            'timestamp': 'date',
-            'timestamp with time zone': 'date',
-            'timestamp without time zone': 'date',
-            'date': 'date',
-        }
 
         # Read postgres column names and types in from the db
         postgres_column_data_types = {
@@ -619,7 +618,7 @@ class SourceTable(BaseSource):
                 col_def['filter'] = col_def.get('filter', True)
                 col_def['sortable'] = col_def.get('sortable', True)
                 pg_data_type = postgres_column_data_types[col_def['field']]
-                col_def['dataType'] = grid_data_type_map.get(pg_data_type, pg_data_type)
+                col_def['dataType'] = GRID_DATA_TYPE_MAP.get(pg_data_type, pg_data_type)
                 col_defs.append(col_def)
 
         return col_defs
@@ -805,6 +804,10 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     query = models.TextField()
     frequency = models.IntegerField(choices=_FREQ_CHOICES)
     reviewed = models.BooleanField(default=False)
+    data_grid_enabled = models.BooleanField(
+        default=False,
+        help_text='Allow users to filter, sort and export data from within the browser',
+    )
 
     class Meta:
         verbose_name = 'SQL Query'
@@ -869,6 +872,32 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
                     record_data[column] = row[i]
                 records.append(record_data)
         return columns, records
+
+    def get_grid_data_url(self):
+        return reverse(
+            'datasets:custom_dataset_query_data', args=(self.dataset_id, self.id)
+        )
+
+    def get_data_grid_query(self):
+        return sql.SQL(self.query.rstrip().rstrip(';'))
+
+    def get_column_config(self):
+        """
+        Return column configuration for the query in the format expected by ag-grid.
+        """
+        col_defs = []
+        for column in datasets_db.get_columns(
+            self.database.memorable_name, query=self.query, include_types=True,
+        ):
+            col_defs.append(
+                {
+                    'field': column[0],
+                    'filter': True,
+                    'sortable': True,
+                    'dataType': GRID_DATA_TYPE_MAP.get(column[1], column[1]),
+                }
+            )
+        return col_defs
 
 
 class CustomDatasetQueryTable(models.Model):
@@ -2003,6 +2032,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         ),
         default='REQUIRES_AUTHENTICATION',
     )
+    events = GenericRelation(EventLog)
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.

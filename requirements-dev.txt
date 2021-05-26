@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements-dev.in
 #
-aiohttp==3.6.2
+aiohttp==3.7.4
     # via
     #   -r requirements.in
     #   elasticsearch
@@ -44,7 +44,7 @@ billiard==3.6.3.0
     # via celery
 black==19.10b0
     # via -r requirements-dev.in
-bleach==3.1.5
+bleach==3.3.0
     # via -r requirements.in
 boto3==1.17.44
     # via
@@ -85,7 +85,7 @@ click==7.1.2
     #   tabulator
 coverage==5.4
     # via pytest-cov
-cryptography==2.9.2
+cryptography==3.3.2
     # via -r requirements.in
 debugpy==1.2.1
     # via -r requirements-dev.in
@@ -123,7 +123,7 @@ django-staff-sso-client==2.1.0
     # via -r requirements.in
 django-waffle==2.0.0
     # via -r requirements.in
-django==3.0.12
+django==3.0.14
     # via
     #   -r requirements.in
     #   django-admin-sortable2
@@ -135,7 +135,7 @@ django==3.0.12
     #   django-redis
     #   django-staff-sso-client
     #   djangorestframework
-djangorestframework==3.11.1
+djangorestframework==3.11.2
     # via -r requirements.in
 docopt==0.6.2
     # via notifications-python-client
@@ -422,6 +422,8 @@ traitlets==5.0.5
     # via ipython
 typed-ast==1.4.2
     # via black
+typing-extensions==3.10.0.0
+    # via aiohttp
 unicodecsv==0.14.1
     # via
     #   tableschema

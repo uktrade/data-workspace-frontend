@@ -1,8 +1,8 @@
 {% extends '_main.html' %}
 {% load static core_tags %}
-{% block page_title %}View {{ source_object.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
 {% block go_back %}
-  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=source_table.dataset.id %}#{{ source_table.dataset.slug }}">
+  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">
     Back
   </a>
 {% endblock %}
@@ -10,13 +10,13 @@
   <script src="{% static 'ag-grid-community.min.js' %}"></script>
   <script src="{% static 'dayjs.min.js' %}"></script>
   <script src="{% static 'data-grid.js' %}"></script>
-  {{ source_table.get_column_config|json_script:"column_data" }}
+  {{ object.get_column_config|json_script:"column_data" }}
   <script nonce="{{ request.csp_nonce }}">
     window.initDataGrid(
         JSON.parse(document.getElementById('column_data').textContent),
-        '{% url 'datasets:source_table_data' source_table.dataset.id source_table.id %}',
+        '{{ object.get_grid_data_url }}',
         null,
-        '{{ source_table.name }}-custom-export.csv'
+        '{{ object.name }}-custom-export.csv'
     );
   </script>
 {% endblock footer_scripts %}
@@ -24,13 +24,19 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l">
-        {{ source_table.name }}
+        {{ object.name }}
       </h2>
       <p class="govuk-body">
-        Filter and sort your data. Drag a column off the table to remove it.
+        Filter and sort your data{% if can_download %} before downloading{% endif %}. Drag a column off the table to remove it.
       </p>
       <div id="data-grid" class="ag-theme-alpine"></div>
       <div class="govuk-!-margin-top-4">
+        {% if can_download %}
+          <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
+            Download this data
+          </button>
+          &nbsp;
+        {% endif %}
         <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
           Reset filters
         </button>

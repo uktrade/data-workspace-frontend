@@ -55,7 +55,7 @@
       </div>
 
       {% if master_datasets_info and not has_access %}
-        {% include 'partials/unauthorised_warning.html' with thing='this dataset' %}
+        {% include 'partials/unauthorised_warning.html' with thing='this dataset' show_tools_message=True %}
       {% endif %}
     </div>
   </div>
@@ -88,7 +88,7 @@
                 {% if has_access %}
                   {% if source_table.data_grid_enabled %}
                     <a class="govuk-link"
-                        href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id table_uuid=source_table.id %}">
+                        href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id object_id=source_table.id %}">
                         View table
                     </a>
                   {% else %}
