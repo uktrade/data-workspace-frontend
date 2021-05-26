@@ -79,6 +79,7 @@ def new_private_database_credentials(
     dw_user: get_user_model(),
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[Database] = tuple(),
+    set_search_path=False,
 ):
     password_alphabet = string.ascii_letters + string.digits
 
@@ -143,6 +144,12 @@ def new_private_database_credentials(
                     sql.Identifier(db_user), sql.Literal(settings.PGAUDIT_LOG_SCOPES)
                 )
             )
+            if set_search_path:
+                cur.execute(
+                    sql.SQL("ALTER USER {} SET search_path = {};").format(
+                        sql.Identifier(db_user), sql.Identifier(db_schema)
+                    )
+                )
 
             # ... create a role (if it doesn't exist)
             cur.execute(

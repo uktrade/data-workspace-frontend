@@ -26,6 +26,14 @@ resource "aws_ecr_repository" "theia" {
   name = "${var.prefix}-theia"
 }
 
+resource "aws_ecr_repository" "data_flow" {
+  name = "${var.prefix}-data-flow"
+}
+
+resource "aws_ecr_repository" "data_flow_ide" {
+  name = "${var.prefix}-data-flow-ide"
+}
+
 resource "aws_ecr_repository" "s3sync" {
   name = "${var.prefix}-s3sync"
 }
@@ -234,6 +242,8 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
       "${aws_ecr_repository.pgadmin.arn}",
       "${aws_ecr_repository.remotedesktop.arn}",
       "${aws_ecr_repository.theia.arn}",
+      "${aws_ecr_repository.data_flow.arn}",
+      "${aws_ecr_repository.data_flow_ide.arn}",
       "${aws_ecr_repository.s3sync.arn}",
       "${aws_ecr_repository.metrics.arn}",
       "${aws_ecr_repository.sentryproxy.arn}",
