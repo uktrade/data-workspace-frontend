@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     'dataworkspace.apps.explorer',
     'dataworkspace.apps.finder',
     'dynamic_models',
+    'dataworkspace.apps.case_studies',
 ]
 
 MIDDLEWARE = [
