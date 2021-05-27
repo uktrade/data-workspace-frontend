@@ -146,9 +146,6 @@ def new_private_database_credentials(
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (datetime.datetime.now() + valid_for).isoformat()
 
-        logger.debug(database_obj)
-        logger.debug(tables)
-
         with connections[database_obj.memorable_name].cursor() as cur:
             cur.execute(
                 sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s').format(
