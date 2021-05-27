@@ -81,7 +81,7 @@ def db_role_schema_suffix_for_app(application_template):
 
 
 def get_or_create_team_schemas(teams, source_tables):
-    logger.info(f'get_or_create_team_schema for {teams}')
+    logger.info('get_or_create_team_schema for %s', teams)
 
     databases = [
         db
@@ -98,7 +98,10 @@ def get_or_create_team_schemas(teams, source_tables):
             for team in teams:
                 schema_name = get_team_schema_name(team)
                 logger.debug(
-                    f"create team scheme for {team} in {database} called {schema_name}"
+                    "create team scheme for %s in %s called %s",
+                    team,
+                    database,
+                    schema_name,
                 )
 
                 cur.execute(
@@ -426,9 +429,8 @@ def can_access_schema_table(user, database, schema, table):
 
 
 def get_teams_for_user(user):
-    logger.info(f'get_teams_for_user {user}')
+    logger.info('get_teams_for_user %s', user)
     teams = Team.objects.filter(member=user)
-    logger.debug(teams)
     return teams
 
 

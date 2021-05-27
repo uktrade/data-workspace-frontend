@@ -65,11 +65,6 @@ async def async_main():
             headers={},
         )
 
-    def handle_root(request):
-        return web.json_response(
-            {'tool_name': __file__}, status=HTTPStatus.OK, headers={}
-        )
-
     upstream = web.Application()
     upstream.add_routes([web.post('/stop', handle_stop)])
     upstream.add_routes([web.get('/{database}/{table}', handle_dataset)])
