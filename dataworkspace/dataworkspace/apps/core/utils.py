@@ -22,7 +22,7 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.core.models import Database, DatabaseUser
+from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
@@ -36,6 +36,10 @@ def database_dsn(database_data):
         f'dbname={database_data["NAME"]} user={database_data["USER"]} '
         f'password={database_data["PASSWORD"]} sslmode=require'
     )
+
+
+def make_postgres_safe_name(value, max_length = 63):
+    return re.sub('[^a-z0-9]', '_', value.lower())[:max_length]
 
 
 def postgres_user(stem, suffix=''):
@@ -56,12 +60,16 @@ def postgres_user(stem, suffix=''):
     max_email_length = 52 - len(suffix)
 
     return (
-        'user_'
-        + re.sub('[^a-z0-9]', '_', stem.lower())[:max_email_length]
-        + '_'
-        + unique_enough
-        + suffix
+            'user_'
+            + make_postgres_safe_name(stem, max_email_length)
+            + '_'
+            + unique_enough
+            + suffix
     )
+
+
+def get_team_schema_name(team):
+    return make_postgres_safe_name("team_" + team.name)
 
 
 def db_role_schema_suffix_for_user(user):
@@ -72,13 +80,45 @@ def db_role_schema_suffix_for_app(application_template):
     return 'app_' + application_template.host_basename
 
 
+def get_or_create_team_schemas(teams, source_tables):
+    logger.info(f'get_or_create_team_schema for {teams}')
+
+    databases = [db for (db, _) in itertools.groupby(source_tables, lambda source_table: source_table['database'])]
+
+    created_schemas = {}
+
+    for database in databases:
+        logger.debug(database.memorable_name)
+        with connections[database.memorable_name].cursor() as cur:
+            for team in teams:
+                schema_name = get_team_schema_name(team)
+                logger.debug(f"create team scheme for {team} in {database} called {schema_name}")
+
+                cur.execute(
+                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {};").format(
+                        sql.Identifier(schema_name)
+                    )
+                )
+
+                created_schemas[team] = schema_name
+    #         # ... set the role to be the owner of the schema
+    #         cur.execute(
+    #             sql.SQL('ALTER SCHEMA {} OWNER TO {}').format(
+    #                 sql.Identifier(db_schema), sql.Identifier(db_role)
+    #             )
+    #         )
+    #
+
+    return created_schemas
+
+
 def new_private_database_credentials(
-    db_role_and_schema_suffix,
-    source_tables,
-    db_user,
-    dw_user: get_user_model(),
-    valid_for: datetime.timedelta,
-    force_create_for_databases: Tuple[Database] = tuple(),
+        db_role_and_schema_suffix,
+        source_tables,
+        db_user,
+        dw_user: get_user_model(),
+        valid_for: datetime.timedelta,
+        force_create_for_databases: Tuple[Database] = tuple(),
 ):
     password_alphabet = string.ascii_letters + string.digits
 
@@ -102,8 +142,6 @@ def new_private_database_credentials(
         logger.debug(database_obj)
         logger.debug(tables)
 
-
-
         with connections[database_obj.memorable_name].cursor() as cur:
             cur.execute(
                 sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s').format(
@@ -115,9 +153,9 @@ def new_private_database_credentials(
         # Multiple concurrent GRANT CONNECT on the same database can cause
         # "tuple concurrently updated" errors
         with cache.lock(
-            f'database-grant-connect-{database_data["NAME"]}--v4',
-            blocking_timeout=3,
-            timeout=180,
+                f'database-grant-connect-{database_data["NAME"]}--v4',
+                blocking_timeout=3,
+                timeout=180,
         ):
             with connections[database_obj.memorable_name].cursor() as cur:
                 cur.execute(
@@ -187,9 +225,9 @@ def new_private_database_credentials(
 
             # ... and ensure new tables are owned by the role so all users of the role can access
             with cache.lock(
-                f'database-ddl-trigger--{database_data["NAME"]}--v4',
-                blocking_timeout=3,
-                timeout=180,
+                    f'database-ddl-trigger--{database_data["NAME"]}--v4',
+                    blocking_timeout=3,
+                    timeout=180,
             ):
                 cur.execute(
                     sql.SQL(
@@ -254,9 +292,9 @@ def new_private_database_credentials(
 
         for schema in schemas:
             with cache.lock(
-                f'database-grant--{database_data["NAME"]}--{schema}--v4',
-                blocking_timeout=3,
-                timeout=180,
+                    f'database-grant--{database_data["NAME"]}--{schema}--v4',
+                    blocking_timeout=3,
+                    timeout=180,
             ):
                 with connections[database_obj.memorable_name].cursor() as cur:
                     logger.info(
@@ -273,9 +311,9 @@ def new_private_database_credentials(
 
         for schema, table in tables_that_exist:
             with cache.lock(
-                f'database-grant--{database_data["NAME"]}--{schema}--v4',
-                blocking_timeout=3,
-                timeout=180,
+                    f'database-grant--{database_data["NAME"]}--{schema}--v4',
+                    blocking_timeout=3,
+                    timeout=180,
             ):
                 with connections[database_obj.memorable_name].cursor() as cur:
                     logger.info(
@@ -339,9 +377,9 @@ def write_credentials_to_bucket(user, creds):
         bucket = settings.NOTEBOOKS_BUCKET
         s3_client = boto3.client('s3')
         s3_prefix = (
-            'user/federated/'
-            + stable_identification_suffix(str(user.profile.sso_id), short=False)
-            + '/'
+                'user/federated/'
+                + stable_identification_suffix(str(user.profile.sso_id), short=False)
+                + '/'
         )
 
         logger.info('Saving creds for %s to %s %s', user, bucket, s3_prefix)
@@ -369,18 +407,25 @@ def can_access_schema_table(user, database, schema, table):
     )
     has_source_table_perms = (
         DataSet.objects.live()
-        .filter(
+            .filter(
             Q(published=True)
             & Q(sourcetable__in=sourcetable)
             & (
-                Q(user_access_type='REQUIRES_AUTHENTICATION')
-                | Q(datasetuserpermission__user=user)
+                    Q(user_access_type='REQUIRES_AUTHENTICATION')
+                    | Q(datasetuserpermission__user=user)
             )
         )
-        .exists()
+            .exists()
     )
 
     return has_source_table_perms
+
+
+def get_teams_for_user(user):
+    logger.info(f'get_teams_for_user {user}')
+    teams = Team.objects.filter(member=user)
+    logger.debug(teams)
+    return teams
 
 
 def source_tables_for_user(user):
@@ -420,8 +465,8 @@ def source_tables_for_user(user):
             },
         }
         for x in ReferenceDataset.objects.live()
-        .filter(deleted=False, **{'published': True} if not user.is_superuser else {})
-        .exclude(external_database=None)
+            .filter(deleted=False, **{'published': True} if not user.is_superuser else {})
+            .exclude(external_database=None)
     ]
     return source_tables + reference_dataset_tables
 
@@ -463,15 +508,15 @@ def source_tables_for_app(application_template):
             },
         }
         for x in ReferenceDataset.objects.live()
-        .filter(published=True, deleted=False)
-        .exclude(external_database=None)
+            .filter(published=True, deleted=False)
+            .exclude(external_database=None)
     ]
     return source_tables + reference_dataset_tables
 
 
 def view_exists(database, schema, view):
     with connect(
-        database_dsn(settings.DATABASES_DATA[database])
+            database_dsn(settings.DATABASES_DATA[database])
     ) as conn, conn.cursor() as cur:
         return _view_exists(cur, schema, view)
 
@@ -496,7 +541,7 @@ def _view_exists(cur, schema, view):
 
 def table_exists(database, schema, table):
     with connect(
-        database_dsn(settings.DATABASES_DATA[database])
+            database_dsn(settings.DATABASES_DATA[database])
     ) as conn, conn.cursor() as cur:
         return _table_exists(cur, schema, table)
 
@@ -533,7 +578,7 @@ def streaming_query_response(user_email, database, query, filename, query_params
         csv_writer = csv.writer(pseudo_buffer, quoting=csv.QUOTE_NONNUMERIC)
 
         with connect(
-            database_dsn(settings.DATABASES_DATA[database])
+                database_dsn(settings.DATABASES_DATA[database])
         ) as conn, conn.cursor(
             name='data_download'
         ) as cur:  # Named cursor => server-side cursor
@@ -591,7 +636,7 @@ def get_random_data_sample(database, query, sample_size):
     minimize_nulls_sample_size = sample_size * 2  # sample size before minimizing nulls
 
     with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor(
-        name='data_preview'
+            name='data_preview'
     ) as cur:  # Named cursor => server-side cursor
 
         conn.set_session(readonly=True)
@@ -633,7 +678,7 @@ def table_data(user_email, database, schema, table, filename=None):
 
 def get_s3_prefix(user_sso_id):
     return (
-        'user/federated/' + stable_identification_suffix(user_sso_id, short=False) + '/'
+            'user/federated/' + stable_identification_suffix(user_sso_id, short=False) + '/'
     )
 
 

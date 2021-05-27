@@ -38,7 +38,7 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_app,
     new_private_database_credentials,
     write_credentials_to_bucket,
-    USER_SCHEMA_STEM,
+    USER_SCHEMA_STEM, get_teams_for_user, get_or_create_team_schemas,
 )
 
 logger = logging.getLogger('app')
@@ -51,13 +51,12 @@ def get_spawner(name):
 @celery_app.task()
 @close_connection
 def spawn(
-    name, user_id, tag, application_instance_id, spawner_options,
+        name, user_id, tag, application_instance_id, spawner_options,
 ):
     user = get_user_model().objects.get(pk=user_id)
     application_instance = ApplicationInstance.objects.get(id=application_instance_id)
 
     logger.debug(user)
-    
 
     (source_tables, db_role_schema_suffix, db_user) = (
         (
@@ -80,6 +79,14 @@ def spawn(
         user,
         valid_for=datetime.timedelta(days=31),
     )
+
+    teams = get_teams_for_user(user)
+
+    schemas = get_or_create_team_schemas(teams, source_tables)
+    # Perhaps store the created schema names against the model??
+    # although (currently) the team names are just the model.name made safe for postgres
+    
+    logger.debug(schemas)
 
     if application_instance.application_template.application_type == 'TOOL':
         # For AppStream to access credentials
@@ -107,7 +114,7 @@ class ProcessSpawner:
 
     @staticmethod
     def spawn(
-        _, __, application_instance, spawner_options, credentials, ___,
+            _, __, application_instance, spawner_options, credentials, ___,
     ):
 
         try:
@@ -126,8 +133,8 @@ class ProcessSpawner:
 
             database_env = {
                 f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
-                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
-                f'user={database["db_user"]} password={database["db_password"]}'
+                                                               f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                                                               f'user={database["db_user"]} password={database["db_password"]}'
                 for database in credentials
             }
 
@@ -209,7 +216,7 @@ class FargateSpawner:
 
     @staticmethod
     def spawn(
-        user, tag, application_instance, spawner_options, credentials, app_schema,
+            user, tag, application_instance, spawner_options, credentials, app_schema,
     ):
         try:
             pipeline_id = None
@@ -245,8 +252,8 @@ class FargateSpawner:
 
             database_env = {
                 f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
-                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
-                f'user={database["db_user"]} password={database["db_password"]}'
+                                                               f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                                                               f'user={database["db_user"]} password={database["db_password"]}'
                 for database in credentials
             }
 
@@ -273,11 +280,11 @@ class FargateSpawner:
 
             # Build tag if we can and it doesn't already exist
             if (
-                ecr_repository_name
-                and tag
-                and application_instance.commit_id
-                and application_instance.application_template.gitlab_project_id
-                and not _ecr_tag_exists(ecr_repository_name, tag)
+                    ecr_repository_name
+                    and tag
+                    and application_instance.commit_id
+                    and application_instance.application_template.gitlab_project_id
+                    and not _ecr_tag_exists(ecr_repository_name, tag)
             ):
                 pipeline = gitlab_api_v4_ecr_pipeline_trigger(
                     ECR_PROJECT_ID,
@@ -301,8 +308,8 @@ class FargateSpawner:
                     pipeline = _gitlab_ecr_pipeline_get(pipeline_id)
                     logger.info('Fetched pipeline %s', pipeline)
                     if (
-                        pipeline['status'] not in RUNNING_PIPELINE_STATUSES
-                        and pipeline['status'] not in SUCCESS_PIPELINE_STATUSES
+                            pipeline['status'] not in RUNNING_PIPELINE_STATUSES
+                            and pipeline['status'] not in SUCCESS_PIPELINE_STATUSES
                     ):
                         raise Exception('Pipeline failed {}'.format(pipeline))
                     if pipeline['status'] in SUCCESS_PIPELINE_STATUSES:
@@ -400,7 +407,7 @@ class FargateSpawner:
 
     @staticmethod
     def state(  # pylint: disable=too-many-return-statements
-        spawner_options, created_date, spawner_application_id, proxy_url
+            spawner_options, created_date, spawner_application_id, proxy_url
     ):
         try:
             logger.info(spawner_options)
@@ -427,8 +434,8 @@ class FargateSpawner:
                 pipeline = _gitlab_ecr_pipeline_get(pipeline_id)
                 pipeline_status = pipeline['status']
                 if (
-                    pipeline_status in RUNNING_PIPELINE_STATUSES
-                    and created_date > thirty_minutes_ago
+                        pipeline_status in RUNNING_PIPELINE_STATUSES
+                        and created_date > thirty_minutes_ago
                 ):
                     return 'RUNNING'
                 if pipeline_status not in SUCCESS_PIPELINE_STATUSES:
@@ -555,13 +562,13 @@ def _ecr_client():
 
 
 def _fargate_new_task_definition(
-    role_arn,
-    task_family,
-    container_name,
-    tag,
-    task_family_suffix,
-    efs_filesystem_id,
-    efs_access_point_id,
+        role_arn,
+        task_family,
+        container_name,
+        tag,
+        task_family_suffix,
+        efs_filesystem_id,
+        efs_access_point_id,
 ):
     client = boto3.client('ecs')
     describe_task_response = client.describe_task_definition(taskDefinition=task_family)
@@ -574,7 +581,7 @@ def _fargate_new_task_definition(
     ][0]
     container['image'] += (':' + tag) if tag else ''
     describe_task_response['taskDefinition']['family'] = (
-        task_family + ('-' + tag if tag else '') + '-' + task_family_suffix
+            task_family + ('-' + tag if tag else '') + '-' + task_family_suffix
     )
 
     if efs_access_point_id:
@@ -599,17 +606,17 @@ def _fargate_new_task_definition(
             key: value
             for key, value in describe_task_response['taskDefinition'].items()
             if key
-            in [
-                'family',
-                'executionRoleArn',
-                'networkMode',
-                'containerDefinitions',
-                'volumes',
-                'placementConstraints',
-                'requiresCompatibilities',
-                'cpu',
-                'memory',
-            ]
+               in [
+                   'family',
+                   'executionRoleArn',
+                   'networkMode',
+                   'containerDefinitions',
+                   'volumes',
+                   'placementConstraints',
+                   'requiresCompatibilities',
+                   'cpu',
+                   'memory',
+               ]
         },
     )
     return register_tag_response['taskDefinition']['taskDefinitionArn']
@@ -625,8 +632,8 @@ def _fargate_task_ip(cluster_name, arn):
             if attachment['name'] == 'privateIPv4Address'
         ]
         if described_task
-        and 'attachments' in described_task
-        and described_task['attachments']
+           and 'attachments' in described_task
+           and described_task['attachments']
         else []
     )
     ip_address = ip_address_attachements[0] if ip_address_attachements else ''
@@ -665,18 +672,18 @@ def _fargate_task_stop(cluster_name, task_arn):
 
 
 def _fargate_task_run(
-    role_arn,
-    cluster_name,
-    container_name,
-    definition_arn,
-    security_groups,
-    subnets,
-    cpu,
-    memory,
-    command_and_args,
-    env,
-    s3_sync,
-    platform_version,
+        role_arn,
+        cluster_name,
+        container_name,
+        definition_arn,
+        security_groups,
+        subnets,
+        cpu,
+        memory,
+        command_and_args,
+        env,
+        s3_sync,
+        platform_version,
 ):
     client = boto3.client('ecs')
 
@@ -688,27 +695,27 @@ def _fargate_task_run(
             'cpu': cpu,
             'memory': memory,
             'containerOverrides': [
-                {
-                    **({'command': command_and_args} if command_and_args else {}),
-                    'environment': [
-                        {'name': name, 'value': value} for name, value in env.items()
-                    ],
-                    'name': container_name,
-                }
-            ]
-            + (
-                [
-                    {
-                        'name': 's3sync',
-                        'environment': [
-                            {'name': name, 'value': value}
-                            for name, value in env.items()
-                        ],
-                    }
-                ]
-                if s3_sync
-                else []
-            ),
+                                      {
+                                          **({'command': command_and_args} if command_and_args else {}),
+                                          'environment': [
+                                              {'name': name, 'value': value} for name, value in env.items()
+                                          ],
+                                          'name': container_name,
+                                      }
+                                  ]
+                                  + (
+                                      [
+                                          {
+                                              'name': 's3sync',
+                                              'environment': [
+                                                  {'name': name, 'value': value}
+                                                  for name, value in env.items()
+                                              ],
+                                          }
+                                      ]
+                                      if s3_sync
+                                      else []
+                                  ),
         },
         launchType='FARGATE',
         networkConfiguration={
