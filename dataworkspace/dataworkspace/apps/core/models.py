@@ -144,7 +144,6 @@ class UserSatisfactionSurvey(TimeStampedModel):
 
 
 class Team(TimeStampedModel):
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(blank=False, null=False, max_length=256, unique=True)
 
