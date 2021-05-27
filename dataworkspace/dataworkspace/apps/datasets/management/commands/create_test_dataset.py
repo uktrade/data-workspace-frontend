@@ -29,8 +29,13 @@ class Command(BaseCommand):
             default="MASTER",
         )
 
-    def create_test_dataset(self, reference_code: DatasetReferenceCode, dataset_type: str, db_memorable_name: str,
-                            table_name: str):
+    def create_test_dataset(
+        self,
+        reference_code: DatasetReferenceCode,
+        dataset_type: str,
+        db_memorable_name: str,
+        table_name: str,
+    ):
         dataset_name = fake.company()
 
         dataset = DataSet.objects.create(
@@ -58,11 +63,14 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            f"Created master dataset '{dataset_name}' -> {database.memorable_name}.public.{table_name}")
+            f"Created master dataset '{dataset_name}' -> {database.memorable_name}.public.{table_name}"
+        )
 
     @transaction.atomic()
     def handle(self, *args, **options):
         dataset_type = options["dataset_type"]
 
         reference_code, _ = DatasetReferenceCode.objects.get_or_create(code="TEST")
-        self.create_test_dataset(reference_code, dataset_type, "my_database", "test_dataset")
+        self.create_test_dataset(
+            reference_code, dataset_type, "my_database", "test_dataset"
+        )

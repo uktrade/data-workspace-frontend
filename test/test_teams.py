@@ -12,7 +12,7 @@ from test.test_application import (
     until_non_202,
     give_user_visualisation_perms,
     create_visualisation_dataset,
-    create_private_dataset,
+    #    create_private_dataset,
 )
 
 logger = logging.getLogger(__name__)

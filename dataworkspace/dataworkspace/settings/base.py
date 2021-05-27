@@ -181,10 +181,10 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'},
-                   "verbose": {"format": "%(asctime)s [%(levelname)s] [%(name)s] %(message)s"}
-
-                   },
+    'formatters': {
+        'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'},
+        "verbose": {"format": "%(asctime)s [%(levelname)s] [%(name)s] %(message)s"},
+    },
     'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'}},
     'loggers': {
         'django': {'handlers': ['console'], 'level': 'INFO'},
