@@ -71,11 +71,9 @@ async def async_main():
         )
 
     upstream = web.Application()
-    upstream.add_routes([web.get('/', handle_root)])
     upstream.add_routes([web.post('/stop', handle_stop)])
     upstream.add_routes([web.get('/{database}/{table}', handle_dataset)])
 
-    # perhaps make this explicit
     upstream.add_routes(
         [web.get('/{database}/{schema}/{table}', handle_schema_dataset)]
     )
