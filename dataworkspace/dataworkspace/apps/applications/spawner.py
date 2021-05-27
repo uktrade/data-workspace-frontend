@@ -56,6 +56,9 @@ def spawn(
     user = get_user_model().objects.get(pk=user_id)
     application_instance = ApplicationInstance.objects.get(id=application_instance_id)
 
+    logger.debug(user)
+    
+
     (source_tables, db_role_schema_suffix, db_user) = (
         (
             source_tables_for_user(user),

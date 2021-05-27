@@ -181,11 +181,14 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'}},
-    'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'ecs'}},
+    'formatters': {'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'},
+                   "verbose": {"format": "%(asctime)s [%(levelname)s] [%(name)s] %(message)s"}
+
+                   },
+    'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'}},
     'loggers': {
         'django': {'handlers': ['console'], 'level': 'INFO'},
-        'app': {'handlers': ['console'], 'level': 'INFO'},
+        'app': {'handlers': ['console'], 'level': 'DEBUG'},
         'test': {'handlers': ['console'], 'level': 'DEBUG', 'propagate': True},
         'dataworkspace': {'handlers': ['console'], 'level': 'INFO'},
         'celery': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
@@ -260,14 +263,12 @@ CSP_STYLE_SRC = [
 ]
 CSP_INCLUDE_NONCE_IN = ['script-src']
 
-
 ZENDESK_EMAIL = env['ZENDESK_EMAIL']
 ZENDESK_SUBDOMAIN = env['ZENDESK_SUBDOMAIN']
 ZENDESK_TOKEN = env['ZENDESK_TOKEN']
 
 ZENDESK_SERVICE_FIELD_ID = env['ZENDESK_SERVICE_FIELD_ID']
 ZENDESK_SERVICE_FIELD_VALUE = env['ZENDESK_SERVICE_FIELD_VALUE']
-
 
 NOTIFY_API_KEY = env['NOTIFY_API_KEY']
 FERNET_EMAIL_TOKEN_KEY = env['FERNET_EMAIL_TOKEN_KEY']
@@ -359,7 +360,6 @@ EFS_ID = env['EFS_ID']
 
 YOUR_FILES_ENABLED = env.get('YOUR_FILES_ENABLED', 'False') == 'True'
 
-
 CKEDITOR_CONFIGS = {
     'default': {
         'toolbar': 'Custom',
@@ -435,9 +435,7 @@ STATIC_ROOT = '/home/django/static/'
 # hitting proxy.py, so must not conflict with an analysis application
 STATIC_URL = '/__django_static/'
 
-
 CKEDITOR_BASEPATH = STATIC_URL + 'ckeditor/ckeditor/'
-
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
@@ -458,7 +456,6 @@ WAFFLE_FLAG_DEFAULT = bool(strtobool(env.get('WAFFLE_FLAG_DEFAULT', "False")))
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
 WAFFLE_SWITCH_DEFAULT = False
-
 
 # ----------------------
 # Data Explorer Settings
@@ -528,7 +525,6 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 # date and time formats
 en_formats.SHORT_DATE_FORMAT = "d/m/Y"
 en_formats.SHORT_DATETIME_FORMAT = "d/m/Y P"
-
 
 EXPLORER_DEFAULT_ROWS = int(env.get("EXPLORER_DEFAULT_ROWS", 1000))
 EXPLORER_QUERY_TIMEOUT_MS = int(

@@ -29,11 +29,8 @@ class Command(BaseCommand):
             default="MASTER",
         )
 
-    @transaction.atomic()
-    def handle(self, *args, **options):
-        dataset_type = options["dataset_type"]
-
-        reference_code, _ = DatasetReferenceCode.objects.get_or_create(code="TEST")
+    def create_test_dataset(self, reference_code: DatasetReferenceCode, dataset_type: str, db_memorable_name: str,
+                            table_name: str):
         dataset_name = fake.company()
 
         dataset = DataSet.objects.create(
@@ -48,16 +45,24 @@ class Command(BaseCommand):
         )
 
         # Requires a value in .env for DATA_DB__my_database__NAME=datasets
-        database, _ = Database.objects.get_or_create(memorable_name="my_database")
-        table_name = fake.catch_phrase()
+        database, _ = Database.objects.get_or_create(memorable_name=db_memorable_name)
+        source_table_name = fake.catch_phrase()
 
         SourceTable.objects.create(
             id=uuid.uuid4(),
             dataset=dataset,
             database=database,
             schema="public",
-            table="test_dataset",
-            name=fake.catch_phrase(),
+            table=table_name,
+            name=source_table_name,
         )
 
-        self.stdout.write(f"Created master dataset '{dataset_name}' -> {database.memorable_name}.public.test_dataset")
+        self.stdout.write(
+            f"Created master dataset '{dataset_name}' -> {database.memorable_name}.public.{table_name}")
+
+    @transaction.atomic()
+    def handle(self, *args, **options):
+        dataset_type = options["dataset_type"]
+
+        reference_code, _ = DatasetReferenceCode.objects.get_or_create(code="TEST")
+        self.create_test_dataset(reference_code, dataset_type, "my_database", "test_dataset")
