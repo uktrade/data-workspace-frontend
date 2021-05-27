@@ -6,7 +6,7 @@ import re
 import signal
 import sys
 
-from aiodnsresolver import Resolver, IPv4AddressExpiresAt, TYPES
+from aiodnsresolver import DnsError, Resolver, IPv4AddressExpiresAt, TYPES
 from dnsrewriteproxy import DnsProxy
 
 
@@ -72,7 +72,24 @@ async def async_main():
     logger.info('DNS server started')
 
     async def handle_client(reader, writer):
-        logger.info('[Healthcheck] request received')
+        async def get_nameservers(_, __):
+            yield (1.0, ('127.0.0.1', 53))
+
+        await reader.read(100)
+        resolve, _ = Resolver(get_nameservers=get_nameservers)
+
+        try:
+            await resolve('s3.eu-west-2.amazonaws.com', TYPES.A)
+        except DnsError:
+            status = '503 Service Unavailable'
+        else:
+            status = '200 OK'
+
+        writer.write(
+            b'HTTP/1.1 %b \r\ncontent-length: 0\r\n\r\n' % status.encode('utf8')
+        )
+        await writer.drain()
+        writer.close()
 
     healthcheck_task = await create_task(
         asyncio.start_server(handle_client, '0.0.0.0', 8888)
