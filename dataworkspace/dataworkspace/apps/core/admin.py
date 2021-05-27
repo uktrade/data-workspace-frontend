@@ -1,6 +1,10 @@
 from django.contrib import admin
 
 
+class DeletableTimeStampedUserTabularInline(admin.TabularInline):
+    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
+
+
 class TimeStampedUserAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.pk:

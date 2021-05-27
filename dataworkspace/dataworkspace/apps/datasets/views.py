@@ -1541,3 +1541,23 @@ class DataGridDataView(DetailView):
 
         records = self._get_rows(source, query, params)
         return JsonResponse({'records': records})
+
+
+class DatasetVisualisationView(View):
+    @csp_update(script_src="'unsafe-eval'")
+    def get(self, request, dataset_uuid, object_id, **kwargs):
+        model_class = kwargs['model_class']
+        try:
+            dataset = model_class.objects.get(id=dataset_uuid)
+        except model_class.DoesNotExist:
+            return HttpResponse(status=404)
+
+        visualisation = dataset.visualisations.get(id=object_id)
+        return render(
+            request,
+            'datasets/visualisation.html',
+            context={
+                "visualisation": visualisation,
+                "vega_definition": json.dumps(visualisation.vega_definition_json),
+            },
+        )

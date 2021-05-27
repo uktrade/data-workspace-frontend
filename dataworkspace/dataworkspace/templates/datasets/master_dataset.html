@@ -149,6 +149,41 @@
     </div>
   </div>
 
+  {% if model.visualisations.all %}
+    <div class="govuk-grid-row" style="overflow-x: auto;">
+      <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Visualisations</h2>
+        <table class="govuk-table">
+          <thead>
+          <tr class="govuk-table__row">
+            <th class="govuk-table__header">Name</th>
+            <th class="govuk-table__header">Summary</th>
+            <th class="govuk-table__header">Details</th>
+          </tr>
+          </thead>
+          <tbody>
+
+          {% for visualisation in model.visualisations.all %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.name }}</td>
+              <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.summary }}</td>
+              <td class="govuk-table__cell app-table_cell--no-border">
+                  {% if has_access %}
+                      <a class="govuk-link"
+                          href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
+                          View
+                      </a>
+                  {% else %}
+                      <p class="govuk-body">No preview available</p>
+                  {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
   {% if related_data %}
   <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">

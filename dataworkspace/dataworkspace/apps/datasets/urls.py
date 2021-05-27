@@ -123,4 +123,10 @@ urlpatterns = [
         {'model_class': models.CustomDatasetQuery, 'download_enabled': True},
         name='custom_dataset_query_data',
     ),
+    path(
+        '<uuid:dataset_uuid>/visualisation/<int:object_id>/',
+        login_required(views.DatasetVisualisationView.as_view()),
+        {'model_class': models.DataSet},
+        name='dataset_visualisation',
+    ),
 ]

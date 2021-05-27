@@ -17,6 +17,7 @@ from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     SourceLink,
     DataSet,
+    DataSetVisualisation,
     ReferenceDataset,
     ReferenceDatasetField,
     CustomDatasetQuery,
@@ -619,6 +620,10 @@ class SourceViewForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['dataset'].queryset = DataCutDataset.objects.live()
+
+
+class DataSetVisualisationForm(forms.ModelForm):
+    model = DataSetVisualisation
 
 
 class SourceTableForm(forms.ModelForm):
