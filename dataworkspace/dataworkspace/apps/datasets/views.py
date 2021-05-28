@@ -1544,7 +1544,6 @@ class DataGridDataView(DetailView):
 
 
 class DatasetVisualisationView(View):
-    @csp_update(script_src="'unsafe-eval'")
     def get(self, request, dataset_uuid, object_id, **kwargs):
         model_class = kwargs['model_class']
         try:
@@ -1553,11 +1552,13 @@ class DatasetVisualisationView(View):
             return HttpResponse(status=404)
 
         visualisation = dataset.visualisations.get(id=object_id)
+        vega_definition = json.loads(visualisation.vega_definition_json)
+
         return render(
             request,
             'datasets/visualisation.html',
             context={
                 "visualisation": visualisation,
-                "vega_definition": visualisation.vega_definition_json,
+                "vega_definition": vega_definition,
             },
         )

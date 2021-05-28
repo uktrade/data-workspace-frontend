@@ -36,16 +36,21 @@
 
 {% block footer_scripts %}
   <script src="{% static 'vega.js' %}"></script>
+  <script src="{% static 'vega-interpreter.js' %}"></script>
+  {{ vega_definition|json_script:"vega-config" }}
   <script nonce="{{ request.csp_nonce }}">
-    var g = {{ vega_definition | safe }};
+    var g = JSON.parse(document.getElementById('vega-config').textContent);
 
     var view;
 
     function render(spec) {
-      view = new vega.View(vega.parse(g), {
-        renderer:  'canvas',  // renderer (canvas or svg)
-        container: '#view',   // parent DOM container
-        hover:     true       // enable hover processing
+      const runtime = vega.parse(spec, null, { ast: true });
+
+      view = new vega.View(runtime, {
+        expr:      vega.expressionInterpreter,
+        renderer:  'svg',    // renderer (canvas or svg)
+        container: '#view',  // parent DOM container
+        hover:     true      // enable hover processing
       });
       return view.runAsync();
     }
