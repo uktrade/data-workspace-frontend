@@ -37,7 +37,7 @@
 {% block footer_scripts %}
   <script src="{% static 'vega.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    var g = JSON.parse({{ vega_definition | safe }});
+    var g = {{ vega_definition | safe }};
 
     var view;
 

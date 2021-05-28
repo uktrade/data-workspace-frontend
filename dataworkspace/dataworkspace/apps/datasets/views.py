@@ -1558,6 +1558,6 @@ class DatasetVisualisationView(View):
             'datasets/visualisation.html',
             context={
                 "visualisation": visualisation,
-                "vega_definition": json.dumps(visualisation.vega_definition_json),
+                "vega_definition": visualisation.vega_definition_json,
             },
         )
