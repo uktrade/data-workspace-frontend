@@ -22,6 +22,9 @@ async def async_main():
     async def handle_dataset(request):
         database = request.match_info['database']
         table = request.match_info['table']
+
+        logger.debug(database)
+
         dsn = os.environ[f'DATABASE_DSN__{database}']
 
         async with aiopg.create_pool(dsn) as pool:

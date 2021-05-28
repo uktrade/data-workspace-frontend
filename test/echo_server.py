@@ -8,7 +8,6 @@ from aiohttp import web
 
 
 async def async_main():
-
     stdout_handler = logging.StreamHandler(sys.stdout)
     for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access']:
         logger = logging.getLogger(logger_name)
@@ -23,6 +22,16 @@ async def async_main():
         }
         return web.json_response(
             data, status=405, headers={'from-upstream': 'upstream-header-value'}
+        )
+
+    async def handle_http_get(request):
+        data = {
+            'content': (await request.read()).decode(),
+            'headers': dict(request.headers),
+        }
+
+        return web.json_response(
+            data, status=200, headers={'from-upstream': 'upstream-header-value'}
         )
 
     async def handle_websockets(request):
@@ -45,6 +54,7 @@ async def async_main():
     upstream.add_routes(
         [
             web.get('/http', handle_http),
+            web.get('/get', handle_http_get),
             web.patch('/http', handle_http),
             web.get('/websockets', handle_websockets),
         ]

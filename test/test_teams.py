@@ -12,6 +12,8 @@ from test.test_application import (
     until_non_202,
     give_user_visualisation_perms,
     create_visualisation_dataset,
+    create_private_dataset,
+    create_visualisation_echo,
     #    create_private_dataset,
 )
 
@@ -53,6 +55,21 @@ class TestTeams(unittest.TestCase):
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
+        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'MASTER',
+            dataset_id_test_dataset,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
         async with session.request(
             "GET", "http://dataworkspace.test:8000/"
         ) as response:
@@ -60,7 +77,7 @@ class TestTeams(unittest.TestCase):
 
         self.assertNotIn("Test Application", content)
 
-        stdout, stderr, code = await create_visualisation_dataset(visualisation_name, 3)
+        stdout, stderr, code = await create_visualisation_echo(visualisation_name)
         self.assertEqual(stdout, b"")
         self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
@@ -87,12 +104,15 @@ class TestTeams(unittest.TestCase):
         sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
             "GET",
-            f"http://{visualisation_name}.dataworkspace.test:8000/test_external_db/table_name",
+            f"http://{visualisation_name}.dataworkspace.test:8000/get",
             headers=sent_headers,
         ) as response:
-            # received_content = await response.json()
+
+            received_content = await response.json()
             received_status_code = response.status
 
+        print(received_content)
         print(received_status_code)
+
         # self.assertEqual(received_content["method"], "GET")
-        # self.assertEqual(received_status_code, 200)
+        self.assertEqual(received_status_code, 200)
