@@ -366,7 +366,7 @@ class DataSetVisualisation(DeletableTimestampedUserModel):
     summary = models.TextField()
     vega_definition_json = models.TextField()
     database = models.ForeignKey(Database, default=None, on_delete=models.CASCADE)
-    query = models.TextField()
+    query = models.TextField(null=True, blank=True)
     dataset = models.ForeignKey(
         DataSet, on_delete=models.CASCADE, related_name='visualisations'
     )
