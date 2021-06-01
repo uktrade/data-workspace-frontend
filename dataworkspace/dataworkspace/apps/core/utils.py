@@ -80,6 +80,11 @@ def new_private_database_credentials(
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[Database] = tuple(),
 ):
+    # This function can take a while. That isn't great, but also not great to
+    # hold a connection to the admin database
+    if not connection.in_atomic_block:
+        connection.close_if_unusable_or_obsolete()
+
     password_alphabet = string.ascii_letters + string.digits
 
     def postgres_password():
