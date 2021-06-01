@@ -166,7 +166,12 @@ def test_get_results_for_index(client, mocker, dataset_finder_db):
 
     response = client.get(
         reverse('finder:show_results', kwargs={'schema': 'public', 'table': 'data'}),
-        {"q": "albania"},
+        {
+            "q": "albania",
+            'name': 'test',
+            'uuid': '3c5cf428-63c1-4c60-bab9-17d4613992d3',
+            'slug': 'slug',
+        },
     )
 
     assert response.status_code == 200
@@ -232,7 +237,12 @@ def test_paging_get_results_for_index(client, mocker, dataset_finder_db):
 
     response = client.get(
         reverse('finder:show_results', kwargs={'schema': 'public', 'table': 'data'}),
-        {"q": "albania"},
+        {
+            "q": "albania",
+            'name': 'test',
+            'uuid': '3c5cf428-63c1-4c60-bab9-17d4613992d3',
+            'slug': 'slug',
+        },
     )
 
     assert response.status_code == 200

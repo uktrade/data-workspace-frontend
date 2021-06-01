@@ -22,11 +22,14 @@
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <p class="govuk-body-l">
-        Showing results in "{{ schema }}"."{{ table }}" for "{{ search_term }}"
+        Showing results from 
+        <a class="govuk-link" href="{% url 'datasets:dataset_detail' dataset_uuid=uuid %}#{{ slug }}" target="_blank">
+          {{ name }}
+        </a>
       </p>
       {% if records %}
       <h2 class="govuk-body">
-        <span id="search-results-count">{{ results.paginator.count }}</span> search results
+        <span id="search-results-count">{{ results.paginator.count }}</span> results in "{{ schema }}"."{{ table }}", matching "{{ search_term }}"
       </h2>
             <div class="scrollable-table {% if record_count <= fixed_table_height_limit %}fixed-table-height{% endif %}" tabindex="0">
           <table class="govuk-table govuk-!-font-size-16">
