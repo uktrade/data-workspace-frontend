@@ -1554,6 +1554,19 @@ class DatasetVisualisationView(View):
         visualisation = dataset.visualisations.get(id=object_id)
         vega_definition = json.loads(visualisation.vega_definition_json)
 
+        if visualisation.query:
+            with psycopg2.connect(
+                database_dsn(
+                    settings.DATABASES_DATA[visualisation.database.memorable_name]
+                )
+            ) as connection:
+                with connection.cursor(
+                    cursor_factory=psycopg2.extras.RealDictCursor
+                ) as cursor:
+                    cursor.execute(visualisation.query)
+                    data = cursor.fetchall()
+            vega_definition['data'][0]['values'] = data
+
         return render(
             request,
             'datasets/visualisation.html',
