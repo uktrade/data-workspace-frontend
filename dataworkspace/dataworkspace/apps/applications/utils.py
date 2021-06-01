@@ -12,7 +12,6 @@ import botocore
 import waffle
 from botocore.config import Config
 from botocore.exceptions import ClientError
-from django_db_geventpool.utils import close_connection
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -38,6 +37,7 @@ from dataworkspace.apps.applications.models import (
 )
 from dataworkspace.apps.core.models import Database, DatabaseUser
 from dataworkspace.apps.core.utils import (
+    close_connection_if_not_in_atomic_block,
     create_tools_access_iam_role,
     database_dsn,
     stable_identification_suffix,
@@ -309,7 +309,7 @@ def application_instance_max_cpu(application_instance):
 
 
 @celery_app.task()
-@close_connection
+@close_connection_if_not_in_atomic_block
 def kill_idle_fargate():
     logger.info('kill_idle_fargate: Start')
 
@@ -355,7 +355,7 @@ def kill_idle_fargate():
 
 
 @celery_app.task()
-@close_connection
+@close_connection_if_not_in_atomic_block
 def populate_created_stopped_fargate():
     logger.info('populate_created_stopped_fargate: Start')
 
@@ -448,7 +448,7 @@ def populate_created_stopped_fargate():
 
 
 @celery_app.task()
-@close_connection
+@close_connection_if_not_in_atomic_block
 def delete_unused_datasets_users():
     try:
         with cache.lock(
@@ -919,6 +919,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
 
 @celery_app.task()
+@close_connection_if_not_in_atomic_block
 def sync_quicksight_permissions(
     user_sso_ids_to_update=tuple(), poll_for_user_creation=False
 ):
@@ -1114,6 +1115,7 @@ def hawk_request(method, url, body):
 
 
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
+@close_connection_if_not_in_atomic_block
 def create_tools_access_iam_role_task(user_id):
     with cache.lock(
         "create_tools_access_iam_role_task", blocking_timeout=0, timeout=360,
@@ -1137,6 +1139,7 @@ def _do_create_tools_access_iam_role(user_id):
 
 
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
+@close_connection_if_not_in_atomic_block
 def sync_activity_stream_sso_users():
     with cache.lock(
         "activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800
@@ -1424,6 +1427,7 @@ def _do_sync_tool_query_logs():
 
 
 @celery_app.task()
+@close_connection_if_not_in_atomic_block
 def sync_tool_query_logs():
     if waffle.switch_is_active('enable_tool_query_log_sync'):
         try:
@@ -1444,6 +1448,7 @@ def _send_slack_message(text):
 
 
 @celery_app.task()
+@close_connection_if_not_in_atomic_block
 def long_running_query_alert():
     if waffle.switch_is_active('enable_long_running_query_alerts'):
         interval = settings.LONG_RUNNING_QUERY_ALERT_THRESHOLD

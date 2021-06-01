@@ -1,4 +1,5 @@
 import datetime
+from functools import wraps
 import hashlib
 import itertools
 import logging
@@ -17,6 +18,7 @@ import boto3
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.signals import request_finished
 from django.http import StreamingHttpResponse
 from django.db import connections, connection
 from django.db.models import Q
@@ -747,3 +749,15 @@ def stable_identification_suffix(identifier, short):
     if short:
         return digest[:8]
     return digest
+
+
+def close_connection_if_not_in_atomic_block(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        finally:
+            if not connection.in_atomic_block:
+                request_finished.send(sender='greenlet')
+
+    return wrapper
