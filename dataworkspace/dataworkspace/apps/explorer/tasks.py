@@ -11,6 +11,7 @@ from pytz import utc
 
 from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
+    close_connection_if_not_in_atomic_block,
     db_role_schema_suffix_for_user,
 )
 from dataworkspace.apps.explorer.constants import QueryLogState
@@ -28,6 +29,7 @@ logger = get_task_logger(__name__)
 
 
 @celery_app.task()
+@close_connection_if_not_in_atomic_block
 def truncate_querylogs(days):
     qs = QueryLog.objects.filter(run_at__lt=datetime.now() - timedelta(days=days))
     logger.info('Deleting %s QueryLog objects older than %s days.', qs.count, days)
@@ -36,6 +38,7 @@ def truncate_querylogs(days):
 
 
 @celery_app.task()
+@close_connection_if_not_in_atomic_block
 def cleanup_playground_sql_table():
     older_than = timedelta(days=14)
     oldest_date_to_retain = datetime.now(tz=utc) - older_than
@@ -54,6 +57,7 @@ def cleanup_playground_sql_table():
 
 
 @celery_app.task()
+@close_connection_if_not_in_atomic_block
 def cleanup_temporary_query_tables():
     one_day_ago = datetime.utcnow() - timedelta(days=1)
     logger.info(
@@ -95,6 +99,7 @@ def _mark_query_log_failed(query_log, exc):
 
 
 @celery_app.task()
+@close_connection_if_not_in_atomic_block
 def _run_querylog_query(query_log_id, page, limit, timeout):
     query_log = QueryLog.objects.get(id=query_log_id)
     user_connection_settings = get_user_explorer_connection_settings(
