@@ -82,8 +82,7 @@ def new_private_database_credentials(
 ):
     # This function can take a while. That isn't great, but also not great to
     # hold a connection to the admin database
-    if not connection.in_atomic_block:
-        connection.close_if_unusable_or_obsolete()
+    close_connection_to_admin_db()
 
     password_alphabet = string.ascii_letters + string.digits
 
@@ -724,7 +723,20 @@ class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
     # Django's point of view its closed, but we we currently use
     # django-db-geventpool which overrides "close" to replace the connection
     # into a pool to be reused later
-    #
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        close_connection_to_admin_db()
+
+
+def stable_identification_suffix(identifier, short):
+    digest = hashlib.sha256(identifier.encode('utf-8')).hexdigest()
+    if short:
+        return digest[:8]
+    return digest
+
+
+def close_connection_to_admin_db():
     # Note, in unit tests the pytest.mark.django_db decorator wraps each test
     # in a transaction that's rolled back at the end of the test. The check
     # against in_atomic_block is to get those tests to pass. This is
@@ -735,15 +747,5 @@ class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
     # same problem. Opting to change the production code to handle this case,
     # since it's probably the right thing to not close the connection if in
     # the middle of a transaction.
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if not connection.in_atomic_block:
-            connection.close_if_unusable_or_obsolete()
-
-
-def stable_identification_suffix(identifier, short):
-    digest = hashlib.sha256(identifier.encode('utf-8')).hexdigest()
-    if short:
-        return digest[:8]
-    return digest
+    if not connection.in_atomic_block:
+        connection.close_if_unusable_or_obsolete()
