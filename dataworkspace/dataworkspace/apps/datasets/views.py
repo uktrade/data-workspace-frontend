@@ -1565,7 +1565,7 @@ class DatasetVisualisationView(View):
                 ) as cursor:
                     cursor.execute(visualisation.query)
                     data = cursor.fetchall()
-            vega_definition['data'][1]['values'] = data
+            vega_definition['data'][0]['values'] = data
 
         return render(
             request,
