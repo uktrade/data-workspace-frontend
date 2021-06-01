@@ -408,13 +408,13 @@ class FargateSpawner:
             now = datetime.datetime.now()
             thirty_minutes_ago = now - datetime.timedelta(minutes=30)
             three_minutes_ago = now - datetime.timedelta(minutes=3)
-            twenty_seconds_ago = now - datetime.timedelta(seconds=20)
+            sixty_seconds_ago = now - datetime.timedelta(seconds=60)
 
             task_arn = spawner_application_id_parsed.get('task_arn')
             pipeline_id = spawner_application_id_parsed.get('pipeline_id')
 
-            # Give twenty seconds for something to start...
-            if not pipeline_id and not task_arn and created_date > twenty_seconds_ago:
+            # Give sixty seconds for something to start...
+            if not pipeline_id and not task_arn and created_date > sixty_seconds_ago:
                 return 'RUNNING'
             if not pipeline_id and not task_arn:
                 return 'STOPPED'
@@ -440,9 +440,9 @@ class FargateSpawner:
             else:
                 task_should_be_created = created_date
 
-            # ... give twenty seconds to create the task...
+            # ... give sixty seconds to create the task...
             if not task_arn:
-                if task_should_be_created > twenty_seconds_ago:
+                if task_should_be_created > sixty_seconds_ago:
                     return 'RUNNING'
                 return 'STOPPED'
 
