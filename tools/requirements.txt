@@ -30,8 +30,6 @@ blis==0.2.4
     #   thinc
 bokeh==0.13.0
     # via -r tools/requirements.in
-cached-property==1.5.2
-    # via h5py
 cachetools==4.2.2
     # via google-auth
 certifi==2020.11.8
@@ -77,10 +75,6 @@ h5py==3.1.0
     # via tensorflow
 idna==2.10
     # via requests
-importlib-metadata==4.0.1
-    # via
-    #   jsonschema
-    #   markdown
 ipykernel==5.3.4
     # via
     #   ipympl
@@ -181,7 +175,7 @@ nest-asyncio==1.4.3
     # via nbclient
 nltk==3.4.5
     # via -r tools/requirements.in
-notebook==6.1.4
+notebook==6.1.5
     # via
     #   -r tools/requirements.in
     #   jupyterlab
@@ -199,7 +193,6 @@ numpy==1.19.5
     #   opt-einsum
     #   pandas
     #   scikit-learn
-    #   scipy
     #   seaborn
     #   spacy
     #   tensorboard
@@ -388,12 +381,8 @@ traitlets==5.0.5
     #   nbconvert
     #   nbformat
     #   notebook
-typed-ast==1.4.3
-    # via astroid
 typing-extensions==3.7.4.3
-    # via
-    #   importlib-metadata
-    #   tensorflow
+    # via tensorflow
 urllib3==1.26.4
     # via
     #   requests
@@ -421,8 +410,6 @@ wrapt==1.12.1
     # via
     #   astroid
     #   tensorflow
-zipp==3.4.1
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
