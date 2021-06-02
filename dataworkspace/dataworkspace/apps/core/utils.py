@@ -83,8 +83,7 @@ def new_private_database_credentials(
 ):
     # This function can take a while. That isn't great, but also not great to
     # hold a connection to the admin database
-    if not connection.in_atomic_block:
-        connection.close_if_unusable_or_obsolete()
+    close_connection_if_not_in_atomic_block_now()
 
     password_alphabet = string.ascii_letters + string.digits
 
@@ -725,22 +724,9 @@ class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
     # Django's point of view its closed, but we we currently use
     # django-db-geventpool which overrides "close" to replace the connection
     # into a pool to be reused later
-    #
-    # Note, in unit tests the pytest.mark.django_db decorator wraps each test
-    # in a transaction that's rolled back at the end of the test. The check
-    # against in_atomic_block is to get those tests to pass. This is
-    # unfortunate, since they then don't test what happens in production when
-    # the connection is closed. However some of the integration tests, which
-    # run in a separate process, do test this behaviour. We could mock
-    # close_old_connections in each of those unit tests, but we'll get the
-    # same problem. Opting to change the production code to handle this case,
-    # since it's probably the right thing to not close the connection if in
-    # the middle of a transaction.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        if not connection.in_atomic_block:
-            connection.close_if_unusable_or_obsolete()
+        close_connection_if_not_in_atomic_block_now()
 
 
 def stable_identification_suffix(identifier, short):
@@ -756,7 +742,21 @@ def close_connection_if_not_in_atomic_block(f):
         try:
             return f(*args, **kwargs)
         finally:
-            if not connection.in_atomic_block:
-                connection.close_if_unusable_or_obsolete()
+            close_connection_if_not_in_atomic_block_now()
 
     return wrapper
+
+
+def close_connection_if_not_in_atomic_block_now():
+    # Note, in unit tests the pytest.mark.django_db decorator wraps each test
+    # in a transaction that's rolled back at the end of the test. The check
+    # against in_atomic_block is to get those tests to pass. This is
+    # unfortunate, since they then don't test what happens in production when
+    # the connection is closed. However some of the integration tests, which
+    # run in a separate process, do test this behaviour. We could mock
+    # close_old_connections in each of those unit tests, but we'll get the
+    # same problem. Opting to change the production code to handle this case,
+    # since it's probably the right thing to not close the connection if in
+    # the middle of a transaction.
+    if not connection.in_atomic_block:
+        connection.close_if_unusable_or_obsolete()
