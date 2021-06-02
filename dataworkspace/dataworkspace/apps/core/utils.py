@@ -97,7 +97,6 @@ def new_private_database_credentials(
         # - temporary database users, each of which are GRANTed the role
 
         db_password = postgres_password()
-        # These must be the same so the below trigger can use a table's schema_name to set its role
         db_role = f'{USER_SCHEMA_STEM}{db_role_and_schema_suffix}'
         db_schema = f'{USER_SCHEMA_STEM}{db_role_and_schema_suffix}'
 
@@ -105,51 +104,23 @@ def new_private_database_credentials(
         valid_until = (datetime.datetime.now() + valid_for).isoformat()
 
         with connections[database_obj.memorable_name].cursor() as cur:
-            cur.execute(
-                sql.SQL('CREATE USER {} WITH PASSWORD %s VALID UNTIL %s').format(
-                    sql.Identifier(db_user)
-                ),
-                [db_password, valid_until],
+            existing_tables_and_views_set = set(
+                tables_and_views_that_exist(cur, tables)
             )
 
-        # Multiple concurrent GRANT CONNECT on the same database can cause
-        # "tuple concurrently updated" errors
-        with cache.lock(
-            f'database-grant-connect-{database_data["NAME"]}--v4',
-            blocking_timeout=3,
-            timeout=180,
-        ):
-            with connections[database_obj.memorable_name].cursor() as cur:
-                cur.execute(
-                    sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
-                        sql.Identifier(database_data['NAME']), sql.Identifier(db_user)
-                    )
-                )
+            allowed_tables_that_exist = [
+                (schema, table)
+                for schema, table in tables
+                if (schema, table) in existing_tables_and_views_set
+            ]
+            allowed_tables_that_exist_set = set(allowed_tables_that_exist)
 
-        with connections[database_obj.memorable_name].cursor() as cur:
-            # Give the user reasonable timeouts...
-            cur.execute(
-                sql.SQL(
-                    "ALTER USER {} SET idle_in_transaction_session_timeout = '60min';"
-                ).format(sql.Identifier(db_user))
+            allowed_schemas_that_exist = without_duplicates_preserve_order(
+                schema for schema, _ in allowed_tables_that_exist
             )
-            cur.execute(
-                sql.SQL("ALTER USER {} SET statement_timeout = '60min';").format(
-                    sql.Identifier(db_user)
-                )
-            )
-            cur.execute(
-                sql.SQL("ALTER USER {} SET pgaudit.log = {};").format(
-                    sql.Identifier(db_user), sql.Literal(settings.PGAUDIT_LOG_SCOPES)
-                )
-            )
-            cur.execute(
-                sql.SQL("ALTER USER {} SET pgaudit.log_catalog = off;").format(
-                    sql.Identifier(db_user), sql.Literal(settings.PGAUDIT_LOG_SCOPES)
-                )
-            )
+            allowed_schemas_that_exist_set = set(allowed_schemas_that_exist)
 
-            # ... create a role (if it doesn't exist)
+            # Ensure role exists
             cur.execute(
                 sql.SQL(
                     '''
@@ -164,133 +135,250 @@ def new_private_database_credentials(
                 ).format(sql.Identifier(db_role), sql.Identifier(db_role))
             )
 
-            # ... add the user to the role
+            # On RDS, to do SET ROLE, you have to GRANT the role to the current master user. You also
+            # have to have (at least) USAGE on each user schema to call has_table_privilege. So,
+            # we make sure the master user has this before the user schema is even created. But, since
+            # this would involve a GRANT, and since GRANTs have to be wrapped in the lock, we check if
+            # we need to do it first
+            cur.execute(
+                sql.SQL(
+                    '''
+                SELECT
+                    1
+                FROM
+                    pg_roles
+                WHERE
+                    rolname={role}
+                    AND pg_has_role({role}, 'member');
+            '''
+                ).format(role=sql.Literal(db_role))
+            )
+            master_granted_user_role = bool(cur.fetchall())
+
+        if not master_granted_user_role:
+            with cache.lock(
+                'database-grant-v1', blocking_timeout=3, timeout=60,
+            ), connections[database_obj.memorable_name].cursor() as cur:
+                cur.execute(
+                    sql.SQL('GRANT {} TO {};').format(
+                        sql.Identifier(db_role), sql.Identifier(database_data["USER"])
+                    )
+                )
+
+        with connections[database_obj.memorable_name].cursor() as cur:
+            # Find existing permissions
+            cur.execute(
+                sql.SQL(
+                    '''
+                SELECT
+                    schemaname AS schema,
+                    tablename as name
+                FROM
+                    pg_catalog.pg_tables
+                WHERE
+                    schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
+                    AND schemaname NOT LIKE 'pg_temp_%'
+                    AND schemaname NOT LIKE 'pg_toast_temp_%'
+                    AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
+                        quote_ident(tablename), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
+                UNION ALL
+                SELECT
+                    schemaname AS schema,
+                    viewname as name
+                FROM
+                    pg_catalog.pg_views
+                WHERE
+                    schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
+                    AND schemaname NOT LIKE 'pg_temp_%'
+                    AND schemaname NOT LIKE 'pg_toast_temp_%'
+                    AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
+                        quote_ident(viewname), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+                UNION ALL
+                SELECT
+                    schemaname AS schema,
+                    matviewname as name
+                FROM
+                    pg_catalog.pg_matviews
+                WHERE
+                    schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
+                    AND schemaname NOT LIKE 'pg_temp_%'
+                    AND schemaname NOT LIKE 'pg_toast_temp_%'
+                    AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
+                        quote_ident(matviewname), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
+                ORDER BY schema, name;
+            '''
+                ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
+            )
+            tables_with_existing_privs = cur.fetchall()
+            tables_with_existing_privs_set = set(tables_with_existing_privs)
+
+            cur.execute(
+                sql.SQL(
+                    '''
+                SELECT
+                    nspname AS name
+                FROM
+                    pg_namespace
+                WHERE
+                    nspname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
+                    AND nspname NOT LIKE 'pg_temp_%'
+                    AND nspname NOT LIKE 'pg_toast_temp_%'
+                    AND has_schema_privilege({role}, nspname, 'CREATE, USAGE')
+                ORDER BY nspname;
+            '''
+                ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
+            )
+            schemas_with_existing_privs = [row[0] for row in cur.fetchall()]
+            schemas_with_existing_privs_set = set(schemas_with_existing_privs)
+
+            tables_to_revoke = [
+                (schema, table)
+                for (schema, table) in tables_with_existing_privs
+                if (schema, table) not in allowed_tables_that_exist_set
+            ]
+            tables_to_grant = [
+                (schema, table)
+                for (schema, table) in allowed_tables_that_exist
+                if (schema, table) not in tables_with_existing_privs_set
+            ]
+
+            schemas_to_revoke = [
+                schema
+                for schema in schemas_with_existing_privs
+                if schema not in allowed_schemas_that_exist_set
+            ]
+            schemas_to_grant = [
+                schema
+                for schema in allowed_schemas_that_exist
+                if schema not in schemas_with_existing_privs_set
+            ]
+
+            # Create user. Note that in PostgreSQL a USER and ROLE are almost the same thing, the
+            # difference is that by default a ROLE is "NOLOGIN", so can't be used to connect to
+            # the database, i.e. it really is more of a "group".
+            cur.execute(
+                sql.SQL(
+                    'CREATE USER {user} WITH PASSWORD {password} VALID UNTIL {valid_until}'
+                ).format(
+                    user=sql.Identifier(db_user),
+                    password=sql.Literal(db_password),
+                    valid_until=sql.Literal(valid_until),
+                ),
+            )
+
+            # ... create a schema
+            cur.execute(
+                sql.SQL('CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};').format(
+                    sql.Identifier(db_schema), sql.Identifier(db_role),
+                )
+            )
+
+            # Give the user and role reasonable timeouts...
+            # [Both out of paranoia in case the user change role mid session]
+            for _db_user in [db_role, db_user]:
+                cur.execute(
+                    sql.SQL(
+                        "ALTER USER {} SET idle_in_transaction_session_timeout = '60min';"
+                    ).format(sql.Identifier(_db_user))
+                )
+                cur.execute(
+                    sql.SQL("ALTER USER {} SET statement_timeout = '60min';").format(
+                        sql.Identifier(_db_user)
+                    )
+                )
+                cur.execute(
+                    sql.SQL("ALTER USER {} SET pgaudit.log = {};").format(
+                        sql.Identifier(_db_user),
+                        sql.Literal(settings.PGAUDIT_LOG_SCOPES),
+                    )
+                )
+                cur.execute(
+                    sql.SQL("ALTER USER {} SET pgaudit.log_catalog = off;").format(
+                        sql.Identifier(_db_user),
+                        sql.Literal(settings.PGAUDIT_LOG_SCOPES),
+                    )
+                )
+
+        # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
+        with cache.lock(
+            'database-grant-v1', blocking_timeout=3, timeout=180,
+        ), connections[database_obj.memorable_name].cursor() as cur:
+            for schema in schemas_to_revoke:
+                logger.info(
+                    'Revoking permissions ON %s %s from %s',
+                    database_obj.memorable_name,
+                    schema,
+                    db_role,
+                )
+                cur.execute(
+                    sql.SQL('REVOKE ALL PRIVILEGES ON SCHEMA {} FROM {};').format(
+                        sql.Identifier(schema), sql.Identifier(db_role),
+                    )
+                )
+
+            for schema, table in tables_to_revoke:
+                logger.info(
+                    'Revoking permissions ON %s %s.%s from %s',
+                    database_obj.memorable_name,
+                    schema,
+                    table,
+                    db_role,
+                )
+                cur.execute(
+                    sql.SQL('REVOKE ALL PRIVILEGES ON {}.{} FROM {};').format(
+                        sql.Identifier(schema),
+                        sql.Identifier(table),
+                        sql.Identifier(db_role),
+                    )
+                )
+
+            for schema in schemas_to_grant:
+                logger.info(
+                    'Granting permissions ON %s %s from %s',
+                    database_obj.memorable_name,
+                    schema,
+                    db_role,
+                )
+                cur.execute(
+                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                        sql.Identifier(schema), sql.Identifier(db_role),
+                    )
+                )
+
+            for schema, table in tables_to_grant:
+                logger.info(
+                    'Granting SELECT ON %s %s.%s from %s',
+                    database_obj.memorable_name,
+                    schema,
+                    table,
+                    db_role,
+                )
+                cur.execute(
+                    sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
+                        sql.Identifier(schema),
+                        sql.Identifier(table),
+                        sql.Identifier(db_role),
+                    )
+                )
+
+            cur.execute(
+                sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
+                    sql.Identifier(database_data['NAME']), sql.Identifier(db_role)
+                )
+            )
             cur.execute(
                 sql.SQL('GRANT {} TO {};').format(
                     sql.Identifier(db_role), sql.Identifier(db_user)
                 )
             )
 
-            # ... create a schema
-            cur.execute(
-                sql.SQL('CREATE SCHEMA IF NOT EXISTS {};').format(
-                    sql.Identifier(db_schema)
-                )
-            )
-
-            # ... set the role to be the owner of the schema
-            cur.execute(
-                sql.SQL('ALTER SCHEMA {} OWNER TO {}').format(
-                    sql.Identifier(db_schema), sql.Identifier(db_role)
-                )
-            )
-
-            # ... and ensure new tables are owned by the role so all users of the role can access
-            with cache.lock(
-                f'database-ddl-trigger--{database_data["NAME"]}--v4',
-                blocking_timeout=3,
-                timeout=180,
-            ):
-                cur.execute(
-                    sql.SQL(
-                        '''
-                    CREATE OR REPLACE FUNCTION set_table_owner()
-                      RETURNS event_trigger
-                      LANGUAGE plpgsql
-                    AS $$
-                    DECLARE
-                      obj record;
-                    BEGIN
-                      FOR obj IN
-                        SELECT
-                            * FROM pg_event_trigger_ddl_commands()
-                        WHERE
-                            command_tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
-                            -- Prevent infinite loop by not altering tables that have the correct owner
-                            -- already. Note pg_trigger_depth() can be used for triggers, but we're in
-                            -- an _event_ trigger.
-                            AND left(schema_name, {}) = '{}'
-                            AND (
-                                SELECT pg_tables.tableowner
-                                FROM pg_tables
-                                WHERE pg_tables.schemaname = schema_name AND pg_tables.tablename = (
-                                    SELECT pg_class.relname FROM pg_class WHERE pg_class.oid = objid
-                                )
-                            ) != schema_name
-                      LOOP
-                        EXECUTE format('ALTER TABLE %s OWNER TO %s', obj.object_identity, quote_ident(obj.schema_name));
-                      END LOOP;
-                    END;
-                    $$;
-                '''.format(
-                            str(len(USER_SCHEMA_STEM)), USER_SCHEMA_STEM
-                        )
-                    )
-                )
-                cur.execute(
-                    '''
-                    DO $$
-                    BEGIN
-                      CREATE EVENT TRIGGER set_table_owner
-                      ON ddl_command_end
-                      WHEN tag IN ('ALTER TABLE', 'CREATE TABLE', 'CREATE TABLE AS')
-                      EXECUTE PROCEDURE set_table_owner();
-                    EXCEPTION WHEN OTHERS THEN
-                      NULL;
-                    END $$;
-                '''
-                )
-
         with connections[database_obj.memorable_name].cursor() as cur:
-            tables_that_exist = [
-                (schema, table)
-                for schema, table in tables
-                if _table_exists(cur, schema, table) or _view_exists(cur, schema, table)
-            ]
-
-        schemas = without_duplicates_preserve_order(
-            schema for schema, _ in tables_that_exist
-        )
-
-        for schema in schemas:
-            with cache.lock(
-                f'database-grant--{database_data["NAME"]}--{schema}--v4',
-                blocking_timeout=3,
-                timeout=180,
-            ):
-                with connections[database_obj.memorable_name].cursor() as cur:
-                    logger.info(
-                        'Granting usages on %s %s to %s',
-                        database_obj.memorable_name,
-                        schema,
-                        db_user,
-                    )
-                    cur.execute(
-                        sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                            sql.Identifier(schema), sql.Identifier(db_user)
-                        )
-                    )
-
-        for schema, table in tables_that_exist:
-            with cache.lock(
-                f'database-grant--{database_data["NAME"]}--{schema}--v4',
-                blocking_timeout=3,
-                timeout=180,
-            ):
-                with connections[database_obj.memorable_name].cursor() as cur:
-                    logger.info(
-                        'Granting permissions to %s %s.%s to %s',
-                        database_obj.memorable_name,
-                        schema,
-                        table,
-                        db_user,
-                    )
-                    tables_sql = sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
-                        sql.Identifier(schema),
-                        sql.Identifier(table),
-                        sql.Identifier(db_user),
-                    )
-                    cur.execute(tables_sql)
+            # Make it so by default, objects created by the user are owned by the role
+            cur.execute(
+                sql.SQL('ALTER USER {} SET ROLE {};').format(
+                    sql.Identifier(db_user), sql.Identifier(db_role)
+                )
+            )
 
         return {
             'memorable_name': database_obj.memorable_name,
@@ -513,6 +601,53 @@ def _table_exists(cur, schema, table):
         (schema, table),
     )
     return bool(cur.fetchone())
+
+
+def tables_and_views_that_exist(cur, schema_tables):
+    if not schema_tables:
+        return []
+    cur.execute(
+        sql.SQL(
+            """
+        SELECT
+            schemaname AS schema, tablename AS name
+        FROM
+            pg_catalog.pg_tables
+        WHERE (
+            (schemaname, tablename) IN ({existing})
+        )
+        UNION
+        SELECT
+            schemaname AS schema, viewname AS name
+        FROM
+            pg_catalog.pg_views
+        WHERE
+            (schemaname, viewname) IN ({existing})
+        UNION
+        SELECT
+            schemaname AS schema, matviewname AS name
+        FROM
+            pg_catalog.pg_matviews
+        WHERE
+             (schemaname, matviewname) IN ({existing})
+    """
+        ).format(
+            existing=sql.SQL(',').join(
+                [
+                    (
+                        sql.SQL('(')
+                        + sql.Literal(schema)
+                        + sql.SQL(',')
+                        + sql.Literal(table)
+                        + sql.SQL(')')
+                    )
+                    for (schema, table) in schema_tables
+                ]
+            )
+        )
+    )
+
+    return cur.fetchall()
 
 
 def streaming_query_response(user_email, database, query, filename, query_params=None):
