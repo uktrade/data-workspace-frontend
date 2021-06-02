@@ -116,6 +116,13 @@ urlpatterns = [
         name='feedback',
     ),
     path(
+        'case-studies/',
+        include(
+            ('dataworkspace.apps.case_studies.urls', 'case_studies'),
+            namespace='case-studies',
+        ),
+    ),
+    path(
         'table_data/<str:database>/<str:schema>/<str:table>',
         login_required(table_data_view),
         name='table_data',

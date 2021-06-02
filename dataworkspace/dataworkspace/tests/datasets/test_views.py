@@ -1027,7 +1027,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
     that the number of queries executed by the search page remains stable. This is potentially a flaky test, given
     that the inputs are indeterminate, but it would at least highlight at some point that we have an unknown issue.
     """
-    expected_num_queries = 12
+    expected_num_queries = 13
     source_tags = [factories.SourceTagFactory() for _ in range(10)]
     topic_tags = [factories.TopicTagFactory() for _ in range(10)]
 

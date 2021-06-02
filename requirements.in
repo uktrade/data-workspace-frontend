@@ -32,6 +32,7 @@ MarkupSafe==1.1.1
 mohawk==1.1.0
 notifications-python-client==5.7.0
 paste==3.4.3
+Pillow==8.2.0
 psutil==5.7.2
 psycogreen==1.0.2
 psycopg2==2.7.7

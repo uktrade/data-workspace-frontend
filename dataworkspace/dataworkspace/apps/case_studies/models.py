@@ -2,6 +2,7 @@ from datetime import datetime
 
 from ckeditor.fields import RichTextField
 from django.db import models
+from django.urls import reverse
 
 from dataworkspace.apps.core.models import TimeStampedUserModel
 
@@ -20,7 +21,7 @@ class CaseStudy(TimeStampedUserModel):
     solution = RichTextField(blank=True)
     impact = RichTextField(blank=True)
     quote_title = models.CharField(max_length=255, blank=True)
-    quote_text = models.CharField(max_length=255, blank=True)
+    quote_text = RichTextField(blank=True)
     quote_full_name = models.CharField(max_length=255, blank=True)
     quote_department_name = models.CharField(max_length=255, blank=True)
 
@@ -51,3 +52,9 @@ class CaseStudy(TimeStampedUserModel):
         )
 
         self._original_publish_date = self.publish_date
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('case-studies:case-study', args=(self.slug,))

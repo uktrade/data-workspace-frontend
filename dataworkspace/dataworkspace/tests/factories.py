@@ -445,6 +445,7 @@ class DatasetFinderQueryLogFactory(factory.django.DjangoModelFactory):
 class CaseStudyFactory(factory.django.DjangoModelFactory):
     published = True
     name = factory.fuzzy.FuzzyText(length=50)
+    slug = factory.fuzzy.FuzzyText(length=20)
     short_description = factory.fuzzy.FuzzyText(length=100)
     department_name = factory.fuzzy.FuzzyText(length=20)
     service_name = factory.fuzzy.FuzzyText(length=25)
