@@ -83,7 +83,7 @@ def new_private_database_credentials(
 ):
     # This function can take a while. That isn't great, but also not great to
     # hold a connection to the admin database
-    close_connection_if_not_in_atomic_block_now()
+    close_admin_db_connection_if_not_in_atomic_block()
 
     password_alphabet = string.ascii_letters + string.digits
 
@@ -726,7 +726,7 @@ class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
     # into a pool to be reused later
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        close_connection_if_not_in_atomic_block_now()
+        close_admin_db_connection_if_not_in_atomic_block()
 
 
 def stable_identification_suffix(identifier, short):
@@ -736,18 +736,20 @@ def stable_identification_suffix(identifier, short):
     return digest
 
 
-def close_connection_if_not_in_atomic_block(f):
+def close_all_connections_if_not_in_atomic_block(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
         finally:
-            close_connection_if_not_in_atomic_block_now()
+            for conn in connections.all():
+                if not conn.in_atomic_block:
+                    conn.close()
 
     return wrapper
 
 
-def close_connection_if_not_in_atomic_block_now():
+def close_admin_db_connection_if_not_in_atomic_block():
     # Note, in unit tests the pytest.mark.django_db decorator wraps each test
     # in a transaction that's rolled back at the end of the test. The check
     # against in_atomic_block is to get those tests to pass. This is
@@ -759,4 +761,4 @@ def close_connection_if_not_in_atomic_block_now():
     # since it's probably the right thing to not close the connection if in
     # the middle of a transaction.
     if not connection.in_atomic_block:
-        connection.close_if_unusable_or_obsolete()
+        connection.close()

@@ -28,7 +28,7 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4_ecr_pipeline_trigger,
 )
 from dataworkspace.apps.core.utils import (
-    close_connection_if_not_in_atomic_block,
+    close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
     stable_identification_suffix,
     source_tables_for_user,
@@ -49,7 +49,7 @@ def get_spawner(name):
 
 
 @celery_app.task()
-@close_connection_if_not_in_atomic_block
+@close_all_connections_if_not_in_atomic_block
 def spawn(
     name, user_id, tag, application_instance_id, spawner_options,
 ):
@@ -90,7 +90,7 @@ def spawn(
 
 
 @celery_app.task()
-@close_connection_if_not_in_atomic_block
+@close_all_connections_if_not_in_atomic_block
 def stop(name, application_instance_id):
     get_spawner(name).stop(application_instance_id)
 
