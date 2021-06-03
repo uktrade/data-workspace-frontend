@@ -6,6 +6,7 @@ import unittest
 
 from faker import Faker
 
+from dataworkspace.apps.core.utils import get_team_schema_name
 from test.sso import create_sso_with_auth
 from test.test_application import (
     until_succeeds,
@@ -17,6 +18,8 @@ from test.test_application import (
     give_user_visualisation_perms,
     create_private_dataset,
     give_user_dataset_perms,
+    toggle_visualisation_visibility,
+    give_visualisation_dataset_perms,
 )
 
 fake = Faker()
@@ -55,7 +58,7 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
     return stdout, stderr, code
 
 
-async def create_visualisation_ddl(name):
+async def create_visualisation_ddl(name, gitlab_project_id=3):
     python_code = textwrap.dedent(
         f"""\
         from dataworkspace.apps.applications.models import (
@@ -68,7 +71,7 @@ async def create_visualisation_ddl(name):
             spawner="PROCESS",
             spawner_options='{{"CMD":["python3", "/test/ddl_server.py"]}}',
             spawner_time=60,
-            gitlab_project_id=3,
+            gitlab_project_id={gitlab_project_id},
             visible=True
         )
         VisualisationCatalogueItem.objects.create(
@@ -108,10 +111,10 @@ class TestTeams(unittest.TestCase):
 
     @async_test
     async def test_launch_tool_sets_teams_schema(self):
-        visualisation_name = "testvisualisation"
+        visualisation_name = "testvisualisation-a"
         test_team_name = fake.company()
 
-        # expected_team_name = get_team_schema_name(test_team_name)
+        expected_team_name = get_team_schema_name(test_team_name)
 
         await flush_database()
         await flush_redis()
@@ -128,17 +131,71 @@ class TestTeams(unittest.TestCase):
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
+        # Ensure user created
+        async with session.request(
+            "GET", "http://dataworkspace.test:8000/"
+        ) as response:
+            await response.text()
+
         dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
         table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
 
         stdout, stderr, code = await create_private_dataset(
-            "my_database",
+            "test_external_db",
             "MASTER",
             dataset_id_test_dataset,
             "test_dataset",
             table_id,
             "test_dataset",
         )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
+        self.assertEqual(code, 0)
+
+        dataset_id_dataset_2 = "ccddcf9a-4997-4761-bd5a-06854d0a6483"
+        table_id = "426f6862-9880-4a1f-82a1-8496a5400820"
+        stdout, stderr, code = await create_private_dataset(
+            "test_external_db2",
+            "MASTER",
+            dataset_id_dataset_2,
+            "dataset_2",
+            table_id,
+            "dataset_2",
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await create_visualisation_ddl(visualisation_name, 3)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await toggle_visualisation_visibility(
+            visualisation_name, True
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await give_user_visualisation_perms(visualisation_name)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await give_visualisation_dataset_perms(
+            visualisation_name, "test_dataset"
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        stdout, stderr, code = await add_user_to_team(SSO_USER_ID, test_team_name)
         self.assertEqual(stdout, b"")
         self.assertEqual(stderr, b"", stderr)
         self.assertEqual(code, 0)
@@ -150,28 +207,8 @@ class TestTeams(unittest.TestCase):
 
         self.assertNotIn("Test Application", content)
 
-        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"", stderr)
-        self.assertEqual(code, 0)
-
-        stdout, stderr, code = await create_visualisation_ddl(visualisation_name)
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"")
-        self.assertEqual(code, 0)
-
-        stdout, stderr, code = await add_user_to_team(SSO_USER_ID, test_team_name)
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"", stderr)
-        self.assertEqual(code, 0)
-
-        stdout, stderr, code = await give_user_visualisation_perms(visualisation_name)
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"", stderr)
-        self.assertEqual(code, 0)
-
         async with session.request(
-            "GET", "http://testvisualisation.dataworkspace.test:8000/"
+            "GET", f"http://{visualisation_name}.dataworkspace.test:8000/"
         ) as response:
             application_content_1 = await response.text()
 
@@ -184,14 +221,11 @@ class TestTeams(unittest.TestCase):
         sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
             "GET",
-            f"http://{visualisation_name}.dataworkspace.test:8000/query_schema/my_database/any_old_schema",
+            f"http://{visualisation_name}.dataworkspace.test:8000/query_schema/test_external_db",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_status_code = response.status
 
-        print(received_content)
-        print(received_status_code)
-
-        # self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_status_code, 200)
+        self.assertIn(expected_team_name, received_content["rows"])

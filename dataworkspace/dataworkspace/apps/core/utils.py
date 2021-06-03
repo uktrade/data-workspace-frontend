@@ -98,7 +98,7 @@ def get_or_create_team_schemas(teams, source_tables):
             for team in teams:
                 schema_name = get_team_schema_name(team.name)
                 logger.debug(
-                    "create team scheme for %s in %s called %s",
+                    "create team schema for %s in %s called %s",
                     team,
                     database,
                     schema_name,
