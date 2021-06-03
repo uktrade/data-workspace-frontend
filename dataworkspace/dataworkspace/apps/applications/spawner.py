@@ -14,7 +14,6 @@ import gevent
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django_db_geventpool.utils import close_connection
 
 from dataworkspace.cel import celery_app
 from dataworkspace.apps.applications.models import (
@@ -29,6 +28,7 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4_ecr_pipeline_trigger,
 )
 from dataworkspace.apps.core.utils import (
+    close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
     stable_identification_suffix,
     source_tables_for_user,
@@ -51,7 +51,7 @@ def get_spawner(name):
 
 
 @celery_app.task()
-@close_connection
+@close_all_connections_if_not_in_atomic_block
 def spawn(
     name, user_id, tag, application_instance_id, spawner_options,
 ):
@@ -103,7 +103,7 @@ def spawn(
 
 
 @celery_app.task()
-@close_connection
+@close_all_connections_if_not_in_atomic_block
 def stop(name, application_instance_id):
     get_spawner(name).stop(application_instance_id)
 
@@ -421,13 +421,13 @@ class FargateSpawner:
             now = datetime.datetime.now()
             thirty_minutes_ago = now - datetime.timedelta(minutes=30)
             three_minutes_ago = now - datetime.timedelta(minutes=3)
-            twenty_seconds_ago = now - datetime.timedelta(seconds=20)
+            sixty_seconds_ago = now - datetime.timedelta(seconds=60)
 
             task_arn = spawner_application_id_parsed.get('task_arn')
             pipeline_id = spawner_application_id_parsed.get('pipeline_id')
 
-            # Give twenty seconds for something to start...
-            if not pipeline_id and not task_arn and created_date > twenty_seconds_ago:
+            # Give sixty seconds for something to start...
+            if not pipeline_id and not task_arn and created_date > sixty_seconds_ago:
                 return 'RUNNING'
             if not pipeline_id and not task_arn:
                 return 'STOPPED'
@@ -453,9 +453,9 @@ class FargateSpawner:
             else:
                 task_should_be_created = created_date
 
-            # ... give twenty seconds to create the task...
+            # ... give sixty seconds to create the task...
             if not task_arn:
-                if task_should_be_created > twenty_seconds_ago:
+                if task_should_be_created > sixty_seconds_ago:
                     return 'RUNNING'
                 return 'STOPPED'
 

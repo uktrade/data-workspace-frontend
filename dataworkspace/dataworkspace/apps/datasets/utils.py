@@ -17,7 +17,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import get_tables_last_updated_date
-
+from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
 
 logger = logging.getLogger('app')
 
@@ -138,6 +138,7 @@ while (!dbHasCompleted(res)) {{
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def update_quicksight_visualisations_last_updated_date():
     """
     When setting the QuickSight VisualisationLink's data_source_last_updated, the following rules are applied:

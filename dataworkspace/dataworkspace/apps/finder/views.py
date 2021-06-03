@@ -66,6 +66,9 @@ def find_datasets(request):
 @require_GET
 def show_results(request, schema, table):
     search_term = request.GET.get("q")
+    name = request.GET.get("name")
+    uuid = request.GET.get("uuid")
+    slug = request.GET.get("slug")
     index_alias = f"{schema}--{table}"
     results_proxy = ResultsProxy(
         es_client=es_client,
@@ -87,6 +90,9 @@ def show_results(request, schema, table):
         'finder/results.html',
         {
             "request": request,
+            "uuid": uuid,
+            "name": name,
+            "slug": slug,
             "schema": schema,
             "table": table,
             "search_term": search_term,

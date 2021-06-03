@@ -20,12 +20,16 @@ from dataworkspace.apps.api_v1.core.views import (
 )
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
-from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
+from dataworkspace.apps.core.admin import (
+    DeletableTimeStampedUserAdmin,
+    DeletableTimeStampedUserTabularInline,
+)
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
     DataSetUserPermission,
+    DataSetVisualisation,
     DatasetReferenceCode,
     MasterDataset,
     ReferenceDataset,
@@ -42,6 +46,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
     DataCutDatasetForm,
+    DataSetVisualisationForm,
     MasterDatasetForm,
     ReferenceDataFieldInlineForm,
     ReferenceDataInlineFormset,
@@ -147,6 +152,15 @@ class SourceLinkInline(admin.TabularInline, SourceReferenceInlineMixin):
 class SourceTableInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceTable
     form = SourceTableForm
+    extra = 1
+    manage_unpublished_permission_codename = (
+        'datasets.manage_unpublished_master_datasets'
+    )
+
+
+class DataSetVisualisationInline(DeletableTimeStampedUserTabularInline):
+    model = DataSetVisualisation
+    form = DataSetVisualisationForm
     extra = 1
     manage_unpublished_permission_codename = (
         'datasets.manage_unpublished_master_datasets'
@@ -375,10 +389,22 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 @admin.register(MasterDataset)
 class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = MasterDatasetForm
-    inlines = [SourceTableInline]
+    inlines = [SourceTableInline, DataSetVisualisationInline]
     manage_unpublished_permission_codename = (
         'datasets.manage_unpublished_master_datasets'
     )
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model != DataSetVisualisation:
+            super().save_formset(request, form, formset, change)
+        else:
+            instances = formset.save(commit=False)
+            for instance in instances:
+                if not instance.pk:
+                    instance.created_by = request.user
+                instance.updated_by = request.user
+                instance.save()
+            formset.save_m2m()
 
 
 @admin.register(DataCutDataset)
