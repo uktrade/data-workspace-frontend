@@ -68,8 +68,8 @@ def postgres_user(stem, suffix=''):
     )
 
 
-def get_team_schema_name(team):
-    return make_postgres_safe_name("team_" + team.name)
+def get_team_schema_name(team_name: str):
+    return make_postgres_safe_name("team_" + team_name)
 
 
 def db_role_schema_suffix_for_user(user):
@@ -96,7 +96,7 @@ def get_or_create_team_schemas(teams, source_tables):
         logger.debug(database.memorable_name)
         with connections[database.memorable_name].cursor() as cur:
             for team in teams:
-                schema_name = get_team_schema_name(team)
+                schema_name = get_team_schema_name(team.name)
                 logger.debug(
                     "create team scheme for %s in %s called %s",
                     team,

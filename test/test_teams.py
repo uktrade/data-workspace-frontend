@@ -4,6 +4,8 @@ import os
 import textwrap
 import unittest
 
+from faker import Faker
+
 from test.sso import create_sso_with_auth
 from test.test_application import (
     until_succeeds,
@@ -16,8 +18,40 @@ from test.test_application import (
     create_private_dataset,
 )
 
+fake = Faker()
+
 logger = logging.getLogger(__name__)
 SSO_USER_ID = "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
+
+
+async def add_user_to_team(user_sso_id: str, team_name: str):
+    python_code = textwrap.dedent(
+        f"""\
+
+        from django.contrib.auth import get_user_model
+        from dataworkspace.apps.core.models import Team, TeamMembership
+
+        User = get_user_model()
+
+        user = User.objects.get(profile__sso_id="{user_sso_id}")
+
+        team, _ = Team.objects.get_or_create(name="{team_name}")
+        membership, _ = TeamMembership.objects.get_or_create(user_id=user, team_id=team)
+
+        """
+    ).encode('ascii')
+
+    add_to_team = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await add_to_team.communicate(python_code)
+    code = await add_to_team.wait()
+
+    return stdout, stderr, code
 
 
 async def create_visualisation_ddl(name):
@@ -74,6 +108,9 @@ class TestTeams(unittest.TestCase):
     @async_test
     async def test_launch_tool_sets_teams_schema(self):
         visualisation_name = "testvisualisation"
+        test_team_name = fake.company()
+
+        # expected_team_name = get_team_schema_name(test_team_name)
 
         # BEGIN TEST BOILERPLATE ....
         await flush_database()
@@ -103,7 +140,7 @@ class TestTeams(unittest.TestCase):
             'test_dataset',
         )
         self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stderr, b'', stderr)
         self.assertEqual(code, 0)
 
         async with session.request(
@@ -118,9 +155,21 @@ class TestTeams(unittest.TestCase):
         self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
+        # stdout, stderr, code = await give_user_visualisation_perms(
+        #     visualisation_name
+        # )
+        # self.assertEqual(stdout, b'')
+        # self.assertEqual(stderr, b'', stderr)
+        # self.assertEqual(code, 0)
+
+        stdout, stderr, code = await add_user_to_team(SSO_USER_ID, test_team_name)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
+        self.assertEqual(code, 0)
+
         stdout, stderr, code = await give_user_visualisation_perms(visualisation_name)
         self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stderr, b'', stderr)
         self.assertEqual(code, 0)
 
         async with session.request(
@@ -140,10 +189,9 @@ class TestTeams(unittest.TestCase):
         sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
             "GET",
-            f"http://{visualisation_name}.dataworkspace.test:8000/get",
+            f"http://{visualisation_name}.dataworkspace.test:8000/query_schema/my_database/any_old_schema",
             headers=sent_headers,
         ) as response:
-
             received_content = await response.json()
             received_status_code = response.status
 
