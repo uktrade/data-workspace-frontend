@@ -16,6 +16,7 @@ from test.test_application import (
     until_non_202,
     give_user_visualisation_perms,
     create_private_dataset,
+    give_user_dataset_perms,
 )
 
 fake = Faker()
@@ -39,10 +40,10 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
         membership, _ = TeamMembership.objects.get_or_create(user_id=user, team_id=team)
 
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     add_to_team = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -77,9 +78,9 @@ async def create_visualisation_ddl(name):
             visualisation_template=template
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -112,7 +113,6 @@ class TestTeams(unittest.TestCase):
 
         # expected_team_name = get_team_schema_name(test_team_name)
 
-        # BEGIN TEST BOILERPLATE ....
         await flush_database()
         await flush_redis()
         logger.debug("test_launch_tool_sets_teams_schema")
@@ -128,19 +128,19 @@ class TestTeams(unittest.TestCase):
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
-        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
 
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'MASTER',
+            "my_database",
+            "MASTER",
             dataset_id_test_dataset,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'', stderr)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
         self.assertEqual(code, 0)
 
         async with session.request(
@@ -150,17 +150,15 @@ class TestTeams(unittest.TestCase):
 
         self.assertNotIn("Test Application", content)
 
+        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
+        self.assertEqual(code, 0)
+
         stdout, stderr, code = await create_visualisation_ddl(visualisation_name)
         self.assertEqual(stdout, b"")
         self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
-
-        # stdout, stderr, code = await give_user_visualisation_perms(
-        #     visualisation_name
-        # )
-        # self.assertEqual(stdout, b'')
-        # self.assertEqual(stderr, b'', stderr)
-        # self.assertEqual(code, 0)
 
         stdout, stderr, code = await add_user_to_team(SSO_USER_ID, test_team_name)
         self.assertEqual(stdout, b"")
@@ -168,8 +166,8 @@ class TestTeams(unittest.TestCase):
         self.assertEqual(code, 0)
 
         stdout, stderr, code = await give_user_visualisation_perms(visualisation_name)
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'', stderr)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"", stderr)
         self.assertEqual(code, 0)
 
         async with session.request(
@@ -182,9 +180,6 @@ class TestTeams(unittest.TestCase):
         await until_non_202(
             session, f"http://{visualisation_name}.dataworkspace.test:8000/"
         )
-
-        # END BOILERPLATE
-        # Actual teams specific tests here ...
 
         sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
