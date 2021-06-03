@@ -4,11 +4,12 @@ import os
 import sys
 
 import aiopg
-import psycopg2.sql
 from aiohttp import web
+import psycopg2.sql
 
 
 async def async_main():
+
     stdout_handler = logging.StreamHandler(sys.stdout)
     for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access']:
         logger = logging.getLogger(logger_name)
@@ -21,11 +22,7 @@ async def async_main():
     async def handle_dataset(request):
         database = request.match_info['database']
         table = request.match_info['table']
-
-        logger.debug(database)
-
         dsn = os.environ[f'DATABASE_DSN__{database}']
-
         async with aiopg.create_pool(dsn) as pool:
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
@@ -41,7 +38,6 @@ async def async_main():
     upstream = web.Application()
     upstream.add_routes([web.post('/stop', handle_stop)])
     upstream.add_routes([web.get('/{database}/{table}', handle_dataset)])
-
     upstream_runner = web.AppRunner(upstream)
     await upstream_runner.setup()
     upstream_site = web.TCPSite(upstream_runner, '0.0.0.0', 8888)

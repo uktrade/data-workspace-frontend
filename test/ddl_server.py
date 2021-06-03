@@ -50,11 +50,24 @@ async def async_main():
             {}, status=200, headers={'from-upstream': 'upstream-header-value'}
         )
 
+    async def handle_http_get(request):
+        data = {
+            'content': (await request.read()).decode(),
+            'headers': dict(request.headers),
+        }
+
+        return web.json_response(
+            data, status=200, headers={'from-upstream': 'upstream-header-value'}
+        )
+
     upstream = web.Application()
-    upstream.add_routes([web.get('/query_schema/{schema_name}', handle_query_schema)])
 
     upstream.add_routes(
-        [web.get('/query_data/{database}/{schema}/{table}', handle_schema_dataset)]
+        [
+            web.get('/query_schema/{schema_name}', handle_query_schema),
+            web.get('/query_data/{database}/{schema}/{table}', handle_schema_dataset),
+            web.get('/get', handle_http_get),
+        ]
     )
 
     upstream_runner = web.AppRunner(upstream)

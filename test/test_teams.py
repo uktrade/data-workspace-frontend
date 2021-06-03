@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import os
+import textwrap
 import unittest
 
 from test.sso import create_sso_with_auth
@@ -12,11 +14,47 @@ from test.test_application import (
     until_non_202,
     give_user_visualisation_perms,
     create_private_dataset,
-    create_visualisation_echo,
 )
 
 logger = logging.getLogger(__name__)
 SSO_USER_ID = "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
+
+
+async def create_visualisation_ddl(name):
+    python_code = textwrap.dedent(
+        f"""\
+        from dataworkspace.apps.applications.models import (
+            VisualisationTemplate,
+        )
+        from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+        template = VisualisationTemplate.objects.create(
+            host_basename="{name}",
+            nice_name="Test {name}",
+            spawner="PROCESS",
+            spawner_options='{{"CMD":["python3", "/test/ddl_server.py"]}}',
+            spawner_time=60,
+            gitlab_project_id=3,
+            visible=True
+        )
+        VisualisationCatalogueItem.objects.create(
+            name="Test {name}",
+            user_access_type="REQUIRES_AUTHORIZATION",
+            slug="{name}",
+            visualisation_template=template
+        )
+        """
+    ).encode('ascii')
+    give_perm = await asyncio.create_subprocess_shell(
+        'django-admin shell',
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
 
 
 def async_test(func):
@@ -75,7 +113,7 @@ class TestTeams(unittest.TestCase):
 
         self.assertNotIn("Test Application", content)
 
-        stdout, stderr, code = await create_visualisation_echo(visualisation_name)
+        stdout, stderr, code = await create_visualisation_ddl(visualisation_name)
         self.assertEqual(stdout, b"")
         self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
