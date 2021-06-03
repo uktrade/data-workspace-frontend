@@ -1,5 +1,10 @@
 from django.contrib import admin
 
+from dataworkspace.apps.core.models import (
+    Team,
+    TeamMembership,
+)
+
 
 class DeletableTimeStampedUserTabularInline(admin.TabularInline):
     exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
@@ -30,3 +35,13 @@ class DeletableTimeStampedUserAdmin(TimeStampedUserAdmin):
         if 'delete_selected' in actions:
             del actions['delete_selected']
         return actions
+
+
+class TeamMembershipAdmin(admin.TabularInline):
+    model = TeamMembership
+    extra = 1
+
+
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    inlines = (TeamMembershipAdmin,)

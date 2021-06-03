@@ -23,7 +23,7 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.core.models import Database, DatabaseUser
+from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
@@ -37,6 +37,10 @@ def database_dsn(database_data):
         f'dbname={database_data["NAME"]} user={database_data["USER"]} '
         f'password={database_data["PASSWORD"]} sslmode=require'
     )
+
+
+def make_postgres_safe_name(value, max_length=63):
+    return re.sub('[^a-z0-9]', '_', value.lower())[:max_length]
 
 
 def postgres_user(stem, suffix=''):
@@ -58,11 +62,15 @@ def postgres_user(stem, suffix=''):
 
     return (
         'user_'
-        + re.sub('[^a-z0-9]', '_', stem.lower())[:max_email_length]
+        + make_postgres_safe_name(stem, max_email_length)
         + '_'
         + unique_enough
         + suffix
     )
+
+
+def get_team_schema_name(team_name: str):
+    return make_postgres_safe_name("team_" + team_name)
 
 
 def db_role_schema_suffix_for_user(user):
@@ -71,6 +79,49 @@ def db_role_schema_suffix_for_user(user):
 
 def db_role_schema_suffix_for_app(application_template):
     return 'app_' + application_template.host_basename
+
+
+def get_or_create_team_schemas(teams, source_tables, user_credentials):
+    logger.info('get_or_create_team_schema for %s', teams)
+
+    databases = [
+        db
+        for (db, _) in itertools.groupby(
+            source_tables, lambda source_table: source_table['database']
+        )
+    ]
+
+    created_schemas = {}
+
+    for database in databases:
+        logger.debug(database.memorable_name)
+        with connections[database.memorable_name].cursor() as cur:
+            for team in teams:
+                schema_name = get_team_schema_name(team.name)
+                logger.debug(
+                    "create team schema for %s in %s called %s",
+                    team,
+                    database,
+                    schema_name,
+                )
+
+                cur.execute(
+                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {};").format(
+                        sql.Identifier(schema_name)
+                    )
+                )
+
+                created_schemas[team] = schema_name
+                for cred in user_credentials:
+                    role_name = cred["db_persistent_role"]
+                    logger.info(role_name)
+                    cur.execute(
+                        sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                            sql.Identifier(schema_name), sql.Identifier(role_name)
+                        )
+                    )
+
+    return created_schemas
 
 
 def new_private_database_credentials(
@@ -313,9 +364,11 @@ def new_private_database_credentials(
         )
     }
 
+    logger.debug(database_to_tables)
+
     # Sometime we want to make sure credentials have been created for a database, even if the user has no explicit
     # access to tables in that database (e.g. for Data Explorer, where ensuring they can always connect to the database
-    # can prevent a number of failure conditions.
+    # can prevent a number of failure conditions.)
     for extra_db in force_create_for_databases:
         if extra_db not in database_to_tables:
             database_to_tables[extra_db] = []
@@ -379,6 +432,12 @@ def can_access_schema_table(user, database, schema, table):
     )
 
     return has_source_table_perms
+
+
+def get_teams_for_user(user):
+    logger.info('get_teams_for_user %s', user)
+    teams = Team.objects.filter(member=user)
+    return teams
 
 
 def source_tables_for_user(user):

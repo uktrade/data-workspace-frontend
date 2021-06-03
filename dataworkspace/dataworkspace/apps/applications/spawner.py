@@ -39,6 +39,8 @@ from dataworkspace.apps.core.utils import (
     new_private_database_credentials,
     write_credentials_to_bucket,
     USER_SCHEMA_STEM,
+    get_teams_for_user,
+    get_or_create_team_schemas,
 )
 
 logger = logging.getLogger('app')
@@ -55,6 +57,8 @@ def spawn(
 ):
     user = get_user_model().objects.get(pk=user_id)
     application_instance = ApplicationInstance.objects.get(id=application_instance_id)
+
+    logger.debug(user)
 
     (source_tables, db_role_schema_suffix, db_user) = (
         (
@@ -77,6 +81,15 @@ def spawn(
         user,
         valid_for=datetime.timedelta(days=31),
     )
+
+    logger.info(credentials)
+    teams = get_teams_for_user(user)
+
+    schemas = get_or_create_team_schemas(teams, source_tables, credentials)
+    # Perhaps store the created schema names against the model??
+    # although (currently) the team names are just the model.name made safe for postgres
+
+    logger.debug(schemas)
 
     if application_instance.application_template.application_type == 'TOOL':
         # For AppStream to access credentials
