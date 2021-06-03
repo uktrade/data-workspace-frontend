@@ -4,8 +4,6 @@ import os
 import textwrap
 import unittest
 
-from faker import Faker
-
 from dataworkspace.apps.core.utils import get_team_schema_name
 from test.sso import create_sso_with_auth
 from test.test_application import (
@@ -21,6 +19,8 @@ from test.test_application import (
     toggle_visualisation_visibility,
     give_visualisation_dataset_perms,
 )
+
+from faker import Faker
 
 fake = Faker()
 

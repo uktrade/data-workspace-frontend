@@ -145,16 +145,16 @@ class UserSatisfactionSurvey(TimeStampedModel):
 
 class Team(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(blank=False, null=False, max_length=256, unique=True)
+    name = models.CharField(max_length=256, unique=True)
 
     member = models.ManyToManyField(get_user_model(), through="TeamMembership")
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         verbose_name = "Team"
         verbose_name_plural = "Teams"
+
+    def __str__(self):
+        return self.name
 
 
 class TeamMembership(TimeStampedModel):
