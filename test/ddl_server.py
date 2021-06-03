@@ -18,6 +18,7 @@ async def async_main():
     async def handle_query_schema(request):
         database = request.match_info["database"]
         dsn = os.environ[f"DATABASE_DSN__{database}"]
+        logger.debug(dsn)
         sql = psycopg2.sql.SQL("SELECT schema_name FROM information_schema.schemata;")
 
         async with aiopg.create_pool(dsn) as pool:
@@ -26,8 +27,12 @@ async def async_main():
                     await cur.execute(sql)
                     rows = [row[0] for row in await cur.fetchall()]
 
+                async with conn.cursor() as cur:
+                    await cur.execute("SELECT current_database();")
+                    db_names = [row[0] for row in await cur.fetchall()]
+
         return web.json_response(
-            {"rows": rows},
+            {"rows": rows, "current_db": db_names},
             status=200,
             headers={"from-upstream": "upstream-header-value"},
         )

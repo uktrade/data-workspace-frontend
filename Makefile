@@ -91,3 +91,6 @@ docker-test-sequential:
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_request_data.py -x -v
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_teams -x -v
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop

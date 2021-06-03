@@ -80,7 +80,7 @@ def db_role_schema_suffix_for_app(application_template):
     return 'app_' + application_template.host_basename
 
 
-def get_or_create_team_schemas(teams, source_tables):
+def get_or_create_team_schemas(teams, source_tables, user_credentials):
     logger.info('get_or_create_team_schema for %s', teams)
 
     databases = [
@@ -111,13 +111,14 @@ def get_or_create_team_schemas(teams, source_tables):
                 )
 
                 created_schemas[team] = schema_name
-    #         # ... set the role to be the owner of the schema
-    #         cur.execute(
-    #             sql.SQL('ALTER SCHEMA {} OWNER TO {}').format(
-    #                 sql.Identifier(db_schema), sql.Identifier(db_role)
-    #             )
-    #         )
-    #
+                for cred in user_credentials:
+                    role_name = cred["db_persistent_role"]
+                    logger.info(role_name)
+                    cur.execute(
+                        sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                            sql.Identifier(schema_name), sql.Identifier(role_name)
+                        )
+                    )
 
     return created_schemas
 

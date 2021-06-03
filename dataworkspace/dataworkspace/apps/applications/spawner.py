@@ -82,9 +82,10 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
+    logger.info(credentials)
     teams = get_teams_for_user(user)
 
-    schemas = get_or_create_team_schemas(teams, source_tables)
+    schemas = get_or_create_team_schemas(teams, source_tables, credentials)
     # Perhaps store the created schema names against the model??
     # although (currently) the team names are just the model.name made safe for postgres
 
