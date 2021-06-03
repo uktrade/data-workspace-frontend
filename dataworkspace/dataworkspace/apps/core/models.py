@@ -158,8 +158,8 @@ class Team(TimeStampedModel):
 
 
 class TeamMembership(TimeStampedModel):
-    team_id = models.ForeignKey(Team, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ("team_id", "user_id")

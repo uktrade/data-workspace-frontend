@@ -20,8 +20,8 @@ from test.test_application import (
     give_visualisation_dataset_perms,
 )
 
-from dataworkspace.apps.core.utils import get_team_schema_name
 from faker import Faker
+from dataworkspace.apps.core.utils import get_team_schema_name
 
 fake = Faker()
 
@@ -41,7 +41,7 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
         user = User.objects.get(profile__sso_id="{user_sso_id}")
 
         team, _ = Team.objects.get_or_create(name="{team_name}")
-        membership, _ = TeamMembership.objects.get_or_create(user_id=user, team_id=team)
+        membership, _ = TeamMembership.objects.get_or_create(user=user, team=team)
 
         """
     ).encode("ascii")
