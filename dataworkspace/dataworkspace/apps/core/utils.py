@@ -81,47 +81,54 @@ def db_role_schema_suffix_for_app(application_template):
     return 'app_' + application_template.host_basename
 
 
-def get_or_create_team_schemas(teams, source_tables, user_credentials):
-    logger.info('get_or_create_team_schema for %s', teams)
-
-    databases = [
-        db
-        for (db, _) in itertools.groupby(
-            source_tables, lambda source_table: source_table['database']
-        )
-    ]
-
+def get_or_create_team_schema(database, teams, role_names):
     created_schemas = {}
+    with connections[database.memorable_name].cursor() as cur:
+        for team in teams:
+            schema_name = get_team_schema_name(team.name)
+            logger.debug(
+                "create team schema for %s in %s called %s",
+                team,
+                database,
+                schema_name,
+            )
 
-    for database in databases:
-        logger.debug(database.memorable_name)
-        with connections[database.memorable_name].cursor() as cur:
-            for team in teams:
-                schema_name = get_team_schema_name(team.name)
-                logger.debug(
-                    "create team schema for %s in %s called %s",
-                    team,
-                    database,
-                    schema_name,
+            cur.execute(
+                sql.SQL("CREATE SCHEMA IF NOT EXISTS {};").format(
+                    sql.Identifier(schema_name)
                 )
+            )
 
+            created_schemas[team] = schema_name
+            for role_name in role_names:
+                logger.info(role_name)
                 cur.execute(
-                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {};").format(
-                        sql.Identifier(schema_name)
+                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                        sql.Identifier(schema_name), sql.Identifier(role_name)
                     )
                 )
 
-                created_schemas[team] = schema_name
-                for cred in user_credentials:
-                    role_name = cred["db_persistent_role"]
-                    logger.info(role_name)
-                    cur.execute(
-                        sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                            sql.Identifier(schema_name), sql.Identifier(role_name)
-                        )
-                    )
 
-    return created_schemas
+def get_or_create_team_schemas(teams, source_tables, user_credentials):
+    pass
+    # return
+    # logger.info('get_or_create_team_schema for %s', teams)
+    #
+    # databases = [
+    #     db
+    #     for (db, _) in itertools.groupby(
+    #         source_tables, lambda source_table: source_table['database']
+    #     )
+    # ]
+    #
+    # created_schemas = {}
+    #
+    # for database in databases:
+    #     logger.debug(database.memorable_name)
+    #     role_names = [cred["db_persistent_role"] for cred in user_credentials]
+    #     get_or_create_team_schema(database, teams, role_names)
+    #
+    # return created_schemas
 
 
 def new_private_database_credentials(
@@ -216,8 +223,8 @@ def new_private_database_credentials(
                     )
                 )
 
+        # Find existing permissions
         with connections[database_obj.memorable_name].cursor() as cur:
-            # Find existing permissions
             cur.execute(
                 sql.SQL(
                     '''
@@ -423,13 +430,18 @@ def new_private_database_credentials(
                 )
             )
 
+        # Make it so by default, objects created by the user are owned by the role
         with connections[database_obj.memorable_name].cursor() as cur:
-            # Make it so by default, objects created by the user are owned by the role
             cur.execute(
                 sql.SQL('ALTER USER {} SET ROLE {};').format(
                     sql.Identifier(db_user), sql.Identifier(db_role)
                 )
             )
+
+        # ensure team schemas exist for each team the user is a member
+        teams = get_teams_for_user(dw_user)
+        if teams:
+            get_or_create_team_schema(database_obj, teams, [db_role])
 
         return {
             'memorable_name': database_obj.memorable_name,
