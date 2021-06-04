@@ -558,9 +558,9 @@ def _do_delete_unused_datasets_users():
                             usename,
                         )
 
-                        # Multiple concurrent GRANT CONNECT on the same database can cause
+                        # Multiple concurrent GRANT or REVOKE on the same object can result in
                         # "tuple concurrently updated" errors
-                        lock_name = f'database-grant-connect-{database_name}--v4'
+                        lock_name = 'database-grant-v1'
                         with cache.lock(lock_name, blocking_timeout=3, timeout=180):
                             cur.execute(
                                 sql.SQL(
@@ -580,9 +580,7 @@ def _do_delete_unused_datasets_users():
                                 )
                             )
 
-                        for schema in schemas:
-                            lock_name = f'database-grant--{database_name}--{schema}--v4'
-                            with cache.lock(lock_name, blocking_timeout=3, timeout=180):
+                            for schema in schemas:
                                 for schema_revoke in schema_revokes:
                                     try:
                                         cur.execute(
