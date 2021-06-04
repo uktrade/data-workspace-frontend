@@ -85,7 +85,7 @@ def get_or_create_team_schema(database, teams, role_name):
     with connections[database.memorable_name].cursor() as cur:
         for team in teams:
             schema_name = get_team_schema_name(team.name)
-            logger.debug(
+            logger.info(
                 "create team schema for %s in %s called %s",
                 team,
                 database,
@@ -415,6 +415,7 @@ def new_private_database_credentials(
         # ensure team schemas exist for each team the user is a member
         teams = get_teams_for_user(dw_user)
         if teams:
+            # TODO - Establish why this fails when using db_user
             get_or_create_team_schema(database_obj, teams, db_role)
 
         return {
