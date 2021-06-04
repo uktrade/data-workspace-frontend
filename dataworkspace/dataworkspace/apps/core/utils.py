@@ -82,7 +82,6 @@ def db_role_schema_suffix_for_app(application_template):
 
 
 def get_or_create_team_schema(database, teams, role_names):
-    created_schemas = {}
     with connections[database.memorable_name].cursor() as cur:
         for team in teams:
             schema_name = get_team_schema_name(team.name)
@@ -99,36 +98,13 @@ def get_or_create_team_schema(database, teams, role_names):
                 )
             )
 
-            created_schemas[team] = schema_name
             for role_name in role_names:
-                logger.info(role_name)
+                logger.debug(role_name)
                 cur.execute(
                     sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
                         sql.Identifier(schema_name), sql.Identifier(role_name)
                     )
                 )
-
-
-def get_or_create_team_schemas(teams, source_tables, user_credentials):
-    pass
-    # return
-    # logger.info('get_or_create_team_schema for %s', teams)
-    #
-    # databases = [
-    #     db
-    #     for (db, _) in itertools.groupby(
-    #         source_tables, lambda source_table: source_table['database']
-    #     )
-    # ]
-    #
-    # created_schemas = {}
-    #
-    # for database in databases:
-    #     logger.debug(database.memorable_name)
-    #     role_names = [cred["db_persistent_role"] for cred in user_credentials]
-    #     get_or_create_team_schema(database, teams, role_names)
-    #
-    # return created_schemas
 
 
 def new_private_database_credentials(
