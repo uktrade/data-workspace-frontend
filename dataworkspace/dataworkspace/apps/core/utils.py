@@ -81,7 +81,7 @@ def db_role_schema_suffix_for_app(application_template):
     return 'app_' + application_template.host_basename
 
 
-def get_or_create_team_schema(database, teams, role_names):
+def get_or_create_team_schema(database, teams, role_name):
     with connections[database.memorable_name].cursor() as cur:
         for team in teams:
             schema_name = get_team_schema_name(team.name)
@@ -98,13 +98,11 @@ def get_or_create_team_schema(database, teams, role_names):
                 )
             )
 
-            for role_name in role_names:
-                logger.debug(role_name)
-                cur.execute(
-                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                        sql.Identifier(schema_name), sql.Identifier(role_name)
-                    )
+            cur.execute(
+                sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                    sql.Identifier(schema_name), sql.Identifier(role_name)
                 )
+            )
 
 
 def new_private_database_credentials(
@@ -417,7 +415,7 @@ def new_private_database_credentials(
         # ensure team schemas exist for each team the user is a member
         teams = get_teams_for_user(dw_user)
         if teams:
-            get_or_create_team_schema(database_obj, teams, [db_role])
+            get_or_create_team_schema(database_obj, teams, db_role)
 
         return {
             'memorable_name': database_obj.memorable_name,
