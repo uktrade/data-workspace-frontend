@@ -263,3 +263,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   margin-right: 48px;
   margin-bottom: 16px;
 }
+
+.case-study-image {
+  width: 100%;
+}

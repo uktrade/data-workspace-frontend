@@ -7,7 +7,7 @@ from dataworkspace.apps.core.admin import CSPRichTextEditorMixin, TimeStampedUse
 
 
 @admin.register(CaseStudy)
-class MasterDatasetAdmin(CSPRichTextEditorMixin, TimeStampedUserAdmin):
+class CaseStudyAdmin(CSPRichTextEditorMixin, TimeStampedUserAdmin):
     list_display = (
         'name',
         'short_description',

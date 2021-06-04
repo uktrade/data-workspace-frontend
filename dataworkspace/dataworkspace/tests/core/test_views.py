@@ -1,6 +1,10 @@
+import io
+
+import botocore
 import mock
 
 import pytest
+from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
 
 from django.contrib.auth.models import Permission
@@ -308,3 +312,70 @@ def test_appstream_link_only_shown_to_user_with_permission(
     soup = BeautifulSoup(response.content.decode(response.charset))
     quicksight_link = soup.find('a', href=True, text=expected_text)
     assert quicksight_link.get('href') == expected_href
+
+
+def test_media_serve_unauthenticated(mocker, unauthenticated_client):
+    mock_client = mocker.patch('dataworkspace.apps.core.storage.boto3.client')
+    mock_client().head_object.side_effect = [
+        botocore.exceptions.ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='head_object',
+        ),
+    ]
+    response = unauthenticated_client.get(
+        reverse('uploaded-media') + '?path=a/path.txt'
+    )
+    assert response.status_code == 403
+
+
+def test_media_serve_no_path(mocker, client):
+    mock_client = mocker.patch('dataworkspace.apps.core.storage.boto3.client')
+    mock_client().head_object.side_effect = [
+        botocore.exceptions.ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='head_object',
+        ),
+    ]
+    response = client.get(reverse('uploaded-media'))
+    assert response.status_code == 400
+
+
+def test_media_serve_invalid_path(mocker, client):
+    mock_client = mocker.patch('dataworkspace.apps.core.storage.boto3.client')
+    mock_client().head_object.side_effect = [
+        botocore.exceptions.ClientError(
+            error_response={'Error': {'Message': 'it failed'}},
+            operation_name='head_object',
+        ),
+    ]
+    response = client.get(reverse('uploaded-media') + '?path=bad-prefix/test.txt')
+    assert response.status_code == 404
+
+
+def test_media_s3_error(mocker, client):
+    mock_client = mocker.patch('dataworkspace.apps.core.storage.boto3.client')
+    mock_client().get_object.side_effect = [
+        botocore.exceptions.ClientError(
+            error_response={
+                'Error': {'Message': 'File is a teapot'},
+                'ResponseMetadata': {'HTTPStatusCode': 418},
+            },
+            operation_name='get_object',
+        ),
+    ]
+    response = client.get(reverse('uploaded-media') + '?path=uploaded-media/test.txt')
+    assert response.status_code == 418
+
+
+def test_media_s3_valid_file(mocker, client):
+    mock_client = mocker.patch('dataworkspace.apps.core.storage.boto3.client')
+    file_content = b'some file content stored on s3'
+    mock_client().get_object.return_value = {
+        'ContentType': 'text/plain',
+        'ContentLength': len(file_content),
+        'Body': StreamingBody(io.BytesIO(file_content), len(file_content)),
+    }
+    response = client.get(reverse('uploaded-media') + '?path=uploaded-media/test.txt')
+    assert response.status_code == 200
+    assert list(response.streaming_content)[0] == b'some file content stored on s3'
+    assert response['content-length'] == str(len(b'some file content stored on s3'))

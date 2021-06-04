@@ -15,6 +15,7 @@ from dataworkspace.apps.core.views import (
     SupportView,
     table_data_view,
     UserSatisfactionSurveyView,
+    ServeS3UploadedFileView,
 )
 from dataworkspace.apps.datasets.views import find_datasets
 from dataworkspace.apps.appstream.views import (
@@ -121,6 +122,11 @@ urlpatterns = [
             ('dataworkspace.apps.case_studies.urls', 'case_studies'),
             namespace='case-studies',
         ),
+    ),
+    path(
+        'media',
+        login_required(ServeS3UploadedFileView.as_view()),
+        name='uploaded-media',
     ),
     path(
         'table_data/<str:database>/<str:schema>/<str:table>',
