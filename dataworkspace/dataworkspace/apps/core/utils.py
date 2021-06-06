@@ -144,24 +144,28 @@ def new_private_database_credentials(
                 sql.SQL(
                     '''
                 SELECT
-                    1
+                    rolname
                 FROM
                     pg_roles
                 WHERE
-                    rolname={role}
-                    AND pg_has_role({role}, 'member');
+                    rolname SIMILAR TO '\\_user\\_[0-9a-f]{8}'
+                    AND NOT pg_has_role(rolname, 'member');
             '''
-                ).format(role=sql.Literal(db_role))
+                )
             )
-            master_granted_user_role = bool(cur.fetchall())
+            missing_db_roles = [role for (role,) in cur.fetchall()]
 
-        if not master_granted_user_role:
+        if missing_db_roles:
             with cache.lock(
                 'database-grant-v1', blocking_timeout=3, timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
-                        sql.Identifier(db_role), sql.Identifier(database_data["USER"])
+                        sql.SQL(',').join(
+                            sql.Literal(missing_db_role)
+                            for missing_db_role in missing_db_roles
+                        ),
+                        sql.Identifier(database_data["USER"]),
                     )
                 )
 
