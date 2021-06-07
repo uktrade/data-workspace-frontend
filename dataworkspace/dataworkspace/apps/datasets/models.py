@@ -45,6 +45,7 @@ from dataworkspace.apps.core.models import (
     Database,
     DeletableQuerySet,
 )
+from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
@@ -367,6 +368,11 @@ class DataSetVisualisation(DeletableTimestampedUserModel):
     vega_definition_json = models.TextField()
     database = models.ForeignKey(Database, default=None, on_delete=models.CASCADE)
     query = models.TextField(null=True, blank=True)
+    thumbnail = models.FileField(
+        storage=S3FileStorage(location='visualisation-thumbnails'),
+        null=True,
+        blank=True,
+    )
     dataset = models.ForeignKey(
         DataSet, on_delete=models.CASCADE, related_name='visualisations'
     )
