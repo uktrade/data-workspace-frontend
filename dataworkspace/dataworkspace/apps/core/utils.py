@@ -162,7 +162,7 @@ def new_private_database_credentials(
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
                         sql.SQL(',').join(
-                            sql.Literal(missing_db_role)
+                            sql.Identifier(missing_db_role)
                             for missing_db_role in missing_db_roles
                         ),
                         sql.Identifier(database_data["USER"]),
