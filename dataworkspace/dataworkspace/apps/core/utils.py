@@ -415,7 +415,7 @@ def new_private_database_credentials(
         # ensure team schemas exist for each team the user is a member
         teams = get_teams_for_user(dw_user)
         if teams:
-            # TODO - Establish why this fails when using db_user
+            # Establish why this fails when using db_user
             get_or_create_team_schema(database_obj, teams, db_role)
 
         return {
