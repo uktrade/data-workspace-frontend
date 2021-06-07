@@ -1,5 +1,8 @@
 import logging
+import os
 
+import boto3
+from botocore.exceptions import ClientError
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -7,9 +10,11 @@ from django.http import (
     HttpResponseForbidden,
     HttpResponseNotAllowed,
     HttpResponseNotFound,
+    HttpResponseServerError,
 )
 from django.shortcuts import render
 from django.urls import reverse
+from django.views import View
 from django.views.generic import FormView
 
 from dataworkspace.apps.core.forms import (
@@ -18,7 +23,9 @@ from dataworkspace.apps.core.forms import (
     UserSatisfactionSurveyForm,
 )
 from dataworkspace.apps.core.models import UserSatisfactionSurvey
+from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.core.utils import (
+    StreamingHttpResponseWithoutDjangoDbConnection,
     can_access_schema_table,
     table_data,
     table_exists,
@@ -165,3 +172,35 @@ class TechnicalSupportView(FormView):
         return HttpResponseRedirect(
             reverse('support-success', kwargs={'ticket_id': ticket_id})
         )
+
+
+class ServeS3UploadedFileView(View):
+    def get(self, request, *args, **kwargs):
+        file_storage = S3FileStorage()
+        path = request.GET.get('path')
+        if path is None:
+            return HttpResponseBadRequest('Expected a `path` parameter')
+
+        if not path.startswith(file_storage.base_prefix):
+            return HttpResponseNotFound()
+
+        client = boto3.client('s3')
+        try:
+            file_object = client.get_object(Bucket=file_storage.bucket, Key=path)
+        except ClientError as ex:
+            try:
+                return HttpResponse(
+                    status=ex.response['ResponseMetadata']['HTTPStatusCode']
+                )
+            except KeyError:
+                return HttpResponseServerError()
+
+        response = StreamingHttpResponseWithoutDjangoDbConnection(
+            file_object['Body'].iter_chunks(chunk_size=65536),
+            content_type=file_object['ContentType'],
+        )
+        response[
+            'Content-Disposition'
+        ] = f'attachment; filename="{os.path.split(path)[-1].rpartition("!")[0]}"'
+        response['Content-Length'] = file_object['ContentLength']
+        return response

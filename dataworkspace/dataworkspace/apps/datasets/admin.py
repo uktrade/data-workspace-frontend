@@ -4,7 +4,6 @@ import logging
 from datetime import datetime
 
 from adminsortable2.admin import SortableInlineAdminMixin
-from csp.decorators import csp_update
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.options import BaseModelAdmin
@@ -23,6 +22,7 @@ from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 from dataworkspace.apps.core.admin import (
     DeletableTimeStampedUserAdmin,
     DeletableTimeStampedUserTabularInline,
+    CSPRichTextEditorMixin,
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import (
@@ -67,21 +67,6 @@ from dataworkspace.apps.explorer.utils import (
 )
 
 logger = logging.getLogger('app')
-
-
-class CSPRichTextEditorMixin:
-
-    # We allow inline scripts to run on this page in order to support CKEditor,
-    # which gives rich-text formatting but unfortunately uses inline scripts to
-    # do so - and we don't have a clean way to either hash the inline script on-demand
-    # or inject our request CSP nonce.
-    @csp_update(SCRIPT_SRC="'unsafe-inline'")
-    def add_view(self, request, form_url='', extra_context=None):
-        return super().add_view(request, form_url, extra_context)
-
-    @csp_update(SCRIPT_SRC="'unsafe-inline'")
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        return super().change_view(request, object_id, form_url, extra_context)
 
 
 class DataLinkAdmin(admin.ModelAdmin):
