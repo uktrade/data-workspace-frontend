@@ -498,16 +498,6 @@ def _do_delete_unused_datasets_users():
             )
             usenames = [result[0] for result in cur.fetchall()]
 
-            logger.info('delete_unused_datasets_users: finding schemas')
-            cur.execute(
-                """
-                SELECT nspname FROM pg_catalog.pg_namespace WHERE
-                nspname != 'pg_catalog' AND nspname != 'information_schema'
-                ORDER BY nspname
-            """
-            )
-            schemas = [result[0] for result in cur.fetchall()]
-
         logger.info(
             'delete_unused_datasets_users: waiting in case they were just created'
         )
@@ -537,16 +527,6 @@ def _do_delete_unused_datasets_users():
                 ).values_list('db_username', 'db_persistent_role')
             )
         }
-
-        schema_revokes = [
-            'REVOKE USAGE ON SCHEMA {} FROM {};',
-            'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {} FROM {};',
-            'REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {} FROM {};',
-            'REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA {} FROM {};',
-            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON TABLES FROM {}',
-            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON SEQUENCES FROM {}',
-            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON FUNCTIONS FROM {}',
-        ]
 
         with connect(database_dsn(database_data)) as conn:
             conn.autocommit = True
@@ -579,26 +559,6 @@ def _do_delete_unused_datasets_users():
                                     sql.Identifier(usename),
                                 )
                             )
-
-                            for schema in schemas:
-                                for schema_revoke in schema_revokes:
-                                    try:
-                                        cur.execute(
-                                            sql.SQL(schema_revoke).format(
-                                                sql.Identifier(schema),
-                                                sql.Identifier(usename),
-                                            )
-                                        )
-                                    except Exception:  # pylint: disable=broad-except
-                                        # This is likely to happen for private schemas where the current user
-                                        # does not have revoke privileges. We carry on in a best effort
-                                        # to remove the user
-                                        logger.info(
-                                            'delete_unused_datasets_users: Unable to %s %s %s',
-                                            schema_revoke,
-                                            schema,
-                                            usename,
-                                        )
 
                         logger.info(
                             'delete_unused_datasets_users: dropping user %s', usename
