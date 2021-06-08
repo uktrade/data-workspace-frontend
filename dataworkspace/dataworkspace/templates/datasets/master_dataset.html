@@ -158,6 +158,7 @@
           <tr class="govuk-table__row">
             <th class="govuk-table__header">Name</th>
             <th class="govuk-table__header">Summary</th>
+            <th class="govuk-table__header">Preview</th>
             <th class="govuk-table__header">Details</th>
           </tr>
           </thead>
@@ -167,6 +168,15 @@
             <tr class="govuk-table__row">
               <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.name }}</td>
               <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.summary }}</td>
+              <td class="govuk-table__cell app-table_cell--no-border">
+                {% if visualisation.thumbnail %}
+                  <a class="govuk-link" href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
+                    <img class="visualisation-preview-thumb" src="{{ visualisation.thumbnail.url }}" width="200" height="125">
+                  </a>
+                {% else %}
+                  Not available
+                {% endif %}
+              </td>
               <td class="govuk-table__cell app-table_cell--no-border">
                   {% if has_access %}
                       <a class="govuk-link"
