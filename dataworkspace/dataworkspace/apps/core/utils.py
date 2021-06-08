@@ -308,60 +308,71 @@ def new_private_database_credentials(
         with cache.lock(
             'database-grant-v1', blocking_timeout=15, timeout=180,
         ), connections[database_obj.memorable_name].cursor() as cur:
-            for schema in schemas_to_revoke:
-                logger.info(
-                    'Revoking permissions ON %s %s from %s',
-                    database_obj.memorable_name,
-                    schema,
-                    db_role,
-                )
+            logger.info(
+                'Revoking permissions ON %s %s from %s',
+                database_obj.memorable_name,
+                schemas_to_revoke,
+                db_role,
+            )
+            if schemas_to_revoke:
                 cur.execute(
                     sql.SQL('REVOKE ALL PRIVILEGES ON SCHEMA {} FROM {};').format(
-                        sql.Identifier(schema), sql.Identifier(db_role),
-                    )
-                )
-
-            for schema, table in tables_to_revoke:
-                logger.info(
-                    'Revoking permissions ON %s %s.%s from %s',
-                    database_obj.memorable_name,
-                    schema,
-                    table,
-                    db_role,
-                )
-                cur.execute(
-                    sql.SQL('REVOKE ALL PRIVILEGES ON {}.{} FROM {};').format(
-                        sql.Identifier(schema),
-                        sql.Identifier(table),
+                        sql.SQL(',').join(
+                            sql.Identifier(schema) for schema in schemas_to_revoke
+                        ),
                         sql.Identifier(db_role),
                     )
                 )
 
-            for schema in schemas_to_grant:
-                logger.info(
-                    'Granting permissions ON %s %s from %s',
-                    database_obj.memorable_name,
-                    schema,
-                    db_role,
-                )
+            logger.info(
+                'Revoking permissions ON %s %s from %s',
+                database_obj.memorable_name,
+                tables_to_revoke,
+                db_role,
+            )
+            if tables_to_revoke:
                 cur.execute(
-                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                        sql.Identifier(schema), sql.Identifier(db_role),
+                    sql.SQL('REVOKE ALL PRIVILEGES ON {} FROM {};').format(
+                        sql.SQL(',').join(
+                            [
+                                sql.Identifier(schema, table)
+                                for schema, table in tables_to_revoke
+                            ]
+                        ),
+                        sql.Identifier(db_role),
                     )
                 )
 
-            for schema, table in tables_to_grant:
-                logger.info(
-                    'Granting SELECT ON %s %s.%s from %s',
-                    database_obj.memorable_name,
-                    schema,
-                    table,
-                    db_role,
-                )
+            logger.info(
+                'Granting permissions ON %s %s from %s',
+                database_obj.memorable_name,
+                schemas_to_grant,
+                db_role,
+            )
+            if schemas_to_grant:
                 cur.execute(
-                    sql.SQL('GRANT SELECT ON {}.{} TO {};').format(
-                        sql.Identifier(schema),
-                        sql.Identifier(table),
+                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
+                        sql.SQL(',').join(
+                            [sql.Identifier(schema) for schema in schemas_to_grant]
+                        ),
+                        sql.Identifier(db_role),
+                    )
+                )
+            logger.info(
+                'Granting SELECT ON %s %s from %s',
+                database_obj.memorable_name,
+                tables_to_grant,
+                db_role,
+            )
+            if tables_to_grant:
+                cur.execute(
+                    sql.SQL('GRANT SELECT ON {} TO {};').format(
+                        sql.SQL(',').join(
+                            [
+                                sql.Identifier(schema, table)
+                                for schema, table in tables_to_grant
+                            ]
+                        ),
                         sql.Identifier(db_role),
                     )
                 )
