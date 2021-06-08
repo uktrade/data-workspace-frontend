@@ -157,8 +157,9 @@ def new_private_database_credentials(
 
         if missing_db_roles:
             with cache.lock(
-                'database-grant-v1', blocking_timeout=7, timeout=60,
+                'database-grant-v1', blocking_timeout=15, timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
+
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
                         sql.SQL(',').join(
@@ -305,7 +306,7 @@ def new_private_database_credentials(
 
         # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
         with cache.lock(
-            'database-grant-v1', blocking_timeout=7, timeout=180,
+            'database-grant-v1', blocking_timeout=15, timeout=180,
         ), connections[database_obj.memorable_name].cursor() as cur:
             for schema in schemas_to_revoke:
                 logger.info(

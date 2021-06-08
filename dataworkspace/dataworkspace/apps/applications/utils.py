@@ -516,6 +516,10 @@ def _do_delete_unused_datasets_users():
         not_in_use_usernames = [
             usename for usename in usenames if usename not in in_use_usenames
         ]
+        logger.info(
+            'delete_unused_datasets_users: not_in_use_usernames %s',
+            not_in_use_usernames,
+        )
 
         # Persistent db roles are needed in order to reassign objects owned by the temporary user role
         # before it gets dropped.
@@ -527,21 +531,26 @@ def _do_delete_unused_datasets_users():
                 ).values_list('db_username', 'db_persistent_role')
             )
         }
+        logger.info(
+            'delete_unused_datasets_users: db_persistent_roles %s', db_persistent_roles,
+        )
 
-        with connect(database_dsn(database_data)) as conn:
-            conn.autocommit = True
-            with conn.cursor() as cur:
-                for usename in not_in_use_usernames:
-                    try:
-                        logger.info(
-                            'delete_unused_datasets_users: revoking credentials for %s',
-                            usename,
-                        )
+        # Multiple concurrent GRANT or REVOKE on the same object can result in
+        # "tuple concurrently updated" errors
+        lock_name = 'database-grant-v1'
+        try:
+            with cache.lock(lock_name, blocking_timeout=0, timeout=4), connect(
+                database_dsn(database_data)
+            ) as conn:
+                conn.autocommit = True
+                with conn.cursor() as cur:
+                    for usename in not_in_use_usernames:
+                        try:
+                            logger.info(
+                                'delete_unused_datasets_users: revoking credentials for %s',
+                                usename,
+                            )
 
-                        # Multiple concurrent GRANT or REVOKE on the same object can result in
-                        # "tuple concurrently updated" errors
-                        lock_name = 'database-grant-v1'
-                        with cache.lock(lock_name, blocking_timeout=3, timeout=180):
                             cur.execute(
                                 sql.SQL(
                                     'REVOKE CONNECT ON DATABASE {} FROM {};'
@@ -560,63 +569,65 @@ def _do_delete_unused_datasets_users():
                                 )
                             )
 
-                        logger.info(
-                            'delete_unused_datasets_users: dropping user %s', usename
-                        )
-
-                        # Revoke privileges so that the DROP USER command succeeds
-                        if usename in db_persistent_roles:
-                            db_persistent_role = db_persistent_roles[usename]
-                            # This reassigns the ownership of all the database objects owned by
-                            # the temporary role, however it does not handle privileges so these
-                            # need to be revoked in the next command.
-                            #
-                            # REASSIGN OWNED requires privileges on both the source role(s) and
-                            # the target role so these are granted first.
-                            cur.execute(
-                                sql.SQL('GRANT {} TO {};').format(
-                                    sql.Identifier(usename),
-                                    sql.Identifier(database_data['USER']),
-                                )
-                            )
-                            cur.execute(
-                                sql.SQL('GRANT {} TO {};').format(
-                                    sql.Identifier(db_persistent_role),
-                                    sql.Identifier(database_data['USER']),
-                                )
-                            )
-                            cur.execute(
-                                sql.SQL('REASSIGN OWNED BY {} TO {};').format(
-                                    sql.Identifier(usename),
-                                    sql.Identifier(db_persistent_role),
-                                )
-                            )
-                            # Revoke all privileges granted to the temporary role so that it
-                            # can be deleted in the next command
-                            cur.execute(
-                                sql.SQL('DROP OWNED BY {};').format(
-                                    sql.Identifier(usename)
-                                )
+                            logger.info(
+                                'delete_unused_datasets_users: dropping user %s',
+                                usename,
                             )
 
-                        cur.execute(
-                            sql.SQL('DROP USER {};').format(sql.Identifier(usename))
-                        )
-                    except redis.exceptions.LockError:
-                        logger.exception('LOCK: Unable to acquire %s', lock_name)
+                            # Revoke privileges so that the DROP USER command succeeds
+                            if usename in db_persistent_roles:
+                                db_persistent_role = db_persistent_roles[usename]
+                                # This reassigns the ownership of all the database objects owned by
+                                # the temporary role, however it does not handle privileges so these
+                                # need to be revoked in the next command.
+                                #
+                                # REASSIGN OWNED requires privileges on both the source role(s) and
+                                # the target role so these are granted first.
+                                cur.execute(
+                                    sql.SQL('GRANT {} TO {};').format(
+                                        sql.Identifier(usename),
+                                        sql.Identifier(database_data['USER']),
+                                    )
+                                )
+                                cur.execute(
+                                    sql.SQL('GRANT {} TO {};').format(
+                                        sql.Identifier(db_persistent_role),
+                                        sql.Identifier(database_data['USER']),
+                                    )
+                                )
+                                cur.execute(
+                                    sql.SQL('REASSIGN OWNED BY {} TO {};').format(
+                                        sql.Identifier(usename),
+                                        sql.Identifier(db_persistent_role),
+                                    )
+                                )
+                                # Revoke all privileges granted to the temporary role so that it
+                                # can be deleted in the next command
+                                cur.execute(
+                                    sql.SQL('DROP OWNED BY {};').format(
+                                        sql.Identifier(usename)
+                                    )
+                                )
 
-                    except Exception:  # pylint: disable=broad-except
-                        logger.exception(
-                            'delete_unused_datasets_users: Failed deleting %s', usename
-                        )
-                    else:
-                        DatabaseUser.objects.filter(
-                            username__in=not_in_use_usernames
-                        ).update(deleted_date=datetime.datetime.now())
-                        logger.info(
-                            'delete_unused_datasets_users: revoked credentials for and dropped %s',
-                            usename,
-                        )
+                            cur.execute(
+                                sql.SQL('DROP USER {};').format(sql.Identifier(usename))
+                            )
+                        except Exception:  # pylint: disable=broad-except
+                            logger.exception(
+                                'delete_unused_datasets_users: Failed deleting %s',
+                                usename,
+                            )
+                        else:
+                            DatabaseUser.objects.filter(username=usename).update(
+                                deleted_date=datetime.datetime.now()
+                            )
+                            logger.info(
+                                'delete_unused_datasets_users: revoked credentials for and dropped %s',
+                                usename,
+                            )
+
+        except redis.exceptions.LockError:
+            logger.exception('LOCK: Unable to acquire %s', lock_name)
 
     logger.info('delete_unused_datasets_users: End')
 
