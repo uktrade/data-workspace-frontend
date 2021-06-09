@@ -267,7 +267,9 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .case-study-image {
   width: 100%;
 }
-
+.case-study-quote .quote-text {
+  margin-bottom:20px;
+}
 
 img.visualisation-preview-thumb {
   border: 1px solid black;
