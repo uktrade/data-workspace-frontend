@@ -86,7 +86,9 @@
                 {% endif %}
                 <div class="govuk-cookie-banner__content quote-content">
                   {% if case_study.quote_text %}
-                    <p class="govuk-body">"{{ case_study.quote_text }}"</p>
+                    <div class="quote-text">
+                      {{ case_study.quote_text | safe }}
+                    </div>
                   {% endif %}
                   {% if case_study.quote_full_name %}{{ case_study.quote_full_name }}{% endif %}
                   {% if case_study.quote_department_name %}
