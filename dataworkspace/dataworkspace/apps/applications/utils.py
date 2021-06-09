@@ -595,14 +595,18 @@ def _do_delete_unused_datasets_users():
                                         sql.Identifier(database_data['USER']),
                                     )
                                 )
+
+                                # The REASSIGN OWNED BY means any objects like tables that were
+                                # owned by the temporary user get transferred to the permanent user
                                 cur.execute(
                                     sql.SQL('REASSIGN OWNED BY {} TO {};').format(
                                         sql.Identifier(usename),
                                         sql.Identifier(db_persistent_role),
                                     )
                                 )
-                                # Revoke all privileges granted to the temporary role so that it
-                                # can be deleted in the next command
+                                # ... so the only effect of DROP OWNED BY is to REVOKE any
+                                # remaining permissions by the temporary user, so it can then get
+                                # deleted below
                                 cur.execute(
                                     sql.SQL('DROP OWNED BY {};').format(
                                         sql.Identifier(usename)
