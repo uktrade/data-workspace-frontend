@@ -501,8 +501,16 @@ def _do_delete_unused_datasets_users():
             logger.info('delete_unused_datasets_users: finding schemas')
             cur.execute(
                 """
-                SELECT nspname FROM pg_catalog.pg_namespace WHERE
-                nspname != 'pg_catalog' AND nspname != 'information_schema'
+                SELECT
+                    nspname
+                FROM
+                    pg_catalog.pg_namespace
+                WHERE
+                    nspname != 'information_schema' AND
+                    nspname != 'pg_catalog' AND
+                    nspname != 'pg_toast' AND
+                    nspname NOT LIKE 'pg_temp_%' AND
+                    nspname NOT LIKE 'pg_toast_%'
                 ORDER BY nspname
             """
             )
