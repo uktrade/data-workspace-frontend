@@ -603,7 +603,7 @@ def _do_delete_unused_datasets_users():
                                         )
                                     )
                                 except Exception:  # pylint: disable=broad-except
-                                    logger.error(
+                                    logger.exception(
                                         'delete_unused_datasets_users: Unable to %s %s %s',
                                         schema_revoke,
                                         schemas,
