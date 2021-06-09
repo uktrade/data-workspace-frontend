@@ -498,24 +498,6 @@ def _do_delete_unused_datasets_users():
             )
             usenames = [result[0] for result in cur.fetchall()]
 
-            logger.info('delete_unused_datasets_users: finding schemas')
-            cur.execute(
-                """
-                SELECT
-                    nspname
-                FROM
-                    pg_catalog.pg_namespace
-                WHERE
-                    nspname != 'information_schema' AND
-                    nspname != 'pg_catalog' AND
-                    nspname != 'pg_toast' AND
-                    nspname NOT LIKE 'pg_temp_%' AND
-                    nspname NOT LIKE 'pg_toast_%'
-                ORDER BY nspname
-            """
-            )
-            schemas = [result[0] for result in cur.fetchall()]
-
         logger.info(
             'delete_unused_datasets_users: waiting in case they were just created'
         )
@@ -553,16 +535,6 @@ def _do_delete_unused_datasets_users():
             'delete_unused_datasets_users: db_persistent_roles %s', db_persistent_roles,
         )
 
-        schema_revokes = [
-            'REVOKE USAGE ON SCHEMA {} FROM {};',
-            'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {} FROM {};',
-            'REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {} FROM {};',
-            'REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA {} FROM {};',
-            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON TABLES FROM {}',
-            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON SEQUENCES FROM {}',
-            'ALTER DEFAULT PRIVILEGES IN SCHEMA {} REVOKE ALL PRIVILEGES ON FUNCTIONS FROM {}',
-        ]
-
         # Multiple concurrent GRANT or REVOKE on the same object can result in
         # "tuple concurrently updated" errors
         lock_name = 'database-grant-v1'
@@ -596,27 +568,6 @@ def _do_delete_unused_datasets_users():
                                     sql.Identifier(usename),
                                 )
                             )
-
-                            for schema_revoke in schema_revokes:
-                                try:
-                                    cur.execute(
-                                        sql.SQL(schema_revoke).format(
-                                            sql.SQL(',').join(
-                                                [
-                                                    sql.Identifier(schema)
-                                                    for schema in schemas
-                                                ]
-                                            ),
-                                            sql.Identifier(usename),
-                                        )
-                                    )
-                                except Exception:  # pylint: disable=broad-except
-                                    logger.exception(
-                                        'delete_unused_datasets_users: Unable to %s %s %s',
-                                        schema_revoke,
-                                        schemas,
-                                        usename,
-                                    )
 
                             logger.info(
                                 'delete_unused_datasets_users: dropping user %s',
