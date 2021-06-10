@@ -107,6 +107,7 @@ def get_datasets_data_for_user_matching_query(
     datasets: QuerySet,
     query,
     use=None,
+    data_type=None,
     user=None,
     id_field='id',
     search_testing_flag_active=False,
@@ -234,8 +235,11 @@ def get_datasets_data_for_user_matching_query(
                 IntegerField(),
             )
         )
+        datasets = datasets.annotate(
+            data_type=Value(DataSetType.REFERENCE, IntegerField())
+        )
     else:
-        datasets = datasets.annotate(purpose=F('type'))
+        datasets = datasets.annotate(purpose=F('type'), data_type=F('type'))
 
     # We are joining on the user permissions table to determine `_has_access`` to the dataset, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
@@ -252,6 +256,7 @@ def get_datasets_data_for_user_matching_query(
             'topic_tag_names',
             'topic_tag_ids',
             'purpose',
+            'data_type',
             'published',
             'published_at',
         )
@@ -270,6 +275,7 @@ def get_datasets_data_for_user_matching_query(
         'topic_tag_names',
         'topic_tag_ids',
         'purpose',
+        'data_type',
         'published',
         'published_at',
         'has_access',
@@ -377,6 +383,10 @@ def get_visualisations_data_for_user_matching_query(
         purpose=Value(DataSetType.VISUALISATION, IntegerField())
     )
 
+    visualisations = visualisations.annotate(
+        data_type=Value(DataSetType.VISUALISATION, IntegerField())
+    )
+
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
     # of the records say that access is available.
@@ -392,6 +402,7 @@ def get_visualisations_data_for_user_matching_query(
             'topic_tag_names',
             'topic_tag_ids',
             'purpose',
+            'data_type',
             'published',
             'published_at',
         )
@@ -410,6 +421,7 @@ def get_visualisations_data_for_user_matching_query(
         'topic_tag_names',
         'topic_tag_ids',
         'purpose',
+        'data_type',
         'published',
         'published_at',
         'has_access',
@@ -423,6 +435,7 @@ def _matches_filters(
     bookmark: bool,
     unpublished: bool,
     use: Set,
+    data_type: Set,
     source_ids: Set,
     topic_ids: Set,
     topic_flag_active,
@@ -435,6 +448,7 @@ def _matches_filters(
         and (not bookmark or data['is_bookmarked'])
         and (unpublished or data['published'])
         and (not use or use == [None] or data['purpose'] in use)
+        and (not data_type or data_type == [None] or data['data_type'] in data_type)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
         and (
             not topic_flag_active
@@ -452,14 +466,14 @@ def _matches_filters(
 
 
 def sorted_datasets_and_visualisations_matching_query_for_user(
-    query, use, user, sort_by, search_testing_flag_active=False,
+    query, use, data_type, user, sort_by, search_testing_flag_active=False,
 ):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
     and returns them, sorted by incoming sort field, default is desc(search_rank).
     """
     master_and_datacut_datasets = get_datasets_data_for_user_matching_query(
-        DataSet.objects.live(), query, use, user=user, id_field='id'
+        DataSet.objects.live(), query, use, data_type, user=user, id_field='id'
     )
 
     reference_datasets = get_datasets_data_for_user_matching_query(
@@ -516,6 +530,7 @@ def find_datasets(request):
         status = form.cleaned_data.get("status")
         unpublished = form.cleaned_data.get("unpublished")
         use = set(form.cleaned_data.get("use"))
+        data_type = set(form.cleaned_data.get("data_type", []))
         sort = form.cleaned_data.get("sort")
         source_ids = set(source.id for source in form.cleaned_data.get("source"))
         topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
@@ -528,6 +543,7 @@ def find_datasets(request):
     all_datasets_visible_to_user_matching_query = sorted_datasets_and_visualisations_matching_query_for_user(
         query=query,
         use=use,
+        data_type=data_type,
         user=request.user,
         sort_by=sort,
         search_testing_flag_active=search_testing_flag_active,
@@ -547,6 +563,7 @@ def find_datasets(request):
                 else bookmarked,
                 bool(unpublished),
                 use,
+                data_type,
                 source_ids,
                 topic_ids,
                 waffle.flag_is_active(request, settings.FILTER_BY_TOPIC_FLAG),
