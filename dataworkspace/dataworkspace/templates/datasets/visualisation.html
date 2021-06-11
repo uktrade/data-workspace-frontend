@@ -30,31 +30,33 @@
       <h1 class="govuk-heading-xl">{{ visualisation.name }}</h1>
     </div>
   </div>
-<div id="view"></div>
+<div id="view" style="width: 935px; height: 642px"></div>
 {% endblock %}
 
 
 {% block footer_scripts %}
   <script src="{% static 'vega.js' %}"></script>
+  <script src="{% static 'vega-lite.js' %}"></script>
+  <script src="{% static 'vega-embed.js' %}"></script>
   <script src="{% static 'vega-interpreter.js' %}"></script>
   {{ vega_definition|json_script:"vega-config" }}
   <script nonce="{{ request.csp_nonce }}">
-    var g = JSON.parse(document.getElementById('vega-config').textContent);
 
-    var view;
+    var vegaSpec = JSON.parse(document.getElementById('vega-config').textContent);
 
-    function render(spec) {
-      const runtime = vega.parse(spec, null, { ast: true });
-
-      view = new vega.View(runtime, {
-        expr:      vega.expressionInterpreter,
-        renderer:  'svg',    // renderer (canvas or svg)
-        container: '#view',  // parent DOM container
-        hover:     true      // enable hover processing
-      });
-      return view.runAsync();
-    }
-
-    render(g);
+    vegaEmbed(
+      '#view',
+      vegaSpec,
+      {
+        actions:
+        {
+          export: true,
+          source: false,
+          compiled: false,
+          editor: false
+        },
+        ast: true
+      }
+    );
   </script>
 {% endblock %}
