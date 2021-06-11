@@ -809,7 +809,7 @@ def create_update_delete_quicksight_user_data_sources(
 def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_list):
     for quicksight_user in quicksight_user_list:
         user_arn = quicksight_user['Arn']
-        user_email = quicksight_user['Email']
+        user_email = quicksight_user['Email'].lower()
         user_role = quicksight_user['Role']
         user_username = quicksight_user['UserName']
 
@@ -852,7 +852,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                 dw_user = get_user_model().objects.filter(email=user_email).first()
                 if not dw_user:
-                    logger.info(
+                    logger.error(
                         "Skipping %s - cannot match with Data Workspace user.",
                         user_email,
                     )
