@@ -11,7 +11,7 @@ def create_subject_matter_expert_group(app, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("auth", "__latest__"),
+        ("auth", "0011_update_proxy_permissions"),
         ("datasets", "0038_add_permissions_and_customdatasetquery_defaults"),
     ]
 
