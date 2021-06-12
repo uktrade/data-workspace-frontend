@@ -22,7 +22,7 @@ appdirs==1.4.4
     #   pyppeteer
 appnope==0.1.2
     # via ipython
-asgiref==3.2.10
+asgiref==3.3.4
     # via
     #   -r requirements.txt
     #   django
@@ -113,7 +113,7 @@ decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
     # via -r requirements.txt
-django-admin-sortable2==0.7.7
+django-admin-sortable2==1.0
     # via -r requirements.txt
 django-appconf==1.0.4
     # via
@@ -127,7 +127,7 @@ django-compressor==2.4
     # via -r requirements.txt
 django-csp==3.6
     # via -r requirements.txt
-django-db-geventpool==3.2.2
+django-db-geventpool==3.2.3
     # via -r requirements.txt
 django-debug-toolbar==3.2.1
     # via -r requirements-dev.in
@@ -147,7 +147,7 @@ django-staff-sso-client==2.1.0
     # via -r requirements.txt
 django-waffle==2.0.0
     # via -r requirements.txt
-django==3.0.14
+django==3.2.4
     # via
     #   -r requirements.txt
     #   django-admin-sortable2
@@ -167,7 +167,7 @@ docopt==0.6.2
     #   notifications-python-client
 ecs-logging==0.5.0
     # via -r requirements.txt
-elastic-apm==5.8.1
+elastic-apm==6.2.2
     # via -r requirements.txt
 elasticsearch[async]==7.11.0
     # via -r requirements.txt
@@ -521,6 +521,7 @@ typing-extensions==3.7.4.3
     # via
     #   -r requirements.txt
     #   aiohttp
+    #   asgiref
     #   yarl
 unicodecsv==0.14.1
     # via

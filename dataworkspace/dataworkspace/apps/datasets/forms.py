@@ -232,12 +232,12 @@ class DatasetSearchForm(forms.Form):
                     counts['use'][use_id] += 1
 
             for source_id, _ in source_choices:
-                if dataset_matcher(source_ids={source_id}):
-                    counts['source'][source_id] += 1
+                if dataset_matcher(source_ids={source_id.value}):
+                    counts['source'][source_id.value] += 1
 
             for topic_id, _ in topic_choices:
-                if dataset_matcher(topic_ids={topic_id}):
-                    counts['topic'][topic_id] += 1
+                if dataset_matcher(topic_ids={topic_id.value}):
+                    counts['topic'][topic_id.value] += 1
 
         self.fields['status'].choices = [
             (status_id, status_text + f" ({counts['status'][status_id]})")
@@ -255,15 +255,17 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields['source'].choices = [
-            (source_id, source_text + f" ({counts['source'][source_id]})")
+            (source_id, source_text + f" ({counts['source'][source_id.value]})")
             for source_id, source_text in source_choices
-            if source_id in selected_source_ids or counts['source'][source_id] != 0
+            if source_id.value in selected_source_ids
+            or counts['source'][source_id.value] != 0
         ]
 
         self.fields['topic'].choices = [
-            (topic_id, topic_text + f" ({counts['topic'][topic_id]})")
+            (topic_id, topic_text + f" ({counts['topic'][topic_id.value]})")
             for topic_id, topic_text in topic_choices
-            if topic_id in selected_topic_ids or counts['topic'][topic_id] != 0
+            if topic_id.value in selected_topic_ids
+            or counts['topic'][topic_id.value] != 0
         ]
 
 
@@ -381,8 +383,8 @@ class DatasetSearchFormV2(DatasetSearchForm):
                     counts['source'][source_id] += 1
 
             for topic_id, _ in topic_choices:
-                if dataset_matcher(topic_ids={topic_id}):
-                    counts['topic'][topic_id] += 1
+                if dataset_matcher(topic_ids={topic_id.value}):
+                    counts['topic'][topic_id.value] += 1
 
         self.fields['user_access'].choices = [
             (access_id, access_text + f" ({counts['user_access'][access_id]})")
@@ -408,15 +410,16 @@ class DatasetSearchFormV2(DatasetSearchForm):
         ]
 
         self.fields['source'].choices = [
-            (source_id, source_text + f" ({counts['source'][source_id]})")
+            (source_id, source_text + f" ({counts['source'][source_id.value]})")
             for source_id, source_text in source_choices
             if source_id in selected_source_ids or counts['source'][source_id] != 0
         ]
 
         self.fields['topic'].choices = [
-            (topic_id, topic_text + f" ({counts['topic'][topic_id]})")
+            (topic_id, topic_text + f" ({counts['topic'][topic_id.value]})")
             for topic_id, topic_text in topic_choices
-            if topic_id in selected_topic_ids or counts['topic'][topic_id] != 0
+            if topic_id.value in selected_topic_ids
+            or counts['topic'][topic_id.value] != 0
         ]
 
 
