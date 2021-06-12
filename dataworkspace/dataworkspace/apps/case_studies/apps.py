@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class CaseStudiesConfig(AppConfig):
-    name = 'case_studies'
+    name = 'dataworkspace.apps.case_studies'

@@ -6,7 +6,7 @@ from django.db import connections as djcs
 
 class ExplorerAppConfig(AppConfig):
 
-    name = 'explorer'
+    name = 'dataworkspace.apps.explorer'
 
     def ready(self):
         _validate_connections()

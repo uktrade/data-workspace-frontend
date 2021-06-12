@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class FinderConfig(AppConfig):
-    name = 'finder'
+    name = 'dataworkspace.apps.finder'
