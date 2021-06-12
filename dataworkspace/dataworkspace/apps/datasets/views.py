@@ -24,6 +24,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import (
     Count,
     F,
+    CharField,
     IntegerField,
     Q,
     Value,
@@ -1419,7 +1420,8 @@ class DatasetUsageHistoryView(View):
                         Value('fields'),
                         Value('name'),
                         function='jsonb_extract_path_text',
-                    )
+                        output_field=CharField(),
+                    ),
                 )
                 .order_by('-day')
                 .values('day', 'email', 'object')

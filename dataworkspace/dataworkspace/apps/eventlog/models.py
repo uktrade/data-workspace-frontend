@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import JSONField
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
@@ -59,7 +58,7 @@ class EventLog(models.Model):
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.SET_NULL)
     object_id = models.CharField(max_length=255, null=True)
     related_object = GenericForeignKey('content_type', 'object_id')
-    extra = JSONField(null=True, encoder=DjangoJSONEncoder)
+    extra = models.JSONField(null=True, encoder=DjangoJSONEncoder)
 
     class Meta:
         ordering = ('-timestamp',)

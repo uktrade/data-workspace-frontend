@@ -33,7 +33,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.db.models import F, ProtectedError, Count, Q
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
 from django.utils.text import slugify
 from django.utils import timezone
 
@@ -575,7 +575,7 @@ class SourceTable(BaseSource):
         default=False,
         help_text='Allow users to filter, sort and export data from within the browser',
     )
-    data_grid_column_config = JSONField(
+    data_grid_column_config = models.JSONField(
         blank=True,
         null=True,
         help_text=(
@@ -1979,8 +1979,8 @@ class ReferenceDatasetUploadLogRecord(TimeStampedModel):
         ReferenceDatasetUploadLog, on_delete=models.CASCADE, related_name='records'
     )
     status = models.IntegerField(choices=_STATUS_CHOICES)
-    row_data = JSONField()
-    errors = JSONField(null=True)
+    row_data = models.JSONField()
+    errors = models.JSONField(null=True)
 
     class Meta:
         ordering = ('created_date',)
