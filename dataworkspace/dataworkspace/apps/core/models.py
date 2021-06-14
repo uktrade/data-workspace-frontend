@@ -1,5 +1,7 @@
+import re
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
@@ -140,3 +142,42 @@ class UserSatisfactionSurvey(TimeStampedModel):
         null=True, blank=True, choices=TryingToDoType.choices
     )
     improve_service = models.TextField(null=True, blank=True)
+
+
+class Team(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=256, unique=True)
+    schema_name = models.CharField(max_length=63, unique=True)
+
+    member = models.ManyToManyField(get_user_model(), through="TeamMembership")
+
+    class Meta:
+        verbose_name = "Team"
+        verbose_name_plural = "Teams"
+
+    def __str__(self):
+        return self.name
+
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        if not self.schema_name:
+            self.schema_name = (
+                '_team_' + re.sub('[^a-z0-9]', '_', self.name.lower())[:63]
+            )
+        super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
+
+
+class TeamMembership(TimeStampedModel):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='memberships')
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name='team_memberships'
+    )
+
+    class Meta:
+        unique_together = ("team_id", "user_id")

@@ -249,7 +249,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
     @async_test
-    async def test_db_application_can_read_and_write_to_private_schema(self):
+    async def test_db_application_can_read_and_write_to_private_and_team_schemas(self):
         await flush_database()
         await flush_redis()
 
@@ -309,6 +309,10 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(stderr, b'')
         self.assertEqual(code, 0)
 
+        await ensure_team_created('not-my-team')
+        await ensure_team_created('My Team')
+        await add_user_to_team('7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2', 'My Team')
+
         async with session.request(
             'GET', 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/'
         ) as response:
@@ -358,6 +362,36 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(received_status, 200)
         self.assertEqual(json.loads(content), {'data': [[1, 'orange']]})
+
+        # Make the table in the team schema
+        team_table = uuid.uuid4().hex
+        async with session.request(
+            'POST',
+            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_my_team/{team_table}',
+        ) as response:
+            received_status = response.status
+            await response.text()
+        self.assertEqual(received_status, 200)
+
+        # Get data from the team schema table
+        async with session.request(
+            'GET',
+            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_my_team/{team_table}',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+        self.assertEqual(received_status, 200)
+        self.assertEqual(json.loads(content), {'data': [[1, 'orange']]})
+
+        # Ensure we cannot make a table in another team's schema
+        another_team_table = uuid.uuid4().hex
+        async with session.request(
+            'POST',
+            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_not_my_team/{another_team_table}',
+        ) as response:
+            received_status = response.status
+            await response.text()
+        self.assertEqual(received_status, 500)
 
         # Stop the application
         async with session.request(
@@ -3158,6 +3192,59 @@ async def create_visualisation_dataset(name, gitlab_project_id):
     )
     stdout, stderr = await give_perm.communicate(python_code)
     code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
+async def ensure_team_created(team_name: str):
+    python_code = textwrap.dedent(
+        f"""\
+
+        from dataworkspace.apps.core.models import Team
+        Team.objects.get_or_create(name="{team_name}")
+
+        """
+    ).encode("ascii")
+
+    add_to_team = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await add_to_team.communicate(python_code)
+    code = await add_to_team.wait()
+
+    return stdout, stderr, code
+
+
+async def add_user_to_team(user_sso_id: str, team_name: str):
+    python_code = textwrap.dedent(
+        f"""\
+
+        from django.contrib.auth import get_user_model
+        from dataworkspace.apps.core.models import Team, TeamMembership
+
+        User = get_user_model()
+
+        user = User.objects.get(profile__sso_id="{user_sso_id}")
+
+        team, _ = Team.objects.get_or_create(name="{team_name}")
+        membership, _ = TeamMembership.objects.get_or_create(user=user, team=team)
+
+        """
+    ).encode("ascii")
+
+    add_to_team = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await add_to_team.communicate(python_code)
+    code = await add_to_team.wait()
 
     return stdout, stderr, code
 
