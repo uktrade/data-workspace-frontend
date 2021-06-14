@@ -1184,13 +1184,13 @@ class CustomDatasetQueryDownloadView(DetailView):
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])
 
-        escaped_query = sql.SQL(query.query)
+        filtered_query = sql.SQL(query.query)
         columns = request.GET.getlist('columns')
 
         if columns:
             trimmed_query = query.query.rstrip().rstrip(';')
 
-            escaped_query = sql.SQL("SELECT {fields} from ({query}) as data;").format(
+            filtered_query = sql.SQL('SELECT {fields} from ({query}) as data;').format(
                 fields=sql.SQL(',').join(
                     [sql.Identifier(column) for column in columns]
                 ),
@@ -1200,7 +1200,7 @@ class CustomDatasetQueryDownloadView(DetailView):
         return streaming_query_response(
             request.user.email,
             query.database.memorable_name,
-            escaped_query,
+            filtered_query,
             query.get_filename(),
         )
 
