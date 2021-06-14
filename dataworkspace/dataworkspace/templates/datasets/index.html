@@ -75,6 +75,7 @@
     {% flag SEARCH_FILTERS_TESTING_FLAG %}
       {{ form.user_access }}
     {% endflag %}
+    {{ form.data_type }}
     {% flag FILTER_BY_TOPIC_FLAG %}
     {% if form.topic.field.choices %}
       {{ form.topic }}

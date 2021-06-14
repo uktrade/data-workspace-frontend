@@ -213,6 +213,7 @@ class DatasetSearchForm(forms.Form):
                 bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
                 use=selected_uses,
+                data_type=None,
                 source_ids=selected_source_ids,
                 topic_ids=selected_topic_ids,
                 topic_flag_active=topic_flag_active,
@@ -298,6 +299,17 @@ class DatasetSearchFormV2(DatasetSearchForm):
         ),
     )
 
+    data_type = forms.TypedMultipleChoiceField(
+        choices=[
+            (DataSetType.MASTER, 'Master dataset'),
+            (DataSetType.DATACUT, 'Data cut'),
+            (DataSetType.REFERENCE, 'Reference dataset'),
+        ],
+        coerce=int,
+        required=False,
+        widget=FilterWidget("Choose data type", hint_text="You can choose 1 or more"),
+    )
+
     source = SourceTagField(
         queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
         required=False,
@@ -328,6 +340,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
             "bookmarked": defaultdict(int),
             "unpublished": defaultdict(int),
             "use": defaultdict(int),
+            "data_type": defaultdict(int),
             "source": defaultdict(int),
             "topic": defaultdict(int),
             "user_access": defaultdict(int),
@@ -337,12 +350,14 @@ class DatasetSearchFormV2(DatasetSearchForm):
         selected_bookmark = bool(self.cleaned_data['bookmarked'])
         selected_unpublished = bool(self.cleaned_data['unpublished'])
         selected_uses = set(self.cleaned_data['use'])
+        selected_data_type = set(self.cleaned_data['data_type'])
         selected_source_ids = set(source.id for source in self.cleaned_data['source'])
         selected_topic_ids = set(topic.id for topic in self.cleaned_data['topic'])
 
         # Cache these locally for performance. The source model choice field can end up hitting the DB each time.
         user_access_choices = list(self.fields['user_access'].choices)
         use_choices = list(self.fields['use'].choices)
+        data_type_choices = list(self.fields['data_type'].choices)
         source_choices = list(self.fields['source'].choices)
         topic_choices = list(self.fields['topic'].choices)
 
@@ -354,6 +369,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
                 bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
                 use=selected_uses,
+                data_type=selected_data_type,
                 source_ids=selected_source_ids,
                 topic_ids=selected_topic_ids,
                 topic_flag_active=topic_flag_active,
@@ -377,6 +393,10 @@ class DatasetSearchFormV2(DatasetSearchForm):
             for use_id, _ in use_choices:
                 if dataset_matcher(use={use_id}):
                     counts['use'][use_id] += 1
+
+            for type_id, _ in data_type_choices:
+                if dataset_matcher(data_type={type_id}):
+                    counts['data_type'][type_id] += 1
 
             for source_id, _ in source_choices:
                 if dataset_matcher(source_ids={source_id}):
@@ -407,6 +427,11 @@ class DatasetSearchFormV2(DatasetSearchForm):
         self.fields['use'].choices = [
             (use_id, use_text + f" ({counts['use'][use_id]})")
             for use_id, use_text in use_choices
+        ]
+
+        self.fields['data_type'].choices = [
+            (type_id, type_text + f" ({counts['data_type'][type_id]})")
+            for type_id, type_text in data_type_choices
         ]
 
         self.fields['source'].choices = [
