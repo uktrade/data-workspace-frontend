@@ -887,7 +887,6 @@ def request_access_success_view(request, dataset_uuid):
 def _notify_visualisation_access_request(
     request, dataset, dataset_url, contact_email, goal
 ):
-
     message = f"""
 An access request has been sent to the data visualisation owner and secondary contact to process.
 
@@ -1170,7 +1169,13 @@ class CustomDatasetQueryDownloadView(DetailView):
         filtered_query = query.query
         columns = request.GET.getlist('columns')
         if columns:
-            filtered_query = f"SELECT {','.join(columns)} FROM ({query.query.rstrip().rstrip(';')}) as data;"
+            trimmed_query = query.query.rstrip().rstrip(';')
+            filtered_query = sql.SQL("SELECT {fields} from ({query}) as data;").format(
+                fields=sql.SQL(',').join(
+                    [sql.Identifier(column) for column in columns]
+                ),
+                query=sql.Identifier(trimmed_query),
+            )
 
         return streaming_query_response(
             request.user.email,
