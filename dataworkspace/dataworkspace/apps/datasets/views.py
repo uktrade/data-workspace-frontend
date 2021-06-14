@@ -7,6 +7,7 @@ from itertools import chain
 import json
 from typing import Set
 
+
 import boto3
 import psycopg2
 import waffle
@@ -1183,21 +1184,23 @@ class CustomDatasetQueryDownloadView(DetailView):
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])
 
-        filtered_query = query.query
+        escaped_query = sql.SQL(query.query)
         columns = request.GET.getlist('columns')
+
         if columns:
             trimmed_query = query.query.rstrip().rstrip(';')
-            filtered_query = sql.SQL("SELECT {fields} from ({query}) as data;").format(
+
+            escaped_query = sql.SQL("SELECT {fields} from ({query}) as data;").format(
                 fields=sql.SQL(',').join(
                     [sql.Identifier(column) for column in columns]
                 ),
-                query=sql.Identifier(trimmed_query),
+                query=sql.SQL(trimmed_query),
             )
 
         return streaming_query_response(
             request.user.email,
             query.database.memorable_name,
-            sql.SQL(filtered_query),
+            escaped_query,
             query.get_filename(),
         )
 
