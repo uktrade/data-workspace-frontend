@@ -422,7 +422,7 @@ def new_private_database_credentials(
 
     # Sometime we want to make sure credentials have been created for a database, even if the user has no explicit
     # access to tables in that database (e.g. for Data Explorer, where ensuring they can always connect to the database
-    # can prevent a number of failure conditions.
+    # can prevent a number of failure conditions.)
     for extra_db in force_create_for_databases:
         if extra_db not in database_to_tables:
             database_to_tables[extra_db] = []
