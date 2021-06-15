@@ -747,41 +747,9 @@ def streaming_query_response(
 
         q.put(StopIteration)
 
-    def get_all_columns_from_unfiltered(conn):
-        logger.debug('get_all_columns_from_unfiltered')
-        columns_query = sql.SQL('SELECT * FROM ({query}) as data LIMIT 1').format(
-            query=original_query
-        )
-        with conn.cursor() as cur:
-            cur.execute(columns_query)
-            columns = [column_desc[0] for column_desc in cur.description]
-
-        return columns
-
-    def get_row_count_from_unfiltered(conn):
-        logger.debug('get_row_count_from_unfiltered')
-        total_query = sql.SQL('SELECT COUNT(*) from ({query}) as data;').format(
-            query=original_query,
-        )
-
-        with conn.cursor() as cur:
-            cur.execute(total_query)
-            counts = cur.fetchone()
-
-        return counts
-
-    def steam_csv_and_calculate_totals():
+    def stream_csv():
         with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
             stream_query_as_csv_to_queue(conn)
-
-            # PR3 - Capture data in the background about how much was requested vs was available
-            if original_query:
-                all_columns = get_all_columns_from_unfiltered(conn)
-                counts = get_row_count_from_unfiltered(conn)
-
-        if original_query:
-            logger.debug(all_columns)
-            logger.debug(counts)
 
     def csv_iterator():
         # Listen for all data on the queue until we receive the done object
@@ -805,7 +773,7 @@ def streaming_query_response(
             logger.error(e, exc_info=True)
             raise
 
-    g = gevent.spawn(steam_csv_and_calculate_totals)
+    g = gevent.spawn(stream_csv)
     g.link_exception(exception_callback)
 
     response = StreamingHttpResponseWithoutDjangoDbConnection(
