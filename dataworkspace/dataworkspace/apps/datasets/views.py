@@ -1189,7 +1189,7 @@ class CustomDatasetQueryDownloadView(DetailView):
 
         if columns:
             trimmed_query = query.query.rstrip().rstrip(';')
-            
+
             filtered_query = sql.SQL('SELECT {fields} from ({query}) as data;').format(
                 fields=sql.SQL(',').join(
                     [sql.Identifier(column) for column in columns]
