@@ -12,6 +12,7 @@ from dataworkspace.apps.your_files.views import (
     CreateTableSuccessView,
     CreateTableTableExists,
     CreateTableConfirmNameView,
+    CreateTableConfirmSchemaView,
     CreateTableValidatingView,
     CreateTableView,
     file_browser_html_view,
@@ -23,6 +24,11 @@ urlpatterns = [
         'create-table/confirm',
         login_required(CreateTableView.as_view()),
         name='create-table-confirm',
+    ),
+    path(
+        'create-table/confirm-schema',
+        login_required(CreateTableConfirmSchemaView.as_view()),
+        name='create-table-confirm-schema',
     ),
     path(
         'create-table/confirm-name',

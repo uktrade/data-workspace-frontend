@@ -564,6 +564,17 @@ def can_access_schema_table(user, database, schema, table):
     return has_source_table_perms
 
 
+def get_team_schemas_for_user(user):
+    teams = Team.objects.filter(member=user)
+    teams = [{'name': team.name, 'schema_name': team.schema_name} for team in teams]
+
+    return teams
+
+
+def is_user_in_teams(user):
+    return Team.objects.filter(member=user).exists()
+
+
 def source_tables_for_user(user):
     req_authentication_tables = SourceTable.objects.filter(
         dataset__user_access_type='REQUIRES_AUTHENTICATION',

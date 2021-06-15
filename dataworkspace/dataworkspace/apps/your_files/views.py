@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from csp.decorators import csp_update
@@ -15,18 +15,27 @@ from django.views import View
 from django.views.generic import FormView, TemplateView
 from requests import HTTPError
 
-from dataworkspace.apps.core.utils import get_s3_prefix
+from dataworkspace.apps.core.utils import (
+    db_role_schema_suffix_for_user,
+    get_s3_prefix,
+    get_team_schemas_for_user,
+    is_user_in_teams,
+    new_private_database_credentials,
+    postgres_user,
+    source_tables_for_user,
+)
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
 from dataworkspace.apps.your_files.forms import (
     CreateTableDataTypesForm,
     CreateTableForm,
+    CreateTableSchemaForm,
 )
 from dataworkspace.apps.your_files.utils import (
+    clean_db_identifier,
     copy_file_to_uploads_bucket,
     get_dataflow_dag_status,
     get_dataflow_task_status,
     get_s3_csv_column_types,
-    clean_db_identifier,
     get_user_schema,
     trigger_dataflow_dag,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
@@ -77,9 +86,49 @@ class CreateTableView(RequiredParameterGetRequestMixin, TemplateView):
                 'path': path,
                 'filename': path.split('/')[-1],
                 'table_name': clean_db_identifier(path),
+                'show_schema': is_user_in_teams(self.request.user),
             }
         )
         return context
+
+
+class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
+    template_name = 'your_files/create-table-confirm-schema.html'
+    form_class = CreateTableSchemaForm
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.method == 'GET':
+            initial.update(
+                {
+                    'path': self.request.GET['path'],
+                    'schema': self.request.GET.get('schema'),
+                    'table_name': self.request.GET.get('table_name'),
+                },
+            )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        team_schemas = get_team_schemas_for_user(self.request.user)
+        schema_name = [
+            t['schema_name']
+            for t in team_schemas
+            if t['name'] == form.cleaned_data['schema']
+        ]
+        params = {
+            'path': self.request.GET['path'],
+            'schema': schema_name,
+            'team': form.cleaned_data['schema'],
+            'table_name': self.request.GET.get('table_name'),
+        }
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
+        )
 
 
 class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
@@ -93,9 +142,10 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
             initial.update(
                 {
                     'path': self.request.GET['path'],
-                    'schema': get_user_schema(self.request),
+                    'schema': self.request.GET.get('schema'),
                     'table_name': self.request.GET.get('table_name'),
                     'force_overwrite': 'overwrite' in self.request.GET,
+                    'show_schema': is_user_in_teams(self.request.user),
                 }
             )
         return initial
@@ -177,6 +227,17 @@ class CreateTableConfirmDataTypesView(FormView):
         return kwargs
 
     def form_valid(self, form):
+        # call new_private_database_credentials to make sure everything is set
+        user = self.request.user
+        source_tables = source_tables_for_user(user)
+        db_role_schema_suffix = db_role_schema_suffix_for_user(user)
+        db_user = postgres_user(user.email)
+        duration = timedelta(hours=24)
+
+        new_private_database_credentials(
+            db_role_schema_suffix, source_tables, db_user, user, duration,
+        )
+
         cleaned = form.cleaned_data
         column_definitions = get_s3_csv_column_types(cleaned['path'])
         for field in column_definitions:

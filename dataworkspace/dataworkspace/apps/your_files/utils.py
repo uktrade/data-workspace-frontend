@@ -170,3 +170,7 @@ def get_dataflow_task_status(execution_date, task_id):
 
 def get_user_schema(request):
     return f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(request.user)}'
+
+
+def get_schema_for_user(user):
+    return f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}'
