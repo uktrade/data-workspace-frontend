@@ -1185,11 +1185,11 @@ class CustomDatasetQueryDownloadView(DetailView):
         dataset.save(update_fields=['number_of_downloads'])
 
         filtered_query = sql.SQL(query.query)
-
         columns = request.GET.getlist('columns')
 
         if columns:
             trimmed_query = query.query.rstrip().rstrip(';')
+            
             filtered_query = sql.SQL('SELECT {fields} from ({query}) as data;').format(
                 fields=sql.SQL(',').join(
                     [sql.Identifier(column) for column in columns]
