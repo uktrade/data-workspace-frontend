@@ -54,6 +54,7 @@ from django.views.generic import DetailView, View
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.core.streaming_query import new_streaming_query_response
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -1548,10 +1549,11 @@ class DataGridDataView(DetailView):
             if not self.kwargs['download_enabled']:
                 return HttpResponseForbidden()
 
-            return streaming_query_response(
+            return new_streaming_query_response(
                 request.user.email,
                 source.database.memorable_name,
                 query,
+                source.get_data_grid_query(),
                 request.POST.get(
                     'export_file_name', f'custom-{source.dataset.slug}-export.csv'
                 ),
