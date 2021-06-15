@@ -391,12 +391,12 @@ class DatasetSearchFormV2(DatasetSearchForm):
                 counts['unpublished']['yes'] += 1
 
             for use_id, _ in use_choices:
-                if dataset_matcher(use={use_id}):
-                    counts['use'][use_id] += 1
+                if dataset_matcher(use={use_id.value}):
+                    counts['use'][use_id.value] += 1
 
             for type_id, _ in data_type_choices:
-                if dataset_matcher(data_type={type_id}):
-                    counts['data_type'][type_id] += 1
+                if dataset_matcher(data_type={type_id.value}):
+                    counts['data_type'][type_id.value] += 1
 
             for source_id, _ in source_choices:
                 if dataset_matcher(source_ids={source_id.value}):
@@ -420,17 +420,17 @@ class DatasetSearchFormV2(DatasetSearchForm):
         ]
 
         self.fields['unpublished'].choices = [
-            (unpub_id, unpub_text + f" ({counts['unpublished'][unpub_id]})")
+            (unpub_id, unpub_text + f" ({counts['unpublished'][unpub_id.value]})")
             for unpub_id, unpub_text in self.fields['unpublished'].choices
         ]
 
         self.fields['use'].choices = [
-            (use_id, use_text + f" ({counts['use'][use_id]})")
+            (use_id, use_text + f" ({counts['use'][use_id.value]})")
             for use_id, use_text in use_choices
         ]
 
         self.fields['data_type'].choices = [
-            (type_id, type_text + f" ({counts['data_type'][type_id]})")
+            (type_id, type_text + f" ({counts['data_type'][type_id.value]})")
             for type_id, type_text in data_type_choices
         ]
 
