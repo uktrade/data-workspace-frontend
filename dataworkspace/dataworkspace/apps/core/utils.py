@@ -11,6 +11,8 @@ import csv
 from typing import Tuple
 
 import gevent
+import gevent.queue
+
 import psycopg2
 from psycopg2 import connect, sql
 
@@ -162,7 +164,6 @@ def new_private_database_credentials(
             with cache.lock(
                 'database-grant-v1', blocking_timeout=15, timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
-
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
                         sql.SQL(',').join(
@@ -669,14 +670,37 @@ def tables_and_views_that_exist(cur, schema_tables):
     return cur.fetchall()
 
 
-def streaming_query_response(user_email, database, query, filename, query_params=None):
+def streaming_query_response(
+    user_email: str,
+    database: str,
+    query,
+    filename,
+    query_params=None,
+    original_query=None,
+):
+    """
+    Returns a streaming http response containing a csv file for download
+
+    @param user_email: for logging - who initiated this download
+    @param database: name of database where the query should be executed
+    @param query: psycopg2 composed SQL query
+    @param filename: the filename that should be generated
+    @param query_params: additional query parameters applied to query
+    @param original_query: (optional) when query is a filtered query i.e. with a where clause
+                this should be the original unfiltered query. It is used to calculate how
+                much data could've been downloaded without the filters
+    @return: Customised DjangoStreamingResponse
+    """
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
+
+    logger.debug('query_params %s', query_params)
+
     batch_size = 1000
     query_timeout = 300 * 1000
 
-    def yield_db_rows():
-        # The csv writer "writes" its output by calling a file-like object
-        # with a `write` method.
+    q = gevent.queue.JoinableQueue()
+
+    def stream_query_as_csv_to_queue(conn):
         class PseudoBuffer:
             def write(self, value):
                 return value
@@ -684,14 +708,8 @@ def streaming_query_response(user_email, database, query, filename, query_params
         pseudo_buffer = PseudoBuffer()
         csv_writer = csv.writer(pseudo_buffer, quoting=csv.QUOTE_NONNUMERIC)
 
-        with connect(
-            database_dsn(settings.DATABASES_DATA[database])
-        ) as conn, conn.cursor(
-            name='data_download'
-        ) as cur:  # Named cursor => server-side cursor
-
+        with conn.cursor(name='data_download') as cur:
             conn.set_session(readonly=True)
-
             # set statements can't be issued in a server-side cursor, so we
             # need to create a separate one to set a timeout on the current
             # connection
@@ -706,10 +724,11 @@ def streaming_query_response(user_email, database, query, filename, query_params
             while True:
                 rows = cur.fetchmany(batch_size)
 
-                if i == 0:
-                    # Column names are not populated until the first row fetched
-                    yield csv_writer.writerow(
-                        [column_desc[0] for column_desc in cur.description]
+                if i == 0:  # Column names are not populated until the first row fetched
+                    q.put(
+                        csv_writer.writerow(
+                            [column_desc[0] for column_desc in cur.description]
+                        )
                     )
 
                 if not rows:
@@ -719,20 +738,82 @@ def streaming_query_response(user_email, database, query, filename, query_params
                     csv_writer.writerow(row) for row in rows
                 ).encode('utf-8')
 
-                yield bytes_fetched
+                logger.debug('fetched %s rows', len(rows))
 
+                q.put(bytes_fetched)
                 i += len(rows)
 
-        yield csv_writer.writerow(['Number of rows: ' + str(i)])
+            q.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
-        logger.info(
-            'streaming_query_response end: %s %s %s', user_email, database, query
+        q.put(StopIteration)
+
+    def get_all_columns_from_unfiltered(conn):
+        logger.debug('get_all_columns_from_unfiltered')
+        columns_query = sql.SQL('SELECT * FROM ({query}) as data LIMIT 1').format(
+            query=original_query
+        )
+        with conn.cursor() as cur:
+            cur.execute(columns_query)
+            columns = [column_desc[0] for column_desc in cur.description]
+
+        return columns
+
+    def get_row_count_from_unfiltered(conn):
+        logger.debug('get_row_count_from_unfiltered')
+        total_query = sql.SQL('SELECT COUNT(*) from ({query}) as data;').format(
+            query=original_query,
         )
 
+        with conn.cursor() as cur:
+            cur.execute(total_query)
+            counts = cur.fetchone()
+
+        return counts
+
+    def steam_csv_and_calculate_totals():
+        with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
+            stream_query_as_csv_to_queue(conn)
+
+            # PR3 - Capture data in the background about how much was requested vs was available
+            if original_query:
+                all_columns = get_all_columns_from_unfiltered(conn)
+                counts = get_row_count_from_unfiltered(conn)
+
+        if original_query:
+            logger.debug(all_columns)
+            logger.debug(counts)
+
+    def csv_iterator():
+        # Listen for all data on the queue until we receive the done object
+        # this means that the filtered part of the query is complete
+        # and we can return
+        while True:
+            data = q.get(block=True)
+
+            if data == StopIteration:
+                break
+
+            if data:
+                yield data
+
+            q.task_done()
+
+    def exception_callback(g):
+        try:
+            g.get()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            raise
+
+    g = gevent.spawn(steam_csv_and_calculate_totals)
+    g.link_exception(exception_callback)
+
     response = StreamingHttpResponseWithoutDjangoDbConnection(
-        yield_db_rows(), content_type='text/csv'
+        csv_iterator(), content_type='text/csv',
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    logger.info('streaming_query_response end: %s %s %s', user_email, database, query)
 
     return response
 

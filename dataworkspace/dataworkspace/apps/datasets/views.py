@@ -55,7 +55,6 @@ from django.views.generic import DetailView, View
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.core.streaming_query import new_streaming_query_response
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -1186,11 +1185,12 @@ class CustomDatasetQueryDownloadView(DetailView):
         dataset.save(update_fields=['number_of_downloads'])
 
         filtered_query = sql.SQL(query.query)
+        unfiltered_query = None
         columns = request.GET.getlist('columns')
 
         if columns:
             trimmed_query = query.query.rstrip().rstrip(';')
-
+            unfiltered_query = sql.SQL(query.query.rstrip().rstrip(';'))
             filtered_query = sql.SQL('SELECT {fields} from ({query}) as data;').format(
                 fields=sql.SQL(',').join(
                     [sql.Identifier(column) for column in columns]
@@ -1203,6 +1203,7 @@ class CustomDatasetQueryDownloadView(DetailView):
             query.database.memorable_name,
             filtered_query,
             query.get_filename(),
+            original_query=unfiltered_query,
         )
 
 
@@ -1557,15 +1558,15 @@ class DataGridDataView(DetailView):
             if not self.kwargs['download_enabled']:
                 return HttpResponseForbidden()
 
-            return new_streaming_query_response(
+            return streaming_query_response(
                 request.user.email,
                 source.database.memorable_name,
                 query,
-                source.get_data_grid_query(),
                 request.POST.get(
                     'export_file_name', f'custom-{source.dataset.slug}-export.csv'
                 ),
                 params,
+                original_query=source.get_data_grid_query(),
             )
 
         records = self._get_rows(source, query, params)
