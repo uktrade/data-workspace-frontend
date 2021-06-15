@@ -7,6 +7,7 @@ from itertools import chain
 import json
 from typing import Set
 
+
 import boto3
 import psycopg2
 import waffle
@@ -905,7 +906,6 @@ def request_access_success_view(request, dataset_uuid):
 def _notify_visualisation_access_request(
     request, dataset, dataset_url, contact_email, goal
 ):
-
     message = f"""
 An access request has been sent to the data visualisation owner and secondary contact to process.
 
@@ -1185,15 +1185,23 @@ class CustomDatasetQueryDownloadView(DetailView):
         dataset.number_of_downloads = F('number_of_downloads') + 1
         dataset.save(update_fields=['number_of_downloads'])
 
-        filtered_query = query.query
+        filtered_query = sql.SQL(query.query)
         columns = request.GET.getlist('columns')
+
         if columns:
-            filtered_query = f"SELECT {','.join(columns)} FROM ({query.query.rstrip().rstrip(';')}) as data;"
+            trimmed_query = query.query.rstrip().rstrip(';')
+
+            filtered_query = sql.SQL('SELECT {fields} from ({query}) as data;').format(
+                fields=sql.SQL(',').join(
+                    [sql.Identifier(column) for column in columns]
+                ),
+                query=sql.SQL(trimmed_query),
+            )
 
         return streaming_query_response(
             request.user.email,
             query.database.memorable_name,
-            sql.SQL(filtered_query),
+            filtered_query,
             query.get_filename(),
         )
 

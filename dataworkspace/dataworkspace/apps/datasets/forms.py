@@ -399,8 +399,8 @@ class DatasetSearchFormV2(DatasetSearchForm):
                     counts['data_type'][type_id] += 1
 
             for source_id, _ in source_choices:
-                if dataset_matcher(source_ids={source_id}):
-                    counts['source'][source_id] += 1
+                if dataset_matcher(source_ids={source_id.value}):
+                    counts['source'][source_id.value] += 1
 
             for topic_id, _ in topic_choices:
                 if dataset_matcher(topic_ids={topic_id.value}):
@@ -437,7 +437,8 @@ class DatasetSearchFormV2(DatasetSearchForm):
         self.fields['source'].choices = [
             (source_id, source_text + f" ({counts['source'][source_id.value]})")
             for source_id, source_text in source_choices
-            if source_id in selected_source_ids or counts['source'][source_id] != 0
+            if source_id.value in selected_source_ids
+            or counts['source'][source_id.value] != 0
         ]
 
         self.fields['topic'].choices = [
