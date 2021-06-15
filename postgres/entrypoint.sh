@@ -8,6 +8,7 @@ openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -subj /CN=analysis-wor
 chown postgres:postgres ssl.key ssl.crt
 chmod 0600 ssl.key ssl.crt
 
+mkdir -p /var/log/postgres
 chown postgres:postgres /var/log/postgres
 
 export POSTGRES_USER=postgres
