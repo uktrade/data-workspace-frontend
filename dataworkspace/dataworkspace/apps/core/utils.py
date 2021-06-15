@@ -671,12 +671,7 @@ def tables_and_views_that_exist(cur, schema_tables):
 
 
 def streaming_query_response(
-    user_email: str,
-    database: str,
-    query,
-    filename,
-    query_params=None,
-    original_query=None,
+    user_email: str, database: str, query, filename, query_params=None,
 ):
     """
     Returns a streaming http response containing a csv file for download
@@ -686,9 +681,6 @@ def streaming_query_response(
     @param query: psycopg2 composed SQL query
     @param filename: the filename that should be generated
     @param query_params: additional query parameters applied to query
-    @param original_query: (optional) when query is a filtered query i.e. with a where clause
-                this should be the original unfiltered query. It is used to calculate how
-                much data could've been downloaded without the filters
     @return: Customised DjangoStreamingResponse
     """
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
