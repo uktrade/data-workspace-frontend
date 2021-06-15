@@ -8,6 +8,7 @@ import re
 import signal
 import textwrap
 import unittest
+import uuid
 
 import aiohttp
 import elasticsearch
@@ -246,6 +247,123 @@ class TestApplication(unittest.TestCase):
             received_content['headers']['from-downstream'], 'downstream-header-value'
         )
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+
+    @async_test
+    async def test_db_application_can_read_and_write_to_private_schema(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application_1 = await create_application()
+        self.add_async_cleanup(cleanup_application_1)
+
+        is_logged_in = True
+        codes = iter(['some-code'])
+        tokens = iter(['token-1'])
+        auth_to_me = {
+            'Bearer token-1': {
+                'email': 'test@test.com',
+                'contact_email': 'test@test.com',
+                'related_emails': [],
+                'first_name': 'Peter',
+                'last_name': 'Piper',
+                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+
+        # Ensure the record has been created
+        async with session.request(
+            'GET', 'http://dataworkspace.test:8000/'
+        ) as response:
+            await response.text()
+
+        # Slightly unfortunately, we need a dataset in the database for the
+        # user to have their private schema created
+        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
+        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        stdout, stderr, code = await create_private_dataset(
+            'my_database',
+            'DATACUT',
+            dataset_id_test_dataset,
+            'test_dataset',
+            table_id,
+            'test_dataset',
+        )
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        _, _, _ = await make_all_tools_visible()
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b'')
+        self.assertEqual(stderr, b'')
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            'GET', 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/'
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn('Tool with DB access is loading...', application_content_1)
+
+        async with session.request(
+            'GET', 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/'
+        ) as response:
+            application_content_2 = await response.text()
+
+        self.assertIn('Tool with DB access is loading...', application_content_2)
+
+        await until_non_202(
+            session, 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/'
+        )
+
+        # Check we go wrong when we have no table
+        table = uuid.uuid4().hex
+        async with session.request(
+            'GET',
+            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+        self.assertEqual(received_status, 500)
+        self.assertEqual(
+            content, '500 Internal Server Error\n\nServer got itself in trouble'
+        )
+
+        # Make the table in the private schema
+        async with session.request(
+            'POST',
+            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}',
+        ) as response:
+            received_status = response.status
+            await response.text()
+        self.assertEqual(received_status, 200)
+
+        # Fetch everything from the table in the private schema
+        async with session.request(
+            'GET',
+            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}',
+        ) as response:
+            received_status = response.status
+            content = await response.text()
+        self.assertEqual(received_status, 200)
+        self.assertEqual(json.loads(content), {'data': [[1, 'orange']]})
+
+        # Stop the application
+        async with session.request(
+            'POST', 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/stop'
+        ) as response:
+            await response.text()
 
     @async_test
     async def test_visualisation_shows_content_if_authorized_and_published(self):
