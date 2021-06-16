@@ -11,6 +11,8 @@ import csv
 from typing import Tuple
 
 import gevent
+import gevent.queue
+
 import psycopg2
 from psycopg2 import connect, sql
 
@@ -169,7 +171,6 @@ def new_private_database_credentials(
             with cache.lock(
                 'database-grant-v1', blocking_timeout=15, timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
-
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
                         sql.SQL(',').join(
@@ -740,14 +741,42 @@ def tables_and_views_that_exist(cur, schema_tables):
     return cur.fetchall()
 
 
-def streaming_query_response(user_email, database, query, filename, query_params=None):
+def streaming_query_response(
+    user_email: str, database: str, query, filename, query_params=None,
+):
+    """
+    Returns a streaming http response containing a csv file for download
+
+    @param user_email: for logging - who initiated this download
+    @param database: name of database where the query should be executed
+    @param query: psycopg2 composed SQL query
+    @param filename: the filename that should be generated
+    @param query_params: additional query parameters applied to query
+    @return: Customised DjangoStreamingResponse
+    """
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
+
+    logger.debug('query_params %s', query_params)
+
     batch_size = 1000
     query_timeout = 300 * 1000
 
-    def yield_db_rows():
-        # The csv writer "writes" its output by calling a file-like object
-        # with a `write` method.
+    # done is added to the queue once the download of the data for the browser is complete
+    # this causes the generator to finish and processing to continue
+    done = object()
+
+    # if an exception occurs within the greenlet we need to signal this to the generator
+    # so we create an instance of ExceptionRaisedInGreenlet and add to the queue
+    # the generator checks for this and will re-raise the exception to the view
+    class ExceptionRaisedInGreenlet:
+        def __init__(self):
+            self.exception = None
+
+    exception_raised = ExceptionRaisedInGreenlet()
+
+    q = gevent.queue.Queue(maxsize=1)
+
+    def stream_query_as_csv_to_queue(conn):
         class PseudoBuffer:
             def write(self, value):
                 return value
@@ -755,14 +784,8 @@ def streaming_query_response(user_email, database, query, filename, query_params
         pseudo_buffer = PseudoBuffer()
         csv_writer = csv.writer(pseudo_buffer, quoting=csv.QUOTE_NONNUMERIC)
 
-        with connect(
-            database_dsn(settings.DATABASES_DATA[database])
-        ) as conn, conn.cursor(
-            name='data_download'
-        ) as cur:  # Named cursor => server-side cursor
-
+        with conn.cursor(name='data_download') as cur:
             conn.set_session(readonly=True)
-
             # set statements can't be issued in a server-side cursor, so we
             # need to create a separate one to set a timeout on the current
             # connection
@@ -779,8 +802,11 @@ def streaming_query_response(user_email, database, query, filename, query_params
 
                 if i == 0:
                     # Column names are not populated until the first row fetched
-                    yield csv_writer.writerow(
-                        [column_desc[0] for column_desc in cur.description]
+                    # don't block this q.put call as it is the first thing to be pushed
+                    q.put(
+                        csv_writer.writerow(
+                            [column_desc[0] for column_desc in cur.description]
+                        )
                     )
 
                 if not rows:
@@ -790,20 +816,56 @@ def streaming_query_response(user_email, database, query, filename, query_params
                     csv_writer.writerow(row) for row in rows
                 ).encode('utf-8')
 
-                yield bytes_fetched
+                logger.debug('fetched %s rows', len(rows))
 
+                q.put(bytes_fetched, block=True, timeout=query_timeout)
                 i += len(rows)
 
-        yield csv_writer.writerow(['Number of rows: ' + str(i)])
+            q.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
-        logger.info(
-            'streaming_query_response end: %s %s %s', user_email, database, query
-        )
+        q.put(done)
+
+    def stream_csv():
+        with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
+            stream_query_as_csv_to_queue(conn)
+
+    def csv_iterator():
+        # Listen for all data on the queue until we receive the done object
+        # this means that the filtered part of the query is complete
+        # and we can return
+        while True:
+            data = q.get(block=True, timeout=query_timeout)
+
+            if data is done:
+                break
+
+            if data is exception_raised:
+                logger.debug("exception was raised elsewhere. Terminating download")
+                raise exception_raised.exception
+
+            if data:
+                yield data
+
+    def exception_callback(g):
+        try:
+            g.get()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            # this is picked up in csv_iterator if it is still running
+            # which willl stop the download
+            exception_raised.exception = e
+            q.put(exception_raised)
+            raise
+
+    g = gevent.spawn(stream_csv)
+    g.link_exception(exception_callback)
 
     response = StreamingHttpResponseWithoutDjangoDbConnection(
-        yield_db_rows(), content_type='text/csv'
+        csv_iterator(), content_type='text/csv',
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    logger.info('streaming_query_response end: %s %s %s', user_email, database, query)
 
     return response
 
