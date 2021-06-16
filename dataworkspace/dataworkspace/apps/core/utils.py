@@ -171,6 +171,7 @@ def new_private_database_credentials(
             with cache.lock(
                 'database-grant-v1', blocking_timeout=15, timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
+
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
                         sql.SQL(',').join(
@@ -742,19 +743,36 @@ def tables_and_views_that_exist(cur, schema_tables):
 
 
 def streaming_query_response(
-    user_email: str, database: str, query, filename, query_params=None,
+    user_email: str,
+    database: str,
+    query,
+    filename,
+    query_params=None,
+    unfiltered_query=None,
+    query_metrics_callback=None,
 ):
     """
     Returns a streaming http response containing a csv file for download
+
+    when provided will callback with query metrics details
+    * Total number of rows in original query vs number of rows requested
+    * Total number of columns in origin vs number of columns requested
 
     @param user_email: for logging - who initiated this download
     @param database: name of database where the query should be executed
     @param query: psycopg2 composed SQL query
     @param filename: the filename that should be generated
     @param query_params: additional query parameters applied to query
+    @param unfiltered_query: the query without any filters applied
+    @param query_metrics_callback: function to call with query metrics data
     @return: Customised DjangoStreamingResponse
     """
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
+
+    if unfiltered_query and not query_metrics_callback:
+        logger.warning(
+            "Missing value for query_metrics_callback. No metrics will be calculated"
+        )
 
     logger.debug('query_params %s', query_params)
 
@@ -784,6 +802,8 @@ def streaming_query_response(
         pseudo_buffer = PseudoBuffer()
         csv_writer = csv.writer(pseudo_buffer, quoting=csv.QUOTE_NONNUMERIC)
 
+        filtered_columns = []
+
         with conn.cursor(name='data_download') as cur:
             conn.set_session(readonly=True)
             # set statements can't be issued in a server-side cursor, so we
@@ -797,11 +817,15 @@ def streaming_query_response(
             cur.execute(query, vars=query_params)
 
             i = 0
+            total_bytes = 0
             while True:
                 rows = cur.fetchmany(batch_size)
 
                 if i == 0:
                     # Column names are not populated until the first row fetched
+                    filtered_columns = [
+                        column_desc[0] for column_desc in cur.description
+                    ]
                     # don't block this q.put call as it is the first thing to be pushed
                     q.put(
                         csv_writer.writerow(
@@ -816,18 +840,69 @@ def streaming_query_response(
                     csv_writer.writerow(row) for row in rows
                 ).encode('utf-8')
 
-                logger.debug('fetched %s rows', len(rows))
-
-                q.put(bytes_fetched, block=True, timeout=query_timeout)
                 i += len(rows)
+                total_bytes += len(bytes_fetched)
+
+                logger.debug('fetched %s rows', len(rows))
+                logger.debug('total bytes %s', total_bytes)
+                q.put(bytes_fetched, block=True, timeout=query_timeout)
 
             q.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
         q.put(done)
 
-    def stream_csv():
+        return filtered_columns, i, total_bytes
+
+    def get_all_columns_from_unfiltered(conn):
+        logger.debug('get_all_columns_from_unfiltered')
+        columns_query = sql.SQL('SELECT * FROM ({query}) as data LIMIT 1').format(
+            query=unfiltered_query
+        )
+        with conn.cursor() as cur:
+            cur.execute(columns_query)
+            columns = [column_desc[0] for column_desc in cur.description]
+
+        return columns
+
+    def get_row_count_from_unfiltered(conn):
+        logger.debug('get_row_count_from_unfiltered')
+        total_query = sql.SQL('SELECT COUNT(*) from ({query}) as data;').format(
+            query=unfiltered_query,
+        )
+
+        with conn.cursor() as cur:
+            cur.execute(total_query)
+            counts = cur.fetchone()
+
+        return counts[0]
+
+    def run_queries():
+        should_run_query_metrics = unfiltered_query and query_metrics_callback
+
         with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
-            stream_query_as_csv_to_queue(conn)
+            (
+                filtered_columns,
+                filtered_rows_count,
+                total_bytes,
+            ) = stream_query_as_csv_to_queue(conn)
+
+            if should_run_query_metrics:
+                # we run this using the connection context and only return the data to caller
+                # once the context / connection is closed to avoid djangodb and datatdb connections
+                # being open at the same time
+                all_columns = get_all_columns_from_unfiltered(conn)
+                all_rows_count = get_row_count_from_unfiltered(conn)
+
+        if should_run_query_metrics:
+            metrics = {
+                'rows': {'all': all_rows_count, 'filtered': filtered_rows_count},
+                'columns': {'all': len(all_columns), 'filtered': len(filtered_columns)},
+                'bytes': {
+                    'filtered': total_bytes
+                },  # we can't work out bytes for 'all' without running the query
+            }
+
+            query_metrics_callback(metrics)
 
     def csv_iterator():
         # Listen for all data on the queue until we receive the done object
@@ -857,7 +932,7 @@ def streaming_query_response(
             q.put(exception_raised)
             raise
 
-    g = gevent.spawn(stream_csv)
+    g = gevent.spawn(run_queries)
     g.link_exception(exception_callback)
 
     response = StreamingHttpResponseWithoutDjangoDbConnection(
