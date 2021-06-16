@@ -698,7 +698,8 @@ def streaming_query_response(
     # so we create an instance of ExceptionRaisedInGreenlet and add to the queue
     # the generator checks for this and will re-raise the exception to the view
     class ExceptionRaisedInGreenlet:
-        pass
+        def __init__(self):
+            self.exception = None
 
     exception_raised = ExceptionRaisedInGreenlet()
 
