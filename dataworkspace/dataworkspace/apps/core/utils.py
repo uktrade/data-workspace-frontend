@@ -23,7 +23,7 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.core.models import Database, DatabaseUser
+from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
@@ -81,6 +81,10 @@ def new_private_database_credentials(
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[Database] = tuple(),
 ):
+    db_team_roles = [team.schema_name for team in Team.objects.filter(member=dw_user)]
+    db_team_roles_set = set(db_team_roles)
+    db_team_schemas = db_team_roles
+
     # This function can take a while. That isn't great, but also not great to
     # hold a connection to the admin database
     close_admin_db_connection_if_not_in_atomic_block()
@@ -120,20 +124,23 @@ def new_private_database_credentials(
             )
             allowed_schemas_that_exist_set = set(allowed_schemas_that_exist)
 
-            # Ensure role exists
-            cur.execute(
-                sql.SQL(
-                    '''
-                DO $$
-                BEGIN
-                  CREATE ROLE {};
-                EXCEPTION WHEN OTHERS THEN
-                  RAISE DEBUG 'Role {} already exists';
-                END
-                $$;
-            '''
-                ).format(sql.Identifier(db_role), sql.Identifier(db_role))
-            )
+            def ensure_db_role(db_role_name):
+                cur.execute(
+                    sql.SQL(
+                        '''
+                    DO $$
+                    BEGIN
+                      CREATE ROLE {role};
+                    EXCEPTION WHEN OTHERS THEN
+                      RAISE DEBUG 'Role {role} already exists';
+                    END
+                    $$;
+                '''
+                    ).format(role=sql.Identifier(db_role_name))
+                )
+
+            for db_role_name in db_team_roles + [db_role]:
+                ensure_db_role(db_role_name)
 
             # On RDS, to do SET ROLE, you have to GRANT the role to the current master user. You also
             # have to have (at least) USAGE on each user schema to call has_table_privilege. So,
@@ -239,6 +246,25 @@ def new_private_database_credentials(
             schemas_with_existing_privs = [row[0] for row in cur.fetchall()]
             schemas_with_existing_privs_set = set(schemas_with_existing_privs)
 
+            # Existing granted team roles to permanant user role
+            cur.execute(
+                sql.SQL(
+                    '''
+                SELECT
+                    rolname
+                FROM
+                    pg_roles
+                WHERE
+                    (
+                        rolname LIKE '\\_team\\_'
+                    )
+                    AND pg_has_role({db_role}, rolname, 'member');
+            '''
+                ).format(db_role=sql.Literal(db_role))
+            )
+            db_team_roles_previously_granted = [role for (role,) in cur.fetchall()]
+            db_team_roles_previously_granted_set = set(db_team_roles_previously_granted)
+
             tables_to_revoke = [
                 (schema, table)
                 for (schema, table) in tables_with_existing_privs
@@ -261,6 +287,17 @@ def new_private_database_credentials(
                 if schema not in schemas_with_existing_privs_set
             ]
 
+            db_team_roles_to_revoke = [
+                db_team_role
+                for db_team_role in db_team_roles_previously_granted
+                if db_team_role not in db_team_roles_set
+            ]
+            db_team_roles_to_grant = [
+                db_team_role
+                for db_team_role in db_team_roles
+                if db_team_role not in db_team_roles_previously_granted_set
+            ]
+
             # Create user. Note that in PostgreSQL a USER and ROLE are almost the same thing, the
             # difference is that by default a ROLE is "NOLOGIN", so can't be used to connect to
             # the database, i.e. it really is more of a "group".
@@ -274,16 +311,19 @@ def new_private_database_credentials(
                 ),
             )
 
-            # ... create a schema
-            cur.execute(
-                sql.SQL('CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};').format(
-                    sql.Identifier(db_schema), sql.Identifier(db_role),
+            # ... create schemas
+            for _db_role, _db_schema in list(zip(db_team_roles, db_team_schemas)) + [
+                (db_role, db_schema)
+            ]:
+                cur.execute(
+                    sql.SQL('CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};').format(
+                        sql.Identifier(_db_schema), sql.Identifier(_db_role),
+                    )
                 )
-            )
 
-            # Give the user and role reasonable timeouts...
-            # [Both out of paranoia in case the user change role mid session]
-            for _db_user in [db_role, db_user]:
+            # Give the roles reasonable timeouts...
+            # [Out of paranoia on all roles in case the user change role mid session]
+            for _db_user in [db_role, db_user] + db_team_roles:
                 cur.execute(
                     sql.SQL(
                         "ALTER USER {} SET idle_in_transaction_session_timeout = '60min';"
@@ -380,6 +420,37 @@ def new_private_database_credentials(
                     )
                 )
 
+            logger.info(
+                'Revoking %s from %s', db_team_roles_to_revoke, db_role,
+            )
+            if db_team_roles_to_revoke:
+                cur.execute(
+                    sql.SQL('REVOKE {} FROM {};').format(
+                        sql.SQL(',').join(
+                            [
+                                sql.Identifier(db_team_role)
+                                for db_team_role in db_team_roles_to_revoke
+                            ]
+                        ),
+                        sql.Identifier(db_role),
+                    )
+                )
+            logger.info(
+                'Granting %s to %s', db_team_roles_to_grant, db_role,
+            )
+            if db_team_roles_to_grant:
+                cur.execute(
+                    sql.SQL('GRANT {} TO {};').format(
+                        sql.SQL(',').join(
+                            [
+                                sql.Identifier(db_team_role)
+                                for db_team_role in db_team_roles_to_grant
+                            ]
+                        ),
+                        sql.Identifier(db_role),
+                    )
+                )
+
             cur.execute(
                 sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
                     sql.Identifier(database_data['NAME']), sql.Identifier(db_role)
@@ -391,8 +462,8 @@ def new_private_database_credentials(
                 )
             )
 
+        # Make it so by default, objects created by the user are owned by the role
         with connections[database_obj.memorable_name].cursor() as cur:
-            # Make it so by default, objects created by the user are owned by the role
             cur.execute(
                 sql.SQL('ALTER USER {} SET ROLE {};').format(
                     sql.Identifier(db_user), sql.Identifier(db_role)
@@ -422,7 +493,7 @@ def new_private_database_credentials(
 
     # Sometime we want to make sure credentials have been created for a database, even if the user has no explicit
     # access to tables in that database (e.g. for Data Explorer, where ensuring they can always connect to the database
-    # can prevent a number of failure conditions.
+    # can prevent a number of failure conditions.)
     for extra_db in force_create_for_databases:
         if extra_db not in database_to_tables:
             database_to_tables[extra_db] = []

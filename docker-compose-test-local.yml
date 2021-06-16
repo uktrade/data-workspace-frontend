@@ -21,6 +21,7 @@ services:
       - "dataworkspace.test:127.0.0.1"
       - "superset.dataworkspace.test:127.0.0.1"
       - "testapplication-23b40dd9.dataworkspace.test:127.0.0.1"
+      - "testdbapplication-23b40dd9.dataworkspace.test:127.0.0.1"
       - "testvisualisation.dataworkspace.test:127.0.0.1"
       - "testvisualisation--8888.dataworkspace.test:127.0.0.1"
       - "testvisualisation--11372717.dataworkspace.test:127.0.0.1"
