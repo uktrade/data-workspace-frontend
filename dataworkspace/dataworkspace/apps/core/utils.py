@@ -690,7 +690,8 @@ def streaming_query_response(
     batch_size = 1000
     query_timeout = 300 * 1000
 
-    q = gevent.queue.JoinableQueue()
+    done = object()
+    q = gevent.queue.Queue(maxsize=1)
 
     def stream_query_as_csv_to_queue(conn):
         class PseudoBuffer:
@@ -716,7 +717,9 @@ def streaming_query_response(
             while True:
                 rows = cur.fetchmany(batch_size)
 
-                if i == 0:  # Column names are not populated until the first row fetched
+                if i == 0:
+                    # Column names are not populated until the first row fetched
+                    # don't block this q.put call as it is the first thing to be pushed
                     q.put(
                         csv_writer.writerow(
                             [column_desc[0] for column_desc in cur.description]
@@ -732,12 +735,12 @@ def streaming_query_response(
 
                 logger.debug('fetched %s rows', len(rows))
 
-                q.put(bytes_fetched)
+                q.put(bytes_fetched, block=True, timeout=query_timeout)
                 i += len(rows)
 
             q.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
-        q.put(StopIteration)
+        q.put(done)
 
     def stream_csv():
         with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
@@ -748,15 +751,13 @@ def streaming_query_response(
         # this means that the filtered part of the query is complete
         # and we can return
         while True:
-            data = q.get(block=True)
+            data = q.get(block=True, timeout=query_timeout)
 
-            if data == StopIteration:
+            if data == done:
                 break
 
             if data:
                 yield data
-
-            q.task_done()
 
     def exception_callback(g):
         try:
