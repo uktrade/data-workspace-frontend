@@ -690,7 +690,18 @@ def streaming_query_response(
     batch_size = 1000
     query_timeout = 300 * 1000
 
+    # done is added to the queue once the download of the data for the browser is complete
+    # this causes the generator to finish and processing to continue
     done = object()
+
+    # if an exception occurs within the greenlet we need to signal this to the generator
+    # so we create an instance of ExceptionRaisedInGreenlet and add to the queue
+    # the generator checks for this and will re-raise the exception to the view
+    class ExceptionRaisedInGreenlet(object):
+        pass
+
+    exception_raised = ExceptionRaisedInGreenlet()
+
     q = gevent.queue.Queue(maxsize=1)
 
     def stream_query_as_csv_to_queue(conn):
@@ -753,8 +764,12 @@ def streaming_query_response(
         while True:
             data = q.get(block=True, timeout=query_timeout)
 
-            if data == done:
+            if data is done:
                 break
+
+            if data is exception_raised:
+                logger.debug("exception was raised elsewhere. Terminating download")
+                raise exception_raised.exception
 
             if data:
                 yield data
@@ -764,6 +779,10 @@ def streaming_query_response(
             g.get()
         except Exception as e:
             logger.error(e, exc_info=True)
+            # this is picked up in csv_iterator if it is still running
+            # which willl stop the download
+            exception_raised.exception = e
+            q.put(exception_raised)
             raise
 
     g = gevent.spawn(stream_csv)
