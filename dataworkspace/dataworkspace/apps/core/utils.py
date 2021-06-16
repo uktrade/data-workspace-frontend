@@ -697,7 +697,7 @@ def streaming_query_response(
     # if an exception occurs within the greenlet we need to signal this to the generator
     # so we create an instance of ExceptionRaisedInGreenlet and add to the queue
     # the generator checks for this and will re-raise the exception to the view
-    class ExceptionRaisedInGreenlet(object):
+    class ExceptionRaisedInGreenlet:
         pass
 
     exception_raised = ExceptionRaisedInGreenlet()
