@@ -1,3 +1,5 @@
+import asyncio
+
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 
@@ -46,7 +48,7 @@ class HomePage(_BasePage):
                 f"//input[@id = //label[contains(text(), '{label}')]/@for]"
             )
         )[0]
-        await element.click()
-
-        await self._page.waitForNavigation()
+        await asyncio.gather(
+            self._page.waitForNavigation(), element.click(),
+        )
         return self
