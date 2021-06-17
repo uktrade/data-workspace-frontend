@@ -277,7 +277,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
             ('no', 'Data I don\'t have access to'),
         ],
         required=False,
-        widget=FilterWidget("Choose data access", hint_text="You can choose 1 or more"),
+        widget=FilterWidget("Choose data access", hint_text="Select all that apply"),
     )
 
     bookmarked = forms.MultipleChoiceField(
@@ -295,7 +295,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
         coerce=int,
         required=False,
         widget=FilterWidget(
-            "What do you want to do?", hint_text="You can choose 1 or more"
+            "What do you want to do?", hint_text="Select all that apply"
         ),
     )
 
@@ -307,7 +307,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
         ],
         coerce=int,
         required=False,
-        widget=FilterWidget("Choose data type", hint_text="You can choose 1 or more"),
+        widget=FilterWidget("Choose data type", hint_text="Select all that apply"),
     )
 
     source = SourceTagField(
@@ -315,7 +315,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
         required=False,
         widget=FilterWidget(
             "Choose data source",
-            hint_text="You can choose 1 or more",
+            hint_text="Select all that apply",
             limit_initial_options=10,
             show_more_label="Show more sources",
         ),
@@ -328,7 +328,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
             "Choose data topic",
             limit_initial_options=10,
             show_more_label="Show more topics",
-            hint_text="You can choose 1 or more",
+            hint_text="Select all that apply",
         ),
     )
 
