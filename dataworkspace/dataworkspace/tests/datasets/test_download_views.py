@@ -854,7 +854,6 @@ class TestCustomQueryDownloadView:
 
         url = f'{query.get_grid_data_url()}?download=1'
 
-        print(url)
         response = request_client.post(
             url,
             data={
