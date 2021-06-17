@@ -773,9 +773,7 @@ def streaming_query_response(
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
 
     if unfiltered_query and not query_metrics_callback:
-        logger.warning(
-            "Missing value for query_metrics_callback. No metrics will be calculated"
-        )
+        logger.warning("Missing value for query_metrics_callback.")
 
     logger.debug('query_params %s', query_params)
 
@@ -795,6 +793,7 @@ def streaming_query_response(
 
     exception_raised = ExceptionRaisedInGreenlet()
 
+    # maxsize of 1 means memory use will be 1 * batch_size * bytes per row
     q = gevent.queue.Queue(maxsize=1)
 
     def stream_query_as_csv_to_queue(conn):
