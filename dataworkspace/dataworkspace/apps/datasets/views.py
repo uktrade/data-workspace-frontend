@@ -1,3 +1,4 @@
+import uuid
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 from contextlib import closing
@@ -1556,19 +1557,29 @@ class DataGridDataView(DetailView):
             original_query, column_config, post_data,
         )
 
-        def write_metrics_to_eventlog(log_data):
-            logger.debug('write_metics_log %s', log_data)
-
-            log_event(
-                request.user,
-                EventLog.TYPE_ENHANCED_PREVIEW_DOWNLOAD,
-                source,
-                extra=log_data,
-            )
-
         if request.GET.get('download'):
             if not self.kwargs['download_enabled']:
                 return HttpResponseForbidden()
+
+            correlation_id = {'correlation_id': str(uuid.uuid4())}
+
+            log_event(
+                request.user,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                source,
+                extra=correlation_id,
+            )
+
+            def write_metrics_to_eventlog(log_data):
+                logger.debug('write_metrics_to_eventlog %s', log_data)
+
+                log_data.update(correlation_id)
+                log_event(
+                    request.user,
+                    EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+                    source,
+                    extra=log_data,
+                )
 
             return streaming_query_response(
                 request.user.email,

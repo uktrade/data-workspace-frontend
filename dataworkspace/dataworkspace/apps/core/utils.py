@@ -18,6 +18,8 @@ from psycopg2 import connect, sql
 
 import boto3
 
+from timeit import default_timer as timer
+
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.http import StreamingHttpResponse
@@ -172,7 +174,6 @@ def new_private_database_credentials(
             with cache.lock(
                 'database-grant-v1', blocking_timeout=15, timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
-
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
                         sql.SQL(',').join(
@@ -804,14 +805,9 @@ def streaming_query_response(
         csv_writer = csv.writer(pseudo_buffer, quoting=csv.QUOTE_NONNUMERIC)
 
         filtered_columns = []
+        start = timer()
 
         with conn.cursor(name='data_download') as cur:
-            conn.set_session(readonly=True)
-            # set statements can't be issued in a server-side cursor, so we
-            # need to create a separate one to set a timeout on the current
-            # connection
-            with conn.cursor() as _cur:
-                _cur.execute('SET statement_timeout={0}'.format(query_timeout))
 
             cur.itersize = batch_size
             cur.arraysize = batch_size
@@ -851,8 +847,9 @@ def streaming_query_response(
             q.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
 
         q.put(done)
+        end = timer()
 
-        return filtered_columns, i, total_bytes
+        return filtered_columns, i, total_bytes, end - start
 
     def get_all_columns_from_unfiltered(conn):
         logger.debug('get_all_columns_from_unfiltered')
@@ -881,10 +878,21 @@ def streaming_query_response(
         should_run_query_metrics = unfiltered_query and query_metrics_callback
 
         with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
+            conn.set_session(readonly=True)
+
+            with conn.cursor() as _cur:
+                # set statements can't be issued in the server-side cursor,
+                # used by stream_query_as_csv_to_queue so we create a separate
+                # one to set a timeout on the current connection
+                _cur.execute('SET statement_timeout={0}'.format(query_timeout))
+                # create a db transaction
+                _cur.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
+
             (
                 filtered_columns,
                 filtered_rows_count,
                 total_bytes,
+                seconds_elapsed,
             ) = stream_query_as_csv_to_queue(conn)
 
             if should_run_query_metrics:
@@ -896,11 +904,12 @@ def streaming_query_response(
 
         if should_run_query_metrics:
             metrics = {
-                'rows': {'all': all_rows_count, 'filtered': filtered_rows_count},
-                'columns': {'all': len(all_columns), 'filtered': len(filtered_columns)},
-                'bytes': {
-                    'filtered': total_bytes
-                },  # we can't work out bytes for 'all' without running the query
+                'bytes_downloaded': total_bytes,
+                'column_count': len(all_columns),
+                'column_count_filtered': len(filtered_columns),
+                'download_time_in_seconds': seconds_elapsed,
+                'row_count': all_rows_count,
+                'row_count_filtered': filtered_rows_count,
             }
 
             query_metrics_callback(metrics)
