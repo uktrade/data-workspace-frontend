@@ -10,6 +10,8 @@ import string
 import csv
 from typing import Tuple
 
+from timeit import default_timer as timer
+
 import gevent
 import gevent.queue
 
@@ -18,7 +20,6 @@ from psycopg2 import connect, sql
 
 import boto3
 
-from timeit import default_timer as timer
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
