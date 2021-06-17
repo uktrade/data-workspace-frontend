@@ -824,11 +824,7 @@ def streaming_query_response(
                         column_desc[0] for column_desc in cur.description
                     ]
                     # don't block this q.put call as it is the first thing to be pushed
-                    q.put(
-                        csv_writer.writerow(
-                            [column_desc[0] for column_desc in cur.description]
-                        )
-                    )
+                    q.put(csv_writer.writerow(filtered_columns))
 
                 if not rows:
                     break
@@ -885,7 +881,6 @@ def streaming_query_response(
                 # used by stream_query_as_csv_to_queue so we create a separate
                 # one to set a timeout on the current connection
                 _cur.execute('SET statement_timeout={0}'.format(query_timeout))
-                # create a db transaction
                 _cur.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
 
             (
