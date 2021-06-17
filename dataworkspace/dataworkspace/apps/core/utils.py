@@ -159,7 +159,8 @@ def new_private_database_credentials(
                 WHERE
                     (
                         rolname SIMILAR TO '\\_user\\_[0-9a-f]{8}' OR
-                        rolname LIKE '\\_user\\_app\\_%'
+                        rolname LIKE '\\_user\\_app\\_%' OR
+                        rolname LIKE '\\_team_\\_%'
                     )
                     AND NOT pg_has_role(rolname, 'member');
             '''
