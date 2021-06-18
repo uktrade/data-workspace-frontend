@@ -1,3 +1,4 @@
+import uuid
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 from contextlib import closing
@@ -7,6 +8,7 @@ from itertools import chain
 import json
 from typing import Set
 
+import logging
 
 import boto3
 import psycopg2
@@ -102,6 +104,8 @@ from dataworkspace.zendesk import (
     create_support_request,
     get_people_url,
 )
+
+logger = logging.getLogger('app')
 
 
 def get_datasets_data_for_user_matching_query(
@@ -1548,13 +1552,34 @@ class DataGridDataView(DetailView):
             post_data['limit'] = min(post_data.get('limit', 100), 100)
             column_config = source.get_column_config()
 
+        original_query = source.get_data_grid_query()
         query, params = build_filtered_dataset_query(
-            source.get_data_grid_query(), column_config, post_data,
+            original_query, column_config, post_data,
         )
 
         if request.GET.get('download'):
             if not self.kwargs['download_enabled']:
                 return HttpResponseForbidden()
+
+            correlation_id = {'correlation_id': str(uuid.uuid4())}
+
+            log_event(
+                request.user,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                source,
+                extra=correlation_id,
+            )
+
+            def write_metrics_to_eventlog(log_data):
+                logger.debug('write_metrics_to_eventlog %s', log_data)
+
+                log_data.update(correlation_id)
+                log_event(
+                    request.user,
+                    EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+                    source,
+                    extra=log_data,
+                )
 
             return streaming_query_response(
                 request.user.email,
@@ -1564,6 +1589,8 @@ class DataGridDataView(DetailView):
                     'export_file_name', f'custom-{source.dataset.slug}-export.csv'
                 ),
                 params,
+                original_query,
+                write_metrics_to_eventlog,
             )
 
         records = self._get_rows(source, query, params)

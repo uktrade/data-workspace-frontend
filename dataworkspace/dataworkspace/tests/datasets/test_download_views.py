@@ -722,7 +722,9 @@ class TestCustomQueryDownloadView:
     def _get_database(self):
         return factories.DatabaseFactory(memorable_name='my_database')
 
-    def _create_query(self, sql, reviewed=True, published=True):
+    def _create_query(
+        self, sql, reviewed=True, published=True, data_grid_enabled=False
+    ):
         with psycopg2.connect(self._get_dsn()) as conn, conn.cursor() as cursor:
             cursor.execute(
                 '''
@@ -741,7 +743,11 @@ class TestCustomQueryDownloadView:
             user_access_type='REQUIRES_AUTHENTICATION', published=published
         )
         return factories.CustomDatasetQueryFactory(
-            dataset=dataset, database=self._get_database(), query=sql, reviewed=reviewed
+            dataset=dataset,
+            database=self._get_database(),
+            query=sql,
+            reviewed=reviewed,
+            data_grid_enabled=data_grid_enabled,
         )
 
     def test_forbidden_dataset(self, client):
@@ -830,6 +836,49 @@ class TestCustomQueryDownloadView:
         assert (
             DataSet.objects.get(pk=query.dataset.id).number_of_downloads
             == download_count + 1
+        )
+
+    @pytest.mark.parametrize(
+        'request_client,published',
+        [('client', True), ('staff_client', True), ('staff_client', False)],
+        indirect=['request_client'],
+    )
+    @pytest.mark.django_db
+    def test_valid_sql_data_grid_preview(self, request_client, published):
+        query = self._create_query(
+            'SELECT * FROM custom_query_test WHERE id IN (1, 3)',
+            published=published,
+            data_grid_enabled=True,
+        )
+        log_count = EventLog.objects.count()
+
+        url = f'{query.get_grid_data_url()}?download=1'
+
+        response = request_client.post(
+            url,
+            data={
+                'export_file_name': 'filename.csv',
+                'columns': ['id', 'name'],
+                'filters': '{}',
+            },
+        )
+
+        assert response.status_code == 200
+        assert b''.join(response.streaming_content) == (
+            b'"id","name"\r\n1,"the first record"\r\n'
+            b'3,"the last record"\r\n"Number of rows: 2"\r\n'
+        )
+        assert EventLog.objects.count() == log_count + 2
+
+        latest_events = EventLog.objects.all().order_by('-id')[:2]
+
+        assert (
+            latest_events[0].event_type
+            == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE
+        )
+
+        assert (
+            latest_events[1].event_type == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
         )
 
     @pytest.mark.parametrize(
