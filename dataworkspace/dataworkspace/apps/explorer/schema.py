@@ -1,24 +1,9 @@
 import logging
 from collections import namedtuple
+from itertools import groupby
 
-from geoalchemy2 import Geometry  # Needed for sqlalchemy to understand geometry columns
-from sqlalchemy import create_engine
-from sqlalchemy.dialects.postgresql.array import ARRAY
-from sqlalchemy.dialects.postgresql.base import DOUBLE_PRECISION, ENUM, TIMESTAMP, UUID
-from sqlalchemy.engine.reflection import Inspector
-from sqlalchemy.sql.sqltypes import (
-    BIGINT,
-    BOOLEAN,
-    CHAR,
-    DATE,
-    FLOAT,
-    INTEGER,
-    NUMERIC,
-    SMALLINT,
-    String,
-    TEXT,
-    VARCHAR,
-)
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 from django.conf import settings
 from django.core.cache import cache
@@ -36,10 +21,6 @@ def _get_includes():
 
 def _get_excludes():
     return settings.EXPLORER_SCHEMA_EXCLUDE_TABLE_PREFIXES
-
-
-def _include_views():
-    return settings.EXPLORER_SCHEMA_INCLUDE_VIEWS is True
 
 
 def _include_table(t):
@@ -69,26 +50,6 @@ def clear_schema_info_cache_for_user(user):
         cache.delete(connection_schema_cache_key(user, connection))
 
 
-COLUMN_MAPPING = {
-    ENUM: 'Enum',
-    CHAR: 'Text',
-    VARCHAR: 'Text',
-    String: 'Text',
-    TEXT: 'Text',
-    UUID: 'UUID',
-    ARRAY: 'Array',
-    INTEGER: 'Integer',
-    SMALLINT: 'Integer',
-    BIGINT: 'Integer',
-    NUMERIC: 'Decimal',
-    DOUBLE_PRECISION: 'Decimal',
-    FLOAT: 'Decimal',
-    BOOLEAN: 'Boolean',
-    DATE: 'Date',
-    TIMESTAMP: 'Timestamp',
-    Geometry: 'Geometry',
-}
-
 Column = namedtuple('Column', ['name', 'type'])
 Table = namedtuple('Table', ['name', 'columns'])
 
@@ -115,68 +76,53 @@ def build_schema_info(user, connection_alias):
             ]
 
         """
-    connection = get_user_explorer_connection_settings(user, connection_alias)
 
-    engine = create_engine(
+    connection = get_user_explorer_connection_settings(user, connection_alias)
+    with psycopg2.connect(
         f'postgresql://{connection["db_user"]}:{connection["db_password"]}'
         f'@{connection["db_host"]}:{connection["db_port"]}/'
         f'{connection["db_name"]}'
-    )
-
-    insp = Inspector.from_engine(engine)
-    conn = engine.raw_connection()
-    try:
-        tables = []
-        schemas_and_tables = _get_accessible_schemas_and_tables(conn)
-        for schema_, table_name in schemas_and_tables:
-            if not _include_table(table_name):
-                continue
-
-            columns = _get_columns_for_table(insp, schema_, table_name)
-            tables.append(Table(TableName(schema_, table_name), columns))
-    finally:
-        conn.close()
-
-    engine.dispose()
-    return tables
-
-
-def _get_accessible_schemas_and_tables(conn):
-    with conn.cursor() as cursor:
+    ) as conn, conn.cursor(cursor_factory=RealDictCursor) as cursor:
+        # Fetch schema, table, column_name, column_type in one query, avoiding
+        # information_schema since there is suspicion it is slow
         cursor.execute(
-            """
-SELECT table_schema, table_name
-FROM information_schema.tables
-WHERE table_schema not in %s
-ORDER BY table_schema, table_name;
-""",
+            '''
+            SELECT
+              pg_namespace.nspname AS schema_name,
+              pg_class.relname AS table_name,
+              pg_attribute.attname AS column_name,
+              pg_catalog.format_type(atttypid, atttypmod) AS column_type
+            FROM
+              pg_attribute
+              INNER JOIN pg_class ON pg_class.oid = pg_attribute.attrelid
+              INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+            WHERE
+              pg_namespace.nspname NOT IN ('information_schema', 'pg_catalog', 'pg_toast') AND
+              pg_namespace.nspname NOT LIKE 'pg_temp_%' AND
+              pg_namespace.nspname NOT LIKE 'pg_toast_temp_%' AND
+              has_schema_privilege(pg_namespace.nspname, 'USAGE') AND
+              has_table_privilege(
+                quote_ident(pg_namespace.nspname) || '.' || quote_ident(pg_class.relname),
+                'SELECT'
+              ) = true AND
+              attnum > 0
+            ORDER BY
+              pg_namespace.nspname, pg_class.relname, attnum
+        '''
+        )
+        results = [
+            row for row in cursor.fetchall() if _include_table(row['table_name'])
+        ]
+
+    return [
+        Table(
+            TableName(schema_name, table_name),
             [
-                (
-                    'pg_toast',
-                    'pg_temp_1',
-                    'pg_toast_temp_1',
-                    'pg_catalog',
-                    'information_schema',
-                )
+                Column(column['column_name'], column['column_type'])
+                for column in columns
             ],
         )
-        schemas_and_tables = cursor.fetchall()
-
-    return schemas_and_tables
-
-
-def _get_columns_for_table(insp, schema, table_name):
-    columns = []
-    cols = insp.get_columns(table_name, schema=schema)
-    for col in cols:
-        try:
-            columns.append(Column(col['name'], COLUMN_MAPPING[type(col['type'])]))
-        except KeyError:
-            logger.info(
-                'Skipping %s as %s (%s) is not a supported field type',
-                col["name"],
-                col["type"],
-                type(col["type"]),
-            )
-            continue
-    return columns
+        for (schema_name, table_name), columns in groupby(
+            results, lambda row: (row['schema_name'], row['table_name'])
+        )
+    ]
