@@ -52,13 +52,13 @@ def connection_schema_cache_key(user, connection_alias):
     return f'_explorer_cache_key_{user.profile.sso_id}_{connection_alias}'
 
 
-def schema_info(user, connection_alias, schema=None, table=None):
+def schema_info(user, connection_alias):
     key = connection_schema_cache_key(user, connection_alias)
     ret = cache.get(key)
     if ret:
         return ret
 
-    ret = build_schema_info(user, connection_alias, schema, table)
+    ret = build_schema_info(user, connection_alias)
     cache.set(key, ret)
 
     return ret
@@ -100,7 +100,7 @@ class TableName(namedtuple("TableName", ['schema', 'name'])):
         return f'{self.schema}.{self.name}'
 
 
-def build_schema_info(user, connection_alias, schema=None, table=None):
+def build_schema_info(user, connection_alias):
     """
         Construct schema information via engine-specific queries of the tables in the DB.
 
@@ -124,9 +124,6 @@ def build_schema_info(user, connection_alias, schema=None, table=None):
     )
 
     insp = Inspector.from_engine(engine)
-    if schema and table:
-        return _get_columns_for_table(insp, schema, table)
-
     conn = engine.raw_connection()
     try:
         tables = []
