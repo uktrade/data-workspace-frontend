@@ -14,12 +14,19 @@
       </h1>
       <p class="govuk-body">
         This process can be used to load a CSV file into the Data Workspace database.
-        It will create a table in your private schema containing the data which can be queried using SQL and
-        combined with other master datasets in Data Workspace tools.
+        It will create a table, either in your private schema or in one of your team schemas,
+        containing the data which can be queried using SQL and combined with other master datasets
+        in Data Workspace tools.
       </p>
+      {% if show_schema %}
+      <a href="{% url 'your_files:create-table-confirm-schema' %}?{{ request.GET.urlencode }}&table_name={{ table_name }}" class="govuk-button">
+        Continue
+      </a>
+      {% else %}
       <a href="{% url 'your_files:create-table-confirm-name' %}?{{ request.GET.urlencode }}&table_name={{ table_name }}" class="govuk-button">
         Continue
       </a>
+      {% endif %}
     </div>
   </div>
 {% endblock %}
