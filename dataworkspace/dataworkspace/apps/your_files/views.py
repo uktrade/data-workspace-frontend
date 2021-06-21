@@ -36,6 +36,7 @@ from dataworkspace.apps.your_files.utils import (
     get_dataflow_dag_status,
     get_dataflow_task_status,
     get_s3_csv_column_types,
+    get_schema_for_user,
     get_user_schema,
     trigger_dataflow_dag,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
@@ -114,15 +115,17 @@ class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
+        user_schema = get_schema_for_user(self.request.user)
         team_schemas = get_team_schemas_for_user(self.request.user)
+        schemas = [{'name': 'user', 'schema_name': user_schema}] + team_schemas
         schema_name = [
-            t['schema_name']
-            for t in team_schemas
-            if t['name'] == form.cleaned_data['schema']
+            schema['schema_name']
+            for schema in schemas
+            if schema['name'] == form.cleaned_data['schema']
         ]
         params = {
             'path': self.request.GET['path'],
-            'schema': schema_name,
+            'schema': schema_name[0],
             'team': form.cleaned_data['schema'],
             'table_name': self.request.GET.get('table_name'),
         }
@@ -143,12 +146,17 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
                 {
                     'path': self.request.GET['path'],
                     'schema': self.request.GET.get('schema'),
+                    'team': self.request.GET.get('team'),
                     'table_name': self.request.GET.get('table_name'),
                     'force_overwrite': 'overwrite' in self.request.GET,
-                    'show_schema': is_user_in_teams(self.request.user),
                 }
             )
         return initial
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'show_schema': is_user_in_teams(self.request.user)})
+        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
