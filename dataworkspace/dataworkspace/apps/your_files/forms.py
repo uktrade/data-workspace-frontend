@@ -10,10 +10,14 @@ from dataworkspace.apps.your_files.utils import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
+    GOVUKDesignSystemRadioField,
+    GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemSelectWidget,
 )
+from dataworkspace.apps.core.utils import get_team_schemas_for_user
+from dataworkspace.apps.your_files.utils import get_schema_for_user
 
 
 class CreateTableForm(GOVUKDesignSystemForm):
@@ -78,6 +82,30 @@ class CreateTableForm(GOVUKDesignSystemForm):
                 )
 
         return super().clean()
+
+
+class CreateTableSchemaForm(GOVUKDesignSystemForm):
+    schema = GOVUKDesignSystemRadioField(
+        label="In which schema would you like your table?",
+        widget=GOVUKDesignSystemRadiosWidget,
+        error_messages={"required": "You must select a schema."},
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super().__init__(*args, **kwargs)
+        user_schema = get_schema_for_user(self.user)
+        user_choice = [('user', f"{user_schema} (your private schema)")]
+        team_schemas = get_team_schemas_for_user(self.user)
+        team_choices = [
+            (
+                team_schema['name'],
+                f"{team_schema['schema_name']} ({team_schema['name']} shared schema)",
+            )
+            for team_schema in team_schemas
+        ]
+        schema_choices = user_choice + team_choices
+        self.fields['schema'].choices = schema_choices
 
 
 class CreateTableDataTypesForm(CreateTableForm):
