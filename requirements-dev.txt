@@ -161,6 +161,8 @@ django==3.2.4
     #   djangorestframework
 djangorestframework==3.11.2
     # via -r requirements.txt
+djhtml==1.4.9
+    # via -r requirements-dev.in
 docopt==0.6.2
     # via
     #   -r requirements.txt

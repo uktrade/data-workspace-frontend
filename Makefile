@@ -37,8 +37,12 @@ check-black:
 check-pylint:
 	 env PYTHONPATH=app python3 -m pylint.__main__ --rcfile .pylintrc dataworkspace/dataworkspace test
 
+.PHONY: check-html
+check-html:
+	djhtml -c dataworkspace/dataworkspace/templates/*.html
+
 .PHONY: check
-check: check-flake8 check-black check-pylint
+check: check-flake8 check-black check-html check-pylint
 
 
 .PHONY: format
