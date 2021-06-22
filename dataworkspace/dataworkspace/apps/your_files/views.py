@@ -349,7 +349,7 @@ class CreateTableCreatingTableView(BaseCreateTableStepView):
                 'title': 'Creating temporary table',
                 'info_text': (
                     'Data will be inserted into a temporary table and validated before '
-                    'it is made available in your private schema.'
+                    'it is made available.'
                 ),
             }
         )
@@ -367,7 +367,7 @@ class CreateTableIngestingView(BaseCreateTableStepView):
             {
                 'title': 'Inserting data',
                 'info_text': 'Once complete, your data will be validated and your table will be '
-                'made available in your private schema.',
+                'made available.',
             }
         )
         return context

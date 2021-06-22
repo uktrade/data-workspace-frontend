@@ -15,7 +15,7 @@ class TestCreateTableViews:
             + "?path=user/federated/abc/i-am-a.csv"
         )
         assert response.status_code == 200
-        assert "Create a table from i-am-a.csv" in response.content.decode(
+        assert "You can create a table from i-am-a.csv" in response.content.decode(
             response.charset
         )
 
