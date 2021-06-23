@@ -10,14 +10,18 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">
-        Create a table from {{ filename }}
+        Create a table
       </h1>
-      <p class="govuk-body">
-        This process can be used to load a CSV file into the Data Workspace database.
-        It will create a table, either in your private schema or in one of your team schemas,
-        containing the data which can be queried using SQL and combined with other master datasets
-        in Data Workspace tools.
+      <p class="govuk-body-l">
+        You can create a table from {{ filename }} allowing you to analyse your data in our tools.
       </p>
+      <p class="govuk-body">
+        You can choose to create this table in:
+      </p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>your private schema, where only you have access</li>
+        <li>a team schema, where your team members all have access</li>
+      </ul>
       {% if show_schema %}
       <a href="{% url 'your_files:create-table-confirm-schema' %}?{{ request.GET.urlencode }}&table_name={{ table_name }}" class="govuk-button">
         Continue
