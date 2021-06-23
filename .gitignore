@@ -48,6 +48,7 @@ target/
 
 .direnv/
 .envs/dev.env
+.envs/superset.dev.env
 
 # OSX
 

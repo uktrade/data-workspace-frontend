@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster-slim AS base
 
 RUN \
     apt-get update && \
@@ -40,6 +40,16 @@ ENV \
 
 COPY superset_config.py /etc/superset/
 COPY start.sh /
+
+FROM base as dev
+
+COPY gunicorn.dev.conf.py /gunicorn.conf.py
+
+USER superset
+
+CMD ["/start.sh"]
+
+FROM base as live
 
 USER superset
 
