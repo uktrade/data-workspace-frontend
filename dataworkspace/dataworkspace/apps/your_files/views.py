@@ -140,12 +140,13 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
     required_parameters = ['path']
 
     def get_initial(self):
+        schema = self.request.GET.get('schema', get_user_schema(self.request))
         initial = super().get_initial()
         if self.request.method == 'GET':
             initial.update(
                 {
                     'path': self.request.GET['path'],
-                    'schema': self.request.GET.get('schema'),
+                    'schema': schema,
                     'team': self.request.GET.get('team'),
                     'table_name': self.request.GET.get('table_name'),
                     'force_overwrite': 'overwrite' in self.request.GET,
