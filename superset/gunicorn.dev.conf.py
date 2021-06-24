@@ -22,6 +22,12 @@ def patched_base_environ(cfg):
         'HTTP_SSO_PROFILE_EMAIL': os.environ['HTTP_SSO_PROFILE_EMAIL'],
         'HTTP_SSO_PROFILE_FIRST_NAME': os.environ['HTTP_SSO_PROFILE_FIRST_NAME'],
         'HTTP_SSO_PROFILE_LAST_NAME': os.environ['HTTP_SSO_PROFILE_LAST_NAME'],
+        'HTTP_CREDENTIALS_DB_HOST': os.environ['DB_HOST'],
+        'HTTP_CREDENTIALS_DB_USER': os.environ['DB_USER'],
+        'HTTP_CREDENTIALS_DB_NAME': os.environ['DB_NAME'],
+        'HTTP_CREDENTIALS_DB_PASSWORD': os.environ['DB_PASSWORD'],
+        'HTTP_CREDENTIALS_DB_PORT': os.environ['DB_PORT'],
+        'HTTP_SSO_BLAH': 'blah',
     }
 
 

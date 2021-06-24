@@ -70,6 +70,7 @@ class DataWorkspaceRemoteUserView(AuthView):
             return redirect(self.appbuilder.get_url_for_index)
 
         app = self.appbuilder.get_app
+
         if role_name == 'Admin':
             is_admin = request.headers["Sso-Profile-Email"] in app.config['ADMIN_USERS']
             if not is_admin:
