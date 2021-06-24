@@ -196,3 +196,5 @@ FLASK_APP_MUTATOR = data_workspace_permission_handler
 CUSTOM_SECURITY_MANAGER = DataWorkspaceSecurityManager
 AUTH_TYPE = AUTH_REMOTE_USER
 ADDITIONAL_MIDDLEWARE = [lambda app: ProxyFix(app, x_proto=1)]
+
+FEATURE_FLAGS = {'SQLLAB_BACKEND_PERSISTENCE': True}
