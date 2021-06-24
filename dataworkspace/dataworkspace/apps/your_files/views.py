@@ -140,12 +140,13 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
     required_parameters = ['path']
 
     def get_initial(self):
+        schema = self.request.GET.get('schema', get_user_schema(self.request))
         initial = super().get_initial()
         if self.request.method == 'GET':
             initial.update(
                 {
                     'path': self.request.GET['path'],
-                    'schema': self.request.GET.get('schema'),
+                    'schema': schema,
                     'team': self.request.GET.get('team'),
                     'table_name': self.request.GET.get('table_name'),
                     'force_overwrite': 'overwrite' in self.request.GET,
@@ -349,7 +350,7 @@ class CreateTableCreatingTableView(BaseCreateTableStepView):
                 'title': 'Creating temporary table',
                 'info_text': (
                     'Data will be inserted into a temporary table and validated before '
-                    'it is made available in your private schema.'
+                    'it is made available.'
                 ),
             }
         )
@@ -367,7 +368,7 @@ class CreateTableIngestingView(BaseCreateTableStepView):
             {
                 'title': 'Inserting data',
                 'info_text': 'Once complete, your data will be validated and your table will be '
-                'made available in your private schema.',
+                'made available.',
             }
         )
         return context
