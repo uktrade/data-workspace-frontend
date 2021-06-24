@@ -8,7 +8,7 @@ reload = True
 workers = 1
 
 
-def dummy_base_environ(cfg):
+def patched_base_environ(cfg):
     return {
         'wsgi.errors': WSGIErrorsWrapper(cfg),
         'wsgi.version': (1, 0),
@@ -25,4 +25,4 @@ def dummy_base_environ(cfg):
     }
 
 
-wsgi.base_environ = dummy_base_environ
+wsgi.base_environ = patched_base_environ
