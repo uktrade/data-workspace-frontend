@@ -3,89 +3,89 @@
 {% block page_title %}{{ application_nice_name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
-  <div class="govuk-breadcrumbs">
-    <ol class="govuk-breadcrumbs__list">
-      <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link" href="{{ root_href }}">Home</a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link" href="{% url 'applications:tools' %}">Tools</a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item">{{ application_nice_name }} is loading</li>
-    </ol>
-  </div>
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="{{ root_href }}">Home</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="{% url 'applications:tools' %}">Tools</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">{{ application_nice_name }} is loading</li>
+        </ol>
+    </div>
 {% endblock %}
 
 {% block head %}
-  {{ block.super }}
-  <script nonce="{{ request.csp_nonce }}">
-    (() => {
-      function getStatus(url) {
-        return new Promise((resolve, reject) => {
-          var request = new XMLHttpRequest();
-          request.addEventListener('load', () => {
-            resolve(request.status);
-          });
-          request.addEventListener('error', reject);
-            request.open('GET', url);
-            // Usually the application is started by just going to the same URL that we're
-            // on / we're querying, which is the same URL as the final application.
-            // However, in the case of error the error is returned in the same request
-            // change deletes the application instance on the server. In order to show
-            // the error on a reload, we ensure we don't delete the application instance
-            // from the XMLHttpRequest. We _could_ show error dynamically via JavaScript,
-            // but we also want the errors to be shown on a full page load anyway, so we
-            // choose to only show error using the one mechanism
-            request.setRequestHeader('x-data-workspace-no-modify-application-instance', 'true')
-            request.send();
-          });
-        }
+    {{ block.super }}
+    <script nonce="{{ request.csp_nonce }}">
+        (() => {
+            function getStatus(url) {
+                return new Promise((resolve, reject) => {
+                    var request = new XMLHttpRequest();
+                    request.addEventListener('load', () => {
+                        resolve(request.status);
+                    });
+                    request.addEventListener('error', reject);
+                    request.open('GET', url);
+                    // Usually the application is started by just going to the same URL that we're
+                    // on / we're querying, which is the same URL as the final application.
+                    // However, in the case of error the error is returned in the same request
+                    // change deletes the application instance on the server. In order to show
+                    // the error on a reload, we ensure we don't delete the application instance
+                    // from the XMLHttpRequest. We _could_ show error dynamically via JavaScript,
+                    // but we also want the errors to be shown on a full page load anyway, so we
+                    // choose to only show error using the one mechanism
+                    request.setRequestHeader('x-data-workspace-no-modify-application-instance', 'true')
+                    request.send();
+                });
+            }
 
-        async function reloadIfNot202() {
-          try {
-            var status = await getStatus(window.location.href);
-          } catch {
-            window.setTimeout(reloadIfNot202, 10000);
-            return;
-          }
+            async function reloadIfNot202() {
+                try {
+                    var status = await getStatus(window.location.href);
+                } catch {
+                    window.setTimeout(reloadIfNot202, 10000);
+                    return;
+                }
 
-          if (status != 202) {
-            window.location.reload();
-            return;
-          }
+                if (status != 202) {
+                    window.location.reload();
+                    return;
+                }
 
-          window.setTimeout(reloadIfNot202, 2000);
-      }
+                window.setTimeout(reloadIfNot202, 2000);
+            }
 
-      window.setTimeout(reloadIfNot202, 2000);
-    })();
-  </script>
+            window.setTimeout(reloadIfNot202, 2000);
+        })();
+    </script>
 {% endblock %}
 
 {% block content %}
-  <div class="govuk-panel govuk-panel--confirmation govuk-!-padding-8 govuk-!-margin-bottom-6">
-    <h1 class="govuk-panel__title govuk-!-font-size-47 govuk-!-padding-bottom-3">
-      {{ application_nice_name }} {% if commit_id %}[{{ commit_id }}]<br />{% endif %}is loading...
-    </h1>
-    <div class="govuk-!-margin-bottom-7 loading-spinner"></div>
-    <h2 class="govuk-panel__body govuk-!-font-size-36 govuk-!-margin-bottom-1">
-      This will take 2 minutes approximately<br />
-    </h2>
-  </div>
-  <p class="govuk-body">
-    {{ application_nice_name }} will be automatically stopped after two hours of inactivity
-  </p>
-  <div class="govuk-grid-row govuk-!-margin-top-6">
-    <div class="govuk-grid-column-two-thirds">
-      <div class="govuk-inset-text">
-        <p class="govuk-body">
-          {{ loading_message.title }}
-          <br />
-          {{ loading_message.body }}
-        </p>
-      </div>
-      <p class="govuk-body">Remember you have a personal responsibility - alongside DIT’s corporate responsibility - to protect data.</p>
-      <p class="govuk-body">If you’re unsure about what you can and can’t do, contact the Data Protection team (<a class="govuk-link" href="mailto:data.protection@trade.gov.uk">data.protection@trade.gov.uk</a>) or talk to your line manager.</p>
+    <div class="govuk-panel govuk-panel--confirmation govuk-!-padding-8 govuk-!-margin-bottom-6">
+        <h1 class="govuk-panel__title govuk-!-font-size-47 govuk-!-padding-bottom-3">
+            {{ application_nice_name }} {% if commit_id %}[{{ commit_id }}]<br />{% endif %}is loading...
+        </h1>
+        <div class="govuk-!-margin-bottom-7 loading-spinner"></div>
+        <h2 class="govuk-panel__body govuk-!-font-size-36 govuk-!-margin-bottom-1">
+            This will take 2 minutes approximately<br />
+        </h2>
     </div>
-  </div>
+    <p class="govuk-body">
+        {{ application_nice_name }} will be automatically stopped after two hours of inactivity
+    </p>
+    <div class="govuk-grid-row govuk-!-margin-top-6">
+        <div class="govuk-grid-column-two-thirds">
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    {{ loading_message.title }}
+                    <br />
+                    {{ loading_message.body }}
+                </p>
+            </div>
+            <p class="govuk-body">Remember you have a personal responsibility - alongside DIT’s corporate responsibility - to protect data.</p>
+            <p class="govuk-body">If you’re unsure about what you can and can’t do, contact the Data Protection team (<a class="govuk-link" href="mailto:data.protection@trade.gov.uk">data.protection@trade.gov.uk</a>) or talk to your line manager.</p>
+        </div>
+    </div>
 {% endblock %}

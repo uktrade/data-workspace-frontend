@@ -3,76 +3,76 @@
 {% block page_title %}AppStream - {{ block.super }}{% endblock %}
 
 {% block content %}
-  <h1 class="govuk-heading-l">Fleet status</h1>
+    <h1 class="govuk-heading-l">Fleet status</h1>
 
-  <dl class="govuk-summary-list govuk-summary-list--no-border">
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">
-        Instances desired
-      </dt>
-      <dd class="govuk-summary-list__value">
-        {{ fleet_status.Desired }}
-      </dd>
-    </div>
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">
-        Instances running
-      </dt>
-      <dd class="govuk-summary-list__value">
-        {{ fleet_status.Running }}
-      </dd>
-    </div>
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">
-        Sessions used
-      </dt>
-      <dd class="govuk-summary-list__value">
-        {{ fleet_status.InUse }}
-      </dd>
-    </div>
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">
-        Sessions available
-      </dt>
-      <dd class="govuk-summary-list__value">
-        {{ fleet_status.Available }}
-      </dd>
-    </div>
-  </dl>
-
-  <h1 class="govuk-heading-l">Users logged in</h1>
-
-  {% for item, user in app_sessions_users %}
     <dl class="govuk-summary-list govuk-summary-list--no-border">
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
-          User
-        </dt>
-        <dd class="govuk-summary-list__value">
-          {{ user.first_name }} {{ user.last_name }}
-        </dd>
-      </div>
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
-          State
-        </dt>
-        <dd class="govuk-summary-list__value">
-          {{ item.State }}
-        </dd>
-      </div>
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
-          Session expires
-        </dt>
-        <dd class="govuk-summary-list__value">
-          {{ item.MaxExpirationTime }} UTC
-        </dd>
-      </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+                Instances desired
+            </dt>
+            <dd class="govuk-summary-list__value">
+                {{ fleet_status.Desired }}
+            </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+                Instances running
+            </dt>
+            <dd class="govuk-summary-list__value">
+                {{ fleet_status.Running }}
+            </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+                Sessions used
+            </dt>
+            <dd class="govuk-summary-list__value">
+                {{ fleet_status.InUse }}
+            </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+                Sessions available
+            </dt>
+            <dd class="govuk-summary-list__value">
+                {{ fleet_status.Available }}
+            </dd>
+        </div>
     </dl>
 
-    {% if not forloop.last %}
-      <hr class="govuk-section-break govuk-section-break--visible">
-    {% endif %}
-  {% endfor %}
+    <h1 class="govuk-heading-l">Users logged in</h1>
+
+    {% for item, user in app_sessions_users %}
+        <dl class="govuk-summary-list govuk-summary-list--no-border">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    User
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ user.first_name }} {{ user.last_name }}
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    State
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ item.State }}
+                </dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">
+                    Session expires
+                </dt>
+                <dd class="govuk-summary-list__value">
+                    {{ item.MaxExpirationTime }} UTC
+                </dd>
+            </div>
+        </dl>
+
+        {% if not forloop.last %}
+            <hr class="govuk-section-break govuk-section-break--visible">
+        {% endif %}
+    {% endfor %}
 
 {% endblock %}

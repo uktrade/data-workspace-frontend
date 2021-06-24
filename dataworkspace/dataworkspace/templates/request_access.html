@@ -24,17 +24,17 @@
 
             <h1 class="govuk-heading-l">Request access</h1>
             <p class="govuk-body">
-              Complete the form below if you need to access this {% if is_visualisation %}data visualisation{% else %}dataset{%endif%} in order to do your job.
+                Complete the form below if you need to access this {% if is_visualisation %}data visualisation{% else %}dataset{%endif%} in order to do your job.
             </p>
             <p class="govuk-body">
-              Access will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection" class="govuk-link govuk-link--no-visited-state">Data Protection Act</a>.
+                Access will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection" class="govuk-link govuk-link--no-visited-state">Data Protection Act</a>.
             </p>
-          <br />
+            <br />
             <p class="govuk-body">
-              <span class="govuk-label govuk-!-font-weight-bold">{% if is_visualisation %}Data visualisation{% else %}Dataset{%endif%}</span>
-              <a href="{{ dataset.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state">
-                  {{ dataset.name }}
-              </a>
+                <span class="govuk-label govuk-!-font-weight-bold">{% if is_visualisation %}Data visualisation{% else %}Dataset{%endif%}</span>
+                <a href="{{ dataset.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state">
+                    {{ dataset.name }}
+                </a>
             </p>
 
             <form method="post" novalidate>

@@ -22,35 +22,35 @@
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">Are you:</h1>
             <ul class="govuk-list govuk-list--bullet">
-              {% for criteria in dataset.eligibility_criteria %}
-                <li>{{ criteria }}</li>
-              {% endfor %}
+                {% for criteria in dataset.eligibility_criteria %}
+                    <li>{{ criteria }}</li>
+                {% endfor %}
             </ul>
             <form method="post">
-              <div class="govuk-form-group">
-                {% csrf_token %}
+                <div class="govuk-form-group">
+                    {% csrf_token %}
 
-                <fieldset class="govuk-fieldset">
-                    <div class="govuk-radios govuk-radios--inline">
-                        <div class="govuk-radios__item">
-                            <input class="govuk-radios__input" id="meet_criteria" name="meet_criteria" type="radio" value="yes">
-                            <label class="govuk-label govuk-radios__label" for="meet_criteria">
-                              Yes
-                            </label>
+                    <fieldset class="govuk-fieldset">
+                        <div class="govuk-radios govuk-radios--inline">
+                            <div class="govuk-radios__item">
+                                <input class="govuk-radios__input" id="meet_criteria" name="meet_criteria" type="radio" value="yes">
+                                <label class="govuk-label govuk-radios__label" for="meet_criteria">
+                                    Yes
+                                </label>
+                            </div>
+                            <div class="govuk-radios__item">
+                                <input class="govuk-radios__input" id="meet_criteria-2" name="meet_criteria" type="radio" value="no">
+                                <label class="govuk-label govuk-radios__label" for="meet_criteria-2">
+                                    No
+                                </label>
+                            </div>
                         </div>
-                        <div class="govuk-radios__item">
-                            <input class="govuk-radios__input" id="meet_criteria-2" name="meet_criteria" type="radio" value="no">
-                            <label class="govuk-label govuk-radios__label" for="meet_criteria-2">
-                              No
-                            </label>
-                        </div>
-                    </div>
-                </fieldset>
-              </div>
-              <div class="govuk-form-group">
-                  <button data-prevent-double-click="true" type="submit" class="govuk-button">Submit
-                  </button>
-              </div>
+                    </fieldset>
+                </div>
+                <div class="govuk-form-group">
+                    <button data-prevent-double-click="true" type="submit" class="govuk-button">Submit
+                    </button>
+                </div>
             </form>
         </div>
     </div>

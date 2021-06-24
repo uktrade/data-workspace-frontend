@@ -3,84 +3,84 @@
 {% block page_title %}Branch {{ current_branch.name }} - {{ block.super }}{% endblock %}
 
 {% block content %}
-<h1 class="govuk-heading-l govuk-!-margin-bottom-4">
-    <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
-    <svg class="branch-icon-large" focusable="false" data-prefix="fas" data-icon="code-branch" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><title>Branch</title><path fill="currentColor" d="M384 144c0-44.2-35.8-80-80-80s-80 35.8-80 80c0 36.4 24.3 67.1 57.5 76.8-.6 16.1-4.2 28.5-11 36.9-15.4 19.2-49.3 22.4-85.2 25.7-28.2 2.6-57.4 5.4-81.3 16.9v-144c32.5-10.2 56-40.5 56-76.3 0-44.2-35.8-80-80-80S0 35.8 0 80c0 35.8 23.5 66.1 56 76.3v199.3C23.5 365.9 0 396.2 0 432c0 44.2 35.8 80 80 80s80-35.8 80-80c0-34-21.2-63.1-51.2-74.6 3.1-5.2 7.8-9.8 14.9-13.4 16.2-8.2 40.4-10.4 66.1-12.8 42.2-3.9 90-8.4 118.2-43.4 14-17.4 21.1-39.8 21.6-67.9 31.6-10.8 54.4-40.7 54.4-75.9zM80 64c8.8 0 16 7.2 16 16s-7.2 16-16 16-16-7.2-16-16 7.2-16 16-16zm0 384c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16zm224-320c8.8 0 16 7.2 16 16s-7.2 16-16 16-16-7.2-16-16 7.2-16 16-16z"></path></svg> {{ current_branch.name }}
-</h1>
+    <h1 class="govuk-heading-l govuk-!-margin-bottom-4">
+        <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+        <svg class="branch-icon-large" focusable="false" data-prefix="fas" data-icon="code-branch" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><title>Branch</title><path fill="currentColor" d="M384 144c0-44.2-35.8-80-80-80s-80 35.8-80 80c0 36.4 24.3 67.1 57.5 76.8-.6 16.1-4.2 28.5-11 36.9-15.4 19.2-49.3 22.4-85.2 25.7-28.2 2.6-57.4 5.4-81.3 16.9v-144c32.5-10.2 56-40.5 56-76.3 0-44.2-35.8-80-80-80S0 35.8 0 80c0 35.8 23.5 66.1 56 76.3v199.3C23.5 365.9 0 396.2 0 432c0 44.2 35.8 80 80 80s80-35.8 80-80c0-34-21.2-63.1-51.2-74.6 3.1-5.2 7.8-9.8 14.9-13.4 16.2-8.2 40.4-10.4 66.1-12.8 42.2-3.9 90-8.4 118.2-43.4 14-17.4 21.1-39.8 21.6-67.9 31.6-10.8 54.4-40.7 54.4-75.9zM80 64c8.8 0 16 7.2 16 16s-7.2 16-16 16-16-7.2-16-16 7.2-16 16-16zm0 384c-8.8 0-16-7.2-16-16s7.2-16 16-16 16 7.2 16 16-7.2 16-16 16zm224-320c8.8 0 16 7.2 16 16s-7.2 16-16 16-16-7.2-16-16 7.2-16 16-16z"></path></svg> {{ current_branch.name }}
+    </h1>
 
-{% if is_default_branch %}
-<section class="production govuk-!-padding-5 govuk-!-margin-bottom-5">
-    <h2 class="govuk-heading-m govuk-heading-production">
-        Production{% if production_commit_id %}: {{ production_commit_id }}{% endif %}
-    </h2>
+    {% if is_default_branch %}
+        <section class="production govuk-!-padding-5 govuk-!-margin-bottom-5">
+            <h2 class="govuk-heading-m govuk-heading-production">
+                Production{% if production_commit_id %}: {{ production_commit_id }}{% endif %}
+            </h2>
 
-    <ul class="govuk-list govuk-!-font-size-16{% if not production_commit_id %} govuk-!-margin-bottom-0{% endif %}">
-        <li>
-            <a class="govuk-link govuk-link--no-visited-state" href="{{ production_link }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> production visualisation</a>
-        </li>
-        {% if production_commit_id %}
-            <li class="govuk-!-margin-bottom-0">
-                <a class="govuk-link govuk-link--no-visited-state" href="{% url 'visualisations:logs' gitlab_project.id production_commit_id %}">
-                    Download latest application log
+            <ul class="govuk-list govuk-!-font-size-16{% if not production_commit_id %} govuk-!-margin-bottom-0{% endif %}">
+                <li>
+                    <a class="govuk-link govuk-link--no-visited-state" href="{{ production_link }}">View<span class="govuk-visually-hidden"> {{ project.gitlab_project.name }}</span> production visualisation</a>
+                </li>
+                {% if production_commit_id %}
+                    <li class="govuk-!-margin-bottom-0">
+                        <a class="govuk-link govuk-link--no-visited-state" href="{% url 'visualisations:logs' gitlab_project.id production_commit_id %}">
+                            Download latest application log
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </section>
+    {% endif %}
+
+    <section class="commit govuk-!-padding-5">
+        <div class="commit-row">
+            <h2 class="commit-left govuk-heading-m">Latest commit: {{ latest_commit.short_id }}</h2>
+            <form method="POST" class="commit-right">
+                {% csrf_token %}
+
+                {% if must_preview_latest_commit_to_release %}
+                    <button class="govuk-button govuk-!-margin-bottom-1" data-module="govuk-button" type="submit" disabled="disabled" aria-disabled="true">
+                        Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
+                    </button>
+                    <p class="govuk-body govuk-!-margin-bottom-3 govuk-!-font-size-14">Preview required before release</p>
+                {% endif %}
+
+                {% if can_release_latest_commit %}
+                    <input type="hidden" name="release-commit" value="{{ latest_commit.short_id }}">
+                    <button class="govuk-button govuk-!-margin-bottom-3" data-module="govuk-button">
+                        Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
+                    </button>
+                {% endif %}
+
+                {% if latest_commit_is_released %}
+                    <button class="govuk-button govuk-button--disabled govuk-!-margin-bottom-1" data-module="govuk-button" disabled="disabled" aria-disabled="true">
+                        Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
+                    </button>
+                    <p class="govuk-body govuk-!-margin-bottom-3 govuk-!-font-size-14">Has been released</p>
+                {% endif %}
+            </form>
+        </div>
+
+        <p class="govuk-body">
+            {{ latest_commit.title }}<br>
+            {{ latest_commit.author_name }} authored on {{ latest_commit_date }}<br>
+        </p>
+
+        <ul class="govuk-list govuk-!-margin-bottom-0 govuk-!-font-size-16">
+            <li>
+                <a class="govuk-link govuk-link--no-visited-state" href="{{ latest_commit_link }}">
+                    View<span class="govuk-visually-hidden"> latest</span> commit<span class="govuk-visually-hidden">{{ latest_commit.short_id }}</span> in GitLab
                 </a>
             </li>
-        {% endif %}
-    </ul>
-</section>
-{% endif %}
-
-<section class="commit govuk-!-padding-5">
-    <div class="commit-row">
-        <h2 class="commit-left govuk-heading-m">Latest commit: {{ latest_commit.short_id }}</h2>
-        <form method="POST" class="commit-right">
-            {% csrf_token %}
-
-            {% if must_preview_latest_commit_to_release %}
-            <button class="govuk-button govuk-!-margin-bottom-1" data-module="govuk-button" type="submit" disabled="disabled" aria-disabled="true">
-                Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
-            </button>
-            <p class="govuk-body govuk-!-margin-bottom-3 govuk-!-font-size-14">Preview required before release</p>
-            {% endif %}
-
-            {% if can_release_latest_commit %}
-            <input type="hidden" name="release-commit" value="{{ latest_commit.short_id }}">
-            <button class="govuk-button govuk-!-margin-bottom-3" data-module="govuk-button">
-                Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
-            </button>
-            {% endif %}
-
-            {% if latest_commit_is_released %}
-            <button class="govuk-button govuk-button--disabled govuk-!-margin-bottom-1" data-module="govuk-button" disabled="disabled" aria-disabled="true">
-                Release<span class="govuk-visually-hidden"> commit {{ latest_commit.short_id }}</span> to production
-            </button>
-            <p class="govuk-body govuk-!-margin-bottom-3 govuk-!-font-size-14">Has been released</p>
-            {% endif %}
-        </form>
-    </div>
-
-    <p class="govuk-body">
-        {{ latest_commit.title }}<br>
-        {{ latest_commit.author_name }} authored on {{ latest_commit_date }}<br>
-    </p>
-
-    <ul class="govuk-list govuk-!-margin-bottom-0 govuk-!-font-size-16">
-        <li>
-            <a class="govuk-link govuk-link--no-visited-state" href="{{ latest_commit_link }}">
-                View<span class="govuk-visually-hidden"> latest</span> commit<span class="govuk-visually-hidden">{{ latest_commit.short_id }}</span> in GitLab
-            </a>
-        </li>
-        <li{% if not can_download_logs %} class="govuk-!-margin-bottom-0"{% endif %}>
-            <a class="govuk-link govuk-link--no-visited-state" href="{{ latest_commit_preview_link }}">
-                Preview visualisation<span class="govuk-visually-hidden"> at<span class="govuk-visually-hidden"> latest</span> commit {{ latest_commit.short_id }}</span>
-            </a>
-        </li>
-        {% if can_download_logs %}
-            <li class="govuk-!-margin-bottom-0">
-                <a class="govuk-link govuk-link--no-visited-state" href="{% url 'visualisations:logs' gitlab_project.id latest_commit.short_id %}">
-                    Download latest application log
+            <li{% if not can_download_logs %} class="govuk-!-margin-bottom-0"{% endif %}>
+                <a class="govuk-link govuk-link--no-visited-state" href="{{ latest_commit_preview_link }}">
+                    Preview visualisation<span class="govuk-visually-hidden"> at<span class="govuk-visually-hidden"> latest</span> commit {{ latest_commit.short_id }}</span>
                 </a>
             </li>
-        {% endif %}
-    </ul>
-</section>
+            {% if can_download_logs %}
+                <li class="govuk-!-margin-bottom-0">
+                    <a class="govuk-link govuk-link--no-visited-state" href="{% url 'visualisations:logs' gitlab_project.id latest_commit.short_id %}">
+                        Download latest application log
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </section>
 {% endblock %}

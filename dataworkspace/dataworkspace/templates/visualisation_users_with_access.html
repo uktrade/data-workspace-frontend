@@ -3,40 +3,40 @@
 {% block page_title %}Users with access - {{ block.super }}{% endblock %}
 
 {% block content %}
-<h1 class="govuk-heading-l govuk-!-margin-bottom-6">
-    <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
-    Users with access
-</h1>
+    <h1 class="govuk-heading-l govuk-!-margin-bottom-6">
+        <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+        Users with access
+    </h1>
 
-{% if catalogue_item.user_access_type == 'REQUIRES_AUTHORIZATION' and not users %}
-<p class="govuk-body">No users can view {{ gitlab_project.name }}</p>
-{% endif %}
+    {% if catalogue_item.user_access_type == 'REQUIRES_AUTHORIZATION' and not users %}
+        <p class="govuk-body">No users can view {{ gitlab_project.name }}</p>
+    {% endif %}
 
-{% if catalogue_item.user_access_type == 'REQUIRES_AUTHORIZATION' and users %}
-<p class="govuk-body">The following {{ users|length }} user{% if users|length != 1 %}s{% endif %} can view {{ gitlab_project.name }}.</p>
+    {% if catalogue_item.user_access_type == 'REQUIRES_AUTHORIZATION' and users %}
+        <p class="govuk-body">The following {{ users|length }} user{% if users|length != 1 %}s{% endif %} can view {{ gitlab_project.name }}.</p>
 
-<dl class="govuk-summary-list">
-    {% for user in users %}
-    <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">
-            {{ user.get_full_name }} <span class="visualisation-user-email">{{ user.email }}</span>
-        </dt>
-        <dd class="govuk-summary-list__actions">
-            <form method="POST" action="{{ request.path }}">
-                {% csrf_token %}
-                <input type="hidden" name="user-id" value="{{ user.id }}">
-                <button class="govuk-button govuk-!-margin-bottom-0 govuk-!-font-size-16 govuk-!-padding-top-1 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2" data-module="govuk-button" type="submit" data-prevent-double-click="true">
-                    Remove access<span class="govuk-visually-hidden"> for {{ user.get_full_name }}</span>
-                </button>
-            </form>
-        </dd>
-    </div>
-    {% endfor %}
-</dl>
-{% endif %}
+        <dl class="govuk-summary-list">
+            {% for user in users %}
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">
+                        {{ user.get_full_name }} <span class="visualisation-user-email">{{ user.email }}</span>
+                    </dt>
+                    <dd class="govuk-summary-list__actions">
+                        <form method="POST" action="{{ request.path }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="user-id" value="{{ user.id }}">
+                            <button class="govuk-button govuk-!-margin-bottom-0 govuk-!-font-size-16 govuk-!-padding-top-1 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2" data-module="govuk-button" type="submit" data-prevent-double-click="true">
+                                Remove access<span class="govuk-visually-hidden"> for {{ user.get_full_name }}</span>
+                            </button>
+                        </form>
+                    </dd>
+                </div>
+            {% endfor %}
+        </dl>
+    {% endif %}
 
-{% if catalogue_item.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
-<p class="govuk-body">All logged in users can view {{ gitlab_project.name }}</p>
-{% endif %}
+    {% if catalogue_item.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
+        <p class="govuk-body">All logged in users can view {{ gitlab_project.name }}</p>
+    {% endif %}
 
 {% endblock %}
