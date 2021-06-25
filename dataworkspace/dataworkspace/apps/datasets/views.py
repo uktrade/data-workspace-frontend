@@ -1176,12 +1176,14 @@ class CustomDatasetQueryDownloadView(DetailView):
         if not query.reviewed and not request.user.is_superuser:
             return HttpResponseForbidden()
 
+        correlation_id = str(uuid.uuid4())
         log_event(
             request.user,
             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
             query.dataset,
             extra={
                 'path': request.get_full_path(),
+                'correlation_id': correlation_id,
                 **serializers.serialize('python', [query])[0],
             },
         )
@@ -1201,11 +1203,24 @@ class CustomDatasetQueryDownloadView(DetailView):
                 query=sql.SQL(trimmed_query),
             )
 
+        def write_metrics(log_data):
+            logger.debug('write_metrics_to_eventlog %s', log_data)
+
+            log_data.update({'correlation_id': correlation_id})
+            log_event(
+                request.user,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+                query.dataset,
+                extra=log_data,
+            )
+
         return streaming_query_response(
             request.user.email,
             query.database.memorable_name,
             filtered_query,
             query.get_filename(),
+            unfiltered_query=query.query,
+            query_metrics_callback=write_metrics,
         )
 
 
