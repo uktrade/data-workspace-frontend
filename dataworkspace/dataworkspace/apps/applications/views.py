@@ -314,7 +314,10 @@ def visualisation_link_html_view(request, link_id):
     if not visualisation_link.visualisation_catalogue_item.user_has_access(
         request.user
     ):
-        return HttpResponse(status=403)
+        return redirect(
+            'datasets:request_access',
+            dataset_uuid=visualisation_link.visualisation_catalogue_item_id,
+        )
 
     identifier = visualisation_link.identifier
     if visualisation_link.visualisation_type == 'QUICKSIGHT':
