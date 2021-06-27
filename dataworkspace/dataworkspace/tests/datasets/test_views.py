@@ -352,8 +352,8 @@ def test_find_datasets_combines_results(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -453,8 +453,8 @@ def test_find_datasets_filters_by_query(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -486,7 +486,9 @@ def test_find_datasets_filters_by_use(client):
         published=True, name='A new reference dataset'
     )
 
-    response = client.get(reverse('datasets:find_datasets'), {"use": [0, 2]})
+    response = client.get(
+        reverse('datasets:find_datasets'), {"use": [DataSetType.DATACUT]}
+    )
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -518,8 +520,8 @@ def test_find_datasets_filters_by_use(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -530,7 +532,7 @@ def test_find_datasets_filters_by_use(client):
 def test_find_datasets_filters_visualisations_by_use(client):
     factories.DataSetFactory.create(published=True, type=1, name='A dataset')
     ds = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
-    factories.ReferenceDatasetFactory.create(
+    rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
     )
     vis = factories.VisualisationCatalogueItemFactory.create(
@@ -556,6 +558,23 @@ def test_find_datasets_filters_visualisations_by_use(client):
             'data_type': mock.ANY,
             'published': True,
             'has_access': False,
+            'is_bookmarked': False,
+        },
+        {
+            'id': rds.uuid,
+            'name': rds.name,
+            'slug': rds.slug,
+            'search_rank': mock.ANY,
+            'short_description': rds.short_description,
+            'published_at': mock.ANY,
+            'source_tag_names': mock.ANY,
+            'source_tag_ids': mock.ANY,
+            'topic_tag_names': mock.ANY,
+            'topic_tag_ids': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
+            'published': True,
+            'has_access': True,
             'is_bookmarked': False,
         },
         {
@@ -644,8 +663,8 @@ def test_find_datasets_filters_by_source(client):
             'source_tag_ids': [source.id],
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -739,8 +758,8 @@ def test_find_datasets_filters_by_topic(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': [topic.name],
             'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -805,8 +824,8 @@ def test_find_datasets_order_by_name_asc(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'has_access': True,
             'is_bookmarked': False,
         },
@@ -1261,8 +1280,8 @@ def test_find_datasets_filters_by_access():
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -1355,7 +1374,8 @@ def test_find_datasets_filters_by_bookmark_single():
     )
     factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
 
-    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -1407,7 +1427,8 @@ def test_find_datasets_filters_by_bookmark_master():
         user_access_type='REQUIRES_AUTHENTICATION',
     )
 
-    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -1469,7 +1490,8 @@ def test_find_datasets_filters_by_bookmark_reference():
         user_access_type='REQUIRES_AUTHENTICATION',
     )
 
-    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -1484,8 +1506,8 @@ def test_find_datasets_filters_by_bookmark_reference():
             'source_tag_ids': mock.ANY,
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': True,
@@ -1527,7 +1549,8 @@ def test_find_datasets_filters_by_bookmark_visualisation():
     )
     factories.VisualisationBookmarkFactory.create(user=user, visualisation=public_vis)
 
-    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -1585,7 +1608,8 @@ def test_find_datasets_filters_by_bookmark_datacut():
         user_access_type='REQUIRES_AUTHENTICATION',
     )
 
-    response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
+    response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -2274,8 +2298,8 @@ def test_find_datasets_search_by_source_name(client):
             'source_tag_ids': [source.id],
             'topic_tag_names': mock.ANY,
             'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -2314,7 +2338,7 @@ def test_find_datasets_search_by_topic_name(client):
             'topic_tag_names': MatchUnorderedMembers([topic.name, topic_2.name]),
             'topic_tag_ids': MatchUnorderedMembers([topic.id, topic_2.id]),
             'purpose': ds1.type,
-            'data_type': mock.ANY,
+            'data_type': ds1.type,
             'published': True,
             'has_access': False,
             'is_bookmarked': False,
@@ -2330,8 +2354,8 @@ def test_find_datasets_search_by_topic_name(client):
             'source_tag_ids': mock.ANY,
             'topic_tag_names': [topic.name],
             'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.REFERENCE,
-            'data_type': mock.ANY,
+            'purpose': DataSetType.DATACUT,
+            'data_type': DataSetType.REFERENCE,
             'published': True,
             'has_access': True,
             'is_bookmarked': False,
@@ -3753,7 +3777,6 @@ class TestGridDataView:
 
 
 @pytest.mark.django_db
-@override_flag(settings.SEARCH_FILTERS_TESTING_FLAG, active=True)
 def test_filter_datasets_by_access_search_v2():
     user = factories.UserFactory.create(is_superuser=False)
     user2 = factories.UserFactory.create(is_superuser=False)
@@ -3842,7 +3865,6 @@ def test_filter_datasets_by_access_search_v2():
 
 
 @pytest.mark.django_db
-@override_flag(settings.SEARCH_FILTERS_TESTING_FLAG, active=True)
 def test_filter_reference_datasets_search_v2():
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
@@ -3867,7 +3889,6 @@ def test_filter_reference_datasets_search_v2():
 
 
 @pytest.mark.django_db
-@override_flag(settings.SEARCH_FILTERS_TESTING_FLAG, active=True)
 def test_filter_bookmarked_search_v2():
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
@@ -3892,7 +3913,6 @@ def test_filter_bookmarked_search_v2():
 
 
 @pytest.mark.django_db
-@override_flag(settings.SEARCH_FILTERS_TESTING_FLAG, active=True)
 def test_filter_data_type_datasets_search_v2():
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))

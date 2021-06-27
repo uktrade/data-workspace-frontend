@@ -375,7 +375,6 @@ class DatasetSearchFormV2(DatasetSearchForm):
                 topic_flag_active=topic_flag_active,
                 user_accessible=user_access == {'yes'},
                 user_inaccessible=user_access == {'no'},
-                search_testing_flag_active=True,
             )
 
             if dataset_matcher(user_accessible=True, user_inaccessible=False):
