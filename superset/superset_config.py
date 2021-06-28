@@ -95,6 +95,11 @@ class DataWorkspaceRemoteUserView(AuthView):
             role=security_manager.find_role(role_name),
         )
 
+        if not user:
+            return make_response(
+                f'Unable to find or create a user with role {role_name}', 500
+            )
+
         login_user(user)
         return redirect(self.appbuilder.get_url_for_index)
 
