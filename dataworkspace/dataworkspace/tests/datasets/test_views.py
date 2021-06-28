@@ -2207,7 +2207,7 @@ class TestVisualisationLinkView:
 
         client = Client(**get_http_sso_data(user))
         response = client.get(link.get_absolute_url())
-        assert response.status_code == 403
+        assert response.status_code == 302
 
         VisualisationUserPermissionFactory.create(visualisation=vis, user=user)
 
