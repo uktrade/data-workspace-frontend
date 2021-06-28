@@ -35,7 +35,7 @@ RUN \
 		python3-pip \
 		man-db=2.8.5-2 \
 		sudo && \
-	curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+	curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y nodejs && \
     rm /etc/apt/sources.list.d/nodesource.list && \
     rm -rf /var/lib/apt/lists/*
