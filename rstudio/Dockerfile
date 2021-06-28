@@ -45,6 +45,7 @@ RUN \
 		libgsl-dev=2.5+dfsg-6 \
 		libxml2-dev \
 		libpq-dev \
+		libgdal-dev \
 		lmodern=2.004.5-6 \
 		procps=2:3.3.15-2 \
 		r-base-dev=3.6.1-2~bustercran.0 \
