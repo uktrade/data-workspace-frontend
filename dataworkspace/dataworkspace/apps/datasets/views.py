@@ -68,7 +68,6 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
-    DatasetSearchForm,
     DatasetSearchFormV2,
     EligibilityCriteriaForm,
     RequestAccessForm,
@@ -109,13 +108,7 @@ logger = logging.getLogger('app')
 
 
 def get_datasets_data_for_user_matching_query(
-    datasets: QuerySet,
-    query,
-    use=None,
-    data_type=None,
-    user=None,
-    id_field='id',
-    search_testing_flag_active=False,
+    datasets: QuerySet, query, use=None, data_type=None, user=None, id_field='id',
 ):
     """
     Filters the dataset queryset for:
@@ -233,12 +226,7 @@ def get_datasets_data_for_user_matching_query(
     # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
         datasets = datasets.annotate(
-            purpose=Value(
-                DataSetType.DATACUT
-                if search_testing_flag_active
-                else DataSetType.REFERENCE,
-                IntegerField(),
-            )
+            purpose=Value(DataSetType.DATACUT, IntegerField(),)
         )
         datasets = datasets.annotate(
             data_type=Value(DataSetType.REFERENCE, IntegerField())
@@ -446,7 +434,6 @@ def _matches_filters(
     topic_flag_active,
     user_accessible: bool = False,
     user_inaccessible: bool = False,
-    search_testing_flag_active: bool = False,
 ):
     return (
         (not access or data['has_access'])
@@ -459,19 +446,13 @@ def _matches_filters(
             not topic_flag_active
             or (not topic_ids or topic_ids.intersection(set(data['topic_tag_ids'])))
         )
-        and (
-            not search_testing_flag_active
-            or (not user_accessible or data['has_access'])
-        )
-        and (
-            not search_testing_flag_active
-            or (not user_inaccessible or not data['has_access'])
-        )
+        and (not user_accessible or data['has_access'])
+        and (not user_inaccessible or not data['has_access'])
     )
 
 
 def sorted_datasets_and_visualisations_matching_query_for_user(
-    query, use, data_type, user, sort_by, search_testing_flag_active=False,
+    query, use, data_type, user, sort_by
 ):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
@@ -482,11 +463,7 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
     )
 
     reference_datasets = get_datasets_data_for_user_matching_query(
-        ReferenceDataset.objects.live(),
-        query,
-        user=user,
-        id_field='uuid',
-        search_testing_flag_active=search_testing_flag_active,
+        ReferenceDataset.objects.live(), query, user=user, id_field='uuid',
     )
 
     visualisations = get_visualisations_data_for_user_matching_query(
@@ -518,16 +495,10 @@ def has_unpublished_dataset_access(user):
 
 @require_GET
 def find_datasets(request):
-    search_testing_flag_active = waffle.flag_is_active(
-        request, settings.SEARCH_FILTERS_TESTING_FLAG
-    )
-    if search_testing_flag_active:
-        form = DatasetSearchFormV2(request.GET)
-    else:
-        form = DatasetSearchForm(request.GET)
+    form = DatasetSearchFormV2(request.GET)
 
-    purposes = form.fields[
-        'use'
+    data_types = form.fields[
+        'data_type'
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
     if form.is_valid():
@@ -546,12 +517,7 @@ def find_datasets(request):
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
     all_datasets_visible_to_user_matching_query = sorted_datasets_and_visualisations_matching_query_for_user(
-        query=query,
-        use=use,
-        data_type=data_type,
-        user=request.user,
-        sort_by=sort,
-        search_testing_flag_active=search_testing_flag_active,
+        query=query, use=use, data_type=data_type, user=request.user, sort_by=sort,
     )
 
     # Filter out any records that don't match the selected filters. We do this in Python, not the DB, because we need
@@ -563,9 +529,7 @@ def find_datasets(request):
             lambda d: _matches_filters(
                 d,
                 bool('access' in status),
-                bool('bookmark' in status)
-                if not search_testing_flag_active
-                else bookmarked,
+                bookmarked,
                 bool(unpublished),
                 use,
                 data_type,
@@ -574,7 +538,6 @@ def find_datasets(request):
                 waffle.flag_is_active(request, settings.FILTER_BY_TOPIC_FLAG),
                 user_accessible,
                 user_inaccessible,
-                search_testing_flag_active,
             ),
             all_datasets_visible_to_user_matching_query,
         )
@@ -593,6 +556,7 @@ def find_datasets(request):
         datasets_matching_query_and_filters, settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
+    data_types.append((DataSetType.VISUALISATION, 'Visualisation'))
     return render(
         request,
         'datasets/index.html',
@@ -600,7 +564,7 @@ def find_datasets(request):
             "form": form,
             "query": query,
             "datasets": paginator.get_page(request.GET.get("page")),
-            "purpose": dict(purposes),
+            "data_type": dict(data_types),
             "show_unpublished": has_unpublished_dataset_access(request.user),
         },
     )
