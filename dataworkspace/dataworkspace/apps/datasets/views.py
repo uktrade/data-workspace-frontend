@@ -423,7 +423,6 @@ def get_visualisations_data_for_user_matching_query(
 
 def _matches_filters(
     data,
-    access: bool,
     bookmark: bool,
     unpublished: bool,
     use: Set,
@@ -434,8 +433,7 @@ def _matches_filters(
     user_inaccessible: bool = False,
 ):
     return (
-        (not access or data['has_access'])
-        and (not bookmark or data['is_bookmarked'])
+        (not bookmark or data['is_bookmarked'])
         and (unpublished or data['published'])
         and (not use or use == [None] or data['purpose'] in use)
         and (not data_type or data_type == [None] or data['data_type'] in data_type)
@@ -498,7 +496,6 @@ def find_datasets(request):
 
     if form.is_valid():
         query = form.cleaned_data.get("q")
-        status = form.cleaned_data.get("status")
         unpublished = form.cleaned_data.get("unpublished")
         use = set(form.cleaned_data.get("use"))
         data_type = set(form.cleaned_data.get("data_type", []))
@@ -523,7 +520,6 @@ def find_datasets(request):
         filter(
             lambda d: _matches_filters(
                 d,
-                bool('access' in status),
                 bookmarked,
                 bool(unpublished),
                 use,
