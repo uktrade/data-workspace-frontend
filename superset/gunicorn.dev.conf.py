@@ -27,7 +27,7 @@ def patched_base_environ(cfg):
         'HTTP_CREDENTIALS_DB_NAME': os.environ['DB_NAME'],
         'HTTP_CREDENTIALS_DB_PASSWORD': os.environ['DB_PASSWORD'],
         'HTTP_CREDENTIALS_DB_PORT': os.environ['DB_PORT'],
-        'HTTP_SSO_BLAH': 'blah',
+        'HTTP_DASHBOARDS': os.environ.get('DASHBOARDS', ''),
     }
 
 
