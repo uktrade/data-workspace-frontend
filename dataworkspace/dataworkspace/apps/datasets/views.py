@@ -67,7 +67,7 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
-    DatasetSearchFormV2,
+    DatasetSearchForm,
     EligibilityCriteriaForm,
     RequestAccessForm,
     RelatedMastersSortForm,
@@ -488,7 +488,7 @@ def has_unpublished_dataset_access(user):
 
 @require_GET
 def find_datasets(request):
-    form = DatasetSearchFormV2(request.GET)
+    form = DatasetSearchForm(request.GET)
 
     data_types = form.fields[
         'data_type'

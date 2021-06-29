@@ -114,7 +114,7 @@ class SourceTagField(forms.ModelMultipleChoiceField):
         return obj.name
 
 
-class DatasetSearchFormV2(forms.Form):
+class DatasetSearchForm(forms.Form):
     q = forms.CharField(required=False)
 
     user_access = forms.TypedMultipleChoiceField(
