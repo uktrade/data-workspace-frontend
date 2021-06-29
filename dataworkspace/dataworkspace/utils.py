@@ -167,6 +167,7 @@ TYPE_CODES_REVERSED = {
     1270: 'time[]',
     1700: 'numeric',
     2950: 'uuid',
+    2951: 'text[]',
     3802: 'jsonb',
     3807: 'jsonb[]',
     3904: 'type',
