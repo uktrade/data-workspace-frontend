@@ -4,6 +4,7 @@
 # fmt: off
 from gevent import monkey; monkey.patch_all()  # noqa: E402,E702
 from psycogreen.gevent import patch_psycopg; patch_psycopg()  # noqa: E402,E702
+from elasticapm.instrumentation.control import instrument; instrument()  # noqa: E402,E702
 # fmt: on
 
 # ... and then start the server proper
