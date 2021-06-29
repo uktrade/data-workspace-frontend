@@ -15,7 +15,6 @@ from django.urls import reverse
 from django.test import Client
 from freezegun import freeze_time
 from lxml import html
-from waffle.testutils import override_flag
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType
@@ -691,7 +690,6 @@ def test_find_datasets_filters_by_source(client):
     assert len(list(response.context["form"].fields['source'].choices)) == 3
 
 
-@override_flag(settings.FILTER_BY_TOPIC_FLAG, active=True)
 def test_find_datasets_filters_by_topic(client):
     topic = factories.TopicTagFactory.create()
     topic_2 = factories.TopicTagFactory.create()
@@ -1062,7 +1060,6 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
         )
 
 
-@override_flag(settings.FILTER_BY_TOPIC_FLAG, active=True)
 def test_finding_datasets_doesnt_query_database_excessively(
     client, django_assert_num_queries
 ):
@@ -2307,7 +2304,6 @@ def test_find_datasets_search_by_source_name(client):
     ]
 
 
-@override_flag(settings.FILTER_BY_TOPIC_FLAG, active=True)
 def test_find_datasets_search_by_topic_name(client):
     topic = factories.TopicTagFactory.create(name='topic1')
     topic_2 = factories.TopicTagFactory.create(name='topic2')

@@ -181,9 +181,7 @@ class DatasetSearchForm(forms.Form):
     class Media:
         js = ('app-filter-show-more-v2.js',)
 
-    def annotate_and_update_filters(
-        self, datasets, matcher, number_of_matches, topic_flag_active
-    ):
+    def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
             "status": defaultdict(int),
             "unpublished": defaultdict(int),
@@ -216,7 +214,6 @@ class DatasetSearchForm(forms.Form):
                 data_type=None,
                 source_ids=selected_source_ids,
                 topic_ids=selected_topic_ids,
-                topic_flag_active=topic_flag_active,
             )
 
             if dataset_matcher(access=True):
@@ -332,9 +329,7 @@ class DatasetSearchFormV2(DatasetSearchForm):
         ),
     )
 
-    def annotate_and_update_filters(
-        self, datasets, matcher, number_of_matches, topic_flag_active
-    ):
+    def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
             "status": defaultdict(int),
             "bookmarked": defaultdict(int),
@@ -372,7 +367,6 @@ class DatasetSearchFormV2(DatasetSearchForm):
                 data_type=selected_data_type,
                 source_ids=selected_source_ids,
                 topic_ids=selected_topic_ids,
-                topic_flag_active=topic_flag_active,
                 user_accessible=user_access == {'yes'},
                 user_inaccessible=user_access == {'no'},
             )
