@@ -822,7 +822,7 @@ def streaming_query_response(
 
             cur.itersize = batch_size
             cur.arraysize = batch_size
-            cur.execute(query, vars=query_params)
+            cur.execute(query, query_params)
 
             i = 0
             total_bytes = 0
