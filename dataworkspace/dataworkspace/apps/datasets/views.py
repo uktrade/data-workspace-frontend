@@ -430,7 +430,6 @@ def _matches_filters(
     data_type: Set,
     source_ids: Set,
     topic_ids: Set,
-    topic_flag_active,
     user_accessible: bool = False,
     user_inaccessible: bool = False,
 ):
@@ -441,10 +440,7 @@ def _matches_filters(
         and (not use or use == [None] or data['purpose'] in use)
         and (not data_type or data_type == [None] or data['data_type'] in data_type)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
-        and (
-            not topic_flag_active
-            or (not topic_ids or topic_ids.intersection(set(data['topic_tag_ids'])))
-        )
+        and (not topic_ids or topic_ids.intersection(set(data['topic_tag_ids'])))
         and (not user_accessible or data['has_access'])
         and (not user_inaccessible or not data['has_access'])
     )
@@ -534,7 +530,6 @@ def find_datasets(request):
                 data_type,
                 source_ids,
                 topic_ids,
-                True,
                 user_accessible,
                 user_inaccessible,
             ),
@@ -548,7 +543,6 @@ def find_datasets(request):
         all_datasets_visible_to_user_matching_query,
         matcher=_matches_filters,
         number_of_matches=len(datasets_matching_query_and_filters),
-        topic_flag_active=True,
     )
 
     paginator = Paginator(
