@@ -12,7 +12,6 @@ import logging
 
 import boto3
 import psycopg2
-import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from psycopg2 import sql
@@ -535,7 +534,7 @@ def find_datasets(request):
                 data_type,
                 source_ids,
                 topic_ids,
-                waffle.flag_is_active(request, settings.FILTER_BY_TOPIC_FLAG),
+                True,
                 user_accessible,
                 user_inaccessible,
             ),
@@ -549,7 +548,7 @@ def find_datasets(request):
         all_datasets_visible_to_user_matching_query,
         matcher=_matches_filters,
         number_of_matches=len(datasets_matching_query_and_filters),
-        topic_flag_active=waffle.flag_is_active(request, settings.FILTER_BY_TOPIC_FLAG),
+        topic_flag_active=True,
     )
 
     paginator = Paginator(
