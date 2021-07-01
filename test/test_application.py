@@ -2313,6 +2313,43 @@ class TestApplication(unittest.TestCase):
         assert "ONS (1)" in with_dit_and_ons_filters
         assert "HMRC (1)" in with_dit_and_ons_filters
 
+        # Toggle DIT and ONS filters off, test data type: master dataset (filters: Master dataset)
+        await home_page.toggle_filter("DIT")
+        await home_page.toggle_filter("ONS")
+        await home_page.toggle_filter("Master dataset")
+
+        with_master_type_filter = find_search_filter_labels(await home_page.get_html())
+        assert "Master dataset (2)" in with_master_type_filter
+        assert "Data cut (1)" in with_master_type_filter
+        assert "Reference dataset (1)" in with_master_type_filter
+        assert "Data I have access to (1)" in with_master_type_filter
+        assert "Data I don't have access to (1)" in with_master_type_filter
+        assert "Download data (0)" in with_master_type_filter
+        assert "Analyse data (2)" in with_master_type_filter
+        assert "View dashboard (0)" in with_master_type_filter
+        assert "DIT (1)" in with_master_type_filter
+        assert not any(f.startswith("ONS") for f in with_master_type_filter)
+        assert "HMRC (1)" in with_master_type_filter
+        assert "My bookmarks (0)" in with_master_type_filter
+        assert "Include unpublished (2)" in with_master_type_filter
+
+        # Toggle DIT and ONS filters off, test data type: master dataset (filters: Master dataset)
+        await home_page.toggle_filter("Master dataset")
+        await home_page.toggle_filter("Data cut")
+
+        with_datacut_type_filter = find_search_filter_labels(await home_page.get_html())
+        assert "Data I don't have access to (0)" in with_datacut_type_filter
+        assert 'View dashboard (0)' in with_datacut_type_filter
+        assert 'Data cut (1)' in with_datacut_type_filter
+        assert 'Analyse data (0)' in with_datacut_type_filter
+        assert 'Master dataset (2)' in with_datacut_type_filter
+        assert 'My bookmarks (0)' in with_datacut_type_filter
+        assert 'ONS (1)' in with_datacut_type_filter
+        assert 'Reference dataset (1)' in with_datacut_type_filter
+        assert 'Data I have access to (1)' in with_datacut_type_filter
+        assert 'Download data (1)' in with_datacut_type_filter
+        assert 'Include unpublished (1)' in with_datacut_type_filter
+
     @async_test
     async def test_tool_query_log_sync(self):
         await flush_database()
