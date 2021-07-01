@@ -1578,7 +1578,7 @@ class DatasetVisualisationView(View):
             except TypeError:
                 # vega, 'data' is a list, and we support setting the query
                 # results as the first item
-                vega_definition['data'][0]['values'] = dataset
+                vega_definition['data'][0]['values'] = data
 
         return render(
             request,
