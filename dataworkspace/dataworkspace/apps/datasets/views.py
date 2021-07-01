@@ -1572,7 +1572,13 @@ class DatasetVisualisationView(View):
                 ) as cursor:
                     cursor.execute(visualisation.query)
                     data = cursor.fetchall()
-            vega_definition['data'][0]['values'] = data
+            try:
+                # vega-lite, 'data' is a dictionary
+                vega_definition['data']['values'] = data
+            except TypeError:
+                # vega, 'data' is a list, and we support setting the query
+                # results as the first item
+                vega_definition['data'][0]['values'] = dataset
 
         return render(
             request,
