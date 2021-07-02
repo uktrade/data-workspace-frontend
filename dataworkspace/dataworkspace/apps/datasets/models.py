@@ -65,6 +65,7 @@ from dataworkspace.apps.datasets.constants import (
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.explorer.models import ChartBuilderChart
 from dataworkspace.datasets_db import (
     get_tables_last_updated_date,
 )
@@ -458,6 +459,17 @@ class DataSetVisualisation(DeletableTimestampedUserModel):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="visualisations")
 
     gds_phase_name = models.CharField(max_length=25, default="", blank=True)
+
+
+class DataSetChartBuilderChart(TimeStampedUserModel):
+    name = models.CharField(max_length=255)
+    summary = models.TextField()
+    chart = models.ForeignKey(ChartBuilderChart, on_delete=models.PROTECT, related_name="datasets")
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="charts")
+    gds_phase_name = models.CharField(max_length=25, default="", blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 class DataSetUserPermission(models.Model):

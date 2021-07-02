@@ -1,6 +1,7 @@
 import pytest
 
 from django.urls import reverse
+from django.test import override_settings
 
 from dataworkspace.tests.common import get_response_csp_as_set
 from dataworkspace.tests.factories import (
@@ -10,6 +11,7 @@ from dataworkspace.tests.factories import (
 )
 
 
+@override_settings(DEBUG=False, LOCAL=False)
 def test_baseline_content_security_policy(client):
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
@@ -25,7 +27,8 @@ def test_baseline_content_security_policy(client):
         "font-src dataworkspace.test:8000 data: https://fonts.gstatic.com",
         "style-src dataworkspace.test:8000 'unsafe-inline' https://tagmanager.google.com https://fonts.googleapis.com",
         "default-src dataworkspace.test:8000",
-        "connect-src dataworkspace.test:8000 https://www.google-analytics.com",
+        "connect-src dataworkspace.test:8000 https://www.google-analytics.com "
+        "dataworkspace.test:3000 ws://dataworkspace.test:3000",
     }
 
     assert policies == expected_policies

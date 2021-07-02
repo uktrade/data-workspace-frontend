@@ -39,6 +39,7 @@ from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
+    DataSetChartBuilderChart,
     DataSetUserPermission,
     DataSetVisualisation,
     DatasetReferenceCode,
@@ -60,6 +61,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
     DataCutDatasetForm,
+    DataSetChartBuilderChartForm,
     DataSetVisualisationForm,
     MasterDatasetForm,
     ReferenceDataFieldInlineForm,
@@ -161,6 +163,13 @@ class DataSetVisualisationInline(DeletableTimeStampedUserTabularInline):
 
     def get_queryset(self, request):
         return super().get_queryset(request).filter(deleted=False)
+
+
+class DataSetChartBuilderChartInline(DeletableTimeStampedUserTabularInline):
+    model = DataSetChartBuilderChart
+    form = DataSetChartBuilderChartForm
+    extra = 1
+    manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
 
 class SourceViewInline(admin.TabularInline, SourceReferenceInlineMixin):
@@ -383,7 +392,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 @admin.register(MasterDataset)
 class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = MasterDatasetForm
-    inlines = [SourceTableInline, DataSetVisualisationInline]
+    inlines = [SourceTableInline, DataSetVisualisationInline, DataSetChartBuilderChartInline]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
     def save_formset(self, request, form, formset, change):

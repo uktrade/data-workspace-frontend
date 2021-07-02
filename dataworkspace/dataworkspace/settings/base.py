@@ -101,6 +101,8 @@ INSTALLED_APPS = [
     "dataworkspace.apps.finder",
     "dynamic_models",
     "dataworkspace.apps.case_studies",
+    "csp_helpers",
+    "webpack_loader",
 ]
 
 MIDDLEWARE = [
@@ -266,6 +268,13 @@ CSP_STYLE_SRC = [
 ]
 CSP_INCLUDE_NONCE_IN = ["script-src"]
 
+# Allow for connecting to the webpack hotloader for local development
+if LOCAL:
+    CSP_CONNECT_SRC += [
+        f"{APPLICATION_ROOT_DOMAIN.split(':')[0]}:3000",
+        f"ws://{APPLICATION_ROOT_DOMAIN.split(':')[0]}:3000",
+    ]
+
 
 ZENDESK_EMAIL = env["ZENDESK_EMAIL"]
 ZENDESK_SUBDOMAIN = env["ZENDESK_SUBDOMAIN"]
@@ -363,6 +372,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         "store-reference-dataset-metadata": {
             "task": "dataworkspace.apps.datasets.utils.store_reference_dataset_metadata",
             "schedule": 60 * 5,
+            "args": (),
+        },
+        "refresh-published-chart-data": {
+            "task": "dataworkspace.apps.explorer.tasks.refresh_published_chart_data",
+            "schedule": crontab(minute=0, hour=6),
             "args": (),
         },
     }
@@ -669,6 +683,8 @@ NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG = "NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG"
 NOTIFY_ON_DATACUT_CHANGE_FLAG = "NOTIFY_ON_DATACUT_CHANGE_FLAG"
 NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG = "NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG"
 DATASET_CHANGELOG_PAGE_FLAG = "DATASET_CHANGELOG_PAGE"
+CHART_BUILDER_BUILD_CHARTS_FLAG = "CHART_BUILDER_BUILD_CHARTS"
+CHART_BUILDER_PUBLISH_CHARTS_FLAG = "CHART_BUILDER_PUBLISH_CHARTS"
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
 
@@ -705,3 +721,14 @@ DATA_WORKSPACE_ROADMAP_URL = env.get("DATA_WORKSPACE_ROADMAP_URL", "")
 CLAMAV_URL = env.get("CLAMAV_URL", "")
 CLAMAV_USER = env.get("CLAMAV_USER", "")
 CLAMAV_PASSWORD = env.get("CLAMAV_PASSWORD", "")
+
+WEBPACK_STATS_FILE = "chart-builder-stats.json" if not LOCAL else "chart-builder-stats-hot.json"
+WEBPACK_LOADER = {
+    "DEFAULT": {
+        "CACHE": not LOCAL,
+        "BUNDLE_DIR_NAME": "js/bundles",
+        "STATS_FILE": os.path.join(BASE_DIR, "static", "js", "stats", WEBPACK_STATS_FILE),
+        "POLL_INTERVAL": 0.1,
+        "IGNORE": [r".+\.hot-update.js", r".+\.map"],
+    }
+}

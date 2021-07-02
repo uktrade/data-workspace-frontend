@@ -89,7 +89,8 @@ class S3FileStorage(FileSystemStorage):
         return filename
 
     def _save(self, name, content):
-        self._av_check(name, content)
+        if not settings.DEBUG:
+            self._av_check(name, content)
         return self._save_to_s3(name, content)
 
     def delete(self, name):

@@ -12,6 +12,7 @@ django-better-admin-arrayfield
 django-ckeditor
 django-compressor
 django-csp
+django-csp-helpers
 django-db-geventpool
 django-dynamic-models-readonly
 django-environ
@@ -27,11 +28,13 @@ elasticsearch[async]
 geoalchemy2
 gevent
 hawk-server-asyncio
+kaleido
 Markdown
 MarkupSafe
 mohawk
 notifications-python-client
 paste
+plotly
 psqlparse==1.0rc7
 psutil
 psycogreen
@@ -46,3 +49,4 @@ tableschema
 Werkzeug
 XlsxWriter
 zenpy
+django-webpack-loader

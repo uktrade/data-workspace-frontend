@@ -1,0 +1,34 @@
+{
+  "status": "done",
+  "assets": {
+    "builder.js": {
+      "name": "builder.js",
+      "path": "/home/nick/work/dit/data-workspace/dataworkspace/dataworkspace/static/js/bundles/builder.js",
+      "publicPath": "/__django_static/js/bundles/builder.js"
+    },
+    "viewer.js": {
+      "name": "viewer.js",
+      "path": "/home/nick/work/dit/data-workspace/dataworkspace/dataworkspace/static/js/bundles/viewer.js",
+      "publicPath": "/__django_static/js/bundles/viewer.js"
+    },
+    "builder.js.LICENSE.txt": {
+      "name": "builder.js.LICENSE.txt",
+      "path": "/home/nick/work/dit/data-workspace/dataworkspace/dataworkspace/static/js/bundles/builder.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/builder.js.LICENSE.txt"
+    },
+    "viewer.js.LICENSE.txt": {
+      "name": "viewer.js.LICENSE.txt",
+      "path": "/home/nick/work/dit/data-workspace/dataworkspace/dataworkspace/static/js/bundles/viewer.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/viewer.js.LICENSE.txt"
+    }
+  },
+  "chunks": {
+    "builder": [
+      "builder.js"
+    ],
+    "viewer": [
+      "viewer.js"
+    ]
+  },
+  "publicPath": "/__django_static/js/bundles/"
+}

@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.test import Client
 from freezegun import freeze_time
 from lxml import html
+from waffle.testutils import override_flag
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
@@ -34,6 +35,8 @@ from dataworkspace.apps.datasets.views import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data, MatchUnorderedMembers
+from dataworkspace.tests.explorer.charts.test_views import create_temporary_results_table
+from dataworkspace.tests.explorer.factories import ChartBuilderChartFactory
 from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,
@@ -3606,3 +3609,84 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     assert list(response.context["datasets"]) == [
         expected_search_result(with_visuals, has_visuals=True)
     ]
+
+
+class TestChartBuilderChartView:
+    @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
+    def test_unpublished(self, client, user):
+        dataset_chart = factories.DataSetChartBuilderChartFactory(
+            dataset=factories.DataSetFactory.create(published=False),
+            chart=ChartBuilderChartFactory.create(),
+        )
+        response = client.get(
+            reverse(
+                "datasets:dataset_chart",
+                args=(
+                    dataset_chart.dataset.id,
+                    dataset_chart.id,
+                ),
+            )
+        )
+        assert response.status_code == 404
+        response = client.get(
+            reverse(
+                "datasets:dataset_chart_data",
+                args=(
+                    dataset_chart.dataset.id,
+                    dataset_chart.id,
+                ),
+            )
+        )
+        assert response.status_code == 404
+
+    @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
+    def test_user_without_permission(self, client, user):
+        dataset_chart = factories.DataSetChartBuilderChartFactory(
+            dataset=factories.DataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+            ),
+            chart=ChartBuilderChartFactory.create(),
+        )
+        response = client.get(
+            reverse(
+                "datasets:dataset_chart",
+                args=(
+                    dataset_chart.dataset.id,
+                    dataset_chart.id,
+                ),
+            )
+        )
+        assert response.status_code == 403
+        response = client.get(
+            reverse(
+                "datasets:dataset_chart_data",
+                args=(
+                    dataset_chart.dataset.id,
+                    dataset_chart.id,
+                ),
+            )
+        )
+        assert response.status_code == 403
+
+    @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
+    def test_user_with_permission(self, client, user):
+        dataset_chart = factories.DataSetChartBuilderChartFactory(
+            dataset=factories.DataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+            chart=ChartBuilderChartFactory.create(
+                chart_config={"traces": [{"meta": {"columnNames": {"id": "id"}}}]}
+            ),
+        )
+        create_temporary_results_table(dataset_chart.chart.query_log)
+        response = client.get(
+            reverse(
+                "datasets:dataset_chart_data",
+                args=(
+                    dataset_chart.dataset.id,
+                    dataset_chart.id,
+                ),
+            )
+        )
+        assert response.status_code == 200
+        assert response.json() == {"data": {"id": [1]}, "duration": 1000.0, "total_rows": None}

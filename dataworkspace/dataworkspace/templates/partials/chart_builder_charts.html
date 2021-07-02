@@ -1,0 +1,49 @@
+{% load datasets_tags %}
+{% if model.charts.all %}
+  <hr />
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <hr class="govuk-section-break">
+      <h2 class="govuk-heading-l govuk-!-margin-top-5">User created charts</h2>
+      <p class="govuk-body">
+        View charts built on top of this data, created by data workspace users
+      </p>
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    {% if has_access %}
+      {% for chart in model.charts.all|slice:"3" %}
+        <div class="govuk-grid-column-one-third">
+          {% if has_access %}
+            <div style="overflow:hidden;">
+              <a href="{% url "datasets:dataset_chart" dataset_uuid=model.id object_id=chart.id %}"
+                 class="govuk-link govuk-link--no-visited-state chart-preview-container"
+                 id="chart-{{ chart.id }}"
+              >
+                {% if not chart.chart.thumbnail %}
+                  <div style="text-align: center">No preview available</div>
+                {% else %}
+                  <img src="{{ chart.chart.thumbnail.url }}" alt="{{ chart.name }}" />
+                {% endif %}
+              </a>
+            </div>
+          {% endif %}
+          <h3 class="govuk-heading-s">
+            {% chart_link_or_plain_text chart.name has_access model.id chart.id %}
+          </h3>
+          <p class="govuk-body">
+            {{ chart.summary }}
+            {% if chart.gds_phase_name %}
+              <br>
+              <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ chart.gds_phase_name }}</strong>
+            {% endif %}
+          </p>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="govuk-grid-column-full">
+        {% include 'partials/request_access_visuals.html' %}
+      </div>
+    {% endif %}
+  </div>
+{% endif %}

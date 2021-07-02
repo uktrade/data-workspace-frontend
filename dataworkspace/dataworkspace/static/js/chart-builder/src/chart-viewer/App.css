@@ -1,0 +1,8 @@
+.chart-loading-spinner {
+  width: 30px;
+  height: 30px;
+  margin-top: 60px;
+}
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}

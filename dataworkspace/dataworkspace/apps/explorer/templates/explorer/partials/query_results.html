@@ -1,4 +1,4 @@
-{% load explorer_tags %}
+{% load explorer_tags waffle_tags %}
 <div class="govuk-grid-row" id="query-results">
   {% if headers %}
     <div class="govuk-grid-column-full">
@@ -62,6 +62,12 @@
          href="{% url 'explorer:download_querylog' query_log.id %}?format=excel">Download Excel</a>
       <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
          href="{% url 'explorer:download_querylog' query_log.id %}?format=json">Download JSON</a>
+      {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
+        {% if total_rows > 0 %}
+          <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
+           href="{% url 'explorer:explorer-charts:create-chart' query_log.id %}">Create Chart</a>
+        {% endif %}
+      {% endflag %}
     </div>
   {% endif %}
 </div>

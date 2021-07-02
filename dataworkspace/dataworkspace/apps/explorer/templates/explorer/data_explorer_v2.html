@@ -1,0 +1,41 @@
+{% load static %}
+{% load render_bundle from webpack_loader %}
+<!doctype html>
+<html lang="en" class="govuk-template">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+    <title>{% block title %}Data Explorer{% endblock %}</title>
+    <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="{% static 'assets/images/favicon.ico' %}"
+          type="image/x-icon">
+    <meta name="twitter:dnt" content="on">
+    <meta name="format-detection" content="telephone=no">
+    {% block styles %}
+      <link rel="stylesheet" href="{% static 'govuk-frontend-3.12.0-without-gds-transport.min.css' %}">
+      <link href="{% static 'explorer_custom.css' %}" rel="stylesheet" media="all"/>
+    {% endblock styles %}
+  </head>
+  <body class="govuk-template__body">
+  <header class="govuk-header " role="banner" data-module="govuk-header">
+      <div class="govuk-header__container">
+        <div class=" govuk-width-container">
+          <div class="govuk-header__logotype" style="width: 100%">
+            <a href="{% url 'explorer:index' %}" class="govuk-header__link govuk-header__link--service-name">Data
+              Explorer </a>
+            <p style="float: right" class="govuk-!-font-size-19 govuk-!-display-inline-block govuk-!-margin-top-0">
+              Uses data on <a class="govuk-header__link" style="text-decoration: underline" href="https://data.trade.gov.uk"
+                              target="_blank" rel="noopener noreferrer">Data Workspace</a>
+            </p>
+          </div>
+          <button type="button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation"
+                  aria-label="Show or hide Top Level Navigation">Menu
+          </button>
+        </div>
+      </div>
+    </header>
+      <div id="app"></div>
+    {% render_bundle 'main' 'js' %}
+  </body>
+</html>
