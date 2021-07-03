@@ -10,6 +10,9 @@ cp /xstartup /home/dw/.vnc/xstartup
 cp /passwd /home/dw/.vnc/passwd
 chmod 600 /home/dw/.vnc/passwd
 
+mkdir -p /home/dw/Desktop/
+cp /org.qgis.qgis.desktop /home/dw/Desktop/
+
 vncserver :1
 
 # The webserver for static files that is build into websocketify occasionally

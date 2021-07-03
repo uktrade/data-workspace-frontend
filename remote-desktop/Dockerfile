@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster
 
 RUN \
 	apt-get update && \
@@ -10,7 +10,15 @@ RUN \
 		task-lxde-desktop \
 		vnc4server \
 		websockify \
+		vim \
+		gnupg \
+		software-properties-common \
 		wget && \
+	wget -qO - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import && \
+	chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg && \
+	add-apt-repository "deb https://qgis.org/ubuntu $(lsb_release -c -s) main" && \
+	apt update && \
+	apt install qgis qgis-plugin-grass -y && \
 	wget https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz && \
 	tar -zxvf v1.1.0.tar.gz && \
 	rm -r -f v1.1.0.tar.gz && \
@@ -25,7 +33,7 @@ RUN \
 	touch /var/run/nginx.pid && \
 	chown dw:dw /var/run/nginx.pid
 
-COPY passwd xstartup start.sh nginx.conf /
+COPY passwd xstartup start.sh nginx.conf org.qgis.qgis.desktop /
 
 ENV \
 	USER=dw
