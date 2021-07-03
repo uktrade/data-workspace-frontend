@@ -22,5 +22,5 @@ sudo -E -u s3sync mobius3 \
     --log-level INFO \
     --credentials-source ecs-container-endpoint \
     --exclude-remote '(.*(/|^)\.checkpoints/)|(.*(/|^)bigdata/.*)' \
-    --exclude-local '(.*(/|^)\.__mobius3_flush__.*)|(.*(/|^)bigdata/.*)' \
+    --exclude-local '(.*(/|^)\.__mobius3_flush__.*)|(.*(/|^)bigdata/.*)|.*(/|^)\.vnc/.*' \
     --upload-on-create '^.*/\.git/.*$'
