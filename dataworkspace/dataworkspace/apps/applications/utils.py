@@ -1533,7 +1533,7 @@ def push_tool_monitoring_dashboard_datasets():
             geckoboard_endpoint + 'tools.failed/data', json=payload,
         )
 
-    def report_tool_start_times(client, session):
+    def report_tool_average_start_times(client, session):
 
         pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
             'taskArns'
@@ -1591,6 +1591,60 @@ def push_tool_monitoring_dashboard_datasets():
             geckoboard_endpoint + 'tools.durations/data', json=payload,
         )
 
+    def report_recent_tool_start_times(client, session):
+
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
+            'taskArns'
+        ]
+
+        pending_tasks = (
+            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
+            if pending_task_arns
+            else []
+        )
+
+        running_tasks = [t for t in pending_tasks if t['lastStatus'] == 'RUNNING']
+
+        # Create dataset
+        payload = {
+            'fields': {
+                'user': {'type': 'string', 'name': 'User'},
+                'tool': {'type': 'string', 'name': 'Tool'},
+                'time_started': {'type': 'datetime', 'name': 'Time started'},
+                'time_taken': {
+                    'type': 'duration',
+                    'time_unit': 'seconds',
+                    'name': 'Time Taken',
+                },
+            }
+        }
+        session.put(
+            geckoboard_endpoint + 'tools.recent', json=payload,
+        )
+
+        # Add data
+        payload = {
+            'data': [
+                {
+                    'user': t['overrides']['taskRoleArn'][31:].replace(
+                        task_role_prefix, ''
+                    ),
+                    'tool': t['group'].replace(
+                        f'family:{cluster.replace("-notebooks", "")}-', ''
+                    )[:-9],
+                    'time_started': t['createdAt'].isoformat(),
+                    'time_taken': (t['startedAt'] - t['createdAt']).seconds,
+                }
+                for t in sorted(
+                    running_tasks, key=lambda x: x['startedAt'], reverse=True
+                )[:10]
+            ]
+        }
+
+        session.put(
+            geckoboard_endpoint + 'tools.recent/data', json=payload,
+        )
+
     client = boto3.client('ecs')
 
     session = requests.Session()
@@ -1598,4 +1652,5 @@ def push_tool_monitoring_dashboard_datasets():
 
     report_running_tools(client, session)
     report_failed_tools(client, session)
-    report_tool_start_times(client, session)
+    report_tool_average_start_times(client, session)
+    report_recent_tool_start_times(client, session)
