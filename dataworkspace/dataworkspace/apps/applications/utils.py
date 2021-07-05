@@ -1447,3 +1447,155 @@ def long_running_query_alert():
                 _send_slack_message(message)
             else:
                 logger.info('No long running queries found.')
+
+
+@celery_app.task()
+def push_tool_monitoring_dashboard_datasets():
+
+    geckboard_api_key = os.environ['GECKOBOARD_API_KEY']
+    cluster = os.environ[
+        'APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME'
+    ]
+    task_role_prefix = os.environ[
+        'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX'
+    ]
+    geckoboard_endpoint = f'https://api.geckoboard.com/datasets/data-workspace.{os.environ["ENVIRONMENT"]}.'
+
+    def report_running_tools(client, session):
+
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
+            'taskArns'
+        ]
+
+        pending_tasks = (
+            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
+            if pending_task_arns
+            else []
+        )
+
+        running_tasks = [t for t in pending_tasks if t['lastStatus'] == 'RUNNING']
+
+        # Create dataset
+        payload = {'fields': {'count': {'type': 'number', 'name': 'Count'}}}
+        session.put(
+            geckoboard_endpoint + 'tools.running', json=payload,
+        )
+
+        # Add data
+        payload = {'data': [{'count': len(running_tasks)}]}
+        session.put(
+            geckoboard_endpoint + 'tools.running/data', json=payload,
+        )
+
+    def report_failed_tools(client, session):
+
+        stopped_tasks_arns = client.list_tasks(
+            cluster=cluster, desiredStatus='STOPPED'
+        )['taskArns']
+
+        stopped_tasks = (
+            client.describe_tasks(cluster=cluster, tasks=stopped_tasks_arns)['tasks']
+            if stopped_tasks_arns
+            else []
+        )
+
+        # Create dataset
+        payload = {
+            'fields': {
+                'user': {'type': 'string', 'name': 'User'},
+                'tool': {'type': 'string', 'name': 'Tool'},
+                'time_started': {'type': 'datetime', 'name': 'Time started'},
+                'stopped_reason': {'type': 'string', 'name': 'Reason'},
+            }
+        }
+        session.put(
+            geckoboard_endpoint + 'tools.failed', json=payload,
+        )
+
+        # Add data
+        payload = {
+            'data': [
+                {
+                    'user': t['overrides']['taskRoleArn'][31:].replace(
+                        task_role_prefix, ''
+                    ),
+                    'tool': t['group'].replace(
+                        f'family:{cluster.replace("-notebooks", "")}-', ''
+                    )[:-9],
+                    'time_started': t['createdAt'].isoformat(),
+                    'stopped_reason': t['stoppedReason'],
+                }
+                for t in stopped_tasks
+                if t['stoppedReason'] != 'Task stopped by user'
+            ]
+        }
+        session.put(
+            geckoboard_endpoint + 'tools.failed/data', json=payload,
+        )
+
+    def report_tool_start_times(client, session):
+
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
+            'taskArns'
+        ]
+
+        pending_tasks = (
+            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
+            if pending_task_arns
+            else []
+        )
+
+        running_tasks = [t for t in pending_tasks if t['lastStatus'] == 'RUNNING']
+
+        # Create dataset
+        payload = {
+            'fields': {
+                'time_taken': {
+                    'type': 'duration',
+                    'time_unit': 'seconds',
+                    'name': 'Time Taken',
+                },
+                'hour_of_day': {'type': 'string', 'name': 'Hour'},
+            }
+        }
+        session.put(
+            geckoboard_endpoint + 'tools.durations', json=payload,
+        )
+
+        # Add data
+        payload = {
+            'data': [
+                {
+                    'time_taken': (t['startedAt'] - t['createdAt']).seconds,
+                    'hour_of_day': t['startedAt'].strftime('%H'),
+                }
+                for t in running_tasks
+            ]
+        }
+
+        hours = {t['hour_of_day'] for t in payload['data']}
+
+        # Create a bucket for each hour
+        for x in range(24):
+            if str(x) not in hours:
+                payload['data'].append(
+                    {
+                        'time_taken': 0,
+                        'hour_of_day': datetime.datetime(2021, 1, 1, x, 0, 0).strftime(
+                            '%H'
+                        ),
+                    }
+                )
+
+        session.put(
+            geckoboard_endpoint + 'tools.durations/data', json=payload,
+        )
+
+    client = boto3.client('ecs')
+
+    session = requests.Session()
+    session.auth = (geckboard_api_key, '')
+
+    report_running_tools(client, session)
+    report_failed_tools(client, session)
+    report_tool_start_times(client, session)

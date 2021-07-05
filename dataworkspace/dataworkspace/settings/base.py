@@ -332,6 +332,11 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
             'schedule': 60 * 5,
             'args': (),
         },
+        'push-tool-monitoring-dashboard-datasets': {
+            'task': 'dataworkspace.apps.applications.utils.push_tool_monitoring_dashboard_datasets',
+            'schedule': 60,
+            'args': (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']

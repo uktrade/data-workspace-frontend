@@ -729,3 +729,33 @@ data "aws_iam_policy_document" "admin_datasets_database_rds_logs" {
     resources = ["*"]
   }
 }
+
+resource "aws_iam_role_policy_attachment" "admin_list_ecs_tasks" {
+  role       = "${aws_iam_role.admin_task.name}"
+  policy_arn = "${aws_iam_policy.admin_list_ecs_tasks.arn}"
+}
+
+resource "aws_iam_policy" "admin_list_ecs_tasks" {
+  name        = "${var.prefix}-admin-list-ecs-tasks"
+  path        = "/"
+  policy       = "${data.aws_iam_policy_document.admin_list_ecs_tasks.json}"
+}
+
+data "aws_iam_policy_document" "admin_list_ecs_tasks" {
+  statement {
+    actions = [
+      "ecs:ListTasks",
+      "ecs:DescribeTasks"
+    ]
+    resources = ["*"]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "ecs:cluster"
+      values = [
+        "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:cluster/${aws_ecs_cluster.notebooks.name}",
+      ]
+    }
+  }
+}
+
