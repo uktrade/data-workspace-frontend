@@ -5,6 +5,7 @@ CREATE ROLE rds_pgaudit;
 CREATE DATABASE dataworkspace;
 CREATE DATABASE datasets;
 CREATE DATABASE airflow;
+CREATE DATABASE superset;
 
 CREATE DATABASE testdb1;
 CREATE DATABASE testdb2;

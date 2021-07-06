@@ -33,6 +33,27 @@ And the application will be visible at http://dataworkspace.test:8000. This is t
 Some parts of the database are managed and populated by [data-flow](https://github.com/uktrade/data-flow/). To ensure there are no issues with some tables being missing, initial setup should include checking out that repo and running the `docker-compose-dw.yml` file, which will perform migrations on the shared Data Workspace/Data Flow DB.
 
 
+## Running superset locally
+
+There is a separate compose file to run superset as it's not necessary to run it locally all the time.
+
+To get started you will need to create an env file
+
+```bash
+cp .envs/superset-sample.env .envs/superset.dev.env
+```
+
+Update the new file with your dit email address (must match your SSO email).
+
+Then run docker-compose using both the dev and dev superset compose files
+
+```bash
+docker-compose -f docker-compose-dev.yml -f docker-compose-superset-dev.yml up
+```
+
+Initially you will then need to set up roles, etc, so your first visit should be to http://superset-admin.dataworkspace.test:8001/
+
+
 ## Creating migrations / running management commands
 
 ```bash
