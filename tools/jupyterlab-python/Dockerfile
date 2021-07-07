@@ -34,7 +34,7 @@ RUN \
     echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
     echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
     echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
-    until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
+    until apt-key adv --keyserver pgp.mit.edu --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential=12.6 \
