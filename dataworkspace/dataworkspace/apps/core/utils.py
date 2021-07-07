@@ -884,7 +884,10 @@ def streaming_query_response(
     def run_queries():
         should_run_query_metrics = unfiltered_query and query_metrics_callback
 
-        with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
+        with connect(
+            database_dsn(settings.DATABASES_DATA[database]),
+            options=f'-c idle_in_transaction_session_timeout={query_timeout}',
+        ) as conn:
             conn.set_session(readonly=True)
 
             with conn.cursor() as _cur:
