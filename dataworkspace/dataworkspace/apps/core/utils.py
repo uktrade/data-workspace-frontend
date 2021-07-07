@@ -764,6 +764,7 @@ def streaming_query_response(
     query_params=None,
     unfiltered_query=None,
     query_metrics_callback=None,
+    cursor_name='data_download',
 ):
     """
     Returns a streaming http response containing a csv file for download
@@ -779,6 +780,7 @@ def streaming_query_response(
     @param query_params: additional query parameters applied to query
     @param unfiltered_query: the query without any filters applied
     @param query_metrics_callback: function to call with query metrics data
+    @param cursor_name: optional name for the cursor - helps with debugging locks
     @return: Customised DjangoStreamingResponse
     """
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
@@ -818,7 +820,7 @@ def streaming_query_response(
         filtered_columns = []
         start = timer()
 
-        with conn.cursor(name='data_download') as cur:
+        with conn.cursor(name=cursor_name) as cur:
 
             cur.itersize = batch_size
             cur.arraysize = batch_size
