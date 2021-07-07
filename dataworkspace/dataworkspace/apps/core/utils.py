@@ -888,7 +888,10 @@ def streaming_query_response(
 
         with connect(
             database_dsn(settings.DATABASES_DATA[database]),
-            options=f'-c idle_in_transaction_session_timeout={query_timeout}',
+            options=(
+                '-c idle_in_transaction_session_timeout={timeout} '
+                '-c statement_timeout={timeout}'
+            ).format(timeout=query_timeout),
         ) as conn:
             conn.set_session(readonly=True)
 
@@ -896,7 +899,6 @@ def streaming_query_response(
                 # set statements can't be issued in the server-side cursor,
                 # used by stream_query_as_csv_to_queue so we create a separate
                 # one to set a timeout on the current connection
-                _cur.execute('SET statement_timeout={0}'.format(query_timeout))
                 _cur.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
 
             (
