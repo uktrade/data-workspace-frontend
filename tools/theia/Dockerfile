@@ -34,6 +34,8 @@ RUN \
 		python3-dev \
 		python3-pip \
 		man-db=2.8.5-2 \
+		vim \
+		emacs \
 		sudo && \
 	curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y nodejs && \

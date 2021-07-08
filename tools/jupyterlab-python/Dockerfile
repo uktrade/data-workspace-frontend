@@ -29,6 +29,8 @@ RUN \
         python3-dev \
         python3-setuptools \
         ssh \
+        vim \
+        emacs \
         wget && \
     echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
     echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \

@@ -63,6 +63,8 @@ RUN \
 		texlive-latex-extra=2018.20190227-2 \
 		git-man=1:2.20.1-2+deb10u3 \
 		man-db=2.8.5-2 \
+                vim \
+                emacs \
 		wget=1.20.1-1.1 && \
 	wget -q https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5019-amd64.deb && \
 	echo "bfea9b32c04b721d5d2fb29be510b4378d57a6cd6c8c0dc8390b8760a87341b3  rstudio-server-1.2.5019-amd64.deb" | sha256sum -c && \
