@@ -821,7 +821,7 @@ def streaming_query_response(
         filtered_columns = []
         start = timer()
 
-        with conn.cursor(name=cursor_name) as cur:
+        with conn.cursor(name='data_download') as cur:
 
             cur.itersize = batch_size
             cur.arraysize = batch_size
