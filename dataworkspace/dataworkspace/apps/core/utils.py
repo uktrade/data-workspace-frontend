@@ -792,6 +792,7 @@ def streaming_query_response(
 
     batch_size = 1000
     query_timeout = 300 * 1000
+    idle_in_transaction_timeout = 60 * 1000
 
     # done is added to the queue once the download of the data for the browser is complete
     # this causes the generator to finish and processing to continue
@@ -889,9 +890,9 @@ def streaming_query_response(
         with connect(
             database_dsn(settings.DATABASES_DATA[database]),
             options=(
-                '-c idle_in_transaction_session_timeout={timeout} '
-                '-c statement_timeout={timeout}'
-            ).format(timeout=query_timeout),
+                f'-c idle_in_transaction_session_timeout={idle_in_transaction_timeout} '
+                f'-c statement_timeout={query_timeout}'
+            ),
         ) as conn:
             conn.set_session(readonly=True)
 
