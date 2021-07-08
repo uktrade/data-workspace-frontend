@@ -48,7 +48,6 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils.text import slugify
 from django.views.decorators.http import (
     require_GET,
     require_http_methods,
@@ -1160,7 +1159,7 @@ class CustomDatasetQueryDownloadView(DetailView):
             query.database.memorable_name,
             filtered_query,
             query.get_filename(),
-            cursor_name=f'custom-query--{query.id}--{slugify(query.name)}',
+            cursor_name=f'custom_query--{query.id}',
         )
 
 
