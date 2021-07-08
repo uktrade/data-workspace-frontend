@@ -6,8 +6,12 @@ services:
        dockerfile: Dockerfile
        target: dev
      image: data-workspace-superset
-     ports:
-       - "8001:8000"
+     environment: 
+       DB_USER: postgres
+       DB_PASSWORD: postgres
+       DB_HOST: data-workspace-postgres
+       DB_NAME: superset
+       DB_PORT: 5432
      env_file:
        - .envs/superset.dev.env
      volumes:

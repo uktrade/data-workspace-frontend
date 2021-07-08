@@ -51,7 +51,20 @@ Then run docker-compose using both the dev and dev superset compose files
 docker-compose -f docker-compose-dev.yml -f docker-compose-superset-dev.yml up
 ```
 
-Initially you will then need to set up roles, etc, so your first visit should be to http://superset-admin.dataworkspace.test:8001/
+Initially you will then need to set up the Editor role by running the following script, replacing container-id with the id of the data-workspace-postgres docker container:
+
+```bash
+docker exec -i <container-id> psql -U postgres -d superset < superset/create-editor-role.sql
+```
+
+After placing the following lines in /etc/hosts:
+
+```
+127.0.0.1       superset-admin.dataworkspace.test
+127.0.0.1       superset-edit.dataworkspace.test
+```
+
+you can then visit http://superset-edit.dataworkspace.test:8000/ or http://superset-admin.dataworkspace.test:8000/
 
 
 ## Creating migrations / running management commands
