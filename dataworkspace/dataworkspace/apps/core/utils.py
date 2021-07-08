@@ -764,6 +764,7 @@ def streaming_query_response(
     query_params=None,
     unfiltered_query=None,
     query_metrics_callback=None,
+    cursor_name='data_download',
 ):
     """
     Returns a streaming http response containing a csv file for download
@@ -779,6 +780,7 @@ def streaming_query_response(
     @param query_params: additional query parameters applied to query
     @param unfiltered_query: the query without any filters applied
     @param query_metrics_callback: function to call with query metrics data
+    @param cursor_name: optional name for the cursor - helps with debugging locks
     @return: Customised DjangoStreamingResponse
     """
     logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
@@ -790,6 +792,7 @@ def streaming_query_response(
 
     batch_size = 1000
     query_timeout = 300 * 1000
+    idle_in_transaction_timeout = 60 * 1000
 
     # done is added to the queue once the download of the data for the browser is complete
     # this causes the generator to finish and processing to continue
@@ -818,7 +821,7 @@ def streaming_query_response(
         filtered_columns = []
         start = timer()
 
-        with conn.cursor(name='data_download') as cur:
+        with conn.cursor(name=cursor_name) as cur:
 
             cur.itersize = batch_size
             cur.arraysize = batch_size
@@ -884,14 +887,19 @@ def streaming_query_response(
     def run_queries():
         should_run_query_metrics = unfiltered_query and query_metrics_callback
 
-        with connect(database_dsn(settings.DATABASES_DATA[database])) as conn:
+        with connect(
+            database_dsn(settings.DATABASES_DATA[database]),
+            options=(
+                f'-c idle_in_transaction_session_timeout={idle_in_transaction_timeout} '
+                f'-c statement_timeout={query_timeout}'
+            ),
+        ) as conn:
             conn.set_session(readonly=True)
 
             with conn.cursor() as _cur:
                 # set statements can't be issued in the server-side cursor,
                 # used by stream_query_as_csv_to_queue so we create a separate
                 # one to set a timeout on the current connection
-                _cur.execute('SET statement_timeout={0}'.format(query_timeout))
                 _cur.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
 
             (

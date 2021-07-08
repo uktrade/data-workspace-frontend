@@ -48,6 +48,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.text import slugify
 from django.views.decorators.http import (
     require_GET,
     require_http_methods,
@@ -1159,6 +1160,7 @@ class CustomDatasetQueryDownloadView(DetailView):
             query.database.memorable_name,
             filtered_query,
             query.get_filename(),
+            cursor_name=f'custom-query--{query.id}--{slugify(query.name)}',
         )
 
 
@@ -1544,6 +1546,7 @@ class DataGridDataView(DetailView):
                 params,
                 original_query,
                 write_metrics_to_eventlog,
+                cursor_name=f'data-grid--{self.kwargs["model_class"].__name__}--{source.id}',
             )
 
         records = self._get_rows(source, query, params)
