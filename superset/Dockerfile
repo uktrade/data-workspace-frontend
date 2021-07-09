@@ -43,8 +43,6 @@ COPY start.sh /
 
 FROM base as dev
 
-COPY gunicorn.dev.conf.py /gunicorn.conf.py
-
 USER superset
 
 CMD ["/start.sh"]
