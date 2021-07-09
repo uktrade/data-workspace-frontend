@@ -1,3 +1,4 @@
+import decimal
 import os
 
 from flask_appbuilder.security.manager import AUTH_REMOTE_USER
@@ -8,7 +9,7 @@ from flask_login import login_user
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Semi-magical request-local proxy objects
-from flask import g, make_response, redirect, request
+from flask import g, json, make_response, redirect, request
 
 from superset import db, security_manager
 from superset.security import SupersetSecurityManager
@@ -168,7 +169,16 @@ def apply_editor_role_permissions(sm, user, role_name):
     sm.get_session.commit()
 
 
-def data_workspace_permission_handler(app):
+def app_mutator(app):
+    class CustomJSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, decimal.Decimal):
+                return str(obj)
+            return super().default(obj)
+
+    with app.app_context():
+        app.json_encoder = CustomJSONEncoder
+
     @app.before_request
     def before_request():  # pylint: disable=unused-variable
         if g.user is not None and g.user.is_authenticated:
@@ -198,7 +208,7 @@ def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
     return uri, params
 
 
-FLASK_APP_MUTATOR = data_workspace_permission_handler
+FLASK_APP_MUTATOR = app_mutator
 CUSTOM_SECURITY_MANAGER = DataWorkspaceSecurityManager
 AUTH_TYPE = AUTH_REMOTE_USER
 ADDITIONAL_MIDDLEWARE = [lambda app: ProxyFix(app, x_proto=1)]
