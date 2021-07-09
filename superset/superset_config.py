@@ -180,7 +180,9 @@ def apply_editor_role_permissions(sm, user, role_name):
 
     # Give users access to any datasets they are owners of
     for table in db.session.query(SqlaTable).filter(
-        SqlaTable.owner_class.id.in_([user.get_id()])
+        SqlaTable.owners.any(  # pylint: disable=no-member
+            sm.user_model.id.in_([user.get_id()])
+        )
     ):
         apply_datasource_perm(sm, role, table)
 
@@ -190,7 +192,7 @@ def apply_editor_role_permissions(sm, user, role_name):
 
 def app_mutator(app):
     class CustomJSONEncoder(json.JSONEncoder):
-        def default(self, obj):
+        def default(self, obj):  # pylint: disable=arguments-differ
             if isinstance(obj, decimal.Decimal):
                 return str(obj)
             return super().default(obj)
