@@ -146,6 +146,16 @@ def apply_public_role_permissions(sm, user, role_name):
     sm.get_session.commit()
 
 
+def apply_datasource_perm(sm, role, datasource):
+    """
+    Give the specified role access to the specified datasource
+    """
+    permission_view_menu = sm.add_permission_view_menu(
+        'datasource_access', datasource.perm
+    )
+    sm.add_permission_role(role, permission_view_menu)
+
+
 def apply_editor_role_permissions(sm, user, role_name):
     """
     Given a user and role name
@@ -154,16 +164,25 @@ def apply_editor_role_permissions(sm, user, role_name):
       - This allows us to restrict the datasources/charts the user can see to only those they created
     """
     from superset.models.slice import Slice  # pylint: disable=import-outside-toplevel
+    from superset.connectors.sqla.models import (  # pylint: disable=import-outside-toplevel
+        SqlaTable,
+    )
 
     role = sm.add_role(role_name)
     if not role:
         role = sm.find_role(role_name)
 
-    for datasource in db.session.query(Slice).filter_by(created_by_fk=user.get_id()):
-        permission_view_menu = sm.add_permission_view_menu(
-            'datasource_access', datasource.perm
-        )
-        sm.add_permission_role(role, permission_view_menu)
+    # Give users access to any slices they are owners of
+    for datasource in db.session.query(Slice).filter(
+        Slice.owners.any(sm.user_model.id.in_([user.get_id()]))
+    ):
+        apply_datasource_perm(sm, role, datasource)
+
+    # Give users access to any datasets they are owners of
+    for table in db.session.query(SqlaTable).filter(
+        SqlaTable.owner_class.id.in_([user.get_id()])
+    ):
+        apply_datasource_perm(sm, role, table)
 
     user.roles.append(role)
     sm.get_session.commit()
