@@ -109,4 +109,3 @@ insert into ab_permission_view_role select nextval('ab_permission_view_role_id_s
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),131, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),132, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),135, 7;
-insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),135, 7;
