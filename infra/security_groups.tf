@@ -721,6 +721,18 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_superset" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_healthcheck" {
+  description = "ingress-https-from-healthcheck-service"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.healthcheck_service.id}"
+
+  type        = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "cloudwatch_ingress_https_from_all" {
   description = "ingress-https-from-everywhere"
 
