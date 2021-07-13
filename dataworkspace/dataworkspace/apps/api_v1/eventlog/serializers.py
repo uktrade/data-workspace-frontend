@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from dataworkspace.apps.datasets.models import (
@@ -73,6 +74,21 @@ class EventLogDataExplorerQuerySerializer(serializers.ModelSerializer):
         return obj.title
 
 
+class EventLogDataUserSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'type', 'name')
+
+    def get_type(self, obj):
+        return 'User'
+
+    def get_name(self, obj):
+        return obj.get_full_name()
+
+
 class EventLogRelatedObjectField(serializers.RelatedField):
     def to_representation(  # pylint: disable=inconsistent-return-statements
         self, value
@@ -87,6 +103,8 @@ class EventLogRelatedObjectField(serializers.RelatedField):
             return EventLogVisualisationLinkSerializer(value).data
         if isinstance(value, Query):
             return EventLogDataExplorerQuerySerializer(value).data
+        if isinstance(value, get_user_model()):
+            return EventLogDataUserSerializer(value).data
 
 
 class EventLogSerializer(serializers.ModelSerializer):
