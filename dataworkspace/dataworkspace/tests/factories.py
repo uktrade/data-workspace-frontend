@@ -255,7 +255,7 @@ class DatasetAccessRequestEventFactory(RelatedObjectEventFactory):
 
 class DatasetAccessGrantedEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
-    content_object = factory.SubFactory(DatacutDataSetFactory)
+    content_object = factory.SubFactory(UserFactory)
     extra = {
         'created_by': 1,
         'updated_by': 1,
@@ -270,7 +270,7 @@ class DatasetAccessGrantedEventFactory(RelatedObjectEventFactory):
 
 class DatasetAccessRevokedEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
-    content_object = factory.SubFactory(DatacutDataSetFactory)
+    content_object = factory.SubFactory(UserFactory)
     extra = {
         'created_by': 1,
         'updated_by': 1,

@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.fields import DateTimeField
@@ -27,8 +28,12 @@ class TestEventLogAPIView(BaseAPIViewTest):
                 'id': str(eventlog.related_object.id)
                 if isinstance(eventlog.related_object.id, uuid.UUID)
                 else eventlog.related_object.id,
-                'name': eventlog.related_object.name,
-                'type': eventlog.related_object.get_type_display(),
+                'name': eventlog.related_object.get_full_name()
+                if isinstance(eventlog.related_object, get_user_model())
+                else eventlog.related_object.name,
+                'type': 'User'
+                if isinstance(eventlog.related_object, get_user_model())
+                else eventlog.related_object.get_type_display(),
             },
             'timestamp': DateTimeField().to_representation(eventlog.timestamp),
             'user_id': eventlog.user.id,
