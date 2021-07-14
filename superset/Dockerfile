@@ -40,6 +40,8 @@ ENV \
 
 COPY superset_config.py /etc/superset/
 COPY start.sh /
+RUN sed -i 's/<\/title>/<\/title><script src="\/static\/assets\/service-worker-register.js"><\/script>/g' \
+    /usr/local/lib/python3.7/dist-packages/superset/templates/superset/basic.html
 
 FROM base as dev
 

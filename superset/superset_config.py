@@ -213,6 +213,11 @@ def app_mutator(app):
                     security_manager, g.user, f'{g.user.username}-Role'
                 )
 
+    @app.after_request
+    def allow_service_worker(response):
+        response.headers["service-worker-allowed"] = "/"
+        return response
+
 
 class DataWorkspaceSecurityManager(SupersetSecurityManager):
     # The Flask AppBuilder Security Manager, from which the Superset Security Manager
