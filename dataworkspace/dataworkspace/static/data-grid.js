@@ -138,12 +138,25 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
     }
   }
 
+  function suppressTabKey(params){
+    var event = params.event;
+    var key = event.key;
+    if(key === "Tab") return true;
+  }
+
   var gridOptions = {
     enableCellTextSelection: true,
     defaultColDef: {
       resizable: true,
       suppressMenu: true,
       floatingFilter: true,
+
+      // suppressHeaderKeyboardEvent: function(params){
+      // We don't suppress TAB from the header because we are showing floatingFilters
+      // https://www.ag-grid.com/javascript-grid/floating-filters/ (the row with text boxes)
+      // ag-grid doesn't suppress the tab navigation between these text boxes
+
+      suppressKeyboardEvent: suppressTabKey,
       filterParams: {
         suppressAndOrCondition: true,
         buttons: ['reset']
