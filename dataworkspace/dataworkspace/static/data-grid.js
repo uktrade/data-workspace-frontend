@@ -155,6 +155,7 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
       // We don't suppress TAB from the header because we are showing floatingFilters
       // https://www.ag-grid.com/javascript-grid/floating-filters/ (the row with text boxes)
       // ag-grid doesn't suppress the tab navigation between these text boxes
+      // this is either by design or a bug in ag-grid
 
       suppressKeyboardEvent: suppressTabKey,
       filterParams: {
