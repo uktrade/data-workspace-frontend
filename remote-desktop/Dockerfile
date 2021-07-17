@@ -33,7 +33,7 @@ RUN \
 	touch /var/run/nginx.pid && \
 	chown dw:dw /var/run/nginx.pid
 
-COPY passwd xstartup start.sh nginx.conf org.qgis.qgis.desktop /
+COPY start.sh nginx.conf org.qgis.qgis.desktop /
 
 ENV \
 	USER=dw

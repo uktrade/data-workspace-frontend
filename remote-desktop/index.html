@@ -19,8 +19,6 @@
 
     <script>
         // Workaround inability to pre-fill certain settings
-        // This is running behind both SSO and the VPN that controls access,
-        // so the hardcoded password of "password" is not a security issue
         (function() {
             var originalHash = location.hash;
 
@@ -32,7 +30,7 @@
                 location.hash = newHash;
             }
             var replaceHash = 'replaceState' in history ? replaceHashHistory : replaceHashLocation;
-            var requiredHash = '#resize=remote&password=password&autoconnect=true';
+            var requiredHash = '#resize=remote&autoconnect=true';
             if (window.location.hash != requiredHash) {
                 replaceHash(requiredHash)
             }
