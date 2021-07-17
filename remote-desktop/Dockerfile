@@ -9,7 +9,6 @@ RUN \
 		procps \
 		task-lxde-desktop \
 		vnc4server \
-		websockify \
 		vim \
 		gnupg \
 		software-properties-common \
@@ -19,13 +18,21 @@ RUN \
 	add-apt-repository "deb https://qgis.org/ubuntu $(lsb_release -c -s) main" && \
 	apt update && \
 	apt install qgis qgis-plugin-grass -y && \
-	wget https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz && \
-	tar -zxvf v1.1.0.tar.gz && \
-	rm -r -f v1.1.0.tar.gz && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY index.html /noVNC-1.1.0/index.html
+RUN \
+	wget https://github.com/novnc/noVNC/archive/v1.2.0.tar.gz && \
+	tar -zxvf v1.2.0.tar.gz && \
+	rm -r -f v1.2.0.tar.gz && \
+	wget https://github.com/novnc/websockify/archive/refs/tags/v0.9.0.tar.gz && \
+	tar -zxvf v0.9.0.tar.gz && \
+	cd websockify-0.9.0 && \
+	python3 setup.py install && \
+	cd .. && \
+	rm -r -f v0.9.0.tar.gz
+
+COPY index.html /noVNC-1.2.0/index.html
 
 RUN \
 	addgroup --system --gid 4356 dw && \

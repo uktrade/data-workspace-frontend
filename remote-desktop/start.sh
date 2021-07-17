@@ -11,4 +11,4 @@ vncserver -SecurityTypes None -xstartup /usr/bin/lxsession :1
 # returns 500s. So we don't use it, and instead serve static files through nginx
 nginx -c /nginx.conf
 
-/usr/bin/websockify 8886 localhost:5901
+websockify 8886 localhost:5901
