@@ -12,6 +12,7 @@ RUN \
 		vim \
 		gnupg \
 		software-properties-common \
+		gzip \
 		wget && \
 	wget -qO - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import && \
 	chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg && \
@@ -22,9 +23,6 @@ RUN \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN \
-	wget https://github.com/novnc/noVNC/archive/v1.2.0.tar.gz && \
-	tar -zxvf v1.2.0.tar.gz && \
-	rm -r -f v1.2.0.tar.gz && \
 	wget https://github.com/novnc/websockify/archive/refs/tags/v0.9.0.tar.gz && \
 	tar -zxvf v0.9.0.tar.gz && \
 	cd websockify-0.9.0 && \
@@ -32,7 +30,9 @@ RUN \
 	cd .. && \
 	rm -r -f v0.9.0.tar.gz
 
-COPY index.html /noVNC-1.2.0/index.html
+COPY index.html /webroot/index.html
+
+RUN gzip -c /webroot/index.html > /webroot/index.html.gz
 
 RUN \
 	addgroup --system --gid 4356 dw && \
