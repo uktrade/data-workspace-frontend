@@ -126,9 +126,7 @@ def apply_public_role_permissions(sm, user, role_name):
         sm.add_permission_role(role, permission_view_menu)
 
     # Delete permissions to existing dashboards
-    for perm in role.permissions:
-        if perm.permission.name == 'datasource_access':
-            sm.del_permission_role(role, perm)
+    delete_datasource_perms(sm, role)
 
     # Add permissions for datasources in dashboards that the user has access to
     for dashboard_id in request.headers['Dashboards'].split(','):
@@ -156,6 +154,12 @@ def apply_datasource_perm(sm, role, datasource):
     sm.add_permission_role(role, permission_view_menu)
 
 
+def delete_datasource_perms(sm, role):
+    for perm in role.permissions:
+        if perm.permission.name == 'datasource_access':
+            sm.del_permission_role(role, perm)
+
+
 def apply_editor_role_permissions(sm, user, role_name):
     """
     Given a user and role name
@@ -171,6 +175,9 @@ def apply_editor_role_permissions(sm, user, role_name):
     role = sm.add_role(role_name)
     if not role:
         role = sm.find_role(role_name)
+
+    # Delete any existing perms attached to this user's role
+    delete_datasource_perms(sm, role)
 
     # Give users access to any slices they are owners of
     for datasource in db.session.query(Slice).filter(
