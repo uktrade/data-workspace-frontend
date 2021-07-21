@@ -41,11 +41,10 @@ ENV \
 COPY superset_config.py /etc/superset/
 COPY start.sh /
 
-FROM base as dev
+COPY monkey-patch-requests.js /usr/local/lib/python3.7/dist-packages/superset/static/assets/
 
-USER superset
-
-CMD ["/start.sh"]
+RUN sed -i 's/<\/title>/<\/title><script src="\/static\/assets\/monkey-patch-requests.js"><\/script>/g' \
+    /usr/local/lib/python3.7/dist-packages/superset/templates/superset/basic.html
 
 FROM base as live
 
