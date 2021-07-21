@@ -193,6 +193,16 @@ def apply_editor_role_permissions(sm, user, role_name):
     ):
         apply_datasource_perm(sm, role, table)
 
+        # By default "virtual" datasets are flagged and filtered out of the chart creation
+        # forms without any indication. The argument for this was...
+        # "it may be a bit confusing, but certainly less than seeing lots of user generated views."
+        # As we only allow users to see the "views" they have created this does not work for us.
+        # So here we remove the flag so users can create charts with virtual datasets as
+        # if they were tables.
+        if table.is_sqllab_view:
+            table.is_sqllab_view = False
+            db.session.add(table)
+
     user.roles.append(role)
     sm.get_session.commit()
 
