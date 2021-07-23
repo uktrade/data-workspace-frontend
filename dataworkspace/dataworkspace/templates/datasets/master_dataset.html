@@ -166,7 +166,12 @@
 
           {% for visualisation in model.visualisations.all %}
             <tr class="govuk-table__row">
-              <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.name }}</td>
+              <td class="govuk-table__cell app-table_cell--no-border">
+                  {% if visualisation.gds_phase_name %}
+                      <strong class="govuk-tag govuk-phase-banner__content__tag">{{ visualisation.gds_phase_name }}</strong>
+                  {% endif %}
+                  {{ visualisation.name }}
+              </td>
               <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.summary }}</td>
               <td class="govuk-table__cell app-table_cell--no-border">
                 {% if visualisation.thumbnail %}

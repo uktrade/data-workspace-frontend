@@ -27,7 +27,11 @@
 {% block content%}
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
+        {% if visualisation.gds_phase_name %}
+            <strong class="govuk-!-margin-bottom-2 govuk-tag govuk-phase-banner__content__tag">{{ visualisation.gds_phase_name }}</strong>
+        {% endif %}
       <h1 class="govuk-heading-xl">{{ visualisation.name }}</h1>
+
     </div>
   </div>
 <div id="view"></div>
