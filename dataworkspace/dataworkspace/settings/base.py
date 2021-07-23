@@ -663,6 +663,3 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 SUPERSET_VIEW_URL = f'https://superset.{APPLICATION_ROOT_DOMAIN}'
 SUPERSET_EDIT_URL = f'https://superset-edit.{APPLICATION_ROOT_DOMAIN}'
-
-# Allows us to use minio / localstack
-AWS_S3_ENDPOINT_URL = env.get('AWS_S3_ENDPOINT_URL', None)  # noqa F405
