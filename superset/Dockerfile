@@ -39,14 +39,21 @@ ENV \
     FLASK_APP=superset
 
 COPY superset_config.py /etc/superset/
-COPY start.sh /
 
 COPY monkey-patch-requests.js /usr/local/lib/python3.7/dist-packages/superset/static/assets/
 
 RUN sed -i 's/<\/title>/<\/title><script src="\/static\/assets\/monkey-patch-requests.js"><\/script>/g' \
     /usr/local/lib/python3.7/dist-packages/superset/templates/superset/basic.html
 
+COPY start-dev.sh /start.sh
+
+USER superset
+
+CMD ["/start.sh"]
+
 FROM base as live
+
+COPY start.sh /
 
 USER superset
 
