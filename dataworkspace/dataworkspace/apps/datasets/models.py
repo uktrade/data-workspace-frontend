@@ -377,7 +377,7 @@ class DataSetVisualisation(DeletableTimestampedUserModel):
         DataSet, on_delete=models.CASCADE, related_name='visualisations'
     )
 
-    gds_phase_name = models.CharField(max_length=25, null=True, blank=True)
+    gds_phase_name = models.CharField(max_length=25, default='', blank=True)
 
 
 class DataSetUserPermission(models.Model):
