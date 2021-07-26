@@ -2,6 +2,7 @@ import copy
 import csv
 import operator
 import os
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -897,8 +898,13 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
             'datasets:custom_dataset_query_data', args=(self.dataset_id, self.id)
         )
 
+    @property
+    def cleaned_query(self):
+        # Replace any single '%' with '%%'
+        return re.sub('(?<!%)%(?!%)', '%%', self.query).rstrip().rstrip(';')
+
     def get_data_grid_query(self):
-        return sql.SQL(self.query.rstrip().rstrip(';'))
+        return sql.SQL(self.cleaned_query)
 
     def get_column_config(self):
         """
@@ -906,7 +912,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         """
         col_defs = []
         for column in datasets_db.get_columns(
-            self.database.memorable_name, query=self.query, include_types=True,
+            self.database.memorable_name, query=self.cleaned_query, include_types=True,
         ):
             col_defs.append(
                 {

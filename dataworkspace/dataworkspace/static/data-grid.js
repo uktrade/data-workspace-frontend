@@ -179,7 +179,9 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
 
   if (dataEndpoint) {
     gridOptions.rowModelType = 'infinite';
-    gridOptions.columnDefs[0].cellRenderer = 'loadingRenderer';
+    if (gridOptions.columnDefs.length > 0) {
+      gridOptions.columnDefs[0].cellRenderer = 'loadingRenderer';
+    }
   }
   else {
     gridOptions.rowData = records;
