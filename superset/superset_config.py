@@ -1,6 +1,7 @@
 import decimal
 import os
 
+from flask_appbuilder.models.generic.filters import FilterStartsWith
 from flask_appbuilder.security.manager import AUTH_REMOTE_USER
 from flask_appbuilder.security.views import AuthView
 from flask_appbuilder import expose
@@ -208,6 +209,56 @@ def apply_editor_role_permissions(sm, user, role_name):
 
 
 def app_mutator(app):
+    from superset.views import (  # pylint: disable=import-outside-toplevel
+        filters,
+        base_api,
+    )
+
+    # Monkey patch the related owners filter to remove any non-editor users
+    class FilterRelatedOwners(filters.FilterRelatedOwners):
+        def apply(self, query, value):
+            user_model = security_manager.user_model
+            query = query.filter(user_model.username.ilike('%editor%'))
+            return super().apply(query, value)
+
+    filters.FilterRelatedOwners = FilterRelatedOwners
+
+    # Override related user view filters to force the filters to be added even if
+    # there is no filter value. This is necessary to allow us to filter
+    # out non-editor users on every request, even if there is no value to filter
+    # for (i.e. filter = '')
+    class BaseSupersetModelRestApi(base_api.BaseSupersetModelRestApi):
+        def _get_related_filter(self, datamodel, column_name, value):
+            filter_field = self.related_field_filters.get(column_name)
+            if isinstance(filter_field, str):
+                filter_field = base_api.RelatedFieldFilter(  # pylint: disable=self-assigning-variable
+                    str(filter_field), FilterStartsWith
+                )
+            search_columns = [filter_field.field_name] if filter_field else None
+            filters = datamodel.get_filters(search_columns)
+            base_filters = self.filter_rel_fields.get(column_name)
+            if base_filters:
+                filters.add_filter_list(base_filters)
+            if filter_field:
+                # If filtering for related owners ensure we always run the
+                # filter even if the value we're filtering for is ''. This allows
+                # us to always filter out non-editor users.
+                if filter_field.filter_class == FilterRelatedOwners:
+                    filters.add_filter(
+                        filter_field.field_name,
+                        filter_field.filter_class,
+                        value if value else '',
+                    )
+                # Any non-related-owner filters are handled as usual
+                elif value:
+                    filters.add_filter(
+                        filter_field.field_name, filter_field.filter_class, value,
+                    )
+
+            return filters
+
+    base_api.BaseSupersetModelRestApi = BaseSupersetModelRestApi
+
     class CustomJSONEncoder(json.JSONEncoder):
         def default(self, obj):  # pylint: disable=arguments-differ
             if isinstance(obj, decimal.Decimal):
