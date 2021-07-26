@@ -56,93 +56,212 @@
     {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
+            <span class="govuk-caption-xl">Master dataset</span>
             <h1 class="govuk-heading-xl">{{ model.name }}</h1>
+            {#            <div class="govuk-body">#}
+            {#                {{ model.description | safe }}#}
+            {#            </div>#}
+            {##}
+            {#            {% if master_datasets_info and not has_access %}#}
+            {#                {% include 'partials/unauthorised_warning.html' with thing='this dataset' show_tools_message=True %}#}
+            {#            {% endif %}#}
+        </div>
+    </div>
+
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <dl class="govuk-summary-list">
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Date added</dt>
+                    <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
+                </div>
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Update frequency</dt>
+                    <dd class="govuk-summary-list__value">{{ summarised_update_frequency }}</dd>
+                </div>
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Licence</dt>
+                    <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
+                </div>
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Restrictions on usage</dt>
+                    <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
+                </div>
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Contact</dt>
+                    <dd class="govuk-summary-list__value">Contact
+                        <a class="govuk-link"
+                           href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
+                        to ask questions about how to use this data
+                    </dd>
+                </div>
+
+
+            </dl>
+
+
+            <details class="govuk-details" data-module="govuk-details">
+                <summary class="govuk-details__summary">
+                    <span class="govuk-details__summary-text">
+                      Additional information
+                    </span>
+                </summary>
+                <div class="govuk-details__text">
+
+                    <dl class="govuk-summary-list">
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Personal Data</dt>
+                            <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
+                        </div>
+
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Retention period details</dt>
+                            <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
+                        </div>
+
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Usage history</dt>
+                            <dd class="govuk-summary-list__value">
+                                <a class="govuk-link" href="{% url "datasets:usage_history" dataset_uuid=dataset.id %}">View
+                                    history</a> to see how often this data is accessed
+                            </dd>
+                        </div>
+
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Information Asset Manager</dt>
+                            <dd class="govuk-summary-list__value">
+                                {% include 'partials/contact.html' with model=model.information_asset_manager %}
+                            </dd>
+                        </div>
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Information Asset Owner</dt>
+                            <dd class="govuk-summary-list__value">
+                                {% include 'partials/contact.html' with model=model.information_asset_owner %}
+                            </dd>
+                        </div>
+
+                    </dl>
+                </div>
+            </details>
+
+            <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
             <div class="govuk-body">
                 {{ model.description | safe }}
             </div>
 
-            {% if master_datasets_info and not has_access %}
-                {% include 'partials/unauthorised_warning.html' with thing='this dataset' show_tools_message=True %}
+        </div>
+
+        <div class="govuk-grid-column-one-third">
+            {% if related_data %}
+                <aside class="app-related-items" role="complementary">
+                    <h3 class="govuk-heading-s" id="subsection-title">
+                        Related Data
+                    </h3>
+                    <nav role="navigation" aria-labelledby="subsection-title">
+                        <ul class="govuk-list">
+                            {% for dataset in related_data %}
+                                <li>
+                                    <a class="govuk-link"
+                                       href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
+                                        {{ dataset.name }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                </aside>
             {% endif %}
         </div>
     </div>
 
     <div class="govuk-grid-row" style="overflow-x: auto;">
         <div class="govuk-grid-column-full">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Details</h2>
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Data</h2>
             <table class="govuk-table">
                 <thead>
                 <tr class="govuk-table__row">
                     <th class="govuk-table__header">Name</th>
                     <th class="govuk-table__header">Identifier</th>
-                    <th class="govuk-table__header">Update frequency</th>
                     <th class="govuk-table__header">Last updated</th>
-                    <th class="govuk-table__header">Details</th>
                 </tr>
                 </thead>
                 <tbody>
 
                 {% for source_table, code_snippets, columns in master_datasets_info %}
                     <tr class="govuk-table__row">
-                        <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.name }}</td>
-                        <td class="govuk-table__cell app-table_cell--no-border">
-                            "{{ source_table.schema }}"."{{ source_table.table }}"
-                        </td>
-                        <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.get_frequency_display }}</td>
-                        <td class="govuk-table__cell app-table_cell--no-border">
-                            {{ source_table.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
-                        </td>
                         <td class="govuk-table__cell app-table_cell--no-border">
                             {% if source_table.type == source_table_type %}
                                 {% if has_access %}
                                     {% if source_table.data_grid_enabled %}
                                         <a class="govuk-link"
                                            href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id object_id=source_table.id %}">
-                                            View table
+                                            {{ source_table.name }}
                                         </a>
                                     {% else %}
                                         <a class="govuk-link"
                                            href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=source_table.id %}">
-                                            Preview
+                                            {{ source_table.name }}
                                         </a>
                                     {% endif %}
                                 {% else %}
-                                    <p class="govuk-body">No preview available</p>
+                                    {{ source_table.name }}
                                 {% endif %}
                             {% else %}
-                                No preview available
+                                {{ source_table.name }}
                             {% endif %}
+
                         </td>
-                        {% if code_snippets %}
+                        <td class="govuk-table__cell app-table_cell--no-border">
+                            <code>"{{ source_table.schema }}"."{{ source_table.table }}"</code>
+                        </td>
+                        <td class="govuk-table__cell app-table_cell--no-border">
+                            {{ source_table.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+                        </td>
+
+
+                        {% if code_snippets or columns %}
                             <tr class="govuk-table__row">
-                                <td colspan="6" class="govuk-table__cell">
-                                    <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
-                                        <summary class="govuk-details__summary">
-                      <span class="govuk-details__summary-text">
-                        Code snippets and columns <span
-                              class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
-                      </span>
-                                        </summary>
-                                        <div class="govuk-details__text">
-                                            <h3 class="govuk-heading-m">
-                                                Column names and types <span
+                                <td colspan="3" class="govuk-table__cell">
+                                    {% if columns %}
+                                        <details class="govuk-details govuk-!-margin-bottom-6"
+                                                 data-module="govuk-details">
+                                            <summary class="govuk-details__summary">
+                                            <span class="govuk-details__summary-text">
+                                            View data structure <span
                                                     class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
-                                            </h3>
-                                            <ul class="govuk-list govuk-list--bullet">
-                                                {% for column, data_type in columns|slice:":12" %}
-                                                    <li>
-                                                        <strong>{{ column }}</strong> ({{ data_type }})
-                                                    </li>
-                                                {% endfor %}
-                                                {% if columns|length > 12 %}
-                                                    <a class="govuk-link"
-                                                       href="{% url 'datasets:source_table_column_details' dataset_uuid=dataset.id table_uuid=source_table.id %}">
-                                                        View all columns <span
-                                                            class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
-                                                    </a>
-                                                {% endif %}
-                                            </ul>
-                                        </div>
+                                            </span>
+                                            </summary>
+                                            <div class="govuk-details__text">
+                                                <ul class="govuk-list govuk-list--bullet">
+                                                    {% for column, data_type in columns|slice:":12" %}
+                                                        <li>
+                                                            <strong>{{ column }}</strong> ({{ data_type }})
+                                                        </li>
+                                                    {% endfor %}
+                                                    {% if columns|length > 12 %}
+                                                        <a class="govuk-link"
+                                                           href="{% url 'datasets:source_table_column_details' dataset_uuid=dataset.id table_uuid=source_table.id %}">
+                                                            View all columns <span
+                                                                class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+                                                        </a>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </details>
+                                    {% endif %}
+
+                                    <details class="govuk-details govuk-!-margin-bottom-6" data-module="govuk-details">
+                                        <summary class="govuk-details__summary">
+                                            <span class="govuk-details__summary-text">
+                                            Use this data <span
+                                                    class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+                                            </span>
+                                        </summary>
                                         <div class="govuk-details__text">
                                             {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
                                         </div>
@@ -150,6 +269,7 @@
                                 </td>
                             </tr>
                         {% endif %}
+
                     </tr>
                 {% endfor %}
                 {% if not master_datasets_info %}
@@ -163,133 +283,90 @@
     </div>
 
     {% if model.visualisations.all %}
-        <div class="govuk-grid-row" style="overflow-x: auto;">
-            <div class="govuk-grid-column-full">
-                <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Visualisations</h2>
-                <table class="govuk-table">
-                    <thead>
-                    <tr class="govuk-table__row">
-                        <th class="govuk-table__header">Name</th>
-                        <th class="govuk-table__header">Summary</th>
-                        <th class="govuk-table__header">Preview</th>
-                        <th class="govuk-table__header">Details</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-
-                    {% for visualisation in model.visualisations.all %}
-                        <tr class="govuk-table__row">
-                            <td class="govuk-table__cell app-table_cell--no-border">
-                                {{ visualisation.name }}
-                                {% if visualisation.gds_phase_name %}
-                                    <br/>
-                                    <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ visualisation.gds_phase_name }}</strong>
-                                {% endif %}
-                            </td>
-                            <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.summary }}</td>
-                            <td class="govuk-table__cell app-table_cell--no-border">
-                                {% if visualisation.thumbnail %}
-                                    <a class="govuk-link"
-                                       href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
-                                        <img class="visualisation-preview-thumb" src="{{ visualisation.thumbnail.url }}"
-                                             width="200" height="125">
-                                    </a>
-                                {% else %}
-                                    Not available
-                                {% endif %}
-                            </td>
-                            <td class="govuk-table__cell app-table_cell--no-border">
-                                {% if has_access %}
-                                    <a class="govuk-link"
-                                       href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
-                                        View
-                                    </a>
-                                {% else %}
-                                    <p class="govuk-body">No preview available</p>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {% endif %}
-    {% if related_data %}
+        <hr class="govuk-section-break govuk-section-break--l">
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-full">
-                <h2 class="govuk-heading-l govuk-!-margin-top-8">Related data</h2>
-                <div class="govuk-grid-row">
-                    {% for dataset in related_data|slice:":4" %}
-                        {% include "partials/related_data.html" with dataset=dataset %}
-                        {% if forloop.counter|divisibleby:2 %}
-                            </div>
-                            <div class="govuk-grid-row">
-                        {% endif %}
-                    {% endfor %}
-                    </div>
-                {% if related_data|length > 4 %}
-                    <a href="{% url "datasets:related_data" dataset_uuid=model.id %}"
-                       class="govuk-button govuk-button--secondary">
-                        Show all data cuts
-                    </a>
-                {% endif %}
+                <h2 class="govuk-heading-l">Visualisations</h2>
             </div>
+        </div>
+        <div class="govuk-grid-row" style="overflow-x: auto;">
+            <div class="govuk-grid-column-one-third">
+
+                {% for visualisation in model.visualisations.all %}
+                    <div style="height:175px">
+                        {% if visualisation.thumbnail %}
+                            <a class="govuk-link"
+                               href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
+                                <img class="visualisation-preview-thumb" src="{{ visualisation.thumbnail.url }}"
+                                     width="200" height="125">
+                            </a>
+                        {% else %}
+                            <p class="govuk-body">
+                                No thumbnail available
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="govuk-heading-s">{{ visualisation.name }}</h3>
+                    <p class="govuk-body">
+                        {{ visualisation.summary }}
+                    </p>
+
+                {% endfor %}
+            </div>
+
+            {#                <table class="govuk-table">#}
+            {#                    <thead>#}
+            {#                    <tr class="govuk-table__row">#}
+            {#                        <th class="govuk-table__header">Name</th>#}
+            {#                        <th class="govuk-table__header">Summary</th>#}
+            {#                        <th class="govuk-table__header">Preview</th>#}
+            {#                        <th class="govuk-table__header">Details</th>#}
+            {#                    </tr>#}
+            {#                    </thead>#}
+            {#                    <tbody>#}
+            {##}
+            {#                    {% for visualisation in model.visualisations.all %}#}
+            {#                        <tr class="govuk-table__row">#}
+            {#                            <td class="govuk-table__cell app-table_cell--no-border">#}
+            {#                                {{ visualisation.name }}#}
+            {#                                {% if visualisation.gds_phase_name %}#}
+            {#                                    <br/>#}
+            {#                                    <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ visualisation.gds_phase_name }}</strong>#}
+            {#                                {% endif %}#}
+            {#                            </td>#}
+            {#                            <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.summary }}</td>#}
+            {#                            <td class="govuk-table__cell app-table_cell--no-border">#}
+            {#                                {% if visualisation.thumbnail %}#}
+            {#                                    <a class="govuk-link"#}
+            {#                                       href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">#}
+            {#                                        <img class="visualisation-preview-thumb" src="{{ visualisation.thumbnail.url }}"#}
+            {#                                             width="200" height="125">#}
+            {#                                    </a>#}
+            {#                                {% else %}#}
+            {#                                    Not available#}
+            {#                                {% endif %}#}
+            {#                            </td>#}
+            {#                            <td class="govuk-table__cell app-table_cell--no-border">#}
+            {#                                {% if has_access %}#}
+            {#                                    <a class="govuk-link"#}
+            {#                                       href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">#}
+            {#                                        View#}
+            {#                                    </a>#}
+            {#                                {% else %}#}
+            {#                                    <p class="govuk-body">No preview available</p>#}
+            {#                                {% endif %}#}
+            {#                            </td>#}
+            {#                        </tr>#}
+            {#                    {% endfor %}#}
+            {#                    </tbody>#}
+            {#                </table>#}
+
         </div>
     {% endif %}
 
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Usage history</h2>
-            <div class="govuk-body">
-                <a class="govuk-link" href="{% url "datasets:usage_history" dataset_uuid=dataset.id %}">View history</a>
-                to see how often this data is accessed.
-            </div>
-        </div>
-    </div>
 
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
-            <dl class="govuk-summary-list">
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Date added</dt>
-                    <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Licence</dt>
-                    <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Retention Policy</dt>
-                    <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Personal Data</dt>
-                    <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Restrictions on usage</dt>
-                    <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Information Asset Manager</dt>
-                    <dd class="govuk-summary-list__value">
-                        {% include 'partials/contact.html' with model=model.information_asset_manager %}
-                    </dd>
-                </div>
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">Information Asset Owner</dt>
-                    <dd class="govuk-summary-list__value">
-                        {% include 'partials/contact.html' with model=model.information_asset_owner %}
-                    </dd>
-                </div>
-            </dl>
-            {% if model.enquiries_contact %}
-                {% include 'partials/contact.html' with model=model.enquiries_contact as_section=True only %}
-            {% endif %}
-        </div>
-    </div>
+
 {% endblock %}
 
 {% block footer_scripts %}

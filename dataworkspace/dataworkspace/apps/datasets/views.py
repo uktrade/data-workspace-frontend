@@ -619,8 +619,11 @@ class DatasetDetailView(DetailView):
             for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
 
+        summarised_update_frequency = ",".join(set([t.get_frequency_display() for t in source_tables]))
+
         ctx.update(
             {
+                'summarised_update_frequency': summarised_update_frequency,
                 'has_access': self.object.user_has_access(self.request.user),
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 'master_datasets_info': master_datasets_info,
@@ -725,10 +728,12 @@ class DatasetDetailView(DetailView):
         )
 
     def get_template_names(self):
+        master_dataset_template = "datasets/master_dataset_layout2.html"
+
         if self._is_reference_dataset():
             return ['datasets/referencedataset_detail.html']
         elif self.object.type == DataSetType.MASTER:
-            return ['datasets/master_dataset.html']
+            return [master_dataset_template]
         elif self.object.type == DataSetType.DATACUT:
             return ['datasets/data_cut_dataset.html']
         elif self._is_visualisation():

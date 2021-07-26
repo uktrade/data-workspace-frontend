@@ -1148,3 +1148,5 @@ def close_admin_db_connection_if_not_in_atomic_block():
     # the middle of a transaction.
     if not connection.in_atomic_block:
         connection.close()
+
+
