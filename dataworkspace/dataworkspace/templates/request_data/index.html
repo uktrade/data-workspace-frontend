@@ -19,34 +19,51 @@
         Request data
       </h1>
       <p class="govuk-body">
-        Tell us about data you want added to the Data Workspace catalogue.
+        Use this service to:
       </p>
-      <h2 class="govuk-heading-m">
-        How long it takes
-      </h2>
-      <p class="govuk-body">
-        It should take you about 5 minutes to complete this form. We will respond to you within 5 working days.
-      </p>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>tell us about data you'd like to publish</li>
+            <li>request your data be published</li>
+        </ul>
       <h2 class="govuk-heading-m">
         Before you start
       </h2>
       <p class="govuk-body">
-        You will be asked to provide details on what the data is used for,
-        where it is currently held, and the names of the
-        <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-standards/what-information-asset-owner/">information asset owner</a>
-        or
-        <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-standards/what-information-asset-manager/">manager</a>.
-
-        You will also be asked to provide details on the licensing of the data,
-        and to confirm that such licensing permits the storing of the data on Data Workspace.
-        You should have this information before you start -
-        if you are not sure of any of these details, please make a note in the field provided.
+        Enter as much detail as you can. You do not need to complete all the information if you do not know it.
       </p>
+      <p class="govuk-body">
+        We will ask for:
+      </p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>a description of the data</li>
+        <li>what the data will be used for</li>
+        <li>the security classification of the data</li>
+        <li>where it is currently held</li>
+        <li>the <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-standards/what-information-asset-owner/">information asset owner</a>
+          or <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-standards/what-information-asset-manager/">information asset manager</a>.
+        </li>
+        <li>licensing details</li>
+      </ul>
+
+      <h3 class="govuk-heading-m">
+        How long it takes
+      </h3>
+
+      <p class="govuk-body">
+        Completing this form takes about 5 minutes. We will respond to you within 5 working days.  
+      </p>
+
       <form method="POST" novalidate>
         {% csrf_token %}
-        <button type="submit" class="govuk-button">Start now</button>
+       
+        <button type="submit" class="govuk-button govuk-button--start">Start now
+          <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z" />
+          </svg>
+        </button>
       </form>
-      <h2 class="govuk-heading-m">
+      <hr class="govuk-section-break govuk-section-break--visible">
+      <h2 class="govuk-heading-m govuk-!-margin-top-4">
         Contact
       </h2>
       <p class="govuk-body">
