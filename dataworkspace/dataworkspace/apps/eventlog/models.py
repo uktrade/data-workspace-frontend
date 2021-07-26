@@ -27,6 +27,7 @@ class EventLog(models.Model):
     TYPE_VIEW_SUPERSET_VISUALISATION = 20
     TYPE_VIEW_VISUALISATION_TEMPLATE = 21
     TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE = 22
+    TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN = 23
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, 'Dataset source link download'),
@@ -50,6 +51,10 @@ class EventLog(models.Model):
         (TYPE_VIEW_SUPERSET_VISUALISATION, 'View Superset visualisation'),
         (TYPE_VIEW_VISUALISATION_TEMPLATE, 'View visualisation'),
         (TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE, 'SQL query download complete'),
+        (
+            TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
+            'Changed dataset authorized email domains',
+        ),
     )
     user = models.ForeignKey(
         get_user_model(), on_delete=models.DO_NOTHING, related_name='events'

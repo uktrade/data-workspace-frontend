@@ -576,6 +576,8 @@ def is_user_in_teams(user):
 
 
 def source_tables_for_user(user):
+    user_email_domain = user.email.split('@')[1]
+
     req_authentication_tables = SourceTable.objects.filter(
         dataset__user_access_type='REQUIRES_AUTHENTICATION',
         dataset__deleted=False,
@@ -585,6 +587,11 @@ def source_tables_for_user(user):
         dataset__user_access_type='REQUIRES_AUTHORIZATION',
         dataset__deleted=False,
         dataset__datasetuserpermission__user=user,
+        **{'dataset__published': True} if not user.is_superuser else {},
+    )
+    automatically_authorized_tables = SourceTable.objects.filter(
+        dataset__deleted=False,
+        dataset__authorized_email_domains__contains=[user_email_domain],
         **{'dataset__published': True} if not user.is_superuser else {},
     )
     source_tables = [
@@ -598,7 +605,9 @@ def source_tables_for_user(user):
                 'user_access_type': x.dataset.user_access_type,
             },
         }
-        for x in req_authentication_tables.union(req_authorization_tables)
+        for x in req_authentication_tables.union(
+            req_authorization_tables, automatically_authorized_tables
+        )
     ]
     reference_dataset_tables = [
         {

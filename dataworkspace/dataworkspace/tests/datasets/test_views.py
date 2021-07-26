@@ -1701,7 +1701,7 @@ def test_request_access_success_content(client):
 @pytest.mark.django_db
 def test_dataset_shows_external_link_warning(source_urls, show_warning):
     ds = factories.DataSetFactory.create(published=True)
-    user = get_user_model().objects.create()
+    user = get_user_model().objects.create(email='test@example.com')
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
 
     for source_url in source_urls:
@@ -1766,7 +1766,9 @@ class TestMasterDatasetDetailView(DatasetsCommon):
     @pytest.mark.django_db
     def test_master_dataset_shows_code_snippets_to_tool_user(self, metadata_db):
         ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-        user = get_user_model().objects.create(is_superuser=False)
+        user = get_user_model().objects.create(
+            email='test@example.com', is_superuser=False
+        )
         factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
         factories.SourceTableFactory.create(
             dataset=ds,
@@ -1874,7 +1876,7 @@ class TestRequestAccess(DatasetsCommon):
 @pytest.mark.django_db
 def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
-    user = get_user_model().objects.create(is_superuser=False)
+    user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.CustomDatasetQueryFactory.create(
         dataset=ds,
@@ -1904,7 +1906,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
     get_columns_mock, metadata_db
 ):
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-    user = get_user_model().objects.create(is_superuser=False)
+    user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     st = factories.SourceTableFactory.create(
         dataset=ds,
@@ -1931,7 +1933,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
 @pytest.mark.django_db(transaction=True)
 def test_launch_master_dataset_in_data_explorer(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-    user = get_user_model().objects.create(is_superuser=True)
+    user = get_user_model().objects.create(email='test@example.com', is_superuser=True)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.SourceTableFactory.create(
         dataset=ds,

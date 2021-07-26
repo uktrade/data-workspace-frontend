@@ -250,6 +250,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     'personal_data',
                     'restrictions_on_usage',
                     'type',
+                    'authorized_email_domains',
                 ]
             },
         ),
@@ -292,6 +293,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         original_user_access_type = obj.user_access_type
+
         obj.user_access_type = (
             'REQUIRES_AUTHORIZATION'
             if form.cleaned_data['requires_authorization']
@@ -334,11 +336,16 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             changed_users.add(user)
             clear_schema_info_cache_for_user(user)
 
-        if original_user_access_type != obj.user_access_type:
+        if (
+            original_user_access_type != obj.user_access_type
+            or 'authorized_email_domains' in form.changed_data
+        ):
             log_permission_change(
                 request.user,
                 obj,
-                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE,
+                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
+                if original_user_access_type != obj.user_access_type
+                else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
                 {"access_type": obj.user_access_type},
                 f"user_access_type set to {obj.user_access_type}",
             )
@@ -672,6 +679,7 @@ class VisualisationCatalogueItemAdmin(
                     'retention_policy',
                     'personal_data',
                     'restrictions_on_usage',
+                    'authorized_email_domains',
                 ]
             },
         ),
@@ -770,11 +778,16 @@ class VisualisationCatalogueItemAdmin(
             )
             changed_users.add(user)
 
-        if original_user_access_type != obj.user_access_type:
+        if (
+            original_user_access_type != obj.user_access_type
+            or 'authorized_email_domains' in form.changed_data
+        ):
             log_permission_change(
                 request.user,
                 obj,
-                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE,
+                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
+                if original_user_access_type != obj.user_access_type
+                else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
                 {"access_type": obj.user_access_type},
                 f"user_access_type set to {obj.user_access_type}",
             )

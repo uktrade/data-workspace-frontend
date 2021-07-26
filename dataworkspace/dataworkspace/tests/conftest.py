@@ -78,7 +78,10 @@ def client(user_data):
 def sme_user(db):
     sme_group = Group.objects.get(name="Subject Matter Experts")
     user = get_user_model().objects.create(
-        username='jane.sampledóttir@test.com', is_staff=True, is_superuser=False
+        username='jane.sampledóttir@test.com',
+        email='jane.sampledóttir@test.com',
+        is_staff=True,
+        is_superuser=False,
     )
     sme_group.user_set.add(user)
     sme_group.save()

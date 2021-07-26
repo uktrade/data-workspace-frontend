@@ -2472,6 +2472,41 @@ class TestDatasetAdmin(BaseAdminTestCase):
         self.assertEqual(dataset.user_has_access(user1), False)
         self.assertEqual(dataset.user_has_access(user2), True)
 
+    def test_edit_dataset_authorized_email_domains(self):
+        dataset = factories.DataSetFactory.create()
+        user1 = factories.UserFactory.create()
+
+        self.assertEqual(dataset.user_has_access(user1), False)
+
+        response = self._authenticated_post(
+            reverse('admin:datasets_datacutdataset_change', args=(dataset.id,)),
+            {
+                'published': dataset.published,
+                'name': dataset.name,
+                'slug': dataset.slug,
+                'short_description': 'test short description',
+                'description': 'test description',
+                'type': 2,
+                'sourcelink_set-TOTAL_FORMS': '0',
+                'sourcelink_set-INITIAL_FORMS': '0',
+                'sourcelink_set-MIN_NUM_FORMS': '0',
+                'sourcelink_set-MAX_NUM_FORMS': '1000',
+                'sourceview_set-TOTAL_FORMS': '0',
+                'sourceview_set-INITIAL_FORMS': '0',
+                'sourceview_set-MIN_NUM_FORMS': '0',
+                'sourceview_set-MAX_NUM_FORMS': '1000',
+                'customdatasetquery_set-TOTAL_FORMS': '0',
+                'customdatasetquery_set-INITIAL_FORMS': '0',
+                'customdatasetquery_set-MIN_NUM_FORMS': '0',
+                'customdatasetquery_set-MAX_NUM_FORMS': '1000',
+                'authorized_email_domains': ['example.com'],
+                '_continue': 'Save and continue editing',
+            },
+        )
+        dataset.refresh_from_db()
+        self.assertContains(response, 'was changed successfully')
+        self.assertEqual(dataset.user_has_access(user1), True)
+
     def test_delete_external_source_link(self):
         dataset = factories.DataSetFactory.create()
         source_link = factories.SourceLinkFactory(
