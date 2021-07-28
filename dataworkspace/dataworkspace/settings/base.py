@@ -665,5 +665,9 @@ DATAFLOW_API_CONFIG = {
 # per user granted, rather than a single field with e.g. comma-separated users.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
-SUPERSET_VIEW_URL = f'https://superset.{APPLICATION_ROOT_DOMAIN}'
-SUPERSET_EDIT_URL = f'https://superset-edit.{APPLICATION_ROOT_DOMAIN}'
+PROTOCOL = 'http://' if LOCAL else 'https://'
+SUPERSET_DOMAINS = {
+    'view': f'{PROTOCOL}superset.{APPLICATION_ROOT_DOMAIN}',
+    'edit': f'{PROTOCOL}superset-edit.{APPLICATION_ROOT_DOMAIN}',
+    'admin': f'{PROTOCOL}superset-admin.{APPLICATION_ROOT_DOMAIN}',
+}

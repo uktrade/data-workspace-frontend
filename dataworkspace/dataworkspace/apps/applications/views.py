@@ -227,7 +227,7 @@ def tools_html_GET(request):
             ],
             'appstream_url': settings.APPSTREAM_URL,
             'quicksight_url': reverse('applications:quicksight_redirect'),
-            'superset_url': settings.SUPERSET_EDIT_URL,
+            'superset_url': settings.SUPERSET_DOMAINS['edit'],
             'your_files_enabled': settings.YOUR_FILES_ENABLED,
             'SUPERSET_FLAG': settings.SUPERSET_FLAG,
         },
@@ -280,10 +280,10 @@ def _get_embedded_quicksight_dashboard(request, dashboard_id, catalogue_item):
     return render(request, 'quicksight_running.html', context, status=200)
 
 
-@csp_update(frame_src=settings.SUPERSET_VIEW_URL)
+@csp_update(frame_src=settings.SUPERSET_DOMAINS['view'])
 def _get_embedded_superset_dashboard(request, dashboard_id, catalogue_item):
     context = {
-        'dashboard_url': f'{settings.SUPERSET_VIEW_URL}/superset/dashboard/{dashboard_id}?standalone=true',
+        'dashboard_url': f'{settings.SUPERSET_DOMAINS["view"]}/superset/dashboard/{dashboard_id}?standalone=true',
         'nice_name': catalogue_item,
         'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
         'catalogue_item': catalogue_item,
