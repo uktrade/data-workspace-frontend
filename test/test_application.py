@@ -520,6 +520,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(
             received_content['headers']['from-downstream'], 'downstream-header-value'
         )
+        self.assertEqual(
+            received_content['headers']['sso-profile-email'], 'test@test.com'
+        )
         self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
 
         stdout, stderr, code = await set_visualisation_wrap(
