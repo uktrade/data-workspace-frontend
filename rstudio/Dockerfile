@@ -93,6 +93,8 @@ RUN \
 	echo '})' >> /usr/lib/R/etc/Rprofile.site && \
 	echo 'CRAN=https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/' >> /etc/rstudio/repos.conf && \
 	echo 'CRAN_1=https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/' >> /etc/rstudio/repos.conf && \
+	echo 'session-timeout-minutes=0' >> /etc/rstudio/rsession.conf && \
+	echo 'session-save-action-default=no' >> /etc/rstudio/rsession.conf && \
 	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
 	Rscript -e 'install.packages(c("aws.s3", "aws.ec2metadata", "ggraph", "igraph", "RPostgres", "text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2", "tidyverse"), repos="https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/", clean=TRUE)'
 
