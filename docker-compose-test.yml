@@ -20,6 +20,7 @@ services:
     extra_hosts:
       - "dataworkspace.test:127.0.0.1"
       - "superset.dataworkspace.test:127.0.0.1"
+      - "superset-edit.dataworkspace.test:127.0.0.1"
       - "testapplication-23b40dd9.dataworkspace.test:127.0.0.1"
       - "testdbapplication-23b40dd9.dataworkspace.test:127.0.0.1"
       - "testvisualisation.dataworkspace.test:127.0.0.1"
