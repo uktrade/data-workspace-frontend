@@ -207,6 +207,9 @@ class DataSet(DeletableTimestampedUserModel):
         DatasetReferenceCode, null=True, blank=True, on_delete=models.SET_NULL
     )
     events = GenericRelation(EventLog)
+    authorized_email_domains = ArrayField(
+        models.CharField(max_length=256), blank=True, default=list
+    )
 
     class Meta:
         db_table = 'app_dataset'
@@ -307,9 +310,11 @@ class DataSet(DeletableTimestampedUserModel):
             self.published_at = timezone.now()
 
     def user_has_access(self, user):
+        user_email_domain = user.email.split('@')[1]
         return (
             self.user_access_type == 'REQUIRES_AUTHENTICATION'
             or self.datasetuserpermission_set.filter(user=user).exists()
+            or user_email_domain in self.authorized_email_domains
         )
 
     def user_has_bookmarked(self, user):
@@ -2062,6 +2067,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.VISUALISATION
+    authorized_email_domains = ArrayField(
+        models.CharField(max_length=256), blank=True, default=list
+    )
 
     class Meta:
         permissions = [
@@ -2121,9 +2129,12 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return links
 
     def user_has_access(self, user):
+        user_email_domain = user.email.split('@')[1]
+
         return (
             self.user_access_type == 'REQUIRES_AUTHENTICATION'
             or self.visualisationuserpermission_set.filter(user=user).exists()
+            or user_email_domain in self.authorized_email_domains
         )
 
     def user_has_bookmarked(self, user):
