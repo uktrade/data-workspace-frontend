@@ -32,4 +32,22 @@ var TILES_RE = /^protocol:\/\/host\/.*?/;
     }
     postMessage.call(this, args);
   }
+
+  if (window.location.pathname === '/tablemodelview/list/') {
+    /*
+     Hide the "create dataset" button on the dataset list view page
+     as we don't want users creating physical datasets
+     */
+    document.head.insertAdjacentHTML(
+        'beforeend',
+        '<style>nav .navbar-right button:nth-child(2) { display: none !important }</style>'
+    )
+    /*
+      Hide the physical/virtual dataset radio button from the edit dataset modal
+     */
+    document.head.insertAdjacentHTML(
+        'beforeend',
+        '<style>.ant-modal-body .ant-radio-wrapper { display: none !important; }</style>'
+    )
+  }
 })(window);
