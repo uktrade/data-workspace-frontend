@@ -40,10 +40,12 @@ ENV \
 
 COPY superset_config.py /etc/superset/
 
-COPY monkey-patch-requests.js /usr/local/lib/python3.7/dist-packages/superset/static/assets/
+COPY data-workspace-patches.js /usr/local/lib/python3.7/dist-packages/superset/static/assets/
 
-RUN sed -i 's/<\/title>/<\/title><script src="\/static\/assets\/monkey-patch-requests.js"><\/script>/g' \
+RUN sed -i 's/<\/title>/<\/title><script src="\/static\/assets\/data-workspace-patches.js"><\/script>/g' \
     /usr/local/lib/python3.7/dist-packages/superset/templates/superset/basic.html
+
+FROM base AS dev
 
 COPY start-dev.sh /start.sh
 

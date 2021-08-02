@@ -10,6 +10,7 @@ insert into ab_permission_view_role select nextval('ab_permission_view_role_id_s
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),9, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),10, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),11, 7;
+insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),12, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),13, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),15, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),16, 7;

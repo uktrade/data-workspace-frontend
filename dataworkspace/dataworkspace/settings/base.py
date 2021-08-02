@@ -179,16 +179,20 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+LOGGING_HANDLERS = ['dev' if DEBUG else 'console']
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {'ecs': {'()': 'dataworkspace.utils.DataWorkspaceECSFormatter'}},
-    'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'ecs'}},
+    'handlers': {
+        'dev': {'class': 'logging.StreamHandler'},
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'ecs'},
+    },
     'loggers': {
-        'django': {'handlers': ['console'], 'level': 'INFO'},
-        'app': {'handlers': ['console'], 'level': 'INFO'},
-        'dataworkspace': {'handlers': ['console'], 'level': 'INFO'},
-        'celery': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'django': {'handlers': LOGGING_HANDLERS, 'level': 'INFO'},
+        'app': {'handlers': LOGGING_HANDLERS, 'level': 'INFO'},
+        'dataworkspace': {'handlers': LOGGING_HANDLERS, 'level': 'INFO'},
+        'celery': {'handlers': LOGGING_HANDLERS, 'level': 'INFO', 'propagate': False},
     },
 }
 
@@ -661,5 +665,9 @@ DATAFLOW_API_CONFIG = {
 # per user granted, rather than a single field with e.g. comma-separated users.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
-SUPERSET_VIEW_URL = f'https://superset.{APPLICATION_ROOT_DOMAIN}'
-SUPERSET_EDIT_URL = f'https://superset-edit.{APPLICATION_ROOT_DOMAIN}'
+PROTOCOL = 'http://' if LOCAL else 'https://'
+SUPERSET_DOMAINS = {
+    'view': f'{PROTOCOL}superset.{APPLICATION_ROOT_DOMAIN}',
+    'edit': f'{PROTOCOL}superset-edit.{APPLICATION_ROOT_DOMAIN}',
+    'admin': f'{PROTOCOL}superset-admin.{APPLICATION_ROOT_DOMAIN}',
+}

@@ -36,24 +36,13 @@ base_role_names = {
 PUBLIC_ROLE_PERMISSIONS = [
     ('can_csrf_token', 'Superset'),
     ('can_dashboard', 'Superset'),
-    ('can_explore', 'Superset'),
     ('can_explore_json', 'Superset'),
-    ('can_fave_dashboards', 'Superset'),
     ('can_favstar', 'Superset'),
-    ('can_list', 'CssTemplateAsyncModelView'),
-    ('can_list', 'Dashboard'),
     ('can_log', 'Superset'),
     ('can_read', 'Annotation'),
     ('can_read', 'Chart'),
     ('can_read', 'CssTemplate'),
     ('can_read', 'Dashboard'),
-    ('can_read', 'Dataset'),
-    ('can_read', 'Log'),
-    ('can_read', 'Query'),
-    ('can_read', 'SavedQuery'),
-    ('can_recent_activity', 'Superset'),
-    ('can_show', 'CssTemplateAsyncModelView'),
-    ('can_slice', 'Superset'),
     ('can_warm_up_cache', 'Superset'),
 ]
 
@@ -126,10 +115,8 @@ def apply_public_role_permissions(sm, user, role_name):
         permission_view_menu = sm.find_permission_view_menu(perm[0], perm[1])
         sm.add_permission_role(role, permission_view_menu)
 
-    # Delete permissions to existing dashboards
-    delete_datasource_perms(sm, role)
-
     # Add permissions for datasources in dashboards that the user has access to
+    datasource_perms = []
     for dashboard_id in request.headers['Dashboards'].split(','):
         if not dashboard_id:
             continue
@@ -139,7 +126,14 @@ def apply_public_role_permissions(sm, user, role_name):
                 permission_view_menu = sm.add_permission_view_menu(
                     'datasource_access', datasource.perm
                 )
-                sm.add_permission_role(role, permission_view_menu)
+                if permission_view_menu not in role.permissions:
+                    sm.add_permission_role(role, permission_view_menu)
+                datasource_perms.append(permission_view_menu)
+
+    # Remove any permissions for dashboards that were not passed in via headers
+    for perm in role.permissions:
+        if perm.permission.name == 'datasource_access' and perm not in datasource_perms:
+            sm.del_permission_role(role, perm)
 
     user.roles.append(role)
     sm.get_session.commit()
