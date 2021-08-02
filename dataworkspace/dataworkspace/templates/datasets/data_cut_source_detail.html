@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load static core_tags %}
+{% load static core_tags humanize %}
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
 {% block go_back %}
   <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">
@@ -33,7 +33,7 @@
       <div class="govuk-!-margin-top-4">
         {% if can_download %}
           <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
-            Download this data
+            Download this data{% if download_limit %} (max {{ download_limit|intcomma }} rows{% endif %}
           </button>
           &nbsp;
         {% endif %}

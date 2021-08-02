@@ -638,13 +638,17 @@ class SourceTableForm(forms.ModelForm):
             return None
 
         # Ensure column config is a dict
-        if not isinstance(self.cleaned_data['data_grid_column_config'], list):
+        if not isinstance(self.cleaned_data['data_grid_column_config'], dict):
+            raise forms.ValidationError('Column config must be a json object')
+
+        # Ensure column config contains some fields
+        if not self.cleaned_data['data_grid_column_config'].get('columns'):
             raise forms.ValidationError(
-                'Column config must be a list of column definitions'
+                'Column config must contain a `columns` key containing column definitions'
             )
 
         # Ensure each item in the config has the required fields
-        for column in self.cleaned_data['data_grid_column_config']:
+        for column in self.cleaned_data['data_grid_column_config']['columns']:
             if not isinstance(column, dict):
                 raise forms.ValidationError(
                     'All items in the config must be json objects'

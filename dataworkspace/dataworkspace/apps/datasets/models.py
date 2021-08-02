@@ -587,11 +587,14 @@ class SourceTable(BaseSource):
         blank=True,
         null=True,
         help_text=(
-            'Must be a list of json objects defining:\n\n'
+            'Must be a json object with a `columns` key containing a list of json objects defining:\n\n'
             '- "field": "[column name]" (required)\n'
             '- "headerName": "[pretty column name]" (optional, defaults to "field")\n'
             '- "sortable": [true|false] (optional, default: true)\n'
-            '- "filter": "[true|false|ag-grid filter name]" (optional, default: true)'
+            '- "filter": "[true|false|ag-grid filter name]" (optional, default: true)\n\n'
+            'Optionally can include the fields:\n\n'
+            '- "download_enabled" (defaults to false)\n'
+            '- "download_limit" (defaults to 5000 rows)'
         ),
     )
 
@@ -638,7 +641,7 @@ class SourceTable(BaseSource):
         }
 
         col_defs = []
-        for col_def in self.data_grid_column_config:
+        for col_def in self.data_grid_column_config.get('columns', []):
             if col_def.get('field') in postgres_column_data_types:
                 col_def['filter'] = col_def.get('filter', True)
                 col_def['sortable'] = col_def.get('sortable', True)
@@ -647,6 +650,14 @@ class SourceTable(BaseSource):
                 col_defs.append(col_def)
 
         return col_defs
+
+    @property
+    def data_grid_download_enabled(self):
+        return self.data_grid_column_config.get('download_enabled', False)
+
+    @property
+    def data_grid_download_limit(self):
+        return self.data_grid_column_config.get('download_limit', 5000)
 
 
 class SourceView(BaseSource):
@@ -928,6 +939,14 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
                 }
             )
         return col_defs
+
+    @property
+    def data_grid_download_enabled(self):
+        return True
+
+    @property
+    def data_grid_download_limit(self):
+        return None
 
 
 class CustomDatasetQueryTable(models.Model):

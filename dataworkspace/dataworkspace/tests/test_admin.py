@@ -3416,17 +3416,14 @@ class TestDatasetAdminPytest:
                 'sourcetable_set-0-frequency': 1,
                 'sourcetable_set-0-table': 'test_table',
                 'sourcetable_set-0-data_grid_enabled': 'on',
-                'sourcetable_set-0-data_grid_column_config': '{"field": "test"}',
+                'sourcetable_set-0-data_grid_column_config': '[{"field": "test"}]',
             },
             follow=True,
         )
 
         assert response.status_code == 200
         assert SourceTable.objects.count() == num_tables
-        assert (
-            'Column config must be a list of column definitions'
-            in response.content.decode('utf-8')
-        )
+        assert 'Column config must be a json object' in response.content.decode('utf-8')
 
     @pytest.mark.django_db
     def test_source_table_data_grid_enabled_invalid_config_item(self, staff_client):
@@ -3461,7 +3458,7 @@ class TestDatasetAdminPytest:
                 'sourcetable_set-0-frequency': 1,
                 'sourcetable_set-0-table': 'test_table',
                 'sourcetable_set-0-data_grid_enabled': 'on',
-                'sourcetable_set-0-data_grid_column_config': '[{"field": "test"}, []]',
+                'sourcetable_set-0-data_grid_column_config': '{"columns":[{"field": "test"}, []]}',
             },
             follow=True,
         )
@@ -3508,7 +3505,7 @@ class TestDatasetAdminPytest:
                 'sourcetable_set-0-frequency': 1,
                 'sourcetable_set-0-table': 'test_table',
                 'sourcetable_set-0-data_grid_enabled': 'on',
-                'sourcetable_set-0-data_grid_column_config': '[{"field": "test"}, {"sortable": false}]',
+                'sourcetable_set-0-data_grid_column_config': '{"columns": [{"field": "test"}, {"sortable": false}]}',
             },
             follow=True,
         )
@@ -3554,7 +3551,7 @@ class TestDatasetAdminPytest:
                 'sourcetable_set-0-table': 'test_table',
                 'sourcetable_set-0-data_grid_enabled': 'on',
                 'sourcetable_set-0-data_grid_column_config': (
-                    '[{"field": "test"}, ' '{"field": "test2", "sortable": true}]'
+                    '{"columns": [{"field": "test"}, {"field": "test2", "sortable": true}]}'
                 ),
             },
             follow=True,
@@ -3595,7 +3592,7 @@ class TestDatasetAdminPytest:
                 'sourcetable_set-0-schema': 'test_schema',
                 'sourcetable_set-0-frequency': 1,
                 'sourcetable_set-0-table': 'test_table',
-                'sourcetable_set-0-data_grid_column_config': '[{"field": "test"}]',
+                'sourcetable_set-0-data_grid_column_config': '{"columns": [{"field": "test"}]}',
             },
             follow=True,
         )

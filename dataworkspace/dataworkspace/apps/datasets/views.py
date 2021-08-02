@@ -1439,10 +1439,14 @@ class DataCutSourceDetailView(DetailView):
         )
 
     def get_context_data(self, **kwargs):
+        source = self.get_object()
         ctx = super().get_context_data(**kwargs)
-        ctx['can_download'] = self.get_object().can_show_link_for_user(
-            self.request.user
-        ) and self.kwargs.get('download_enabled', False)
+        ctx['can_download'] = (
+            source.data_grid_download_enabled
+            and source.can_show_link_for_user(self.request.user)
+            and self.kwargs.get('download_enabled', False)
+        )
+        ctx['download_limit'] = source.data_grid_download_limit
         return ctx
 
 
@@ -1484,6 +1488,9 @@ class DataGridDataView(DetailView):
         source = self.get_object()
 
         if request.GET.get('download'):
+            if not source.data_grid_download_enabled:
+                return JsonResponse({}, status=403)
+
             filters = {}
             for filter_data in [json.loads(x) for x in request.POST.getlist('filters')]:
                 filters.update(filter_data)
@@ -1497,7 +1504,7 @@ class DataGridDataView(DetailView):
 
             post_data = {
                 'filters': filters,
-                'limit': None,
+                'limit': source.data_grid_download_limit,
                 'sortDir': request.POST.get('sortDir', 'ASC'),
                 'sortField': request.POST.get('sortField', column_config[0]['field']),
             }
