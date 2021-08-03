@@ -10,6 +10,8 @@
   <script src="{% static 'ag-grid-community.min.js' %}"></script>
   <script src="{% static 'dayjs.min.js' %}"></script>
   <script src="{% static 'data-grid.js' %}"></script>
+  {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
+  <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}" />
   {{ object.get_column_config|json_script:"column_data" }}
   <script nonce="{{ request.csp_nonce }}">
     window.initDataGrid(
