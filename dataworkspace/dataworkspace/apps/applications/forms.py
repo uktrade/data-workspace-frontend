@@ -121,10 +121,10 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
     )
     user_access_type = GOVUKDesignSystemBooleanField(
-        label='Each user must be individually authorized to access the data',
+        label='Open to all Data Workspace users',
         required=False,
         widget=GOVUKDesignSystemSingleCheckboxWidget(
-            check_test=lambda val: val == 'REQUIRES_AUTHORIZATION',
+            check_test=lambda val: val == 'REQUIRES_AUTHENTICATION',
         ),
     )
     eligibility_criteria = DWSplitArrayField(

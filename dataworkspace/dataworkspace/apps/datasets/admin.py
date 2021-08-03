@@ -250,7 +250,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     'personal_data',
                     'restrictions_on_usage',
                     'type',
-                    'authorized_email_domains',
                 ]
             },
         ),
@@ -258,8 +257,9 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             'Permissions',
             {
                 'fields': [
-                    'requires_authorization',
+                    'open_to_all_users',
                     'eligibility_criteria',
+                    'authorized_email_domains',
                     'authorized_users',
                 ]
             },
@@ -277,6 +277,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
         form_class = super().get_form(request, obj=None, **kwargs)
+        form_class.base_fields['authorized_email_domains'].widget.attrs[
+            'style'
+        ] = 'width: 30em;'
+        form_class.base_fields['eligibility_criteria'].widget.attrs[
+            'style'
+        ] = 'width: 30em;'
         return functools.partial(form_class, user=request.user)
 
     def get_tags(self, obj):
@@ -295,9 +301,9 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         original_user_access_type = obj.user_access_type
 
         obj.user_access_type = (
-            'REQUIRES_AUTHORIZATION'
-            if form.cleaned_data['requires_authorization']
-            else 'REQUIRES_AUTHENTICATION'
+            'REQUIRES_AUTHENTICATION'
+            if form.cleaned_data['open_to_all_users']
+            else 'REQUIRES_AUTHORIZATION'
         )
 
         current_authorized_users = set(
@@ -679,7 +685,6 @@ class VisualisationCatalogueItemAdmin(
                     'retention_policy',
                     'personal_data',
                     'restrictions_on_usage',
-                    'authorized_email_domains',
                 ]
             },
         ),
@@ -687,8 +692,9 @@ class VisualisationCatalogueItemAdmin(
             'Permissions',
             {
                 'fields': [
-                    'requires_authorization',
+                    'open_to_all_users',
                     'eligibility_criteria',
+                    'authorized_email_domains',
                     'authorized_users',
                 ]
             },
@@ -708,6 +714,12 @@ class VisualisationCatalogueItemAdmin(
 
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
         form_class = super().get_form(request, obj=None, **kwargs)
+        form_class.base_fields['authorized_email_domains'].widget.attrs[
+            'style'
+        ] = 'width: 30em;'
+        form_class.base_fields['eligibility_criteria'].widget.attrs[
+            'style'
+        ] = 'width: 30em;'
         return functools.partial(form_class, user=request.user)
 
     def get_tags(self, obj):
@@ -735,9 +747,9 @@ class VisualisationCatalogueItemAdmin(
 
         original_user_access_type = obj.user_access_type
         obj.user_access_type = (
-            'REQUIRES_AUTHORIZATION'
-            if form.cleaned_data['requires_authorization']
-            else 'REQUIRES_AUTHENTICATION'
+            'REQUIRES_AUTHENTICATION'
+            if form.cleaned_data['open_to_all_users']
+            else 'REQUIRES_AUTHORIZATION'
         )
 
         current_authorized_users = set(

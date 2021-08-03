@@ -479,9 +479,8 @@ class BaseDatasetForm(forms.ModelForm):
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )
-    requires_authorization = forms.BooleanField(
-        label='Each user must be individually authorized to access the data',
-        required=False,
+    open_to_all_users = forms.BooleanField(
+        label='Open to all Data Workspace users', required=False,
     )
     authorized_users = forms.ModelMultipleChoiceField(
         required=False,
@@ -504,10 +503,10 @@ class BaseDatasetForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
 
-        self.fields['requires_authorization'].initial = (
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
+        self.fields['open_to_all_users'].initial = (
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHENTICATION'
             if is_instance
-            else True
+            else False
         )
 
         self.fields['authorized_users'].initial = (
@@ -520,7 +519,7 @@ class BaseDatasetForm(forms.ModelForm):
         if not user.is_superuser and not user.has_perm(
             self.can_change_user_permission_codename
         ):
-            self.fields['requires_authorization'].disabled = True
+            self.fields['open_to_all_users'].disabled = True
 
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(
@@ -674,9 +673,8 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )
-    requires_authorization = forms.BooleanField(
-        label='Each user must be individually authorized to access the data',
-        required=False,
+    open_to_all_users = forms.BooleanField(
+        label='Open to all Data Workspace users', required=False,
     )
     authorized_users = forms.ModelMultipleChoiceField(
         required=False,
@@ -695,10 +693,10 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
 
-        self.fields['requires_authorization'].initial = (
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
+        self.fields['open_to_all_users'].initial = (
+            kwargs['instance'].user_access_type == 'REQUIRES_AUTHENTICATION'
             if is_instance
-            else True
+            else False
         )
 
         self.fields['authorized_users'].initial = (
@@ -711,7 +709,7 @@ class VisualisationCatalogueItemForm(forms.ModelForm):
         if not user.is_superuser and not user.has_perm(
             self.can_change_user_permission_codename
         ):
-            self.fields['requires_authorization'].disabled = True
+            self.fields['open_to_all_users'].disabled = True
 
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(
