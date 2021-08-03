@@ -208,7 +208,10 @@ class DataSet(DeletableTimestampedUserModel):
     )
     events = GenericRelation(EventLog)
     authorized_email_domains = ArrayField(
-        models.CharField(max_length=256), blank=True, default=list
+        models.CharField(max_length=256),
+        blank=True,
+        default=list,
+        help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
     )
 
     class Meta:
@@ -2068,7 +2071,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.VISUALISATION
     authorized_email_domains = ArrayField(
-        models.CharField(max_length=256), blank=True, default=list
+        models.CharField(max_length=256),
+        blank=True,
+        default=list,
+        help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
     )
 
     class Meta:
