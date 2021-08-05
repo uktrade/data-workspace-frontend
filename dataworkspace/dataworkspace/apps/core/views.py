@@ -184,7 +184,7 @@ class ServeS3UploadedFileView(View):
         if not path.startswith(file_storage.base_prefix):
             return HttpResponseNotFound()
 
-        client = boto3.client('s3')
+        client = file_storage.get_s3_client()
         try:
             file_object = client.get_object(Bucket=file_storage.bucket, Key=path)
         except ClientError as ex:

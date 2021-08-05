@@ -2,28 +2,34 @@
 @import 'app-copy.css';
 
 .govuk-panel--confirmation--left {
-  text-align:left;
+  text-align: left;
 }
+
 .govuk-panel--confirmation:focus {
   outline: 5px solid #fd0;
 }
+
 .unknown {
   color: #bfc1c3;
 }
+
 .scrollable-table {
   width: 100%;
   overflow-x: auto;
   max-height: 560px;
   padding: 3px;
 }
+
 .scrollable-table:focus {
-    border: 3px solid #0b0c0c;
-    outline: 3px solid #fd0;
-    padding: 0;
+  border: 3px solid #0b0c0c;
+  outline: 3px solid #fd0;
+  padding: 0;
 }
+
 .fixed-table-height {
   max-height: 100% !important;
 }
+
 .scrollable-table table thead th {
   padding: 15px;
   background-color: #dee0e2;
@@ -34,124 +40,130 @@
   position: relative;
   vertical-align: middle;
 }
+
 .scrollable-table table tbody td {
   padding: 15px;
   vertical-align: top;
   border: none;
 }
+
 .scrollable-table table tbody tr:nth-child(even) td {
   background-color: #f8f8f8;
 }
+
 .scrollable-table table thead th.ref-data-col-character-field,
 .scrollable-table table thead th.ref-datetime-field {
   min-width: 280px;
 }
+
 .scrollable-table table thead th.ref-data-col-id {
   min-width: 120px;
 }
+
 .scrollable-table table thead th.ref-data-boolean-field {
   min-width: 80px;
 }
+
 .scrollable-table table thead th.ref-data-col-universal-unique-identifier-field {
   min-width: 300px;
 }
 
 .search-field {
-  position:relative;
+  position: relative;
 }
 
 .search-field__label {
-  font-size:16px;
-  line-height:2.5;
+  font-size: 16px;
+  line-height: 2.5;
 }
 
 @media (min-width: 40.0625em) {
   .search-field__label {
-    font-size:19px;
-    line-height:2.1052631579
+    font-size: 19px;
+    line-height: 2.1052631579
   }
 }
 
 .js-enabled .search-field__label {
- position:absolute;
- left:15px;
- top:1px;
- z-index:1;
- color:#6f777b
+  position: absolute;
+  left: 15px;
+  top: 1px;
+  z-index: 1;
+  color: #6f777b
 }
 
 .search-field-wrapper {
- display:table;
- width:100%;
- background:#ffffff
+  display: table;
+  width: 100%;
+  background: #ffffff
 }
 
 .search-field__item {
- position:relative;
- display:table-cell;
- vertical-align:top
+  position: relative;
+  display: table-cell;
+  vertical-align: top
 }
 
 .search-field__input[type="search"]:focus,
 .search-field__input[type="search"].focus {
- z-index:2
+  z-index: 2
 }
 
 .search-field__input[type="search"] {
- border-right-width:0
+  border-right-width: 0
 }
 
 .search-field__input[type="search"]:focus {
- border-right-width:2px
+  border-right-width: 2px
 }
 
 .search-field-submit-wrapper {
- width:1%
+  width: 1%
 }
 
 .search-field__submit {
- border:0;
- cursor:pointer;
- border-radius:0;
- position:relative;
- padding:0;
- width:40px;
- height:40px;
- background-image:url('/__django_static/assets/images/search-button.png');
- background-repeat:no-repeat;
- background-position:2px 50%;
- text-indent:-5000px;
- overflow:hidden;
- background-color:#0b0c0c;
- color:#ffffff
+  border: 0;
+  cursor: pointer;
+  border-radius: 0;
+  position: relative;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  background-image: url('/__django_static/assets/images/search-button.png');
+  background-repeat: no-repeat;
+  background-position: 2px 50%;
+  text-indent: -5000px;
+  overflow: hidden;
+  background-color: #0b0c0c;
+  color: #ffffff
 }
 
 @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2), only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx) {
- .search-field__submit {
-  background-size:52.5px auto;
-  background-position:115% 50%
- }
+  .search-field__submit {
+    background-size: 52.5px auto;
+    background-position: 115% 50%
+  }
 }
 
 .search-field__submit:focus {
- z-index:2;
- outline:3px solid #ffbf47;
- outline-offset:0;
- box-shadow:inset 0 0 0 4px #0b0c0c
+  z-index: 2;
+  outline: 3px solid #ffbf47;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 4px #0b0c0c
 }
 
 .search-field__submit::-moz-focus-inner {
- border:0
+  border: 0
 }
 
 .search-field__submit:hover {
- background-color:#171719
+  background-color: #171719
 }
 
 .search-result {
- padding:0 0 15px;
- margin:0 0 15px;
- border-bottom:1px solid #bfc1c3
+  padding: 0 0 15px;
+  margin: 0 0 15px;
+  border-bottom: 1px solid #bfc1c3
 }
 
 .pagination {
@@ -178,13 +190,23 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   animation: spin 2s linear infinite;
   margin: 0 auto;
 }
+
 @-webkit-keyframes spin {
-  0% { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
 }
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* The GDS styles assume the presence of the GOV UK logo + crown, which we
@@ -197,55 +219,57 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
    of the style on the larger sizes must be copied and pasted after the
    override in @media min-width blocks. */
 .govuk-header__menu-button {
-  top: 12px;  /* The original value is 20px */
+  top: 12px; /* The original value is 20px */
 }
+
 @media (min-width: 40.0625em) {
   .govuk-header__menu-button {
-      top: 15px;  /* The original GDS value */
+    top: 15px; /* The original GDS value */
   }
 }
 
 .app-\!-fill-width {
-    width: 100%
+  width: 100%
 }
 
 .js-enabled .app-js-hidden {
-    display: none;
+  display: none;
 }
 
 .hidden {
-    display: none;
+  display: none;
 }
 
 .app-header--suggestion {
-    display: none;
+  display: none;
 }
 
 @media (min-width: 48.05em) {
-    .app-header--suggestion {
-        display: block;
-        float: right;
-    }
+  .app-header--suggestion {
+    display: block;
+    float: right;
+  }
 }
 
 .app-table_cell--no-border {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .app-taglist {
-    list-style: none;
-    display: inline-block;
-    padding-inline: 0;
+  list-style: none;
+  display: inline-block;
+  padding-inline: 0;
 }
 
 .app-taglist__item {
-    display: inline;
-    box-sizing: border-box;
-    margin: 0;
-    border: 2px solid rgba(11, 12, 12, .15);
-    border-radius: 4px;
-    padding: 2px 4px;
+  display: inline;
+  box-sizing: border-box;
+  margin: 0;
+  border: 2px solid rgba(11, 12, 12, .15);
+  border-radius: 4px;
+  padding: 2px 4px;
 }
+
 #data-grid {
   width: 100%;
   height: 560px;
@@ -267,12 +291,27 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .case-study-image {
   width: 100%;
 }
+
 .case-study-quote .quote-text {
-  margin-bottom:20px;
+  margin-bottom: 20px;
 }
 
-img.visualisation-preview-thumb {
-  border: 1px solid black;
-  padding: 10px;
-  margin: 10px;
+.visualisation-preview-container {
+  border: 1px solid #999;
+  padding: 1rem;
+  max-width: 20rem;
+  overflow: hidden;
+  display:block;
 }
+
+.visualisation-preview-container svg {
+  width: 100%;
+  height: auto;
+}
+
+
+.visualisation-preview-container img {
+  width: 100%;
+  height: auto;
+}
+

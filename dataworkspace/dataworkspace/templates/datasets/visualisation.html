@@ -1,66 +1,91 @@
-{% extends '_main.html' %}
+{% extends "_main.html" %}
 {% load humanize static datasets_tags %}
 
 {% block page_title %}{{ visualisation.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-three-quarters">
-    <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-          <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link" href="/">Home</a>
-          </li>
-          <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=visualisation.dataset.id %}#{{ visualisation.dataset.slug }}">{{ visualisation.dataset.name }}</a>
-          </li>
-          <li class="govuk-breadcrumbs__list-item">
-            {{ visualisation.name }}
-          </li>
-          
-        </ol>
-      </div>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-three-quarters">
+            <div class="govuk-breadcrumbs">
+                <ol class="govuk-breadcrumbs__list">
+                    <li class="govuk-breadcrumbs__list-item">
+                        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+                    </li>
+                    <li class="govuk-breadcrumbs__list-item">
+                        <a class="govuk-link"
+                           href="{% url "datasets:dataset_detail" dataset_uuid=visualisation.dataset.id %}#{{ visualisation.dataset.slug }}">{{ visualisation.dataset.name }}</a>
+                    </li>
+                    <li class="govuk-breadcrumbs__list-item">
+                        {{ visualisation.name }}
+                    </li>
+
+                </ol>
+            </div>
+        </div>
     </div>
-</div>
 {% endblock %}
 
-{% block content%}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-        {% if visualisation.gds_phase_name %}
-            <strong class="govuk-!-margin-bottom-2 govuk-tag govuk-phase-banner__content__tag">{{ visualisation.gds_phase_name }}</strong>
-        {% endif %}
-      <h1 class="govuk-heading-xl">{{ visualisation.name }}</h1>
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            {% if visualisation.gds_phase_name %}
+                <strong class="govuk-!-margin-bottom-2 govuk-tag govuk-phase-banner__content__tag">{{ visualisation.gds_phase_name }}</strong>
+            {% endif %}
+            <h1 class="govuk-heading-xl">{{ visualisation.name }}</h1>
 
+        </div>
     </div>
-  </div>
-<div id="view"></div>
+    <div id="view"></div>
 {% endblock %}
 
 
 {% block footer_scripts %}
-  <script src="{% static 'vega.js' %}"></script>
-  <script src="{% static 'vega-lite.js' %}"></script>
-  <script src="{% static 'vega-embed.js' %}"></script>
-  <script src="{% static 'vega-interpreter.js' %}"></script>
-  {{ vega_definition|json_script:"vega-config" }}
-  <script nonce="{{ request.csp_nonce }}">
+    <script src="{% static 'vega.js' %}"></script>
+    <script src="{% static 'vega-lite.js' %}"></script>
+    <script src="{% static 'vega-embed.js' %}"></script>
+    <script src="{% static 'vega-interpreter.js' %}"></script>
+    {{ vega_definition|json_script:"vega-config" }}
+    <script nonce="{{ request.csp_nonce }}">
 
-    var vegaSpec = JSON.parse(document.getElementById('vega-config').textContent);
+        (function () {
+            const updateUrl = "{% url "datasets:dataset_visualisation" dataset_uuid=dataset_uuid object_id=visualisation.id %}";
+            const imgThumb = document.getElementById("thumb");
+            const vegaSpec = JSON.parse(document.getElementById('vega-config').textContent);
+            const actions = {
+                export: true,
+                source: false,
+                compiled: false,
+                editor: false
+            };
 
-    vegaEmbed(
-      '#view',
-      vegaSpec,
-      {
-        actions:
-        {
-          export: true,
-          source: false,
-          compiled: false,
-          editor: false
-        },
-        ast: true
-      }
-    );
-  </script>
+            vegaEmbed("#view",
+                vegaSpec,
+                {
+                    actions: actions,
+                    ast: true
+                }
+            ).then((result) => {
+                return result.view.toSVG();
+            }).then((svg) => {
+                const body = JSON.stringify({svg});
+                // TODO - Do we update thumbs every time?
+                return fetch(updateUrl, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": "{{ csrf_token }}",
+                    },
+                    body: body
+
+                })
+            }).then(response => {
+                // Not expecting any usable data
+            });
+        })
+        ();
+
+
+    </script>
 {% endblock %}
