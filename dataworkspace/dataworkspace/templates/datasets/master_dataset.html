@@ -163,6 +163,9 @@
     </div>
 
     {% if model.visualisations.all %}
+        <script nonce="{{ request.csp_nonce }}">
+            window.visPreviewQueue = [];
+        </script>
         <div class="govuk-grid-row" style="overflow-x: auto;">
             <div class="govuk-grid-column-full">
                 <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Visualisations</h2>
@@ -170,47 +173,33 @@
                     <thead>
                     <tr class="govuk-table__row">
                         <th class="govuk-table__header">Name</th>
+                        <th class="govuk-table__header">Summary</th>
                         <th class="govuk-table__header">Preview</th>
                         <th class="govuk-table__header">Details</th>
                     </tr>
                     </thead>
                     <tbody>
 
-
                     {% for visualisation in model.visualisations.all %}
+                        <script nonce="{{ request.csp_nonce }}">
+                            window.visPreviewQueue.push({
+                                url: "{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}",
+                                id: "vis-{{ visualisation.id }}"
+                            });
+                        </script>
                         <tr class="govuk-table__row">
                             <td class="govuk-table__cell app-table_cell--no-border">
-
-                                <a class="govuk-link"
-                                   href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
-                                    {{ visualisation.name }}
-                                </a>
-                                {% if visualisation.summary %}
-                                    <p class="govuk-body-m">
-                                        {{ visualisation.summary }}
-                                    </p>
-                                {% endif %}
-
+                                {{ visualisation.name }}
                                 {% if visualisation.gds_phase_name %}
+                                    <br/>
                                     <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ visualisation.gds_phase_name }}</strong>
                                 {% endif %}
-
                             </td>
+                            <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.summary }}</td>
                             <td class="govuk-table__cell app-table_cell--no-border">
-                                {% if visualisation.thumbnail %}
-                                    <a class="govuk-link visualisation-preview-container"
-                                       href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
-                                        <img src="{{ visualisation.thumbnail.url }}"
-                                             width="200" height="125">
-                                    </a>
-                                {% elif visualisation.thumbnail_svg %}
-                                    <a class="govuk-link visualisation-preview-container"
-                                       href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
-                                        {{ visualisation.thumbnail_svg | safe }}
-                                    </a>
-                                {% else %}
-                                    Not available
-                                {% endif %}
+                                <a class="govuk-link visualisation-preview-container" id="vis-{{ visualisation.id }}"
+                                   href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
+                                </a>
                             </td>
                             <td class="govuk-table__cell app-table_cell--no-border">
                                 {% if has_access %}
@@ -311,10 +300,33 @@
     <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
 
     <script src="{% static 'app-copy.js' %}"></script>
+
+    <script src="{% static 'vega.js' %}"></script>
+    <script src="{% static 'vega-lite.js' %}"></script>
+    <script src="{% static 'vega-embed.js' %}"></script>
+    <script src="{% static 'vega-interpreter.js' %}"></script>
+    <script src="{% static 'vega-visualisation-builder.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
         let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
         nodeListForEach($codeBlocks, function ($codeBlock) {
             new Copy($codeBlock).init()
         });
     </script>
+
+    {% if has_access %}
+        <script nonce="{{ request.csp_nonce }}">
+            document.addEventListener("DOMContentLoaded", function () {
+                const canvasContainer = document.createElement("div");
+                visPreviewQueue.forEach((config) => {
+                    buildVisualisation(config.url, "{{ csrf_token }}", canvasContainer).then(result => {
+                        return result.view.toSVG(1);
+                    }).then((svg) => {
+                        const el = document.getElementById(config.id);
+                        el.innerHTML = svg;
+                    });
+                })
+            });
+
+        </script>
+    {% endif %}
 {% endblock %}

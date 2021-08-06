@@ -1,5 +1,5 @@
-@import 'app-tabs.css';
-@import 'app-copy.css';
+@import "app-tabs.css";
+@import "app-copy.css";
 
 .govuk-panel--confirmation--left {
   text-align: left;
@@ -64,7 +64,10 @@
   min-width: 80px;
 }
 
-.scrollable-table table thead th.ref-data-col-universal-unique-identifier-field {
+.scrollable-table
+  table
+  thead
+  th.ref-data-col-universal-unique-identifier-field {
   min-width: 300px;
 }
 
@@ -80,7 +83,7 @@
 @media (min-width: 40.0625em) {
   .search-field__label {
     font-size: 19px;
-    line-height: 2.1052631579
+    line-height: 2.1052631579;
   }
 }
 
@@ -89,36 +92,36 @@
   left: 15px;
   top: 1px;
   z-index: 1;
-  color: #6f777b
+  color: #6f777b;
 }
 
 .search-field-wrapper {
   display: table;
   width: 100%;
-  background: #ffffff
+  background: #ffffff;
 }
 
 .search-field__item {
   position: relative;
   display: table-cell;
-  vertical-align: top
+  vertical-align: top;
 }
 
 .search-field__input[type="search"]:focus,
 .search-field__input[type="search"].focus {
-  z-index: 2
+  z-index: 2;
 }
 
 .search-field__input[type="search"] {
-  border-right-width: 0
+  border-right-width: 0;
 }
 
 .search-field__input[type="search"]:focus {
-  border-right-width: 2px
+  border-right-width: 2px;
 }
 
 .search-field-submit-wrapper {
-  width: 1%
+  width: 1%;
 }
 
 .search-field__submit {
@@ -129,19 +132,22 @@
   padding: 0;
   width: 40px;
   height: 40px;
-  background-image: url('/__django_static/assets/images/search-button.png');
+  background-image: url("/__django_static/assets/images/search-button.png");
   background-repeat: no-repeat;
   background-position: 2px 50%;
   text-indent: -5000px;
   overflow: hidden;
   background-color: #0b0c0c;
-  color: #ffffff
+  color: #ffffff;
 }
 
-@media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2), only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx) {
+@media only screen and (-webkit-min-device-pixel-ratio: 2),
+  only screen and (min-device-pixel-ratio: 2),
+  only screen and (min-resolution: 192dpi),
+  only screen and (min-resolution: 2dppx) {
   .search-field__submit {
     background-size: 52.5px auto;
-    background-position: 115% 50%
+    background-position: 115% 50%;
   }
 }
 
@@ -149,21 +155,21 @@
   z-index: 2;
   outline: 3px solid #ffbf47;
   outline-offset: 0;
-  box-shadow: inset 0 0 0 4px #0b0c0c
+  box-shadow: inset 0 0 0 4px #0b0c0c;
 }
 
 .search-field__submit::-moz-focus-inner {
-  border: 0
+  border: 0;
 }
 
 .search-field__submit:hover {
-  background-color: #171719
+  background-color: #171719;
 }
 
 .search-result {
   padding: 0 0 15px;
   margin: 0 0 15px;
-  border-bottom: 1px solid #bfc1c3
+  border-bottom: 1px solid #bfc1c3;
 }
 
 .pagination {
@@ -229,7 +235,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 }
 
 .app-\!-fill-width {
-  width: 100%
+  width: 100%;
 }
 
 .js-enabled .app-js-hidden {
@@ -265,7 +271,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   display: inline;
   box-sizing: border-box;
   margin: 0;
-  border: 2px solid rgba(11, 12, 12, .15);
+  border: 2px solid rgba(11, 12, 12, 0.15);
   border-radius: 4px;
   padding: 2px 4px;
 }
@@ -278,7 +284,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .case-study-quote .quote-heading {
   overflow: hidden;
   margin-left: 32px;
-  margin-top: 16px
+  margin-top: 16px;
 }
 
 .case-study-quote .quote-content {
@@ -296,12 +302,22 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   margin-bottom: 20px;
 }
 
+.visualisation-container {
+  border: 1px solid #999;
+  padding: 1rem;
+  overflow: hidden;
+  display:block;
+  width: 100%;
+  min-height: 300px;
+}
+
+
 .visualisation-preview-container {
   border: 1px solid #999;
   padding: 1rem;
   max-width: 20rem;
   overflow: hidden;
-  display:block;
+  display: block;
 }
 
 .visualisation-preview-container svg {
@@ -309,9 +325,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   height: auto;
 }
 
-
 .visualisation-preview-container img {
   width: 100%;
   height: auto;
 }
-
