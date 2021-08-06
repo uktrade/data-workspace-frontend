@@ -183,10 +183,14 @@
                     <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ visualisation.gds_phase_name }}</strong>
                   {% endif %}
               </td>
-              <td class="govuk-table__cell app-table_cell--no-border">{{ visualisation.summary }}</td>
               <td class="govuk-table__cell app-table_cell--no-border">
-                <a class="govuk-link visualisation-preview-container" id="vis-{{ visualisation.id }}"
-                   href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}">
+                <div style="max-width:15rem">
+                  {{ visualisation.summary }}
+                </div>
+              </td>
+              <td class="govuk-table__cell app-table_cell--no-border">
+                <a class="govuk-link visualisation-preview-container" id="vis-{{ visualisation.id }}">
+                  <div style="text-align: center">No preview available</div>
                 </a>
               </td>
               <td class="govuk-table__cell app-table_cell--no-border">
@@ -308,6 +312,7 @@
                   return result.view.toSVG(1);
               }).then((svg) => {
                   const el = document.getElementById(config.id);
+                  el.setAttribute("href", config.url);
                   el.innerHTML = svg;
               });
           })
