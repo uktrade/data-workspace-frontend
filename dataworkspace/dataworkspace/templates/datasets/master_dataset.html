@@ -306,16 +306,16 @@
   {% if has_access %}
     <script nonce="{{ request.csp_nonce }}">
       document.addEventListener("DOMContentLoaded", function () {
+        visPreviewQueue.forEach((config) => {
           const canvasContainer = document.createElement("div");
-          visPreviewQueue.forEach((config) => {
-              buildVisualisation(config.url, "{{ csrf_token }}", canvasContainer).then(result => {
-                  return result.view.toSVG(1);
-              }).then((svg) => {
-                  const el = document.getElementById(config.id);
-                  el.setAttribute("href", config.url);
-                  el.innerHTML = svg;
-              });
-          })
+          buildVisualisation(config.url, "{{ csrf_token }}", canvasContainer).then(result => {
+              return result.view.toSVG(1);
+          }).then((svg) => {
+              const el = document.getElementById(config.id);
+              el.setAttribute("href", config.url);
+              el.innerHTML = svg;
+          });
+        });
       });
     </script>
   {% endif %}
