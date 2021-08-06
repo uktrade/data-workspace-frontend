@@ -107,12 +107,7 @@ logger = logging.getLogger('app')
 
 
 def get_datasets_data_for_user_matching_query(
-    datasets: QuerySet,
-    query,
-    use=None,
-    data_type=None,
-    user=None,
-    id_field='id',
+    datasets: QuerySet, query, use=None, data_type=None, user=None, id_field='id',
 ):
     """
     Filters the dataset queryset for:
@@ -187,9 +182,7 @@ def get_datasets_data_for_user_matching_query(
 
     datasets = datasets.annotate(
         _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
+            When(access_filter, then=True), default=False, output_field=BooleanField(),
         )
         if access_filter
         else Value(True, BooleanField()),
@@ -232,10 +225,7 @@ def get_datasets_data_for_user_matching_query(
     # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
         datasets = datasets.annotate(
-            purpose=Value(
-                DataSetType.DATACUT,
-                IntegerField(),
-            )
+            purpose=Value(DataSetType.DATACUT, IntegerField(),)
         )
         datasets = datasets.annotate(
             data_type=Value(DataSetType.REFERENCE, IntegerField())
@@ -337,9 +327,7 @@ def get_visualisations_data_for_user_matching_query(
 
     visualisations = visualisations.annotate(
         _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
+            When(access_filter, then=True), default=False, output_field=BooleanField(),
         )
         if access_filter
         else Value(True, BooleanField()),
@@ -468,10 +456,7 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
     )
 
     reference_datasets = get_datasets_data_for_user_matching_query(
-        ReferenceDataset.objects.live(),
-        query,
-        user=user,
-        id_field='uuid',
+        ReferenceDataset.objects.live(), query, user=user, id_field='uuid',
     )
 
     visualisations = get_visualisations_data_for_user_matching_query(
@@ -523,14 +508,8 @@ def find_datasets(request):
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
-    all_datasets_visible_to_user_matching_query = (
-        sorted_datasets_and_visualisations_matching_query_for_user(
-            query=query,
-            use=use,
-            data_type=data_type,
-            user=request.user,
-            sort_by=sort,
-        )
+    all_datasets_visible_to_user_matching_query = sorted_datasets_and_visualisations_matching_query_for_user(
+        query=query, use=use, data_type=data_type, user=request.user, sort_by=sort,
     )
 
     # Filter out any records that don't match the selected filters. We do this in Python, not the DB, because we need
@@ -563,8 +542,7 @@ def find_datasets(request):
     )
 
     paginator = Paginator(
-        datasets_matching_query_and_filters,
-        settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
+        datasets_matching_query_and_filters, settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
     data_types.append((DataSetType.VISUALISATION, 'Visualisation'))
@@ -1208,9 +1186,7 @@ class DatasetPreviewView(DetailView, metaclass=ABCMeta):
         sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
         if columns:
             rows = get_random_data_sample(
-                source_object.database.memorable_name,
-                sql.SQL(query),
-                sample_size,
+                source_object.database.memorable_name, sql.SQL(query), sample_size,
             )
             for row in rows:
                 record_data = {}
@@ -1499,8 +1475,7 @@ class DataGridDataView(DetailView):
             database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
         ) as connection:
             with connection.cursor(
-                name='data-grid-data',
-                cursor_factory=psycopg2.extras.RealDictCursor,
+                name='data-grid-data', cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
                 return cursor.fetchall()
@@ -1533,9 +1508,7 @@ class DataGridDataView(DetailView):
 
         original_query = source.get_data_grid_query()
         query, params = build_filtered_dataset_query(
-            original_query,
-            column_config,
-            post_data,
+            original_query, column_config, post_data,
         )
 
         if request.GET.get('download'):
@@ -1580,7 +1553,6 @@ class DataGridDataView(DetailView):
 
 
 class DatasetVisualisationView(View):
-
     def _get_vega_definition(self, visualisation):
         vega_definition = json.loads(visualisation.vega_definition_json)
 
@@ -1605,7 +1577,6 @@ class DatasetVisualisationView(View):
 
         return vega_definition
 
-
     def get(self, request, dataset_uuid, object_id, **kwargs):
         model_class = kwargs['model_class']
         try:
@@ -1618,11 +1589,7 @@ class DatasetVisualisationView(View):
         return render(
             request,
             'datasets/visualisation.html',
-            context={
-                "dataset_uuid": dataset_uuid,
-                "visualisation": visualisation,
-
-            },
+            context={"dataset_uuid": dataset_uuid, "visualisation": visualisation,},
         )
 
     def post(self, request, dataset_uuid, object_id, **kwargs):
@@ -1635,6 +1602,5 @@ class DatasetVisualisationView(View):
 
         visualisation = dataset.visualisations.get(id=object_id)
         vega_definition = self._get_vega_definition(visualisation)
-
 
         return JsonResponse(vega_definition)
