@@ -46,7 +46,6 @@ from dataworkspace.apps.core.models import (
     Database,
     DeletableQuerySet,
 )
-from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
