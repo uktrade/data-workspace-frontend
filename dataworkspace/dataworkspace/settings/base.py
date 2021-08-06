@@ -352,8 +352,6 @@ GTM_CONTAINER_ENVIRONMENT_PARAMS = env.get('GTM_CONTAINER_ENVIRONMENT_PARAMS', '
 
 AWS_UPLOADS_BUCKET = env['UPLOADS_BUCKET']
 
-AWS_S3_ENDPOINT_URL = env.get('AWS_S3_ENDPOINT_URL', None)
-
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
