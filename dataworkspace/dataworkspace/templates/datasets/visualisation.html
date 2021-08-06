@@ -31,10 +31,12 @@
             <strong class="govuk-!-margin-bottom-2 govuk-tag govuk-phase-banner__content__tag">{{ visualisation.gds_phase_name }}</strong>
         {% endif %}
       <h1 class="govuk-heading-xl">{{ visualisation.name }}</h1>
-
+       <p class="govuk-body">{{ visualisation.summary }}</p>
     </div>
   </div>
-<div id="view"></div>
+  <div class="visualisation-container">
+    <div id="view"></div>
+  </div>
 {% endblock %}
 
 
@@ -43,24 +45,14 @@
   <script src="{% static 'vega-lite.js' %}"></script>
   <script src="{% static 'vega-embed.js' %}"></script>
   <script src="{% static 'vega-interpreter.js' %}"></script>
-  {{ vega_definition|json_script:"vega-config" }}
+
+  <script src="{% static 'vega-visualisation-builder.js' %}"></script>
+
   <script nonce="{{ request.csp_nonce }}">
+        document.addEventListener("DOMContentLoaded", function () {
+            const dataUrl = "{% url "datasets:dataset_visualisation" dataset_uuid=dataset_uuid object_id=visualisation.id %}";
+            buildVisualisation(dataUrl, "{{ csrf_token }}", "#view");
+        });
 
-    var vegaSpec = JSON.parse(document.getElementById('vega-config').textContent);
-
-    vegaEmbed(
-      '#view',
-      vegaSpec,
-      {
-        actions:
-        {
-          export: true,
-          source: false,
-          compiled: false,
-          editor: false
-        },
-        ast: true
-      }
-    );
   </script>
 {% endblock %}
