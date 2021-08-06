@@ -1,5 +1,5 @@
 /**
- * calls vega lite to generate an image using the config/data return from dataUrl
+ * calls vega lite to generate an image using the config/data returned from *POST* to dataUrl
  *
  * @param dataUrl - url to request the data.
  * @param csrfToken - django csrfToken
