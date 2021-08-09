@@ -1609,5 +1609,5 @@ class DatasetVisualisationView(View):
         return render(
             request,
             'datasets/visualisation.html',
-            context={"dataset_uuid": dataset_uuid, "visualisation": visualisation,},
+            context={"dataset_uuid": dataset_uuid, "visualisation": visualisation},
         )
