@@ -173,7 +173,7 @@
           {% for visualisation in model.visualisations.all %}
             <script nonce="{{ request.csp_nonce }}">
               window.visPreviewQueue.push({
-                url: "{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}",
+                url: "{% url "datasets:dataset_visualisation-preview" dataset_uuid=model.id object_id=visualisation.id %}",
                 id: "vis-{{ visualisation.id }}"
               });
             </script>
@@ -193,7 +193,8 @@
               {% if has_access %}
               <td class="govuk-table__cell app-table_cell--no-border">
 
-                <a class="govuk-link visualisation-preview-container" id="vis-{{ visualisation.id }}">
+                <a href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}"
+                  class="govuk-link visualisation-preview-container" id="vis-{{ visualisation.id }}">
                   <div style="text-align: center">Loading preview ...</div>
                 </a>
 
@@ -313,12 +314,11 @@
     <script nonce="{{ request.csp_nonce }}">
       document.addEventListener("DOMContentLoaded", function () {
         visPreviewQueue.forEach((config) => {
-          const canvasContainer = document.createElement("div");
-          buildVisualisation(config.url, "{{ csrf_token }}", canvasContainer).then(result => {
+          var canvasContainer = document.createElement("div");
+          buildVisualisation(config.url, canvasContainer).then(function(result) {
               return result.view.toSVG(1);
-          }).then((svg) => {
-              const el = document.getElementById(config.id);
-              el.setAttribute("href", config.url);
+          }).then(function(svg) {
+              var el = document.getElementById(config.id);
               el.innerHTML = svg;
           });
         });

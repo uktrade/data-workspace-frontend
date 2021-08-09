@@ -50,8 +50,8 @@
 
   <script nonce="{{ request.csp_nonce }}">
         document.addEventListener("DOMContentLoaded", function () {
-            const dataUrl = "{% url "datasets:dataset_visualisation" dataset_uuid=dataset_uuid object_id=visualisation.id %}";
-            buildVisualisation(dataUrl, "{{ csrf_token }}", "#view");
+            var dataUrl = "{% url "datasets:dataset_visualisation-preview" dataset_uuid=dataset_uuid object_id=visualisation.id %}";
+            buildVisualisation(dataUrl, "#view");
         });
 
   </script>

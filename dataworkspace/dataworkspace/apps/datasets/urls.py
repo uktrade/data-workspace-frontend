@@ -129,4 +129,10 @@ urlpatterns = [
         {'model_class': models.DataSet},
         name='dataset_visualisation',
     ),
+    path(
+        '<uuid:dataset_uuid>/visualisation-preview/<int:object_id>/',
+        login_required(views.DatasetVisualisationPreview.as_view()),
+        {'model_class': models.DataSet},
+        name='dataset_visualisation-preview',
+    ),
 ]
