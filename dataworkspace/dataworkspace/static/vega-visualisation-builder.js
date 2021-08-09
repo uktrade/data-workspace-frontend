@@ -1,13 +1,13 @@
 /**
- * calls vega lite to generate an image using the config/data
+ * calls vega lite to generate an image using the config and data provided by dataUrl
  *
  * @param dataUrl - url to request the data.
- * @param csrfToken - django csrfToken
- * @param viewElementId - the #elementId. NB: The preceeding hash # is required!
+ * @param viewElement - the element or id of the element.
+ *                      The preceeding hash # is required when viewElement is a string
  */
-function buildVisualisation(dataUrl, viewElementId) {
+function buildVisualisation(dataUrl, viewElement) {
   if (!dataUrl) throw "dataUrl is required";
-  if (!viewElementId) throw "viewElementId is required";
+  if (!viewElement) throw "viewElementId is required";
 
   function getVegaConfig(dataUrl) {
     return new Promise(function (resolve, reject) {
@@ -41,7 +41,7 @@ function buildVisualisation(dataUrl, viewElementId) {
     };
 
     // return so the client can get access to view etc
-    return vegaEmbed(viewElementId, vegaSpec, {
+    return vegaEmbed(viewElement, vegaSpec, {
       actions: actions,
       ast: true,
     });
