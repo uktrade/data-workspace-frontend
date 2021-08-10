@@ -38,6 +38,34 @@ def quote_plus(data):
     return parse.quote_plus(data)
 
 
+def _get_localised_date(utc_date: datetime) -> datetime:
+    if timezone.is_naive(utc_date):
+        utc_date = utc_date.replace(tzinfo=pytz.UTC)
+
+    timezone.activate(pytz.timezone('Europe/London'))
+    localised_date = timezone.localtime(utc_date)
+    offset = relativedelta(
+        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
+    )
+
+    return localised_date, offset
+
+
+@register.filter
+def time_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
+    """
+    See date_with_gmt_offset
+    @param utc_date:
+    @return:
+    """
+    if not utc_date:
+        return None
+
+    localised_date, offset = _get_localised_date(utc_date)
+    return localised_date.strftime(
+        f'%-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
+    )
+
 @register.filter
 def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
     """
@@ -51,14 +79,7 @@ def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
     if not utc_date:
         return None
 
-    if timezone.is_naive(utc_date):
-        utc_date = utc_date.replace(tzinfo=pytz.UTC)
-
-    timezone.activate(pytz.timezone('Europe/London'))
-    localised_date = timezone.localtime(utc_date)
-    offset = relativedelta(
-        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
-    )
+    localised_date, offset = _get_localised_date(utc_date)
     return localised_date.strftime(
         f'%b %-d, %Y, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
     )

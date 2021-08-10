@@ -132,7 +132,6 @@
               </dd>
             </div>
 
-
             <div class="govuk-summary-list__row">
               <dt class="govuk-summary-list__key">Personal Data</dt>
               <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
@@ -169,7 +168,7 @@
       </details>
 
       <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
-      <div class="govuk-body">
+      <div class="govuk-body dataset-description-richtext">
         {{ model.description | safe }}
       </div>
 
@@ -198,7 +197,7 @@
     </div>
   </div>
 
-  <div class="govuk-grid-row" style="overflow-x: auto;">
+  <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l govuk-!-margin-top-8">Data</h2>
       <table class="govuk-table">
@@ -236,12 +235,13 @@
 
             </td>
             <td class="govuk-table__cell app-table_cell--no-border">
-              <code>"{{ source_table.schema }}"."{{ source_table.table }}"</code>
+              "{{ source_table.schema }}"."{{ source_table.table }}"
             </td>
             <td class="govuk-table__cell app-table_cell--no-border">
-              {{ source_table.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+              {{ source_table.get_data_last_updated_date|date|default_if_none:"N/A" }}
+              <br>
+              {{ source_table.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
             </td>
-
 
             {% if code_snippets or columns %}
               <tr class="govuk-table__row">
