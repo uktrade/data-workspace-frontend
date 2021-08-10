@@ -150,10 +150,6 @@
   </div>
 
   {% if model.visualisations.all %}
-    <script nonce="{{ request.csp_nonce }}">
-      window.visPreviewQueue = [];
-    </script>
-
     <div class="govuk-grid-row" style="overflow-x: auto;">
       <div class="govuk-grid-column-full">
         <h2 class="govuk-heading-l govuk-!-margin-top-8">Dataset Visualisations</h2>
@@ -171,12 +167,6 @@
           <tbody>
 
           {% for visualisation in model.visualisations.all %}
-            <script nonce="{{ request.csp_nonce }}">
-              window.visPreviewQueue.push({
-                url: "{% url "datasets:dataset_visualisation-preview" dataset_uuid=model.id object_id=visualisation.id %}",
-                id: "vis-{{ visualisation.id }}"
-              });
-            </script>
             <tr class="govuk-table__row">
               <td class="govuk-table__cell app-table_cell--no-border">
                   {{ visualisation.name }}
@@ -312,7 +302,17 @@
 
   {% if has_access %}
     <script nonce="{{ request.csp_nonce }}">
+
       document.addEventListener("DOMContentLoaded", function () {
+        var visPreviewQueue = [];
+
+        {% for visualisation in model.visualisations.all %}
+          visPreviewQueue.push({
+            url: "{% url "datasets:dataset_visualisation-preview" dataset_uuid=model.id object_id=visualisation.id %}",
+            id: "vis-{{ visualisation.id }}"
+        });
+        {% endfor %}
+
         visPreviewQueue.forEach((config) => {
           var canvasContainer = document.createElement("div");
           buildVisualisation(config.url, canvasContainer).then(function(result) {
