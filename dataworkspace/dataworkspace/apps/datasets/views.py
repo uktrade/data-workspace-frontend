@@ -1552,15 +1552,8 @@ class DataGridDataView(DetailView):
         return JsonResponse({'records': records})
 
 
-class DatasetVisualisationView(View):
-    def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs['model_class']
-        try:
-            dataset = model_class.objects.get(id=dataset_uuid)
-        except model_class.DoesNotExist:
-            return HttpResponse(status=404)
-
-        visualisation = dataset.visualisations.get(id=object_id)
+class DatasetVisualisationPreview(View):
+    def _get_vega_definition(self, visualisation):
         vega_definition = json.loads(visualisation.vega_definition_json)
 
         if visualisation.query:
@@ -1582,11 +1575,39 @@ class DatasetVisualisationView(View):
                 # results as the first item
                 vega_definition['data'][0]['values'] = data
 
+        return vega_definition
+
+    def get(self, request, dataset_uuid, object_id, **kwargs):
+        model_class = kwargs['model_class']
+        try:
+            dataset = model_class.objects.get(id=dataset_uuid)
+        except model_class.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if not dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+
+        visualisation = dataset.visualisations.get(id=object_id)
+        vega_definition = self._get_vega_definition(visualisation)
+
+        return JsonResponse(vega_definition)
+
+
+class DatasetVisualisationView(View):
+    def get(self, request, dataset_uuid, object_id, **kwargs):
+        model_class = kwargs['model_class']
+        try:
+            dataset = model_class.objects.get(id=dataset_uuid)
+        except model_class.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if not dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+
+        visualisation = dataset.visualisations.get(id=object_id)
+
         return render(
             request,
             'datasets/visualisation.html',
-            context={
-                "visualisation": visualisation,
-                "vega_definition": vega_definition,
-            },
+            context={"dataset_uuid": dataset_uuid, "visualisation": visualisation},
         )
