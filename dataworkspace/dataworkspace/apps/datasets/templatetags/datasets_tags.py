@@ -66,6 +66,7 @@ def time_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
         f'%-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
     )
 
+
 @register.filter
 def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
     """
