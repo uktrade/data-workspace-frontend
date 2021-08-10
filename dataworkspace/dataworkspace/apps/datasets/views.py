@@ -1581,19 +1581,18 @@ class DatasetVisualisationPreview(View):
     def get(self, request, dataset_uuid, object_id, **kwargs):
         cache_key = f'vis-preview-{dataset_uuid}-{object_id}'
 
+        model_class = kwargs['model_class']
+        try:
+            dataset = model_class.objects.get(id=dataset_uuid)
+        except model_class.DoesNotExist:
+            return HttpResponse(status=404)
+
+        if not dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+
         vega_definition = cache.get(cache_key)
 
         if not vega_definition:
-
-            model_class = kwargs['model_class']
-            try:
-                dataset = model_class.objects.get(id=dataset_uuid)
-            except model_class.DoesNotExist:
-                return HttpResponse(status=404)
-
-            if not dataset.user_has_access(request.user):
-                return HttpResponseForbidden()
-
             visualisation = dataset.visualisations.get(id=object_id)
             vega_definition = self._get_vega_definition(visualisation)
             cache.set(cache_key, vega_definition, 600) # cache for 10 minutes?
