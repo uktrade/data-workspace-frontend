@@ -20,6 +20,7 @@ from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core import serializers
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
@@ -1578,17 +1579,24 @@ class DatasetVisualisationPreview(View):
         return vega_definition
 
     def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs['model_class']
-        try:
-            dataset = model_class.objects.get(id=dataset_uuid)
-        except model_class.DoesNotExist:
-            return HttpResponse(status=404)
+        cache_key = f'vis-preview-{dataset_uuid}-{object_id}'
 
-        if not dataset.user_has_access(request.user):
-            return HttpResponseForbidden()
+        vega_definition = cache.get(cache_key)
 
-        visualisation = dataset.visualisations.get(id=object_id)
-        vega_definition = self._get_vega_definition(visualisation)
+        if not vega_definition:
+
+            model_class = kwargs['model_class']
+            try:
+                dataset = model_class.objects.get(id=dataset_uuid)
+            except model_class.DoesNotExist:
+                return HttpResponse(status=404)
+
+            if not dataset.user_has_access(request.user):
+                return HttpResponseForbidden()
+
+            visualisation = dataset.visualisations.get(id=object_id)
+            vega_definition = self._get_vega_definition(visualisation)
+            cache.set(cache_key, vega_definition, 600) # cache for 10 minutes?
 
         return JsonResponse(vega_definition)
 
