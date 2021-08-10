@@ -1,0 +1,32 @@
+<div class="govuk-warning-text">
+  <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+  <div class="govuk-warning-text__text">
+    <strong>
+      <span class="govuk-warning-text__assistive">Warning</span>
+      You need to request access to view this data. You can only access data with a valid reason.
+    </strong>
+
+    {% if not has_tools_access %}
+      <p class="govuk-body govuk-!-margin-top-4">
+        You will also need tools access to use the data.
+        You can check and request access from the <a href="{% url 'applications:tools' %}">tools</a> page.
+        <br>
+      </p>
+    {% endif %}
+
+    {% if model.eligibility_criteria %}
+      <p class="govuk-body govuk-!-margin-top-4">
+        <a class="govuk-button"
+           href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
+      </p>
+    {% else %}
+      <p class="govuk-body govuk-!-margin-top-4">
+        <a class="govuk-button"
+           href="{% url 'datasets:request_access' model.id %}">Request access</a>
+      </p>
+    {% endif %}
+  </div>
+
+</div>
+
+
