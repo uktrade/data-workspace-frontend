@@ -626,11 +626,14 @@ class DatasetDetailView(DetailView):
             {t.get_frequency_display() for t in source_tables}
         )
 
+        # user_has_tools_access = self.object.user.
+
         ctx.update(
             {
                 'summarised_update_frequency': summarised_update_frequency,
                 'source_text': source_text,
                 'has_access': self.object.user_has_access(self.request.user),
+                'has_tools_access': self.object.user_has_access(self.request.user),
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 'master_datasets_info': master_datasets_info,
                 'source_table_type': DataLinkType.SOURCE_TABLE,
