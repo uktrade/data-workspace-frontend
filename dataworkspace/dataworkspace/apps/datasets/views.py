@@ -16,6 +16,7 @@ from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from psycopg2 import sql
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
@@ -56,6 +57,7 @@ from django.views.generic import DetailView, View
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -69,7 +71,6 @@ from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
     DatasetSearchForm,
     EligibilityCriteriaForm,
-    RequestAccessForm,
     RelatedMastersSortForm,
     RelatedDataCutsSortForm,
 )
@@ -88,7 +89,6 @@ from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
-    find_visualisation,
     find_dataset_or_visualisation,
     find_dataset_or_visualisation_for_bookmark,
     get_code_snippets_for_table,
@@ -96,12 +96,6 @@ from dataworkspace.apps.datasets.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-from dataworkspace.notify import generate_token, send_email
-from dataworkspace.zendesk import (
-    create_zendesk_ticket,
-    create_support_request,
-    get_people_url,
-)
 
 logger = logging.getLogger('app')
 
@@ -706,6 +700,10 @@ class DatasetDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
         ctx['model'] = self.object
+        ctx['user_has_tools_access'] = self.request.user.user_permissions.filter(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
         ctx['DATA_CUT_ENHANCED_PREVIEW_FLAG'] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
 
         if self._is_reference_dataset():
@@ -749,7 +747,7 @@ def eligibility_criteria_view(request, dataset_uuid):
         if form.is_valid():
             if form.cleaned_data['meet_criteria']:
                 return HttpResponseRedirect(
-                    reverse('datasets:request_access', args=[dataset_uuid])
+                    reverse('request_access:dataset', args=[dataset_uuid])
                 )
             else:
                 return HttpResponseRedirect(
@@ -781,158 +779,6 @@ def toggle_bookmark(request, dataset_uuid):
     dataset.toggle_bookmark(request.user)
 
     return HttpResponseRedirect(dataset.get_absolute_url())
-
-
-@require_http_methods(['GET', 'POST'])
-def request_access_view(request, dataset_uuid):
-    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
-    form = RequestAccessForm(
-        request.POST if request.method == 'POST' else None,
-        initial={"email": request.user.email},
-    )
-
-    if request.method == 'POST':
-        if form.is_valid():
-            goal = form.cleaned_data['goal']
-            contact_email = form.cleaned_data['email']
-
-            user_edit_relative = reverse(
-                'admin:auth_user_change', args=[request.user.id]
-            )
-            user_url = request.build_absolute_uri(user_edit_relative)
-
-            dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
-
-            if (
-                isinstance(dataset, VisualisationCatalogueItem)
-                and dataset.visualisation_template
-            ):
-                ticket_reference = _notify_visualisation_access_request(
-                    request, dataset, dataset_url, contact_email, goal
-                )
-            else:
-                ticket_reference = create_zendesk_ticket(
-                    contact_email,
-                    request.user,
-                    goal,
-                    user_url,
-                    dataset.name,
-                    dataset_url,
-                    dataset.information_asset_owner,
-                    dataset.information_asset_manager,
-                )
-
-            log_event(
-                request.user,
-                EventLog.TYPE_DATASET_ACCESS_REQUEST,
-                dataset,
-                extra={
-                    'contact_email': contact_email,
-                    'goal': goal,
-                    'ticket_reference': ticket_reference,
-                },
-            )
-
-            url = reverse('datasets:request_access_success', args=[dataset_uuid])
-            return HttpResponseRedirect(f'{url}?ticket={ticket_reference}')
-
-    return render(
-        request,
-        'request_access.html',
-        {
-            'dataset': dataset,
-            'is_visualisation': isinstance(dataset, VisualisationCatalogueItem),
-            'form': form,
-        },
-    )
-
-
-@require_GET
-def request_access_success_view(request, dataset_uuid):
-    # yes this could cause 400 errors but Todo - replace with session / messages
-    ticket = request.GET['ticket']
-
-    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
-
-    return render(
-        request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
-    )
-
-
-def _notify_visualisation_access_request(
-    request, dataset, dataset_url, contact_email, goal
-):
-    message = f"""
-An access request has been sent to the data visualisation owner and secondary contact to process.
-
-There is no need to action this ticket until a further notification is received.
-
-Data visualisation: {dataset.name} ({dataset_url})
-
-Requestor {request.user.email}
-People finder link: {get_people_url(request.user.get_full_name())}
-
-Requestor’s response to why access is needed:
-{goal}
-
-Data visualisation owner: {dataset.enquiries_contact.email if dataset.enquiries_contact else 'Not set'}
-
-Secondary contact: {dataset.secondary_enquiries_contact.email if dataset.secondary_enquiries_contact else 'Not set'}
-
-If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
-    """
-
-    ticket_reference = create_support_request(
-        request.user,
-        request.user.email,
-        message,
-        subject=f"Data visualisation access request received - {dataset.name}",
-        tag='visualisation-access-request',
-    )
-
-    give_access_url = request.build_absolute_uri(
-        reverse(
-            "visualisations:users-give-access",
-            args=[dataset.visualisation_template.gitlab_project_id],
-        )
-    )
-    give_access_token = generate_token(
-        {'email': request.user.email, 'ticket': ticket_reference}
-    ).decode('utf-8')
-
-    contacts = set()
-    if dataset.enquiries_contact:
-        contacts.add(dataset.enquiries_contact.email)
-    if dataset.secondary_enquiries_contact:
-        contacts.add(dataset.secondary_enquiries_contact.email)
-
-    for contact in contacts:
-        send_email(
-            settings.NOTIFY_VISUALISATION_ACCESS_REQUEST_TEMPLATE_ID,
-            contact,
-            personalisation={
-                "visualisation_name": dataset.name,
-                "visualisation_url": dataset_url,
-                "user_email": contact_email,
-                "goal": goal,
-                "people_url": get_people_url(request.user.get_full_name()),
-                "give_access_url": f"{give_access_url}?token={give_access_token}",
-            },
-        )
-
-    return ticket_reference
-
-
-@require_GET
-def request_visualisation_access_success_view(request, dataset_uuid):
-    # yes this could cause 400 errors but Todo - replace with session / messages
-    ticket = request.GET['ticket']
-
-    dataset = find_visualisation(dataset_uuid, request.user)
-
-    return render(
-        request, 'request_access_success.html', {'ticket': ticket, 'dataset': dataset}
-    )
 
 
 class ReferenceDatasetDownloadView(DetailView):

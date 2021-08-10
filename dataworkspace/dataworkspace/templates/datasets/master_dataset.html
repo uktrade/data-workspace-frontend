@@ -53,10 +53,11 @@
       <div class="govuk-body">
         {{ model.description | safe }}
       </div>
-
-      {% if master_datasets_info and not has_access %}
-        {% include 'partials/unauthorised_warning.html' with thing='this dataset' show_tools_message=True %}
-      {% endif %}
+        {% if master_datasets_info %}
+          {% if not has_access or not user_has_tools_access %}
+            {% include 'partials/unauthorised_warning.html' with thing='this dataset' show_dataset_access_message=has_access|yesno:",True" show_tools_access_message=user_has_tools_access|yesno:",True" %}
+          {% endif %}
+        {% endif %}
     </div>
   </div>
 

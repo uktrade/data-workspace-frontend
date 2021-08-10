@@ -2,7 +2,12 @@ import copy
 
 from django import forms
 from django.core.validators import EmailValidator
-from django.forms import CheckboxInput, CharField, EmailField, ModelChoiceField
+from django.forms import (
+    CheckboxInput,
+    CharField,
+    EmailField,
+    ModelChoiceField,
+)
 
 
 class GOVUKDesignSystemWidgetMixin:
@@ -92,6 +97,12 @@ class GOVUKDesignSystemCheckboxesWidget(
     option_template_name = "design_system/checkbox_option.html"
 
 
+class GOVUKDesignSystemFileInputWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.FileInput
+):
+    template_name = 'design_system/file.html'
+
+
 class GOVUKDesignSystemMultipleChoiceField(
     GOVUKDesignSystemFieldMixin, forms.MultipleChoiceField
 ):
@@ -141,6 +152,10 @@ class GOVUKDesignSystemEmailValidationModelChoiceField(
         if value:
             EmailValidator(message=self.error_messages['invalid_email'])(value.lower())
         return super().clean(value.lower() if value else value)
+
+
+class GOVUKDesignSystemFileField(GOVUKDesignSystemFieldMixin, forms.FileField):
+    widget = GOVUKDesignSystemFileInputWidget
 
 
 class GOVUKDesignSystemModelForm(forms.ModelForm):

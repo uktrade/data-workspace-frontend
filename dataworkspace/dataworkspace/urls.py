@@ -87,6 +87,13 @@ urlpatterns = [
         ),
     ),
     path(
+        'request-access/',
+        include(
+            ('dataworkspace.apps.request_access.urls', 'request_access'),
+            namespace='request-access',
+        ),
+    ),
+    path(
         'files/',
         include(
             ('dataworkspace.apps.your_files.urls', 'your_files'),

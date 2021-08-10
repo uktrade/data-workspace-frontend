@@ -17,7 +17,12 @@ class S3FileStorage(FileSystemStorage):
         return os.path.join(self.base_prefix, self._location, name)
 
     def _save(self, name, content):
-        client = boto3.client('s3')
+        client = boto3.client(
+            's3',
+            endpoint_url='http://host.docker.internal:9000',
+            aws_access_key_id='AKIAV3ON3AJYFQS6BJ3B',
+            aws_secret_access_key='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',
+        )
         filename = f'{name}!{uuid.uuid4()}'
         key = self._get_key(filename)
 
