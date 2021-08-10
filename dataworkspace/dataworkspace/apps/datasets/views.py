@@ -623,7 +623,7 @@ class DatasetDetailView(DetailView):
             t.name for t in self.object.tags.filter(type=TagType.SOURCE)
         )
         summarised_update_frequency = ",".join(
-            set([t.get_frequency_display() for t in source_tables])
+            {t.get_frequency_display() for t in source_tables}
         )
 
         ctx.update(
