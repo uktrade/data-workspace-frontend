@@ -1585,7 +1585,7 @@ class DatasetVisualisationPreview(View):
             return HttpResponse(status=404)
 
         if not dataset.user_has_access(request.user):
-            return HttpResponse(status=404)
+            return HttpResponseForbidden()
 
         visualisation = dataset.visualisations.get(id=object_id)
         vega_definition = self._get_vega_definition(visualisation)
@@ -1602,7 +1602,7 @@ class DatasetVisualisationView(View):
             return HttpResponse(status=404)
 
         if not dataset.user_has_access(request.user):
-            return HttpResponse(status=404)
+            return HttpResponseForbidden()
 
         visualisation = dataset.visualisations.get(id=object_id)
 
