@@ -306,26 +306,32 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   border: 1px solid #999;
   padding: 1rem;
   overflow: hidden;
-  display:block;
+  display: block;
   width: 100%;
   min-height: 300px;
 }
 
-
 .visualisation-preview-container {
-  border: 1px solid #999;
-  padding: 1rem;
-  max-width: 20rem;
+  /*border: 1px solid #999;*/
   overflow: hidden;
   display: block;
+  width: 280px;
+  height: 175px;
+  line-height: 175px;
 }
 
 .visualisation-preview-container svg {
-  width: 100%;
-  height: auto;
+  /*width: 100%;*/
+  width: 280px;
+  height: 175px;
 }
 
 .visualisation-preview-container img {
   width: 100%;
   height: auto;
+}
+
+.app-related-items {
+  border-top: 2px solid #1d70b8;
+  padding-top: 10px;
 }

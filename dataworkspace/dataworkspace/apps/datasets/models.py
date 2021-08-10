@@ -171,7 +171,12 @@ class DataSet(DeletableTimestampedUserModel):
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
-    licence = models.CharField(null=True, blank=True, max_length=256)
+    licence = models.CharField(
+        null=True, blank=True, max_length=256, help_text="Licence description"
+    )
+    licence_url = models.CharField(
+        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
+    )
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
     restrictions_on_usage = models.TextField(null=True, blank=True)
