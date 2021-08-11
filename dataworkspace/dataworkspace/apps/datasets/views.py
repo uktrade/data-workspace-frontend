@@ -14,13 +14,13 @@ import boto3
 import psycopg2
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
-from dataworkspace.apps.applications.models import ApplicationInstance
-from django.contrib.contenttypes.models import ContentType
+
 from psycopg2 import sql
 from django.conf import settings
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -104,6 +104,8 @@ from dataworkspace.zendesk import (
     create_support_request,
     get_people_url,
 )
+from dataworkspace.apps.applications.models import ApplicationInstance
+
 
 logger = logging.getLogger('app')
 
