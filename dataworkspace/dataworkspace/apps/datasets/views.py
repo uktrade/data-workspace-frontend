@@ -630,7 +630,7 @@ class DatasetDetailView(DetailView):
 
         user_has_tools_access = self.request.user.user_permissions.filter(
             codename='start_all_applications',
-            content_type=ContentType.objects.get_for_model(ApplicationInstance)
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
         ctx.update(
