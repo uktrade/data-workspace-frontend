@@ -1818,6 +1818,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         self._create_related_data_cuts(num=5)
 
         url = reverse('datasets:dataset_detail', args=(master.id,))
+        print(url)
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
@@ -1833,11 +1834,11 @@ class TestRequestAccess(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert (
-            "You do not have permission to access this dataset"
+            "You need to request access to view this data. You can only access data with a valid reason."
             in response.content.decode(response.charset)
         )
         assert (
-            "You will also need tools access to use the data"
+            "You will also need tools access to use the data."
             in response.content.decode(response.charset)
         )
 
