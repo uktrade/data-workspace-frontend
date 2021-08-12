@@ -193,14 +193,18 @@
                   </a>
                 </li>
               {% endfor %}
+
+              {% if related_data|length > 4 %}
+                <li class="govuk-!-margin-top-4">
+                  <a href="{% url "datasets:related_data" dataset_uuid=model.id %}"
+                     class="govuk-link govuk-link--no-visited-state">
+                    Show all related data
+                  </a>
+                </li>
+              {% endif %}
             </ul>
           </nav>
-          {% if 2 %}
-            <a href="{% url "datasets:related_data" dataset_uuid=model.id %}"
-               class="govuk-button govuk-button--secondary">
-              Show all data cuts
-            </a>
-          {% endif %}
+
         </aside>
       {% endif %}
     </div>

@@ -1818,11 +1818,10 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         self._create_related_data_cuts(num=5)
 
         url = reverse('datasets:dataset_detail', args=(master.id,))
-        print(url)
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
-        assert "Show all data cuts" in response.content.decode(response.charset)
+        assert "Show all related data" in response.content.decode(response.charset)
 
 
 class TestRequestAccess(DatasetsCommon):
