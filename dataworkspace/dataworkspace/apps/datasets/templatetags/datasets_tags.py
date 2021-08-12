@@ -80,10 +80,16 @@ def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
     if not utc_date:
         return None
 
-    localised_date, offset = _get_localised_date(utc_date)
-    formatted_date = format_date_only(localised_date)
+    if timezone.is_naive(utc_date):
+        utc_date = utc_date.replace(tzinfo=pytz.UTC)
+
+    timezone.activate(pytz.timezone('Europe/London'))
+    localised_date = timezone.localtime(utc_date)
+    offset = relativedelta(
+        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
+    )
     return localised_date.strftime(
-        f'{formatted_date}, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
+        f'%b %-d, %Y, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
     )
 
 
