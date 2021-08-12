@@ -94,5 +94,9 @@ def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
 
 
 @register.filter
-def format_date_only(date: datetime) -> str:
+def format_date_only(date: Optional[datetime]) -> str:
+
+    if not date:
+        return None
+
     return date.strftime("%-d %B %Y")
