@@ -76,7 +76,7 @@
       <dl class="govuk-summary-list">
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Date added</dt>
-          <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
+          <dd class="govuk-summary-list__value">{{ model.published_at|format_date_only }}</dd>
         </div>
 
         <div class="govuk-summary-list__row">
@@ -104,7 +104,7 @@
           <dd class="govuk-summary-list__value">Contact
             <a class="govuk-link"
                href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-            to ask questions about how to use this data
+            to ask questions about how to use this data and the visuals.
           </dd>
         </div>
       </dl>
@@ -185,7 +185,7 @@
           </h3>
           <nav role="navigation" aria-labelledby="subsection-title">
             <ul class="govuk-list">
-              {% for dataset in related_data %}
+              {% for dataset in related_data|slice:":4" %}
                 <li>
                   <a class="govuk-link"
                      href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
@@ -195,12 +195,18 @@
               {% endfor %}
             </ul>
           </nav>
+          {% if 2 %}
+            <a href="{% url "datasets:related_data" dataset_uuid=model.id %}"
+               class="govuk-button govuk-button--secondary">
+              Show all data cuts
+            </a>
+          {% endif %}
         </aside>
       {% endif %}
     </div>
   </div>
 
-  <div class="govuk-grid-row">
+  <div class="govuk-grid-row" style="overflow-x: auto;">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l">Data</h2>
       <table class="govuk-table">
@@ -221,7 +227,7 @@
               "{{ source_table.schema }}"."{{ source_table.table }}"
             </td>
             <td class="govuk-table__cell app-table_cell--no-border">
-              {{ source_table.get_data_last_updated_date|date|default_if_none:"N/A" }}
+              {{ source_table.get_data_last_updated_date|format_date_only|default_if_none:"N/A" }}
               <br>
               {{ source_table.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
             </td>
@@ -313,7 +319,7 @@
       <div class="govuk-grid-column-full">
         <hr class="govuk-section-break">
         <h2 class="govuk-heading-l">Visuals</h2>
-        <p class="govuk-body">These show the data visually, allowing you to identify basic trends</p>
+        <p class="govuk-body">These show the data visually, allowing you to identify basic trends.</p>
       </div>
     </div>
 

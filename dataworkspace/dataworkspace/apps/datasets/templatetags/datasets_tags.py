@@ -81,6 +81,12 @@ def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
         return None
 
     localised_date, offset = _get_localised_date(utc_date)
+    formatted_date = format_date_only(localised_date)
     return localised_date.strftime(
-        f'%b %-d, %Y, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
+        f'{formatted_date}, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
     )
+
+
+@register.filter
+def format_date_only(date: datetime) -> str:
+    return date.strftime("%-d %B %Y")
