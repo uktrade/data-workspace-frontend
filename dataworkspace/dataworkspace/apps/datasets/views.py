@@ -744,7 +744,7 @@ class DatasetDetailView(DetailView):
         )
 
     def get_template_names(self):
-        master_dataset_template = "datasets/master_dataset_layout2.html"
+        master_dataset_template = "datasets/master_dataset.html"
 
         if self._is_reference_dataset():
             return ['datasets/referencedataset_detail.html']
