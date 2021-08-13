@@ -331,23 +331,23 @@
       {% if has_access %}
         {% for visualisation in model.visualisations.all|slice:"3" %}
 
-          <script nonce="{{ request.csp_nonce }}">
-            window.visPreviewQueue.push({
-              url: "{% url "datasets:dataset_visualisation-preview" dataset_uuid=model.id object_id=visualisation.id %}",
-              id: "vis-{{ visualisation.id }}"
-            });
-          </script>
-
-          <div class="govuk-grid-column-one-third govuk-!-margin-bottom-4">
+          <div class="govuk-grid-column-one-third">
             {% if has_access %}
-              <a href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}"
-                 class="govuk-link govuk-link--no-visited-state visualisation-preview-container"
-                 id="vis-{{ visualisation.id }}">
-                <div style="text-align: center">Loading preview ...</div>
-              </a>
-
+              <div style="overflow:hidden;">
+                <a href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}"
+                   class="govuk-link govuk-link--no-visited-state visualisation-preview-container"
+                   id="vis-{{ visualisation.id }}">
+                  <div style="text-align: center">Loading preview ...</div>
+                </a>
+              </div>
             {% endif %}
 
+            <h3 class="govuk-heading-s">
+              {% visualisation_link_or_plain_text visualisation.name has_access model.id visualisation.id %}
+            </h3>
+            <p class="govuk-body">
+              {{ visualisation.summary }}
+            </p>
 
           </div>
         {% endfor %}
@@ -358,19 +358,7 @@
       {% endif %}
     </div>
 
-    <div class="govuk-grid-row">
-      {% for visualisation in model.visualisations.all|slice:"3" %}
-        <div class="govuk-grid-column-one-third">
-          <h3 class="govuk-heading-s">
-            {% visualisation_link_or_plain_text visualisation.name has_access model.id visualisation.id %}
-          </h3>
-          <p class="govuk-body">
-            {{ visualisation.summary }}
-          </p>
-        </div>
-      {% endfor %}
 
-    </div>
 
   {% endif %}
 
@@ -412,10 +400,14 @@
         visPreviewQueue.forEach((config) => {
           var canvasContainer = document.createElement("div");
           buildVisualisation(config.url, canvasContainer).then(function (result) {
+            {#return result.view.toImageURL('png');#}
             return result.view.toSVG(1);
           }).then(function (svg) {
             var el = document.getElementById(config.id);
             el.innerHTML = svg;
+            {#var img = document.createElement("img")#}
+            {#img.setAttribute("src", imageUrl);#}
+            {#el.appendChild(img);#}
           });
         });
       });
