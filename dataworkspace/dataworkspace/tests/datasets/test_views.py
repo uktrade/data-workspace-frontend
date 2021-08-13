@@ -1837,7 +1837,7 @@ class TestRequestAccess(DatasetsCommon):
             in response.content.decode(response.charset)
         )
         assert (
-            "You will also need tools access to use the data."
+            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
             in response.content.decode(response.charset)
         )
 
