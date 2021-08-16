@@ -390,14 +390,10 @@
         visPreviewQueue.forEach((config) => {
           var canvasContainer = document.createElement("div");
           buildVisualisation(config.url, canvasContainer).then(function (result) {
-            {#return result.view.toImageURL('png');#}
             return result.view.toSVG(1);
           }).then(function (svg) {
             var el = document.getElementById(config.id);
             el.innerHTML = svg;
-            {#var img = document.createElement("img")#}
-            {#img.setAttribute("src", imageUrl);#}
-            {#el.appendChild(img);#}
           });
         });
       });
