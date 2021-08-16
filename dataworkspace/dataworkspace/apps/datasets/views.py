@@ -95,7 +95,6 @@ from dataworkspace.apps.datasets.utils import (
     find_dataset_or_visualisation_for_bookmark,
     get_code_snippets_for_table,
     get_code_snippets_for_query,
-    get_summarised_update_frequency_text,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
