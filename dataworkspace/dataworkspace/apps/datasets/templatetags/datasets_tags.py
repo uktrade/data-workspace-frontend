@@ -5,10 +5,20 @@ from dateutil.relativedelta import relativedelta
 import pytz
 
 from django import template
+from django.urls import reverse
 from django.utils import timezone
-
+from django.utils.safestring import mark_safe
 
 register = template.Library()
+
+
+@register.simple_tag()
+def visualisation_link_or_plain_text(text, condition, dataset_uuid, object_id):
+    if condition:
+        url = reverse("datasets:dataset_visualisation", args=[dataset_uuid, object_id])
+        return mark_safe(f"<a class='govuk-link' href='{url}'>{text}</a>")
+
+    return text
 
 
 @register.simple_tag(takes_context=True)
@@ -26,6 +36,35 @@ def quote_plus(data):
     return parse.quote_plus(data)
 
 
+def _get_localised_date(utc_date: datetime) -> datetime:
+    if timezone.is_naive(utc_date):
+        utc_date = utc_date.replace(tzinfo=pytz.UTC)
+
+    timezone.activate(pytz.timezone('Europe/London'))
+    localised_date = timezone.localtime(utc_date)
+    offset = relativedelta(
+        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
+    )
+
+    return localised_date, offset
+
+
+@register.filter
+def time_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
+    """
+    See date_with_gmt_offset
+    @param utc_date:
+    @return:
+    """
+    if not utc_date:
+        return None
+
+    localised_date, offset = _get_localised_date(utc_date)
+    return localised_date.strftime(
+        f'%-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
+    )
+
+
 @register.filter
 def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
     """
@@ -39,14 +78,25 @@ def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
     if not utc_date:
         return None
 
-    if timezone.is_naive(utc_date):
-        utc_date = utc_date.replace(tzinfo=pytz.UTC)
+    localised_date, offset = _get_localised_date(utc_date)
 
-    timezone.activate(pytz.timezone('Europe/London'))
-    localised_date = timezone.localtime(utc_date)
-    offset = relativedelta(
-        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
-    )
     return localised_date.strftime(
-        f'%b %-d, %Y, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
+        f'%-d %B %Y, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
     )
+
+
+@register.filter
+def gmt_date(utc_date: Optional[datetime]) -> Optional[str]:
+    if not utc_date:
+        return None
+
+    localised_date, offset = _get_localised_date(utc_date)
+    return localised_date.strftime("%-d %B %Y")
+
+
+@register.filter
+def format_date_uk(date: Optional[datetime.date]) -> Optional[str]:
+    if not date:
+        return None
+
+    return date.strftime("%-d %B %Y")
