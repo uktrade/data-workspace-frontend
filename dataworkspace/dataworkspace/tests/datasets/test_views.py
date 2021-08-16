@@ -7,14 +7,12 @@ from uuid import uuid4
 import mock
 import psycopg2
 import pytest
-from dataworkspace.tests.conftest import get_staff_client, get_staff_user_data
-from django.contrib.contenttypes.models import ContentType
-
-from dataworkspace.apps.applications.models import ApplicationInstance
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+
 from django.urls import reverse
 from django.test import Client
 from freezegun import freeze_time
@@ -40,6 +38,9 @@ from dataworkspace.tests.factories import (
     VisualisationUserPermissionFactory,
     VisualisationLinkFactory,
 )
+
+from dataworkspace.tests.conftest import get_staff_client, get_staff_user_data
+from dataworkspace.apps.applications.models import ApplicationInstance
 
 
 @pytest.mark.parametrize(
