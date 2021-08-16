@@ -14,11 +14,13 @@ import boto3
 import psycopg2
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
+
 from psycopg2 import sql
 from django.conf import settings
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -102,6 +104,8 @@ from dataworkspace.zendesk import (
     create_support_request,
     get_people_url,
 )
+from dataworkspace.apps.applications.models import ApplicationInstance
+
 
 logger = logging.getLogger('app')
 
@@ -619,9 +623,25 @@ class DatasetDetailView(DetailView):
             for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
 
+        source_text = ",".join(
+            sorted({t.name for t in self.object.tags.filter(type=TagType.SOURCE)})
+        )
+
+        summarised_update_frequency = ",".join(
+            sorted({t.get_frequency_display() for t in source_tables})
+        )
+
+        user_has_tools_access = self.request.user.user_permissions.filter(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+
         ctx.update(
             {
+                'summarised_update_frequency': summarised_update_frequency,
+                'source_text': source_text,
                 'has_access': self.object.user_has_access(self.request.user),
+                'has_tools_access': user_has_tools_access,
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 'master_datasets_info': master_datasets_info,
                 'source_table_type': DataLinkType.SOURCE_TABLE,
@@ -725,10 +745,12 @@ class DatasetDetailView(DetailView):
         )
 
     def get_template_names(self):
+        master_dataset_template = "datasets/master_dataset.html"
+
         if self._is_reference_dataset():
             return ['datasets/referencedataset_detail.html']
         elif self.object.type == DataSetType.MASTER:
-            return ['datasets/master_dataset.html']
+            return [master_dataset_template]
         elif self.object.type == DataSetType.DATACUT:
             return ['datasets/data_cut_dataset.html']
         elif self._is_visualisation():

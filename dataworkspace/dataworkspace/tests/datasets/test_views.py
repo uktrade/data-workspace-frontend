@@ -11,6 +11,8 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+
 from django.urls import reverse
 from django.test import Client
 from freezegun import freeze_time
@@ -36,6 +38,9 @@ from dataworkspace.tests.factories import (
     VisualisationUserPermissionFactory,
     VisualisationLinkFactory,
 )
+
+from dataworkspace.tests.conftest import get_staff_client, get_staff_user_data
+from dataworkspace.apps.applications.models import ApplicationInstance
 
 
 @pytest.mark.parametrize(
@@ -1821,7 +1826,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
-        assert "Show all data cuts" in response.content.decode(response.charset)
+        assert "Show all related data" in response.content.decode(response.charset)
 
 
 class TestRequestAccess(DatasetsCommon):
@@ -1833,11 +1838,44 @@ class TestRequestAccess(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert (
-            "You do not have permission to access this dataset"
+            "You need to request access to view this data. You can only access data with a valid reason."
             in response.content.decode(response.charset)
         )
         assert (
-            "You will also need tools access to use the data"
+            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
+            in response.content.decode(response.charset)
+        )
+
+    def test_when_user_has_data_access_only(self, db, staff_user, metadata_db):
+        master = self._create_master(user_access_type='REQUIRES_AUTHENTICATION')
+        url = reverse('datasets:dataset_detail', args=(master.id,))
+        client = get_staff_client(get_staff_user_data(db, staff_user))
+        response = client.get(url)
+
+        assert response.status_code == 200
+        assert (
+            "You need to request access to tools to analyse this data."
+            in response.content.decode(response.charset)
+        )
+
+    def test_when_user_has_tools_access_only(self, db, staff_user, metadata_db):
+        master = self._create_master(user_access_type='REQUIRES_AUTHORIZATION')
+        url = reverse('datasets:dataset_detail', args=(master.id,))
+
+        # grant tools permissions
+        permission = Permission.objects.get(
+            codename="start_all_applications",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+
+        staff_user.user_permissions.add(permission)
+        client = get_staff_client(get_staff_user_data(db, staff_user))
+
+        response = client.get(url)
+        assert response.status_code == 200
+
+        assert (
+            "You need to request access to view this data. You can only access data with a valid reason."
             in response.content.decode(response.charset)
         )
 
