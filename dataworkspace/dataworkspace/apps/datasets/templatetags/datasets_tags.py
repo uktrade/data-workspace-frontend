@@ -78,22 +78,24 @@ def date_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
     if not utc_date:
         return None
 
-    if timezone.is_naive(utc_date):
-        utc_date = utc_date.replace(tzinfo=pytz.UTC)
+    localised_date, offset = _get_localised_date(utc_date)
 
-    timezone.activate(pytz.timezone('Europe/London'))
-    localised_date = timezone.localtime(utc_date)
-    offset = relativedelta(
-        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
-    )
     return localised_date.strftime(
-        f'%b %-d, %Y, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
+        f'%-d %B %Y, %-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
     )
 
 
 @register.filter
-def format_date_only(date: Optional[datetime]) -> str:
+def gmt_date(utc_date: Optional[datetime]) -> Optional[str]:
+    if not utc_date:
+        return None
 
+    localised_date, offset = _get_localised_date(utc_date)
+    return localised_date.strftime("%-d %B %Y")
+
+
+@register.filter
+def format_date_uk(date: Optional[datetime.date]) -> Optional[str]:
     if not date:
         return None
 

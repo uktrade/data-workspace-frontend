@@ -65,7 +65,7 @@
       <dl class="govuk-summary-list">
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Date added</dt>
-          <dd class="govuk-summary-list__value">{{ model.published_at|format_date_only }}</dd>
+          <dd class="govuk-summary-list__value">{{ model.published_at|format_date_uk }}</dd>
         </div>
 
         <div class="govuk-summary-list__row">
@@ -222,7 +222,7 @@
               "{{ source_table.schema }}"."{{ source_table.table }}"
             </td>
             <td class="govuk-table__cell app-table_cell--no-border">
-              {{ source_table.get_data_last_updated_date|format_date_only|default_if_none:"N/A" }}
+              {{ source_table.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }}
               <br>
               {{ source_table.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
             </td>
