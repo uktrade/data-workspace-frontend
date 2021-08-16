@@ -95,6 +95,7 @@ from dataworkspace.apps.datasets.utils import (
     find_dataset_or_visualisation_for_bookmark,
     get_code_snippets_for_table,
     get_code_snippets_for_query,
+    get_summarised_update_frequency_text,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -624,10 +625,11 @@ class DatasetDetailView(DetailView):
         ]
 
         source_text = ",".join(
-            t.name for t in self.object.tags.filter(type=TagType.SOURCE)
+            sorted({t.name for t in self.object.tags.filter(type=TagType.SOURCE)})
         )
+
         summarised_update_frequency = ",".join(
-            {t.get_frequency_display() for t in source_tables}
+            sorted({t.get_frequency_display() for t in source_tables})
         )
 
         user_has_tools_access = self.request.user.user_permissions.filter(
