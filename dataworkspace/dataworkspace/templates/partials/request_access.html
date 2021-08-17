@@ -4,14 +4,14 @@
     <strong>
       <span class="govuk-warning-text__assistive">Warning</span>
       {% if not has_data_access %}
-        You need to request access to view this data. You can only access data with a valid reason.
-        {% if not has_tools_access %}
+        You need to request access to view {% if type == 'master' %}this data{% elif type == 'datacut' %}these links{% elif type == 'visualisation' %}this data visualisation{% endif %}. You can only access data with a valid reason.
+        {% if type == 'master' and not has_tools_access %}
           <p class="govuk-body govuk-!-margin-top-4">
             We will ask you some questions so we can give you access to the tools you need to analyse this data.
             <br>
           </p>
         {% endif %}
-      {% elif not has_tools_access %}
+      {% elif type == 'master' and not has_tools_access %}
         You need to request access to tools to analyse this data.
       {% endif %}
     </strong>
@@ -29,7 +29,7 @@
     {% else %}
       <p class="govuk-body govuk-!-margin-top-4">
         <a class="govuk-button"
-           href="{% url 'datasets:request_access' model.id %}">Request access</a>
+           href="{% url 'request_access:dataset' model.id %}">Request access</a>
       </p>
     {% endif %}
   </div>

@@ -315,7 +315,7 @@ def visualisation_link_html_view(request, link_id):
         request.user
     ):
         return redirect(
-            'request_access:index',
+            'request_access:dataset',
             dataset_uuid=visualisation_link.visualisation_catalogue_item_id,
         )
 

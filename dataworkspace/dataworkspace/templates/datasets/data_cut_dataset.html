@@ -69,9 +69,8 @@
             <div class="govuk-body">
                 {{ model.description | safe }}
             </div>
-
             {% if datacut_links_info and not has_access %}
-                {% include 'partials/unauthorised_warning.html' with thing='these links' %}
+              {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
             {% endif %}
         </div>
     </div>

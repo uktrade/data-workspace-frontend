@@ -46,7 +46,7 @@ from dataworkspace.apps.applications.models import ApplicationInstance
 @pytest.mark.parametrize(
     'eligibility_criteria,view_name',
     [
-        ([], 'datasets:request_access'),
+        ([], 'request_access:dataset'),
         (['Criteria 1', 'Criteria 2'], 'datasets:eligibility_criteria'),
     ],
 )
@@ -84,7 +84,7 @@ def test_eligibility_criteria_list(client):
 @pytest.mark.parametrize(
     'meet_criteria,redirect_view',
     [
-        ('yes', 'datasets:request_access'),
+        ('yes', 'request_access:dataset'),
         ('no', 'datasets:eligibility_criteria_not_met'),
     ],
 )
@@ -200,93 +200,93 @@ def test_toggle_bookmark_off_visualisation():
     assert ds.user_has_bookmarked(user) is False
 
 
-def test_request_access_form(client, mocker):
-    create_zendesk_ticket = mocker.patch(
-        'dataworkspace.apps.datasets.views.create_zendesk_ticket'
-    )
-    create_zendesk_ticket.return_value = 999
+# def test_request_access_form(client, mocker):
+#     create_zendesk_ticket = mocker.patch(
+#         'dataworkspace.apps.datasets.views.create_zendesk_ticket'
+#     )
+#     create_zendesk_ticket.return_value = 999
 
-    ds = factories.DataSetFactory.create(published=True)
-    log_count = EventLog.objects.count()
+#     ds = factories.DataSetFactory.create(published=True)
+#     log_count = EventLog.objects.count()
 
-    response = client.post(
-        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
-        data={"email": "user@example.com", "goal": "My goal"},
-        follow=True,
-    )
+#     response = client.post(
+#         reverse('request_access:dataset', kwargs={'dataset_uuid': ds.id}),
+#         data={"email": "user@example.com", "goal": "My goal"},
+#         follow=True,
+#     )
 
-    assert response.status_code == 200
+#     assert response.status_code == 200
 
-    create_zendesk_ticket.assert_called_once_with(
-        "user@example.com", mock.ANY, "My goal", mock.ANY, ds.name, mock.ANY, None, None
-    )
-    assert EventLog.objects.count() == log_count + 1
-    assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_ACCESS_REQUEST
+#     create_zendesk_ticket.assert_called_once_with(
+#         "user@example.com", mock.ANY, "My goal", mock.ANY, ds.name, mock.ANY, None, None
+#     )
+#     assert EventLog.objects.count() == log_count + 1
+#     assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_ACCESS_REQUEST
 
 
-def test_request_gitlab_visualisation_access(client, user, mocker):
-    owner = factories.UserFactory()
-    secondary_contact = factories.UserFactory()
+# def test_request_gitlab_visualisation_access(client, user, mocker):
+#     owner = factories.UserFactory()
+#     secondary_contact = factories.UserFactory()
 
-    create_zendesk_ticket = mocker.patch(
-        'dataworkspace.apps.datasets.views.create_support_request'
-    )
-    create_zendesk_ticket.return_value = 123
+#     create_zendesk_ticket = mocker.patch(
+#         'dataworkspace.zendesk.create_support_request'
+#     )
+#     create_zendesk_ticket.return_value = 123
 
-    send_email = mocker.patch('dataworkspace.apps.datasets.views.send_email')
+#     send_email = mocker.patch('dataworkspace.apps.datasets.views.send_email')
 
-    ds = factories.VisualisationCatalogueItemFactory.create(
-        published=True,
-        enquiries_contact=owner,
-        secondary_enquiries_contact=secondary_contact,
-        visualisation_template__gitlab_project_id=321,
-    )
+#     ds = factories.VisualisationCatalogueItemFactory.create(
+#         published=True,
+#         enquiries_contact=owner,
+#         secondary_enquiries_contact=secondary_contact,
+#         visualisation_template__gitlab_project_id=321,
+#     )
 
-    response = client.post(
-        reverse('datasets:request_access', kwargs={'dataset_uuid': ds.id}),
-        data={"email": "user@example.com", "goal": "my goal"},
-        follow=True,
-    )
+#     response = client.post(
+#         reverse('request_access:dataset', kwargs={'dataset_uuid': ds.id}),
+#         data={"email": "user@example.com", "goal": "my goal"},
+#         follow=True,
+#     )
 
-    assert response.status_code == 200
+#     assert response.status_code == 200
 
-    create_zendesk_ticket.assert_called_once_with(
-        mock.ANY,
-        mock.ANY,
-        mock.ANY,
-        subject=f"Data visualisation access request received - {ds.name}",
-        tag="visualisation-access-request",
-    )
+#     create_zendesk_ticket.assert_called_once_with(
+#         mock.ANY,
+#         mock.ANY,
+#         mock.ANY,
+#         subject=f"Data visualisation access request received - {ds.name}",
+#         tag="visualisation-access-request",
+#     )
 
-    send_email.assert_has_calls(
-        [
-            mock.call(
-                mock.ANY,
-                owner.email,
-                personalisation={
-                    "visualisation_name": ds.name,
-                    "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
-                    "user_email": "user@example.com",
-                    "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
-                    "give_access_url": mock.ANY,
-                    "goal": "my goal",
-                },
-            ),
-            mock.call(
-                mock.ANY,
-                secondary_contact.email,
-                personalisation={
-                    "visualisation_name": ds.name,
-                    "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
-                    "user_email": "user@example.com",
-                    "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
-                    "give_access_url": mock.ANY,
-                    "goal": "my goal",
-                },
-            ),
-        ],
-        any_order=True,
-    )
+#     send_email.assert_has_calls(
+#         [
+#             mock.call(
+#                 mock.ANY,
+#                 owner.email,
+#                 personalisation={
+#                     "visualisation_name": ds.name,
+#                     "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
+#                     "user_email": "user@example.com",
+#                     "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
+#                     "give_access_url": mock.ANY,
+#                     "goal": "my goal",
+#                 },
+#             ),
+#             mock.call(
+#                 mock.ANY,
+#                 secondary_contact.email,
+#                 personalisation={
+#                     "visualisation_name": ds.name,
+#                     "visualisation_url": f"http://testserver/datasets/{ds.id}#{ds.slug}",
+#                     "user_email": "user@example.com",
+#                     "people_url": "https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson",
+#                     "give_access_url": mock.ANY,
+#                     "goal": "my goal",
+#                 },
+#             ),
+#         ],
+#         any_order=True,
+#     )
 
 
 def test_find_datasets_with_no_results(client):
@@ -1680,20 +1680,6 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
     } == result_dataset_names
 
 
-def test_request_access_success_content(client):
-    ds = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
-
-    response = client.get(
-        reverse('datasets:request_access_success', kwargs={"dataset_uuid": ds.id}),
-        {"ticket": "test-ticket-id"},
-    )
-
-    assert (
-        'Your request has been received. It will normally be completed within 5 working days.'
-        in response.content.decode(response.charset)
-    )
-
-
 @pytest.mark.parametrize(
     "source_urls, show_warning",
     (
@@ -1892,7 +1878,7 @@ class TestRequestAccess(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert (
-            "You do not have permission to access these links"
+            "You need to request access to view these links"
             in response.content.decode(response.charset)
         )
 
@@ -1906,7 +1892,7 @@ class TestRequestAccess(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert (
-            "You do not have permission to access this data visualisation"
+            "You need to request access to view this data visualisation"
             in response.content.decode(response.charset)
         )
 
@@ -2018,7 +2004,7 @@ class TestVisualisationsDetailView:
         assert response.status_code == 200
         assert vis.name in response.content.decode(response.charset)
         assert (
-            "You do not have permission to access this data visualisation."
+            "You need to request access to view this data visualisation."
             in response.content.decode(response.charset)
         ) is not has_access
 

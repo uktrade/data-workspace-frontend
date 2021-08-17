@@ -21,7 +21,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator

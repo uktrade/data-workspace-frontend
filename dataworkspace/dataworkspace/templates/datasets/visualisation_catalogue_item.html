@@ -58,7 +58,7 @@
             </div>
 
             {% if not has_access %}
-                {% include 'partials/unauthorised_warning.html' with thing='this data visualisation' show_dataset_access_message=True show_tools_access_message=False %}
+                {% include 'partials/request_access.html' with type='visualisation' has_data_access=has_access %}
             {% endif %}
         </div>
     </div>

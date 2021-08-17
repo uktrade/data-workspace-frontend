@@ -1836,7 +1836,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn('You do not have permission to access these links', content)
+        self.assertIn('You need to request access to view these links', content)
 
         async with session.request(
             'GET',
@@ -1859,7 +1859,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertNotIn('You do not have permission to access these links', content)
+        self.assertNotIn('You need to request access to view these links', content)
 
         async with session.request(
             'GET',
