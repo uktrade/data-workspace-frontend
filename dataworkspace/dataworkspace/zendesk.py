@@ -32,7 +32,7 @@ def build_ticket_description_text(
     ticket_description = f"""Access request for
 
 Username:   {username}
-Journey:    {access_request.journey}
+Journey:    {access_request.human_readable_journey}
 Dataset:    {catalogue_item}
 SSO Login:  {access_request.requester.email}
 People search: {people_url}

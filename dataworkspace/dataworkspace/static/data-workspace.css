@@ -354,3 +354,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .dataset-description-richtext a:visited {
   color: #4c2c92;
 }
+
+.training-screenshot {
+  content: url("/__django_static/assets/images/rit-screenshot.png")
+}

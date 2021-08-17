@@ -60,8 +60,14 @@ class ToolsAccessRequestFormPart1(GOVUKDesignSystemModelForm):
         label="Responsible for Information training screenshot",
         help_html=render_to_string('request_access/training-screenshot-hint.html'),
         widget=GOVUKDesignSystemFileInputWidget(
-            label_is_heading=False, extra_label_classes='govuk-!-font-weight-bold',
+            label_is_heading=True,
+            heading='h2',
+            heading_class='govuk-heading-m',
+            extra_label_classes='govuk-!-font-weight-bold',
         ),
+        error_messages={
+            "required": "You must upload proof that you've completed the training."
+        },
     )
 
 

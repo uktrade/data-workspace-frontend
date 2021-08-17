@@ -15,17 +15,12 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
     ToolsAccessRequestFormPart3,
 )
 
-from dataworkspace.apps.request_access.models import (  # pylint: disable=import-error
-    AccessRequest,
-)
-from dataworkspace.zendesk import (
-    create_zendesk_ticket,
-    notify_visualisation_access_request,
-)  # pylint: disable=import-error
+from dataworkspace.apps.request_access import models
+from dataworkspace import zendesk
 
 
 class DatasetAccessRequest(CreateView):
-    model = AccessRequest
+    model = models.AccessRequest
     template_name = 'request_access/dataset.html'
     form_class = DatasetAccessRequestForm
 
@@ -64,7 +59,7 @@ class DatasetAccessRequest(CreateView):
             user_has_dataset_access = True
 
         if user_has_dataset_access and not user_has_tools_access:
-            access_request = AccessRequest.objects.create(
+            access_request = models.AccessRequest.objects.create(
                 requester=self.request.user,
                 catalogue_item_id=catalogue_item.id if catalogue_item else None,
             )
@@ -82,7 +77,7 @@ class DatasetAccessRequest(CreateView):
             self.kwargs['dataset_uuid'], self.request.user
         )
 
-        access_request = AccessRequest.objects.create(
+        access_request = models.AccessRequest.objects.create(
             requester=self.request.user,
             catalogue_item_id=catalogue_item.id,
             contact_email=form.cleaned_data['contact_email'],
@@ -103,7 +98,7 @@ class DatasetAccessRequest(CreateView):
 
 
 class ToolsAccessRequestPart1(UpdateView):
-    model = AccessRequest
+    model = models.AccessRequest
     template_name = 'request_access/tools_1.html'
     form_class = ToolsAccessRequestFormPart1
 
@@ -112,7 +107,7 @@ class ToolsAccessRequestPart1(UpdateView):
 
 
 class ToolsAccessRequestPart2(UpdateView):
-    model = AccessRequest
+    model = models.AccessRequest
     template_name = 'request_access/tools_2.html'
     form_class = ToolsAccessRequestFormPart2
 
@@ -125,7 +120,7 @@ class ToolsAccessRequestPart2(UpdateView):
 
 
 class ToolsAccessRequestPart3(UpdateView):
-    model = AccessRequest
+    model = models.AccessRequest
     template_name = 'request_access/tools_3.html'
     form_class = ToolsAccessRequestFormPart3
 
@@ -136,7 +131,7 @@ class ToolsAccessRequestPart3(UpdateView):
 
 
 class AccessRequestConfirmationPage(DetailView):
-    model = AccessRequest
+    model = models.AccessRequest
     template_name = 'request_access/confirmation-page.html'
 
     def get(self, request, *args, **kwargs):
@@ -151,11 +146,11 @@ class AccessRequestConfirmationPage(DetailView):
             )
 
             if isinstance(catalogue_item, VisualisationCatalogueItem):
-                access_request.zendesk_reference_number = notify_visualisation_access_request(
+                access_request.zendesk_reference_number = zendesk.notify_visualisation_access_request(
                     request, access_request, catalogue_item,
                 )
             else:
-                access_request.zendesk_reference_number = create_zendesk_ticket(
+                access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
                     request, access_request, catalogue_item,
                 )
             access_request.save()

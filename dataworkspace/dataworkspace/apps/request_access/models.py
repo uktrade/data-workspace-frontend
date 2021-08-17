@@ -4,7 +4,7 @@ from django.db import models
 from dataworkspace.apps.core.models import (  # pylint: disable=import-error
     TimeStampedModel,
 )
-from dataworkspace.apps.core.storage import S3FileStorage
+from dataworkspace.apps.core import storage
 
 
 class AccessRequest(TimeStampedModel):
@@ -22,7 +22,9 @@ class AccessRequest(TimeStampedModel):
     contact_email = models.CharField(max_length=256, null=True, blank=False)
     reason_for_access = models.TextField(null=True, blank=False)
     training_screenshot = models.FileField(
-        storage=S3FileStorage(location='training_screenshots'), null=True, blank=True,
+        storage=storage.S3FileStorage(location='training_screenshots'),
+        null=True,
+        blank=True,
     )
     spss_and_stata = models.BooleanField(default=False, blank=True)
     line_manager_email_address = models.CharField(max_length=256, null=True)
@@ -34,9 +36,18 @@ class AccessRequest(TimeStampedModel):
 
     @property
     def journey(self):
-        if not self.catalogue_item_id:
+        if not self.contact_email and self.training_screenshot:
             return self.JOURNEY_TOOLS_ACCESS
-        elif not self.training_screenshot:
+        elif self.contact_email and not self.training_screenshot:
             return self.JOURNEY_DATASET_ACCESS
-        else:
+        elif self.contact_email and self.training_screenshot:
             return self.JOURNEY_DATASET_AND_TOOLS_ACCESS
+        return None
+
+    @property
+    def human_readable_journey(self):
+        return {
+            self.JOURNEY_TOOLS_ACCESS: 'Tools access',
+            self.JOURNEY_DATASET_ACCESS: 'Dataset access',
+            self.JOURNEY_DATASET_AND_TOOLS_ACCESS: 'Both dataset and tools access',
+        }.get(self.journey, 'None')

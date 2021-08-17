@@ -17,17 +17,17 @@ urlpatterns = [
         name='dataset',
     ),
     path(
-        '<int:pk>/tools-1',
+        '<int:pk>/tools',
         login_required(ToolsAccessRequestPart1.as_view()),
         name='tools-1',
     ),
     path(
-        '<int:pk>/tools-2',
+        '<int:pk>/spss-stata',
         login_required(ToolsAccessRequestPart2.as_view()),
         name='tools-2',
     ),
     path(
-        '<int:pk>/tools-3',
+        '<int:pk>/spss-stata-reason',
         login_required(ToolsAccessRequestPart3.as_view()),
         name='tools-3',
     ),

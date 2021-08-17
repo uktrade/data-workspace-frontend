@@ -16,6 +16,7 @@ class GOVUKDesignSystemWidgetMixin:
         *,
         label_is_heading=True,
         heading='h1',
+        heading_class='govuk-label-wrapper',
         label_size='l',
         extra_label_classes='',
         small=False,
@@ -25,6 +26,7 @@ class GOVUKDesignSystemWidgetMixin:
         self.custom_context = dict(
             label_is_heading=label_is_heading,
             heading=heading,
+            heading_class=heading_class,
             label_size=label_size,
             extra_label_classes=extra_label_classes,
             small=small,

@@ -27,7 +27,7 @@
         {% if object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS %}
           You've requested access to <a href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}</a> and our <a href="/tools" >tools.</a>
         {% elif object.journey == object.JOURNEY_TOOLS_ACCESS %}
-          <p class="govuk-body">You've requested access to our <a href="/tools" >tools.</a>
+          <p class="govuk-body">You've requested access to our <a href="{% url 'applications:tools' %}" >tools.</a>
         {% elif object.journey == object.JOURNEY_DATASET_ACCESS %}
           <p class="govuk-body">You've requested access to <a href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}.</a>
         {% endif %}
@@ -48,16 +48,21 @@
         If you have any questions, contact <a href="mailto:data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com">data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com</a>
       </p>
       <p class="govuk-body">
-        <a href="/">Search our data</a> to find and request access to more data.
+        You can also:
       </p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>
+          <a href="/">search our data</a> to find and request access to more data.
+        </li>
+        <li>
+          join the <a href="https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fteam%2F19%3Ac1f08445f252403982e22a387b30b4ca%40thread.skype%2Fconversations%3FgroupId%3D748264d0-f2a0-4e13-afa0-22c152ea7cb9%26tenantId%3D8fa217ec-33aa-46fb-ad96-dfe68006bb86&amp;type=team&amp;deeplinkId=87aab110-11a4-4caf-860d-3610d220f5fa&amp;directDl=true&amp;msLaunch=true&amp;enableMobilePage=true&amp;suppressPrompt=true" class="govuk-link">Data Workspace Community</a> for help, support and advice.
+        </li>
+        <li>
+          find out our latest dataset and improvements on our <a href="https://data-services-help.trade.gov.uk/data-workspace/updates/roadmap/" class="govuk-link">roadmap</a>.
+        </li>
+      </ul>
       <p class="govuk-body">
-        Join the <a href="https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fteam%2F19%3Ac1f08445f252403982e22a387b30b4ca%40thread.skype%2Fconversations%3FgroupId%3D748264d0-f2a0-4e13-afa0-22c152ea7cb9%26tenantId%3D8fa217ec-33aa-46fb-ad96-dfe68006bb86&amp;type=team&amp;deeplinkId=87aab110-11a4-4caf-860d-3610d220f5fa&amp;directDl=true&amp;msLaunch=true&amp;enableMobilePage=true&amp;suppressPrompt=true" class="govuk-link">Data Workspace Community</a> for help, support and advice.
-      </p>
-      <p class="govuk-body">
-        Find out our latest dataset and improvements on our <a href="https://data-services-help.trade.gov.uk/data-workspace/updates/roadmap/" class="govuk-link">roadmap</a>.
-      </p>
-      <p class="govuk-body">
-        <a href="/feedback/" class="govuk-link">What did you think of this service?</a> (takes 30 seconds)
+        <a href="{% url 'feedback' %}" class="govuk-link">What did you think of this service?</a> (takes 30 seconds)
       </p>
     </div>
   </div>
