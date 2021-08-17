@@ -30,7 +30,7 @@
               <tr class="govuk-table__row">
                 {% for column in row %}
                   <td class="govuk-table__cell">
-                    {{ column }}
+                    <pre>{{ column|linebreaksbr }}</pre>
                   </td>
                 {% endfor %}
               </tr>
