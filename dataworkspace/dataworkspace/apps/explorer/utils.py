@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 
@@ -245,10 +246,21 @@ def fetch_query_results(query_log_id):
     )
     table_name = tempory_query_table_name(user, query_log.id)
     with user_explorer_connection(user_connection_settings) as conn:
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        cursor.execute("select oid from pg_type where typname='jsonb'")
+        jsonb_code = cursor.fetchone()[0]
+
         cursor.execute(f'SELECT * FROM {table_name}')
         # strip the prefix from the results
-        description = [(re.sub(r'col_\d*_', '', s[0]),) for s in cursor.description]
+        description = [(re.sub(r'col_\d*_', '', s.name),) for s in cursor.description]
         headers = [d[0].strip() for d in description] if description else ['--']
-        data = [list(r) for r in cursor]
-    return headers, data, query_log
+        data_list = [list(r) for r in cursor]
+        types = [
+            'jsonb' if t.type_code == jsonb_code else None for t in cursor.description
+        ]
+        data = [
+            json.dumps(row, indent=2) if types[i] == 'jsonb' else row
+            for i, row in enumerate(data_list[0])
+        ]
+    return headers, [data], query_log
