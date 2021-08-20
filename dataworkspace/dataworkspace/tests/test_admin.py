@@ -2168,6 +2168,24 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, 'File extension “txt” is not allowed.')
 
     def test_reference_data_upload(self):
+        self._test_reference_data_upload(
+            b'refid,name,link\r\n'  # Header
+            b'B1,Updated name,\r\n'  # Update existing record
+            b'B2,New record 1,A2\r\n'  # Update existing record
+            b'B3,New record 2,\r\n'  # Add record without link
+            b'B4,Another record,Z1\r\n'  # Invalid link
+        )
+
+    def test_reference_data_upload_with_bom(self):
+        self._test_reference_data_upload(
+            b'\xef\xbb\xbfrefid,name,link\r\n'  # Header
+            b'B1,Updated name,\r\n'  # Update existing record
+            b'B2,New record 1,A2\r\n'  # Update existing record
+            b'B3,New record 2,\r\n'  # Add record without link
+            b'B4,Another record,Z1\r\n'  # Invalid link
+        )
+
+    def _test_reference_data_upload(self, upload_content):
         ref_ds1 = factories.ReferenceDatasetFactory.create(
             name='ref_invalid_upload', table_name='ref_invalid_upload'
         )
@@ -2229,17 +2247,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             },
         )
         record_count = ref_ds1.get_records().count()
-
-        upload_content = [
-            b'refid,name,link',  # Header
-            b'B1,Updated name,',  # Update existing record
-            b'B2,New record 1,A2',  # Update existing record
-            b'B3,New record 2,',  # Add record without link
-            b'B4,Another record,Z1',  # Invalid link
-        ]
-        file1 = SimpleUploadedFile(
-            'file1.csv', b'\r\n'.join(upload_content), content_type='text/csv'
-        )
+        file1 = SimpleUploadedFile('file1.csv', upload_content, content_type='text/csv')
         response = self._authenticated_post(
             reverse('dw-admin:reference-dataset-record-upload', args=(ref_ds1.id,)),
             {'file': file1},

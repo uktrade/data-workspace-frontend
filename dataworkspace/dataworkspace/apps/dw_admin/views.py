@@ -215,7 +215,9 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        reader = csv.DictReader(chunk.decode() for chunk in form.cleaned_data['file'])
+        reader = csv.DictReader(
+            chunk.decode('utf-8-sig') for chunk in form.cleaned_data['file']
+        )
         reader.fieldnames = [x.lower() for x in reader.fieldnames]
         reference_dataset = self._get_reference_dataset()
         record_model_class = reference_dataset.get_record_model_class()
