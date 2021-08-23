@@ -436,7 +436,9 @@ class ReferenceDataRecordUploadForm(forms.Form):
         super().__init__(*args, **kwargs)
 
     def clean_file(self):
-        reader = csv.DictReader(chunk.decode() for chunk in self.cleaned_data['file'])
+        reader = csv.DictReader(
+            chunk.decode('utf-8-sig') for chunk in self.cleaned_data['file']
+        )
         csv_fields = [x.lower() for x in reader.fieldnames]
         for field in [
             field.name.lower()

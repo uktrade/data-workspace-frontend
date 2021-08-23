@@ -40,7 +40,7 @@ def get_s3_csv_column_types(path):
         Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
     )
 
-    head = file['Body'].read().decode('utf-8')
+    head = file['Body'].read().decode('utf-8-sig')
     csv_data = head.splitlines()
 
     if len(csv_data) <= 2:
