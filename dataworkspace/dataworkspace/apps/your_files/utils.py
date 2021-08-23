@@ -40,26 +40,23 @@ def get_s3_csv_column_types(path):
         Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
     )
 
-    head = file['Body'].read().decode('utf-8-sig')
-    csv_data = head.splitlines()
+    fh = StringIO(file['Body'].read().decode('utf-8-sig'))
+    rows = list(csv.reader(fh))
 
-    if len(csv_data) <= 2:
+    if len(rows) <= 2:
         raise ValueError("Unable to read enough lines of data from file", path)
 
     # Drop the last line, which might be incomplete
-    del csv_data[-1]
+    del rows[-1]
 
     # Pare down to a max of 10 lines so that inferring datatypes is quicker
-    del csv_data[10:]
+    del rows[10:]
 
-    fh = StringIO('\n'.join(csv_data))
-    reader = csv.reader(fh)
     schema = Schema()
-    schema.infer(list(reader), confidence=1, headers=1)
+    schema.infer(rows, confidence=1, headers=1)
 
     fields = []
     for idx, field in enumerate(schema.descriptor['fields']):
-        fh.seek(0)
         fields.append(
             {
                 'header_name': field['name'],
@@ -67,7 +64,7 @@ def get_s3_csv_column_types(path):
                 'data_type': SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
                     field['type'], PostgresDataTypes.TEXT
                 ),
-                'sample_data': [row[idx] for row in reader][1:6],
+                'sample_data': [row[idx] for row in rows][:6],
             }
         )
     return fields

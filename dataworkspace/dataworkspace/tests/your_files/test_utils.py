@@ -11,13 +11,19 @@ from dataworkspace.apps.your_files.utils import get_s3_csv_column_types
 @pytest.mark.parametrize(
     'csv_content',
     [
-        b'col1,col2\nrow1-col1,1\nrow2-col1,2\nrow3-col1,3\n',
-        b'\xef\xbb\xbfcol1,col2\nrow1-col1,1\nrow2-col1,2\nrow3-col1,3\n',
+        # Standard row
+        b'col1,col2\nrow1-col1,1\n"row2\ncol1",2\nrow3-col1,3\n',
+        # Contains BOM
+        b'\xef\xbb\xbfcol1,col2\nrow1-col1,1\n"row2\ncol1",2\nrow3-col1,3\n',
+        # Incomplete row
+        b'col1,col2\n"row1-col1",1\n"row2\ncol1",2\n"row3\ncol\n1"',
     ],
 )
 @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
 def test_s3_csv_column_types(mock_client, csv_content):
     mock_client().head_object.return_value = {'ContentType': 'text/csv'}
+    # with open('/dataworkspace/market_access_trade_barriers.csv', 'rb') as fh:
+    #     csv_content = fh.read()
     mock_client().get_object.return_value = {
         'ContentType': 'text/plain',
         'ContentLength': len(csv_content),
@@ -29,7 +35,7 @@ def test_s3_csv_column_types(mock_client, csv_content):
             'header_name': 'col1',
             'column_name': 'col1',
             'data_type': PostgresDataTypes.TEXT,
-            'sample_data': ['row1-col1', 'row2-col1'],
+            'sample_data': ['row1-col1', 'row2\ncol1'],
         },
         {
             'header_name': 'col2',
