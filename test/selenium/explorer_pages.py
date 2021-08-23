@@ -58,7 +58,7 @@ class HomePage(_BaseExplorerPage):
                 [
                     cell.text.strip()
                     for cell in row.xpath(
-                        ".//td[contains(@class, 'govuk-table__cell')]"
+                        ".//td[contains(@class, 'govuk-table__cell')]//pre"
                     )
                 ]
             )
