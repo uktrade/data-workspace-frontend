@@ -260,7 +260,10 @@ def fetch_query_results(query_log_id):
             'jsonb' if t.type_code == jsonb_code else None for t in cursor.description
         ]
         data = [
-            json.dumps(row, indent=2) if types[i] == 'jsonb' else row
-            for i, row in enumerate(data_list[0])
+            [
+                json.dumps(row, indent=2) if types[i] == 'jsonb' else row
+                for i, row in enumerate(record)
+            ]
+            for record in data_list
         ]
-    return headers, [data], query_log
+    return headers, data, query_log
