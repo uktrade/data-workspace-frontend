@@ -145,7 +145,10 @@ class AccessRequestConfirmationPage(DetailView):
                 else None
             )
 
-            if isinstance(catalogue_item, VisualisationCatalogueItem):
+            if (
+                isinstance(catalogue_item, VisualisationCatalogueItem)
+                and catalogue_item.visualisation_template is not None
+            ):
                 access_request.zendesk_reference_number = zendesk.notify_visualisation_access_request(
                     request, access_request, catalogue_item,
                 )
