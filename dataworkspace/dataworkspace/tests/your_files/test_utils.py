@@ -22,8 +22,6 @@ from dataworkspace.apps.your_files.utils import get_s3_csv_column_types
 @mock.patch('dataworkspace.apps.your_files.utils.boto3.client')
 def test_s3_csv_column_types(mock_client, csv_content):
     mock_client().head_object.return_value = {'ContentType': 'text/csv'}
-    # with open('/dataworkspace/market_access_trade_barriers.csv', 'rb') as fh:
-    #     csv_content = fh.read()
     mock_client().get_object.return_value = {
         'ContentType': 'text/plain',
         'ContentLength': len(csv_content),
