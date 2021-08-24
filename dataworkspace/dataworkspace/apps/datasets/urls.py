@@ -56,16 +56,6 @@ urlpatterns = [
         name='eligibility_criteria_not_met',
     ),
     path(
-        '<uuid:dataset_uuid>/request-access',
-        login_required(views.request_access_view),
-        name='request_access',
-    ),
-    path(
-        '<uuid:dataset_uuid>/request-access-success',
-        login_required(views.request_access_success_view),
-        name='request_access_success',
-    ),
-    path(
         '<uuid:dataset_uuid>/related-data',
         login_required(views.RelatedDataView.as_view()),
         name='related_data',

@@ -58,7 +58,7 @@
             </div>
 
             {% if not has_access %}
-                {% include 'partials/unauthorised_warning.html' with thing='this data visualisation' %}
+                {% include 'partials/request_access.html' with type='visualisation' has_data_access=has_access %}
             {% endif %}
         </div>
     </div>

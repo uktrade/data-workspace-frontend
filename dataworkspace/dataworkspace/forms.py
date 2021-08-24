@@ -2,7 +2,12 @@ import copy
 
 from django import forms
 from django.core.validators import EmailValidator
-from django.forms import CheckboxInput, CharField, EmailField, ModelChoiceField
+from django.forms import (
+    CheckboxInput,
+    CharField,
+    EmailField,
+    ModelChoiceField,
+)
 
 
 class GOVUKDesignSystemWidgetMixin:
@@ -11,6 +16,7 @@ class GOVUKDesignSystemWidgetMixin:
         *,
         label_is_heading=True,
         heading='h1',
+        heading_class='govuk-label-wrapper',
         label_size='l',
         extra_label_classes='',
         small=False,
@@ -20,6 +26,7 @@ class GOVUKDesignSystemWidgetMixin:
         self.custom_context = dict(
             label_is_heading=label_is_heading,
             heading=heading,
+            heading_class=heading_class,
             label_size=label_size,
             extra_label_classes=extra_label_classes,
             small=small,
@@ -92,6 +99,12 @@ class GOVUKDesignSystemCheckboxesWidget(
     option_template_name = "design_system/checkbox_option.html"
 
 
+class GOVUKDesignSystemFileInputWidget(
+    GOVUKDesignSystemWidgetMixin, forms.widgets.FileInput
+):
+    template_name = 'design_system/file.html'
+
+
 class GOVUKDesignSystemMultipleChoiceField(
     GOVUKDesignSystemFieldMixin, forms.MultipleChoiceField
 ):
@@ -141,6 +154,10 @@ class GOVUKDesignSystemEmailValidationModelChoiceField(
         if value:
             EmailValidator(message=self.error_messages['invalid_email'])(value.lower())
         return super().clean(value.lower() if value else value)
+
+
+class GOVUKDesignSystemFileField(GOVUKDesignSystemFieldMixin, forms.FileField):
+    widget = GOVUKDesignSystemFileInputWidget
 
 
 class GOVUKDesignSystemModelForm(forms.ModelForm):
