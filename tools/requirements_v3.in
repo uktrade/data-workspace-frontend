@@ -5,7 +5,7 @@ ipympl==0.5.6
 ipython-sql==0.3.9
 ipython==6.5.0
 ipywidgets==7.5.1
-jupyterlab==3.0.6
+jupyterlab
 jupyterlab-widgets==1.0.0
 matplotlib==3.2.1
 nltk==3.4.5

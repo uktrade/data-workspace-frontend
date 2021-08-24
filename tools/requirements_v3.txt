@@ -153,7 +153,7 @@ jupyterlab-server==2.3.0
     # via jupyterlab
 jupyterlab-widgets==1.0.0
     # via -r tools/requirements_v3.in
-jupyterlab==3.0.6
+jupyterlab==3.1.7
     # via -r tools/requirements_v3.in
 keras-nightly==2.5.0.dev2021032900
     # via tensorflow
