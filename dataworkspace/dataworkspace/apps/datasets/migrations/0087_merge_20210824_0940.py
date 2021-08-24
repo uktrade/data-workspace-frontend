@@ -10,5 +10,4 @@ class Migration(migrations.Migration):
         ('datasets', '0086_auto_20210809_1627'),
     ]
 
-    operations = [
-    ]
+    operations = []
