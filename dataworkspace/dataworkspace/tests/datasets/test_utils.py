@@ -243,3 +243,93 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         assert visualisation_link.data_source_last_updated == datetime.datetime(
             2021, 1, 3
         ).replace(tzinfo=pytz.UTC)
+
+
+class TestUpdateQuickSightVisualisationsRelatedDatasets:
+    @pytest.fixture(autouse=True)
+    def setUp(self):
+        mock_sts_client = MagicMock()
+        self.mock_quicksight_client = MagicMock()
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {'Version': {'DataSetArns': ['testArn']}}
+        }
+        boto3_patcher = patch('dataworkspace.apps.datasets.utils.boto3.client')
+        mock_boto3_client = boto3_patcher.start()
+        mock_boto3_client.side_effect = [
+            mock_sts_client,
+            self.mock_quicksight_client,
+            self.mock_quicksight_client,
+            self.mock_quicksight_client,
+        ]
+        yield
+        boto3_patcher.stop()
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
+    def test_direct_query_visualisation_with_relational_table(
+        self, mock_get_tables_last_updated_date
+    ):
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '1',
+                'LastUpdatedTime': datetime.datetime(2021, 1, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'RelationalTable': {'Schema': 'public', 'Name': 'bar'}
+                    }
+                },
+            }
+        }
+        mock_get_tables_last_updated_date.return_value = datetime.date(2021, 1, 2)
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        SourceTableFactory.create(dataset=ds, schema="public", table="bar")
+
+        visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
+        update_quicksight_visualisations_last_updated_date()
+
+        visualisation_link.refresh_from_db()
+
+        assert list(
+            visualisation_link.visualisation_catalogue_item.datasets.all().values_list(
+                'id', flat=True
+            )
+        ) == [ds.id]
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
+    def test_direct_query_visualisation_with_custom_sql(self, mock_extract_tables):
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {
+                'Version': {'DataSetArns': ['testArn']},
+                'LastPublishedTime': datetime.datetime(2021, 1, 1),
+                'LastUpdatedTime': datetime.datetime(2021, 2, 1),
+            }
+        }
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '1',
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.foo'}
+                    }
+                },
+            }
+        }
+        mock_extract_tables.return_value = [('public', 'foo')]
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        SourceTableFactory.create(dataset=ds, schema="public", table="foo")
+
+        visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
+        update_quicksight_visualisations_last_updated_date()
+
+        visualisation_link.refresh_from_db()
+
+        assert list(
+            visualisation_link.visualisation_catalogue_item.datasets.all().values_list(
+                'id', flat=True
+            )
+        ) == [ds.id]

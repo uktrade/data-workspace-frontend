@@ -1,14 +1,18 @@
 import logging
+import operator
+from functools import reduce
 from uuid import UUID
 
 import boto3
 import botocore
 from django.conf import settings
 from django.http import Http404
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from psycopg2.sql import Identifier, SQL
 
 from dataworkspace.apps.datasets.models import (
+    CustomDatasetQueryTable,
     DataSet,
     ReferenceDataset,
     VisualisationCatalogueItem,
@@ -16,7 +20,10 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.cel import celery_app
-from dataworkspace.datasets_db import get_tables_last_updated_date
+from dataworkspace.datasets_db import (
+    extract_queried_tables_from_sql_query,
+    get_tables_last_updated_date,
+)
 from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
 
 logger = logging.getLogger('app')
@@ -198,6 +205,8 @@ def update_quicksight_visualisations_last_updated_date():
                 dashboard_id,
             )
             last_updated_dates = []
+            tables = []
+            database_name, _ = list(settings.DATABASES_DATA.items())[0]
 
             for data_set_arn in data_set_arns:
                 try:
@@ -229,11 +238,23 @@ def update_quicksight_visualisations_last_updated_date():
                                     )
                                     or data_set_last_updated_time
                                 )
+                                tables.append(
+                                    (
+                                        table_map['RelationalTable']['Schema'],
+                                        table_map['RelationalTable']['Name'],
+                                    )
+                                )
                             elif data_set_type == 'CustomSql':
                                 last_updated_date_candidate = max(
                                     dashboard['LastPublishedTime'],
                                     dashboard['LastUpdatedTime'],
                                     data_set['LastUpdatedTime'],
+                                )
+                                tables.extend(
+                                    extract_queried_tables_from_sql_query(
+                                        database_name,
+                                        table_map['CustomSql']['SqlQuery'],
+                                    )
                                 )
                             elif data_set_type == 'S3Source':
                                 last_updated_date_candidate = data_set_last_updated_time
@@ -248,9 +269,42 @@ def update_quicksight_visualisations_last_updated_date():
             visualisation_link.data_source_last_updated = max(last_updated_dates)
             visualisation_link.save()
 
+            set_dataset_related_visualisation_catalogue_items(
+                visualisation_link, tables
+            )
+
     logger.info(
         'Finished fetching last updated dates for QuickSight visualisation links'
     )
+
+
+def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables):
+    datasets = list(
+        DataSet.objects.filter(
+            reduce(
+                operator.or_,
+                (
+                    [
+                        Q(sourcetable__schema=t[0], sourcetable__table=t[1])
+                        for t in tables
+                    ]
+                ),
+            )
+        )
+        .distinct()
+        .values_list('id', flat=True)
+    )
+
+    datacuts = list(
+        CustomDatasetQueryTable.objects.filter(
+            reduce(operator.or_, ([Q(schema=t[0], table=t[1]) for t in tables]),)
+        )
+        .distinct()
+        .values_list('query__dataset__id', flat=True)
+    )
+
+    for id in datasets + datacuts:
+        visualisation_link.visualisation_catalogue_item.datasets.add(id)
 
 
 def build_filtered_dataset_query(inner_query, column_config, params):

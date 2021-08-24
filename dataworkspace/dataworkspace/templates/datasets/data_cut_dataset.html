@@ -225,6 +225,23 @@
         </div>
     {% endif %}
 
+    {% if model.related_visualisations.all %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">Related data</h2>
+            <div class="govuk-grid-row">
+                {% for master in model.related_visualisations.all|slice:":4" %}
+                    {% include "partials/related_data.html" with dataset=master %}
+                    {% if forloop.counter|divisibleby:2 %}
+                        </div>
+                        <div class="govuk-grid-row">
+                    {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <h2 class="govuk-heading-l govuk-!-margin-top-8">Usage history</h2>
