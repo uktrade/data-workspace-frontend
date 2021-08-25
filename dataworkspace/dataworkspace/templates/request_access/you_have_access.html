@@ -1,0 +1,26 @@
+{% extends '_main.html' %}
+
+{% block page_title %}Request access to tools - you have access to our tools{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">Request access
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-xl">You have access to our tools</h1>
+            <p class="govuk-body">
+                You can use our <a href="{% url 'applications:tools' %}">tools</a> to <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/">analyse data</a> 
+            </p>
+        </div>
+    </div>
+{% endblock %}

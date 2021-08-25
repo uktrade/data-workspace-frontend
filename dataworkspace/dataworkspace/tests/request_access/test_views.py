@@ -373,3 +373,20 @@ class TestDatasetAndToolsAccess:
         assert resp.url == reverse(
             'request_access:tools-1', kwargs={"pk": access_requests[0].pk}
         )
+
+
+class TestNoAccessRequired:
+    def test_user_sees_appropriate_message_on_request_access_page(
+        self, client, user, metadata_db
+    ):
+        DatasetsCommon()._create_master(user_access_type='REQUIRES_AUTHENTICATION')
+        permission = Permission.objects.get(
+            codename="start_all_applications",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user.user_permissions.add(permission)
+
+        resp = client.get(reverse('request_access:index'))
+
+        assert resp.status_code == 200
+        assert "You have access to our tools" in resp.content.decode(resp.charset)
