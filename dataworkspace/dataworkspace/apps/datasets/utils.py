@@ -269,9 +269,10 @@ def update_quicksight_visualisations_last_updated_date():
             visualisation_link.data_source_last_updated = max(last_updated_dates)
             visualisation_link.save()
 
-            set_dataset_related_visualisation_catalogue_items(
-                visualisation_link, tables
-            )
+            if tables:
+                set_dataset_related_visualisation_catalogue_items(
+                    visualisation_link, tables
+                )
 
     logger.info(
         'Finished fetching last updated dates for QuickSight visualisation links'
@@ -303,8 +304,8 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
         .values_list('query__dataset__id', flat=True)
     )
 
-    for id in datasets + datacuts:
-        visualisation_link.visualisation_catalogue_item.datasets.add(id)
+    for object_id in datasets + datacuts:
+        visualisation_link.visualisation_catalogue_item.datasets.add(object_id)
 
 
 def build_filtered_dataset_query(inner_query, column_config, params):
