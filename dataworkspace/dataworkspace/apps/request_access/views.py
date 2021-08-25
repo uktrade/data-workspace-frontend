@@ -66,6 +66,8 @@ class DatasetAccessRequest(CreateView):
             return HttpResponseRedirect(
                 reverse('request-access:tools-1', kwargs={"pk": access_request.pk})
             )
+        elif user_has_dataset_access and user_has_tools_access:
+            return HttpResponseRedirect(reverse('root'))
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
