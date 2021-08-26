@@ -12,6 +12,10 @@ aiocontextvars==0.2.2
     # via -r tools/requirements_v3.in
 anyio==2.2.0
     # via jupyter-server
+appnope==0.1.2
+    # via
+    #   ipykernel
+    #   ipython
 argon2-cffi==20.1.0
     # via notebook
 astroid==2.4.2
@@ -34,6 +38,8 @@ blis==0.2.4
     #   thinc
 bokeh==2.3.0
     # via -r tools/requirements_v3.in
+cached-property==1.5.2
+    # via h5py
 cachetools==4.2.2
     # via google-auth
 certifi==2020.11.8
@@ -81,6 +87,10 @@ idna==2.10
     # via
     #   anyio
     #   requests
+importlib-metadata==4.7.0
+    # via
+    #   jsonschema
+    #   markdown
 ipykernel==5.3.4
     # via
     #   ipympl
@@ -216,6 +226,7 @@ numpy==1.19.5
     #   opt-einsum
     #   pandas
     #   scikit-learn
+    #   scipy
     #   seaborn
     #   spacy
     #   tensorboard
@@ -383,7 +394,7 @@ tensorboard==2.5.0
     # via tensorflow
 tensorflow-estimator==2.5.0
     # via tensorflow
-tensorflow==2.5.0
+tensorflow==2.5.1
     # via -r tools/requirements_v3.in
 termcolor==1.1.0
     # via tensorflow
@@ -421,9 +432,13 @@ traitlets==5.0.5
     #   nbconvert
     #   nbformat
     #   notebook
+typed-ast==1.4.3
+    # via astroid
 typing-extensions==3.7.4.3
     # via
+    #   anyio
     #   bokeh
+    #   importlib-metadata
     #   tensorflow
 urllib3==1.26.5
     # via
@@ -452,6 +467,8 @@ wrapt==1.12.1
     # via
     #   astroid
     #   tensorflow
+zipp==3.5.0
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
