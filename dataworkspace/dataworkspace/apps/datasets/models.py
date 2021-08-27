@@ -2085,6 +2085,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         default='REQUIRES_AUTHENTICATION',
     )
     events = GenericRelation(EventLog)
+    datasets = models.ManyToManyField(
+        DataSet, related_name='related_visualisations', blank=True
+    )
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
