@@ -320,7 +320,7 @@
 
     <div class="govuk-grid-row">
       {% if has_access %}
-        {% for visualisation in model.visualisations.all|slice:"3" %}
+        {% for visualisation in model.visualisations.live|slice:"3" %}
 
           <div class="govuk-grid-column-one-third">
             {% if has_access %}

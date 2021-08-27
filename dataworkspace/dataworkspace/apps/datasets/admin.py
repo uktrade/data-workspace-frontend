@@ -151,6 +151,9 @@ class DataSetVisualisationInline(DeletableTimeStampedUserTabularInline):
         'datasets.manage_unpublished_master_datasets'
     )
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).live()
+
 
 class SourceViewInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceView
@@ -398,11 +401,17 @@ class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
             super().save_formset(request, form, formset, change)
         else:
             instances = formset.save(commit=False)
+            # Save any changes
             for instance in instances:
                 if not instance.pk:
                     instance.created_by = request.user
                 instance.updated_by = request.user
                 instance.save()
+            # Soft delete any deletions
+            for instance in formset.deleted_objects:
+                instance.deleted = True
+                instance.save()
+
             formset.save_m2m()
 
 
