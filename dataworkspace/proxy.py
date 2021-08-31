@@ -81,6 +81,7 @@ async def async_main():
         'x-scheme',
         'x-forwarded-proto',
         'referer',
+        'user-agent',
     )
 
     # Cookies on the embed path must be allowed to be SameSite=None, so they
