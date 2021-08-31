@@ -152,7 +152,7 @@ class DataSetVisualisationInline(DeletableTimeStampedUserTabularInline):
     )
 
     def get_queryset(self, request):
-        return super().get_queryset(request).live()
+        return super().get_queryset(request).filter(deleted=False)
 
 
 class SourceViewInline(admin.TabularInline, SourceReferenceInlineMixin):
