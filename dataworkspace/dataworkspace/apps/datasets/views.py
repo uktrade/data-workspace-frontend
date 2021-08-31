@@ -1473,7 +1473,7 @@ class DatasetVisualisationView(View):
         if not dataset.user_has_access(request.user):
             return HttpResponseForbidden()
 
-        visualisation = dataset.visualisations.get(id=object_id)
+        visualisation = dataset.visualisations.live().get(id=object_id)
 
         return render(
             request,
