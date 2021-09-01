@@ -1300,17 +1300,6 @@ class DataCutSourceDetailView(DetailView):
             else {},
         )
 
-    def get_context_data(self, **kwargs):
-        source = self.get_object()
-        ctx = super().get_context_data(**kwargs)
-        ctx['can_download'] = (
-            source.data_grid_download_enabled
-            and source.can_show_link_for_user(self.request.user)
-            and self.kwargs.get('download_enabled', False)
-        )
-        ctx['download_limit'] = source.data_grid_download_limit
-        return ctx
-
 
 class DataGridDataView(DetailView):
     def _user_can_access(self):
@@ -1381,9 +1370,6 @@ class DataGridDataView(DetailView):
         )
 
         if request.GET.get('download'):
-            if not self.kwargs['download_enabled']:
-                return HttpResponseForbidden()
-
             correlation_id = {'correlation_id': str(uuid.uuid4())}
 
             log_event(

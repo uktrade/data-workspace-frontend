@@ -92,25 +92,25 @@ urlpatterns = [
     path(
         '<uuid:dataset_uuid>/table/<uuid:object_id>/grid',
         login_required(views.DataCutSourceDetailView.as_view()),
-        {'model_class': models.SourceTable, 'download_enabled': False},
+        {'model_class': models.SourceTable},
         name='source_table_detail',
     ),
     path(
         '<uuid:dataset_uuid>/table/<int:object_id>/grid',
         login_required(views.DataCutSourceDetailView.as_view()),
-        {'model_class': models.CustomDatasetQuery, 'download_enabled': True},
+        {'model_class': models.CustomDatasetQuery},
         name='custom_dataset_query_detail',
     ),
     path(
         '<uuid:dataset_uuid>/table/<uuid:object_id>/data',
         login_required(views.DataGridDataView.as_view()),
-        {'model_class': models.SourceTable, 'download_enabled': False},
+        {'model_class': models.SourceTable},
         name='source_table_data',
     ),
     path(
         '<uuid:dataset_uuid>/table/<int:object_id>/data',
         login_required(views.DataGridDataView.as_view()),
-        {'model_class': models.CustomDatasetQuery, 'download_enabled': True},
+        {'model_class': models.CustomDatasetQuery},
         name='custom_dataset_query_data',
     ),
     path(
