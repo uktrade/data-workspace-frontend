@@ -1,7 +1,7 @@
 {% extends 'running_base.html' %}
 {% load static %}
 {% block extra_head %}
-  <script nonce="{{ request.csp_nonce }}" src="{% static 'quicksight-embedding-js-sdk-1.0.15.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'quicksight-embedding-js-sdk-1.0.17.min.js' %}"></script>
 {% endblock extra_head %}
 {% block javascript %}
   <script nonce="{{ request.csp_nonce }}">
