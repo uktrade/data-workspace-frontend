@@ -5,7 +5,12 @@
 
 {% block initialGTMDataLayer %}
   {{ block.super }}
-  <script nonce="{{ request.csp_nonce }}">dataLayer.push({"event": "catalogueView", "catalogueId": "{{ model.id }}", "catalogueName": "{{ model.name }}", "catalogueType": "reference"})</script>
+  <script nonce="{{ request.csp_nonce }}">dataLayer.push({
+    "event": "catalogueView",
+    "catalogueId": "{{ model.uuid }}",
+    "catalogueName": "{{ model.name }}",
+    "catalogueType": "reference"
+  })</script>
 {% endblock %}
 {% block footer_scripts %}
   {% flag DATA_GRID_REFERENCE_DATASET_FLAG %}
@@ -25,231 +30,182 @@
       );
     </script>
   {% endflag %}
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+
+  <script src="{% static 'app-copy.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
+    nodeListForEach($codeBlocks, function ($codeBlock) {
+      new Copy($codeBlock).init()
+    });
+  </script>
 {% endblock footer_scripts %}
 {% block breadcrumbs %}
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-three-quarters">
-    <div class="govuk-breadcrumbs">
-      <ol class="govuk-breadcrumbs__list">
-        <li class="govuk-breadcrumbs__list-item">
-          <a class="govuk-breadcrumbs__link" href="/">Home</a>
-        </li>
-        <li class="govuk-breadcrumbs__list-item">
-          {{ model.name }}
-        </li>
-        {% if perms.datasets_referencedataset.change %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
           <li class="govuk-breadcrumbs__list-item">
-            <a href="{% url 'admin:datasets_referencedataset_change' model.id %}" class="govuk-breadcrumbs__link">
-              [Edit]
-            </a>
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
           </li>
-        {% endif %}
-      </ol>
+          <li class="govuk-breadcrumbs__list-item">
+            {{ model.name }}
+          </li>
+          {% if perms.datasets_referencedataset.change %}
+            <li class="govuk-breadcrumbs__list-item">
+              <a href="{% url 'admin:datasets_referencedataset_change' model.uuid %}" class="govuk-breadcrumbs__link">
+                [Edit]
+              </a>
+            </li>
+          {% endif %}
+        </ol>
+      </div>
+    </div>
+    <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
+      {% if is_bookmarked %}
+        {% include 'partials/bookmark-yes.html' %}
+        <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.uuid %}">
+          Bookmark
+        </a>
+      {% else %}
+        {% include 'partials/bookmark-no.html' %}
+        <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.uuid %}">
+          Bookmark
+        </a>
+      {% endif %}
     </div>
   </div>
-  <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
-  {% if is_bookmarked %}
-    {% include 'partials/bookmark-yes.html' %}
-    <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.uuid %}">
-        Bookmark
-    </a>
-  {% else %}
-    {% include 'partials/bookmark-no.html' %}
-    <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.uuid %}">
-      Bookmark
-    </a>
-  {% endif %}
-  </div>
-</div>
 {% endblock %}
 
 {% block content %}
-  {% with model.fields.all as fields %}
-    {% if not model.published %}
-      {% include 'partials/unpublished_banner.html' with type='dataset' %}
-    {% endif %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-        <div class="govuk-body">
-          {{ model.description|safe }}
+  {% if not model.published %}
+    {% include 'partials/unpublished_banner.html' with type='dataset' %}
+  {% endif %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-xl">Reference dataset</span>
+      <h1 class="govuk-heading-xl">{{ model.name }}</h1>
+    </div>
+  </div>
+
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Date added</dt>
+          <dd class="govuk-summary-list__value">{{ model.published_at|format_date_uk }}</dd>
         </div>
-      </div>
-    </div>
 
-    <div class="govuk-grid-row" style="overflow-x: auto;">
-      <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-l govuk-!-margin-top-8">Data links</h2>
-        <table class="govuk-table">
-          <thead>
-            <tr class="govuk-table__row">
-              <th class="govuk-table__header">Link to the data</th>
-              <th class="govuk-table__header">Format</th>
-              <th class="govuk-table__header">Version</th>
-              <th class="govuk-table__header">Last updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="govuk-table__row">
-              <td class="govuk-table__cell">
-                <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' model.uuid 'json'%}">
-                  {{ model.slug }}-{{ model.published_version }}.json
-                </a>
-              </td>
-              <td class="govuk-table__cell">JSON</td>
-              <td class="govuk-table__cell">{{ model.published_version }}</td>
-              <td class="govuk-table__cell">{{ model.data_last_updated|date_with_gmt_offset }}</td>
-            </tr>
-            <tr class="govuk-table__row">
-              <td class="govuk-table__cell">
-                <a class="govuk-link" href="{% url 'datasets:reference_dataset_download' model.uuid 'csv' %}">
-                  {{ model.slug }}-{{ model.published_version }}.csv
-                </a>
-              </td>
-              <td class="govuk-table__cell">
-                CSV
-              </td>
-              <td class="govuk-table__cell">{{ model.published_version }}</td>
-              <td class="govuk-table__cell">{{ model.data_last_updated|date_with_gmt_offset }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-l govuk-!-margin-top-8">
-          Field definitions
-        </h2>
-        <dl class="govuk-summary-list">
-          {% for field in fields %}
-              <div class="govuk-summary-list__row">
-                <dt class="govuk-summary-list__key">{{ field.name }}</dt>
-                <dd class="govuk-summary-list__value">{{ field.description }}</dd>
-              </div>
-          {% empty %}
-            <div class="govuk-summary-list__row">
-              <p>No fields have been defined for this reference dataset yet.</p>
-            </div>
-          {% endfor %}
-        </dl>
-      </div>
-    </div>
-
-    {% flag DATA_GRID_REFERENCE_DATASET_FLAG %}
-      <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-          <h2 class="govuk-heading-l govuk-!-margin-top-8">
-            Reference data
-          </h2>
-          <p class="govuk-body">
-            Filter and sort your data before downloading.
-            Drag a column off the table to remove it.
-          </p>
-          <div id="data-grid" class="ag-theme-alpine"></div>
-          <div class="govuk-!-margin-top-4">
-            <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
-              Download this data
-            </button>
-            &nbsp;
-            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
-              Reset filters
-            </button>
-            &nbsp;
-            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
-              Reset columns
-            </button>
-
-          </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Source</dt>
+          <dd class="govuk-summary-list__value">N/A</dd>
         </div>
+
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Restrictions on usage</dt>
+          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage }}</dd>
+        </div>
+
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Summary</dt>
+          <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
+        </div>
+
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Licence</dt>
+          <dd class="govuk-summary-list__value">{{ model.licence }}</dd>
+        </div>
+
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Contact</dt>
+          <dd class="govuk-summary-list__value">Contact
+            <a class="govuk-link"
+               href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
+            to ask questions about how to use this data and the visuals.
+          </dd>
+        </div>
+      </dl>
+
+      <div class="govuk-body dataset-description-richtext">
+        {{ model.description | safe }}
       </div>
-    {% else %}
-      <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-          <h2 class="govuk-heading-l govuk-!-margin-top-8">
-            Data preview
-          </h2>
-          <p class="govuk-body">
-            Showing {% if preview_limit < record_count %}first {% endif %}<strong>{{ preview_limit }}</strong> record{{ preview_limit|pluralize }} {% if preview_limit < record_count %} of <strong>{{ record_count }}</strong>{% endif %}
-          </p>
-          <div class="scrollable-table" tabindex="0">
-            <table class="govuk-table govuk-!-font-size-16">
-              <thead>
-                <tr class="govuk-table__row">
-                  {% for field in fields %}
-                    <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
-                      {{ field.name }}
-                    </th>
-                  {% endfor %}
-                  {% if perms.datasets_referencedataset.change %}
-                    <th class="govuk-table__header">Admin</th>
-                  {% endif %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for record in records %}
-                  <tr class="govuk-table__row">
-                    {% for field in fields %}
-                      {% if field.data_type == field.DATA_TYPE_FOREIGN_KEY %}
-                        {% with record|get_attr:field.relationship_name as relationship %}
-                          {% with relationship|get_attr:field.linked_reference_dataset_field.column_name as value %}
-                            <td class="govuk-table__cell">
-                              {{ value|not_set_if_none }}
-                            </td>
-                          {% endwith %}
-                        {% endwith %}
-                      {% else %}
-                        {% with record|get_attr:field.column_name as value %}
-                          <td class="govuk-table__cell">
-                            {{ value|not_set_if_none }}
-                          </td>
-                        {% endwith %}
-                      {% endif %}
-                    {% endfor %}
-                    {% if perms.datasets_referencedataset.change %}
-                      <td class="govuk-table__cell">
-                        <a href="{% url 'dw-admin:reference-dataset-record-edit' model.id record.id %}">
-                          Edit
-                        </a>
-                      </td>
-                    {% endif %}
-                  </tr>
-                {% empty %}
-                  <tr class="govuk-table__row">
-                    <td colspan="{{ model.field_names|length }}">
-                      This reference dataset doesn't have any data yet.
-                    </td>
-                  </tr>
+    </div>
+
+    <div class="govuk-grid-column-one-third">
+    </div>
+  </div>
+
+  <div class="govuk-grid-row" style="overflow-x: auto;">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-l">Data</h2>
+      <table class="govuk-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Name</th>
+          <th class="govuk-table__header">Format</th>
+          <th class="govuk-table__header">Version</th>
+          <th class="govuk-table__header">Last updated</th>
+          <th class="govuk-table__header">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell app-table_cell--no-border">
+              {{ model.slug }}-{{ model.published_version }}
+            </td>
+            <td class="govuk-table__cell app-table_cell--no-border">CSV, JSON</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ model.published_version }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">{{ model.data_last_updated|date_with_gmt_offset }}</td>
+            <td class="govuk-table__cell app-table_cell--no-border">
+              <a class="govuk-link"
+                  href="{% url "datasets:reference_dataset_grid" dataset_uuid=model.uuid %}">
+                View
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      {% if code_snippets or columns %}
+        {% if columns %}
+          <details class="govuk-details govuk"
+                    data-module="govuk-details">
+            <summary class="govuk-details__summary">
+              <span class="govuk-details__summary-text">
+                View data structure <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
+              </span>
+            </summary>
+            <div class="govuk-details__text">
+              <ul class="govuk-list govuk-list--bullet">
+                {% for column, data_type in columns|slice:":12" %}
+                  <li>
+                    <strong>{{ column }}</strong> ({{ data_type }})
+                  </li>
                 {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    {% endflag %}
-
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-        <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
-        <dl class="govuk-summary-list">
-          <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">Date added</dt>
-            <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
-          </div>
-          <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">Licence</dt>
-            <dd class="govuk-summary-list__value">{{ model.licence }}</dd>
-          </div>
-          <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">Restrictions on usage</dt>
-            <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
-          </div>
-        </dl>
-        {% if model.enquiries_contact %}
-          {% include 'partials/contact.html' with model=model.enquiries_contact as_section=True only %}
+                {% if columns|length > 12 %}
+                  <a class="govuk-link"
+                      href="{% url 'datasets:reference_dataset_column_details' dataset_uuid=model.uuid %}">
+                    View all columns <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
+                  </a>
+                {% endif %}
+              </ul>
+            </div>
+          </details>
         {% endif %}
-      </div>
+
+        <details class="govuk-details govuk" data-module="govuk-details">
+          <summary class="govuk-details__summary">
+            <span class="govuk-details__summary-text">
+              Use this data <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
+            </span>
+          </summary>
+          <div class="govuk-details__text">
+            {% include 'partials/code_snippets.html' with code_snippets=code_snippets %}
+          </div>
+        </details>
+      {% endif %}
     </div>
-  {% endwith %}
+  </div>
+
 {% endblock %}

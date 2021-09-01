@@ -94,6 +94,7 @@ from dataworkspace.apps.datasets.utils import (
     find_dataset_or_visualisation_for_bookmark,
     get_code_snippets_for_table,
     get_code_snippets_for_query,
+    get_code_snippets_for_refereance_table,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -691,6 +692,15 @@ class DatasetDetailView(DetailView):
         total_record_count = records.count()
         preview_limit = self.get_preview_limit(total_record_count)
         records = records[:preview_limit]
+        code_snippets = get_code_snippets_for_refereance_table(self.object.table_name)
+        columns = None
+        if self.object.external_database:
+            columns = datasets_db.get_columns(
+                self.object.external_database.memorable_name,
+                schema='public',
+                table=self.object.table_name,
+                include_types=True,
+            )
 
         ctx.update(
             {
@@ -699,6 +709,8 @@ class DatasetDetailView(DetailView):
                 'records': records,
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 'DATA_GRID_REFERENCE_DATASET_FLAG': settings.DATA_GRID_REFERENCE_DATASET_FLAG,
+                'code_snippets': code_snippets,
+                'columns': columns,
             }
         )
         return ctx
@@ -1136,6 +1148,45 @@ class SourceTableColumnDetails(View):
                 "dataset": dataset,
                 "source_table": source_table,
                 "columns": columns,
+            },
+        )
+
+
+class ReferenceDatasetColumnDetails(View):
+    def get(self, request, dataset_uuid):
+        try:
+            dataset = ReferenceDataset.objects.get(uuid=dataset_uuid)
+        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+            return HttpResponse(status=404)
+
+        columns = datasets_db.get_columns(
+            dataset.external_database.memorable_name,
+            schema='public',
+            table=dataset.table_name,
+            include_types=True,
+        )
+        return render(
+            request,
+            'datasets/referencedataset_column_details.html',
+            context={
+                "dataset": dataset,
+                "columns": columns,
+            },
+        )
+
+
+class ReferenceDatasetGridView(View):
+    def get(self, request, dataset_uuid):
+        try:
+            dataset = ReferenceDataset.objects.get(uuid=dataset_uuid)
+        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+            return HttpResponse(status=404)
+
+        return render(
+            request,
+            'datasets/reference_dataset_grid.html',
+            context={
+                "model": dataset,
             },
         )
 
