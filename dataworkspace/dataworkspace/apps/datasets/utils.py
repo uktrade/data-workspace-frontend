@@ -1,5 +1,6 @@
 import logging
 import operator
+import os
 from functools import reduce
 from uuid import UUID
 
@@ -10,6 +11,7 @@ from django.http import Http404
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from psycopg2.sql import Identifier, SQL
+import requests
 
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQueryTable,
@@ -277,6 +279,74 @@ def update_quicksight_visualisations_last_updated_date():
     logger.info(
         'Finished fetching last updated dates for QuickSight visualisation links'
     )
+
+
+@celery_app.task()
+def link_superset_visualisations_to_related_datasets():
+    api_url = os.environ['SUPERSET_ROOT'] + '/api/v1/%s'
+
+    login_response = requests.post(
+        api_url % 'security/login',
+        json={
+            'username': os.environ['SUPERSET_DW_USER_USERNAME'],
+            'password': os.environ['SUPERSET_DW_USER_PASSWORD'],
+            'provider': 'db',
+        },
+    )
+    if login_response.status_code != 200:
+        logger.error(
+            "Unable to authenticate with Superset API with error %s",
+            login_response.content,
+        )
+        return
+
+    jwt_access_token = login_response.json()['access_token']
+
+    database_name, _ = list(settings.DATABASES_DATA.items())[0]
+
+    for visualisation_link in VisualisationLink.objects.filter(
+        visualisation_type='SUPERSET', visualisation_catalogue_item__deleted=False
+    ):
+        dashboard_id = int(visualisation_link.identifier)
+        logger.info(
+            "Setting related visualisations for Superset dashboard id %d", dashboard_id
+        )
+
+        tables = []
+        datasets_response = requests.get(
+            api_url % f'dashboard/{dashboard_id}/datasets',
+            headers={'Authorization': f'Bearer {jwt_access_token}'},
+        )
+        if datasets_response.status_code != 200:
+            logger.error(
+                "Unable to get datasets for Superset dashboard id %d with error %s",
+                dashboard_id,
+                datasets_response.content,
+            )
+            continue
+
+        datasets = datasets_response.json()['result']
+        logger.info(
+            'Found %d datasets for Superset dashboard id %d',
+            len(datasets),
+            dashboard_id,
+        )
+
+        for dataset in datasets:
+            logger.info(
+                'Extracting tables from dashboard id %d and dataset if %d',
+                dashboard_id,
+                dataset['id'],
+            )
+
+            tables.extend(
+                extract_queried_tables_from_sql_query(database_name, dataset['sql'])
+            )
+
+        if tables:
+            set_dataset_related_visualisation_catalogue_items(
+                visualisation_link, tables
+            )
 
 
 def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables):

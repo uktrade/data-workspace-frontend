@@ -121,6 +121,9 @@ variable superset_admin_users {}
 variable superset_db_instance_class {}
 variable superset_internal_domain {}
 
+variable superset_dw_user_username {}
+variable superset_dw_user_password {}
+
 variable datasets_rds_cluster_backup_retention_period {}
 variable datasets_rds_cluster_database_name {}
 variable datasets_rds_cluster_master_username {}
