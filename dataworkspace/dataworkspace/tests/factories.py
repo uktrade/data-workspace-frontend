@@ -61,6 +61,16 @@ class TopicTagFactory(TagFactory):
     type = TagType.TOPIC
 
 
+class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText()
+    summary = factory.fuzzy.FuzzyText()
+    gds_phase_name = "prototype"
+    database = factory.SubFactory(DatabaseFactory)
+
+    class Meta:
+        model = 'datasets.DataSetVisualisation'
+
+
 class DataSetFactory(factory.django.DjangoModelFactory):
     grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
