@@ -1726,6 +1726,169 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert "Show all related data" in response.content.decode(response.charset)
 
 
+class TestReferenceDatasetDetailView(DatasetsCommon):
+    @pytest.mark.django_db
+    def test_reference_dataset_shows_code_snippets(self):
+        user = get_user_model().objects.create(
+            email='test@example.com', is_superuser=False
+        )
+        rds = factories.ReferenceDatasetFactory.create(
+            published=True,
+            table_name='ref_my_reference_table',
+            name='A search reference dataset',
+        )
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(rds.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            """SELECT * FROM &quot;public&quot;.&quot;ref_my_reference_table&quot; LIMIT 50"""
+            not in response.content.decode(response.charset)
+        )
+        user.is_superuser = True
+        user.save()
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(rds.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            """SELECT * FROM &quot;public&quot;.&quot;ref_my_reference_table&quot; LIMIT 50"""
+            in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.parametrize(
+        'request_client,published',
+        [('client', True), ('staff_client', True), ('staff_client', False)],
+        indirect=['request_client'],
+    )
+    @pytest.mark.django_db
+    def test_reference_dataset_shows_column_details(self, request_client, published):
+        group = factories.DataGroupingFactory.create()
+        external_db = factories.DatabaseFactory.create()
+        rds = factories.ReferenceDatasetFactory.create(
+            published=published,
+            group=group,
+            external_database=external_db,
+        )
+        field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='code', column_name="code", data_type=2, is_identifier=True
+        )
+        field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name', column_name="name", data_type=1
+        )
+        rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 1,
+                field2.column_name: 'Test record',
+            },
+        )
+        rds.save_record(
+            None,
+            {
+                'reference_dataset': rds,
+                field1.column_name: 2,
+                field2.column_name: 'Ánd again',
+            },
+        )
+        response = request_client.get(rds.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            "<strong>code</strong> (integer)"
+            in response.content.decode(response.charset)
+        )
+        assert (
+            "<strong>name</strong> (text)"
+            in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.parametrize(
+        'request_client,published',
+        [('client', True), ('staff_client', True), ('staff_client', False)],
+        indirect=['request_client'],
+    )
+    def test_reference_dataset_shows_show_all_columns_link(self, request_client, published):
+        group = factories.DataGroupingFactory.create()
+        linked_rds = factories.ReferenceDatasetFactory.create(
+            group=group, table_name='test_get_ref_data_linked'
+        )
+        linked_field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_rds, name='id', data_type=2, is_identifier=True
+        )
+        linked_field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=linked_rds, name='name', data_type=1
+        )
+        rds = factories.ReferenceDatasetFactory.create(
+            published=published, group=group, table_name='test_get_ref_data'
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='id', data_type=2, is_identifier=True
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name', data_type=1
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='linked: id',
+            relationship_name="rel_1",
+            data_type=8,
+            linked_reference_dataset_field=linked_field1,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='linked: name',
+            relationship_name="rel_1",
+            data_type=8,
+            linked_reference_dataset_field=linked_field2,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='auto uuid',
+            column_name='auto_uuid',
+            data_type=9,
+            sort_order=4,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name='auto id',
+            column_name='auto_id',
+            data_type=10,
+            sort_order=5,
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name1', data_type=1
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name2', data_type=1
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name3', data_type=1
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name4', data_type=1
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name5', data_type=1
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name6', data_type=1
+        )
+        factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name='name7', data_type=1
+        )
+        response = request_client.get(rds.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            "View all columns"
+            not in response.content.decode(response.charset)
+        )
+
+
 class TestRequestAccess(DatasetsCommon):
     @pytest.mark.django_db
     def test_unauthorised_dataset(self, staff_client, metadata_db):
