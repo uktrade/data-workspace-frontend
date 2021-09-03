@@ -60,6 +60,7 @@ class TestDataExplorer:
 
         home_page.enter_query("select 1, 2, 3")
         home_page.click_run()
+        home_page.wait_for_results()
 
         assert home_page.read_result_headers() == ['?column?', '?column?', '?column?']
         assert home_page.read_result_rows() == [["1", "2", "3"]]

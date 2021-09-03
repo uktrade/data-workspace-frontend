@@ -11,6 +11,7 @@ from dataworkspace.apps.explorer.views import (
     PlayQueryView,
     QueryLogResultView,
     QueryView,
+    RunningQueryView,
     ShareQueryConfirmationView,
     ShareQueryView,
 )
@@ -21,6 +22,11 @@ urlpatterns = [
         'download/<int:querylog_id>',
         login_required(DownloadFromQuerylogView.as_view()),
         name='download_querylog',
+    ),
+    path(
+        'query/<int:query_log_id>/',
+        login_required(RunningQueryView.as_view()),
+        name='running_query',
     ),
     path('queries/', login_required(ListQueryView.as_view()), name='list_queries'),
     path(
