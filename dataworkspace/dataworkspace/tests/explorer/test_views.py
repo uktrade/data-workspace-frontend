@@ -131,7 +131,7 @@ class TestQueryDetailView:
         )
 
         assert (
-            "Enter a SQL statement starting with SELECT or WITH"
+            "Enter a SQL statement starting with SELECT, WITH or EXPLAIN"
             in resp.content.decode(resp.charset)
         )
 
