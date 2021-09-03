@@ -114,6 +114,20 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
         table_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
         try:
             cursor.execute(f'SET statement_timeout = {timeout}')
+            if sql.strip().upper().startswith('EXPLAIN'):
+                cursor.execute("""
+                    create or replace function query_plan(in qry text) returns setof text as $$
+                    declare r text;
+                    BEGIN
+                    FOR r IN EXECUTE qry loop
+                        return next r;
+                    END LOOP;
+                    return;
+                    END; $$ language plpgsql;
+                    """
+                )
+                sql = sql.replace("'", "''")
+                sql = f"select query_plan('{sql}')"
             # This is required to handle multiple select columns with the same name.
             # It adds a prefix of col_x_ to duplicated column returned from the query and
             # these prefixed column names are used to create a table containing the
