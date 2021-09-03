@@ -17,9 +17,16 @@ from dataworkspace.forms import (
 class SqlField(Field):
     def validate(self, value):
         query = value.strip().upper()
-        if not any([query.startswith("SELECT"), query.startswith("WITH"), query.startswith("EXPLAIN")]):
+        if not any(
+            [
+                query.startswith("SELECT"),
+                query.startswith("WITH"),
+                query.startswith("EXPLAIN"),
+            ]
+        ):
             raise ValidationError(
-                "Enter a SQL statement starting with SELECT, WITH or EXPLAIN", code="InvalidSql"
+                "Enter a SQL statement starting with SELECT, WITH or EXPLAIN",
+                code="InvalidSql",
             )
 
 

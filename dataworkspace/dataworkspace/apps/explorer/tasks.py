@@ -115,7 +115,8 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
         try:
             cursor.execute(f'SET statement_timeout = {timeout}')
             if sql.strip().upper().startswith('EXPLAIN'):
-                cursor.execute("""
+                cursor.execute(
+                    """
                     create or replace function query_plan(in qry text) returns setof text as $$
                     declare r text;
                     BEGIN
