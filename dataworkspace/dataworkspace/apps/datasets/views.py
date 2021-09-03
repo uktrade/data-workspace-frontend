@@ -1154,10 +1154,11 @@ class SourceTableColumnDetails(View):
 
 class ReferenceDatasetColumnDetails(View):
     def get(self, request, dataset_uuid):
-        try:
-            dataset = ReferenceDataset.objects.get(uuid=dataset_uuid)
-        except (ReferenceDataset.DoesNotExist):
-            return HttpResponse(status=404)
+        dataset = get_object_or_404(
+            ReferenceDataset.objects.live(),
+            uuid=dataset_uuid,
+            **{'published': True} if not self.request.user.is_superuser else {},
+        )
 
         columns = datasets_db.get_columns(
             dataset.external_database.memorable_name,
@@ -1177,10 +1178,11 @@ class ReferenceDatasetColumnDetails(View):
 
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
-        try:
-            dataset = ReferenceDataset.objects.get(uuid=dataset_uuid)
-        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
-            return HttpResponse(status=404)
+        dataset = get_object_or_404(
+            ReferenceDataset.objects.live(),
+            uuid=dataset_uuid,
+            **{'published': True} if not self.request.user.is_superuser else {},
+        )
 
         return render(
             request,

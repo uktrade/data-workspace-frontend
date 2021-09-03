@@ -280,16 +280,16 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
   });
 
   document.querySelector('#data-grid-json-download').addEventListener('click', function (e) {
-    let rowData = [];
+    var rowData = [];
     gridOptions.api.forEachNodeAfterFilter(function(node) {
       rowData.push(node.data);
     });
-    let dataStr = JSON.stringify({'data': rowData});
-    let dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    var dataStr = JSON.stringify({'data': rowData});
+    var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
 
-    let exportFileDefaultName = exportFileName.replace('csv', 'json');
+    var exportFileDefaultName = exportFileName.replace('csv', 'json');
 
-    let linkElement = document.createElement('a');
+    var linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
