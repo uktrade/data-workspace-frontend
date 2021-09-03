@@ -508,6 +508,11 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
     )
     inlines = [ReferenceDataFieldInline]
     autocomplete_fields = ['tags']
+    autocomplete_fields = (
+        'enquiries_contact',
+        'information_asset_owner',
+        'information_asset_manager',
+    )
     fieldsets = [
         (
             None,

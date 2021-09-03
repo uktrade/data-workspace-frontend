@@ -39,6 +39,17 @@ class ReferenceDatasetForm(forms.ModelForm):
         if 'sort_field' in self.fields:
             self.fields['sort_field'].queryset = self.instance.fields.all()
 
+        # Do not allow adding/editing users for autocomplete fields
+        for field in [
+            'enquiries_contact',
+            'information_asset_owner',
+            'information_asset_manager',
+        ]:
+            if field in self.fields:
+                self.fields[field].widget.can_add_related = False
+                self.fields[field].widget.can_change_related = False
+                self.fields[field].widget.can_delete_related = False
+
 
 class ReferenceDataInlineFormset(CustomInlineFormSet):
     model = ReferenceDatasetField
