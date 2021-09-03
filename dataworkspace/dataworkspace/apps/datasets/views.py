@@ -94,7 +94,7 @@ from dataworkspace.apps.datasets.utils import (
     find_dataset_or_visualisation_for_bookmark,
     get_code_snippets_for_table,
     get_code_snippets_for_query,
-    get_code_snippets_for_refereance_table,
+    get_code_snippets_for_reference_table,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -692,7 +692,7 @@ class DatasetDetailView(DetailView):
         total_record_count = records.count()
         preview_limit = self.get_preview_limit(total_record_count)
         records = records[:preview_limit]
-        code_snippets = get_code_snippets_for_refereance_table(self.object.table_name)
+        code_snippets = get_code_snippets_for_reference_table(self.object.table_name)
         columns = None
         if self.object.external_database:
             columns = datasets_db.get_columns(
@@ -1156,7 +1156,7 @@ class ReferenceDatasetColumnDetails(View):
     def get(self, request, dataset_uuid):
         try:
             dataset = ReferenceDataset.objects.get(uuid=dataset_uuid)
-        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
+        except (ReferenceDataset.DoesNotExist):
             return HttpResponse(status=404)
 
         columns = datasets_db.get_columns(
