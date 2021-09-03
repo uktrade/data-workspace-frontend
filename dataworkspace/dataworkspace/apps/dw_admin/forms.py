@@ -31,24 +31,28 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 
 
-class ReferenceDatasetForm(forms.ModelForm):
+class AutoCompleteUserFieldsMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Do not allow adding/editing users for autocomplete fields
+        for field in (
+            'enquiries_contact',
+            'information_asset_owner',
+            'information_asset_manager',
+        ):
+            if field in self.fields:
+                self.fields[field].widget.can_add_related = False
+                self.fields[field].widget.can_change_related = False
+                self.fields[field].widget.can_delete_related = False
+
+
+class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     model = ReferenceDataset
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'sort_field' in self.fields:
             self.fields['sort_field'].queryset = self.instance.fields.all()
-
-        # Do not allow adding/editing users for autocomplete fields
-        for field in [
-            'enquiries_contact',
-            'information_asset_owner',
-            'information_asset_manager',
-        ]:
-            if field in self.fields:
-                self.fields[field].widget.can_add_related = False
-                self.fields[field].widget.can_change_related = False
-                self.fields[field].widget.can_delete_related = False
 
 
 class ReferenceDataInlineFormset(CustomInlineFormSet):
@@ -487,7 +491,7 @@ def clean_identifier(form):
     return cleaned_data[id_field]
 
 
-class BaseDatasetForm(forms.ModelForm):
+class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     type = forms.HiddenInput()
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
@@ -686,7 +690,7 @@ class SourceTableForm(forms.ModelForm):
         return cleaned
 
 
-class VisualisationCatalogueItemForm(forms.ModelForm):
+class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )

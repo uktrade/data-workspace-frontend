@@ -232,7 +232,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     list_filter = ('tags',)
     search_fields = ['name']
     actions = [clone_dataset]
-    autocomplete_fields = ['tags']
+    autocomplete_fields = (
+        'tags',
+        'enquiries_contact',
+        'information_asset_owner',
+        'information_asset_manager',
+    )
     fieldsets = [
         (
             None,
@@ -507,8 +512,8 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         'get_bookmarks',
     )
     inlines = [ReferenceDataFieldInline]
-    autocomplete_fields = ['tags']
     autocomplete_fields = (
+        'tags',
         'enquiries_contact',
         'information_asset_owner',
         'information_asset_manager',
