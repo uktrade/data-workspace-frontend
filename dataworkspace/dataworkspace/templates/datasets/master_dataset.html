@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load humanize static datasets_tags %}
+{% load humanize static datasets_tags core_tags %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -49,6 +49,8 @@
 {% endblock %}
 
 {% block content %}
+  {% browser_is_internet_explorer as is_ie %}
+
   {% if not model.published %}
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
@@ -327,7 +329,7 @@
     </div>
   </div>
 
-  {% if model.visualisations.all %}
+  {% if model.visualisations.all and not is_ie %}
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <hr class="govuk-section-break">
@@ -379,6 +381,7 @@
 {% endblock %}
 
 {% block footer_scripts %}
+  {% browser_is_internet_explorer as is_ie %}
   <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
 
@@ -390,13 +393,12 @@
     });
   </script>
 
-  <script src="{% static 'vega.js' %}"></script>
-  <script src="{% static 'vega-lite.js' %}"></script>
-  <script src="{% static 'vega-embed.js' %}"></script>
-  <script src="{% static 'vega-interpreter.js' %}"></script>
-  <script src="{% static 'vega-visualisation-builder.js' %}"></script>
-
-  {% if has_access %}
+  {% if has_access and not is_ie %}
+    <script src="{% static 'vega.js' %}"></script>
+    <script src="{% static 'vega-lite.js' %}"></script>
+    <script src="{% static 'vega-embed.js' %}"></script>
+    <script src="{% static 'vega-interpreter.js' %}"></script>
+    <script src="{% static 'vega-visualisation-builder.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
       document.addEventListener("DOMContentLoaded", function () {
 

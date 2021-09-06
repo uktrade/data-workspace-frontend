@@ -1,4 +1,5 @@
 import json
+import re
 
 from django import template
 from django.utils.html import format_html
@@ -60,3 +61,9 @@ def spawner_memory(value):
 @register.filter
 def spawner_cpu(value):
     return '-' if not value else str(int(value) / 1024).rstrip('0').rstrip('.')
+
+
+@register.simple_tag(takes_context=True)
+def browser_is_internet_explorer(context, **kwargs):
+    user_agent = context['request'].META.get('HTTP_USER_AGENT', '')
+    return re.search(r'MSIE|Trident/7\.0; rv:\d+', user_agent) is not None
