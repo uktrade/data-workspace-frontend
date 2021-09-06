@@ -126,3 +126,11 @@ def build_schema_info(user, connection_alias):
             results, lambda row: (row['schema_name'], row['table_name'])
         )
     ]
+
+
+def get_user_schema_info(request):
+    schema = schema_info(
+        user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
+    )
+    tables_columns = ['.'.join(schema_table) for schema_table, _ in schema]
+    return schema, tables_columns

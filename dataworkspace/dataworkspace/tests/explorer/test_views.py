@@ -304,14 +304,14 @@ class TestHomePage:
         )
         assert resp.status_code == 404
 
-    def test_async_playground_renders_submitting_message(self, staff_client):
+    def test_async_playground_redirects_to_results_page(self, staff_client):
         resp = staff_client.post(
             reverse("explorer:index"),
             {'title': 'test', 'sql': 'select 1+3400;', "action": "run"},
         )
-        assert (
-            'Your query is currently being executed by Data Explorer'
-            in resp.content.decode(resp.charset)
+        assert resp.status_code == 302
+        assert resp['Location'] == reverse(
+            'explorer:running_query', args=(QueryLog.objects.last().id,)
         )
 
     def test_playground_redirects_to_query_create_on_save_with_sql_query_param(

@@ -29,8 +29,8 @@ from dataworkspace.apps.explorer.constants import QueryLogState
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm, ShareQueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
+from dataworkspace.apps.explorer.schema import get_user_schema_info
 from dataworkspace.notify import send_email
-from dataworkspace.apps.explorer.schema import schema_info
 from dataworkspace.apps.explorer.tasks import submit_query_for_execution
 from dataworkspace.apps.explorer.utils import (
     fetch_query_results,
@@ -253,13 +253,6 @@ class DeleteQueryView(DeleteView):
 
 
 class PlayQueryView(View):
-    def _schema_info(self, request):
-        schema = schema_info(
-            user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
-        )
-        tables_columns = ['.'.join(schema_table) for schema_table, _ in schema]
-        return schema, tables_columns
-
     def get(self, request):
         if url_get_query_id(request):
             query = get_object_or_404(
@@ -280,7 +273,7 @@ class PlayQueryView(View):
         if play_sql:
             initial_data['sql'] = play_sql.sql
 
-        schema, tables_columns = self._schema_info(request)
+        schema, tables_columns = get_user_schema_info(request)
         return render(
             self.request,
             'explorer/home.html',
@@ -382,7 +375,7 @@ class PlayQueryView(View):
             page=page,
             form=form,
         )
-        schema, tables_columns = self._schema_info(request)
+        schema, tables_columns = get_user_schema_info(request)
         context['schema'] = schema
         context['schema_tables'] = tables_columns
         context['form_action'] = self.get_form_action(request)
@@ -391,6 +384,12 @@ class PlayQueryView(View):
             context['extra_errors'] = [
                 'Your download has failed. Re-run the query and trying downloading again.',
             ]
+
+        if run_query and context['query_log']:
+            url = reverse('explorer:running_query', args=(context['query_log'].id,)) + (
+                f'?query_id={query.id}' if query.id is not None else ''
+            )
+            return HttpResponseRedirect(url)
 
         return render(self.request, 'explorer/home.html', context)
 
@@ -653,3 +652,31 @@ class ShareQueryConfirmationView(TemplateView):
             get_user_model(), id=self.kwargs['recipient_id']
         )
         return context
+
+
+class RunningQueryView(View):
+    def get(self, request, query_log_id):
+        query_log = get_object_or_404(
+            QueryLog, pk=query_log_id, run_by_user=self.request.user
+        )
+        query_instance = None
+        query_id = url_get_query_id(request)
+        if query_id:
+            query_instance = get_object_or_404(
+                Query, pk=query_id, created_by_user=self.request.user
+            )
+        form = QueryForm(initial={'sql': query_log.sql}, instance=query_instance)
+        schema, tables_columns = get_user_schema_info(request)
+        context = {
+            'title': query_instance.title if query_instance else 'Playground',
+            'query': query_log.query,
+            'form': form,
+            'unsafe_rendering': settings.EXPLORER_UNSAFE_RENDERING,
+            'query_log': query_log,
+            'form_action': f'{reverse("explorer:index")}?{request.META["QUERY_STRING"]}',
+            'schema': schema,
+            'schema_tables': tables_columns,
+            'rows': url_get_rows(request),
+            'page': url_get_page(request),
+        }
+        return render(request, 'explorer/home.html', context)

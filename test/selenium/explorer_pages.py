@@ -1,4 +1,7 @@
 from lxml import html
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
 
 from test.selenium.common import _BasePage  # pylint: disable=wrong-import-order
 
@@ -37,6 +40,11 @@ class HomePage(_BaseExplorerPage):
 
     def click_format_sql(self):
         self._submit("Format SQL")
+
+    def wait_for_results(self):
+        WebDriverWait(self._driver, 10).until(
+            expected_conditions.visibility_of_element_located((By.ID, "query-results"))
+        )
 
     def read_result_headers(self):
         headers = self._driver.find_elements_by_xpath(
