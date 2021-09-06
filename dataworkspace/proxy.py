@@ -276,7 +276,7 @@ async def async_main():
 
     def is_mirror_requested(request):
         return request.url.host.endswith(
-            f'.{root_domain_no_port}'
+            root_domain_no_port
         ) and request.url.path.startswith(mirror_local_root)
 
     def is_requesting_credentials(request):
