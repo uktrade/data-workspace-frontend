@@ -356,6 +356,10 @@
             </h3>
             <p class="govuk-body">
               {{ visualisation.summary }}
+              {% if visualisation.gds_phase_name %}
+                <br>
+                <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ visualisation.gds_phase_name }}</strong>
+              {% endif %}
             </p>
 
           </div>

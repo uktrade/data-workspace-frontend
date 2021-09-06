@@ -4,6 +4,7 @@ import random
 from urllib.parse import quote_plus
 from uuid import uuid4
 
+import factory.fuzzy
 import mock
 import psycopg2
 import pytest
@@ -1662,6 +1663,53 @@ class DatasetsCommon:
             datacuts.append(datacut)
 
         return datacuts
+
+
+class TestDatasetVisualisations:
+    @pytest.mark.django_db
+    def test_request_access_appears_when_user_has_no_access(self, client):
+        master_dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER, published=True
+        )
+        factories.VisualisationDatasetFactory.create(dataset=master_dataset)
+        response = client.get(master_dataset.get_absolute_url())
+
+        assert response.status_code == 200
+        assert (
+            "Request access to the data to view these visuals"
+            in response.content.decode(response.charset)
+        )
+
+    @pytest.mark.django_db
+    def test_maximum_of_three_visualisation_previews_are_displayed(self, staff_client):
+        master_dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        for _ in range(4):
+            factories.VisualisationDatasetFactory.create(dataset=master_dataset)
+        response = staff_client.get(master_dataset.get_absolute_url())
+
+        assert response.status_code == 200
+        response_text = response.content.decode(response.charset)
+        assert response_text.count("visualisation-preview-container") == 3
+
+    @pytest.mark.django_db
+    def test_prototype_label_is_visible(self, staff_client):
+        master_dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type='REQUIRES_AUTHENTICATION',
+        )
+        expected_gds_phase_name = factory.fuzzy.FuzzyText().fuzz()
+        factories.VisualisationDatasetFactory.create(
+            dataset=master_dataset, gds_phase_name=expected_gds_phase_name
+        )
+        response = staff_client.get(master_dataset.get_absolute_url())
+
+        assert response.status_code == 200
+        assert expected_gds_phase_name in response.content.decode(response.charset)
 
 
 class TestMasterDatasetDetailView(DatasetsCommon):
