@@ -118,7 +118,7 @@ import sqlalchemy
 
 conn = psycopg2.connect(os.environ['DATABASE_DSN__datasets_1'])
 engine = sqlalchemy.create_engine('postgresql://', creator=lambda: conn, execution_options={{"stream_results": True}})
-chunks = pandas.read_sql('{query}', engine, chunksize=10000)
+chunks = pandas.read_sql('''{query}''', engine, chunksize=10000)
 for chunk in chunks:
     display(chunk)"""
 
