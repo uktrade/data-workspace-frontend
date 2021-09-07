@@ -16,7 +16,7 @@ resource "aws_elasticsearch_domain" "datasets_finder" {
   cluster_config {
     dedicated_master_enabled = false
     instance_type = var.datasets_finder_instance_type
-    instance_count = 1
+    instance_count = 2
   }
 
   domain_endpoint_options {
