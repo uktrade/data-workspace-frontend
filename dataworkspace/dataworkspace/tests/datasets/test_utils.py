@@ -9,6 +9,7 @@ from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     get_code_snippets_for_query,
     get_code_snippets_for_table,
+    link_superset_visualisations_to_related_datasets,
     update_quicksight_visualisations_last_updated_date,
 )
 from dataworkspace.tests.factories import (
@@ -328,6 +329,44 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
 
         visualisation_link.refresh_from_db()
 
+        assert list(
+            visualisation_link.visualisation_catalogue_item.datasets.all().values_list(
+                'id', flat=True
+            )
+        ) == [ds.id]
+
+
+class TestLinkSupersetVisualisationsRelatedDatasets:
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
+    def test_links_superset_dashboard_to_dataset(
+        self, mock_extract_tables, requests_mock
+    ):
+        requests_mock.post(
+            'http://superset.test/api/v1/security/login', json={'access_token': '123'}
+        )
+        requests_mock.get(
+            'http://superset.test/api/v1/dashboard/1/datasets',
+            json={'result': [{'id': 1, 'sql': 'SELECT * FROM foo'}]},
+        )
+        mock_extract_tables.return_value = [('public', 'foo')]
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        SourceTableFactory.create(dataset=ds, schema="public", table="foo")
+        visualisation_link = VisualisationLinkFactory(
+            visualisation_type='SUPERSET', identifier='1'
+        )
+
+        link_superset_visualisations_to_related_datasets()
+
+        assert requests_mock.request_history[0].json() == {
+            'username': 'dw_user',
+            'password': 'dw_user_password',
+            'provider': 'db',
+        }
+        assert requests_mock.request_history[1].headers['Authorization'] == 'Bearer 123'
+
+        visualisation_link.refresh_from_db()
         assert list(
             visualisation_link.visualisation_catalogue_item.datasets.all().values_list(
                 'id', flat=True

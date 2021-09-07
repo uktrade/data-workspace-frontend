@@ -79,6 +79,8 @@ locals {
     google_analytics_site_id = "${var.google_analytics_site_id}"
 
     superset_root = "https://${var.superset_internal_domain}"
+    superset_dw_user_username = "${var.superset_dw_user_username}"
+    superset_dw_user_password = "${var.superset_dw_user_password}"
 
     admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
 

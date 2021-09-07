@@ -928,6 +928,14 @@
       "value": "${superset_root}"
     },
     {
+      "name": "SUPERSET_DW_USER_USERNAME",
+      "value": "${superset_dw_user_username}"
+    },
+    {
+      "name": "SUPERSET_DW_USER_PASSWORD",
+      "value": "${superset_dw_user_password}"
+    },
+    {
       "name": "APPSTREAM_URL",
       "value": "${appstream_url}"
     },
