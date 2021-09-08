@@ -3,7 +3,9 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.request_access.views import (
     AccessRequestConfirmationPage,
+    AccessRequestSummaryPage,
     DatasetAccessRequest,
+    DatasetAccessRequestUpdate,
     ToolsAccessRequestPart1,
     ToolsAccessRequestPart2,
     ToolsAccessRequestPart3,
@@ -15,6 +17,11 @@ urlpatterns = [
         '<uuid:dataset_uuid>',
         login_required(DatasetAccessRequest.as_view()),
         name='dataset',
+    ),
+    path(
+        '<int:pk>/dataset',
+        login_required(DatasetAccessRequestUpdate.as_view()),
+        name='dataset-request-update',
     ),
     path(
         '<int:pk>/tools',
@@ -30,6 +37,11 @@ urlpatterns = [
         '<int:pk>/spss-stata-reason',
         login_required(ToolsAccessRequestPart3.as_view()),
         name='tools-3',
+    ),
+    path(
+        '<int:pk>/summary',
+        login_required(AccessRequestSummaryPage.as_view()),
+        name='summary-page',
     ),
     path(
         '<int:pk>/confirmation',

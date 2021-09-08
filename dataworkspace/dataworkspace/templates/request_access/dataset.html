@@ -34,9 +34,10 @@
               </a>
             </p>
 
-            <form method="post" novalidate>
+            <form method="post" novalidate{% if form.instance.id %} action="{% url 'request_access:dataset-request-update' form.instance.id %}{% endif %}">
                 {% csrf_token %}
                 <fieldset class="govuk-fieldset">
+                    {{ form.id }}
                     {{ form.contact_email }}
                     {{ form.reason_for_access }}
 

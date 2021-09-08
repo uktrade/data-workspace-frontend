@@ -24,8 +24,14 @@
   </span>
   {% endif %}
 
+  {% if widget.show_selected_file and widget.value %}
+    <div id="{{ id }}-currently-selected-hint" class="govuk-hint currently-selected-file">
+      Currently selected file: {{ widget.value }}
+    </div>
+  {% endif %}
+
   <input
-          class="govuk-file-upload bla foo"
+          class="govuk-file-upload"
           type="file"
           name="{{ widget.name }}"
           {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}

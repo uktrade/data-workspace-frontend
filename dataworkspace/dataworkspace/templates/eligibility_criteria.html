@@ -47,6 +47,9 @@
                     </div>
                 </fieldset>
               </div>
+              {% if access_request %}
+                <input type="hidden" name="access_request" value="{{ access_request }}" />
+              {% endif %}
               <div class="govuk-form-group">
                   <button data-prevent-double-click="true" type="submit" class="govuk-button">Continue
                   </button>
