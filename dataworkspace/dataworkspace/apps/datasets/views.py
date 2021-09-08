@@ -639,6 +639,9 @@ class DatasetDetailView(DetailView):
                 'master_datasets_info': master_datasets_info,
                 'source_table_type': DataLinkType.SOURCE_TABLE,
                 'related_data': self.object.related_datasets(),
+                'related_visualisations': self.object.related_visualisations.filter(
+                    published=True
+                ),
             }
         )
         return ctx
@@ -683,6 +686,9 @@ class DatasetDetailView(DetailView):
                 ),
                 'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY,
                 'related_data': self.object.related_datasets(),
+                'related_visualisations': self.object.related_visualisations.filter(
+                    published=True
+                ),
             }
         )
         return ctx
@@ -1169,10 +1175,7 @@ class ReferenceDatasetColumnDetails(View):
         return render(
             request,
             'datasets/referencedataset_column_details.html',
-            context={
-                "dataset": dataset,
-                "columns": columns,
-            },
+            context={"dataset": dataset, "columns": columns,},
         )
 
 
@@ -1187,9 +1190,7 @@ class ReferenceDatasetGridView(View):
         return render(
             request,
             'datasets/reference_dataset_grid.html',
-            context={
-                "model": dataset,
-            },
+            context={"model": dataset,},
         )
 
 
