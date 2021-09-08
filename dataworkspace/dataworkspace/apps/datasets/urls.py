@@ -41,6 +41,16 @@ urlpatterns = [
         name='source_table_column_details',
     ),
     path(
+        '<uuid:dataset_uuid>/columns',
+        login_required(views.ReferenceDatasetColumnDetails.as_view()),
+        name='reference_dataset_column_details',
+    ),
+    path(
+        '<uuid:dataset_uuid>/grid',
+        login_required(views.ReferenceDatasetGridView.as_view()),
+        name='reference_dataset_grid',
+    ),
+    path(
         '<uuid:dataset_uuid>/reference/<str:format>/download',
         login_required(views.ReferenceDatasetDownloadView.as_view()),
         name='reference_dataset_download',

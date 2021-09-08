@@ -99,6 +99,14 @@ def get_code_snippets_for_table(source_table):
         "sql": query,
     }
 
+def get_code_snippets_for_reference_table(table):
+    query = get_sql_snippet('public', table, 50)
+    return {
+        "python": get_python_snippet(query),
+        "r": get_r_snippet(query),
+        "sql": query,
+    }
+
 
 def get_code_snippets_for_query(query):
     return {

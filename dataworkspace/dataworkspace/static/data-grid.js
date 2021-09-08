@@ -279,6 +279,24 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
     return;
   });
 
+  document.querySelector('#data-grid-json-download').addEventListener('click', function (e) {
+    var rowData = [];
+    gridOptions.api.forEachNodeAfterFilter(function(node) {
+      rowData.push(node.data);
+    });
+    var dataStr = JSON.stringify({'data': rowData});
+    var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+    var exportFileDefaultName = exportFileName.replace('csv', 'json');
+
+    var linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    document.activeElement.blur();
+    return;
+  });
+
   document.querySelector('#data-grid-reset-filters').addEventListener('click', function(e){
     gridOptions.api.setFilterModel(null);
     document.activeElement.blur();
