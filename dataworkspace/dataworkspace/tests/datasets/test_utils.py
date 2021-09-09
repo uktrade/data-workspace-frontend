@@ -42,8 +42,13 @@ def test_get_code_snippets_for_table(metadata_db):
     )
 
     snippets = get_code_snippets_for_table(sourcetable)
-    assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['python']
-    assert """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50""" in snippets['r']
+    assert (
+        """SELECT * FROM \\"public\\".\\"MY_LOVELY_TABLE\\" LIMIT 50"""
+        in snippets['python']
+    )
+    assert (
+        """SELECT * FROM \\"public\\".\\"MY_LOVELY_TABLE\\" LIMIT 50""" in snippets['r']
+    )
     assert snippets['sql'] == """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50"""
 
 
@@ -52,6 +57,16 @@ def test_get_code_snippets_for_query(metadata_db):
     assert 'SELECT * FROM foo' in snippets['python']
     assert 'SELECT * FROM foo' in snippets['r']
     assert snippets['sql'] == 'SELECT * FROM foo'
+
+
+def test_r_code_snippets_are_escaped(metadata_db):
+    snippets = get_code_snippets_for_query('SELECT * FROM "foo"')
+    assert 'SELECT * FROM \\"foo\\"' in snippets['r']
+
+
+def test_python_code_snippets_are_escaped(metadata_db):
+    snippets = get_code_snippets_for_query('SELECT * FROM "foo"')
+    assert 'sqlalchemy.text(\"""SELECT * FROM \\"foo\\"\"""' in snippets['python']
 
 
 class TestUpdateQuickSightVisualisationsLastUpdatedDate:

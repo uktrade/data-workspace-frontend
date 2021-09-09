@@ -1175,7 +1175,7 @@ class ReferenceDatasetColumnDetails(View):
         return render(
             request,
             'datasets/referencedataset_column_details.html',
-            context={"dataset": dataset, "columns": columns,},
+            context={"dataset": dataset, "columns": columns},
         )
 
 
@@ -1188,9 +1188,7 @@ class ReferenceDatasetGridView(View):
         )
 
         return render(
-            request,
-            'datasets/reference_dataset_grid.html',
-            context={"model": dataset,},
+            request, 'datasets/reference_dataset_grid.html', context={"model": dataset},
         )
 
 
