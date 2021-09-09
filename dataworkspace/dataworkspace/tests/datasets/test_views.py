@@ -1816,12 +1816,14 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         group = factories.DataGroupingFactory.create()
         external_db = factories.DatabaseFactory.create()
         rds = factories.ReferenceDatasetFactory.create(
-            published=published,
-            group=group,
-            external_database=external_db,
+            published=published, group=group, external_database=external_db,
         )
         field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds, name='code', column_name="code", data_type=2, is_identifier=True
+            reference_dataset=rds,
+            name='code',
+            column_name="code",
+            data_type=2,
+            is_identifier=True,
         )
         field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, name='name', column_name="name", data_type=1
@@ -1845,13 +1847,11 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         response = request_client.get(rds.get_absolute_url())
 
         assert response.status_code == 200
-        assert (
-            "<strong>code</strong> (integer)"
-            in response.content.decode(response.charset)
+        assert "<strong>code</strong> (integer)" in response.content.decode(
+            response.charset
         )
-        assert (
-            "<strong>name</strong> (text)"
-            in response.content.decode(response.charset)
+        assert "<strong>name</strong> (text)" in response.content.decode(
+            response.charset
         )
 
     @pytest.mark.parametrize(
@@ -1859,7 +1859,9 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         [('client', True), ('staff_client', True), ('staff_client', False)],
         indirect=['request_client'],
     )
-    def test_reference_dataset_shows_show_all_columns_link(self, request_client, published):
+    def test_reference_dataset_shows_show_all_columns_link(
+        self, request_client, published
+    ):
         group = factories.DataGroupingFactory.create()
         linked_rds = factories.ReferenceDatasetFactory.create(
             group=group, table_name='test_get_ref_data_linked'
@@ -1931,10 +1933,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         response = request_client.get(rds.get_absolute_url())
 
         assert response.status_code == 200
-        assert (
-            "View all columns"
-            not in response.content.decode(response.charset)
-        )
+        assert "View all columns" not in response.content.decode(response.charset)
 
 
 class TestRequestAccess(DatasetsCommon):

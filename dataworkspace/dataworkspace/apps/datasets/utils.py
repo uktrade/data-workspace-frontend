@@ -99,6 +99,7 @@ def get_code_snippets_for_table(source_table):
         "sql": query,
     }
 
+
 def get_code_snippets_for_reference_table(table):
     query = get_sql_snippet('public', table, 50)
     return {
@@ -121,6 +122,11 @@ def get_sql_snippet(schema, table_name, limit=50):
 
 
 def get_python_snippet(query):
+    """
+    sqlalchemy.text() is used to make sure the sql string is in a form that sqlalchemy expects.
+    `backslash`, `"` and `'''` are also escaped
+    """
+    query = query.replace('\\', '\\\\').replace('"', '\\"')
     return f"""import os
 import pandas
 import psycopg2
@@ -128,12 +134,13 @@ import sqlalchemy
 
 conn = psycopg2.connect(os.environ['DATABASE_DSN__datasets_1'])
 engine = sqlalchemy.create_engine('postgresql://', creator=lambda: conn, execution_options={{"stream_results": True}})
-chunks = pandas.read_sql('''{query}''', engine, chunksize=10000)
+chunks = pandas.read_sql(sqlalchemy.text(\"""{query}\"""), engine, chunksize=10000)
 for chunk in chunks:
     display(chunk)"""
 
 
 def get_r_snippet(query):
+    query = query.replace('\\', '\\\\').replace('"', '\\"')
     return f"""library(stringr)
 library(DBI)
 getConn <- function(dsn) {{
@@ -147,7 +154,7 @@ getConn <- function(dsn) {{
 }}
 conn <- getConn(Sys.getenv('DATABASE_DSN__datasets_1'))
 
-res <- dbSendQuery(conn, '{query}')
+res <- dbSendQuery(conn, \"{query}\")
 while (!dbHasCompleted(res)) {{
     chunk <- dbFetch(res, n = 50)
     print(chunk)
