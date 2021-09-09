@@ -132,6 +132,12 @@ class DatasetSearchForm(forms.Form):
         widget=FilterWidget("Show unpublished"),
     )
 
+    opendata = forms.MultipleChoiceField(
+        choices=[('yes', 'Show Open data')],
+        required=False,
+        widget=FilterWidget("Show unpublished"),
+    )
+
     bookmarked = forms.MultipleChoiceField(
         choices=[('yes', 'My bookmarks')],
         required=False,
@@ -209,6 +215,7 @@ class DatasetSearchForm(forms.Form):
         counts = {
             "bookmarked": defaultdict(int),
             "unpublished": defaultdict(int),
+            "opendata": defaultdict(int),
             "use": defaultdict(int),
             "data_type": defaultdict(int),
             "source": defaultdict(int),
@@ -219,6 +226,7 @@ class DatasetSearchForm(forms.Form):
         user_access = set(self.cleaned_data['user_access'])
         selected_bookmark = bool(self.cleaned_data['bookmarked'])
         selected_unpublished = bool(self.cleaned_data['unpublished'])
+        selected_opendata = bool(self.cleaned_data['opendata'])
         selected_uses = set(self.cleaned_data['use'])
         selected_data_type = set(self.cleaned_data['data_type'])
         selected_source_ids = set(source.id for source in self.cleaned_data['source'])
@@ -237,6 +245,7 @@ class DatasetSearchForm(forms.Form):
                 data=dataset,
                 bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
+                opendata=selected_opendata,
                 use=selected_uses,
                 data_type=selected_data_type,
                 source_ids=selected_source_ids,
@@ -256,6 +265,9 @@ class DatasetSearchForm(forms.Form):
 
             if dataset_matcher(unpublished=True):
                 counts['unpublished']['yes'] += 1
+
+            if dataset_matcher(opendata=True):
+                counts['opendata']['yes'] += 1
 
             for use_id, _ in use_choices:
                 if dataset_matcher(use={use_id}):
@@ -289,6 +301,11 @@ class DatasetSearchForm(forms.Form):
         self.fields['unpublished'].choices = [
             (unpub_id, unpub_text + f" ({counts['unpublished'][unpub_id]})")
             for unpub_id, unpub_text in self.fields['unpublished'].choices
+        ]
+
+        self.fields['opendata'].choices = [
+            (unpub_id, unpub_text + f" ({counts['opendata'][unpub_id]})")
+            for unpub_id, unpub_text in self.fields['opendata'].choices
         ]
 
         self.fields['use'].choices = [
