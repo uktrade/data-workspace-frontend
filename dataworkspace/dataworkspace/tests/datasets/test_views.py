@@ -1714,8 +1714,14 @@ class TestDatasetVisualisations:
 
 class TestMasterDatasetDetailView(DatasetsCommon):
     @pytest.mark.django_db
-    def test_master_dataset_shows_code_snippets_to_tool_user(self, metadata_db):
-        ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
+    def test_master_dataset_shows_code_snippets_to_tool_user(
+        self, metadata_db, dataset_db
+    ):
+        ds = factories.DataSetFactory.create(
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type='REQUIRES_AUTHORIZATION',
+        )
         user = get_user_model().objects.create(
             email='test@example.com', is_superuser=False
         )
@@ -1723,28 +1729,30 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         factories.SourceTableFactory.create(
             dataset=ds,
             schema="public",
-            table="MY_LOVELY_TABLE",
+            table="dataset_test",
             database=factories.DatabaseFactory.create(memorable_name='my_database'),
         )
 
+        # User without tools access should not see code snippets
         client = Client(**get_http_sso_data(user))
         response = client.get(ds.get_absolute_url())
-
         assert response.status_code == 200
         assert (
-            """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
+            """SELECT * FROM &quot;public&quot;.&quot;dataset_test&quot; LIMIT 50"""
             not in response.content.decode(response.charset)
         )
 
-        user.is_superuser = True
-        user.save()
-
-        client = Client(**get_http_sso_data(user))
+        # User with tools access should see code snippets
+        user.user_permissions.add(
+            Permission.objects.get(
+                codename='start_all_applications',
+                content_type=ContentType.objects.get_for_model(ApplicationInstance),
+            )
+        )
         response = client.get(ds.get_absolute_url())
-
         assert response.status_code == 200
         assert (
-            """SELECT * FROM &quot;public&quot;.&quot;MY_LOVELY_TABLE&quot; LIMIT 50"""
+            """SELECT * FROM &quot;public&quot;.&quot;dataset_test&quot; LIMIT 50"""
             in response.content.decode(response.charset)
         )
 
@@ -1776,7 +1784,10 @@ class TestMasterDatasetDetailView(DatasetsCommon):
 
 class TestReferenceDatasetDetailView(DatasetsCommon):
     @pytest.mark.django_db
-    def test_reference_dataset_shows_code_snippets(self):
+    @mock.patch(
+        'dataworkspace.apps.datasets.models.ReferenceDataset.sync_to_external_database'
+    )
+    def test_reference_dataset_shows_code_snippets(self, mock_sync):
         user = get_user_model().objects.create(
             email='test@example.com', is_superuser=False
         )
@@ -1784,6 +1795,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
             published=True,
             table_name='ref_my_reference_table',
             name='A search reference dataset',
+            external_database=factories.DatabaseFactory.create(),
         )
 
         client = Client(**get_http_sso_data(user))
