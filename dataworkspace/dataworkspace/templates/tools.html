@@ -42,7 +42,7 @@
       </ul>
     </div>
   </div>
-  {% if not has_access %}
+  {% if not perms.applications.start_all_applications %}
     <div class="govuk-grid-row govuk-!-margin-bottom-6">
       <div class="govuk-grid-column-two-thirds">
         <div class="govuk-warning-text">
@@ -54,7 +54,7 @@
             </strong>
           </div>
         </div>
-        <a class="govuk-button govuk-button--primary" href="/request-access/">Request access</a>
+        <a class="govuk-button govuk-button--primary" href="{% url 'request_access:index' %}">Request access</a>
       </div>
     </div>
   {% endif %}
