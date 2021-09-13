@@ -303,17 +303,18 @@
                   </details>
                 {% endif %}
 
-                <details class="govuk-details govuk-!-margin-bottom-6" data-module="govuk-details">
-                  <summary class="govuk-details__summary">
-                                            <span class="govuk-details__summary-text">
-                                            Use this data <span
-                                              class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
-                                            </span>
-                  </summary>
-                  <div class="govuk-details__text">
-                    {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
-                  </div>
-                </details>
+                {% if has_access %}
+                  <details class="govuk-details govuk-!-margin-bottom-6" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                      <span class="govuk-details__summary-text">
+                        Use this data <span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+                      </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
+                    </div>
+                  </details>
+                {% endif %}
               </td>
             </tr>
           {% endif %}

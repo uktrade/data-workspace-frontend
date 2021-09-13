@@ -107,6 +107,7 @@ class EligibilityCriteriaForm(forms.Form):
         coerce=lambda x: x == 'yes',
         choices=(('no', 'No'), ('yes', 'Yes')),
     )
+    access_request = forms.IntegerField(widget=forms.HiddenInput, required=False)
 
 
 class SourceTagField(forms.ModelMultipleChoiceField):

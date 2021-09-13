@@ -1,0 +1,56 @@
+{% extends '_main.html' %}
+{% block page_title %}Check your answers before sending your request - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Request access
+      </li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Check your answers before sending your request</h1>
+      {% if catalogue_item %}
+        <p class="govuk-body">
+          <strong>Dataset</strong>
+          <br />
+          <a href="{{ catalogue_item.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state">
+            {{ catalogue_item }}
+          </a>
+        </p>
+      {% endif %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="govuk-form-group">
+          <dl class="govuk-summary-list">
+            {% if object.journey == object.JOURNEY_DATASET_ACCESS or object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS %}
+              {% if catalogue_item.eligibility_criteria %}
+                {% with object.id|stringformat:'s' as req_id %}
+                  {% include 'request_access/partials/summary-list-row.html' with title='Eligibility criteria' description='Yes' change_link='datasets:eligibility_criteria' object_id=catalogue_item.id query_params='?access_request='|add:req_id %}
+                {% endwith %}
+              {% endif %}
+              {% include 'request_access/partials/summary-list-row.html' with title='Contact email' description=object.contact_email change_link='request_access:dataset-request-update' object_id=object.id %}
+              {% include 'request_access/partials/summary-list-row.html' with title='Reason to access this data' description=object.reason_for_access change_link='request_access:dataset-request-update' object_id=object.id %}
+            {% endif %}
+            {% if object.journey == object.JOURNEY_TOOLS_ACCESS or object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS%}
+              {% include 'request_access/partials/summary-list-row.html' with title='Responsible for Information training proof' description='Uploaded' change_link='request_access:tools-1' object_id=object.id %}
+              {% if object.spss_and_stata %}
+                {% include 'request_access/partials/summary-list-row.html' with title='Request SPSS and Stata' description='Yes' change_link='request_access:tools-2' object_id=object.id %}
+                {% include 'request_access/partials/summary-list-row.html' with title='Line manager&apos;s email address' description=object.line_manager_email_address change_link='request_access:tools-3' object_id=object.id %}
+                {% include 'request_access/partials/summary-list-row.html' with title='Reason for needing SPSS and Stata' description=object.reason_for_spss_and_stata change_link='request_access:tools-3' object_id=object.id %}
+              {% else %}
+                {% include 'request_access/partials/summary-list-row.html' with title='Request SPSS and Stata' description='No' change_link='request_access:tools-2' object_id=object.id %}
+              {% endif %}
+            {% endif %}
+          </dl>
+          <button class="govuk-button" data-module="govuk-button">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

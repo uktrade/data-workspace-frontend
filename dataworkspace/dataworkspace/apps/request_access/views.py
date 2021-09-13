@@ -91,13 +91,22 @@ class DatasetAccessRequest(CreateView):
             catalogue_item, VisualisationCatalogueItem
         ):
             return HttpResponseRedirect(
-                reverse(
-                    'request-access:confirmation-page', kwargs={"pk": access_request.pk}
-                )
+                reverse('request-access:summary-page', kwargs={"pk": access_request.pk})
             )
         return HttpResponseRedirect(
             reverse('request-access:tools-1', kwargs={"pk": access_request.pk})
         )
+
+
+class DatasetAccessRequestUpdate(UpdateView):
+    model = models.AccessRequest
+    template_name = 'request_access/dataset.html'
+    form_class = DatasetAccessRequestForm
+
+    def get_success_url(self):
+        if self.object.journey == self.object.JOURNEY_DATASET_ACCESS:
+            return reverse('request-access:summary-page', kwargs={"pk": self.object.pk})
+        return reverse('request-access:tools-1', kwargs={"pk": self.object.pk})
 
 
 class ToolsAccessRequestPart1(UpdateView):
@@ -117,9 +126,7 @@ class ToolsAccessRequestPart2(UpdateView):
     def get_success_url(self):
         if self.object.spss_and_stata:
             return reverse('request-access:tools-3', kwargs={"pk": self.object.pk})
-        return reverse(
-            'request-access:confirmation-page', kwargs={"pk": self.object.pk}
-        )
+        return reverse('request-access:summary-page', kwargs={"pk": self.object.pk})
 
 
 class ToolsAccessRequestPart3(UpdateView):
@@ -128,8 +135,27 @@ class ToolsAccessRequestPart3(UpdateView):
     form_class = ToolsAccessRequestFormPart3
 
     def get_success_url(self):
-        return reverse(
-            'request-access:confirmation-page', kwargs={"pk": self.object.pk}
+        return reverse('request-access:summary-page', kwargs={"pk": self.object.pk})
+
+
+class AccessRequestSummaryPage(DetailView):
+    model = models.AccessRequest
+    template_name = 'request_access/summary.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['catalogue_item'] = (
+            find_dataset_or_visualisation(
+                ctx['object'].catalogue_item_id, self.request.user
+            )
+            if ctx['object'].catalogue_item_id
+            else None
+        )
+        return ctx
+
+    def post(self, request, pk):
+        return HttpResponseRedirect(
+            reverse('request-access:confirmation-page', kwargs={"pk": pk})
         )
 
 

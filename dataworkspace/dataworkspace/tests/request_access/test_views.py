@@ -9,6 +9,7 @@ from django.urls import reverse
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
+from dataworkspace.tests.request_access import factories
 
 
 class TestDatasetAccessOnly:
@@ -71,10 +72,20 @@ class TestDatasetAccessOnly:
 
         access_requests = AccessRequest.objects.all()
 
+        # Ensure summary page is shown
+        assert resp.status_code == 302
+        assert resp.url == reverse(
+            'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
+        )
         assert len(access_requests) == 1
         assert access_requests[0].contact_email == 'test@example.com'
         assert access_requests[0].reason_for_access == 'I need it'
         assert access_requests[0].journey == AccessRequest.JOURNEY_DATASET_ACCESS
+
+        # Submit summary page
+        resp = client.post(
+            reverse('request_access:summary-page', kwargs={"pk": access_requests[0].pk})
+        )
         assert resp.status_code == 302
         assert resp.url == reverse(
             'request_access:confirmation-page', kwargs={"pk": access_requests[0].pk}
@@ -104,13 +115,27 @@ class TestDatasetAccessOnly:
         )
         user.user_permissions.add(permission)
 
-        client.post(
+        resp = client.post(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}),
             {'contact_email': 'test@example.com', 'reason_for_access': 'I need it'},
-            follow=True,
         )
 
         access_requests = AccessRequest.objects.all()
+
+        # Ensure summary page is shown
+        assert resp.status_code == 302
+        assert resp.url == reverse(
+            'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
+        )
+
+        # Submit summary page
+        client.post(
+            reverse(
+                'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
+            ),
+            {'contact_email': 'test@example.com', 'reason_for_access': 'I need it'},
+            follow=True,
+        )
 
         assert len(mock_zenpy_client.tickets.create.call_args_list) == 1
         call_args, _ = mock_zenpy_client.tickets.create.call_args_list[0]
@@ -220,7 +245,7 @@ class TestToolsAccessOnly:
             'request_access:tools-3', kwargs={"pk": access_requests[0].pk}
         )
 
-    def test_user_redirected_to_confirmation_page_after_responding_no_in_step_2(
+    def test_user_redirected_to_summary_page_after_responding_no_in_step_2(
         self, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
@@ -239,10 +264,10 @@ class TestToolsAccessOnly:
         assert access_requests[0].spss_and_stata is False
         assert resp.status_code == 302
         assert resp.url == reverse(
-            'request_access:confirmation-page', kwargs={"pk": access_requests[0].pk}
+            'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
         )
 
-    def test_user_redirected_to_confirmation_page_after_step_3_form_submission(
+    def test_user_redirected_to_summary_page_after_step_3_form_submission(
         self, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
@@ -266,7 +291,7 @@ class TestToolsAccessOnly:
         assert access_requests[0].reason_for_spss_and_stata == 'I want it'
         assert resp.status_code == 302
         assert resp.url == reverse(
-            'request_access:confirmation-page', kwargs={"pk": access_requests[0].pk}
+            'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
         )
 
     @pytest.mark.django_db
@@ -300,6 +325,12 @@ class TestToolsAccessOnly:
         )
         client.post(
             reverse('request_access:tools-2', kwargs={"pk": access_requests[0].pk}),
+            follow=True,
+        )
+        client.post(
+            reverse(
+                'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
+            ),
             follow=True,
         )
 
@@ -390,3 +421,76 @@ class TestNoAccessRequired:
 
         assert resp.status_code == 200
         assert "You have access to our tools" in resp.content.decode(resp.charset)
+
+
+class TestEditAccessRequest:
+    def test_edit_eligibility_criteria(self, client):
+        dataset = DatasetsCommon()._create_master(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        access_request = factories.AccessRequestFactory(
+            catalogue_item_id=dataset.id,
+            contact_email='original@example.com',
+            reason_for_access='I need it',
+        )
+        resp = client.post(
+            reverse(
+                'datasets:eligibility_criteria', kwargs={"dataset_uuid": dataset.id},
+            )
+            + f'?access_request={access_request.id}',
+            {'meet_criteria': 'yes'},
+        )
+        assert resp.status_code == 302
+        assert resp.url == reverse(
+            'request_access:dataset', kwargs={"dataset_uuid": dataset.id}
+        )
+        assert access_request.id == AccessRequest.objects.latest('created_date').id
+
+    def test_edit_dataset_request_fields(self, client):
+        dataset = DatasetsCommon()._create_master(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        )
+        access_request = factories.AccessRequestFactory(
+            catalogue_item_id=dataset.id,
+            contact_email='original@example.com',
+            reason_for_access='I need it',
+        )
+        resp = client.post(
+            reverse(
+                'request_access:dataset-request-update',
+                kwargs={"pk": access_request.id},
+            ),
+            {
+                'contact_email': 'updated@example.com',
+                'reason_for_access': 'I still need it',
+            },
+        )
+        assert resp.status_code == 302
+        access_request.refresh_from_db()
+        assert access_request.catalogue_item_id == dataset.id
+        assert access_request.contact_email == 'updated@example.com'
+        assert access_request.reason_for_access == 'I still need it'
+
+    @mock.patch('dataworkspace.apps.request_access.views.models.storage.boto3')
+    def test_edit_training_screenshot(self, mock_boto, client):
+        screenshot1 = SimpleUploadedFile("original-file.txt", b"file_content")
+        access_request = factories.AccessRequestFactory(
+            contact_email='testy-mctestface@example.com',
+            training_screenshot=screenshot1,
+        )
+
+        # Ensure the original file name is displayed in the form
+        resp = client.get(
+            reverse('request_access:tools-1', kwargs={"pk": access_request.pk})
+        )
+        assert 'original-file.txt' in resp.content.decode(resp.charset)
+
+        # Ensure the file can be updated
+        screenshot2 = SimpleUploadedFile("new-file.txt", b"file_content")
+        resp = client.post(
+            reverse('request_access:tools-1', kwargs={"pk": access_request.pk}),
+            {'training_screenshot': screenshot2},
+        )
+        assert resp.status_code == 302
+        access_request.refresh_from_db()
+        assert access_request.training_screenshot.name.split('!')[0] == 'new-file.txt'

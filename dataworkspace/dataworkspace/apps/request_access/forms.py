@@ -1,3 +1,4 @@
+from django import forms
 from django.template.loader import render_to_string
 
 from dataworkspace.apps.request_access.models import AccessRequest
@@ -17,8 +18,9 @@ from dataworkspace.forms import (
 class DatasetAccessRequestForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = AccessRequest
-        fields = ['contact_email', 'reason_for_access']
+        fields = ['id', 'contact_email', 'reason_for_access']
 
+    id = forms.IntegerField(widget=forms.HiddenInput, required=False)
     contact_email = GOVUKDesignSystemCharField(
         label="Contact email",
         widget=GOVUKDesignSystemTextWidget(
@@ -64,6 +66,7 @@ class ToolsAccessRequestFormPart1(GOVUKDesignSystemModelForm):
             heading='h2',
             heading_class='govuk-heading-m',
             extra_label_classes='govuk-!-font-weight-bold',
+            show_selected_file=True,
         ),
         error_messages={
             "required": "You must upload proof that you've completed the training."

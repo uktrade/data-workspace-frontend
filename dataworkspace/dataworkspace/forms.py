@@ -20,6 +20,7 @@ class GOVUKDesignSystemWidgetMixin:
         label_size='l',
         extra_label_classes='',
         small=False,
+        show_selected_file=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -30,6 +31,7 @@ class GOVUKDesignSystemWidgetMixin:
             label_size=label_size,
             extra_label_classes=extra_label_classes,
             small=small,
+            show_selected_file=show_selected_file,
         )
 
     def __deepcopy__(self, memo):
@@ -103,6 +105,14 @@ class GOVUKDesignSystemFileInputWidget(
     GOVUKDesignSystemWidgetMixin, forms.widgets.FileInput
 ):
     template_name = 'design_system/file.html'
+
+    def format_value(self, value):
+        """
+        Return the file object if it has a defined url attribute.
+        """
+        if value:
+            return value.name.split('!')[0]
+        return super().format_value(value)
 
 
 class GOVUKDesignSystemMultipleChoiceField(

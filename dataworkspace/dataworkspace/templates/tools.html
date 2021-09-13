@@ -19,29 +19,45 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="govuk-heading-xl">Tools</h1>
-
+  <h1 class="govuk-heading-xl">Tools</h1>
+  <div class="govuk-grid-row govuk-!-margin-bottom-6">
+    <div class="govuk-grid-column-two-thirds">
+      <p class="govuk-body">Use these tools to:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>
+          <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/" class="govuk-link">
+            analyse data
+          </a>
+        </li>
+        <li>
+          <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/upload-your-own-data/" class="govuk-link">
+            upload and analyse your own data
+          </a>
+        </li>
+        <li>
+          <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/create-a-dashboard/" class="govuk-link">
+            create dashboards
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  {% if not perms.applications.start_all_applications %}
     <div class="govuk-grid-row govuk-!-margin-bottom-6">
       <div class="govuk-grid-column-two-thirds">
-        <p class="govuk-body">
-          Data Workspace offers access to a range of analysis tools that you can use with datasets in the catalogue.
-        </p>
-
-        <p class="govuk-body">
-          These are powerful and versatile tools aimed at analysts and data scientists.
-          They require some familiarity with coding languages such as Python, R or SQL.
-          Find out more about the tools and how to start using them in
-          <a class="govuk-link" href="https://data-services-help.trade.gov.uk">the Help Centre.</a>
-        </p>
-
-        <p class="govuk-body">
-          <a class="govuk-link" href="{{ request.path }}#access-request">
-            How to request access to the tools?
-          </a>
-        </p>
+        <div class="govuk-warning-text">
+          <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+          <div class="govuk-warning-text__text">
+            <strong>
+              <span class="govuk-warning-text__assistive">Warning</span>
+              You need to request access to use tools.
+            </strong>
+          </div>
+        </div>
+        <a class="govuk-button govuk-button--primary" href="{% url 'request_access:index' %}">Request access</a>
       </div>
     </div>
-
+  {% endif %}
     <div>
       <h2 class="govuk-visually-hidden">Available tools</h2>
 
@@ -81,21 +97,5 @@
       {% with application_summary='QuickSight is a visualisations tool supplied by Amazon Web Services (AWS). Use it to create and share dashboards using data from Data Workspace.' %}
         {% include 'partials/tool_section.html' with application_name="Amazon QuickSight" application_summary=application_summary application_help_link=None instance=None application_url=quicksight_url customisable_instance=False has_access=perms.applications.access_quicksight trailing_horizontal_rule=False %}
       {% endwith %}
-    </div>
-
-    <div class="govuk-grid-row govuk-!-margin-top-9">
-      <div class="govuk-grid-column-two-thirds">
-        <h2 class="govuk-heading-l" id="access-request">Access requirements and request workflow</h2>
-        <p class="govuk-body">
-          Users will need to have completed the
-          <a class="govuk-link" href="https://app.ihasco.co.uk/lgjg02" target="_blank" rel="noopener noreferrer">GDPR Essentials</a> and
-          <a class="govuk-link" href="https://learn.civilservice.gov.uk/courses/-20CQRZLS4qIPaCW8rF58g" target="_blank" rel="noopener noreferrer">Responsible for Information</a>
-          online training before they can access tools. You can find more information in the article
-          <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-workspace-basics/how-do-i-request-access-tool/" target="_blank" rel="noopener noreferrer">How do I request access to a tool</a>.
-        </p>
-        <p class="govuk-body">
-          We will action your request within 5 working days.
-        </p>
-      </div>
     </div>
 {% endblock %}
