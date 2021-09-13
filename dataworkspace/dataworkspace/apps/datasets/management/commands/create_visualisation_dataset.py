@@ -56,7 +56,7 @@ class Command(BaseCommand):
             published=True,
         )
 
-        link = VisualisationLink.objects.create(
+        VisualisationLink.objects.create(
             visualisation_type="QUICKSIGHT",
             name=name,
             identifier=str(uuid.uuid4().hex),
