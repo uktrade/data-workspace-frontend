@@ -1,5 +1,5 @@
 apache-superset==1.2.0
 gevent==21.1.2
 gunicorn==20.0.4
-Pillow==8.2.0
+Pillow==8.3.2
 psycopg2-binary==2.8.6

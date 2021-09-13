@@ -180,7 +180,7 @@ pathlib2==2.3.5
     # via apache-superset
 pgsanity==0.2.9
     # via apache-superset
-pillow==8.2.0
+pillow==8.3.2
     # via -r requirements.in
 polyline==1.4.0
     # via apache-superset
