@@ -779,18 +779,26 @@ def eligibility_criteria_view(request, dataset_uuid):
     if request.method == 'POST':
         form = EligibilityCriteriaForm(request.POST)
         if form.is_valid():
+            access_request_id = form.cleaned_data.get('access_request')
             if form.cleaned_data['meet_criteria']:
-                return HttpResponseRedirect(
-                    reverse('request_access:dataset', args=[dataset_uuid])
-                )
-            else:
-                return HttpResponseRedirect(
-                    reverse(
-                        'datasets:eligibility_criteria_not_met', args=[dataset_uuid]
+                url = reverse('request_access:dataset', args=[dataset_uuid])
+                if access_request_id:
+                    url = reverse(
+                        'request_access:dataset-request-update',
+                        args=[access_request_id],
                     )
+            else:
+                url = reverse(
+                    'datasets:eligibility_criteria_not_met', args=[dataset_uuid]
                 )
 
-    return render(request, 'eligibility_criteria.html', {'dataset': dataset})
+            return HttpResponseRedirect(url)
+
+    return render(
+        request,
+        'eligibility_criteria.html',
+        {'dataset': dataset, 'access_request': request.GET.get('access_request')},
+    )
 
 
 @require_GET
