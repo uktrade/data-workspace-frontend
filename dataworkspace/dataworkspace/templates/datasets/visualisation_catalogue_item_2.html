@@ -1,0 +1,179 @@
+{% extends '_main.html' %}
+{% load humanize static core_filters datasets_tags %}
+
+{% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
+
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}">
+    dataLayer.push({
+      "event": "catalogueView",
+      "catalogueId": "{{ model.id }}",
+      "catalogueName": "{{ model.name }}",
+      "catalogueType": "visualisation"
+    })
+  </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            {{ model.name }}
+          </li>
+          {% if perms.datasets_dataset.change %}
+            <li class="govuk-breadcrumbs__list-item">
+              <a href="{{ model.get_admin_edit_url }}" class="govuk-breadcrumbs__link">[Edit]</a>
+            </li>
+
+          {% endif %}
+        </ol>
+      </div>
+    </div>
+    <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
+      {% if is_bookmarked %}
+        {% include 'partials/bookmark-yes.html' %}
+        <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.id %}">
+          Bookmark
+        </a>
+      {% else %}
+        {% include 'partials/bookmark-no.html' %}
+        <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.id %}">
+          Bookmark
+        </a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  {% if not model.published %}
+    {% include 'partials/unpublished_banner.html' with type='visualisation' %}
+  {% endif %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">{{ model.name }}</h1>
+      <div class="govuk-body">
+        {{ model.description | safe }}
+      </div>
+
+      {% if not has_access %}
+        {% include 'partials/request_access.html' with type='visualisation' has_data_access=has_access %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="govuk-grid-row" style="overflow-x: auto;">
+    <div class="govuk-grid-column-two-thirds">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Data Visualisations</h2>
+    </div>
+
+    <div class="govuk-grid-column-full">
+      <table class="govuk-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Link to the data visualisation</th>
+          <th class="govuk-table__header">Last updated</th>
+          <th class="govuk-table__header">Format</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for visualisation_link in visualisation_links %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">
+              {% if has_access %}
+                <a class="govuk-link" href="{{ visualisation_link.get_absolute_url }}">
+                  {{ visualisation_link.name }}
+                </a>
+              {% else %}
+                {{ visualisation_link.name }}
+              {% endif %}
+            </td>
+            <td class="govuk-table__cell">
+              {{ visualisation_link.data_source_last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
+            </td>
+            <td class="govuk-table__cell">
+              Web
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          <h2 class="govuk-heading-l govuk-!-margin-top-8">Usage history</h2>
+          <div class="govuk-body">
+            <a class="govuk-link" href="{% url "datasets:visualisation_usage_history" dataset_uuid=model.id %}">View
+              history</a> to see how often this data is accessed.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if fields %}
+    <details class="govuk-details" data-module="govuk-details">
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">
+          Data fields
+        </span>
+      </summary>
+      <div class="govuk-details__text">
+        <ul class="govuk-list govuk-list--bullet">
+          {% for field in fields %}
+            <li>{{ field }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </details>
+  {% endif %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Additional information</h2>
+
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Date added</dt>
+          <dd class="govuk-summary-list__value">{{ model.published_at }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Licence</dt>
+          <dd class="govuk-summary-list__value">{{ model.licence|default:"" }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Retention Policy</dt>
+          <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Personal Data</dt>
+          <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Restrictions on usage</dt>
+          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Information Asset Manager</dt>
+          <dd class="govuk-summary-list__value">
+            {% include 'partials/contact.html' with model=model.information_asset_manager %}
+          </dd>
+        </div>
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Information Asset Owner</dt>
+          <dd class="govuk-summary-list__value">
+            {% include 'partials/contact.html' with model=model.information_asset_owner %}
+          </dd>
+        </div>
+      </dl>
+      {% if model.enquiries_contact %}
+        {% include 'partials/contact.html' with model=model.enquiries_contact as_section=True only %}
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

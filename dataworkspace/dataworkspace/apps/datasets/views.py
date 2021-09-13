@@ -755,16 +755,15 @@ class DatasetDetailView(DetailView):
         )
 
     def get_template_names(self):
-        master_dataset_template = "datasets/master_dataset.html"
 
         if self._is_reference_dataset():
             return ['datasets/referencedataset_detail.html']
         elif self.object.type == DataSetType.MASTER:
-            return [master_dataset_template]
+            return ["datasets/master_dataset.html"]
         elif self.object.type == DataSetType.DATACUT:
             return ['datasets/data_cut_dataset.html']
         elif self._is_visualisation():
-            return ['datasets/visualisation_catalogue_item.html']
+            return ['datasets/visualisation_catalogue_item_2.html']
 
         raise RuntimeError(f"Unknown template for {self}")
 
