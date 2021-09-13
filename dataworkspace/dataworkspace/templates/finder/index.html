@@ -12,26 +12,34 @@
 {% block content %}
 <form id="ds-finder-search-form" action="{% url 'finder:find_datasets' %}" method="get">
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds" style="margin: 0 auto; float: unset">
+    <div class="govuk-grid-column-two-thirds">
       <div class="govuk-form-group">
-        <h1 class="govuk-label-wrapper govuk-!-margin-top-5" style="text-align: center"><label class="govuk-label govuk-label--xl" for="q">
-          Dataset finder
-        </label>
+        <h1 class="govuk-label-wrapper">
+          <label class="govuk-label govuk-label--xl" for="q">Search all our data</label>
         </h1>
-        <p class="govuk-body-l" style="text-align: center">
-          Search for master datasets in Data Workspace that contain a specific word or phrase.
+        <p class="govuk-body">
+          Find the datasets which mention for example a particular:
+          <ul class="govuk-list govuk-list--bullet">
+            <li>company</li>
+            <li>country</li>
+            <li>sector</li>
+          </ul>
         </p>
       </div>
     </div>
-    <div class="govuk-grid-column-two-thirds govuk-!-margin-top-9" style="margin: 0 auto; float: unset">
+    <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-hint">To search for a phrase, put the phrase in quotation marks.</div>
         <div class="search-field govuk-!-margin-bottom-9">
-          <label class="govuk-label search-field__label" for="search">Search a specific word or phrase</label>
-          <div class="search-field-wrapper">
+          <div class="search-field-wrapper govuk-!-padding-bottom-6">
+            <label class="govuk-label search-field__label" for="search">Search a specific word or phrase</label>
             <input type="search" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ search_term }}">
             <div class="search-field-submit-wrapper search-field__item">
               <input class="search-field__submit" type="submit" value="Search">
             </div>
           </div>
+          <p class="govuk-body">
+            Switch to <a href="{% url 'datasets:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">search by title or description</a>.
+          </p>
         </div>
     </div>
   </div>
