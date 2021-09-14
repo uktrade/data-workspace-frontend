@@ -596,6 +596,12 @@ class DatasetDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    def _get_source_text(self, model):
+        source_text = ",".join(
+            sorted({t.name for t in self.object.tags.filter(type=TagType.SOURCE)})
+        )
+        return source_text
+
     def _get_context_data_for_master_dataset(self, ctx, **kwargs):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
 
@@ -616,10 +622,6 @@ class DatasetDetailView(DetailView):
             for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
 
-        source_text = ",".join(
-            sorted({t.name for t in self.object.tags.filter(type=TagType.SOURCE)})
-        )
-
         summarised_update_frequency = ",".join(
             sorted({t.get_frequency_display() for t in source_tables})
         )
@@ -632,7 +634,7 @@ class DatasetDetailView(DetailView):
         ctx.update(
             {
                 'summarised_update_frequency': summarised_update_frequency,
-                'source_text': source_text,
+                'source_text': self._get_source_text(self.object),
                 'has_access': self.object.user_has_access(self.request.user),
                 'has_tools_access': user_has_tools_access,
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
@@ -726,9 +728,11 @@ class DatasetDetailView(DetailView):
             {
                 'has_access': self.object.user_has_access(self.request.user),
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
-                "visualisation_links": self.object.get_visualisation_links(
+                'visualisation_links': self.object.get_visualisation_links(
                     self.request
                 ),
+                'summarised_update_frequency': 'N/A',
+                'source_text': self._get_source_text(self.object),
             }
         )
         return ctx

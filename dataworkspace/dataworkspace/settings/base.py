@@ -678,4 +678,4 @@ SUPERSET_DOMAINS = {
     'admin': f'{PROTOCOL}superset-admin.{APPLICATION_ROOT_DOMAIN}',
 }
 
-# DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

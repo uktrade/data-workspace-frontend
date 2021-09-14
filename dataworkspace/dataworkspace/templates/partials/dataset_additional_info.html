@@ -1,0 +1,59 @@
+{% load humanize datasets_tags %}
+
+<details class="govuk-details" data-module="govuk-details">
+  <summary class="govuk-details__summary">
+                    <span class="govuk-details__summary-text">
+                      Additional information
+                    </span>
+  </summary>
+  <div class="govuk-details__text">
+
+    <dl class="govuk-summary-list">
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Licence</dt>
+        <dd class="govuk-summary-list__value">
+          {% if model.licence_url %}
+            <a class="govuk-link" href="{{ model.licence_url }}">{{ model.licence }}</a>
+          {% else %}
+            {{ model.licence|default:"" }}
+          {% endif %}
+        </dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Personal Data</dt>
+        <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Retention period details</dt>
+        <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
+      </div>
+
+      {% if show_usage_history %}
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Usage history</dt>
+          <dd class="govuk-summary-list__value">
+            <a class="govuk-link" href="{% url "datasets:usage_history" dataset_uuid=dataset.id %}">View
+              history</a> to see how often this data is accessed
+          </dd>
+        </div>
+      {% endif %}
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Information Asset Manager</dt>
+        <dd class="govuk-summary-list__value">
+          {% include 'partials/contact.html' with model=model.information_asset_manager %}
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Information Asset Owner</dt>
+        <dd class="govuk-summary-list__value">
+          {% include 'partials/contact.html' with model=model.information_asset_owner %}
+        </dd>
+      </div>
+
+    </dl>
+  </div>
+</details>
