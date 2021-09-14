@@ -46,7 +46,7 @@
 
   {% if search_term %}
   <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds" style="margin: 0 auto; float: unset">
+      <div class="govuk-grid-column-two-thirds">
         {% if results %}
           <p class="govuk-body">
             <strong>{{ results|length }} results</strong>
@@ -55,23 +55,23 @@
           {% for result in results %}
             <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
             
-            <h2 class="govuk-heading-m">
-              <a class="govuk-link" href="{% url 'datasets:dataset_detail' dataset_uuid=result.id %}#{{ result.slug }}" target="_blank">
-                {{ result.name }}
-              </a>
-            </h2>
+            <h2 class="govuk-heading-m">{{ result.name }}</h2>
             {% for table in result.table_matches %}
-            <p class="govuk-body">
-              <strong>{{ table.count }}</strong> matching rows in "{{ table.schema }}"."{{ table.table }}"
-              <br>
-              <span class="govuk-hint govuk-!-margin-bottom-0">{{ table.name }}</span>
-
               {% if table.has_access %}
-              <a class="govuk-link" href="{% url 'finder:show_results' schema=table.schema table=table.table %}?name={{ result.name }}&slug={{ result.slug }}&uuid={{ result.id }}&q={{ search_term }}">
-                Show results<span class="govuk-visually-hidden"> for {{table.schema }}.{{ table.table }}</span>
-              </a>
+                <p class="govuk-body govuk-!-margin-bottom-0">
+                  <a class="govuk-link--no-visited-state" href="{% url 'finder:show_results' schema=table.schema table=table.table %}?name={{ result.name }}&slug={{ result.slug }}&uuid={{ result.id }}&q={{ search_term }}">
+                    {{ table.name }}
+                  </a>
+                </p>
+              {% else %}
+                <p class="govuk-body">
+                  You need to <a class="govuk-link govuk-link--no-visited-state" href="{% url 'request_access:dataset' dataset_uuid=result.id %}">request access to view this data</a>.
+                </p>
+                <span class="govuk-hint govuk-!-margin-bottom-0">{{ table.name}}</span>
               {% endif %}
-            </p>
+              <p class="govuk-body">
+                <strong>{{ table.count }}</strong> matching rows in "{{ table.schema }}"."{{ table.table }}"
+              </p>
             {% endfor %}
           {% endfor %}
         {% else %}

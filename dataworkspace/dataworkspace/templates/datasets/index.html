@@ -56,9 +56,11 @@
             <input class="search-field__submit" type="submit" value="Search">
           </div>
         </div>
-        <p class="govuk-body">
-          Switch to <a href="{% url 'finder:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">search all our data</a>.
-        </p>
+        {% flag DATASET_FINDER_FLAG %}
+          <p class="govuk-body">
+            Switch to <a href="{% url 'finder:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">search all our data</a>.
+          </p>
+        {% endflag %}
       </div>
     </div>
 </div>

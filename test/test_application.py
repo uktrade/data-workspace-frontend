@@ -2565,7 +2565,7 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
 
         self.assertEqual(response.status, 200)
-        self.assertIn("Dataset finder", content)
+        self.assertIn("Search all our data", content)
 
         dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'

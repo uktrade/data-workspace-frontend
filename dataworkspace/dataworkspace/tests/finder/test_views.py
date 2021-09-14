@@ -3,9 +3,9 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.test import Client, override_settings
 from waffle.testutils import override_flag
 
-from django.test import Client, override_settings
 from dataworkspace.apps.finder.models import DatasetFinderQueryLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -16,7 +16,9 @@ def test_find_datasets_default(client, mocker):
     response = client.get(reverse('finder:find_datasets'))
 
     assert response.status_code == 200
-    assert b"Search for master datasets in Data Workspace" in response.content
+    assert (
+        b"Find the datasets which mention for example a particular:" in response.content
+    )
 
 
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
