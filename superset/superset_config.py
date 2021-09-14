@@ -283,11 +283,12 @@ class DataWorkspaceSecurityManager(SupersetSecurityManager):
 
 
 def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
-    uri.host = request.headers['Credentials-Db-Host']
-    uri.username = request.headers['Credentials-Db-User']
-    uri.database = request.headers['Credentials-Db-Name']
-    uri.password = request.headers['Credentials-Db-Password']
-    uri.port = request.headers['Credentials-Db-Port']
+    if 'Credentials-Db-Host' in request.headers:
+        uri.host = request.headers['Credentials-Db-Host']
+        uri.username = request.headers['Credentials-Db-User']
+        uri.database = request.headers['Credentials-Db-Name']
+        uri.password = request.headers['Credentials-Db-Password']
+        uri.port = request.headers['Credentials-Db-Port']
     return uri, params
 
 
