@@ -19,9 +19,7 @@ pytest-django
 pytest-timeout
 django-debug-toolbar
 requests-mock
-# Ideally would use PyPI's pyppeteer, but the latest version there requires
-# websockets 8.1, which has a vulnerability
-git+https://github.com/pyppeteer/pyppeteer.git@0fd15a7c4b2d3aeaaf6da65da9033c150de0d3cb
+pyppeteer
 ipdb
 lxml
 selenium

@@ -347,7 +347,7 @@ sqlalchemy==1.3.20
     # via
     #   -r tools/requirements.in
     #   ipython-sql
-sqlparse==0.4.1
+sqlparse==0.4.2
     # via ipython-sql
 srsly==1.0.4
     # via
