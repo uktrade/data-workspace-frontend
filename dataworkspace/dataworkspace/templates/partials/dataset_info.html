@@ -28,13 +28,16 @@
 
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Contact</dt>
-    <dd class="govuk-summary-list__value">Contact
-      <a class="govuk-link"
-         href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-      {% if type == "visualisation" %}
-        to ask any questions or report problems with this dashboard.
-      {% else %}
-      to ask questions about how to use this data and the visuals. {{ type }}
+    <dd class="govuk-summary-list__value">
+      {% if model.enquiries_contact %}
+        Contact
+        <a class="govuk-link"
+           href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
+        {% if type == "visualisation" %}
+          to ask any questions or report problems with this dashboard.
+        {% else %}
+          to ask questions about how to use this data and the visuals. {{ type }}
+        {% endif %}
       {% endif %}
     </dd>
   </div>
