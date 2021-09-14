@@ -38,7 +38,6 @@ class TestData:
             email=email,
             first_name=self.fake.first_name(),
             last_name=self.fake.last_name(),
-
         )
 
         return user

@@ -60,17 +60,21 @@
       <span class="govuk-caption-xl">Dashboard</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
 
-      {% include "partials/dataset_info.html" with model=model %}
+      {% with dataset_type='visualisation' %}
 
-      {% include "partials/dataset_additional_info.html" with model=model show_usage_history=False %}
+        {% include "partials/dataset_info.html" with model=model type=dataset_type %}
 
-      <div class="govuk-body dataset-description-richtext">
-        {{ model.description | safe }}
-      </div>
+        {% include "partials/dataset_additional_info.html" with model=model show_usage_history=False %}
 
-      {% if not has_access %}
-        {% include 'partials/request_access.html' with type='visualisation' has_data_access=has_access %}
-      {% endif %}
+        <div class="govuk-body dataset-description-richtext">
+          {{ model.description | safe }}
+        </div>
+
+        {% if not has_access %}
+          {% include 'partials/request_access.html' with type=dataset_type has_data_access=has_access %}
+        {% endif %}
+
+      {% endwith %}
     </div>
   </div>
 
@@ -106,6 +110,8 @@
                 <a class="govuk-link" href="{{ visualisation_link.get_absolute_url }}">
                   View
                 </a>
+              {% else %}
+                View
               {% endif %}
             </td>
 
@@ -118,3 +124,7 @@
   </div>
 
 {% endblock %}
+
+
+
+

@@ -4,9 +4,7 @@ from faker import Faker  # noqa
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.management.commands._create_utils import TestData
-from dataworkspace.apps.datasets.models import (
-    MasterDataset,
-)
+from dataworkspace.apps.datasets.models import MasterDataset
 
 fake = Faker("en-GB")
 
@@ -31,7 +29,6 @@ class Command(BaseCommand):
             enquiries_contact=user,
             information_asset_owner=user,
             information_asset_manager=user,
-            # perhaps add other users?
             licence=test_data.get_licence_text(),
             licence_url=test_data.get_licence_url(),
             personal_data=test_data.get_personal_data_text(),

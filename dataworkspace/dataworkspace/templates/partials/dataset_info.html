@@ -31,7 +31,11 @@
     <dd class="govuk-summary-list__value">Contact
       <a class="govuk-link"
          href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-      to ask questions about how to use this data and the visuals.
+      {% if type == "visualisation" %}
+        to ask any questions or report problems with this dashboard.
+      {% else %}
+      to ask questions about how to use this data and the visuals. {{ type }}
+      {% endif %}
     </dd>
   </div>
 </dl>

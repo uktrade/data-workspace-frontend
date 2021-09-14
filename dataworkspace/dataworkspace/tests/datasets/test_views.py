@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 from uuid import uuid4
 
 import factory.fuzzy
+import faker
 import mock
 import psycopg2
 import pytest
@@ -2111,14 +2112,42 @@ def test_launch_master_dataset_in_data_explorer(metadata_db):
     )
 
 
+def get_govuk_summary_list_value(doc, key_text):
+    # xpath hint ... the first dd child of the parent of the dt element containing key_text
+    match = doc.xpath(
+        f'//dt[@class="govuk-summary-list__key" and text()="{key_text}"]/../dd/text()'
+    )
+
+    if match:
+        return match[0]
+
+    # Don't want to return an empty string as this could give false positives
+    return "<empty>"
+
+
 class TestVisualisationsDetailView:
-    def test_get_published_authenticated_visualisation(self, client):
+    def test_get_published_authenticated_visualisation(self, client, user):
         vis = VisualisationCatalogueItemFactory()
+
+        vis.enquiries_contact = user
+        vis.short_description = faker.Faker().sentence()
+        vis.save()
 
         response = client.get(vis.get_absolute_url())
 
+        response_content = response.content.decode(response.charset)
+        doc = html.fromstring(response_content)
+
         assert response.status_code == 200
-        assert vis.name in response.content.decode(response.charset)
+        assert vis.name in response_content
+
+        assert (
+            "to ask any questions or report problems with this dashboard."
+            in response_content
+        )
+
+        assert get_govuk_summary_list_value(doc, "Update frequency") == "N/A"
+        assert get_govuk_summary_list_value(doc, "Summary") == vis.short_description
 
     @pytest.mark.parametrize('has_access', (True, False))
     @pytest.mark.django_db
@@ -2137,7 +2166,7 @@ class TestVisualisationsDetailView:
         assert response.status_code == 200
         assert vis.name in response.content.decode(response.charset)
         assert (
-            "You need to request access to view this data visualisation."
+            "You need to request access to view this data."
             in response.content.decode(response.charset)
         ) is not has_access
 
