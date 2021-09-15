@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='referencedataset',
             name='licence_url',
-            field=models.CharField(blank=True, help_text='Link to license (optional)', max_length=1024, null=True),
+            field=models.CharField(
+                blank=True,
+                help_text='Link to license (optional)',
+                max_length=1024,
+                null=True,
+            ),
         ),
     ]
