@@ -2026,7 +2026,7 @@ class TestRequestAccess(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert (
-            "You need to request access to view this data visualisation"
+            "You need to request access to view this data."
             in response.content.decode(response.charset)
         )
 
