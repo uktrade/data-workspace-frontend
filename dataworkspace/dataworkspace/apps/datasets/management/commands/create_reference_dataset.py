@@ -4,7 +4,6 @@ from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 from faker import Faker  # noqa
 
-from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.management.commands._create_utils import TestData
 from dataworkspace.apps.datasets.models import ReferenceDataset
 
