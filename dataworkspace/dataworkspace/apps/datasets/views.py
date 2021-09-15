@@ -767,7 +767,7 @@ class DatasetDetailView(DetailView):
         elif self.object.type == DataSetType.DATACUT:
             return ['datasets/data_cut_dataset.html']
         elif self._is_visualisation():
-            return ['datasets/visualisation_catalogue_item_2.html']
+            return ['datasets/visualisation_catalogue_item.html']
 
         raise RuntimeError(f"Unknown template for {self}")
 
