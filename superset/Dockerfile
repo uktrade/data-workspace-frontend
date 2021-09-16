@@ -31,7 +31,7 @@ RUN adduser --disabled-password --gecos '' superset
 COPY requirements.txt /
 
 RUN \
-    pip3 install --upgrade setuptools pip && \
+    pip3 install --upgrade setuptools==57.5.0 pip && \
     pip3 install -r requirements.txt
 
 ENV \

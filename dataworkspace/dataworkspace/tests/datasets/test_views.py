@@ -1796,7 +1796,9 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
             published=True,
             table_name='ref_my_reference_table',
             name='A search reference dataset',
-            external_database=factories.DatabaseFactory.create(),
+            external_database=factories.DatabaseFactory.create(
+                memorable_name='my_database'
+            ),
         )
 
         client = Client(**get_http_sso_data(user))
@@ -1827,7 +1829,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
     @pytest.mark.django_db
     def test_reference_dataset_shows_column_details(self, request_client, published):
         group = factories.DataGroupingFactory.create()
-        external_db = factories.DatabaseFactory.create()
+        external_db = factories.DatabaseFactory.create(memorable_name='my_database')
         rds = factories.ReferenceDatasetFactory.create(
             published=published, group=group, external_database=external_db,
         )
