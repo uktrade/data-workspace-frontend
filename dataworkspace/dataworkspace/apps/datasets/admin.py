@@ -538,6 +538,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
                     'information_asset_owner',
                     'information_asset_manager',
                     'licence',
+                    'licence_url',
                     'restrictions_on_usage',
                     'sort_field',
                     'sort_direction',

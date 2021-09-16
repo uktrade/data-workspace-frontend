@@ -1050,6 +1050,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         blank=True,
     )
 
+    licence_url = models.CharField(
+        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
+    )
+
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE
