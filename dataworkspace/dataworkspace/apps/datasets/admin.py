@@ -702,6 +702,7 @@ class VisualisationCatalogueItemAdmin(
                     'information_asset_owner',
                     'information_asset_manager',
                     'licence',
+                    'licence_url',
                     'retention_policy',
                     'personal_data',
                     'restrictions_on_usage',

@@ -2099,6 +2099,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
     )
 
+    licence_url = models.CharField(
+        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
+    )
+
     class Meta:
         permissions = [
             (
