@@ -35,7 +35,7 @@
       <div class="govuk-!-margin-top-4">
         {% if object.data_grid_download_enabled %}
           <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
-            Download this data (max {% if object.data_grid_download_limit %}{{ object.data_grid_download_limit|intcomma }}{% else %}5,000{% endif %} rows)
+            Download this data{% if object.data_grid_download_limit %} (max {{ object.data_grid_download_limit|intcomma }} rows){% endif %}
           </button>
           &nbsp;
         {% endif %}
