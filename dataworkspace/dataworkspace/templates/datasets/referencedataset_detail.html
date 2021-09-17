@@ -125,10 +125,13 @@
 
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Contact</dt>
-          <dd class="govuk-summary-list__value">Contact
-            <a class="govuk-link"
-               href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-            to ask questions about how to use this data and the visuals.
+          <dd class="govuk-summary-list__value">
+            {% if model.enquiries_contact %}
+              Contact
+              <a class="govuk-link"
+                href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
+                to ask questions about how to use this data and the visuals.
+              {% endif %}
           </dd>
         </div>
       </dl>
