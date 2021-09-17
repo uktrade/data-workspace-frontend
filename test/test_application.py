@@ -2547,6 +2547,8 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
+        await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
+
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
         await until_succeeds('http://data-workspace-es:9200/_cat/indices')
         await setup_elasticsearch_indexes()
@@ -2556,8 +2558,6 @@ class TestApplication(unittest.TestCase):
             'GET', 'http://dataworkspace.test:8000/',
         ) as response:
             content = await response.text()
-
-        await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
 
         async with session.request(
             'GET', 'http://dataworkspace.test:8000/finder',
