@@ -18,15 +18,15 @@
     <script src="{% static 'dayjs.min.js' %}"></script>
     <script src="{% static 'data-grid.js' %}"></script>
     {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
-    <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
     {{ model.get_column_config|json_script:"column_data" }}
     {{ model.get_grid_data|json_script:"grid_data" }}
     <script nonce="{{ request.csp_nonce }}">
       window.initDataGrid(
-          JSON.parse(document.getElementById('column_data').textContent),
-          null,
-          JSON.parse(document.getElementById('grid_data').textContent),
-          '{{ model.slug }}-{{ model.published_version }}-custom-export.csv'
+        JSON.parse(document.getElementById('column_data').textContent),
+        null,
+        JSON.parse(document.getElementById('grid_data').textContent),
+        '{{ model.slug }}-{{ model.published_version }}-custom-export.csv'
       );
     </script>
   {% endflag %}
@@ -89,7 +89,6 @@
     </div>
   </div>
 
-
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <dl class="govuk-summary-list">
@@ -115,15 +114,24 @@
 
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Licence</dt>
-          <dd class="govuk-summary-list__value">{{ model.licence }}</dd>
+          <dd class="govuk-summary-list__value">
+            {% if model.licence_url %}
+              <a class="govuk-link" href="{{ model.licence_url }}">{{ model.licence }}</a>
+            {% else %}
+              {{ model.licence|default:"" }}
+            {% endif %}
+          </dd>
         </div>
 
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Contact</dt>
-          <dd class="govuk-summary-list__value">Contact
-            <a class="govuk-link"
-               href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-            to ask questions about how to use this data and the visuals.
+          <dd class="govuk-summary-list__value">
+            {% if model.enquiries_contact %}
+              Contact
+              <a class="govuk-link"
+                href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
+                to ask questions about how to use this data and the visuals.
+              {% endif %}
           </dd>
         </div>
       </dl>
@@ -151,26 +159,27 @@
         </tr>
         </thead>
         <tbody>
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell app-table_cell--no-border">
-              {{ model.slug }}-{{ model.published_version }}
-            </td>
-            <td class="govuk-table__cell app-table_cell--no-border">CSV, JSON</td>
-            <td class="govuk-table__cell app-table_cell--no-border">{{ model.published_version }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">{{ model.data_last_updated|date_with_gmt_offset }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">
-              <a class="govuk-link"
-                  href="{% url "datasets:reference_dataset_grid" dataset_uuid=model.uuid %}">
-                View
-              </a>
-            </td>
-          </tr>
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell app-table_cell--no-border">
+            {{ model.slug }}-{{ model.published_version }}
+          </td>
+          <td class="govuk-table__cell app-table_cell--no-border">CSV, JSON</td>
+          <td class="govuk-table__cell app-table_cell--no-border">{{ model.published_version }}</td>
+          <td
+            class="govuk-table__cell app-table_cell--no-border">{{ model.data_last_updated|date_with_gmt_offset }}</td>
+          <td class="govuk-table__cell app-table_cell--no-border">
+            <a class="govuk-link"
+               href="{% url "datasets:reference_dataset_grid" dataset_uuid=model.uuid %}">
+              View
+            </a>
+          </td>
+        </tr>
         </tbody>
       </table>
       {% if code_snippets or columns %}
         {% if columns %}
           <details class="govuk-details govuk"
-                    data-module="govuk-details">
+                   data-module="govuk-details">
             <summary class="govuk-details__summary">
               <span class="govuk-details__summary-text">
                 View data structure <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
@@ -185,7 +194,7 @@
                 {% endfor %}
                 {% if columns|length > 12 %}
                   <a class="govuk-link"
-                      href="{% url 'datasets:reference_dataset_column_details' dataset_uuid=model.uuid %}">
+                     href="{% url 'datasets:reference_dataset_column_details' dataset_uuid=model.uuid %}">
                     View all columns <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
                   </a>
                 {% endif %}
@@ -205,7 +214,7 @@
               {% include 'partials/code_snippets.html' with code_snippets=code_snippets %}
             </div>
           </details>
-          {% endif %}
+        {% endif %}
       {% endif %}
     </div>
   </div>

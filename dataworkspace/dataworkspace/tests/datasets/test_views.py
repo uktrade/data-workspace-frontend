@@ -1784,6 +1784,39 @@ class TestMasterDatasetDetailView(DatasetsCommon):
 
 
 class TestReferenceDatasetDetailView(DatasetsCommon):
+    def _get_ref_dataset(self, table_name: str):
+        return factories.ReferenceDatasetFactory.create(
+            published=True,
+            table_name=table_name,
+            name='A search reference dataset',
+            external_database=factories.DatabaseFactory.create(
+                memorable_name='my_database'
+            ),
+        )
+
+    @mock.patch(
+        'dataworkspace.apps.datasets.models.ReferenceDataset.sync_to_external_database'
+    )
+    def test_reference_dataset_show_link_to_license(self, mock_sync, staff_client):
+        rds = self._get_ref_dataset('ref_test_license_url')
+
+        rds.licence = "Open Gov"
+        rds.licence_url = "http://www.example.com/"
+        rds.save()
+
+        response = staff_client.get(rds.get_absolute_url())
+        assert response.status_code == 200
+
+        response_body = response.content.decode(response.charset)
+        doc = html.fromstring(response_body)
+
+        match = doc.xpath(
+            '//dt[@class="govuk-summary-list__key" and text()="Licence"]/../dd/a/@href'
+        )
+
+        assert match
+        assert match[0] == rds.licence_url
+
     @pytest.mark.django_db
     @mock.patch(
         'dataworkspace.apps.datasets.models.ReferenceDataset.sync_to_external_database'
@@ -1792,14 +1825,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         user = get_user_model().objects.create(
             email='test@example.com', is_superuser=False
         )
-        rds = factories.ReferenceDatasetFactory.create(
-            published=True,
-            table_name='ref_my_reference_table',
-            name='A search reference dataset',
-            external_database=factories.DatabaseFactory.create(
-                memorable_name='my_database'
-            ),
-        )
+        rds = self._get_ref_dataset('ref_my_reference_table')
 
         client = Client(**get_http_sso_data(user))
         response = client.get(rds.get_absolute_url())
