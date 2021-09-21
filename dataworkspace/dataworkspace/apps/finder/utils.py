@@ -1,5 +1,6 @@
 import operator
 from dataclasses import dataclass
+from datetime import datetime
 from functools import reduce
 from typing import List, Iterable
 
@@ -142,12 +143,13 @@ class ResultsProxy:
     passed to a Paginator.
     """
 
-    def __init__(self, es_client, index_alias, phrase, count):
+    def __init__(self, es_client, index_alias, phrase, count, filters=None):
         super(ResultsProxy, self).__init__()
         self._client = es_client
         self.index_alias = index_alias
         self.phrase = phrase
         self.count = count
+        self.filters = filters
 
     def __len__(self):
         return self.count
@@ -160,6 +162,90 @@ class ResultsProxy:
             index_aliases=[self.index_alias],
             from_=item.start,
             size=item.stop - item.start,
+            filters=self.filters,
         )
 
         return resp['hits']['hits']
+
+
+def build_grid_filters(column_config, params):
+    es_filters = []
+    column_map = {x['field']: x for x in column_config}
+    for field, filter_data in params.items():
+        data_type = column_map[field].get('dataType', filter_data['filterType'])
+        term = filter_data.get('filter')
+
+        # Booleans are passed as integers
+        if data_type == 'boolean':
+            term = bool(int(term))
+
+        if field in column_map:
+            if filter_data['type'] == 'contains':
+                es_filters.append(
+                    {
+                        'bool': {
+                            'must': {'match_phrase': {field: term}}
+                            if ' ' in term
+                            else {'wildcard': {field: {'value': f'*{term}*'}}}
+                        }
+                    }
+                )
+
+            elif filter_data['type'] == 'notContains':
+                es_filters.append(
+                    {
+                        'bool': {
+                            'must_not': {'match_phrase': {field: term}}
+                            if ' ' in term
+                            else {'wildcard': {field: {'value': f'*{term}*'}}}
+                        }
+                    }
+                )
+
+            elif filter_data['type'] == 'equals':
+                if data_type == 'date':
+                    term = datetime.strptime(
+                        filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
+                    )
+                es_filters.append({'term': {field: term}})
+
+            elif filter_data['type'] == 'notEqual':
+                if data_type == 'date':
+                    term = datetime.strptime(
+                        filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
+                    )
+                es_filters.append({'term': {field: term}})
+
+            elif filter_data['type'] in ['lessThan', 'greaterThan']:
+                if data_type == 'date':
+                    term = datetime.strptime(
+                        filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
+                    )
+                es_filters.append(
+                    {
+                        'range': {
+                            field: {
+                                'lt'
+                                if filter_data['type'] == 'lessThan'
+                                else 'gt': term
+                            }
+                        }
+                    }
+                )
+
+            elif filter_data['type'] == 'inRange':
+                es_filters.append(
+                    {
+                        'range': {
+                            field: {
+                                'gte': datetime.strptime(
+                                    filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
+                                ),
+                                'lte': datetime.strptime(
+                                    filter_data['dateTo'], '%Y-%m-%d %H:%M:%S'
+                                ),
+                            }
+                        }
+                    }
+                )
+    return es_filters
