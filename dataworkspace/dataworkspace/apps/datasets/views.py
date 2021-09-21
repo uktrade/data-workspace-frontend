@@ -669,7 +669,8 @@ class DatasetDetailView(DetailView):
         )
 
         DatacutLinkInfo = namedtuple(
-            'DatacutLinkInfo', ('datacut_link', 'can_show_link', 'code_snippets', 'columns')
+            'DatacutLinkInfo',
+            ('datacut_link', 'can_show_link', 'code_snippets', 'columns'),
         )
         datacut_links_info = [
             DatacutLinkInfo(
@@ -699,7 +700,7 @@ class DatasetDetailView(DetailView):
                 'related_visualisations': self.object.related_visualisations.filter(
                     published=True
                 ),
-                'summarised_update_frequency':summarised_update_frequency,
+                'summarised_update_frequency': summarised_update_frequency,
                 'source_text': self._get_source_text(self.object),
             }
         )

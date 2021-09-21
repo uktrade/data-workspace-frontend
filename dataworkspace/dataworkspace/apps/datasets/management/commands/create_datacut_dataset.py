@@ -39,5 +39,7 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            self.style.SUCCESS(f"created new datacut dataset {name} {catalogue_item.id}")
+            self.style.SUCCESS(
+                f"created new datacut dataset {name} {catalogue_item.id}"
+            )
         )

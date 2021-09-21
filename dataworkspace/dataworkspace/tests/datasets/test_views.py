@@ -1643,8 +1643,13 @@ class DatasetsCommon:
 
         return master
 
-    def _create_related_data_cuts(self, schema='public', table='test_dataset', num=1,
-                                  user_access_type='REQUIRES_AUTHENTICATION'):
+    def _create_related_data_cuts(
+        self,
+        schema='public',
+        table='test_dataset',
+        num=1,
+        user_access_type='REQUIRES_AUTHENTICATION',
+    ):
         datacuts = []
 
         for i in range(num):
@@ -2064,7 +2069,9 @@ class TestDataCutDetailsView(DatasetsCommon):
     @pytest.mark.django_db
     def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
         ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
-        user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
+        user = get_user_model().objects.create(
+            email='test@example.com', is_superuser=False
+        )
         factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
         factories.CustomDatasetQueryFactory.create(
             dataset=ds,
@@ -2097,11 +2104,17 @@ class TestDataCutDetailsView(DatasetsCommon):
         response = staff_client.get(data_cut.get_absolute_url())
 
         assert response.status_code == 200
-        assert "This data set is on an external website." in response.content.decode(response.charset)
+        assert "This data set is on an external website." in response.content.decode(
+            response.charset
+        )
 
-    def test_code_snippets_are_hidden_when_user_has_no_permissions(self, metadata_db, user):
+    def test_code_snippets_are_hidden_when_user_has_no_permissions(
+        self, metadata_db, user
+    ):
         self._create_master()
-        data_cut = self._create_related_data_cuts(user_access_type='REQUIRES_AUTHORIZATION')[0]
+        data_cut = self._create_related_data_cuts(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        )[0]
 
         client = Client(**get_http_sso_data(user))
         response = client.get(data_cut.get_absolute_url())
@@ -2110,8 +2123,6 @@ class TestDataCutDetailsView(DatasetsCommon):
 
         assert response.status_code == 200
         assert "Code snippets" not in response_text
-
-
 
 
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
