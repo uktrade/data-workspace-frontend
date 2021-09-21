@@ -1643,7 +1643,8 @@ class DatasetsCommon:
 
         return master
 
-    def _create_related_data_cuts(self, schema='public', table='test_dataset', num=1):
+    def _create_related_data_cuts(self, schema='public', table='test_dataset', num=1,
+                                  user_access_type='REQUIRES_AUTHENTICATION'):
         datacuts = []
 
         for i in range(num):
@@ -1651,7 +1652,7 @@ class DatasetsCommon:
                 published=True,
                 type=DataSetType.DATACUT,
                 name=f'Datacut {i}',
-                user_access_type='REQUIRES_AUTHENTICATION',
+                user_access_type=user_access_type,
             )
             query = factories.CustomDatasetQueryFactory.create(
                 dataset=datacut,
@@ -2059,31 +2060,58 @@ class TestRequestAccess(DatasetsCommon):
         )
 
 
-@pytest.mark.django_db
-def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
-    ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
-    user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    factories.CustomDatasetQueryFactory.create(
-        dataset=ds,
-        query='SELECT * FROM foo',
-        database=factories.DatabaseFactory(memorable_name='my_database'),
-    )
+class TestDataCutDetailsView(DatasetsCommon):
+    @pytest.mark.django_db
+    def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
+        ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
+        user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
+        factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+        factories.CustomDatasetQueryFactory.create(
+            dataset=ds,
+            query='SELECT * FROM foo',
+            database=factories.DatabaseFactory(memorable_name='my_database'),
+        )
 
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
+        client = Client(**get_http_sso_data(user))
+        response = client.get(ds.get_absolute_url())
 
-    assert response.status_code == 200
-    assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
+        assert response.status_code == 200
+        assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
 
-    user.is_superuser = True
-    user.save()
+        user.is_superuser = True
+        user.save()
 
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
+        client = Client(**get_http_sso_data(user))
+        response = client.get(ds.get_absolute_url())
 
-    assert response.status_code == 200
-    assert """SELECT * FROM foo""" in response.content.decode(response.charset)
+        assert response.status_code == 200
+        assert """SELECT * FROM foo""" in response.content.decode(response.charset)
+
+    def test_warning_is_shown_for_external_data(self, metadata_db, staff_client):
+        self._create_master()
+        data_cut = self._create_related_data_cuts()[0]
+
+        # Create external sourcelink
+        factories.SourceLinkFactory(dataset=data_cut)
+
+        response = staff_client.get(data_cut.get_absolute_url())
+
+        assert response.status_code == 200
+        assert "This data set is on an external website." in response.content.decode(response.charset)
+
+    def test_code_snippets_are_hidden_when_user_has_no_permissions(self, metadata_db, user):
+        self._create_master()
+        data_cut = self._create_related_data_cuts(user_access_type='REQUIRES_AUTHORIZATION')[0]
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(data_cut.get_absolute_url())
+
+        response_text = response.content.decode(response.charset)
+
+        assert response.status_code == 200
+        assert "Code snippets" not in response_text
+
+
 
 
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')

@@ -602,6 +602,14 @@ class DatasetDetailView(DetailView):
         )
         return source_text
 
+    def _get_user_tools_access(self) -> bool:
+        user_has_tools_access = self.request.user.user_permissions.filter(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        ).exists()
+
+        return user_has_tools_access
+
     def _get_context_data_for_master_dataset(self, ctx, **kwargs):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
 
@@ -626,17 +634,12 @@ class DatasetDetailView(DetailView):
             sorted({t.get_frequency_display() for t in source_tables})
         )
 
-        user_has_tools_access = self.request.user.user_permissions.filter(
-            codename='start_all_applications',
-            content_type=ContentType.objects.get_for_model(ApplicationInstance),
-        ).exists()
-
         ctx.update(
             {
                 'summarised_update_frequency': summarised_update_frequency,
                 'source_text': self._get_source_text(self.object),
                 'has_access': self.object.user_has_access(self.request.user),
-                'has_tools_access': user_has_tools_access,
+                'has_tools_access': self._get_user_tools_access(),
                 'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
                 'master_datasets_info': master_datasets_info,
                 'source_table_type': DataLinkType.SOURCE_TABLE,
@@ -661,8 +664,12 @@ class DatasetDetailView(DetailView):
             key=lambda x: x.name,
         )
 
+        summarised_update_frequency = ",".join(
+            sorted({t.get_frequency_display() for t in datacut_links})
+        )
+
         DatacutLinkInfo = namedtuple(
-            'DatacutLinkInfo', ('datacut_link', 'can_show_link', 'code_snippets')
+            'DatacutLinkInfo', ('datacut_link', 'can_show_link', 'code_snippets', 'columns')
         )
         datacut_links_info = [
             DatacutLinkInfo(
@@ -673,6 +680,7 @@ class DatasetDetailView(DetailView):
                     if hasattr(datacut_link, 'query')
                     else None
                 ),
+                columns=[],
             )
             for datacut_link in datacut_links
         ]
@@ -691,6 +699,8 @@ class DatasetDetailView(DetailView):
                 'related_visualisations': self.object.related_visualisations.filter(
                     published=True
                 ),
+                'summarised_update_frequency':summarised_update_frequency,
+                'source_text': self._get_source_text(self.object),
             }
         )
         return ctx
@@ -765,7 +775,7 @@ class DatasetDetailView(DetailView):
         elif self.object.type == DataSetType.MASTER:
             return ["datasets/master_dataset.html"]
         elif self.object.type == DataSetType.DATACUT:
-            return ['datasets/data_cut_dataset.html']
+            return ['datasets/data_cut_dataset_2.html']
         elif self._is_visualisation():
             return ['datasets/visualisation_catalogue_item.html']
 

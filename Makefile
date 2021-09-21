@@ -56,7 +56,7 @@ docker-test-unit-local:
 	if [ -z "$$TEST_DIR" ]; \
 		then TEST_DIR="/dataworkspace/dataworkspace"; \
  	fi; \
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v
 
 .PHONY: docker-test-integration-local
 docker-test-integration-local:
