@@ -681,7 +681,15 @@ class DatasetDetailView(DetailView):
                     if hasattr(datacut_link, 'query')
                     else None
                 ),
-                columns=[],
+                columns=(
+                    datasets_db.get_columns(
+                        database_name=datacut_link.database.memorable_name,
+                        query=datacut_link.query,
+                        include_types=True,
+                    )
+                    if hasattr(datacut_link, 'query')
+                    else None
+                ),
             )
             for datacut_link in datacut_links
         ]

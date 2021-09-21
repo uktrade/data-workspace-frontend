@@ -2124,6 +2124,22 @@ class TestDataCutDetailsView(DatasetsCommon):
         assert response.status_code == 200
         assert "Code snippets" not in response_text
 
+    def test_data_structure_is_hidden_when_user_has_no_permissions(
+        self, metadata_db, user
+    ):
+        self._create_master()
+        data_cut = self._create_related_data_cuts(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        )[0]
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(data_cut.get_absolute_url())
+
+        response_text = response.content.decode(response.charset)
+
+        assert response.status_code == 200
+        assert "View data structure" not in response_text
+
 
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
 @pytest.mark.django_db
