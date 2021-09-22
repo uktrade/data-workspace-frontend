@@ -138,6 +138,7 @@
           <tr class="govuk-table__row">
             <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
               {{ datacut_link.name }}
+
             </td>
             <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
               {% if datacut_link.format %}{{ datacut_link.format }}{% else %}CSV{% endif %}
@@ -164,37 +165,39 @@
                   <p class="govuk-body">No preview available</p>
                 {% endif %}
               {% else %}
-                <a class="govuk-link" href="{{ datacut_link.get_absolute_url }}">
-                  Download
-                </a>
+                {% if has_access %}
+                  <a class="govuk-link external-link" href="{{ datacut_link.get_absolute_url }}">
+                    Visit
+                  </a>
+                {% endif %}
               {% endif %}
 
             </td>
 
-          <tr class="govuk-table__row">
-            <td colspan="6" class="govuk-table__cell">
-              {% if columns %}
-                {% include "partials/column_list.html" with columns=columns dataset=dataset source_table=source_table %}
-              {% endif %}
-              {% if code_snippets and has_access %}
-                <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
-                  <summary class="govuk-details__summary">
+            {% if columns or code_snippets and has_access %}
+              <tr class="govuk-table__row">
+                <td colspan="6" class="govuk-table__cell">
+                  {% if columns %}
+                    {% include "partials/column_list.html" with columns=columns dataset=dataset source_table=source_table %}
+                  {% endif %}
+                  {% if code_snippets and has_access %}
+                    <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
+                      <summary class="govuk-details__summary">
                                   <span class="govuk-details__summary-text">
                                     Use this data<span
                                     class="govuk-visually-hidden"> "{{ source_table.schema }}"."{{ source_table.table }}"</span>
                                   </span>
-                  </summary>
-                  <div class="govuk-details__text">
-                    {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
+                      </summary>
+                      <div class="govuk-details__text">
+                        {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
 
-                  </div>
-                </details>
-              {% endif %}
-            </td>
-          </tr>
+                      </div>
+                    </details>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endif %}
 
-
-          </tr>
         {% endfor %}
 
         {% if not datacut_links_info %}

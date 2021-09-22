@@ -1643,6 +1643,9 @@ class DatasetsCommon:
 
         return master
 
+    def _create_external_link(self):
+        pass
+
     def _create_related_data_cuts(
         self,
         schema='public',
@@ -2108,6 +2111,22 @@ class TestDataCutDetailsView(DatasetsCommon):
             response.charset
         )
 
+    def test_external_link_shown_when_user_has_no_permissions(self, metadata_db, user):
+        self._create_master()
+        data_cut = self._create_related_data_cuts(
+            user_access_type='REQUIRES_AUTHORIZATION'
+        )[0]
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(data_cut.get_absolute_url())
+
+        response_text = response.content.decode(response.charset)
+        assert response.status_code == 200
+        doc = html.fromstring(response_text)
+
+        assert response.status_code == 200
+        assert len(doc.xpath(f"//a[@class = 'govuk-link external-link']")) == 1
+
     def test_code_snippets_are_hidden_when_user_has_no_permissions(
         self, metadata_db, user
     ):
@@ -2124,9 +2143,12 @@ class TestDataCutDetailsView(DatasetsCommon):
         assert response.status_code == 200
         assert "Code snippets" not in response_text
 
-    def test_data_structure_is_hidden_when_user_has_no_permissions(
-        self, metadata_db, user
+    @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
+    def test_data_structure_is_visible_when_user_has_no_permissions(
+        self, get_columns_mock, metadata_db, user
     ):
+        get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(20)]
+
         self._create_master()
         data_cut = self._create_related_data_cuts(
             user_access_type='REQUIRES_AUTHORIZATION'
@@ -2138,7 +2160,7 @@ class TestDataCutDetailsView(DatasetsCommon):
         response_text = response.content.decode(response.charset)
 
         assert response.status_code == 200
-        assert "View data structure" not in response_text
+        assert "View data structure" in response_text
 
 
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
