@@ -276,7 +276,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     ]
 
     class Media:
-        js = ('js/min/django_better_admin_arrayfield.min.js',)
+        js = ('js/min/django_better_admin_arrayfield.min.js', 'data-workspace-admin.js')
         css = {
             'all': (
                 'css/min/django_better_admin_arrayfield.min.css',
@@ -565,7 +565,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
     get_bookmarks.short_description = 'Bookmarks'
 
     class Media:
-        js = ('admin/js/vendor/jquery/jquery.js', 'data-workspace-admin.js')
+        js = ('data-workspace-admin.js',)
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
