@@ -2067,7 +2067,7 @@ class TestRequestAccess(DatasetsCommon):
 
 class TestDataCutDetailsView(DatasetsCommon):
     @pytest.mark.django_db
-    def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
+    def test_datacut_dataset_shows_code_snippets_to_tool_user(self, metadata_db):
         ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
         user = get_user_model().objects.create(
             email='test@example.com', is_superuser=False

@@ -122,7 +122,7 @@
     </div>
 
 
-    <div class="govuk-grid-column-full">
+    <div class="govuk-grid-column-full" style="overflow-x: auto;">
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
@@ -145,7 +145,7 @@
             <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
               {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
             </td>
-            {# Do not show details column #}
+
             <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
               {% if can_show_link and datacut_link.type == custom_dataset_query_type %}
                 {% if has_access %}
@@ -170,28 +170,29 @@
               {% endif %}
 
             </td>
-            {% if code_snippets and has_access %}
-              <tr class="govuk-table__row">
-                <td colspan="6" class="govuk-table__cell">
-                  {% if columns and has_access %}
-                    {% include "partials/column_list.html" with columns=columns dataset=dataset source_table=source_table %}
-                  {% endif %}
-                  <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
-                    <summary class="govuk-details__summary">
+
+          <tr class="govuk-table__row">
+            <td colspan="6" class="govuk-table__cell">
+              {% if columns %}
+                {% include "partials/column_list.html" with columns=columns dataset=dataset source_table=source_table %}
+              {% endif %}
+              {% if code_snippets and has_access %}
+                <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
+                  <summary class="govuk-details__summary">
                                   <span class="govuk-details__summary-text">
                                     Use this data<span
                                     class="govuk-visually-hidden"> "{{ source_table.schema }}"."{{ source_table.table }}"</span>
                                   </span>
-                    </summary>
-                    <div class="govuk-details__text">
-                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
+                  </summary>
+                  <div class="govuk-details__text">
+                    {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table %}
 
-                    </div>
-                  </details>
+                  </div>
+                </details>
+              {% endif %}
+            </td>
+          </tr>
 
-                </td>
-              </tr>
-            {% endif %}
 
           </tr>
         {% endfor %}
