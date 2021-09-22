@@ -309,11 +309,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     def save_model(self, request, obj, form, change):
         original_user_access_type = obj.user_access_type
 
-        obj.user_access_type = (
-            'REQUIRES_AUTHENTICATION'
-            if form.cleaned_data['open_to_all_users']
-            else 'REQUIRES_AUTHORIZATION'
-        )
+        obj.user_access_type = form.cleaned_data['open_to_all_users']
 
         current_authorized_users = set(
             get_user_model().objects.filter(datasetuserpermission__dataset=obj)

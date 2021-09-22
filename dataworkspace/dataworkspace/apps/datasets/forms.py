@@ -127,15 +127,21 @@ class DatasetSearchForm(forms.Form):
     )
 
     unpublished = forms.MultipleChoiceField(
-        choices=[('yes', 'Include unpublished')],
+        choices=[
+            ('yes', 'Include unpublished'),
+        ],
         required=False,
         widget=FilterWidget("Show unpublished"),
     )
 
-    opendata = forms.MultipleChoiceField(
-        choices=[('yes', 'Show Open data')],
+    admin = forms.TypedMultipleChoiceField(
+        choices=[
+            ('UNPUBLISHED', 'Include unpublished'),
+            ('OPENDATA', 'Show Open data'),
+        ],
+        coerce=str,
         required=False,
-        widget=FilterWidget("Show unpublished"),
+        widget=FilterWidget("Admin only options"),
     )
 
     bookmarked = forms.MultipleChoiceField(
@@ -215,7 +221,7 @@ class DatasetSearchForm(forms.Form):
         counts = {
             "bookmarked": defaultdict(int),
             "unpublished": defaultdict(int),
-            "opendata": defaultdict(int),
+            "admin": defaultdict(int),
             "use": defaultdict(int),
             "data_type": defaultdict(int),
             "source": defaultdict(int),
@@ -225,8 +231,9 @@ class DatasetSearchForm(forms.Form):
 
         user_access = set(self.cleaned_data['user_access'])
         selected_bookmark = bool(self.cleaned_data['bookmarked'])
-        selected_unpublished = bool(self.cleaned_data['unpublished'])
-        selected_opendata = bool(self.cleaned_data['opendata'])
+        selected_admin = set(self.cleaned_data['admin'])
+        selected_unpublished = 'UNPUBLISHED' in selected_admin # bool(self.cleaned_data['unpublished'])
+        selected_opendata = 'OPENDATA' in selected_admin
         selected_uses = set(self.cleaned_data['use'])
         selected_data_type = set(self.cleaned_data['data_type'])
         selected_source_ids = set(source.id for source in self.cleaned_data['source'])
@@ -234,6 +241,7 @@ class DatasetSearchForm(forms.Form):
 
         # Cache these locally for performance. The source model choice field can end up hitting the DB each time.
         user_access_choices = list(self.fields['user_access'].choices)
+        admin_choices = list(self.fields['admin'].choices)
         use_choices = list(self.fields['use'].choices)
         data_type_choices = list(self.fields['data_type'].choices)
         source_choices = list(self.fields['source'].choices)
@@ -266,8 +274,13 @@ class DatasetSearchForm(forms.Form):
             if dataset_matcher(unpublished=True):
                 counts['unpublished']['yes'] += 1
 
-            if dataset_matcher(opendata=True):
-                counts['opendata']['yes'] += 1
+            for admin_id, _ in admin_choices:
+                if admin_id == 'UNPUBLISHED':
+                    if dataset_matcher(unpublished=True):
+                        counts['admin'][admin_id] += 1
+                if admin_id == 'OPENDATA':
+                    if dataset_matcher(opendata=True):
+                        counts['admin'][admin_id] += 1
 
             for use_id, _ in use_choices:
                 if dataset_matcher(use={use_id}):
@@ -303,9 +316,9 @@ class DatasetSearchForm(forms.Form):
             for unpub_id, unpub_text in self.fields['unpublished'].choices
         ]
 
-        self.fields['opendata'].choices = [
-            (unpub_id, unpub_text + f" ({counts['opendata'][unpub_id]})")
-            for unpub_id, unpub_text in self.fields['opendata'].choices
+        self.fields['admin'].choices = [
+            (admin_id, admin_text + f" ({counts['admin'][admin_id]})")
+            for admin_id, admin_text in admin_choices
         ]
 
         self.fields['use'].choices = [

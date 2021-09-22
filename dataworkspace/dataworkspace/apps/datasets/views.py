@@ -169,13 +169,16 @@ def get_datasets_data_for_user_matching_query(
     # Mark up whether the user can access the data in the dataset.
     access_filter = Q()
     bookmark_filter = Q(referencedatasetbookmark__user=user)
+    open_data_filter = Q()
 
     if user and datasets.model is not ReferenceDataset:
-        access_filter &= (Q(user_access_type='REQUIRES_AUTHENTICATION')) | Q(
+        access_filter &= (Q(user_access_type='OPEN')) | (
+            Q(user_access_type='REQUIRES_AUTHENTICATION')) | Q(
             user_access_type='REQUIRES_AUTHORIZATION', datasetuserpermission__user=user
         )
 
         bookmark_filter = Q(datasetbookmark__user=user)
+        open_data_filter = Q(user_access_type='OPEN')
 
     datasets = datasets.annotate(
         _has_access=Case(
@@ -193,6 +196,14 @@ def get_datasets_data_for_user_matching_query(
         )
         if bookmark_filter
         else Value(True, BooleanField()),
+    )
+
+    datasets = datasets.annotate(
+        _is_open_data=Case(
+            When(open_data_filter, then=True), default=False, output_field=BooleanField(),
+        )
+        if open_data_filter
+        else Value(False, BooleanField()),
     )
 
     # Pull in the source tag IDs for the dataset
@@ -251,6 +262,7 @@ def get_datasets_data_for_user_matching_query(
         )
         .annotate(has_access=BoolOr('_has_access'))
         .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
+        .annotate(is_open_data=BoolOr('_is_open_data'))
     )
 
     return datasets.values(
@@ -269,6 +281,7 @@ def get_datasets_data_for_user_matching_query(
         'published_at',
         'has_access',
         'is_bookmarked',
+        'is_open_data',
     )
 
 
@@ -375,6 +388,9 @@ def get_visualisations_data_for_user_matching_query(
     visualisations = visualisations.annotate(
         data_type=Value(DataSetType.VISUALISATION, IntegerField())
     )
+    visualisations = visualisations.annotate(
+        _is_open_data = Value(False, BooleanField())
+    )
 
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
@@ -397,6 +413,7 @@ def get_visualisations_data_for_user_matching_query(
         )
         .annotate(has_access=BoolOr('_has_access'))
         .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
+        .annotate(is_open_data=BoolOr('_is_open_data'))
     )
 
     return visualisations.values(
@@ -415,6 +432,7 @@ def get_visualisations_data_for_user_matching_query(
         'published_at',
         'has_access',
         'is_bookmarked',
+        'is_open_data',
     )
 
 
@@ -422,6 +440,7 @@ def _matches_filters(
     data,
     bookmark: bool,
     unpublished: bool,
+    opendata: bool,
     use: Set,
     data_type: Set,
     source_ids: Set,
@@ -438,6 +457,7 @@ def _matches_filters(
         and (not topic_ids or topic_ids.intersection(set(data['topic_tag_ids'])))
         and (not user_accessible or data['has_access'])
         and (not user_inaccessible or not data['has_access'])
+        and (not opendata or data['is_open_data'])
     )
 
 
@@ -493,7 +513,9 @@ def find_datasets(request):
 
     if form.is_valid():
         query = form.cleaned_data.get("q")
-        unpublished = form.cleaned_data.get("unpublished")
+        admin = set(form.cleaned_data.get("admin"))
+        unpublished = 'UNPUBLISHED' in admin
+        opendata = 'OPENDATA' in admin
         use = set(form.cleaned_data.get("use"))
         data_type = set(form.cleaned_data.get("data_type", []))
         sort = form.cleaned_data.get("sort")
@@ -502,6 +524,7 @@ def find_datasets(request):
         bookmarked = form.cleaned_data.get("bookmarked")
         user_accessible = set(form.cleaned_data.get("user_access", [])) == {'yes'}
         user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {'no'}
+        opendata = form.cleaned_data.get("opendata")
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
@@ -519,6 +542,7 @@ def find_datasets(request):
                 d,
                 bookmarked,
                 bool(unpublished),
+                bool(opendata),
                 use,
                 data_type,
                 source_ids,

@@ -183,6 +183,7 @@ class DataSet(DeletableTimestampedUserModel):
     user_access_type = models.CharField(
         max_length=64,
         choices=(
+            ('OPEN', 'Open data'),
             ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
             ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
         ),
@@ -319,7 +320,8 @@ class DataSet(DeletableTimestampedUserModel):
     def user_has_access(self, user):
         user_email_domain = user.email.split('@')[1]
         return (
-            self.user_access_type == 'REQUIRES_AUTHENTICATION'
+            self.user_access_type == 'OPEN'
+            or self.user_access_type == 'REQUIRES_AUTHENTICATION'
             or self.datasetuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )
@@ -2079,6 +2081,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     user_access_type = models.CharField(
         max_length=64,
         choices=(
+            ('OPEN', 'Open data'),
             ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
             ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
         ),
@@ -2160,7 +2163,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         user_email_domain = user.email.split('@')[1]
 
         return (
-            self.user_access_type == 'REQUIRES_AUTHENTICATION'
+            self.user_access_type == 'OPEN'
+            or self.user_access_type == 'REQUIRES_AUTHENTICATION'
             or self.visualisationuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )

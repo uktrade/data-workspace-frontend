@@ -496,9 +496,15 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )
-    open_to_all_users = forms.BooleanField(
-        label='Open to all Data Workspace users', required=False,
+    # open_to_all_users = forms.BooleanField(
+    #     label='Open to all Data Workspace users', required=False,
+    # )
+    CHOICES = (
+        ('OPEN', 'Open data'),
+        ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
+        ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
     )
+    open_to_all_users = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES)
     authorized_users = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('users', False),
@@ -521,7 +527,7 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         is_instance = 'instance' in kwargs and kwargs['instance']
 
         self.fields['open_to_all_users'].initial = (
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHENTICATION'
+            kwargs['instance'].user_access_type
             if is_instance
             else False
         )
