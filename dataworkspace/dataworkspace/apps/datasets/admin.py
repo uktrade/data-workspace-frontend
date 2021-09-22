@@ -267,6 +267,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             {
                 'fields': [
                     'open_to_all_users',
+                    'contains_open_data',
                     'eligibility_criteria',
                     'authorized_email_domains',
                     'authorized_users',
@@ -715,6 +716,7 @@ class VisualisationCatalogueItemAdmin(
             {
                 'fields': [
                     'open_to_all_users',
+                    'contains_open_data',
                     'eligibility_criteria',
                     'authorized_email_domains',
                     'authorized_users',

@@ -525,6 +525,7 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
             if is_instance
             else False
         )
+        self.fields['contains_open_data'].disabled = not is_instance
 
         self.fields['authorized_users'].initial = (
             get_user_model().objects.filter(
@@ -537,7 +538,7 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
             self.can_change_user_permission_codename
         ):
             self.fields['open_to_all_users'].disabled = True
-
+            self.fields['contains_open_data'].disabled = True
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(
                 choices=(
@@ -545,6 +546,17 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
                     for user in self.fields['authorized_users'].queryset.all()
                 )
             )
+
+    def clean(self):
+        if (
+            self.cleaned_data['contains_open_data']
+            and not self.cleaned_data['open_to_all_users']
+        ):
+            raise forms.ValidationError(
+                'Open data must also be "Open to all Data Workspace users"'
+            )
+
+        return self.cleaned_data
 
 
 class DataCutDatasetForm(BaseDatasetForm):
@@ -719,6 +731,7 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
             if is_instance
             else False
         )
+        self.fields['contains_open_data'].disabled = not is_instance
 
         self.fields['authorized_users'].initial = (
             get_user_model().objects.filter(
@@ -731,7 +744,7 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
             self.can_change_user_permission_codename
         ):
             self.fields['open_to_all_users'].disabled = True
-
+            self.fields['contains_open_data'].disabled = True
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(
                 choices=(
@@ -739,6 +752,17 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
                     for user in self.fields['authorized_users'].queryset.all()
                 )
             )
+
+    def clean(self):
+        if (
+            self.cleaned_data['contains_open_data']
+            and not self.cleaned_data['open_to_all_users']
+        ):
+            raise forms.ValidationError(
+                'Open data must also be "Open to all Data Workspace users"'
+            )
+
+        return self.cleaned_data
 
 
 class VisualisationLinkForm(forms.ModelForm):

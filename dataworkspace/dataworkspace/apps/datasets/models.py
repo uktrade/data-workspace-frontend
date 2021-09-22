@@ -217,6 +217,13 @@ class DataSet(DeletableTimestampedUserModel):
         default=list,
         help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
     )
+    contains_open_data = models.BooleanField(
+        default=False,
+        help_text=(
+            'This dataset contains "safe" data suitable for sharing.<br />'
+            'Requires "Open to all Data Workspace users" permission.'
+        ),
+    )
 
     class Meta:
         db_table = 'app_dataset'
@@ -2087,6 +2094,13 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
         ),
         default='REQUIRES_AUTHENTICATION',
+    )
+    contains_open_data = models.BooleanField(
+        default=False,
+        help_text=(
+            'This dataset contains "safe" data suitable for sharing.<br />'
+            'Requires "Open to all Data Workspace users" permission.'
+        ),
     )
     events = GenericRelation(EventLog)
     datasets = models.ManyToManyField(

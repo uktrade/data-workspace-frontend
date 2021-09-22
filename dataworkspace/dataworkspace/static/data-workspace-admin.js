@@ -55,5 +55,22 @@ window.addEventListener("load", function() {
       $(this).attr('_change', 1);
     });
 
+    // Toggle the "contains open data" selector when the "open to all data workspace" checkbox changes
+    if ($('#id_contains_open_data').length) {
+      if (!$('#id_open_to_all_users').is(':checked')) {
+        $('#id_contains_open_data').attr('disabled', 'disabled');
+      }
+    }
+    $('#id_open_to_all_users').on('change', function(e) {
+      var $el = $(e.currentTarget);
+      if ($el.is(':checked')) {
+        $('#id_contains_open_data').removeAttr('disabled');
+      }
+      else {
+        $('#id_contains_open_data')
+          .prop('checked', false)
+          .attr('disabled', 'disabled');
+      }
+    });
   })(django.jQuery);
 });
