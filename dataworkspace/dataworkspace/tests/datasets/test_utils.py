@@ -10,7 +10,7 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_query,
     get_code_snippets_for_table,
     link_superset_visualisations_to_related_datasets,
-    update_quicksight_visualisations_last_updated_date,
+    process_quicksight_dashboard_visualisations,
 )
 from dataworkspace.tests.factories import (
     DataSetFactory,
@@ -93,12 +93,17 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'SPICE',
-                'DataSetId': '1',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 1, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'RelationalTable': {'Schema': 'public', 'Name': 'bar'}
+                    }
+                },
             }
         }
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
 
         visualisation_link.refresh_from_db()
         # data_source_last_updated should be set to the DataSet's LastUpdatedTime
@@ -114,7 +119,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'DIRECT_QUERY',
-                'DataSetId': '1',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 1, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
@@ -126,7 +131,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         mock_get_tables_last_updated_date.return_value = datetime.date(2021, 1, 2)
 
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
 
         assert mock_get_tables_last_updated_date.call_args_list == [
             call('my_database', (('public', 'bar'),))
@@ -150,7 +155,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'DIRECT_QUERY',
-                'DataSetId': '1',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 3, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
@@ -161,7 +166,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         }
 
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
 
         visualisation_link.refresh_from_db()
         # data_source_last_updated should be set to max of Dashboard.LastPublishedTime,
@@ -175,7 +180,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'DIRECT_QUERY',
-                'DataSetId': '1',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 1, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {'S3Source': {}}
@@ -183,7 +188,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
             }
         }
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
 
         visualisation_link.refresh_from_db()
         # data_source_last_updated should be set to the DataSet's LastUpdatedTime
@@ -201,21 +206,31 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
             {
                 'DataSet': {
                     'ImportMode': 'SPICE',
-                    'DataSetId': '1',
+                    'DataSetId': '00000000-0000-0000-0000-000000000001',
                     'LastUpdatedTime': datetime.datetime(2021, 1, 1),
+                    'PhysicalTableMap': {
+                        '00000000-0000-0000-0000-000000000000': {
+                            'RelationalTable': {'Schema': 'public', 'Name': 'bar'}
+                        },
+                    },
                 }
             },
             {
                 'DataSet': {
                     'ImportMode': 'SPICE',
-                    'DataSetId': '2',
+                    'DataSetId': '00000000-0000-0000-0000-000000000002',
                     'LastUpdatedTime': datetime.datetime(2021, 1, 2),
+                    'PhysicalTableMap': {
+                        '00000000-0000-0000-0000-000000000000': {
+                            'RelationalTable': {'Schema': 'public', 'Name': 'bar'}
+                        },
+                    },
                 }
             },
         ]
 
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
 
         visualisation_link.refresh_from_db()
         # data_source_last_updated should be set to the most recent DataSet LastUpdatedTime
@@ -231,7 +246,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'DIRECT_QUERY',
-                'DataSetId': '1',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 1, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
@@ -249,7 +264,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         ]
 
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
         assert mock_get_tables_last_updated_date.call_args_list == [
             call('my_database', (('public', 'bar'),)),
             call('my_database', (('public', 'baz'),)),
@@ -288,7 +303,7 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'DIRECT_QUERY',
-                'DataSetId': '1',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 1, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
@@ -302,7 +317,7 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
         SourceTableFactory.create(dataset=ds, schema="public", table="bar")
 
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
 
         visualisation_link.refresh_from_db()
 
@@ -325,7 +340,7 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
         self.mock_quicksight_client.describe_data_set.return_value = {
             'DataSet': {
                 'ImportMode': 'DIRECT_QUERY',
-                'DataSetId': '1',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 3, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
@@ -340,7 +355,7 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
         SourceTableFactory.create(dataset=ds, schema="public", table="foo")
 
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
-        update_quicksight_visualisations_last_updated_date()
+        process_quicksight_dashboard_visualisations()
 
         visualisation_link.refresh_from_db()
 
@@ -349,6 +364,173 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
                 'id', flat=True
             )
         ) == [ds.id]
+
+
+class TestUpdateQuickSightVisualisationsSqlQueries:
+    @pytest.fixture(autouse=True)
+    def setUp(self):
+        mock_sts_client = MagicMock()
+        self.mock_quicksight_client = MagicMock()
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {'Version': {'DataSetArns': ['testArn']}}
+        }
+        boto3_patcher = patch('dataworkspace.apps.datasets.utils.boto3.client')
+        mock_boto3_client = boto3_patcher.start()
+        mock_boto3_client.side_effect = [
+            mock_sts_client,
+            self.mock_quicksight_client,
+            self.mock_quicksight_client,
+            self.mock_quicksight_client,
+        ]
+        yield
+        boto3_patcher.stop()
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
+    def test_creates_sql_query_using_custom_sql(self, mock_extract_tables):
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {
+                'Version': {'DataSetArns': ['testArn']},
+                'LastPublishedTime': datetime.datetime(2021, 1, 1),
+                'LastUpdatedTime': datetime.datetime(2021, 2, 1),
+            }
+        }
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.foo'}
+                    }
+                },
+            }
+        }
+        mock_extract_tables.return_value = [('public', 'foo')]
+
+        visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
+        process_quicksight_dashboard_visualisations()
+
+        visualisation_link.refresh_from_db()
+
+        assert len(visualisation_link.sql_queries.all()) == 1
+
+        sql_query = visualisation_link.sql_queries.all()[0]
+
+        assert str(sql_query.data_set_id) == '00000000-0000-0000-0000-000000000001'
+        assert sql_query.is_latest is True
+        assert sql_query.sql_query == 'SELECT * FROM public.foo'
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
+    def test_sql_query_no_change_doesnt_create_new_version(self, mock_extract_tables):
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {
+                'Version': {'DataSetArns': ['testArn']},
+                'LastPublishedTime': datetime.datetime(2021, 1, 1),
+                'LastUpdatedTime': datetime.datetime(2021, 2, 1),
+            }
+        }
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.foo'}
+                    }
+                },
+            }
+        }
+        mock_extract_tables.return_value = [('public', 'foo')]
+
+        visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
+        process_quicksight_dashboard_visualisations()
+
+        visualisation_link.refresh_from_db()
+
+        assert len(visualisation_link.sql_queries.all()) == 1
+
+        sql_query = visualisation_link.sql_queries.all()[0]
+
+        assert str(sql_query.data_set_id) == '00000000-0000-0000-0000-000000000001'
+        assert sql_query.is_latest is True
+        assert sql_query.sql_query == 'SELECT * FROM public.foo'
+
+        process_quicksight_dashboard_visualisations()
+
+        assert len(visualisation_link.sql_queries.all()) == 1
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
+    def test_sql_query_changes_creates_new_version(self, mock_extract_tables):
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {
+                'Version': {'DataSetArns': ['testArn']},
+                'LastPublishedTime': datetime.datetime(2021, 1, 1),
+                'LastUpdatedTime': datetime.datetime(2021, 2, 1),
+            }
+        }
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.foo'}
+                    }
+                },
+            }
+        }
+        mock_extract_tables.return_value = [('public', 'foo')]
+
+        visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
+        process_quicksight_dashboard_visualisations()
+
+        visualisation_link.refresh_from_db()
+
+        assert len(visualisation_link.sql_queries.all()) == 1
+
+        sql_query = visualisation_link.sql_queries.all()[0]
+
+        assert str(sql_query.data_set_id) == '00000000-0000-0000-0000-000000000001'
+        assert sql_query.is_latest is True
+        assert sql_query.sql_query == 'SELECT * FROM public.foo'
+
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'CustomSql': {
+                            'SqlQuery': 'SELECT * FROM public.foo WHERE bar = 1'
+                        }
+                    }
+                },
+            }
+        }
+        process_quicksight_dashboard_visualisations()
+        visualisation_link.refresh_from_db()
+
+        assert len(visualisation_link.sql_queries.all()) == 2
+
+        new_sql_query = visualisation_link.sql_queries.all().order_by('-created_date')[
+            0
+        ]
+        original_sql_query = visualisation_link.sql_queries.all().order_by(
+            '-created_date'
+        )[1]
+
+        assert new_sql_query.is_latest is True
+        assert new_sql_query.sql_query == 'SELECT * FROM public.foo WHERE bar = 1'
+
+        assert original_sql_query.is_latest is False
+        assert original_sql_query.sql_query == 'SELECT * FROM public.foo'
 
 
 class TestLinkSupersetVisualisationsRelatedDatasets:
