@@ -2125,7 +2125,7 @@ class TestDataCutDetailsView(DatasetsCommon):
         doc = html.fromstring(response_text)
 
         assert response.status_code == 200
-        assert len(doc.xpath(f"//a[@class = 'govuk-link external-link']")) == 1
+        assert len(doc.xpath("//a[@class = 'govuk-link external-link']")) == 1
 
     def test_code_snippets_are_hidden_when_user_has_no_permissions(
         self, metadata_db, user
