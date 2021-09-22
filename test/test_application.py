@@ -2547,6 +2547,8 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
+        await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
+
         await until_succeeds('http://dataworkspace.test:8000/healthcheck')
         await until_succeeds('http://data-workspace-es:9200/_cat/indices')
         await setup_elasticsearch_indexes()
@@ -2557,15 +2559,13 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
-
         async with session.request(
             'GET', 'http://dataworkspace.test:8000/finder',
         ) as response:
             content = await response.text()
 
         self.assertEqual(response.status, 200)
-        self.assertIn("Dataset finder", content)
+        self.assertIn("Search all our data", content)
 
         dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
         table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'

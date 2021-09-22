@@ -552,6 +552,7 @@ def find_datasets(request):
             "datasets": paginator.get_page(request.GET.get("page")),
             "data_type": dict(data_types),
             "show_unpublished": has_unpublished_dataset_access(request.user),
+            "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
         },
     )
 
