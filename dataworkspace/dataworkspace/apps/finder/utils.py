@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from functools import reduce
 from typing import List, Iterable
 
-from django.db.models import Q, Case, When, BooleanField, F, Value
+from django.db.models import Q, Case, When, BooleanField, Value
 from django.db.models.functions import Concat
 
 from dataworkspace.apps.datasets.models import SourceTable
@@ -17,6 +17,7 @@ class _DatasetMatch:
     slug: str
     name: str
     table_matches: List[_TableMatchResult]
+    has_access: bool
 
     @property
     def count(self):
@@ -24,7 +25,7 @@ class _DatasetMatch:
 
 
 def group_tables_by_master_dataset(
-    matches: List[_TableMatchResult],
+    matches: List[_TableMatchResult], user
 ) -> List[_DatasetMatch]:
     if matches == []:
         return []
@@ -34,22 +35,12 @@ def group_tables_by_master_dataset(
     )
 
     table_to_master_map = {}
-
-    queryset = (
-        SourceTable.objects.filter(match_table_filter)
-        .values('schema', 'table')
-        .annotate(
-            master_id=F('dataset__id'),
-            master_slug=F('dataset__slug'),
-            master_name=F('dataset__name'),
-        )
-    )
-
-    for row in queryset:
-        table_to_master_map[(row["schema"], row["table"])] = {
-            "id": row["master_id"],
-            "slug": row["master_slug"],
-            "name": row["master_name"],
+    for source_table in SourceTable.objects.filter(match_table_filter):
+        table_to_master_map[(source_table.schema, source_table.table)] = {
+            "id": source_table.dataset.id,
+            "slug": source_table.dataset.slug,
+            "name": source_table.dataset.name,
+            "has_access": source_table.dataset.user_has_access(user),
         }
 
     masters = {}
@@ -65,6 +56,7 @@ def group_tables_by_master_dataset(
                 slug=master_blob["slug"],
                 name=master_blob["name"],
                 table_matches=[],
+                has_access=master_blob["has_access"],
             )
 
         masters[master_blob["id"]].table_matches.append(match)
