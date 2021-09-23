@@ -105,7 +105,7 @@
           {% if related_visualisations %}
             <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related visuals</h3>
               {% for master in related_visualisations %}
-                {% include "partials/related_data.html" with dataset=master %}
+                {% include "partials/related_data_link.html" with dataset=master %}
               {% endfor %}
 
           {% endif %}
