@@ -784,7 +784,7 @@ class DatasetDetailView(DetailView):
         elif self.object.type == DataSetType.MASTER:
             return ["datasets/master_dataset.html"]
         elif self.object.type == DataSetType.DATACUT:
-            return ['datasets/data_cut_dataset_2.html']
+            return ['datasets/data_cut_dataset.html']
         elif self._is_visualisation():
             return ['datasets/visualisation_catalogue_item.html']
 
