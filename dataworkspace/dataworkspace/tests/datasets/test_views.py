@@ -1616,7 +1616,7 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
 
     assert response.status_code == 200
     assert (
-        "This data set is hosted by an external source."
+        "This data set is on an external website."
         in response.content.decode(response.charset)
     ) is show_warning
 
@@ -2049,7 +2049,7 @@ class TestRequestAccess(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert (
-            "You need to request access to view these links"
+            "You need to request access to view this data."
             in response.content.decode(response.charset)
         )
 
@@ -2111,13 +2111,17 @@ class TestDataCutDetailsView(DatasetsCommon):
             response.charset
         )
 
-    def test_external_link_shown_when_user_has_no_permissions(self, metadata_db, user):
+    def test_external_link_shown_when_user_has_permissions(
+        self, metadata_db, staff_user
+    ):
         self._create_master()
-        data_cut = self._create_related_data_cuts(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )[0]
+        data_cut = self._create_related_data_cuts()[0]
 
-        client = Client(**get_http_sso_data(user))
+        factories.SourceLinkFactory.create(
+            dataset=data_cut, url="https://www.example.com/dataset.csv"
+        )
+
+        client = Client(**get_http_sso_data(staff_user))
         response = client.get(data_cut.get_absolute_url())
 
         response_text = response.content.decode(response.charset)
