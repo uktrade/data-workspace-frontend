@@ -1778,6 +1778,16 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 2
 
+        response_body = response.content.decode(response.charset)
+        doc = html.fromstring(response_body)
+
+        match = doc.xpath(
+            '//a[@class="govuk-link related-data"]'
+        )
+
+        assert len(match) == 2
+
+
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_link_to_related_data_cuts_if_more_than_four(
         self, staff_client, metadata_db
@@ -1816,7 +1826,14 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         response = staff_client.get(rds.get_absolute_url())
         assert response.status_code == 200
 
-        response_body = response.content.decode(response.charset)
+        doc = html.fromstring(response_body)
+
+        match = doc.xpath(
+            '//dt[@class="govuk-summary-list__key" and text()="Licence"]/../dd/a/@href'
+        )
+
+        assert match
+        assert match[0] == rds.licence_url
         doc = html.fromstring(response_body)
 
         match = doc.xpath(
