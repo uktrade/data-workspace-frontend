@@ -1787,7 +1787,6 @@ class TestMasterDatasetDetailView(DatasetsCommon):
 
         assert len(match) == 2
 
-
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_link_to_related_data_cuts_if_more_than_four(
         self, staff_client, metadata_db
