@@ -239,6 +239,12 @@ def dataset_finder_db(metadata_db):
                 frequency VARCHAR(255),
                 "table" VARCHAR(255)
             );
+
+            CREATE TABLE IF NOT EXISTS country_stats (
+                date DATE,
+                driving NUMERIC,
+                country VARCHAR(255)
+            );
             '''
         )
 
