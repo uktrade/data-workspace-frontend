@@ -179,6 +179,9 @@ def build_grid_filters(column_config, params):
         if data_type == 'boolean':
             term = bool(int(term))
 
+        if data_type == 'date':
+            term = datetime.strptime(filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S')
+
         if field in column_map:
             if filter_data['type'] == 'contains':
                 es_filters.append(
@@ -203,24 +206,12 @@ def build_grid_filters(column_config, params):
                 )
 
             elif filter_data['type'] == 'equals':
-                if data_type == 'date':
-                    term = datetime.strptime(
-                        filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
-                    )
                 es_filters.append({'term': {field: term}})
 
             elif filter_data['type'] == 'notEqual':
-                if data_type == 'date':
-                    term = datetime.strptime(
-                        filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
-                    )
-                es_filters.append({'term': {field: term}})
+                es_filters.append({'bool': {'must_not': {'term': {field: term}}}})
 
             elif filter_data['type'] in ['lessThan', 'greaterThan']:
-                if data_type == 'date':
-                    term = datetime.strptime(
-                        filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
-                    )
                 es_filters.append(
                     {
                         'range': {
@@ -238,9 +229,7 @@ def build_grid_filters(column_config, params):
                     {
                         'range': {
                             field: {
-                                'gte': datetime.strptime(
-                                    filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S'
-                                ),
+                                'gte': term,
                                 'lte': datetime.strptime(
                                     filter_data['dateTo'], '%Y-%m-%d %H:%M:%S'
                                 ),
