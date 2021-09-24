@@ -6,8 +6,12 @@ from django.utils.text import slugify
 from faker import Faker  # noqa
 
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import MasterDataset, VisualisationCatalogueItem, VisualisationLink, \
-    ReferenceDataset
+from dataworkspace.apps.datasets.models import (
+    MasterDataset,
+    VisualisationCatalogueItem,
+    VisualisationLink,
+    ReferenceDataset,
+)
 
 
 class TestData:
@@ -133,11 +137,10 @@ def create_fake_reference_dataset():
     user = test_data.get_new_user()
 
     table_name = (
-            "ref_"
-            + fake.first_name().lower()
-            + datetime.datetime.now().strftime('%Y%m%d%H%M%s')
+        "ref_"
+        + fake.first_name().lower()
+        + datetime.datetime.now().strftime('%Y%m%d%H%M%s')
     )
-
 
     catalogue_item = ReferenceDataset.objects.create(
         name=name,
