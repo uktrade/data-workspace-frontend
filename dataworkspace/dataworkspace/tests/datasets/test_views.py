@@ -1826,14 +1826,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         response = staff_client.get(rds.get_absolute_url())
         assert response.status_code == 200
 
-        doc = html.fromstring(response_body)
-
-        match = doc.xpath(
-            '//dt[@class="govuk-summary-list__key" and text()="Licence"]/../dd/a/@href'
-        )
-
-        assert match
-        assert match[0] == rds.licence_url
+        response_body = response.content.decode(response.charset)
         doc = html.fromstring(response_body)
 
         match = doc.xpath(
