@@ -16,7 +16,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "type",
             type=str,
-            help=f"Which type of dataset to create - [MASTER, REFERENCE, DATACUT]",
+            help="Which type of dataset to create - [MASTER, REFERENCE, DATACUT]",
         )
 
     def handle(self, *args, **options):

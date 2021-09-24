@@ -4,11 +4,6 @@ from os import path
 from django.core.management.base import BaseCommand
 from faker import Faker  # noqa
 
-from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.example_data.management.commands._create_utils import (
-    create_fake_dataset,
-)
-
 
 class Command(BaseCommand):
     help = "Creates a dataset and imports the CSV file for this dataset"
@@ -18,7 +13,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--type",
             type=str,
-            help=f"Which type of dataset to create - [MASTER, REFERENCE, DATACUT]. Defaults to MASTER",
+            help="Which type of dataset to create - [MASTER, REFERENCE, DATACUT]. Defaults to MASTER",
             default="MASTER",
         )
 
@@ -36,6 +31,6 @@ class Command(BaseCommand):
             reader = csv.DictReader(file, delimiter=",")
 
             for row in reader:
-                pass
+                self.stdout.write(row)
 
             self.stdout.write(str(reader.fieldnames))
