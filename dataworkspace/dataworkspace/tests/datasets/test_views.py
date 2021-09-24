@@ -1781,9 +1781,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         response_body = response.content.decode(response.charset)
         doc = html.fromstring(response_body)
 
-        match = doc.xpath(
-            '//a[@class="govuk-link related-data"]'
-        )
+        match = doc.xpath('//a[@class="govuk-link related-data"]')
 
         assert len(match) == 2
 
