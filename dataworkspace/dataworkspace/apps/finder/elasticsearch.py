@@ -139,7 +139,7 @@ class ElasticsearchClient:
         Return a list of the fields stored in an elasticsearch index
         """
         mapping = self.client.indices.get_mapping(index_alias)
-        return list(mapping[list(mapping.keys())[0]]['mappings']['properties'].keys())
+        return list(list(mapping.values())[0]['mappings']['properties'].keys())
 
 
 es_client = ElasticsearchClient()
