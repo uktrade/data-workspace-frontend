@@ -93,10 +93,9 @@
           <nav role="navigation" aria-labelledby="subsection-title">
             <ul class="govuk-list">
               {% for master in related_data %}
-                <li>
-                  <a class="govuk-link"
-                     href="{% url "datasets:dataset_detail" dataset_uuid=master.id %}#{{ master.slug }}">{{ master.name }}</a>
-                </li>
+                 <li>
+                    {% include "partials/related_data_link.html" with dataset=master %}
+                  </li>
               {% endfor %}
             </ul>
           </nav>
