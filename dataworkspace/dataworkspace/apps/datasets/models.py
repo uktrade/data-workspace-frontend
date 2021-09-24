@@ -713,6 +713,9 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def _is_s3_link(self):
         return self.url.startswith('s3://')
 
+    def get_frequency_display(self):
+        return self.frequency
+
     def local_file_is_accessible(self):
         """
         Check whether we can access the file on s3
