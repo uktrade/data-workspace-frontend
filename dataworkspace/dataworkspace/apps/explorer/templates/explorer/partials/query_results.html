@@ -44,24 +44,28 @@
 
       <div class="govuk-grid-row govuk-!-margin-top-4">
         <div class="govuk-grid-column-full">
-            <span class="govuk-label app-label--inline" for="query-page">Show page </span>
-            <input class="govuk-input govuk-input--width-5 app-input--inline" id="query-page"
-                   name="query-page"
-                   value="{{ page }}"/>
-            <span class="govuk-body"> with </span>
-            <input class="govuk-input govuk-input--width-5 app-input--inline" id="query-rows"
-                   name="query-rows"
-                   value="{{ rows }}" type="number"/>
-            <span class="govuk-label app-label--inline" for="query-rows"> results per page</span>
-            <button class="govuk-button govuk-!-margin-left-5" data-module="govuk-button" name="action" value="fetch-page">
-              Fetch page
-            </button>
+          <span class="govuk-label app-label--inline" for="query-page">Show page </span>
+          <input class="govuk-input govuk-input--width-5 app-input--inline" id="query-page"
+                 name="query-page"
+                 value="{{ page }}"/>
+          <span class="govuk-body"> with </span>
+          <input class="govuk-input govuk-input--width-5 app-input--inline" id="query-rows"
+                 name="query-rows"
+                 value="{{ rows }}" type="number"/>
+          <span class="govuk-label app-label--inline" for="query-rows"> results per page</span>
+          <button class="govuk-button govuk-!-margin-left-5" data-module="govuk-button" name="action"
+                  value="fetch-page">
+            Fetch page
+          </button>
         </div>
       </div>
 
-      <a class="govuk-button govuk-button--secondary" href="{% url 'explorer:download_querylog' query_log.id %}?format=csv">Download CSV</a>
-      <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4" href="{% url 'explorer:download_querylog' query_log.id %}?format=excel">Download Excel</a>
-      <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4" href="{% url 'explorer:download_querylog' query_log.id %}?format=json">Download JSON</a>
+      <a class="govuk-button govuk-button--secondary"
+         href="{% url 'explorer:download_querylog' query_log.id %}?format=csv">Download CSV</a>
+      <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
+         href="{% url 'explorer:download_querylog' query_log.id %}?format=excel">Download Excel</a>
+      <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
+         href="{% url 'explorer:download_querylog' query_log.id %}?format=json">Download JSON</a>
     </div>
   {% endif %}
 </div>

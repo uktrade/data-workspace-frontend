@@ -316,9 +316,16 @@ class PlayQueryView(View):
             query_params = (("play_id", play_sql.id),)
             return redirect(redirect_url + f"?{urlencode(query_params)}")
 
-        elif action in {'run', 'fetch-page'}:
+        elif action == 'run':
             query.params = url_get_params(request)
             return self.render_with_sql(request, query, run_query=True)
+            return self.render_with_sql(request, query, run_query=True)
+
+        elif action == 'fetch-page':
+            query.params = url_get_params(request)
+            rows = url_get_rows(request)
+            page = url_get_page(request)
+            return self.render_with_sql(request, query, run_query=True, rows=rows,page= page)
 
         elif action == 'share':
             play_sql, _ = PlaygroundSQL.objects.get_or_create(
@@ -347,9 +354,8 @@ class PlayQueryView(View):
 
         return form_action
 
-    def render_with_sql(self, request, query, run_query=True):
-        rows = url_get_rows(request)
-        page = url_get_page(request)
+    def render_with_sql(self, request, query, run_query=True, rows=settings.EXPLORER_DEFAULT_ROWS, page=1):
+
         download_failed = request.GET.get('error') == 'download'
         form = QueryForm(
             request.POST if request.method == 'POST' else None, instance=query
@@ -564,11 +570,12 @@ class QueryLogResultView(View):
             elif query_log.state == QueryLogState.COMPLETE:
                 template = loader.get_template('explorer/partials/query_results.html')
                 headers, data, _ = fetch_query_results(querylog_id)
+                next_page_request_rows = len(data) if len(data) else settings.EXPLORER_DEFAULT_ROWS
                 context = {
                     'query_log': query_log,
                     'headers': headers,
                     'data': data,
-                    'rows': len(data),
+                    'rows': next_page_request_rows,
                     'duration': query_log.duration,
                     'total_rows': query_log.rows,
                     'page': query_log.page,
