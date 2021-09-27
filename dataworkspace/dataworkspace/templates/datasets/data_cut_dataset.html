@@ -87,19 +87,29 @@
       {% endif %}
     </div>
     <div class="govuk-grid-column-one-third">
-      {% if related_data %}
+       {% if related_data or related_visualisations %}
         <aside class="app-related-items" role="complementary">
-          <h3 class="govuk-heading-s">Source master datasets</h3>
-          <nav role="navigation" aria-labelledby="subsection-title">
-            <ul class="govuk-list">
-              {% for master in related_data %}
-                <li>
-                  <a class="govuk-link"
-                     href="{% url "datasets:dataset_detail" dataset_uuid=master.id %}#{{ master.slug }}">{{ master.name }}</a>
-                </li>
+          {% if related_data %}
+            <h3 class="govuk-heading-s">Source master datasets</h3>
+            <nav role="navigation" aria-labelledby="subsection-title">
+              <ul class="govuk-list">
+                {% for master in related_data %}
+                  <li>
+                    {% include "partials/related_data_link.html" with dataset=master %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          {% endif %}
+
+          {% if related_visualisations %}
+            <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related visuals</h3>
+              {% for master in related_visualisations %}
+                {% include "partials/related_data_link.html" with dataset=master %}
               {% endfor %}
-            </ul>
-          </nav>
+
+          {% endif %}
+
         </aside>
       {% endif %}
     </div>

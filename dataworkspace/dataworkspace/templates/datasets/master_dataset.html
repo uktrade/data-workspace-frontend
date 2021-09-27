@@ -91,10 +91,7 @@
             <ul class="govuk-list">
               {% for dataset in related_data|slice:":4" %}
                 <li>
-                  <a class="govuk-link"
-                     href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
-                    {{ dataset.name }}
-                  </a>
+                  {% include "partials/related_data_link.html" with dataset=dataset %}
                 </li>
               {% endfor %}
 
