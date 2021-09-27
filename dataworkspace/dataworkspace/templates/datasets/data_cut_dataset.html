@@ -87,11 +87,11 @@
       {% endif %}
     </div>
     <div class="govuk-grid-column-one-third">
-       {% if related_data or related_visualisations %}
+      {% if related_data or related_visualisations %}
         <aside class="app-related-items" role="complementary">
           {% if related_data %}
             <h3 class="govuk-heading-s">Source master datasets</h3>
-            <nav role="navigation" aria-labelledby="subsection-title">
+            <nav role="navigation">
               <ul class="govuk-list">
                 {% for master in related_data %}
                   <li>
@@ -104,10 +104,15 @@
 
           {% if related_visualisations %}
             <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related visuals</h3>
-              {% for master in related_visualisations %}
-                {% include "partials/related_data_link.html" with dataset=master %}
-              {% endfor %}
-
+            <nav role="navigation">
+              <ul class="govuk-list">
+                {% for master in related_visualisations %}
+                  <li>
+                  {% include "partials/related_data_link.html" with dataset=master %}
+                {% endfor %}
+                </li>
+              </ul>
+            </nav>
           {% endif %}
 
         </aside>
@@ -222,31 +227,6 @@
       </table>
     </div>
   </div>
-
-  {% if related_visualisations %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-l govuk-!-margin-top-8">Related data</h2>
-        <div class="govuk-grid-row">
-          {% for master in related_visualisations|slice:":4" %}
-            {% include "partials/related_data.html" with dataset=master %}
-            {% if forloop.counter|divisibleby:2 %}
-              </div>
-              <div class="govuk-grid-row">
-            {% endif %}
-          {% endfor %}
-          </div>
-      </div>
-    </div>
-  {% endif %}
-
-  {#{% if visualisation_src %}#}
-  {#  <h2 class="govuk-heading-l govuk-!-margin-top-8">Visualisation</h2>#}
-  {#  <iframe src="{{ visualisation_src }}"#}
-  {#          sandbox="allow-forms allow-presentation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads"#}
-  {#          class="vis"></iframe>#}
-  {#{% endif %}#}
-
 
 {% endblock %}
 {% block footer_scripts %}
