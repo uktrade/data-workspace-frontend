@@ -319,7 +319,6 @@ class PlayQueryView(View):
         elif action == 'run':
             query.params = url_get_params(request)
             return self.render_with_sql(request, query, run_query=True)
-            return self.render_with_sql(request, query, run_query=True)
 
         elif action == 'fetch-page':
             query.params = url_get_params(request)
@@ -580,7 +579,7 @@ class QueryLogResultView(View):
                 template = loader.get_template('explorer/partials/query_results.html')
                 headers, data, _ = fetch_query_results(querylog_id)
                 next_page_request_rows = (
-                    len(data) if len(data) else settings.EXPLORER_DEFAULT_ROWS
+                    len(data) if data else settings.EXPLORER_DEFAULT_ROWS
                 )
                 context = {
                     'query_log': query_log,
