@@ -325,7 +325,9 @@ class PlayQueryView(View):
             query.params = url_get_params(request)
             rows = url_get_rows(request)
             page = url_get_page(request)
-            return self.render_with_sql(request, query, run_query=True, rows=rows,page= page)
+            return self.render_with_sql(
+                request, query, run_query=True, rows=rows, page=page
+            )
 
         elif action == 'share':
             play_sql, _ = PlaygroundSQL.objects.get_or_create(
@@ -354,7 +356,14 @@ class PlayQueryView(View):
 
         return form_action
 
-    def render_with_sql(self, request, query, run_query=True, rows=settings.EXPLORER_DEFAULT_ROWS, page=1):
+    def render_with_sql(
+        self,
+        request,
+        query,
+        run_query=True,
+        rows=settings.EXPLORER_DEFAULT_ROWS,
+        page=1,
+    ):
 
         download_failed = request.GET.get('error') == 'download'
         form = QueryForm(
@@ -570,7 +579,9 @@ class QueryLogResultView(View):
             elif query_log.state == QueryLogState.COMPLETE:
                 template = loader.get_template('explorer/partials/query_results.html')
                 headers, data, _ = fetch_query_results(querylog_id)
-                next_page_request_rows = len(data) if len(data) else settings.EXPLORER_DEFAULT_ROWS
+                next_page_request_rows = (
+                    len(data) if len(data) else settings.EXPLORER_DEFAULT_ROWS
+                )
                 context = {
                     'query_log': query_log,
                     'headers': headers,
@@ -579,6 +590,7 @@ class QueryLogResultView(View):
                     'duration': query_log.duration,
                     'total_rows': query_log.rows,
                     'page': query_log.page,
+                    'page_size': query_log.page_size,
                 }
                 html = template.render(context, request)
 
