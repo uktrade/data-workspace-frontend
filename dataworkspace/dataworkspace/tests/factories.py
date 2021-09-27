@@ -72,6 +72,7 @@ class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)

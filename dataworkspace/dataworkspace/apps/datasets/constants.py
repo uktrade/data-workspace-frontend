@@ -17,6 +17,7 @@ GRID_DATA_TYPE_MAP = {
     'timestamp with time zone': 'date',
     'timestamp without time zone': 'date',
     'date': 'date',
+    'boolean': 'boolean',
 }
 
 
