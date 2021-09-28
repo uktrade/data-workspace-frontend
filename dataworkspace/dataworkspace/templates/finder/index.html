@@ -54,19 +54,21 @@
 
           {% for result in results %}
             <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-            
+
             <h2 class="govuk-heading-m">{{ result.name }}</h2>
+            {% if not result.has_access %}
+                <p class="govuk-body">
+                  You need to <a class="govuk-link govuk-link--no-visited-state" href="{% url 'request_access:dataset' dataset_uuid=result.id %}">request access to view this data</a>.
+                </p>
+            {% endif %}
             {% for table in result.table_matches %}
-              {% if table.has_access %}
+              {% if result.has_access %}
                 <p class="govuk-body govuk-!-margin-bottom-0">
                   <a class="govuk-link--no-visited-state" href="{% url 'finder:show_results' schema=table.schema table=table.table %}?name={{ result.name }}&slug={{ result.slug }}&uuid={{ result.id }}&q={{ search_term }}">
                     {{ table.name }}
                   </a>
                 </p>
               {% else %}
-                <p class="govuk-body">
-                  You need to <a class="govuk-link govuk-link--no-visited-state" href="{% url 'request_access:dataset' dataset_uuid=result.id %}">request access to view this data</a>.
-                </p>
                 <span class="govuk-hint govuk-!-margin-bottom-0">{{ table.name}}</span>
               {% endif %}
               <p class="govuk-body">

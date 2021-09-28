@@ -54,7 +54,7 @@ def find_datasets(request):
             visible_matches, has_suppressed_tables = _enrich_and_suppress_matches(
                 request, matches
             )
-            results = group_tables_by_master_dataset(visible_matches)
+            results = group_tables_by_master_dataset(visible_matches, request.user)
 
         if search_term:
             log_query(request.user, search_term)
