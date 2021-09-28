@@ -318,7 +318,8 @@ class PlayQueryView(View):
 
         elif action == 'run':
             query.params = url_get_params(request)
-            return self.render_with_sql(request, query, run_query=True)
+            rows = url_get_rows(request)
+            return self.render_with_sql(request, query, run_query=True, rows=rows)
 
         elif action == 'fetch-page':
             query.params = url_get_params(request)
@@ -588,6 +589,7 @@ class QueryLogResultView(View):
                     'rows': next_page_request_rows,
                     'duration': query_log.duration,
                     'total_rows': query_log.rows,
+                    'result_count': len(data),
                     'page': query_log.page,
                     'page_size': query_log.page_size,
                 }
