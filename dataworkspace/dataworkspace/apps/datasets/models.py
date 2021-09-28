@@ -2243,6 +2243,16 @@ class VisualisationLink(TimeStampedModel):
         return reverse('visualisations:link', kwargs={"link_id": self.id})
 
 
+class VisualisationLinkSqlQuery(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    data_set_id = models.UUIDField()
+    sql_query = models.TextField()
+    is_latest = models.BooleanField()
+    visualisation_link = models.ForeignKey(
+        VisualisationLink, on_delete=models.CASCADE, related_name='sql_queries'
+    )
+
+
 class ToolQueryAuditLog(models.Model):
     # Note: Unique index on rolename, timestamp and md5 hash of query sql
     # created manually in migration 0065_add_audit_log_hashed_unique_index

@@ -12,6 +12,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from dataworkspace.apps.api_v1.core.views import (
     invalidate_superset_user_cached_credentials,
@@ -41,6 +42,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
     VisualisationUserPermission,
     VisualisationLink,
+    VisualisationLinkSqlQuery,
     ToolQueryAuditLog,
 )
 from dataworkspace.apps.dw_admin.forms import (
@@ -663,6 +665,26 @@ class SourceTableAdmin(admin.ModelAdmin):
         return self.model.objects.filter(dataset__deleted=False)
 
 
+@admin.register(VisualisationLinkSqlQuery)
+class VisualisationLinkSqlQueryAdmin(admin.ModelAdmin):
+    exclude = (
+        'is_latest',
+        'visualisation_link',
+    )
+    readonly_fields = ('data_set_id', 'sql_query', 'view_previous_versions')
+    list_display = ('id', 'is_latest', 'created_date')
+
+    @mark_safe
+    def view_previous_versions(self, obj):
+        url = (
+            reverse("admin:datasets_visualisationlinksqlquery_changelist")
+            + f'?o=-3&visualisation_link_id={obj.visualisation_link_id}'
+        )
+        return '<a href="%s">View previous versions</a>' % (url)
+
+    view_previous_versions.allow_tags = True
+
+
 class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     form = VisualisationLinkForm
     model = VisualisationLink
@@ -670,6 +692,17 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
     manage_unpublished_permission_codename = (
         'datasets.manage_unpublished_visualisations'
     )
+    readonly_fields = ('sql_query',)
+
+    @mark_safe
+    def sql_query(self, obj):
+        url = reverse(
+            "admin:datasets_visualisationlinksqlquery_change",
+            args=(obj.sql_queries.get(is_latest=True).id,),
+        )
+        return '<a href="%s">View sql query</a>' % (url)
+
+    sql_query.allow_tags = True
 
 
 @admin.register(VisualisationCatalogueItem)

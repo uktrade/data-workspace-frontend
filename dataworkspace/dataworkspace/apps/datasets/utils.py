@@ -19,6 +19,7 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     VisualisationCatalogueItem,
     VisualisationLink,
+    VisualisationLinkSqlQuery,
 )
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.cel import celery_app
@@ -163,30 +164,34 @@ while (!dbHasCompleted(res)) {{
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
-def update_quicksight_visualisations_last_updated_date():
+def process_quicksight_dashboard_visualisations():
     """
-    When setting the QuickSight VisualisationLink's data_source_last_updated, the following rules are applied:
+    Loop over all VisualisationLink objects and do the following:
 
-    - Is it a SPICE visualisation?
-        = Yes
-          Use the DataSet's LastUpdatedTime
-        = No
-          - Is it a RelationalTable dataset?
-              = Yes
-                Use the table's last updated date
-              = No
-                - Is it a CustomSql dataset?
-                    = Yes
-                      Use the max of Dashboard.LastPublishedTime, Dashboard.LastUpdatedTime,
-                      DataSet.LastUpdatedTime
-                    = No
-                      - Is it an S3Source dataset?
+    1) Save each data set's CustomSql query in the VisalisationLink's sql_queries field
+    2) Extract the tables from each data set's CustomSql query and save them in the
+       VisualisationCatalogueItem's datasets field
+    3) Set the VisualisationLink's data_source_last_updated using the following rules:
+        - Is it a SPICE visualisation?
+            = Yes
+            Use the DataSet's LastUpdatedTime
+            = No
+            - Is it a RelationalTable dataset?
+                = Yes
+                    Use the table's last updated date
+                = No
+                    - Is it a CustomSql dataset?
                         = Yes
-                          Use the DataSet's LastUpdatedTime
+                        Use the max of Dashboard.LastPublishedTime, Dashboard.LastUpdatedTime,
+                        DataSet.LastUpdatedTime
+                        = No
+                        - Is it an S3Source dataset?
+                            = Yes
+                            Use the DataSet's LastUpdatedTime
 
-    Each dashboard can have multiple DataSets and each DataSet can have multiple mappings, i.e it can have
-    both RelationalTable and CustomSql mappings. Therefore a list of potential last updated dates is made and
-    the most recent date from this list is chosen for the VisualisationLink's data_source_last_updated.
+        Each dashboard can have multiple DataSets and each DataSet can have multiple mappings, i.e it can have
+        both RelationalTable and CustomSql mappings. Therefore a list of potential last updated dates is made and
+        the most recent date from this list is chosen for the VisualisationLink's data_source_last_updated.
     """
 
     def get_last_updated_date_by_table_name(schema, table):
@@ -198,6 +203,7 @@ def update_quicksight_visualisations_last_updated_date():
 
     account_id = boto3.client('sts').get_caller_identity().get('Account')
     quicksight_client = boto3.client('quicksight')
+
     logger.info('Fetching last updated dates for QuickSight visualisation links')
 
     for visualisation_link in VisualisationLink.objects.filter(
@@ -244,6 +250,21 @@ def update_quicksight_visualisations_last_updated_date():
                     data_set_last_updated_time = data_set['LastUpdatedTime']
                     if data_set['ImportMode'] == 'SPICE':
                         last_updated_dates.append(data_set_last_updated_time)
+
+                        for table_map in data_set['PhysicalTableMap'].values():
+                            data_set_type = list(table_map)[0]
+                            if data_set_type == 'CustomSql':
+                                store_sql_query(
+                                    visualisation_link,
+                                    data_set['DataSetId'],
+                                    table_map['CustomSql']['SqlQuery'],
+                                )
+                                tables.extend(
+                                    extract_queried_tables_from_sql_query(
+                                        database_name,
+                                        table_map['CustomSql']['SqlQuery'],
+                                    )
+                                )
                     else:
                         for table_map in data_set['PhysicalTableMap'].values():
                             data_set_type = list(table_map)[0]
@@ -262,6 +283,11 @@ def update_quicksight_visualisations_last_updated_date():
                                     )
                                 )
                             elif data_set_type == 'CustomSql':
+                                store_sql_query(
+                                    visualisation_link,
+                                    data_set['DataSetId'],
+                                    table_map['CustomSql']['SqlQuery'],
+                                )
                                 last_updated_date_candidate = max(
                                     dashboard['LastPublishedTime'],
                                     dashboard['LastUpdatedTime'],
@@ -294,6 +320,23 @@ def update_quicksight_visualisations_last_updated_date():
     logger.info(
         'Finished fetching last updated dates for QuickSight visualisation links'
     )
+
+
+def store_sql_query(visualisation_link, data_set_id, sql_query):
+    try:
+        visualisation_link.sql_queries.get(
+            is_latest=True, data_set_id=data_set_id, sql_query=sql_query
+        )
+    except VisualisationLinkSqlQuery.DoesNotExist:
+        visualisation_link.sql_queries.filter(
+            is_latest=True, data_set_id=data_set_id
+        ).update(is_latest=False)
+        VisualisationLinkSqlQuery.objects.create(
+            data_set_id=data_set_id,
+            sql_query=sql_query,
+            is_latest=True,
+            visualisation_link=visualisation_link,
+        )
 
 
 @celery_app.task()
