@@ -1,16 +1,8 @@
-function getCookie(name) {
-  var cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (var i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
+function getCsrfToken() {
+  if (document.getElementsByName('csrfmiddlewaretoken').length > 0) {
+    return document.getElementsByName('csrfmiddlewaretoken')[0].value;
   }
-  return cookieValue;
+  throw new Error('Unable to find CSRF token in the page');
 }
 
 function autoSizeColumns(columnApi) {
@@ -209,7 +201,7 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', dataEndpoint, true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.setRequestHeader("X-CSRFToken", getCookie('data_workspace_csrf'));
+        xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
         xhr.onreadystatechange = function() {
           if (this.readyState === XMLHttpRequest.DONE) {
             if (this.status === 200) {
@@ -244,7 +236,7 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
         form.method = 'POST';
         form.enctype = 'application/x-www-form-urlencoded';
 
-        form.append(createInputFormField('csrfmiddlewaretoken', getCookie('data_workspace_csrf')));
+        form.append(createInputFormField('csrfmiddlewaretoken', getCsrfToken()));
         form.append(createInputFormField('export_file_name', exportFileName));
 
         // Define the columns to include in the csv
