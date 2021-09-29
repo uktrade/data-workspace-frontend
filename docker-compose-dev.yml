@@ -1,4 +1,4 @@
-version: "3.4"
+version: "3.9"
 services:
   data-workspace:
     build:
@@ -15,10 +15,6 @@ services:
       - AWS_SESSION_TOKEN
       - AWS_SECURITY_TOKEN
     env_file: .envs/dev.env
-    links:
-      - "data-workspace-postgres"
-      - "data-workspace-redis"
-      - "data-workspace-es"
     volumes:
       - ./dataworkspace:/dataworkspace
   data-workspace-celery:
@@ -28,9 +24,6 @@ services:
       target: dev
     image: data-workspace
     env_file: .envs/dev.env
-    links:
-      - "data-workspace-postgres"
-      - "data-workspace-redis"
     command: "/dataworkspace/start-celery-dev.sh"
     volumes:
       - ./dataworkspace:/dataworkspace
@@ -52,6 +45,25 @@ services:
     image: data-workspace-redis
     ports:
       - "6379:6379"
+  data-workspace-localstack:
+    build:
+      context: localstack
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:53:53"
+      - "127.0.0.1:53:53/udp"
+      - "127.0.0.1:443:443"
+      - "127.0.0.1:4566:4566"
+      - "127.0.0.1:4571:4571"
+    environment:
+      - AWS_DEFAULT_REGION=eu-west-2
+      - EDGE_PORT=4566
+      - SERVICES=s3,sts,iam
+      - EXTRA_CORS_ALLOWED_ORIGINS=http://dataworkspace.test:8000
+    volumes:
+      - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
   data-workspace-es:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
     environment:
@@ -59,12 +71,41 @@ services:
       - http.port=9200
     ports:
       - "9200:9200"
+    profiles: ["finder"]
+  data-workspace-superset:
+    build:
+      context: superset
+      dockerfile: Dockerfile
+      target: dev
+    image: data-workspace-superset
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: data-workspace-postgres
+      DB_NAME: superset
+      DB_PORT: 5432
+    env_file:
+      - .envs/superset.dev.env
+    volumes:
+      - ./superset/superset_config.py:/etc/superset/superset_config.py
+    profiles: ["superset"]
 
+  data-workspace-gitlab:
+    image: gitlab/gitlab-ee:latest
+    hostname: gitlab.dataworkspace.test
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.dataworkspace.test'
+        # Add any other gitlab.rb configuration here, each on its own line
+    ports:
+      - '8001:80'
+      - '2222:22'
+    profiles: ["visualisations"]
 
 volumes:
   db-data-dev:
   db-logs-dev:
-  
+
 networks:
   default:
     external:

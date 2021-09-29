@@ -32,10 +32,37 @@ And the application will be visible at http://dataworkspace.test:8000. This is t
 
 Some parts of the database are managed and populated by [data-flow](https://github.com/uktrade/data-flow/). To ensure there are no issues with some tables being missing, initial setup should include checking out that repo and running the `docker-compose-dw.yml` file, which will perform migrations on the shared Data Workspace/Data Flow DB.
 
+## Running specific services
+
+The dev compose file is split up into a few parts. This is to reduce the amount of resources used locally while developing.
+
+**The Data Workspace UI** (Django, Postgres, Celery, Localstack)
+```bash
+docker-compose -f docker-compose-dev.yml up
+```
+
+**Dataset finder** (elasticsearch)
+```bash
+docker-compose -f docker-compose-dev.yml --profile finder up
+```
+
+**Superset** (see notes below)
+```bash
+docker-compose -f docker-compose-dev.yml --profile superset up
+```
+
+
+**Visualisations** (gitlab)
+```bash
+docker-compose -f docker-compose-dev.yml --profile visualisations up
+```
+
+**All the services**
+```bash
+docker-compose -f docker-compose-dev.yml --profile visualisations --profile superset --profile finder up
+```
 
 ## Running superset locally
-
-There is a separate compose file to run superset as it's not necessary to run it locally all the time.
 
 To get started you will need to create an env file
 
@@ -45,10 +72,10 @@ cp .envs/superset-sample.env .envs/superset.dev.env
 
 Update the new file with your dit email address (must match your SSO email).
 
-Then run docker-compose using both the dev and dev superset compose files
+Then run docker-compose using the superset profile
 
 ```bash
-docker-compose -f docker-compose-dev.yml -f docker-compose-superset-dev.yml up
+docker-compose -f docker-compose-dev.yml --profile superset up
 ```
 
 Initially you will then need to set up the Editor role by running the following script, replacing container-id with the id of the data-workspace-postgres docker container:

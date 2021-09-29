@@ -241,7 +241,7 @@ def aws_credentials_api_view(request):
 
 
 def aws_credentials_api_GET(request):
-    client = boto3.client('sts')
+    client = boto3.client('sts', endpoint_url=settings.AWS_ENDPOINT_URL)
     role_arn, _ = create_tools_access_iam_role(
         request.user.email,
         str(request.user.profile.sso_id),

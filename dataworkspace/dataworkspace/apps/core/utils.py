@@ -1053,7 +1053,7 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
     if user.profile.tools_access_role_arn:
         return user.profile.tools_access_role_arn, s3_prefix
 
-    iam_client = boto3.client('iam')
+    iam_client = boto3.client('iam', endpoint_url=settings.AWS_ENDPOINT_URL)
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
     policy_name = settings.S3_POLICY_NAME

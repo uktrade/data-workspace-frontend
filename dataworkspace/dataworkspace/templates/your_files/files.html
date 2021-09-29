@@ -338,7 +338,8 @@ close(conn)</pre></code>
             bucket: '{% endverbatim %}{{ bucket }}{% verbatim %}',
             prefix: '{% endverbatim %}{{ prefix }}{% verbatim %}',
             bigdataPrefix: 'bigdata/',
-            credentialsUrl: '{% endverbatim %}{% url 'api_v1:aws-credentials' %}{% verbatim %}'
+            credentialsUrl: '{% endverbatim %}{% url 'api_v1:aws-credentials' %}{% verbatim %}',
+            endpointUrl: '{% endverbatim %}{{ aws_endpoint }}{% verbatim %}'
         };
     });
     </script>

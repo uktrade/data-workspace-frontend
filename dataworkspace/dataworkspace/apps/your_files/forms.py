@@ -49,7 +49,7 @@ class CreateTableForm(GOVUKDesignSystemForm):
 
     def clean_path(self):
         path = self.cleaned_data['path']
-        client = boto3.client('s3')
+        client = boto3.client('s3', endpoint_url=settings.AWS_ENDPOINT_URL)
 
         if not path.startswith(get_s3_prefix(str(self.user.profile.sso_id))):
             raise ValidationError('You don\'t have permission to access this file')

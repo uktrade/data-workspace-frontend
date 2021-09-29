@@ -29,7 +29,7 @@ SCHEMA_POSTGRES_DATA_TYPE_MAP = {
 
 
 def get_s3_csv_column_types(path):
-    client = boto3.client('s3')
+    client = boto3.client('s3', endpoint_url=settings.AWS_ENDPOINT_URL)
 
     # Let's just read the first 100KiB of the file and assume that will give us enough lines to make reasonable
     # assumptions about data types. This is an alternative to reading the first ~10 lines, in which case the first line
@@ -122,7 +122,7 @@ def clean_db_identifier(identifier):
 
 
 def copy_file_to_uploads_bucket(from_path, to_path):
-    client = boto3.client('s3')
+    client = boto3.client('s3', endpoint_url=settings.AWS_ENDPOINT_URL)
     client.copy_object(
         CopySource={'Bucket': settings.NOTEBOOKS_BUCKET, 'Key': from_path},
         Bucket=settings.AWS_UPLOADS_BUCKET,

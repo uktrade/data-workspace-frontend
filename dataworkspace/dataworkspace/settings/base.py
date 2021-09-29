@@ -682,3 +682,11 @@ SUPERSET_DOMAINS = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# Localstack
+AWS_ENDPOINT_URL = env.get('AWS_ENDPOINT_URL', None)
+FRONTEND_AWS_ENDPOINT_URL = 'http://localhost:4566' if LOCAL else None
+YOUR_FILES_CONNECT_SRC = [
+    APPLICATION_ROOT_DOMAIN,
+    'https://s3.eu-west-2.amazonaws.com',
+] + (['http://localhost:4566'] if LOCAL else [])
