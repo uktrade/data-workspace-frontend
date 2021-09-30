@@ -885,7 +885,7 @@ class ReferenceDatasetDownloadView(DetailView):
         )
 
         log_event(
-            request.user,
+            request,
             EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
             ref_dataset,
             extra={
@@ -928,7 +928,7 @@ class SourceLinkDownloadView(DetailView):
         )
 
         log_event(
-            request.user,
+            request,
             EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
             source_link.dataset,
             extra={
@@ -991,7 +991,7 @@ class SourceDownloadMixin:
             return HttpResponseNotFound()
 
         log_event(
-            request.user,
+            request,
             self.event_log_type,
             db_object.dataset,
             extra={
@@ -1041,7 +1041,7 @@ class CustomDatasetQueryDownloadView(DetailView):
             return HttpResponseForbidden()
 
         log_event(
-            request.user,
+            request,
             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
             query.dataset,
             extra={
@@ -1456,7 +1456,7 @@ class DataGridDataView(DetailView):
             correlation_id = {'correlation_id': str(uuid.uuid4())}
 
             log_event(
-                request.user,
+                request,
                 EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
                 source,
                 extra=correlation_id,
@@ -1467,7 +1467,7 @@ class DataGridDataView(DetailView):
 
                 log_data.update(correlation_id)
                 log_event(
-                    request.user,
+                    request,
                     EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
                     source,
                     extra=log_data,

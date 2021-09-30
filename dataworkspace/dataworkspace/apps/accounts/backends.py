@@ -4,33 +4,19 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 from sentry_sdk import set_user
 
-from dataworkspace.apps.applications.utils import create_user_from_sso
+from dataworkspace.apps.applications.utils import get_sso_user
 
 logger = logging.getLogger('app')
 
 
 class AuthbrokerBackendUsernameIsEmail(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
-        try:
-            email = request.META['HTTP_SSO_PROFILE_EMAIL']
-            contact_email = request.META['HTTP_SSO_PROFILE_CONTACT_EMAIL']
-            related_emails = request.META['HTTP_SSO_PROFILE_RELATED_EMAILS'].split(',')
-            user_id = request.META['HTTP_SSO_PROFILE_USER_ID']
-            first_name = request.META['HTTP_SSO_PROFILE_FIRST_NAME']
-            last_name = request.META['HTTP_SSO_PROFILE_LAST_NAME']
-        except KeyError:
-            return None
-
-        primary_email = contact_email if contact_email else email
-        emails = [email] + ([contact_email] if contact_email else []) + related_emails
-        user = create_user_from_sso(
-            user_id,
-            primary_email,
-            emails,
-            first_name,
-            last_name,
-            check_tools_access_if_user_exists=False,
-        )
+        if (
+            not request.path.startswith('/admin')
+            and 'impersonated_user' in request.session
+        ):
+            return request.session['impersonated_user']
+        user = get_sso_user(request)
         set_user({"id": str(user.profile.sso_id), "email": user.email})
         return user
 

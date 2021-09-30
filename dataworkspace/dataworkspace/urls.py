@@ -149,6 +149,13 @@ urlpatterns = [
         include(('dataworkspace.apps.dw_admin.urls', 'dw_admin'), namespace='dw-admin'),
     ),
     path('admin/', admin.site.urls),
+    path(
+        'impersonation/',
+        include(
+            ('dataworkspace.apps.impersonation.urls', 'impersonation'),
+            namespace='impersonation',
+        ),
+    ),
 ]
 
 if settings.DEBUG:

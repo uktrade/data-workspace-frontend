@@ -158,7 +158,7 @@ def application_running_html_GET(request, public_host):
             return public_error_500_html_view(request)
 
         log_event(
-            request.user,
+            request,
             EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
             visualisation_catalogue_item,
             serializers.serialize(
@@ -322,7 +322,7 @@ def visualisation_link_html_view(request, link_id):
     identifier = visualisation_link.identifier
     if visualisation_link.visualisation_type == 'QUICKSIGHT':
         log_event(
-            request.user,
+            request,
             EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
             visualisation_link.visualisation_catalogue_item,
             serializers.serialize('python', [visualisation_link])[0],
@@ -332,7 +332,7 @@ def visualisation_link_html_view(request, link_id):
         )
     elif visualisation_link.visualisation_type == 'SUPERSET':
         log_event(
-            request.user,
+            request,
             EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
             visualisation_link.visualisation_catalogue_item,
             serializers.serialize('python', [visualisation_link])[0],

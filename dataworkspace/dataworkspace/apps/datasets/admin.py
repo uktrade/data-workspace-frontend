@@ -332,7 +332,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         for user in authorized_users - current_authorized_users:
             DataSetUserPermission.objects.create(dataset=obj, user=user)
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_GRANTED_DATASET_PERMISSION,
                 {'for_user_id': user.id},
@@ -344,7 +344,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         for user in current_authorized_users - authorized_users:
             DataSetUserPermission.objects.filter(dataset=obj, user=user).delete()
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_REVOKED_DATASET_PERMISSION,
                 {'for_user_id': user.id},
@@ -358,7 +358,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             or 'authorized_email_domains' in form.changed_data
         ):
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
                 if original_user_access_type != obj.user_access_type
@@ -824,7 +824,7 @@ class VisualisationCatalogueItemAdmin(
         for user in authorized_users - current_authorized_users:
             VisualisationUserPermission.objects.create(visualisation=obj, user=user)
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
                 {'for_user_id': user.id},
@@ -837,7 +837,7 @@ class VisualisationCatalogueItemAdmin(
                 visualisation=obj, user=user
             ).delete()
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
                 {'for_user_id': user.id},
@@ -850,7 +850,7 @@ class VisualisationCatalogueItemAdmin(
             or 'authorized_email_domains' in form.changed_data
         ):
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
                 if original_user_access_type != obj.user_access_type

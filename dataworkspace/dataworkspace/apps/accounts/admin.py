@@ -12,6 +12,8 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.db import transaction
+from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 from dataworkspace.apps.core.utils import stable_identification_suffix
 from dataworkspace.apps.datasets.constants import DataSetType
@@ -238,6 +240,14 @@ class AppUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {'classes': ('wide',), 'fields': ('email', 'first_name', 'last_name')}),
     )
+    list_display = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'is_staff',
+        'impersonation',
+    )
     list_filter = (
         'is_staff',
         'is_superuser',
@@ -299,7 +309,7 @@ class AppUserAdmin(UserAdmin):
 
         def log_change(event_type, permission, message):
             log_permission_change(
-                request.user, obj, event_type, {'permission': permission}, message
+                request, obj, event_type, {'permission': permission}, message
             )
 
         start_all_applications_permission = Permission.objects.get(
@@ -429,7 +439,7 @@ class AppUserAdmin(UserAdmin):
         for dataset in authorized_datasets - current_datasets:
             DataSetUserPermission.objects.create(dataset=dataset, user=obj)
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_GRANTED_DATASET_PERMISSION,
                 serializers.serialize('python', [dataset])[0],
@@ -442,7 +452,7 @@ class AppUserAdmin(UserAdmin):
         for dataset in current_datasets - authorized_datasets:
             DataSetUserPermission.objects.filter(dataset=dataset, user=obj).delete()
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 EventLog.TYPE_REVOKED_DATASET_PERMISSION,
                 serializers.serialize('python', [dataset])[0],
@@ -468,7 +478,7 @@ class AppUserAdmin(UserAdmin):
                         visualisation=visualisation_catalogue_item, user=obj
                     )
                     log_permission_change(
-                        request.user,
+                        request,
                         obj,
                         EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
                         serializers.serialize('python', [visualisation_catalogue_item])[
@@ -485,7 +495,7 @@ class AppUserAdmin(UserAdmin):
                         visualisation=visualisation_catalogue_item, user=obj
                     ).delete()
                     log_permission_change(
-                        request.user,
+                        request,
                         obj,
                         EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
                         serializers.serialize('python', [visualisation_catalogue_item])[
@@ -516,3 +526,9 @@ class AppUserAdmin(UserAdmin):
 
     def stable_id_suffix(self, instance):
         return stable_identification_suffix(str(instance.profile.sso_id), short=True)
+
+    @mark_safe
+    def impersonation(self, obj):
+        return render_to_string('impersonation/admin/button.html', {'id': obj.id})
+
+    impersonation.allow_tags = True

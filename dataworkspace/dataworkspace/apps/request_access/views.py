@@ -189,7 +189,7 @@ class AccessRequestConfirmationPage(DetailView):
 
             if catalogue_item:
                 log_event(
-                    request.user,
+                    request,
                     EventLog.TYPE_DATASET_ACCESS_REQUEST,
                     catalogue_item,
                     extra={
@@ -198,7 +198,7 @@ class AccessRequestConfirmationPage(DetailView):
                 )
             else:
                 log_event(
-                    request.user,
+                    request,
                     EventLog.TYPE_TOOLS_ACCESS_REQUEST,
                     extra={
                         'ticket_reference': access_request.zendesk_reference_number,

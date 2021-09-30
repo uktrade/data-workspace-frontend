@@ -125,7 +125,7 @@ def table_data_view(request, database, schema, table):
     )
 
     log_event(
-        request.user,
+        request,
         EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
         extra={
             'path': request.get_full_path(),

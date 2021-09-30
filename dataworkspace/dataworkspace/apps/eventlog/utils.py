@@ -1,20 +1,28 @@
 from django.contrib.admin.models import LogEntry, CHANGE
-from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.http.request import HttpRequest
 from django.utils.encoding import force_text
 
 from dataworkspace.apps.eventlog.models import EventLog
 
 
-def log_event(user, event_type, related_object=None, extra=None):
-    return EventLog.objects.create(
-        user=user, event_type=event_type, related_object=related_object, extra=extra
-    )
+def log_event(request, event_type, related_object=None, extra=None):
+    if 'impersonated_user' in request.session:
+        from dataworkspace.apps.applications.utils import get_sso_user
+
+        user = get_sso_user(request)
+        return EventLog.objects.create(
+            user=user,
+            event_type=event_type,
+            related_object=related_object,
+            extra=extra,
+            impersonated_user=request.session['impersonated_user'],
+        )
 
 
 def log_permission_change(
-    user: User, obj: models.Model, event_type: int, extra: dict, message: str
+    request: HttpRequest, obj: models.Model, event_type: int, extra: dict, message: str
 ):
     """
     Log permission chagne dto both the django user history and to our custom event log.
@@ -26,7 +34,7 @@ def log_permission_change(
     :return:
     """
     LogEntry.objects.log_action(
-        user_id=user.pk,
+        user_id=request.user.pk,
         content_type_id=ContentType.objects.get_for_model(obj).pk,
         object_id=obj.id,
         object_repr=force_text(obj),
@@ -34,4 +42,4 @@ def log_permission_change(
         change_message=message,
     )
     extra.update({'message': message})
-    log_event(user, event_type, related_object=obj, extra=extra)
+    log_event(request, event_type, related_object=obj, extra=extra)

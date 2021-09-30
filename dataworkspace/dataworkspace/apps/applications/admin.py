@@ -460,7 +460,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         def log_change(event_type, dataset, message):
             log_permission_change(
-                request.user,
+                request,
                 obj,
                 event_type,
                 serializers.serialize('python', [dataset])[0],

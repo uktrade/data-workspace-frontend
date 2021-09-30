@@ -68,6 +68,9 @@ class EventLog(models.Model):
     object_id = models.CharField(max_length=255, null=True)
     related_object = GenericForeignKey('content_type', 'object_id')
     extra = models.JSONField(null=True, encoder=DjangoJSONEncoder)
+    impersonated_user = models.ForeignKey(
+        get_user_model(), null=True, on_delete=models.DO_NOTHING
+    )
 
     class Meta:
         ordering = ('-timestamp',)

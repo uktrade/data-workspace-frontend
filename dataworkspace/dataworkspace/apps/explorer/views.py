@@ -218,7 +218,7 @@ class CreateQueryView(CreateView):
 
                 messages.success(request, "Your query has been saved.")
                 log_event(
-                    request.user,
+                    request,
                     EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY,
                     related_object=query,
                     extra={"sql": query.sql},
@@ -432,7 +432,7 @@ class QueryView(View):
             if success:
                 messages.success(request, "Your query has been updated.")
                 log_event(
-                    request.user,
+                    request,
                     EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY,
                     related_object=query,
                     extra={"sql": query.sql},

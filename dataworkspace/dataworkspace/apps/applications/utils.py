@@ -1062,6 +1062,30 @@ def create_user_from_sso(
     return user
 
 
+def get_sso_user(request):
+    try:
+        email = request.META['HTTP_SSO_PROFILE_EMAIL']
+        contact_email = request.META['HTTP_SSO_PROFILE_CONTACT_EMAIL']
+        related_emails = request.META['HTTP_SSO_PROFILE_RELATED_EMAILS'].split(',')
+        user_id = request.META['HTTP_SSO_PROFILE_USER_ID']
+        first_name = request.META['HTTP_SSO_PROFILE_FIRST_NAME']
+        last_name = request.META['HTTP_SSO_PROFILE_LAST_NAME']
+    except KeyError:
+        return None
+
+    primary_email = contact_email if contact_email else email
+    emails = [email] + ([contact_email] if contact_email else []) + related_emails
+    user = create_user_from_sso(
+        user_id,
+        primary_email,
+        emails,
+        first_name,
+        last_name,
+        check_tools_access_if_user_exists=False,
+    )
+    return user
+
+
 def hawk_request(method, url, body):
     hawk_id = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_ID
     hawk_key = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY

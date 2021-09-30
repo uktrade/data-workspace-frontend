@@ -13,7 +13,13 @@ from dataworkspace.apps.eventlog.models import EventLog
 
 @admin.register(EventLog)
 class EventLogAdmin(admin.ModelAdmin):
-    list_display = ('timestamp', 'user_link', 'event_type', 'related_object_link')
+    list_display = (
+        'timestamp',
+        'user_link',
+        'event_type',
+        'related_object_link',
+        'impersonated_user',
+    )
     list_filter = ('event_type',)
     list_display_links = ['timestamp']
     fields = (
