@@ -103,12 +103,12 @@
           {% endif %}
 
           {% if related_visualisations %}
-            <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related visuals</h3>
+            <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related dashboards</h3>
             <nav role="navigation">
               <ul class="govuk-list">
                 {% for master in related_visualisations %}
                   <li>
-                  {% include "partials/related_data_link.html" with dataset=master %}
+                  {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
                 {% endfor %}
                 </li>
               </ul>
