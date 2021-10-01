@@ -109,7 +109,7 @@
         </aside>
       {% endif %}
       {% if related_visualisations %}
-        <aside class="app-related-items" role="complementary">
+        <aside class="govuk-!-margin-top-8" role="complementary">
           <h3 class="govuk-heading-s" id="subsection-title">
             Related dashboards
           </h3>
@@ -117,10 +117,7 @@
             <ul class="govuk-list">
               {% for dataset in related_visualisations %}
                 <li>
-                  <a class="govuk-link"
-                    href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
-                    {{ dataset.name }}
-                  </a>
+                  {% include "partials/related_data_link.html" with dataset=dataset css_classname="related-dashboard" %}
                 </li>
               {% endfor %}
             </ul>
