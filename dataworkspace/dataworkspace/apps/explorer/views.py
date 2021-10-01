@@ -579,14 +579,10 @@ class QueryLogResultView(View):
             elif query_log.state == QueryLogState.COMPLETE:
                 template = loader.get_template('explorer/partials/query_results.html')
                 headers, data, _ = fetch_query_results(querylog_id)
-                next_page_request_rows = (
-                    len(data) if data else settings.EXPLORER_DEFAULT_ROWS
-                )
                 context = {
                     'query_log': query_log,
                     'headers': headers,
                     'data': data,
-                    'rows': next_page_request_rows,
                     'duration': query_log.duration,
                     'total_rows': query_log.rows,
                     'result_count': len(data),
