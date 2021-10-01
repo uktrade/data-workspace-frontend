@@ -187,6 +187,7 @@ def submit_query_for_execution(
         run_by_user=user,
         connection=query_connection,
         page=page,
+        page_size=limit,
     )
 
     _run_querylog_query.delay(query_log.id, page, limit, timeout)

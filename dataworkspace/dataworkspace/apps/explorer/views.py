@@ -316,9 +316,18 @@ class PlayQueryView(View):
             query_params = (("play_id", play_sql.id),)
             return redirect(redirect_url + f"?{urlencode(query_params)}")
 
-        elif action in {'run', 'fetch-page'}:
+        elif action == 'run':
             query.params = url_get_params(request)
-            return self.render_with_sql(request, query, run_query=True)
+            rows = url_get_rows(request)
+            return self.render_with_sql(request, query, run_query=True, rows=rows)
+
+        elif action == 'fetch-page':
+            query.params = url_get_params(request)
+            rows = url_get_rows(request)
+            page = url_get_page(request)
+            return self.render_with_sql(
+                request, query, run_query=True, rows=rows, page=page
+            )
 
         elif action == 'share':
             play_sql, _ = PlaygroundSQL.objects.get_or_create(
@@ -347,9 +356,15 @@ class PlayQueryView(View):
 
         return form_action
 
-    def render_with_sql(self, request, query, run_query=True):
-        rows = url_get_rows(request)
-        page = url_get_page(request)
+    def render_with_sql(
+        self,
+        request,
+        query,
+        run_query=True,
+        rows=settings.EXPLORER_DEFAULT_ROWS,
+        page=1,
+    ):
+
         download_failed = request.GET.get('error') == 'download'
         form = QueryForm(
             request.POST if request.method == 'POST' else None, instance=query
@@ -568,10 +583,11 @@ class QueryLogResultView(View):
                     'query_log': query_log,
                     'headers': headers,
                     'data': data,
-                    'rows': len(data),
                     'duration': query_log.duration,
                     'total_rows': query_log.rows,
+                    'result_count': len(data),
                     'page': query_log.page,
+                    'page_size': query_log.page_size,
                 }
                 html = template.render(context, request)
 
