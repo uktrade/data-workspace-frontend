@@ -7,3 +7,8 @@ def impersonate(request, id):
     user = get_user_model().objects.get(id=id)
     request.session['impersonated_user'] = user
     return HttpResponseRedirect(reverse('root'))
+
+
+def stop_impersonating(request):
+    del request.session['impersonated_user']
+    return HttpResponseRedirect(reverse('root'))

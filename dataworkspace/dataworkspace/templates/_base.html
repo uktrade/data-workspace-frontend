@@ -105,6 +105,15 @@
         </ul>
       </nav>
     </div>
+    {% if request.session.impersonated_user %}
+      <div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+        <div class="govuk-notification-banner__header">
+          <h1 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+            You are currently impersonating {{ request.session.impersonated_user }}. <a href="{% url 'impersonation:stop' %}">Stop impersonating</a>.
+          </h1>
+        </div>
+      </div>
+    {% endif %}
   </header>
 
   <div class="govuk-width-container">

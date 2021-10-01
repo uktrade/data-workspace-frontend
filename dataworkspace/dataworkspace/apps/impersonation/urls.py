@@ -1,13 +1,9 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.impersonation.views import impersonate
+from dataworkspace.apps.impersonation.views import impersonate, stop_impersonating
 
 urlpatterns = [
-    path('<int:id>', login_required(impersonate), name='index',),
-    # path(
-    #     '<uuid:dataset_uuid>',
-    #     login_required(DatasetAccessRequest.as_view()),
-    #     name='dataset',
-    # ),
+    path('start/<int:id>', login_required(impersonate), name='start',),
+    path('stop', login_required(stop_impersonating), name='stop',),
 ]
