@@ -122,7 +122,11 @@ class QueryLog(models.Model):
     sql = models.TextField(null=True, blank=True)
     query = models.ForeignKey(Query, null=True, blank=True, on_delete=models.SET_NULL)
     run_by_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='query_logs',
     )
     run_at = models.DateTimeField(auto_now_add=True)
     duration = models.FloatField(blank=True, null=True)  # milliseconds
@@ -133,6 +137,9 @@ class QueryLog(models.Model):
     rows = models.IntegerField(null=True, blank=True)
     page = models.IntegerField(default=1)
     error = models.TextField(null=True, blank=True)
+    impersonator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     @property
     def is_playground(self):

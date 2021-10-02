@@ -178,15 +178,22 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
 
 
 def submit_query_for_execution(
-    query_sql, query_connection, query_id, user_id, page, limit, timeout
+    request, query_sql, query_connection, query_id, page, limit, timeout
 ):
-    user = get_user_model().objects.get(id=user_id)
+    if 'impersonated_user' in request.session:
+        from dataworkspace.apps.applications.utils import get_sso_user
+
+        impersonator = get_sso_user(request)
+    else:
+        impersonator = None
+
     query_log = QueryLog.objects.create(
         sql=query_sql,
         query_id=query_id,
-        run_by_user=user,
+        run_by_user=request.user,
         connection=query_connection,
         page=page,
+        impersonator=impersonator,
     )
 
     _run_querylog_query.delay(query_log.id, page, limit, timeout)

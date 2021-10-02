@@ -134,7 +134,11 @@ class ListQueryView(ListView):
 
 class ListQueryLogView(ListView):
     def get_queryset(self):
-        kwargs = {'sql__isnull': False, 'run_by_user': self.request.user}
+        kwargs = {
+            'sql__isnull': False,
+            'run_by_user': self.request.user,
+            'impersonator__isnull': True,
+        }
         if url_get_query_id(self.request):
             kwargs['query_id'] = url_get_query_id(self.request)
         return QueryLog.objects.filter(**kwargs).order_by('-run_at').all()
@@ -510,10 +514,10 @@ def query_viewmodel(
             headers = None
             data = None
             query_log = submit_query_for_execution(
+                request,
                 query.final_sql(),
                 query.connection,
                 query.id,
-                request.user.id,
                 page,
                 rows,
                 timeout,
