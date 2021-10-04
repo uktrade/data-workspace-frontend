@@ -170,9 +170,18 @@ def application_api_PUT(request, public_host):
 
     spawner_options = json.dumps(application_options(application_template))
 
+    if 'impersonated_user' in request.session:
+        from dataworkspace.apps.applications.utils import get_sso_user
+
+        owner = get_sso_user(request)
+        impersonated_user = request.user
+    else:
+        owner = request.user
+        impersonated_user = None
+
     try:
         application_instance = ApplicationInstance.objects.create(
-            owner=request.user,
+            owner=owner,
             application_template=application_template,
             spawner=application_template.spawner,
             spawner_application_template_options=spawner_options,
@@ -183,6 +192,7 @@ def application_api_PUT(request, public_host):
             cpu=cpu,
             memory=memory,
             commit_id=commit_id,
+            impersonated_user=impersonated_user,
         )
     except IntegrityError:
         application_instance = get_api_visible_application_instance_by_public_host(

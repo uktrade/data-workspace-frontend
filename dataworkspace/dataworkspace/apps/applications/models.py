@@ -252,6 +252,12 @@ class ApplicationInstance(TimeStampedModel):
     )
 
     commit_id = models.CharField(null=True, max_length=8)
+    impersonated_user = models.ForeignKey(
+        get_user_model(),
+        null=True,
+        on_delete=models.PROTECT,
+        related_name='application_instances',
+    )
 
     class Meta:
         db_table = 'app_applicationinstance'

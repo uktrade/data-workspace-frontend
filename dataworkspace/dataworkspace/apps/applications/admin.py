@@ -37,7 +37,13 @@ from dataworkspace.apps.eventlog.utils import log_permission_change
 
 @admin.register(ApplicationInstance)
 class ApplicationInstanceAdmin(admin.ModelAdmin):
-    list_display = ('owner', 'public_host', 'created_date', 'state')
+    list_display = (
+        'owner',
+        'public_host',
+        'created_date',
+        'state',
+        'impersonated_user',
+    )
     list_filter = ('state',)
     ordering = ('-created_date',)
     fieldsets = [
