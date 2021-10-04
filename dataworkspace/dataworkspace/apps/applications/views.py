@@ -188,21 +188,14 @@ def tools_html_view(request):
 
 
 def tools_html_GET(request):
-    if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
-
-        user = get_sso_user(request)
-    else:
-        user = request.user
-
     sso_id_hex_short = stable_identification_suffix(
-        str(user.profile.sso_id), short=True
+        str(request.user.profile.sso_id), short=True
     )
 
     application_instances = {
         application_instance.application_template: application_instance
         for application_instance in ApplicationInstance.objects.filter(
-            owner=user, state__in=['RUNNING', 'SPAWNING']
+            owner=request.user, state__in=['RUNNING', 'SPAWNING']
         )
     }
 
@@ -223,7 +216,7 @@ def tools_html_GET(request):
                     'summary': application_template.application_summary,
                     'help_link': application_template.application_help_link,
                     'tool_configuration': application_template.user_tool_configuration.filter(
-                        user=user
+                        user=request.user
                     ).first()
                     or UserToolConfiguration.default_config(),
                 }
@@ -242,20 +235,15 @@ def tools_html_GET(request):
 
 
 def tools_html_POST(request):
-    if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
-
-        user = get_sso_user(request)
-    else:
-        user = request.user
-
     public_host = request.POST['public_host']
     redirect_target = {'root': 'root', 'applications:tools': 'applications:tools'}[
         request.POST['redirect_target']
     ]
     try:
         application_instance = ApplicationInstance.objects.get(
-            owner=user, public_host=public_host, state__in=['RUNNING', 'SPAWNING'],
+            owner=request.user,
+            public_host=public_host,
+            state__in=['RUNNING', 'SPAWNING'],
         )
     except ApplicationInstance.DoesNotExist:
         # The user could force a POST for any public_host, and will be able to
