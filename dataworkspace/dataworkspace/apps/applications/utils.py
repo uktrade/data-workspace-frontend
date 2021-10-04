@@ -204,15 +204,8 @@ def application_api_is_allowed(request, public_host):
             visualisation_template=application_template
         )
 
-    if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
-
-        user = get_sso_user(request)
-    else:
-        user = request.user
-
     request_sso_id_hex_short = stable_identification_suffix(
-        str(user.profile.sso_id), short=True
+        str(request.user.profile.sso_id), short=True
     )
     is_preview = commit_id is not None
 
