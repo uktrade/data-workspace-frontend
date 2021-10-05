@@ -446,7 +446,7 @@ class TestEditAccessRequest:
         )
         assert access_request.id == AccessRequest.objects.latest('created_date').id
 
-    def test_edit_dataset_request_fields(self, client):
+    def test_edit_dataset_request_fields(self, client, user):
         dataset = DatasetsCommon()._create_master(
             user_access_type='REQUIRES_AUTHORIZATION'
         )
@@ -454,6 +454,7 @@ class TestEditAccessRequest:
             catalogue_item_id=dataset.id,
             contact_email='original@example.com',
             reason_for_access='I need it',
+            requester=user,
         )
         resp = client.post(
             reverse(
@@ -472,11 +473,12 @@ class TestEditAccessRequest:
         assert access_request.reason_for_access == 'I still need it'
 
     @mock.patch('dataworkspace.apps.request_access.views.models.storage.boto3')
-    def test_edit_training_screenshot(self, mock_boto, client):
+    def test_edit_training_screenshot(self, mock_boto, client, user):
         screenshot1 = SimpleUploadedFile("original-file.txt", b"file_content")
         access_request = factories.AccessRequestFactory(
             contact_email='testy-mctestface@example.com',
             training_screenshot=screenshot1,
+            requester=user,
         )
 
         # Ensure the original file name is displayed in the form
@@ -494,3 +496,27 @@ class TestEditAccessRequest:
         assert resp.status_code == 302
         access_request.refresh_from_db()
         assert access_request.training_screenshot.name.split('!')[0] == 'new-file.txt'
+
+    @mock.patch('dataworkspace.apps.request_access.views.models.storage.boto3')
+    def test_cannot_access_other_users_access_request(self, mock_boto, client, user):
+        screenshot1 = SimpleUploadedFile("original-file.txt", b"file_content")
+        access_request = factories.AccessRequestFactory(
+            contact_email='testy-mctestface@example.com',
+            training_screenshot=screenshot1,
+        )
+
+        # client.post results in the request.user being set to the user fixture, whereas
+        # the AccessRequestFactory will create a new user object and assign it as the
+        # request access requester. Therefore trying to edit the access request should
+        # raise a 404
+        resp = client.post(
+            reverse(
+                'request_access:dataset-request-update',
+                kwargs={"pk": access_request.id},
+            ),
+            {
+                'contact_email': 'updated@example.com',
+                'reason_for_access': 'I still need it',
+            },
+        )
+        assert resp.status_code == 404
