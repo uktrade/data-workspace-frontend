@@ -713,6 +713,9 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def _is_s3_link(self):
         return self.url.startswith('s3://')
 
+    def get_frequency_display(self):
+        return self.frequency
+
     def local_file_is_accessible(self):
         """
         Check whether we can access the file on s3
@@ -2238,6 +2241,16 @@ class VisualisationLink(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse('visualisations:link', kwargs={"link_id": self.id})
+
+
+class VisualisationLinkSqlQuery(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    data_set_id = models.UUIDField()
+    sql_query = models.TextField()
+    is_latest = models.BooleanField()
+    visualisation_link = models.ForeignKey(
+        VisualisationLink, on_delete=models.CASCADE, related_name='sql_queries'
+    )
 
 
 class ToolQueryAuditLog(models.Model):

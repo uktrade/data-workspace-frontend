@@ -1,9 +1,10 @@
 import operator
 from dataclasses import dataclass
+from datetime import datetime
 from functools import reduce
 from typing import List, Iterable
 
-from django.db.models import Q, Case, When, BooleanField, F, Value
+from django.db.models import Q, Case, When, BooleanField, Value
 from django.db.models.functions import Concat
 
 from dataworkspace.apps.datasets.models import SourceTable
@@ -17,6 +18,7 @@ class _DatasetMatch:
     slug: str
     name: str
     table_matches: List[_TableMatchResult]
+    has_access: bool
 
     @property
     def count(self):
@@ -24,7 +26,7 @@ class _DatasetMatch:
 
 
 def group_tables_by_master_dataset(
-    matches: List[_TableMatchResult],
+    matches: List[_TableMatchResult], user
 ) -> List[_DatasetMatch]:
     if matches == []:
         return []
@@ -34,22 +36,12 @@ def group_tables_by_master_dataset(
     )
 
     table_to_master_map = {}
-
-    queryset = (
-        SourceTable.objects.filter(match_table_filter)
-        .values('schema', 'table')
-        .annotate(
-            master_id=F('dataset__id'),
-            master_slug=F('dataset__slug'),
-            master_name=F('dataset__name'),
-        )
-    )
-
-    for row in queryset:
-        table_to_master_map[(row["schema"], row["table"])] = {
-            "id": row["master_id"],
-            "slug": row["master_slug"],
-            "name": row["master_name"],
+    for source_table in SourceTable.objects.filter(match_table_filter):
+        table_to_master_map[(source_table.schema, source_table.table)] = {
+            "id": source_table.dataset.id,
+            "slug": source_table.dataset.slug,
+            "name": source_table.dataset.name,
+            "has_access": source_table.dataset.user_has_access(user),
         }
 
     masters = {}
@@ -65,6 +57,7 @@ def group_tables_by_master_dataset(
                 slug=master_blob["slug"],
                 name=master_blob["name"],
                 table_matches=[],
+                has_access=master_blob["has_access"],
             )
 
         masters[master_blob["id"]].table_matches.append(match)
@@ -142,12 +135,13 @@ class ResultsProxy:
     passed to a Paginator.
     """
 
-    def __init__(self, es_client, index_alias, phrase, count):
+    def __init__(self, es_client, index_alias, phrase, count, filters=None):
         super(ResultsProxy, self).__init__()
         self._client = es_client
         self.index_alias = index_alias
         self.phrase = phrase
         self.count = count
+        self.filters = filters
 
     def __len__(self):
         return self.count
@@ -160,6 +154,79 @@ class ResultsProxy:
             index_aliases=[self.index_alias],
             from_=item.start,
             size=item.stop - item.start,
+            filters=self.filters,
         )
 
         return resp['hits']['hits']
+
+
+def build_grid_filters(column_config, params):
+    es_filters = []
+    column_map = {x['field']: x for x in column_config}
+    for field, filter_data in params.items():
+        data_type = column_map[field].get('dataType', filter_data['filterType'])
+        term = filter_data.get('filter')
+
+        # Booleans are passed as integers
+        if data_type == 'boolean':
+            term = bool(int(term))
+
+        if data_type == 'date':
+            term = datetime.strptime(filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S')
+
+        if field in column_map:
+            if filter_data['type'] == 'contains':
+                es_filters.append(
+                    {
+                        'bool': {
+                            'must': {'match_phrase': {field: term}}
+                            if ' ' in term
+                            else {'wildcard': {field: {'value': f'*{term}*'}}}
+                        }
+                    }
+                )
+
+            elif filter_data['type'] == 'notContains':
+                es_filters.append(
+                    {
+                        'bool': {
+                            'must_not': {'match_phrase': {field: term}}
+                            if ' ' in term
+                            else {'wildcard': {field: {'value': f'*{term}*'}}}
+                        }
+                    }
+                )
+
+            elif filter_data['type'] == 'equals':
+                es_filters.append({'term': {field: term}})
+
+            elif filter_data['type'] == 'notEqual':
+                es_filters.append({'bool': {'must_not': {'term': {field: term}}}})
+
+            elif filter_data['type'] in ['lessThan', 'greaterThan']:
+                es_filters.append(
+                    {
+                        'range': {
+                            field: {
+                                'lt'
+                                if filter_data['type'] == 'lessThan'
+                                else 'gt': term
+                            }
+                        }
+                    }
+                )
+
+            elif filter_data['type'] == 'inRange':
+                es_filters.append(
+                    {
+                        'range': {
+                            field: {
+                                'gte': term,
+                                'lte': datetime.strptime(
+                                    filter_data['dateTo'], '%Y-%m-%d %H:%M:%S'
+                                ),
+                            }
+                        }
+                    }
+                )
+    return es_filters

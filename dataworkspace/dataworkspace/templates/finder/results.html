@@ -1,106 +1,84 @@
 {% extends '_main.html' %}
-{% load static %}
-{% load datasets_tags %}
+{% load static datasets_tags explorer_tags %}
 
 {% block go_back %}
   {% if backlink %}
     <a href="{{ backlink }}" class="govuk-back-link">Back</a>
   {% endif %}
-{% endblock %}
-
+{% endblock go_back %}
+{% block footer_scripts %}
+  <script src="{% static 'ag-grid-community.min.js' %}"></script>
+  <script src="{% static 'dayjs.min.js' %}"></script>
+  <script src="{% static 'data-grid.js' %}"></script>
+  {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
+  <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}" />
+  {{ grid_column_definitions|json_script:"column_data" }}
+  <script nonce="{{ request.csp_nonce }}">
+    window.initDataGrid(
+        JSON.parse(document.getElementById('column_data').textContent),
+        '{% url 'finder:data_grid_results' source_table.schema source_table.table %}?{{ request.GET.urlencode }}',
+        null,
+        null
+    );
+  </script>
+{% endblock footer_scripts %}
 {% block content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-full" style="margin: 0 auto; float: unset">
-        <div class="govuk-form-group">
-        <h1 class="govuk-label-wrapper govuk-!-margin-top-5" style="text-align: left"><label class="govuk-label govuk-label--xl" for="q">
-            Dataset finder - results
-        </label>
-        </h1>
-        </div>
-    </div>
-</div>
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-      <p class="govuk-body-l">
-        Showing results from 
-        <a class="govuk-link" href="{% url 'datasets:dataset_detail' dataset_uuid=uuid %}#{{ slug }}" target="_blank">
-          {{ name }}
-        </a>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">
+        Results in {{ dataset.name }}
+      </h1>
+      <p class="govuk-body govuk-!-padding-bottom-2">
+        <strong>{{ search_term }}</strong> found in {{ source_table.name }} in <a class="govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>.
       </p>
-      {% if records %}
-      <h2 class="govuk-body">
-        <span id="search-results-count">{{ results.paginator.count }}</span> results in "{{ schema }}"."{{ table }}", matching "{{ search_term }}"
-      </h2>
-            <div class="scrollable-table {% if record_count <= fixed_table_height_limit %}fixed-table-height{% endif %}" tabindex="0">
-          <table class="govuk-table govuk-!-font-size-16">
-            <thead>
-              <tr class="govuk-table__row">
-              {% for field in fields %}
-                  <th class="govuk-table__header">
-                    {{ field }}
-                  </th>
-              {% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-            {% for record in records %}
-              <tr class="govuk-table__row">
-                {% for key, value in record.items %}
-                    <td class="govuk-table__cell">
-                    {{ value }}
-                    </td>
-                {% endfor %}
-            </tr>
-            {% empty %}
-              <tr class="govuk-table__row">
-                <td colspan="{{ fields|length }}">
-                    No data available.
-                </td>
-              </tr>
+      <p class="govuk-body govuk-!-padding-bottom-2">
+        {{ dataset.short_description }}
+      </p>
+      <details class="govuk-details govuk-!-margin-bottom-6" data-module="govuk-details">
+        <summary class="govuk-details__summary">
+          <span class="govuk-details__summary-text">
+            View data structure <span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+          </span>
+        </summary>
+        <div class="govuk-details__text">
+          <ul class="govuk-list govuk-list--bullet">
+            {% for column, data_type in columns|slice:":12" %}
+              <li>
+                <strong>{{ column }}</strong> ({{ data_type }})
+              </li>
             {% endfor %}
-            </tbody>
-          </table>
+            {% if columns|length > 12 %}
+              <a class="govuk-link" href="{% url 'datasets:source_table_column_details' dataset_uuid=dataset.id table_uuid=source_table.id %}">
+                View all columns <span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+              </a>
+            {% endif %}
+          </ul>
         </div>
-        <br/>
-        <p class="govuk-body" style="display: inline">
-            Showing results {{ results.start_index  }}&ndash;{{ results.end_index }} of {{ results.paginator.count }}
-        </p>
-        
-        {% if results.paginator.num_pages > 1 %}
-            <nav role="navigation" class="govuk-body" aria-label="Search result page navigation" style="display: inline">
-            <ul class="pagination govuk-list">
-                {% if results.has_previous %}
-                <li><a class="govuk-link" href="{% url_replace page=results.previous_page_number %}" aria-label="Previous page">Previous</a></li>
-                {% endif %}
-        
-                {% if results.number > 3 %}
-                <li><a class="govuk-link" href="{% url_replace page=1 %}" aria-label="Page 1">{{ 1 }}</a></li>
-                {% if results.number > 4 %}<li>&hellip;</li>{% endif %}
-                {% endif %}
-        
-                {% for i in results.paginator.page_range %}
-                {% if results.number == i %}
-                    <li class="active">{{ i }}</li>
-                {% elif i >= results.number|add:'-2' and i <= results.number|add:'2' %}
-                    <li><a class="govuk-link" href="{% url_replace page=i %}" aria-label="Page {{ i }}">{{ i }}</a></li>
-                {% endif %}
-                {% endfor %}
-        
-                {% if results.paginator.num_pages > results.number|add:'2' %}
-                {% if results.paginator.num_pages > results.number|add:'3' %}<li>&hellip;</li>{% endif %}
-                <li><a class="govuk-link" href="{% url_replace page=results.paginator.num_pages %}" aria-label="Page {{ results.paginator.num_pages }}">{{ results.paginator.num_pages }}</a></li>
-                {% endif %}
-        
-                {% if results.has_next %}
-                <li><a class="govuk-link" href="{% url_replace page=results.next_page_number %}" aria-label="Next page">Next</a></li>
-                {% endif %}
-            </ul>
-            </nav>
-        {% endif %}
+      </details>
+    <p class="govuk-body">
+      {{ total_results }} results found in <strong>"{{ source_table.schema }}"."{{ source_table.table }}"</strong>.
+    </p>
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      {% if total_results > 0 %}
+        <div id="data-grid" class="ag-theme-alpine"></div>
+        <div class="govuk-!-margin-top-4">
+          <a class="govuk-button govuk-button--primary" target="_blank" href="{% query_table_in_explorer_link source_table.schema source_table.table %}">
+            Open in Data Explorer
+          </a>
+          <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
+            Reset filters
+          </button>
+          <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
+            Reset columns
+          </button>
+        </div>
       {% else %}
         <p class="govuk-body">No data available</p>
       {% endif %}
     </div>
-</div>
+  </div>
+  {% csrf_token %}
 {% endblock %}
-

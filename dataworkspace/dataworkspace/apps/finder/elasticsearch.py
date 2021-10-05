@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional, Tuple
 
 from django.conf import settings
 
@@ -67,17 +67,32 @@ class ElasticsearchClient:
 
         return lists_of_indexes
 
-    def search(self, phrase: str, index_aliases: List[str], from_: int, size: int):
+    def search(
+        self,
+        phrase: str,
+        index_aliases: List[str],
+        from_: int,
+        size: int,
+        filters: List[dict] = None,
+    ):
+        queries = [
+            {
+                'bool': {
+                    'must': {
+                        "multi_match": {
+                            "query": phrase,
+                            "type": "phrase",
+                            "fields": ["_all"],
+                        }
+                    }
+                }
+            }
+        ] + (filters if filters else [])
+
         return self._client.search(
             body={
                 "sort": [{"_id": {"order": "asc"}}],
-                "query": {
-                    "simple_query_string": {
-                        "query": phrase,
-                        "fields": ["_all"],
-                        "flags": "FUZZY|PHRASE",
-                    }
-                },
+                "query": {"bool": {"must": queries}},
                 "aggs": {"indexes": {"terms": {"field": "_index"}}},
             },
             index=','.join(index_aliases),
@@ -87,12 +102,15 @@ class ElasticsearchClient:
         )
 
     def search_for_phrase(
-        self, phrase: str, index_aliases: List[str]
+        self,
+        phrase: str,
+        index_aliases: List[str],
+        filters: Tuple[Tuple[str, Any]] = None,
     ) -> List[_TableMatchResult]:
         results = []
 
         for batch in self._batch_indexes(index_aliases):
-            resp = self.search(phrase, batch, 0, 0)
+            resp = self.search(phrase, batch, 0, 0, filters=filters)
 
             if resp['hits']['total']['value'] > 0:
                 for r in resp["aggregations"]["indexes"]["buckets"]:
@@ -110,11 +128,18 @@ class ElasticsearchClient:
 
         return sorted(results, key=lambda x: -x.count)
 
-    def get_count(self, phrase, index_alias):
-        matches = self.search_for_phrase(phrase, [index_alias])
+    def get_count(self, phrase, index_alias, filters: Tuple[Tuple[str, Any]] = None):
+        matches = self.search_for_phrase(phrase, [index_alias], filters=filters)
         if matches:
             return matches[0].count
         return 0
+
+    def get_fields(self, index_alias):
+        """
+        Return a list of the fields stored in an elasticsearch index
+        """
+        mapping = self.client.indices.get_mapping(index_alias)
+        return list(list(mapping.values())[0]['mappings']['properties'].keys())
 
 
 es_client = ElasticsearchClient()

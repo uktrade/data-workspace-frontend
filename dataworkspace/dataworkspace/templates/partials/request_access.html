@@ -4,7 +4,7 @@
     <strong>
       <span class="govuk-warning-text__assistive">Warning</span>
       {% if not has_data_access %}
-        You need to request access to view {% if type == 'master' %}this data{% elif type == 'datacut' %}these links{% elif type == 'visualisation' %}this data{% endif %}. You can only access data with a valid reason.
+        You need to request access to view this data. You can only access data with a valid reason.
       {% elif type == 'master' and not has_tools_access %}
         You need to request access to tools to analyse this data.
       {% endif %}

@@ -1,9 +1,11 @@
+from urllib.parse import urlencode
+
 import pytest
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.urls import reverse
 from django.test import Client, override_settings
+from django.urls import reverse
 from waffle.testutils import override_flag
 
 from dataworkspace.apps.finder.models import DatasetFinderQueryLog
@@ -45,7 +47,9 @@ def test_find_datasets_with_no_results(client, mocker):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
 def test_find_datasets_with_results(client, mocker, dataset_finder_db):
-    user = get_user_model().objects.create(is_staff=True, is_superuser=True)
+    user = get_user_model().objects.create(
+        is_staff=True, is_superuser=True, email='test@test.com'
+    )
     client = Client(**get_http_sso_data(user))
 
     master_dataset = factories.MasterDataSetFactory.create(
@@ -99,6 +103,18 @@ def test_find_datasets_with_results(client, mocker, dataset_finder_db):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
 def test_get_results_for_index(client, mocker, dataset_finder_db):
+    source_table = factories.SourceTableFactory.create(
+        dataset=factories.MasterDataSetFactory.create(
+            user_access_type='REQUIRES_AUTHENTICATION'
+        ),
+        schema='public',
+        table='country_stats',
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
+    get_fields = mocker.patch(
+        'dataworkspace.apps.finder.elasticsearch.ElasticsearchClient.get_fields'
+    )
+    get_fields.return_value = ['date', 'country', 'driving']
     dataset_search = mocker.patch('elasticsearch.Elasticsearch.search')
     dataset_search.side_effect = [
         {
@@ -115,7 +131,10 @@ def test_get_results_for_index(client, mocker, dataset_finder_db):
                     'doc_count_error_upper_bound': 0,
                     'sum_other_doc_count': 0,
                     'buckets': [
-                        {'key': '20210316t070000--public--data--1', 'doc_count': 3},
+                        {
+                            'key': '20210316t070000--public--country_stats--1',
+                            'doc_count': 3,
+                        },
                     ],
                 }
             },
@@ -129,7 +148,7 @@ def test_get_results_for_index(client, mocker, dataset_finder_db):
                 'max_score': None,
                 'hits': [
                     {
-                        "_index": "20210316t070000--public--data--1",
+                        "_index": "20210316t070000--public--country_stats--1",
                         "_type": "_doc",
                         "_id": "1",
                         "_score": 1.0,
@@ -140,7 +159,7 @@ def test_get_results_for_index(client, mocker, dataset_finder_db):
                         },
                     },
                     {
-                        "_index": "20210316t070000--public--data--1",
+                        "_index": "20210316t070000--public--country_stats--1",
                         "_type": "_doc",
                         "_id": "1",
                         "_score": 1.0,
@@ -151,7 +170,7 @@ def test_get_results_for_index(client, mocker, dataset_finder_db):
                         },
                     },
                     {
-                        "_index": "20210316t070000--public--data--1",
+                        "_index": "20210316t070000--public--country_stats--1",
                         "_type": "_doc",
                         "_id": "1",
                         "_score": 1.0,
@@ -166,32 +185,50 @@ def test_get_results_for_index(client, mocker, dataset_finder_db):
         },
     ]
 
-    response = client.get(
-        reverse('finder:show_results', kwargs={'schema': 'public', 'table': 'data'}),
-        {
-            "q": "albania",
-            'name': 'test',
-            'uuid': '3c5cf428-63c1-4c60-bab9-17d4613992d3',
-            'slug': 'slug',
-        },
+    params = {
+        "q": "albania",
+        'name': 'test',
+        'uuid': source_table.dataset.id,
+        'slug': 'slug',
+    }
+    response = client.post(
+        reverse(
+            'finder:data_grid_results',
+            kwargs={'schema': 'public', 'table': 'country_stats'},
+        )
+        + '?'
+        + urlencode(params),
+        {},
+        content_type='application/json',
     )
 
     assert response.status_code == 200
-    assert len(response.context["records"]) == 3
-    assert len(response.context["fields"]) == 3
-    assert response.context["fields"] == ["country", "date", "driving"]
-    assert response.context["records"] == [
-        {"country": "Albania", "date": "2020-01-13", "driving": 0.0},
-        {"country": "Albania", "date": "2020-01-14", "driving": 1.5},
-        {"country": "Albania", "date": "2020-01-15", "driving": 6.7},
-    ]
-    assert response.context["results"].paginator.num_pages == 1
+    assert response.json() == {
+        'total': 3,
+        'records': [
+            {'country': 'Albania', 'date': '2020-01-13', 'driving': 0.0},
+            {'country': 'Albania', 'date': '2020-01-14', 'driving': 1.5},
+            {'country': 'Albania', 'date': '2020-01-15', 'driving': 6.7},
+        ],
+    }
 
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
 @override_settings(DATASET_FINDER_SEARCH_RESULTS_PER_PAGE=1)
 def test_paging_get_results_for_index(client, mocker, dataset_finder_db):
+    source_table = factories.SourceTableFactory.create(
+        dataset=factories.MasterDataSetFactory.create(
+            user_access_type='REQUIRES_AUTHENTICATION'
+        ),
+        schema='public',
+        table='country_stats',
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
+    get_fields = mocker.patch(
+        'dataworkspace.apps.finder.elasticsearch.ElasticsearchClient.get_fields'
+    )
+    get_fields.return_value = ['date', 'country', 'driving']
     dataset_search = mocker.patch('elasticsearch.Elasticsearch.search')
     dataset_search.side_effect = [
         {
@@ -208,7 +245,10 @@ def test_paging_get_results_for_index(client, mocker, dataset_finder_db):
                     'doc_count_error_upper_bound': 0,
                     'sum_other_doc_count': 0,
                     'buckets': [
-                        {'key': '20210316t070000--public--data--1', 'doc_count': 3},
+                        {
+                            'key': '20210316t070000--public--country_stats--1',
+                            'doc_count': 3,
+                        },
                     ],
                 }
             },
@@ -218,11 +258,11 @@ def test_paging_get_results_for_index(client, mocker, dataset_finder_db):
             'timed_out': False,
             '_shards': {'total': 1, 'successful': 1, 'skipped': 0, 'failed': 0},
             'hits': {
-                'total': {'value': 3, 'relation': 'eq'},
+                'total': {'value': 1, 'relation': 'eq'},
                 'max_score': None,
                 'hits': [
                     {
-                        "_index": "20210316t070000--public--data--1",
+                        "_index": "20210316t070000--public--country_stats--1",
                         "_type": "_doc",
                         "_id": "1",
                         "_score": 1.0,
@@ -235,17 +275,49 @@ def test_paging_get_results_for_index(client, mocker, dataset_finder_db):
                 ],
             },
         },
+        {
+            'took': 11,
+            'timed_out': False,
+            '_shards': {'total': 1, 'successful': 1, 'skipped': 0, 'failed': 0},
+            'hits': {
+                'total': {'value': 1, 'relation': 'eq'},
+                'max_score': None,
+                'hits': [
+                    {
+                        "_index": "20210316t070000--public--country_stats--1",
+                        "_type": "_doc",
+                        "_id": "1",
+                        "_score": 1.0,
+                        "_source": {
+                            "country": "Albania",
+                            "date": "2020-01-14",
+                            "driving": 1.5,
+                        },
+                    },
+                ],
+            },
+        },
     ]
 
-    response = client.get(
-        reverse('finder:show_results', kwargs={'schema': 'public', 'table': 'data'}),
-        {
-            "q": "albania",
-            'name': 'test',
-            'uuid': '3c5cf428-63c1-4c60-bab9-17d4613992d3',
-            'slug': 'slug',
-        },
+    params = {
+        "q": "albania",
+        'name': 'test',
+        'uuid': source_table.dataset.id,
+        'slug': 'slug',
+    }
+    response = client.post(
+        reverse(
+            'finder:data_grid_results',
+            kwargs={'schema': 'public', 'table': 'country_stats'},
+        )
+        + '?'
+        + urlencode(params),
+        {'limit': 1, 'start': 1},
+        content_type='application/json',
     )
 
     assert response.status_code == 200
-    assert response.context["results"].paginator.num_pages == 3
+    assert response.json() == {
+        'total': 3,
+        'records': [{'country': 'Albania', 'date': '2020-01-13', 'driving': 0.0}],
+    }

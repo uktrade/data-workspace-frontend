@@ -63,41 +63,6 @@ def test_master_dataset_no_access_preview(client, dataset_db):
     assert 'Preview' not in response.rendered_content
 
 
-def test_query_data_cut_preview(client, dataset_db):
-    ds = factories.DataSetFactory.create(
-        user_access_type='REQUIRES_AUTHENTICATION', published=True,
-    )
-    cut1 = factories.CustomDatasetQueryFactory(
-        dataset=ds,
-        database=dataset_db,
-        query="SELECT id customid, name customname FROM dataset_test",
-        reviewed=True,
-    )
-    cut2 = factories.CustomDatasetQueryFactory(
-        dataset=ds,
-        database=dataset_db,
-        query="SELECT id customid, name customname FROM dataset_test",
-        reviewed=False,
-    )
-
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-
-    # reviewed query should have a preview link
-    assert (
-        f'href="/datasets/{ds.id}/query/{cut1.id}/preview"' in response.rendered_content
-    )
-    assert 'Preview' in response.rendered_content
-
-    # non reviewed query shouldn't have a preview link
-    assert (
-        f'href="/datasets/{ds.id}/query/{cut2.id}/preview"'
-        not in response.rendered_content
-    )
-    assert 'No preview available' in response.rendered_content
-
-
 def test_query_data_cut_preview_staff_user(staff_client, dataset_db):
     ds = factories.DataSetFactory.create(
         user_access_type='REQUIRES_AUTHENTICATION', published=True,
@@ -138,15 +103,15 @@ def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
 
 
 def test_link_data_cut_doesnt_have_preview(client):
-    ds = factories.DataSetFactory(
+    data_cut = factories.DataSetFactory(
         user_access_type='REQUIRES_AUTHENTICATION', published=True
     )
-    factories.SourceLinkFactory(dataset=ds)
+    factories.SourceLinkFactory(dataset=data_cut)
 
-    response = client.get(ds.get_absolute_url())
+    response = client.get(data_cut.get_absolute_url())
 
     assert response.status_code == 200
-    assert 'No preview available' in response.rendered_content
+    # assert 'No preview available' in response.rendered_content
 
 
 class TestDatasetViews:

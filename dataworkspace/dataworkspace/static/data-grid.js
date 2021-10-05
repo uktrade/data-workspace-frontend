@@ -1,16 +1,8 @@
-function getCookie(name) {
-  var cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (var i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
+function getCsrfToken() {
+  if (document.getElementsByName('csrfmiddlewaretoken').length > 0) {
+    return document.getElementsByName('csrfmiddlewaretoken')[0].value;
   }
-  return cookieValue;
+  throw new Error('Unable to find CSRF token in the page');
 }
 
 function autoSizeColumns(columnApi) {
@@ -209,7 +201,7 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', dataEndpoint, true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.setRequestHeader("X-CSRFToken", getCookie('data_workspace_csrf'));
+        xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
         xhr.onreadystatechange = function() {
           if (this.readyState === XMLHttpRequest.DONE) {
             if (this.status === 200) {
@@ -234,68 +226,73 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
     gridOptions.api.setDatasource(dataSource);
   }
 
-  document.querySelector('#data-grid-download').addEventListener('click', function (e) {
-    if (dataEndpoint) {
-      // Download a csv via the backend using current sort/filter options.
-      var form = document.createElement('form');
-      form.action = dataEndpoint + '?download=1'
-      form.method = 'POST';
-      form.enctype = 'application/x-www-form-urlencoded';
+  var csvDownloadButton = document.querySelector('#data-grid-download');
+  if (csvDownloadButton !== null) {
+    csvDownloadButton.addEventListener('click', function (e) {
+      if (dataEndpoint) {
+        // Download a csv via the backend using current sort/filter options.
+        var form = document.createElement('form');
+        form.action = dataEndpoint + '?download=1'
+        form.method = 'POST';
+        form.enctype = 'application/x-www-form-urlencoded';
 
-      form.append(createInputFormField('csrfmiddlewaretoken', getCookie('data_workspace_csrf')));
-      form.append(createInputFormField('export_file_name', exportFileName));
+        form.append(createInputFormField('csrfmiddlewaretoken', getCsrfToken()));
+        form.append(createInputFormField('export_file_name', exportFileName));
 
-      // Define the columns to include in the csv
-      var displayedColumns = gridOptions.columnApi.getAllDisplayedColumns();
-      for (var i=0; i<displayedColumns.length; i++) {
-        form.append(createInputFormField('columns', displayedColumns[i].colDef.field));
+        // Define the columns to include in the csv
+        var displayedColumns = gridOptions.columnApi.getAllDisplayedColumns();
+        for (var i = 0; i < displayedColumns.length; i++) {
+          form.append(createInputFormField('columns', displayedColumns[i].colDef.field));
+        }
+
+        // Add current filters to the form
+        var filters = cleanFilters(gridOptions.api.getFilterModel(), columnDataTypeMap);
+        for (var key in filters) {
+          form.append(createInputFormField('filters', JSON.stringify({[key]: filters[key]})));
+        }
+
+        // Add the current sort config to the form
+        var sortModel = gridOptions.api.getSortModel()[0];
+        if (sortModel) {
+          form.append(createInputFormField('sortDir', sortModel.sort));
+          form.append(createInputFormField('sortField', sortModel.colId));
+        }
+
+        // Add the form to the page, submit it and then remove it
+        document.body.append(form);
+        form.submit();
+        form.remove();
+      } else {
+        // Download a csv locally using javascript
+        gridOptions.api.exportDataAsCsv({
+          fileName: exportFileName
+        });
       }
+      document.activeElement.blur();
+      return;
+    });
 
-      // Add current filters to the form
-      var filters = cleanFilters(gridOptions.api.getFilterModel(), columnDataTypeMap);
-      for (var key in filters) {
-        form.append(createInputFormField('filters', JSON.stringify({[key]: filters[key]})));
-      }
+    var jsonDownloadButton = document.querySelector('#data-grid-download');
+    if (jsonDownloadButton !== null) {
+      jsonDownloadButton.addEventListener('click', function (e) {
+        var rowData = [];
+        gridOptions.api.forEachNodeAfterFilter(function (node) {
+          rowData.push(node.data);
+        });
+        var dataStr = JSON.stringify({'data': rowData});
+        var dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
-      // Add the current sort config to the form
-      var sortModel = gridOptions.api.getSortModel()[0];
-      if (sortModel) {
-        form.append(createInputFormField('sortDir', sortModel.sort));
-        form.append(createInputFormField('sortField', sortModel.colId));
-      }
+        var exportFileDefaultName = exportFileName.replace('csv', 'json');
 
-      // Add the form to the page, submit it and then remove it
-      document.body.append(form);
-      form.submit();
-      form.remove();
-    }
-    else {
-      // Download a csv locally using javascript
-      gridOptions.api.exportDataAsCsv({
-        fileName: exportFileName
+        var linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        document.activeElement.blur();
+        return;
       });
     }
-    document.activeElement.blur();
-    return;
-  });
-
-  document.querySelector('#data-grid-json-download').addEventListener('click', function (e) {
-    var rowData = [];
-    gridOptions.api.forEachNodeAfterFilter(function(node) {
-      rowData.push(node.data);
-    });
-    var dataStr = JSON.stringify({'data': rowData});
-    var dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-
-    var exportFileDefaultName = exportFileName.replace('csv', 'json');
-
-    var linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    document.activeElement.blur();
-    return;
-  });
+  }
 
   document.querySelector('#data-grid-reset-filters').addEventListener('click', function(e){
     gridOptions.api.setFilterModel(null);
