@@ -185,7 +185,7 @@ def get_definitions():
     },
     "y": {"field": "Activity", "type": "nominal"}
   }
-} 
+}
     """
     )
 
@@ -209,7 +209,7 @@ def get_definitions():
     "theta": {"field": "value", "type": "quantitative"},
     "color": {"field": "category", "type": "nominal"}
   }
-}    
+}
     """
     )
 
