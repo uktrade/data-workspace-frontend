@@ -4,6 +4,6 @@ from .base import *  # noqa
 
 DEBUG = True
 
-INSTALLED_APPS += [
+INSTALLED_APPS += [  # noqa
     'dataworkspace.apps.example_data',
 ]

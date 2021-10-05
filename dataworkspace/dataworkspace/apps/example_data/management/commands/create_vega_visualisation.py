@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
         # very basic static vega definition
         name = fake.job()
-        vis = DataSetVisualisation.objects.create(
+        DataSetVisualisation.objects.create(
             name=name,
             summary=fake.sentence(nb_words=20),
             database=database,
@@ -55,5 +55,5 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            self.style.SUCCESS(f"Add {name} vega visualistaion to {dataset}")
+            self.style.SUCCESS(f"Added {name} vega visualistaion to {dataset}")
         )

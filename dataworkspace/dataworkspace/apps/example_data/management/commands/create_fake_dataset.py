@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
         dataset_type_text = options["type"].upper()
 
-        if not dataset_type_text in DataSetType.__members__:
+        if dataset_type_text not in DataSetType.__members__:
             self.stderr.write(
                 self.style.ERROR(f"{options['type']} is not a valid DataSetType")
             )
