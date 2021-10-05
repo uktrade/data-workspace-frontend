@@ -25,7 +25,7 @@
 
       <p class="govuk-body">
         {% if object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS %}
-          You've requested access to <a href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}</a> and our <a href="/tools" >tools.</a>
+          You've requested access to <a class="govuk-link" href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}</a> and our <a href="/tools" >tools.</a>
         {% elif object.journey == object.JOURNEY_TOOLS_ACCESS %}
           <p class="govuk-body">You've requested access to our <a href="{% url 'applications:tools' %}" >tools.</a>
         {% elif object.journey == object.JOURNEY_DATASET_ACCESS %}
@@ -45,7 +45,7 @@
         {% endif %}
       </p>
       <p class="govuk-body">
-        If you have any questions, contact <a href="mailto:data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com">data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com</a>
+        If you have any questions, contact <a class="govuk-link" href="mailto:data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com">data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com</a>
       </p>
       <p class="govuk-body">
         You can also:
