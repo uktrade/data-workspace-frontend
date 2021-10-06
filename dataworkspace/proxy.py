@@ -595,8 +595,6 @@ async def async_main():
 
             asyncio.ensure_future(set_application_running())
 
-            await send_to_google_analytics(downstream_request)
-
             return response
 
     async def handle_application_http_running_wrapped(
