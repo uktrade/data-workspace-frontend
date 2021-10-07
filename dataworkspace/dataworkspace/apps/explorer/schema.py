@@ -33,14 +33,21 @@ def connection_schema_cache_key(user, connection_alias):
     return f'_explorer_cache_key_{user.profile.sso_id}_{connection_alias}'
 
 
-def schema_info(user, connection_alias):
-    key = connection_schema_cache_key(user, connection_alias)
-    ret = cache.get(key)
-    if ret:
-        return ret
+def schema_info(request, connection_alias):
+    if 'impersonated_user' in request.session:
+        from dataworkspace.apps.applications.utils import get_sso_user
 
-    ret = build_schema_info(user, connection_alias)
-    cache.set(key, ret)
+        return build_schema_info(
+            request.user, connection_alias, impersonator=get_sso_user(request)
+        )
+    else:
+        key = connection_schema_cache_key(request.user, connection_alias)
+        ret = cache.get(key)
+        if ret:
+            return ret
+
+        ret = build_schema_info(request.user, connection_alias)
+        cache.set(key, ret)
 
     return ret
 
@@ -61,7 +68,7 @@ class TableName(namedtuple("TableName", ['schema', 'name'])):
         return f'{self.schema}.{self.name}'
 
 
-def build_schema_info(user, connection_alias):
+def build_schema_info(user, connection_alias, impersonator=None):
     """
         Construct schema information via engine-specific queries of the tables in the DB.
 
@@ -77,7 +84,9 @@ def build_schema_info(user, connection_alias):
 
         """
 
-    connection = get_user_explorer_connection_settings(user, connection_alias)
+    connection = get_user_explorer_connection_settings(
+        user, connection_alias, impersonator
+    )
     with psycopg2.connect(
         f'postgresql://{connection["db_user"]}:{connection["db_password"]}'
         f'@{connection["db_host"]}:{connection["db_port"]}/'
@@ -129,8 +138,6 @@ def build_schema_info(user, connection_alias):
 
 
 def get_user_schema_info(request):
-    schema = schema_info(
-        user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
-    )
+    schema = schema_info(request, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION)
     tables_columns = ['.'.join(schema_table) for schema_table, _ in schema]
     return schema, tables_columns

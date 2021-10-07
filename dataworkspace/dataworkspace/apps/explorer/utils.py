@@ -134,7 +134,7 @@ def get_user_cached_credentials_key(user):
     return f"explorer_credentials_{credentials_version}_{user.profile.sso_id}"
 
 
-def get_user_explorer_connection_settings(user, alias):
+def get_user_explorer_connection_settings(user, alias, impersonator=None):
     from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
         connections,
     )
@@ -175,7 +175,10 @@ def get_user_explorer_connection_settings(user, alias):
         if not user_credentials:
             db_role_schema_suffix = db_role_schema_suffix_for_user(user)
             source_tables = source_tables_for_user(user)
-            db_user = postgres_user(user.email, suffix='explorer')
+            db_user = postgres_user(
+                user.email if not impersonator else impersonator.email,
+                suffix='explorer',
+            )
             duration = timedelta(hours=24)
             cache_duration = (duration - timedelta(minutes=15)).total_seconds()
 
