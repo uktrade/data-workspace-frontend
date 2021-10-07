@@ -51,8 +51,13 @@ def get_spawner(name):
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def spawn(
-    name, user_id, tag, application_instance_id, spawner_options,
+    name, user_id, tag, application_instance_id, spawner_options, impersonator_id
 ):
+    if user_id != impersonator_id:
+        impersonator = get_user_model().objects.get(pk=impersonator_id)
+    else:
+        impersonator = None
+
     user = get_user_model().objects.get(pk=user_id)
     application_instance = ApplicationInstance.objects.get(id=application_instance_id)
 
@@ -60,7 +65,7 @@ def spawn(
         (
             source_tables_for_user(user),
             db_role_schema_suffix_for_user(user),
-            postgres_user(user.email),
+            postgres_user(user.email if not impersonator else impersonator.email),
         )
         if application_instance.application_template.application_type == 'TOOL'
         else (

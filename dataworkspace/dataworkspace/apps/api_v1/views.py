@@ -205,6 +205,7 @@ def application_api_PUT(request, public_host):
             tag,
             application_instance.id,
             spawner_options,
+            owner.pk,
         )
 
     return JsonResponse(api_application_dict(application_instance), status=200)
