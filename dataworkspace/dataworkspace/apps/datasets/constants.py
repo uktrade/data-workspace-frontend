@@ -40,3 +40,12 @@ class DataLinkType(models.IntegerChoices):
 class TagType(models.IntegerChoices):
     SOURCE = 1, 'Source'
     TOPIC = 2, 'Topic'
+
+
+class UserAccessType(models.TextChoices):
+    OPEN = 'OPEN', 'Everyone - for public data only, suitable to be shown in demos'
+    REQUIRES_AUTHENTICATION = 'REQUIRES_AUTHENTICATION', 'All logged in users'
+    REQUIRES_AUTHORIZATION = (
+        'REQUIRES_AUTHORIZATION',
+        'Only specific authorized users or email domains',
+    )

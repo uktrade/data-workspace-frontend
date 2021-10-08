@@ -1,6 +1,7 @@
 import mock
 from django.urls import reverse
 
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseTestCase
 
@@ -17,7 +18,7 @@ class TestApplicationAPI(BaseTestCase):
         factories.SourceTableFactory.create(
             database=factories.DatabaseFactory.create(memorable_name='my_database'),
             dataset=factories.DataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             ),
             table='doesnotexist',
         )

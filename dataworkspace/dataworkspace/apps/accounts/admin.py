@@ -14,7 +14,7 @@ from django.core import serializers
 from django.db import transaction
 
 from dataworkspace.apps.core.utils import stable_identification_suffix
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     DataSetUserPermission,
@@ -87,14 +87,14 @@ class AppUserEditForm(forms.ModelForm):
         required=False,
         widget=FilteredSelectMultiple('master datasets', False),
         queryset=MasterDataset.objects.live()
-        .filter(user_access_type='REQUIRES_AUTHORIZATION')
+        .filter(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
         .order_by('name'),
     )
     authorized_data_cut_datasets = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('data cut datasets', False),
         queryset=DataCutDataset.objects.live()
-        .filter(user_access_type='REQUIRES_AUTHORIZATION')
+        .filter(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
         .order_by('name'),
     )
     authorized_visualisations = forms.ModelMultipleChoiceField(

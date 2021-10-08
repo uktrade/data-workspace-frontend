@@ -8,6 +8,7 @@ import pytest
 from botocore.response import StreamingBody
 from pytz import UTC
 
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import SourceLink
 from dataworkspace.tests import factories
 
@@ -60,7 +61,9 @@ def test_clone_dataset_copies_related_objects(db):
 def test_dataset_source_reference_code(db, factory):
     ref_code1 = factories.DatasetReferenceCodeFactory(code='Abc')
     ref_code2 = factories.DatasetReferenceCodeFactory(code='Def')
-    ds = factories.DataSetFactory(reference_code=ref_code1)
+    ds = factories.DataSetFactory(
+        reference_code=ref_code1, user_access_type=UserAccessType.OPEN
+    )
     source = factory(dataset=ds)
     assert source.source_reference == 'ABC00001'
 

@@ -10,7 +10,7 @@ from django.urls import reverse
 from waffle.testutils import override_flag
 
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.tests import factories
 
 
@@ -21,7 +21,8 @@ class TestCustomQueryPreviewView:
 
     def test_preview_forbidden_datacut(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHORIZATION',
+            type=DataSetType.DATACUT,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         )
         query = factories.CustomDatasetQueryFactory(
             dataset=dataset, database=test_db, query='SELECT * FROM a_table',
@@ -34,9 +35,12 @@ class TestCustomQueryPreviewView:
         )
         assert response.status_code == 403
 
-    def test_preview_invalid_datacut(self, client, test_db):
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_preview_invalid_datacut(self, access_type, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT, user_access_type=access_type,
         )
         query = factories.CustomDatasetQueryFactory(
             dataset=dataset, database=test_db, query='SELECT * FROM invalid_table',
@@ -53,9 +57,12 @@ class TestCustomQueryPreviewView:
         assert 'Download' not in response_content
 
     @override_settings(DATASET_PREVIEW_NUM_OF_ROWS=20)
-    def test_preview_valid_datacut(self, client, test_db):
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_preview_valid_datacut(self, access_type, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT, user_access_type=access_type,
         )
 
         # Check if sample data shown correctly
@@ -112,7 +119,7 @@ class TestCustomQueryPreviewView:
     def _preview_unreviewed_datacut(self, client, test_db):
         dataset = factories.DataSetFactory(
             type=DataSetType.DATACUT,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
             published=True,
         )
         sql = 'SELECT 1 as a, 2 as b'
@@ -155,7 +162,8 @@ class TestSourceTablePreviewView:
 
     def test_preview_forbidden_master_dataset(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHORIZATION'
+            type=DataSetType.MASTER,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         )
         source_table = factories.SourceTableFactory(
             dataset=dataset,
@@ -175,7 +183,8 @@ class TestSourceTablePreviewView:
     @override_settings(DATASET_PREVIEW_NUM_OF_ROWS=10)
     def test_preview_table(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION'
+            type=DataSetType.MASTER,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
         )
 
         # Check if sample data shown correctly
@@ -243,8 +252,11 @@ class TestDataCutPreviewDownloadView:
         assert response.status_code == 403
 
     @override_flag(settings.DATA_CUT_ENHANCED_PREVIEW_FLAG, active=True)
-    def test_authorised_link(self, client, mocker):
-        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_authorised_link(self, access_type, client, mocker):
+        dataset = factories.DataSetFactory(user_access_type=access_type)
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
             dataset=dataset,
@@ -285,7 +297,8 @@ class TestDataCutPreviewDownloadView:
     @override_flag(settings.DATA_CUT_ENHANCED_PREVIEW_FLAG, active=True)
     def test_unauthorised_query(self, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHORIZATION'
+            type=DataSetType.MASTER,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         )
 
         query = factories.CustomDatasetQueryFactory(
@@ -300,9 +313,12 @@ class TestDataCutPreviewDownloadView:
         assert response.status_code == 403
 
     @override_flag(settings.DATA_CUT_ENHANCED_PREVIEW_FLAG, active=True)
-    def test_authorised_query(self, client, test_db):
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_authorised_query(self, access_type, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION'
+            type=DataSetType.MASTER, user_access_type=access_type
         )
 
         query = factories.CustomDatasetQueryFactory(

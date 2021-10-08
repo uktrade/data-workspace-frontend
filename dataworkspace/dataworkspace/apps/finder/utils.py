@@ -7,6 +7,7 @@ from typing import List, Iterable
 from django.db.models import Q, Case, When, BooleanField, Value
 from django.db.models.functions import Concat
 
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.finder.elasticsearch import _TableMatchResult
 from dataworkspace.apps.finder.models import DatasetFinderQueryLog
@@ -77,9 +78,9 @@ def _enrich_and_suppress_matches(request, matches: Iterable[_TableMatchResult]):
 
     queryset = SourceTable.objects.filter(match_table_filter)
 
-    no_access_filter = Q(dataset__user_access_type='REQUIRES_AUTHORIZATION') & ~Q(
-        dataset__datasetuserpermission__user=request.user
-    )
+    no_access_filter = Q(
+        dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+    ) & ~Q(dataset__datasetuserpermission__user=request.user)
 
     # Pull out just the information we need
     tables_with_access_info = queryset.values(

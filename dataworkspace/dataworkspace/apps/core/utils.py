@@ -29,6 +29,7 @@ from django.db.models import Q
 from django.conf import settings
 
 from dataworkspace.apps.core.models import Database, DatabaseUser, Team
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
 logger = logging.getLogger('app')
@@ -554,7 +555,12 @@ def can_access_schema_table(user, database, schema, table):
             Q(published=True)
             & Q(sourcetable__in=sourcetable)
             & (
-                Q(user_access_type='REQUIRES_AUTHENTICATION')
+                Q(
+                    user_access_type__in=[
+                        UserAccessType.REQUIRES_AUTHENTICATION,
+                        UserAccessType.OPEN,
+                    ]
+                )
                 | Q(datasetuserpermission__user=user)
             )
         )
@@ -579,12 +585,17 @@ def source_tables_for_user(user):
     user_email_domain = user.email.split('@')[1]
 
     req_authentication_tables = SourceTable.objects.filter(
-        dataset__user_access_type='REQUIRES_AUTHENTICATION',
+        Q(
+            dataset__user_access_type__in=[
+                UserAccessType.REQUIRES_AUTHENTICATION,
+                UserAccessType.OPEN,
+            ]
+        ),
         dataset__deleted=False,
         **{'dataset__published': True} if not user.is_superuser else {},
     )
     req_authorization_tables = SourceTable.objects.filter(
-        dataset__user_access_type='REQUIRES_AUTHORIZATION',
+        dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__deleted=False,
         dataset__datasetuserpermission__user=user,
         **{'dataset__published': True} if not user.is_superuser else {},
@@ -617,7 +628,7 @@ def source_tables_for_user(user):
             'dataset': {
                 'id': x.uuid,
                 'name': x.name,
-                'user_access_type': 'REQUIRES_AUTHENTICATION',
+                'user_access_type': UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
         for x in ReferenceDataset.objects.live()
@@ -629,14 +640,19 @@ def source_tables_for_user(user):
 
 def source_tables_for_app(application_template):
     req_authentication_tables = SourceTable.objects.filter(
+        Q(
+            dataset__user_access_type__in=[
+                UserAccessType.REQUIRES_AUTHENTICATION,
+                UserAccessType.OPEN,
+            ]
+        ),
         dataset__published=True,
         dataset__deleted=False,
-        dataset__user_access_type='REQUIRES_AUTHENTICATION',
     )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__published=True,
         dataset__deleted=False,
-        dataset__user_access_type='REQUIRES_AUTHORIZATION',
+        dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__datasetapplicationtemplatepermission__application_template=application_template,
     )
     source_tables = [
@@ -660,7 +676,7 @@ def source_tables_for_app(application_template):
             'dataset': {
                 'id': x.uuid,
                 'name': x.name,
-                'user_access_type': 'REQUIRES_AUTHENTICATION',
+                'user_access_type': UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
         for x in ReferenceDataset.objects.live()

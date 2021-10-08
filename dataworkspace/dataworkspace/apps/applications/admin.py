@@ -20,6 +20,7 @@ from dataworkspace.apps.applications.models import (
     ToolTemplate,
     VisualisationTemplate,
 )
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     DataSetApplicationTemplatePermission,
@@ -404,7 +405,7 @@ class VisualisationTemplateEditForm(forms.ModelForm):
         required=False,
         widget=FilteredSelectMultiple('master datasets', False),
         queryset=MasterDataset.objects.live()
-        .filter(user_access_type='REQUIRES_AUTHORIZATION')
+        .filter(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
         .order_by('name'),
     )
 

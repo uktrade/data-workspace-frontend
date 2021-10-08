@@ -59,7 +59,11 @@ from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.datasets.constants import DataSetType, DataLinkType
+from dataworkspace.apps.datasets.constants import (
+    DataSetType,
+    DataLinkType,
+    UserAccessType,
+)
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
@@ -171,8 +175,14 @@ def get_datasets_data_for_user_matching_query(
     bookmark_filter = Q(referencedatasetbookmark__user=user)
 
     if user and datasets.model is not ReferenceDataset:
-        access_filter &= (Q(user_access_type='REQUIRES_AUTHENTICATION')) | Q(
-            user_access_type='REQUIRES_AUTHORIZATION', datasetuserpermission__user=user
+        access_filter &= Q(
+            user_access_type__in=[
+                UserAccessType.REQUIRES_AUTHENTICATION,
+                UserAccessType.OPEN,
+            ]
+        ) | Q(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            datasetuserpermission__user=user,
         )
 
         bookmark_filter = Q(datasetbookmark__user=user)
@@ -310,13 +320,20 @@ def get_visualisations_data_for_user_matching_query(
     # Mark up whether the user can access the visualisation.
     if user:
         access_filter = (
-            Q(user_access_type='REQUIRES_AUTHENTICATION')
+            (
+                Q(
+                    user_access_type__in=[
+                        UserAccessType.REQUIRES_AUTHENTICATION,
+                        UserAccessType.OPEN,
+                    ]
+                )
+            )
             & (
                 Q(visualisationuserpermission__user=user)
                 | Q(visualisationuserpermission__isnull=True)
             )
         ) | Q(
-            user_access_type='REQUIRES_AUTHORIZATION',
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
             visualisationuserpermission__user=user,
         )
     else:

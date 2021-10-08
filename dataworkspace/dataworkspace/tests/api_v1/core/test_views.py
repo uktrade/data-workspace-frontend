@@ -7,6 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 
 
@@ -140,7 +141,7 @@ class TestGetSupersetCredentialsAPIView:
     ):
         visualisation = factories.VisualisationLinkFactory(
             visualisation_type='SUPERSET',
-            visualisation_catalogue_item__user_access_type='REQUIRES_AUTHENTICATION',
+            visualisation_catalogue_item__user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
         )
         credentials = {
             'memorable_name': 'my_database',

@@ -16,6 +16,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     UserToolConfiguration,
 )
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
@@ -62,28 +63,33 @@ class TestDataVisualisationUICataloguePage:
                     'visualisations:catalogue-item',
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
-                {"short_description": "summary"},
+                {
+                    "short_description": "summary",
+                    "user_access_type": UserAccessType.OPEN,
+                },
                 follow=True,
             )
 
         visualisation.refresh_from_db()
+        print(response.content)
         assert response.status_code == 200
         assert visualisation.short_description == "summary"
 
     @pytest.mark.parametrize(
-        "start_type, post_type, expected_type",
+        "start_type, expected_type",
         (
-            ("REQUIRES_AUTHORIZATION", "", "REQUIRES_AUTHENTICATION"),
             (
-                "REQUIRES_AUTHENTICATION",
-                "REQUIRES_AUTHORIZATION",
-                "REQUIRES_AUTHORIZATION",
+                UserAccessType.REQUIRES_AUTHORIZATION,
+                UserAccessType.REQUIRES_AUTHENTICATION,
             ),
+            (
+                UserAccessType.REQUIRES_AUTHENTICATION,
+                UserAccessType.REQUIRES_AUTHORIZATION,
+            ),
+            (UserAccessType.REQUIRES_AUTHORIZATION, UserAccessType.OPEN),
         ),
     )
-    def test_can_set_user_access_type(
-        self, staff_client, start_type, post_type, expected_type
-    ):
+    def test_can_set_user_access_type(self, staff_client, start_type, expected_type):
         log_count = LogEntry.objects.count()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
@@ -101,7 +107,7 @@ class TestDataVisualisationUICataloguePage:
                     'visualisations:catalogue-item',
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
-                {"short_description": "summary", "user_access_type": post_type},
+                {"short_description": "summary", "user_access_type": expected_type},
                 follow=True,
             )
 
