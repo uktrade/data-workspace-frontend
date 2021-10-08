@@ -227,6 +227,28 @@ def test_find_datasets_has_search_result_count_span_for_live_search_and_gtm(clie
     assert elem[0].get("role") == "status"
 
 
+def expected_search_result(catalogue_item, **kwargs):
+    result = {
+        'id': getattr(catalogue_item, 'uuid', catalogue_item.id),
+        'name': catalogue_item.name,
+        'slug': catalogue_item.slug,
+        'search_rank': mock.ANY,
+        'short_description': catalogue_item.short_description,
+        'published_at': mock.ANY,
+        'source_tag_names': mock.ANY,
+        'source_tag_ids': mock.ANY,
+        'topic_tag_names': mock.ANY,
+        'topic_tag_ids': mock.ANY,
+        'purpose': mock.ANY,
+        'data_type': mock.ANY,
+        'published': catalogue_item.published,
+        'has_access': True,
+        'is_bookmarked': False,
+    }
+    result.update(**kwargs)
+    return result
+
+
 def test_find_datasets_combines_results(client):
     factories.DataSetFactory.create(published=False, name='Unpublished search dataset')
     ds = factories.DataSetFactory.create(published=True, name='A search dataset')
@@ -241,57 +263,9 @@ def test_find_datasets_combines_results(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, has_access=False, purpose=DataSetType.DATACUT),
+        expected_search_result(rds, purpose=DataSetType.DATACUT),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
     assert "If you haven’t found what you’re looking for" in response.content.decode(
@@ -342,57 +316,11 @@ def test_find_datasets_filters_by_query(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, purpose=ds.type, has_access=False),
+        expected_search_result(
+            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE,
+        ),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
 
@@ -409,40 +337,8 @@ def test_find_datasets_filters_by_use(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, has_access=False),
+        expected_search_result(rds),
     ]
 
 
@@ -460,57 +356,11 @@ def test_find_datasets_filters_visualisations_by_use(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, has_access=False),
+        expected_search_result(
+            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE,
+        ),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
 
@@ -552,57 +402,21 @@ def test_find_datasets_filters_by_source(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': 0.0,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': MatchUnorderedMembers([source.name, source_2.name]),
-            'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.0,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': 0.0,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds,
+            has_access=False,
+            source_tag_names=MatchUnorderedMembers([source.name, source_2.name]),
+            source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
+        ),
+        expected_search_result(
+            rds, source_tag_names=[source.name], source_tag_ids=[source.id]
+        ),
+        expected_search_result(
+            vis,
+            source_tag_names=[source.name],
+            source_tag_ids=[source.id],
+            purpose=DataSetType.VISUALISATION,
+        ),
     ]
 
     assert len(list(response.context["form"].fields['source'].choices)) == 3
@@ -646,57 +460,26 @@ def test_find_datasets_filters_by_topic(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': 0.0,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': MatchUnorderedMembers([topic.name, topic_2.name]),
-            'topic_tag_ids': MatchUnorderedMembers([topic.id, topic_2.id]),
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.0,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': [topic.name],
-            'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': 0.0,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': [topic.name],
-            'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds,
+            has_access=False,
+            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
+            topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
+            search_rank=0.0,
+        ),
+        expected_search_result(
+            rds,
+            topic_tag_names=[topic.name],
+            topic_tag_ids=[topic.id],
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
+        ),
+        expected_search_result(
+            vis,
+            topic_tag_names=[topic.name],
+            topic_tag_ids=[topic.id],
+            purpose=DataSetType.VISUALISATION,
+        ),
     ]
 
     assert len(list(response.context["form"].fields['topic'].choices)) == 2
@@ -711,57 +494,11 @@ def test_find_datasets_order_by_name_asc(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds1.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds1, has_access=False),
+        expected_search_result(
+            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE
+        ),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
 
@@ -778,57 +515,9 @@ def test_find_datasets_order_by_newest_first(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ads1.id,
-            'name': ads1.name,
-            'slug': ads1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads1.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads1.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads2.id,
-            'name': ads2.name,
-            'slug': ads2.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads2.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads2.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads3.id,
-            'name': ads3.name,
-            'slug': ads3.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads3.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads3.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ads1, purpose=ads1.type, has_access=False),
+        expected_search_result(ads2, has_access=False),
+        expected_search_result(ads3, has_access=False),
     ]
 
 
@@ -847,57 +536,9 @@ def test_find_datasets_order_by_oldest_first(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ads3.id,
-            'name': ads3.name,
-            'slug': ads3.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads3.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads3.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads2.id,
-            'name': ads2.name,
-            'slug': ads2.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads2.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads2.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads1.id,
-            'name': ads1.name,
-            'slug': ads1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads1.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads1.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ads3, has_access=False, purpose=ads3.type),
+        expected_search_result(ads2, has_access=False, purpose=ads2.type),
+        expected_search_result(ads1, has_access=False, purpose=ads1.type),
     ]
 
 
@@ -1096,25 +737,7 @@ def test_find_datasets_filters_by_access_requires_authenticate():
     response = client.get(reverse('datasets:find_datasets'), {"status": ["access"]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
-        {
-            'id': public_master.id,
-            'name': public_master.name,
-            'slug': public_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': public_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-    ]
+    assert list(response.context["datasets"]) == [expected_search_result(public_master)]
 
 
 @pytest.mark.django_db
@@ -1135,23 +758,7 @@ def test_find_datasets_filters_by_bookmark_single():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': bookmarked_master.id,
-            'name': bookmarked_master.name,
-            'slug': bookmarked_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': bookmarked_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': bookmarked_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': True,
-        },
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True)
     ]
 
 
@@ -1188,23 +795,7 @@ def test_find_datasets_filters_by_bookmark_master():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': bookmarked_master.id,
-            'name': bookmarked_master.name,
-            'slug': bookmarked_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': bookmarked_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': bookmarked_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': True,
-        },
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
     ]
 
 
@@ -1251,23 +842,12 @@ def test_find_datasets_filters_by_bookmark_reference():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': public_reference.uuid,
-            'name': public_reference.name,
-            'slug': public_reference.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_reference.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': True,
-        },
+        expected_search_result(
+            public_reference,
+            is_bookmarked=True,
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
+        )
     ]
 
 
@@ -1310,23 +890,9 @@ def test_find_datasets_filters_by_bookmark_visualisation():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': public_vis.id,
-            'name': public_vis.name,
-            'slug': public_vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': True,
-        },
+        expected_search_result(
+            public_vis, is_bookmarked=True, purpose=DataSetType.VISUALISATION
+        )
     ]
 
 
@@ -1369,23 +935,12 @@ def test_find_datasets_filters_by_bookmark_datacut():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': public_datacut.id,
-            'name': public_datacut.name,
-            'slug': public_datacut.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_datacut.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': True,
-        },
+        expected_search_result(
+            public_datacut,
+            purpose=DataSetType.DATACUT,
+            is_bookmarked=True,
+            has_access=False,
+        )
     ]
 
 
@@ -1403,63 +958,15 @@ def test_find_datasets_filters_by_show_unpublished():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': publshed_master.id,
-            'name': publshed_master.name,
-            'slug': publshed_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': publshed_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': publshed_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': mock.ANY,
-            'is_bookmarked': False,
-        },
+        expected_search_result(publshed_master, has_access=mock.ANY)
     ]
 
     response = client.get(reverse('datasets:find_datasets'), {"unpublished": "yes"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': publshed_master.id,
-            'name': publshed_master.name,
-            'slug': publshed_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': publshed_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': publshed_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': mock.ANY,
-            'is_bookmarked': False,
-        },
-        {
-            'id': unpublished_master.id,
-            'name': unpublished_master.name,
-            'slug': unpublished_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': unpublished_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': unpublished_master.type,
-            'data_type': mock.ANY,
-            'published': False,
-            'has_access': mock.ANY,
-            'is_bookmarked': False,
-        },
+        expected_search_result(publshed_master, has_access=mock.ANY),
+        expected_search_result(unpublished_master, has_access=mock.ANY),
     ]
 
 
@@ -1492,23 +999,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': access_granted_master.id,
-            'name': access_granted_master.name,
-            'slug': access_granted_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': access_granted_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': access_granted_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        }
+        expected_search_result(access_granted_master)
     ]
 
 
@@ -1777,13 +1268,6 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 2
-
-        response_body = response.content.decode(response.charset)
-        doc = html.fromstring(response_body)
-
-        match = doc.xpath('//a[@class="govuk-link related-data"]')
-
-        assert len(match) == 2
 
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_link_to_related_data_cuts_if_more_than_four(
@@ -2075,103 +1559,31 @@ class TestRequestAccess(DatasetsCommon):
         )
 
 
-class TestDataCutDetailsView(DatasetsCommon):
-    @pytest.mark.django_db
-    def test_datacut_dataset_shows_code_snippets_to_tool_user(self, metadata_db):
-        ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
-        user = get_user_model().objects.create(
-            email='test@example.com', is_superuser=False
-        )
-        factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-        factories.CustomDatasetQueryFactory.create(
-            dataset=ds,
-            query='SELECT * FROM foo',
-            database=factories.DatabaseFactory(memorable_name='my_database'),
-        )
+@pytest.mark.django_db
+def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
+    ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
+    user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+    factories.CustomDatasetQueryFactory.create(
+        dataset=ds,
+        query='SELECT * FROM foo',
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
 
-        client = Client(**get_http_sso_data(user))
-        response = client.get(ds.get_absolute_url())
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
 
-        assert response.status_code == 200
-        assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
+    assert response.status_code == 200
+    assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
 
-        user.is_superuser = True
-        user.save()
+    user.is_superuser = True
+    user.save()
 
-        client = Client(**get_http_sso_data(user))
-        response = client.get(ds.get_absolute_url())
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
 
-        assert response.status_code == 200
-        assert """SELECT * FROM foo""" in response.content.decode(response.charset)
-
-    def test_warning_is_shown_for_external_data(self, metadata_db, staff_client):
-        self._create_master()
-        data_cut = self._create_related_data_cuts()[0]
-
-        # Create external sourcelink
-        factories.SourceLinkFactory(dataset=data_cut)
-
-        response = staff_client.get(data_cut.get_absolute_url())
-
-        assert response.status_code == 200
-        assert "This data set is on an external website." in response.content.decode(
-            response.charset
-        )
-
-    def test_external_link_shown_when_user_has_permissions(
-        self, metadata_db, staff_user
-    ):
-        self._create_master()
-        data_cut = self._create_related_data_cuts()[0]
-
-        factories.SourceLinkFactory.create(
-            dataset=data_cut, url="https://www.example.com/dataset.csv"
-        )
-
-        client = Client(**get_http_sso_data(staff_user))
-        response = client.get(data_cut.get_absolute_url())
-
-        response_text = response.content.decode(response.charset)
-        assert response.status_code == 200
-        doc = html.fromstring(response_text)
-
-        assert response.status_code == 200
-        assert len(doc.xpath("//a[@class = 'govuk-link external-link']")) == 1
-
-    def test_code_snippets_are_hidden_when_user_has_no_permissions(
-        self, metadata_db, user
-    ):
-        self._create_master()
-        data_cut = self._create_related_data_cuts(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )[0]
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(data_cut.get_absolute_url())
-
-        response_text = response.content.decode(response.charset)
-
-        assert response.status_code == 200
-        assert "Code snippets" not in response_text
-
-    @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
-    def test_data_structure_is_visible_when_user_has_no_permissions(
-        self, get_columns_mock, metadata_db, user
-    ):
-        get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(20)]
-
-        self._create_master()
-        data_cut = self._create_related_data_cuts(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )[0]
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(data_cut.get_absolute_url())
-
-        response_text = response.content.decode(response.charset)
-
-        assert response.status_code == 200
-        assert "View data structure" in response_text
+    assert response.status_code == 200
+    assert """SELECT * FROM foo""" in response.content.decode(response.charset)
 
 
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
@@ -2412,40 +1824,19 @@ def test_find_datasets_search_by_source_name(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': 0.243171,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name, source_2.name],
-            'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.243171,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds1,
+            search_rank=0.243171,
+            source_tag_names=[source.name, source_2.name],
+            source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
+            has_access=False,
+        ),
+        expected_search_result(
+            rds,
+            search_rank=0.243171,
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
+        ),
     ]
 
 
@@ -2467,40 +1858,19 @@ def test_find_datasets_search_by_topic_name(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': 0.243171,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': MatchUnorderedMembers([topic.name, topic_2.name]),
-            'topic_tag_ids': MatchUnorderedMembers([topic.id, topic_2.id]),
-            'purpose': ds1.type,
-            'data_type': ds1.type,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.243171,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': [topic.name],
-            'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds1,
+            search_rank=0.243171,
+            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
+            topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
+            has_access=False,
+        ),
+        expected_search_result(
+            rds,
+            search_rank=0.243171,
+            topic_tag_names=[topic.name],
+            topic_tag_ids=[topic.id],
+        ),
     ]
 
 
@@ -2527,57 +1897,9 @@ def test_find_datasets_name_weighting(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds4.id,
-            'name': ds4.name,
-            'slug': ds4.slug,
-            'search_rank': 0.759909,
-            'short_description': ds4.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds4.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': 0.607927,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ds2.id,
-            'name': ds2.name,
-            'slug': ds2.slug,
-            'search_rank': 0.243171,
-            'short_description': ds2.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds2.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds4, has_access=False, search_rank=0.759909),
+        expected_search_result(ds1, has_access=False, search_rank=0.607927),
+        expected_search_result(ds2, has_access=False, search_rank=0.243171),
     ]
 
 
@@ -2595,23 +1917,12 @@ def test_find_datasets_matches_both_source_and_name(client):
     assert response.status_code == 200
     assert len(list(response.context["datasets"])) == 1
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source_1.name, source_2.name],
-            'source_tag_ids': MatchUnorderedMembers([source_1.id, source_2.id]),
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        }
+        expected_search_result(
+            ds1,
+            source_tag_names=MatchUnorderedMembers([source_1.name, source_2.name]),
+            source_tag_ids=MatchUnorderedMembers([source_1.id, source_2.id]),
+            has_access=False,
+        )
     ]
 
 
