@@ -127,10 +127,14 @@ class DatasetSearchForm(forms.Form):
         widget=FilterWidget("Choose data access", hint_text="Select all that apply"),
     )
 
-    unpublished = forms.MultipleChoiceField(
-        choices=[('yes', 'Include unpublished')],
+    admin_filters = forms.TypedMultipleChoiceField(
+        choices=[
+            ('unpublished', 'Include unpublished'),
+            ('opendata', 'Show Open data'),
+        ],
+        coerce=str,
         required=False,
-        widget=FilterWidget("Show unpublished"),
+        widget=FilterWidget("Admin only options"),
     )
 
     bookmarked = forms.MultipleChoiceField(
@@ -209,7 +213,7 @@ class DatasetSearchForm(forms.Form):
     def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
             "bookmarked": defaultdict(int),
-            "unpublished": defaultdict(int),
+            "admin_filters": defaultdict(int),
             "use": defaultdict(int),
             "data_type": defaultdict(int),
             "source": defaultdict(int),
@@ -219,7 +223,10 @@ class DatasetSearchForm(forms.Form):
 
         user_access = set(self.cleaned_data['user_access'])
         selected_bookmark = bool(self.cleaned_data['bookmarked'])
-        selected_unpublished = bool(self.cleaned_data['unpublished'])
+        selected_admin = set(self.cleaned_data['admin_filters'])
+        selected_unpublished = 'unpublished' in selected_admin
+        selected_opendata = 'opendata' in selected_admin
+
         selected_uses = set(self.cleaned_data['use'])
         selected_data_type = set(self.cleaned_data['data_type'])
         selected_source_ids = set(source.id for source in self.cleaned_data['source'])
@@ -227,6 +234,7 @@ class DatasetSearchForm(forms.Form):
 
         # Cache these locally for performance. The source model choice field can end up hitting the DB each time.
         user_access_choices = list(self.fields['user_access'].choices)
+        admin_choices = list(self.fields['admin_filters'].choices)
         use_choices = list(self.fields['use'].choices)
         data_type_choices = list(self.fields['data_type'].choices)
         source_choices = list(self.fields['source'].choices)
@@ -238,6 +246,7 @@ class DatasetSearchForm(forms.Form):
                 data=dataset,
                 bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
+                opendata=selected_opendata,
                 use=selected_uses,
                 data_type=selected_data_type,
                 source_ids=selected_source_ids,
@@ -255,8 +264,9 @@ class DatasetSearchForm(forms.Form):
             if dataset_matcher(bookmark=True):
                 counts['bookmarked']['yes'] += 1
 
-            if dataset_matcher(unpublished=True):
-                counts['unpublished']['yes'] += 1
+            for admin_id, _ in admin_choices:
+                if dataset_matcher(**{admin_id: True}):
+                    counts['admin_filters'][admin_id] += 1
 
             for use_id, _ in use_choices:
                 if dataset_matcher(use={use_id}):
@@ -287,9 +297,9 @@ class DatasetSearchForm(forms.Form):
             for bookmarked_id, bookmarked_text in self.fields['bookmarked'].choices
         ]
 
-        self.fields['unpublished'].choices = [
-            (unpub_id, unpub_text + f" ({counts['unpublished'][unpub_id]})")
-            for unpub_id, unpub_text in self.fields['unpublished'].choices
+        self.fields['admin_filters'].choices = [
+            (admin_id, admin_text + f" ({counts['admin_filters'][admin_id]})")
+            for admin_id, admin_text in admin_choices
         ]
 
         self.fields['use'].choices = [

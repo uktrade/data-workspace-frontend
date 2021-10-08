@@ -185,7 +185,7 @@ class TestDataExplorer:
             'explorer_dataset_2',
             table_2_id,
             'my_database',
-            UserAccessType.OPEN,
+            UserAccessType.REQUIRES_AUTHORIZATION,
         )
 
         home_page = HomePage(driver=self.driver)

@@ -232,13 +232,20 @@ def get_datasets_data_for_user_matching_query(
     # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
         datasets = datasets.annotate(
-            purpose=Value(DataSetType.DATACUT, IntegerField(),)
-        )
-        datasets = datasets.annotate(
-            data_type=Value(DataSetType.REFERENCE, IntegerField())
+            purpose=Value(DataSetType.DATACUT, IntegerField()),
+            data_type=Value(DataSetType.REFERENCE, IntegerField()),
+            is_open_data=Value(False, BooleanField()),
         )
     else:
-        datasets = datasets.annotate(purpose=F('type'), data_type=F('type'))
+        datasets = datasets.annotate(
+            purpose=F('type'),
+            data_type=F('type'),
+            is_open_data=Case(
+                When(user_access_type=UserAccessType.OPEN, then=True),
+                default=False,
+                output_field=BooleanField(),
+            ),
+        )
 
     # We are joining on the user permissions table to determine `_has_access`` to the dataset, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
@@ -258,6 +265,7 @@ def get_datasets_data_for_user_matching_query(
             'data_type',
             'published',
             'published_at',
+            'is_open_data',
         )
         .annotate(has_access=BoolOr('_has_access'))
         .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
@@ -277,6 +285,7 @@ def get_datasets_data_for_user_matching_query(
         'data_type',
         'published',
         'published_at',
+        'is_open_data',
         'has_access',
         'is_bookmarked',
     )
@@ -384,13 +393,15 @@ def get_visualisations_data_for_user_matching_query(
         )
     )
 
-    # Define a `purpose` column denoting the dataset type
     visualisations = visualisations.annotate(
-        purpose=Value(DataSetType.VISUALISATION, IntegerField())
-    )
-
-    visualisations = visualisations.annotate(
-        data_type=Value(DataSetType.VISUALISATION, IntegerField())
+        # Define a `purpose` column denoting the dataset type
+        purpose=Value(DataSetType.VISUALISATION, IntegerField()),
+        data_type=Value(DataSetType.VISUALISATION, IntegerField()),
+        is_open_data=Case(
+            When(user_access_type=UserAccessType.OPEN, then=True),
+            default=False,
+            output_field=BooleanField(),
+        ),
     )
 
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
@@ -411,6 +422,7 @@ def get_visualisations_data_for_user_matching_query(
             'data_type',
             'published',
             'published_at',
+            'is_open_data',
         )
         .annotate(has_access=BoolOr('_has_access'))
         .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
@@ -430,6 +442,7 @@ def get_visualisations_data_for_user_matching_query(
         'data_type',
         'published',
         'published_at',
+        'is_open_data',
         'has_access',
         'is_bookmarked',
     )
@@ -439,6 +452,7 @@ def _matches_filters(
     data,
     bookmark: bool,
     unpublished: bool,
+    opendata: bool,
     use: Set,
     data_type: Set,
     source_ids: Set,
@@ -449,6 +463,7 @@ def _matches_filters(
     return (
         (not bookmark or data['is_bookmarked'])
         and (unpublished or data['published'])
+        and (not opendata or data['is_open_data'])
         and (not use or use == [None] or data['purpose'] in use)
         and (not data_type or data_type == [None] or data['data_type'] in data_type)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
@@ -510,7 +525,8 @@ def find_datasets(request):
 
     if form.is_valid():
         query = form.cleaned_data.get("q")
-        unpublished = form.cleaned_data.get("unpublished")
+        unpublished = 'unpublished' in form.cleaned_data.get("admin_filters")
+        open_data = 'opendata' in form.cleaned_data.get("admin_filters")
         use = set(form.cleaned_data.get("use"))
         data_type = set(form.cleaned_data.get("data_type", []))
         sort = form.cleaned_data.get("sort")
@@ -536,6 +552,7 @@ def find_datasets(request):
                 d,
                 bookmarked,
                 bool(unpublished),
+                bool(open_data),
                 use,
                 data_type,
                 source_ids,
@@ -568,7 +585,7 @@ def find_datasets(request):
             "query": query,
             "datasets": paginator.get_page(request.GET.get("page")),
             "data_type": dict(data_types),
-            "show_unpublished": has_unpublished_dataset_access(request.user),
+            "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
         },
     )

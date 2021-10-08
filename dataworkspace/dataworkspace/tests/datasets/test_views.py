@@ -244,6 +244,8 @@ def expected_search_result(catalogue_item, **kwargs):
         'published': catalogue_item.published,
         'has_access': True,
         'is_bookmarked': False,
+        'is_open_data': getattr(catalogue_item, 'user_access_type', None)
+        == UserAccessType.OPEN,
     }
     result.update(**kwargs)
     return result
@@ -974,7 +976,7 @@ def test_find_datasets_filters_by_show_unpublished():
     user = factories.UserFactory.create(is_superuser=True)
     client = Client(**get_http_sso_data(user))
 
-    publshed_master = factories.DataSetFactory.create(name='published dataset')
+    published_master = factories.DataSetFactory.create(name='published dataset')
     unpublished_master = factories.DataSetFactory.create(
         published=False, name='unpublished dataset'
     )
@@ -983,14 +985,16 @@ def test_find_datasets_filters_by_show_unpublished():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(publshed_master, has_access=mock.ANY)
+        expected_search_result(published_master, has_access=mock.ANY)
     ]
 
-    response = client.get(reverse('datasets:find_datasets'), {"unpublished": "yes"})
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "unpublished"}
+    )
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(publshed_master, has_access=mock.ANY),
+        expected_search_result(published_master, has_access=mock.ANY),
         expected_search_result(unpublished_master, has_access=mock.ANY),
     ]
 
@@ -1106,7 +1110,9 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
         published=False, name='Visualisation'
     )
 
-    response = client.get(reverse('datasets:find_datasets'), {"unpublished": "yes"})
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "unpublished"}
+    )
 
     assert response.status_code == 200
     assert {
@@ -3485,3 +3491,39 @@ def test_filter_data_type_datasets_search_v2(access_type):
     )
     assert response.status_code == 200
     assert len(response.context["datasets"]) == 1
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_show_open_data():
+    user = factories.UserFactory.create(is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
+    requires_authorization = factories.DataSetFactory.create(
+        name='requires authorization',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+    )
+    requires_authentication = factories.DataSetFactory.create(
+        name='requires authentication',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    is_open = factories.DataSetFactory.create(
+        name='open', user_access_type=UserAccessType.OPEN
+    )
+
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(is_open, has_access=mock.ANY),
+        expected_search_result(requires_authentication, has_access=mock.ANY),
+        expected_search_result(requires_authorization, has_access=mock.ANY),
+    ]
+
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "opendata"}
+    )
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(is_open, has_access=mock.ANY)
+    ]
