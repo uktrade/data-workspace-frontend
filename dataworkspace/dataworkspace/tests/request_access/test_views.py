@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.request_access import factories
@@ -17,7 +18,7 @@ class TestDatasetAccessOnly:
         self, client, user, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         permission = Permission.objects.get(
             codename="start_all_applications",
@@ -38,7 +39,7 @@ class TestDatasetAccessOnly:
 
     def test_request_access_form_is_single_page(self, client, user, metadata_db):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         permission = Permission.objects.get(
             codename="start_all_applications",
@@ -57,7 +58,7 @@ class TestDatasetAccessOnly:
         self, client, user, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         permission = Permission.objects.get(
             codename="start_all_applications",
@@ -107,7 +108,7 @@ class TestDatasetAccessOnly:
         mock_zendesk_client.return_value = mock_zenpy_client
 
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         permission = Permission.objects.get(
             codename="start_all_applications",
@@ -162,10 +163,13 @@ http://testserver/admin/request_access/accessrequest/{access_requests[0].pk}/cha
 
 
 class TestToolsAccessOnly:
-    def test_user_sees_appropriate_message_on_dataset_page(self, client, metadata_db):
-        dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_user_sees_appropriate_message_on_dataset_page(
+        self, access_type, client, metadata_db
+    ):
+        dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         resp = client.get(dataset.get_absolute_url())
 
         assert resp.status_code == 200
@@ -178,10 +182,13 @@ class TestToolsAccessOnly:
             in resp.content.decode(resp.charset)
         )
 
-    def test_request_access_form_is_multipage_form(self, client, metadata_db):
-        dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_request_access_form_is_multipage_form(
+        self, access_type, client, metadata_db
+    ):
+        dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         resp = client.get(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
         )
@@ -197,13 +204,14 @@ class TestToolsAccessOnly:
         )
         assert "Continue" in resp.content.decode(resp.charset)
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @mock.patch('dataworkspace.apps.request_access.views.models.storage.boto3')
     def test_user_redirected_to_step_2_after_step_1_form_submission(
-        self, mock_boto, client, metadata_db
+        self, mock_boto, access_type, client, metadata_db
     ):
-        dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
         )
@@ -222,12 +230,13 @@ class TestToolsAccessOnly:
             'request_access:tools-2', kwargs={"pk": access_requests[0].pk}
         )
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     def test_user_redirected_to_step_3_after_responding_yes_in_step_2(
-        self, client, metadata_db
+        self, access_type, client, metadata_db
     ):
-        dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
         )
@@ -245,12 +254,13 @@ class TestToolsAccessOnly:
             'request_access:tools-3', kwargs={"pk": access_requests[0].pk}
         )
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     def test_user_redirected_to_summary_page_after_responding_no_in_step_2(
-        self, client, metadata_db
+        self, access_type, client, metadata_db
     ):
-        dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
         )
@@ -267,12 +277,13 @@ class TestToolsAccessOnly:
             'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
         )
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     def test_user_redirected_to_summary_page_after_step_3_form_submission(
-        self, client, metadata_db
+        self, access_type, client, metadata_db
     ):
-        dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
         )
@@ -295,10 +306,13 @@ class TestToolsAccessOnly:
         )
 
     @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @mock.patch('dataworkspace.apps.request_access.views.models.storage.boto3')
     @mock.patch('dataworkspace.apps.request_access.views.zendesk.Zenpy')
     def test_zendesk_ticket_created_after_form_submission(
-        self, mock_zendesk_client, mock_boto, client, metadata_db
+        self, mock_zendesk_client, mock_boto, client, metadata_db, access_type
     ):
         class MockTicket:
             @property
@@ -310,9 +324,7 @@ class TestToolsAccessOnly:
 
         mock_zendesk_client.return_value = mock_zenpy_client
 
-        dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
         )
@@ -361,7 +373,7 @@ http://testserver/admin/request_access/accessrequest/{access_requests[0].pk}/cha
 class TestDatasetAndToolsAccess:
     def test_user_sees_appropriate_message_on_dataset_page(self, client, metadata_db):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         resp = client.get(dataset.get_absolute_url())
 
@@ -376,7 +388,7 @@ class TestDatasetAndToolsAccess:
 
     def test_request_access_form_is_multipage_form(self, client, metadata_db):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         resp = client.get(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
@@ -387,7 +399,7 @@ class TestDatasetAndToolsAccess:
         self, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         resp = client.post(
             reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}),
@@ -407,10 +419,13 @@ class TestDatasetAndToolsAccess:
 
 
 class TestNoAccessRequired:
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     def test_user_sees_appropriate_message_on_request_access_page(
-        self, client, user, metadata_db
+        self, access_type, client, user, metadata_db
     ):
-        DatasetsCommon()._create_master(user_access_type='REQUIRES_AUTHENTICATION')
+        DatasetsCommon()._create_master(user_access_type=access_type)
         permission = Permission.objects.get(
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -426,7 +441,7 @@ class TestNoAccessRequired:
 class TestEditAccessRequest:
     def test_edit_eligibility_criteria(self, client):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         access_request = factories.AccessRequestFactory(
             catalogue_item_id=dataset.id,
@@ -448,7 +463,7 @@ class TestEditAccessRequest:
 
     def test_edit_dataset_request_fields(self, client, user):
         dataset = DatasetsCommon()._create_master(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         access_request = factories.AccessRequestFactory(
             catalogue_item_id=dataset.id,

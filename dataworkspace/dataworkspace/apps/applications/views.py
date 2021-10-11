@@ -62,6 +62,7 @@ from dataworkspace.apps.core.utils import (
     stable_identification_suffix,
 )
 from dataworkspace.apps.core.views import public_error_500_html_view
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
     MasterDataset,
     DataSetApplicationTemplatePermission,
@@ -865,7 +866,7 @@ def _application_template(gitlab_project):
                     slug=path_and_dns_safe_name,
                     short_description=gitlab_project['description'],
                     visualisation_template=visualisation_template,
-                    user_access_type='REQUIRES_AUTHORIZATION',
+                    user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
                 )
                 return visualisation_template
         except IntegrityError as integrity_error:
@@ -907,7 +908,7 @@ def _render_visualisation(
             'gitlab_project': gitlab_project,
             'catalogue_item': catalogue_item,
             'show_users_section': catalogue_item.user_access_type
-            == 'REQUIRES_AUTHORIZATION',
+            == UserAccessType.REQUIRES_AUTHORIZATION,
             'branches': branches,
             'current_menu_item': current_menu_item,
             **template_specific_context,
@@ -1258,7 +1259,8 @@ def _datasets(user, application_template):
     selectable_dataset_ids = set(
         source_table['dataset']['id']
         for source_table in source_tables_user
-        if source_table['dataset']['user_access_type'] == 'REQUIRES_AUTHORIZATION'
+        if source_table['dataset']['user_access_type']
+        in (UserAccessType.REQUIRES_AUTHORIZATION, UserAccessType.OPEN)
     )
 
     selected_dataset_ids = set(

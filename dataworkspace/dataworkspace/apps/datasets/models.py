@@ -55,6 +55,7 @@ from dataworkspace.apps.datasets.constants import (
     DataLinkType,
     GRID_DATA_TYPE_MAP,
     TagType,
+    UserAccessType,
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
@@ -182,11 +183,8 @@ class DataSet(DeletableTimestampedUserModel):
     restrictions_on_usage = models.TextField(null=True, blank=True)
     user_access_type = models.CharField(
         max_length=64,
-        choices=(
-            ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
-            ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
-        ),
-        default='REQUIRES_AUTHORIZATION',
+        choices=UserAccessType.choices,
+        default=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     published = models.BooleanField(default=False)
     published_at = models.DateField(null=True, blank=True)
@@ -319,7 +317,8 @@ class DataSet(DeletableTimestampedUserModel):
     def user_has_access(self, user):
         user_email_domain = user.email.split('@')[1]
         return (
-            self.user_access_type == 'REQUIRES_AUTHENTICATION'
+            self.user_access_type
+            in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.datasetuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )
@@ -2085,11 +2084,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     user_access_type = models.CharField(
         max_length=64,
-        choices=(
-            ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
-            ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
-        ),
-        default='REQUIRES_AUTHENTICATION',
+        choices=UserAccessType.choices,
+        default=UserAccessType.REQUIRES_AUTHENTICATION,
     )
     events = GenericRelation(EventLog)
     datasets = models.ManyToManyField(
@@ -2171,7 +2167,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         user_email_domain = user.email.split('@')[1]
 
         return (
-            self.user_access_type == 'REQUIRES_AUTHENTICATION'
+            self.user_access_type
+            in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.visualisationuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )

@@ -8,6 +8,7 @@ from django.test import Client, override_settings
 from django.urls import reverse
 from waffle.testutils import override_flag
 
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.finder.models import DatasetFinderQueryLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -102,11 +103,12 @@ def test_find_datasets_with_results(client, mocker, dataset_finder_db):
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
-def test_get_results_for_index(client, mocker, dataset_finder_db):
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
+def test_get_results_for_index(access_type, client, mocker, dataset_finder_db):
     source_table = factories.SourceTableFactory.create(
-        dataset=factories.MasterDataSetFactory.create(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        ),
+        dataset=factories.MasterDataSetFactory.create(user_access_type=access_type),
         schema='public',
         table='country_stats',
         database=factories.DatabaseFactory(memorable_name='my_database'),
@@ -216,11 +218,12 @@ def test_get_results_for_index(client, mocker, dataset_finder_db):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
 @override_settings(DATASET_FINDER_SEARCH_RESULTS_PER_PAGE=1)
-def test_paging_get_results_for_index(client, mocker, dataset_finder_db):
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
+def test_paging_get_results_for_index(access_type, client, mocker, dataset_finder_db):
     source_table = factories.SourceTableFactory.create(
-        dataset=factories.MasterDataSetFactory.create(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        ),
+        dataset=factories.MasterDataSetFactory.create(user_access_type=access_type),
         schema='public',
         table='country_stats',
         database=factories.DatabaseFactory(memorable_name='my_database'),

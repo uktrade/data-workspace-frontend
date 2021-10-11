@@ -9,7 +9,7 @@ from django.db.models import ProtectedError
 from freezegun import freeze_time
 
 from dataworkspace.apps.core.models import Database
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
@@ -866,7 +866,7 @@ class TestSourceLinkModel(BaseTestCase):
     @mock.patch('dataworkspace.apps.datasets.models.boto3.client')
     def test_delete_local_source_link(self, mock_client):
         dataset = factories.DataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -888,7 +888,7 @@ class TestSourceLinkModel(BaseTestCase):
     @mock.patch('dataworkspace.apps.datasets.models.boto3.client')
     def test_delete_external_source_link(self, mock_client):
         dataset = factories.DataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',

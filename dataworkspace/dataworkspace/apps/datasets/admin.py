@@ -268,7 +268,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             'Permissions',
             {
                 'fields': [
-                    'open_to_all_users',
+                    'user_access_type',
                     'eligibility_criteria',
                     'authorized_email_domains',
                     'authorized_users',
@@ -309,14 +309,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        original_user_access_type = obj.user_access_type
-
-        obj.user_access_type = (
-            'REQUIRES_AUTHENTICATION'
-            if form.cleaned_data['open_to_all_users']
-            else 'REQUIRES_AUTHORIZATION'
-        )
-
         current_authorized_users = set(
             get_user_model().objects.filter(datasetuserpermission__dataset=obj)
         )
@@ -324,6 +316,8 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         authorized_users = set(
             form.cleaned_data.get('authorized_users', get_user_model().objects.none())
         )
+
+        access_type_changed = 'user_access_type' in form.changed_data
 
         super().save_model(request, obj, form, change)
 
@@ -353,15 +347,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             changed_users.add(user)
             clear_schema_info_cache_for_user(user)
 
-        if (
-            original_user_access_type != obj.user_access_type
-            or 'authorized_email_domains' in form.changed_data
-        ):
+        if access_type_changed or 'authorized_email_domains' in form.changed_data:
             log_permission_change(
                 request.user,
                 obj,
                 EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
-                if original_user_access_type != obj.user_access_type
+                if access_type_changed
                 else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
                 {"access_type": obj.user_access_type},
                 f"user_access_type set to {obj.user_access_type}",
@@ -369,8 +360,8 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
             # As the dataset's access type has changed, clear cached credentials for all
             # users to ensure they either:
-            #   - lose access if it went from REQUIRES_AUTHENTICATION to REQUIRES_AUTHORIZATION
-            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION
+            #   - lose access if it went from REQUIRES_AUTHENTICATION/OPEN to REQUIRES_AUTHORIZATION
+            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION/OPEN
             invalidate_data_explorer_user_cached_credentials()
             invalidate_superset_user_cached_credentials()
         else:
@@ -391,7 +382,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     sync_quicksight_permissions.delay(
                         user_sso_ids_to_update=tuple(changed_user_sso_ids)
                     )
-            elif original_user_access_type != obj.user_access_type:
+            elif access_type_changed:
                 sync_quicksight_permissions.delay()
 
 
@@ -747,7 +738,7 @@ class VisualisationCatalogueItemAdmin(
             'Permissions',
             {
                 'fields': [
-                    'open_to_all_users',
+                    'user_access_type',
                     'eligibility_criteria',
                     'authorized_email_domains',
                     'authorized_users',
@@ -800,13 +791,6 @@ class VisualisationCatalogueItemAdmin(
         if obj.visualisation_template and not obj.name:
             obj.name = obj.visualisation_template.nice_name
 
-        original_user_access_type = obj.user_access_type
-        obj.user_access_type = (
-            'REQUIRES_AUTHENTICATION'
-            if form.cleaned_data['open_to_all_users']
-            else 'REQUIRES_AUTHORIZATION'
-        )
-
         current_authorized_users = set(
             get_user_model().objects.filter(
                 visualisationuserpermission__visualisation=obj
@@ -817,6 +801,7 @@ class VisualisationCatalogueItemAdmin(
             form.cleaned_data.get('authorized_users', get_user_model().objects.none())
         )
 
+        access_type_changed = 'user_access_type' in form.changed_data
         super().save_model(request, obj, form, change)
 
         changed_users = set()
@@ -846,14 +831,14 @@ class VisualisationCatalogueItemAdmin(
             changed_users.add(user)
 
         if (
-            original_user_access_type != obj.user_access_type
+            access_type_changed != obj.user_access_type
             or 'authorized_email_domains' in form.changed_data
         ):
             log_permission_change(
                 request.user,
                 obj,
                 EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
-                if original_user_access_type != obj.user_access_type
+                if access_type_changed != obj.user_access_type
                 else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
                 {"access_type": obj.user_access_type},
                 f"user_access_type set to {obj.user_access_type}",
@@ -861,8 +846,8 @@ class VisualisationCatalogueItemAdmin(
 
             # As the visualisation's access type has changed, clear cached credentials for all
             # users to ensure they either:
-            #   - lose access if it went from REQUIRES_AUTHENTICATION to REQUIRES_AUTHORIZATION
-            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION
+            #   - lose access if it went from REQUIRES_AUTHENTICATION/OPEN to REQUIRES_AUTHORIZATION
+            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION/OPEN
             invalidate_superset_user_cached_credentials()
         else:
             for user in changed_users:

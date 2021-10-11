@@ -46,6 +46,7 @@ from dataworkspace.apps.core.utils import (
     postgres_user,
 )
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLog,
     VisualisationCatalogueItem,
@@ -222,7 +223,7 @@ def application_api_is_allowed(request, public_host):
             and application_template.visible is True
             and visualisation_catalogue_item
             and visualisation_catalogue_item.user_access_type
-            == 'REQUIRES_AUTHENTICATION'
+            in (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
         )
 
     def is_published_visualisation_and_requires_authorisation_and_has_authorisation():
@@ -231,7 +232,7 @@ def application_api_is_allowed(request, public_host):
             and application_template.visible is True
             and visualisation_catalogue_item
             and visualisation_catalogue_item.user_access_type
-            == 'REQUIRES_AUTHORIZATION'
+            == UserAccessType.REQUIRES_AUTHORIZATION
             and request.user.visualisationuserpermission_set.filter(
                 visualisation=visualisation_catalogue_item
             ).exists()

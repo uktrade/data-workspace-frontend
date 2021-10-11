@@ -9,17 +9,18 @@ from django.test import override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import SourceLink, ReferenceDataset, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 
 
-def test_master_dataset_with_access_preview(client, dataset_db):
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
+def test_master_dataset_with_access_preview(access_type, client, dataset_db):
     ds = factories.DataSetFactory.create(
-        type=DataSetType.MASTER,
-        user_access_type='REQUIRES_AUTHENTICATION',
-        published=True,
+        type=DataSetType.MASTER, user_access_type=access_type, published=True,
     )
     source_table = factories.SourceTableFactory(
         dataset=ds,
@@ -42,7 +43,7 @@ def test_master_dataset_with_access_preview(client, dataset_db):
 def test_master_dataset_no_access_preview(client, dataset_db):
     ds = factories.DataSetFactory.create(
         type=DataSetType.MASTER,
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         published=True,
     )
     source_table = factories.SourceTableFactory(
@@ -63,10 +64,11 @@ def test_master_dataset_no_access_preview(client, dataset_db):
     assert 'Preview' not in response.rendered_content
 
 
-def test_query_data_cut_preview_staff_user(staff_client, dataset_db):
-    ds = factories.DataSetFactory.create(
-        user_access_type='REQUIRES_AUTHENTICATION', published=True,
-    )
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
+def test_query_data_cut_preview_staff_user(access_type, staff_client, dataset_db):
+    ds = factories.DataSetFactory.create(user_access_type=access_type, published=True,)
     cut = factories.CustomDatasetQueryFactory(
         dataset=ds,
         database=dataset_db,
@@ -84,7 +86,7 @@ def test_query_data_cut_preview_staff_user(staff_client, dataset_db):
 
 def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
     ds = factories.DataSetFactory.create(
-        user_access_type='REQUIRES_AUTHORIZATION', published=True,
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION, published=True,
     )
     cut = factories.CustomDatasetQueryFactory(
         dataset=ds,
@@ -102,10 +104,11 @@ def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
     assert 'Preview' not in response.rendered_content
 
 
-def test_link_data_cut_doesnt_have_preview(client):
-    data_cut = factories.DataSetFactory(
-        user_access_type='REQUIRES_AUTHENTICATION', published=True
-    )
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
+def test_link_data_cut_doesnt_have_preview(access_type, client):
+    data_cut = factories.DataSetFactory(user_access_type=access_type, published=True)
     factories.SourceLinkFactory(dataset=data_cut)
 
     response = client.get(data_cut.get_absolute_url())
@@ -464,7 +467,7 @@ class TestDatasetViews:
 class TestSourceLinkDownloadView:
     def test_forbidden_dataset(self, client):
         dataset = factories.DataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -489,10 +492,13 @@ class TestSourceLinkDownloadView:
         [('client', True), ('staff_client', True), ('staff_client', False)],
         indirect=['request_client'],
     )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_download_external_file(self, request_client, published):
+    def test_download_external_file(self, access_type, request_client, published):
         dataset = factories.DataSetFactory.create(
-            published=published, user_access_type='REQUIRES_AUTHENTICATION'
+            published=published, user_access_type=access_type
         )
         link = factories.SourceLinkFactory(
             dataset=dataset,
@@ -519,15 +525,20 @@ class TestSourceLinkDownloadView:
         )
 
     @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    @pytest.mark.parametrize(
         'request_client,published',
         [('client', True), ('staff_client', True), ('staff_client', False)],
         indirect=['request_client'],
     )
     @pytest.mark.django_db
     @mock.patch('dataworkspace.apps.datasets.views.boto3.client')
-    def test_download_local_file(self, mock_client, request_client, published):
+    def test_download_local_file(
+        self, mock_client, request_client, published, access_type
+    ):
         dataset = factories.DataSetFactory.create(
-            published=published, user_access_type='REQUIRES_AUTHENTICATION'
+            published=published, user_access_type=access_type
         )
         link = factories.SourceLinkFactory(
             id='158776ec-5c40-4c58-ba7c-a3425905ec45',
@@ -568,7 +579,9 @@ class TestSourceLinkDownloadView:
 
 class TestSourceViewDownloadView:
     def test_forbidden_dataset(self, client):
-        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
+        dataset = factories.DataSetFactory(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
         source_view = factories.SourceViewFactory(dataset=dataset)
         log_count = EventLog.objects.count()
         download_count = dataset.number_of_downloads
@@ -577,8 +590,11 @@ class TestSourceViewDownloadView:
         assert EventLog.objects.count() == log_count
         assert DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count
 
-    def test_missing_view(self, client):
-        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHENTICATION')
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_missing_view(self, access_type, client):
+        dataset = factories.DataSetFactory(user_access_type=access_type)
         source_view = factories.SourceViewFactory(
             dataset=dataset,
             database=factories.DatabaseFactory(memorable_name='my_database'),
@@ -593,8 +609,11 @@ class TestSourceViewDownloadView:
         [('client', True), ('staff_client', True), ('staff_client', False)],
         indirect=['request_client'],
     )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_view_download(self, request_client, published):
+    def test_view_download(self, access_type, request_client, published):
         dsn = database_dsn(settings.DATABASES_DATA['my_database'])
         with psycopg2.connect(dsn) as conn, conn.cursor() as cursor:
             cursor.execute(
@@ -608,7 +627,7 @@ class TestSourceViewDownloadView:
             )
 
         dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION', published=published
+            user_access_type=access_type, published=published
         )
         source_view = factories.SourceViewFactory(
             dataset=dataset,
@@ -638,8 +657,11 @@ class TestSourceViewDownloadView:
         [('client', True), ('staff_client', True), ('staff_client', False)],
         indirect=['request_client'],
     )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_materialized_view_download(self, request_client, published):
+    def test_materialized_view_download(self, access_type, request_client, published):
         dsn = database_dsn(settings.DATABASES_DATA['my_database'])
         with psycopg2.connect(dsn) as conn, conn.cursor() as cursor:
             cursor.execute(
@@ -654,7 +676,7 @@ class TestSourceViewDownloadView:
                 '''
             )
         dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION', published=published
+            user_access_type=access_type, published=published
         )
         source_view = factories.SourceViewFactory(
             dataset=dataset,
@@ -705,7 +727,7 @@ class TestCustomQueryDownloadView:
                 '''
             )
         dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION', published=published
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION, published=published
         )
         return factories.CustomDatasetQueryFactory(
             dataset=dataset,
@@ -716,7 +738,9 @@ class TestCustomQueryDownloadView:
         )
 
     def test_forbidden_dataset(self, client):
-        dataset = factories.DataSetFactory(user_access_type='REQUIRES_AUTHORIZATION')
+        dataset = factories.DataSetFactory(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
         query = factories.CustomDatasetQueryFactory(
             dataset=dataset,
             database=self._get_database(),

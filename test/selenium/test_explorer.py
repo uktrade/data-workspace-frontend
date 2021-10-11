@@ -5,6 +5,7 @@ import pytest
 import requests
 from django.core.cache import cache
 
+from dataworkspace.apps.datasets.constants import UserAccessType
 from test.selenium.common import get_driver  # pylint: disable=wrong-import-order
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
@@ -177,14 +178,14 @@ class TestDataExplorer:
             'explorer_dataset',
             table_1_id,
             'my_database',
-            'REQUIRES_AUTHENTICATION',
+            UserAccessType.REQUIRES_AUTHENTICATION,
         )
         create_dataset(
             dataset_2_id,
             'explorer_dataset_2',
             table_2_id,
             'my_database',
-            'REQUIRES_AUTHORIZATION',
+            UserAccessType.REQUIRES_AUTHORIZATION,
         )
 
         home_page = HomePage(driver=self.driver)
@@ -220,14 +221,14 @@ class TestDataExplorer:
             'explorer_dataset',
             table_1_id,
             'my_database',
-            'REQUIRES_AUTHENTICATION',
+            UserAccessType.REQUIRES_AUTHENTICATION,
         )
         create_dataset(
             dataset_2_id,
             'explorer_2_dataset',
             table_2_id,
             'my_database',
-            'REQUIRES_AUTHENTICATION',
+            UserAccessType.REQUIRES_AUTHENTICATION,
         )
 
         home_page = HomePage(driver=self.driver)
@@ -242,7 +243,7 @@ class TestDataExplorer:
         assert "Columns in public.explorer_dataset" in home_page.get_html()
         assert "Columns in public.explorer_2_dataset" in home_page.get_html()
 
-        set_dataset_access_type(dataset_1_id, 'REQUIRES_AUTHORIZATION')
+        set_dataset_access_type(dataset_1_id, UserAccessType.REQUIRES_AUTHORIZATION)
 
         home_page.open()  # Reset the page, i.e. to remove the existing query
         home_page.enter_query("select count(*) as count from public.explorer_dataset")

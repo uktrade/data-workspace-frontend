@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 from faker import Faker  # noqa
 
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.management.commands._create_utils import TestData
 from dataworkspace.apps.datasets.models import MasterDataset
 
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             personal_data=test_data.get_personal_data_text(),
             restrictions_on_usage=test_data.get_no_restrictions_on_usage_text(),
             retention_policy=test_data.get_no_retention_policy_text(),
-            user_access_type="REQUIRES_AUTHORIZATION",
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
             published=True,
         )
 
