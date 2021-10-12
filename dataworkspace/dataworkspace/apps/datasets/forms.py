@@ -131,6 +131,7 @@ class DatasetSearchForm(forms.Form):
         choices=[
             ('unpublished', 'Include unpublished'),
             ('opendata', 'Show Open data'),
+            ('withvisuals', 'Show datasets with Visuals'),
         ],
         coerce=str,
         required=False,
@@ -226,6 +227,7 @@ class DatasetSearchForm(forms.Form):
         selected_admin = set(self.cleaned_data['admin_filters'])
         selected_unpublished = 'unpublished' in selected_admin
         selected_opendata = 'opendata' in selected_admin
+        selected_withvisuals = 'withvisuals' in selected_admin
 
         selected_uses = set(self.cleaned_data['use'])
         selected_data_type = set(self.cleaned_data['data_type'])
@@ -247,6 +249,7 @@ class DatasetSearchForm(forms.Form):
                 bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
                 opendata=selected_opendata,
+                withvisuals=selected_withvisuals,
                 use=selected_uses,
                 data_type=selected_data_type,
                 source_ids=selected_source_ids,
