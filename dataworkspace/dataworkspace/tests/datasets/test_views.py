@@ -244,6 +244,7 @@ def expected_search_result(catalogue_item, **kwargs):
         'published': catalogue_item.published,
         'has_access': True,
         'is_bookmarked': False,
+        'has_vega': mock.ANY,
         'is_open_data': getattr(catalogue_item, 'user_access_type', None)
         == UserAccessType.OPEN,
     }
@@ -3526,4 +3527,38 @@ def test_find_datasets_filters_show_open_data():
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(is_open, has_access=mock.ANY)
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_show_datasets_with_vega_visualisations():
+    user = factories.UserFactory.create(is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
+    without_vega = factories.DataSetFactory.create(
+        name='without vega', user_access_type=UserAccessType.OPEN
+    )
+    with_vega = factories.DataSetFactory.create(
+        name='with vega',
+        user_access_type=UserAccessType.OPEN,
+        type=DataSetType.MASTER,
+        published=True,
+    )
+    factories.VisualisationDatasetFactory.create(dataset=with_vega)
+
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(without_vega, has_vega=False),
+        expected_search_result(with_vega, has_vega=True),
+    ]
+
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "withvega"}
+    )
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(with_vega, has_vega=True)
     ]
