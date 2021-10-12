@@ -244,7 +244,7 @@ def expected_search_result(catalogue_item, **kwargs):
         'published': catalogue_item.published,
         'has_access': True,
         'is_bookmarked': False,
-        'has_vega': mock.ANY,
+        'has_visuals': mock.ANY,
         'is_open_data': getattr(catalogue_item, 'user_access_type', None)
         == UserAccessType.OPEN,
     }
@@ -3531,34 +3531,34 @@ def test_find_datasets_filters_show_open_data():
 
 
 @pytest.mark.django_db
-def test_find_datasets_filters_show_datasets_with_vega_visualisations():
+def test_find_datasets_filters_show_datasets_with_visualisations():
     user = factories.UserFactory.create(is_superuser=True)
     client = Client(**get_http_sso_data(user))
 
-    without_vega = factories.DataSetFactory.create(
-        name='without vega', user_access_type=UserAccessType.OPEN
+    without_visuals = factories.DataSetFactory.create(
+        name='without visuals', user_access_type=UserAccessType.OPEN
     )
-    with_vega = factories.DataSetFactory.create(
-        name='with vega',
+    with_visuals = factories.DataSetFactory.create(
+        name='with visuals',
         user_access_type=UserAccessType.OPEN,
         type=DataSetType.MASTER,
         published=True,
     )
-    factories.VisualisationDatasetFactory.create(dataset=with_vega)
+    factories.VisualisationDatasetFactory.create(dataset=with_visuals)
 
     response = client.get(reverse('datasets:find_datasets'))
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(without_vega, has_vega=False),
-        expected_search_result(with_vega, has_vega=True),
+        expected_search_result(without_visuals, has_visuals=False),
+        expected_search_result(with_visuals, has_visuals=True),
     ]
 
     response = client.get(
-        reverse('datasets:find_datasets'), {"admin_filters": "withvega"}
+        reverse('datasets:find_datasets'), {"admin_filters": "withvisuals"}
     )
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(with_vega, has_vega=True)
+        expected_search_result(with_visuals, has_visuals=True)
     ]

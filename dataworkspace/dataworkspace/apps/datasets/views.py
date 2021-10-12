@@ -238,10 +238,10 @@ def get_datasets_data_for_user_matching_query(
             purpose=Value(DataSetType.DATACUT, IntegerField()),
             data_type=Value(DataSetType.REFERENCE, IntegerField()),
             is_open_data=Value(False, BooleanField()),
-            has_vega=Value(False, BooleanField()),
+            has_visuals=Value(False, BooleanField()),
         )
     else:
-        dataset_vega_filter = DataSetVisualisation.objects.filter(
+        dataset_visual_filter = DataSetVisualisation.objects.filter(
             dataset_id=OuterRef('id')
         )
         datasets = datasets.annotate(
@@ -252,8 +252,8 @@ def get_datasets_data_for_user_matching_query(
                 default=False,
                 output_field=BooleanField(),
             ),
-            has_vega=Case(
-                When(Exists(dataset_vega_filter), then=True),
+            has_visuals=Case(
+                When(Exists(dataset_visual_filter), then=True),
                 default=False,
                 output_field=BooleanField(),
             ),
@@ -278,7 +278,7 @@ def get_datasets_data_for_user_matching_query(
             'published',
             'published_at',
             'is_open_data',
-            'has_vega',
+            'has_visuals',
         )
         .annotate(has_access=BoolOr('_has_access'))
         .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
@@ -299,7 +299,7 @@ def get_datasets_data_for_user_matching_query(
         'published',
         'published_at',
         'is_open_data',
-        'has_vega',
+        'has_visuals',
         'has_access',
         'is_bookmarked',
     )
@@ -416,7 +416,7 @@ def get_visualisations_data_for_user_matching_query(
             default=False,
             output_field=BooleanField(),
         ),
-        has_vega=Value(False, BooleanField()),
+        has_visuals=Value(False, BooleanField()),
     )
 
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
@@ -438,7 +438,7 @@ def get_visualisations_data_for_user_matching_query(
             'published',
             'published_at',
             'is_open_data',
-            'has_vega',
+            'has_visuals',
         )
         .annotate(has_access=BoolOr('_has_access'))
         .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
@@ -459,7 +459,7 @@ def get_visualisations_data_for_user_matching_query(
         'published',
         'published_at',
         'is_open_data',
-        'has_vega',
+        'has_visuals',
         'has_access',
         'is_bookmarked',
     )
@@ -470,7 +470,7 @@ def _matches_filters(
     bookmark: bool,
     unpublished: bool,
     opendata: bool,
-    withvega: bool,
+    withvisuals: bool,
     use: Set,
     data_type: Set,
     source_ids: Set,
@@ -482,7 +482,7 @@ def _matches_filters(
         (not bookmark or data['is_bookmarked'])
         and (unpublished or data['published'])
         and (not opendata or data['is_open_data'])
-        and (not withvega or data['has_vega'])
+        and (not withvisuals or data['has_visuals'])
         and (not use or use == [None] or data['purpose'] in use)
         and (not data_type or data_type == [None] or data['data_type'] in data_type)
         and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
@@ -546,7 +546,7 @@ def find_datasets(request):
         query = form.cleaned_data.get("q")
         unpublished = 'unpublished' in form.cleaned_data.get("admin_filters")
         open_data = 'opendata' in form.cleaned_data.get("admin_filters")
-        with_vega = 'withvega' in form.cleaned_data.get("admin_filters")
+        with_visuals = 'withvisuals' in form.cleaned_data.get("admin_filters")
         use = set(form.cleaned_data.get("use"))
         data_type = set(form.cleaned_data.get("data_type", []))
         sort = form.cleaned_data.get("sort")
@@ -573,7 +573,7 @@ def find_datasets(request):
                 bookmarked,
                 bool(unpublished),
                 bool(open_data),
-                bool(with_vega),
+                bool(with_visuals),
                 use,
                 data_type,
                 source_ids,
