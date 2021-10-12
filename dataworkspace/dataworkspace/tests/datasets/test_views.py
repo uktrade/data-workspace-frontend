@@ -1998,9 +1998,7 @@ def test_find_datasets_matches_both_full_description(client):
     assert response.status_code == 200
     assert len(list(response.context["datasets"])) == 1
     assert list(response.context["datasets"]) == [
-        expected_search_result(
-            ds1, has_access=False,
-        )
+        expected_search_result(ds1, has_access=False,)
     ]
 
 
