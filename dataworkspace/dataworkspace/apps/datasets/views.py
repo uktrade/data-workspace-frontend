@@ -163,7 +163,6 @@ def get_datasets_data_for_user_matching_query(
         + SearchVector(
             StringAgg('tags__name', delimiter='\n'), weight='B', config='english'
         )
-        + SearchVector('description', weight='B', config='english')
     )
     search_query = SearchQuery(query, config='english')
 
