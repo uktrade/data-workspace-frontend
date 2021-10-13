@@ -1426,7 +1426,10 @@ class DataCutSourceDetailView(DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         if not self._user_can_access():
-            return HttpResponseForbidden()
+            dataset_uuid = self.kwargs.get('dataset_uuid')
+            dataset = find_dataset(dataset_uuid, self.request.user)
+
+            return HttpResponseRedirect(dataset.get_absolute_url())
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
