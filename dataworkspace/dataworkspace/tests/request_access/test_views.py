@@ -7,9 +7,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.datasets.constants import UserAccessType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
+from dataworkspace.tests.factories import DataSetFactory
 from dataworkspace.tests.request_access import factories
 
 
@@ -415,6 +416,29 @@ class TestDatasetAndToolsAccess:
         assert resp.status_code == 302
         assert resp.url == reverse(
             'request_access:tools-1', kwargs={"pk": access_requests[0].pk}
+        )
+
+    def test_tools_not_required_for_data_cut(self, client, metadata_db):
+        datacut = DataSetFactory.create(
+            published=True,
+            type=DataSetType.DATACUT,
+            name='A datacut',
+            user_access_type='REQUIRES_AUTHORIZATION',
+        )
+        resp = client.post(
+            reverse('request_access:dataset', kwargs={"dataset_uuid": datacut.id}),
+            {'contact_email': 'test@example.com', 'reason_for_access': 'I need it'},
+        )
+
+        access_requests = AccessRequest.objects.all()
+
+        assert len(access_requests) == 1
+        assert access_requests[0].contact_email == 'test@example.com'
+        assert access_requests[0].reason_for_access == 'I need it'
+        assert access_requests[0].journey == AccessRequest.JOURNEY_DATASET_ACCESS
+        assert resp.status_code == 302
+        assert resp.url == reverse(
+            'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
         )
 
 

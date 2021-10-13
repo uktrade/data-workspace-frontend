@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.views.generic import CreateView, UpdateView, DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.apps.datasets.utils import find_dataset_or_visualisation
 from dataworkspace.apps.eventlog.models import EventLog
@@ -87,12 +88,14 @@ class DatasetAccessRequest(CreateView):
             reason_for_access=form.cleaned_data['reason_for_access'],
         )
 
-        if user_has_tools_access or isinstance(
-            catalogue_item, VisualisationCatalogueItem
-        ):
+        if user_has_tools_access or catalogue_item.type in [
+            DataSetType.VISUALISATION,
+            DataSetType.DATACUT,
+        ]:
             return HttpResponseRedirect(
                 reverse('request-access:summary-page', kwargs={"pk": access_request.pk})
             )
+
         return HttpResponseRedirect(
             reverse('request-access:tools-1', kwargs={"pk": access_request.pk})
         )
