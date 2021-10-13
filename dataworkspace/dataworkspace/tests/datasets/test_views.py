@@ -1977,6 +1977,32 @@ def test_find_datasets_matches_both_source_and_name(client):
     ]
 
 
+def test_find_datasets_matches_both_full_description(client):
+    ds1 = factories.DataSetFactory.create(
+        published=True,
+        type=1,
+        name='dataset1',
+        short_description="short datasset1",
+        description="this is long description",
+    )
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=1,
+        name='dataset2',
+        short_description="short datasset2",
+        description="nothing",
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "description"})
+
+    assert response.status_code == 200
+    assert len(list(response.context["datasets"])) == 1
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, has_access=False,)
+    ]
+
+
 class TestCustomQueryRelatedDataView:
     def _get_dsn(self):
         return database_dsn(settings.DATABASES_DATA['my_database'])
