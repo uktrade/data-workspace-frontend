@@ -669,7 +669,7 @@ class VisualisationLinkSqlQueryAdmin(admin.ModelAdmin):
     def view_previous_versions(self, obj):
         url = (
             reverse("admin:datasets_visualisationlinksqlquery_changelist")
-            + f'?o=-3&visualisation_link_id={obj.visualisation_link_id}'
+            + f'?o=-3&visualisation_link_id={obj.visualisation_link_id}&data_set_id={obj.data_set_id}'
         )
         return '<a href="%s">View previous versions</a>' % (url)
 
