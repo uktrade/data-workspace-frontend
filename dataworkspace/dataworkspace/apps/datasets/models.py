@@ -373,6 +373,9 @@ class DataSet(DeletableTimestampedUserModel):
             reverse('datasets:dataset_detail', args=(self.id,)), self.slug
         )
 
+    def get_usage_history_url(self):
+        return reverse('datasets:usage_history', args=(self.id,))
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
@@ -2184,6 +2187,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
     def bookmark_count(self):
         return self.visualisationbookmark_set.count()
+
+    def get_usage_history_url(self):
+        return reverse('datasets:visualisation_usage_history', args=(self.id,))
 
     def __str__(self):
         return self.name
