@@ -1862,14 +1862,17 @@ def test_find_datasets_search_by_source_name(client):
     source_2 = factories.SourceTagFactory(name='source2')
     ds1 = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
     ds1.tags.set([source, source_2])
+    ds1.save()
 
     ds2 = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
     ds2.tags.set([factories.SourceTagFactory(name='source3')])
+    ds2.save()
 
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
     )
     rds.tags.set([source])
+    rds.save()
 
     response = client.get(reverse('datasets:find_datasets'), {"q": "source1"})
 
@@ -1877,14 +1880,14 @@ def test_find_datasets_search_by_source_name(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             ds1,
-            search_rank=0.243171,
+            search_rank=0.121585,
             source_tag_names=[source.name, source_2.name],
             source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
             has_access=False,
         ),
         expected_search_result(
             rds,
-            search_rank=0.243171,
+            search_rank=0.121585,
             purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
@@ -1896,14 +1899,17 @@ def test_find_datasets_search_by_topic_name(client):
     topic_2 = factories.TopicTagFactory.create(name='topic2')
     ds1 = factories.DataSetFactory.create(published=True, type=1, name='A dataset')
     ds1.tags.set([topic, topic_2])
+    ds1.save()
 
     ds2 = factories.DataSetFactory.create(published=True, type=2, name='A new dataset')
     ds2.tags.set([factories.TopicTagFactory.create(name='topic3')])
+    ds2.save()
 
     rds = factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
     )
     rds.tags.set([topic])
+    rds.save()
 
     response = client.get(reverse('datasets:find_datasets'), {"q": "topic1"})
 
@@ -1911,14 +1917,14 @@ def test_find_datasets_search_by_topic_name(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             ds1,
-            search_rank=0.243171,
+            search_rank=0.121585,
             topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
             topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
             has_access=False,
         ),
         expected_search_result(
             rds,
-            search_rank=0.243171,
+            search_rank=0.121585,
             topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
         ),
@@ -1974,6 +1980,32 @@ def test_find_datasets_matches_both_source_and_name(client):
             source_tag_ids=MatchUnorderedMembers([source_1.id, source_2.id]),
             has_access=False,
         )
+    ]
+
+
+def test_find_datasets_matches_both_full_description(client):
+    ds1 = factories.DataSetFactory.create(
+        published=True,
+        type=1,
+        name='dataset1',
+        short_description="short datasset1",
+        description="this is long description",
+    )
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=1,
+        name='dataset2',
+        short_description="short datasset2",
+        description="nothing",
+    )
+
+    response = client.get(reverse('datasets:find_datasets'), {"q": "description"})
+
+    assert response.status_code == 200
+    assert len(list(response.context["datasets"])) == 1
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, has_access=False,)
     ]
 
 

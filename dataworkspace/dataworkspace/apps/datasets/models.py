@@ -35,6 +35,8 @@ from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.db.models import F, ProtectedError, Count, Q
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.utils.text import slugify
 from django.utils import timezone
 
@@ -215,9 +217,11 @@ class DataSet(DeletableTimestampedUserModel):
         default=list,
         help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
     )
+    search_vector = SearchVectorField(null=True)
 
     class Meta:
         db_table = 'app_dataset'
+        indexes = (GinIndex(fields=["search_vector"]),)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -240,6 +244,16 @@ class DataSet(DeletableTimestampedUserModel):
             for obj in self.related_objects():
                 obj.reference_number = None
                 obj.save()
+
+        tag_names = ' '.join([x.name for x in self.tags.all()])
+        DataSet.objects.filter(id=self.id).update(
+            search_vector=(
+                SearchVector('name', weight='A')
+                + SearchVector('short_description', weight='B')
+                + SearchVector(models.Value(tag_names), weight='C')
+                + SearchVector('description', weight='D')
+            )
+        )
 
     def related_objects(self):
         """
@@ -1062,6 +1076,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE
+    search_vector = SearchVectorField(null=True)
 
     class Meta:
         db_table = 'app_referencedataset'
@@ -1072,6 +1087,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 "Manage (create, view, edit) unpublished reference datasets",
             )
         ]
+        indexes = (GinIndex(fields=["search_vector"]),)
 
     def __str__(self):
         return self.name
@@ -1160,6 +1176,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self._original_table_name = self.table_name
         self._original_ext_db = self.external_database
         self._original_sort_order = self.record_sort_order
+
+        tag_names = ' '.join([x.name for x in self.tags.all()])
+        ReferenceDataset.objects.filter(id=self.id).update(
+            search_vector=(
+                SearchVector('name', weight='A')
+                + SearchVector('short_description', weight='B')
+                + SearchVector(models.Value(tag_names), weight='C')
+                + SearchVector('description', weight='D')
+            )
+        )
 
     @transaction.atomic
     def delete(self, **kwargs):  # pylint: disable=arguments-differ
@@ -2108,6 +2134,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     licence_url = models.CharField(
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
     )
+    search_vector = SearchVectorField(null=True)
 
     class Meta:
         permissions = [
@@ -2116,6 +2143,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
                 "Manage (create, view, edit) unpublished visualisations",
             )
         ]
+        indexes = (GinIndex(fields=["search_vector"]),)
 
     def get_admin_edit_url(self):
         return reverse(
@@ -2141,8 +2169,17 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
         self.update_published_and_updated_timestamps()
-
         super().save(force_insert, force_update, using, update_fields)
+
+        tag_names = ' '.join([x.name for x in self.tags.all()])
+        VisualisationCatalogueItem.objects.filter(id=self.id).update(
+            search_vector=(
+                SearchVector('name', weight='A')
+                + SearchVector('short_description', weight='B')
+                + SearchVector(models.Value(tag_names), weight='C')
+                + SearchVector('description', weight='D')
+            )
+        )
 
     def get_visualisation_links(self, request):
         @dataclass
