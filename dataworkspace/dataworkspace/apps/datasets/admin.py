@@ -685,7 +685,7 @@ class VisualisationLinkSqlQueryAdmin(admin.ModelAdmin):
     def view_previous_versions(self, obj):
         url = (
             reverse("admin:datasets_visualisationlinksqlquery_changelist")
-            + f'?o=-3&visualisation_link_id={obj.visualisation_link_id}'
+            + f'?o=-3&visualisation_link_id={obj.visualisation_link_id}&data_set_id={obj.data_set_id}'
         )
         return '<a href="%s">View previous versions</a>' % (url)
 
@@ -820,19 +820,19 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
         'datasets.manage_unpublished_visualisations'
     )
     readonly_fields = (
-        'sql_query',
+        'sql_queries',
         'clone_quicksight_dataset',
     )
 
     @mark_safe
-    def sql_query(self, obj):
-        url = reverse(
-            "admin:datasets_visualisationlinksqlquery_change",
-            args=(obj.sql_queries.get(is_latest=True).id,),
+    def sql_queries(self, obj):
+        url = (
+            reverse("admin:datasets_visualisationlinksqlquery_changelist")
+            + f'?o=-3&visualisation_link_id={obj.id}&is_latest=True'
         )
-        return '<a href="%s">View sql query</a>' % (url)
+        return '<a href="%s">View sql queries</a>' % (url)
 
-    sql_query.allow_tags = True
+    sql_queries.allow_tags = True
 
     @mark_safe
     def clone_quicksight_dataset(self, obj):
