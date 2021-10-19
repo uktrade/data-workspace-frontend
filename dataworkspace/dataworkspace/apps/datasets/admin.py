@@ -1,16 +1,23 @@
 import csv
 import functools
 import logging
+import uuid
 from datetime import datetime
 
+import boto3
+import botocore
 from adminsortable2.admin import SortableInlineAdminMixin
+from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.forms import formset_factory
 from django.http import HttpResponse
-from django.urls import reverse
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
@@ -19,7 +26,10 @@ from dataworkspace.apps.api_v1.core.views import (
     remove_superset_user_cached_credentials,
 )
 from dataworkspace.apps.applications.models import VisualisationTemplate
-from dataworkspace.apps.applications.utils import sync_quicksight_permissions
+from dataworkspace.apps.applications.utils import (
+    get_data_source_id,
+    sync_quicksight_permissions,
+)
 from dataworkspace.apps.core.admin import (
     DeletableTimeStampedUserAdmin,
     DeletableTimeStampedUserTabularInline,
@@ -665,6 +675,12 @@ class VisualisationLinkSqlQueryAdmin(admin.ModelAdmin):
     readonly_fields = ('data_set_id', 'sql_query', 'view_previous_versions')
     list_display = ('id', 'is_latest', 'created_date')
 
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        return {}
+
     @mark_safe
     def view_previous_versions(self, obj):
         url = (
@@ -676,6 +692,126 @@ class VisualisationLinkSqlQueryAdmin(admin.ModelAdmin):
     view_previous_versions.allow_tags = True
 
 
+class CloneDatasetForm(forms.Form):
+    dataset_id = forms.CharField(disabled=True, widget=forms.HiddenInput())
+    existing_dataset_name = forms.CharField(
+        disabled=True, widget=forms.TextInput(attrs={'size': 80})
+    )
+    new_dataset_name = forms.CharField(widget=forms.TextInput(attrs={'size': 80}))
+    new_data_source_owner = forms.CharField(widget=forms.TextInput(attrs={'size': 80}))
+
+
+@admin.register(VisualisationLink)
+class VisualisationLinkAdmin(admin.ModelAdmin):
+    def get_model_perms(self, request):
+        """
+        Return empty perms dict thus hiding the model from admin index.
+        """
+        return {}
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path(
+                'clone_quicksight_dataset/<uuid:dashboard_id>',
+                self.admin_site.admin_view(self.handle_clone_quicksight_dataset),
+            )
+        ]
+        return my_urls + urls
+
+    def clone_quicksight_dataset(
+        self, dataset_id, new_dataset_name, new_data_source_owner
+    ):
+        user_region = settings.QUICKSIGHT_USER_REGION
+        account_id = boto3.client('sts').get_caller_identity().get('Account')
+        quicksight_client = boto3.client('quicksight')
+
+        dataset = quicksight_client.describe_data_set(
+            AwsAccountId=account_id, DataSetId=dataset_id
+        )
+        user = quicksight_client.describe_user(
+            AwsAccountId=account_id, UserName=new_data_source_owner, Namespace='default'
+        )['User']
+        db_name, _ = list(settings.DATABASES_DATA.items())[0]
+        replacement_datasource_arn = (
+            f'arn:aws:quicksight:{user_region}:{account_id}:datasource/'
+            + get_data_source_id(db_name, user['Arn'])
+        )
+
+        new_physical_table_map = {}
+
+        for mapping_id, mapping in dataset['DataSet']['PhysicalTableMap'].items():
+            new_physical_table_map[mapping_id] = mapping
+            for table_id, _ in new_physical_table_map[mapping_id].items():
+                new_physical_table_map[mapping_id][table_id][
+                    'DataSourceArn'
+                ] = replacement_datasource_arn
+
+        quicksight_client.create_data_set(
+            AwsAccountId=account_id,
+            DataSetId=str(uuid.uuid4()),
+            Name=new_dataset_name,
+            PhysicalTableMap=new_physical_table_map,
+            LogicalTableMap=dataset['DataSet']['LogicalTableMap'],
+            ImportMode=dataset['DataSet']['ImportMode'],
+            Permissions=[
+                {
+                    "Principal": f"arn:aws:quicksight:{user_region}:{account_id}:group/default/DataWorkspaceAdmins",
+                    "Actions": [
+                        "quicksight:UpdateDataSetPermissions",
+                        "quicksight:DescribeDataSet",
+                        "quicksight:DescribeDataSetPermissions",
+                        "quicksight:PassDataSet",
+                        "quicksight:DescribeIngestion",
+                        "quicksight:ListIngestions",
+                        "quicksight:UpdateDataSet",
+                        "quicksight:DeleteDataSet",
+                        "quicksight:CreateIngestion",
+                        "quicksight:CancelIngestion",
+                    ],
+                }
+            ],
+        )
+
+    def handle_clone_quicksight_dataset(self, request, dashboard_id):
+        account_id = boto3.client('sts').get_caller_identity().get('Account')
+        quicksight_client = boto3.client('quicksight')
+
+        datasets_arns = quicksight_client.describe_dashboard(
+            AwsAccountId=account_id, DashboardId=str(dashboard_id)
+        )['Dashboard']['Version']['DataSetArns']
+        dataset_ids = [d[-36:] for d in datasets_arns]
+
+        initial = []
+        for dataset_id in dataset_ids:
+            dataset = quicksight_client.describe_data_set(
+                AwsAccountId=account_id, DataSetId=dataset_id
+            )['DataSet']
+            initial.append(
+                {'dataset_id': dataset_id, 'existing_dataset_name': dataset['Name']}
+            )
+
+        CloneDatasetFormset = formset_factory(CloneDatasetForm, extra=0)
+        if request.method == 'POST':
+            formset = CloneDatasetFormset(request.POST, initial=initial)
+            if formset.is_valid():
+                for form in formset:
+                    try:
+                        self.clone_quicksight_dataset(
+                            form.cleaned_data['dataset_id'],
+                            form.cleaned_data['new_dataset_name'],
+                            form.cleaned_data['new_data_source_owner'],
+                        )
+                        messages.success(request, 'Dataset cloned successfully')
+                    except botocore.exceptions.ClientError as e:
+                        messages.error(request, e)
+        else:
+            formset = CloneDatasetFormset(initial=initial)
+
+        context = {'formset': formset, 'dashboard_id': dashboard_id}
+        return TemplateResponse(request, "admin/quicksight_clone_dataset.html", context)
+
+
 class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixin):
     form = VisualisationLinkForm
     model = VisualisationLink
@@ -683,7 +819,10 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
     manage_unpublished_permission_codename = (
         'datasets.manage_unpublished_visualisations'
     )
-    readonly_fields = ('sql_queries',)
+    readonly_fields = (
+        'sql_queries',
+        'clone_quicksight_dataset',
+    )
 
     @mark_safe
     def sql_queries(self, obj):
@@ -694,6 +833,15 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
         return '<a href="%s">View sql queries</a>' % (url)
 
     sql_queries.allow_tags = True
+
+    @mark_safe
+    def clone_quicksight_dataset(self, obj):
+        if obj.visualisation_type != 'QUICKSIGHT':
+            return '-'
+        url = reverse("admin:datasets_visualisationlink_changelist",)
+        return f'<a href="{url}clone_quicksight_dataset/{obj.identifier}">Clone dataset</a>'
+
+    clone_quicksight_dataset.allow_tags = True
 
 
 @admin.register(VisualisationCatalogueItem)

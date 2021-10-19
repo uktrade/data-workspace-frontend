@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">{% endblock %}
+
+{% block content %}
+<h1>Clone datasets for dashboard {{ dashboard_id }}</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+        {% for form in formset %}
+        <div>
+            <fieldset class="module aligned ">
+                <h2>Dataset ID {{ form.dataset_id.value }}</h2>
+                {% for field in form %}
+                    {% if field.name != 'dataset_id' %}
+                        <div class="form-row">
+                            <div>
+                                {{ field.errors }}
+                                {{ field.label_tag }}
+                                {% if field.field.disabled %}
+                                    <div class="readonly">{{ field.value }}</div>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </fieldset>
+        </div>
+        {% endfor %}
+        <input type="submit" value="Clone dataset">
+</form>
+{% endblock %}

@@ -706,6 +706,17 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     return dashboard_name, dashboard_url
 
 
+def get_data_source_id(db_name, quicksight_user_arn):
+    return (
+        "data-workspace-"
+        + settings.ENVIRONMENT.lower()
+        + "-"
+        + db_name
+        + "-"
+        + stable_identification_suffix(quicksight_user_arn, short=True)
+    )
+
+
 def create_update_delete_quicksight_user_data_sources(
     data_client, account_id, quicksight_user, creds
 ):
@@ -716,22 +727,12 @@ def create_update_delete_quicksight_user_data_sources(
         'quicksight:PassDataSource',
     ]
 
-    def _get_data_source_id(db_name):
-        return (
-            "data-workspace-"
-            + env
-            + "-"
-            + db_name
-            + "-"
-            + stable_identification_suffix(quicksight_user['Arn'], short=True)
-        )
-
     authorized_data_source_ids = set()
 
     # Create/update any data sources the user has access to
     for cred in creds:
         db_name = cred['memorable_name']
-        data_source_id = _get_data_source_id(db_name)
+        data_source_id = get_data_source_id(db_name, quicksight_user['Arn'])
         data_source_name = f"Data Workspace - {db_name}"
         if env != "production":
             data_source_name = f"{env.upper()} - {data_source_name}"
@@ -786,10 +787,12 @@ def create_update_delete_quicksight_user_data_sources(
 
     # Delete any data sources the user no longer has access to
     all_data_source_ids = {
-        _get_data_source_id(db_name) for db_name in settings.DATABASES_DATA.keys()
+        get_data_source_id(db_name, quicksight_user['Arn'])
+        for db_name in settings.DATABASES_DATA.keys()
     }
     unauthorized_data_source_ids = all_data_source_ids - {
-        _get_data_source_id(cred['memorable_name']) for cred in creds
+        get_data_source_id(cred['memorable_name'], quicksight_user['Arn'])
+        for cred in creds
     }
     logger.info(all_data_source_ids)
     logger.info(unauthorized_data_source_ids)
