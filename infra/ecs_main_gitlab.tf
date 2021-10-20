@@ -23,33 +23,18 @@ resource "aws_ecs_service" "gitlab" {
     container_name   = "gitlab"
   }
 
-  service_registries {
-    registry_arn   = "${aws_service_discovery_service.gitlab.arn}"
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.gitlab_internal_22.arn}"
+    container_port   = "22"
+    container_name   = "gitlab"
   }
 
   depends_on = [
     # The target group must have been associated with the listener first
     "aws_lb_listener.gitlab_443",
     "aws_lb_listener.gitlab_22",
+    "aws_lb_listener.gitlab_internal_22",
   ]
-}
-
-resource "aws_service_discovery_service" "gitlab" {
-  name = "gitlab"
-  dns_config {
-    namespace_id = "${aws_service_discovery_private_dns_namespace.jupyterhub.id}"
-    dns_records {
-      ttl = 10
-      type = "A"
-    }
-  }
-
-  # Needed for a service to be able to register instances with a target group,
-  # but only if it has a service_registries, which we do
-  # https://forums.aws.amazon.com/thread.jspa?messageID=852407&tstart=0
-  health_check_custom_config {
-    failure_threshold = 1
-  }
 }
 
 resource "aws_ecs_task_definition" "gitlab" {
@@ -253,6 +238,17 @@ resource "aws_lb" "gitlab" {
   }
 }
 
+resource "aws_lb" "gitlab_internal" {
+  name               = "${var.prefix}-gli"
+  load_balancer_type = "network"
+  internal           = true
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.private_with_egress.*.id[0]}"
+    private_ipv4_address = cidrhost("${aws_subnet.private_with_egress.*.cidr_block[0]}", 6)
+  }
+}
+
 resource "aws_lb_listener" "gitlab_443" {
   load_balancer_arn = "${aws_lb.gitlab.arn}"
   port              = "443"
@@ -273,6 +269,17 @@ resource "aws_lb_listener" "gitlab_22" {
 
   default_action {
     target_group_arn = "${aws_lb_target_group.gitlab_22.arn}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_listener" "gitlab_internal_22" {
+  load_balancer_arn = "${aws_lb.gitlab_internal.arn}"
+  port              = "22"
+  protocol          = "TCP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.gitlab_internal_22.arn}"
     type             = "forward"
   }
 }
@@ -298,6 +305,25 @@ resource "aws_lb_target_group" "gitlab_80" {
 
 resource "aws_lb_target_group" "gitlab_22" {
   name_prefix = "gl22-"
+  port        = "22"
+  vpc_id      = "${aws_vpc.main.id}"
+  target_type = "ip"
+  protocol    = "TCP"
+
+  health_check {
+    protocol = "TCP"
+    interval = 10
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_lb_target_group" "gitlab_internal_22" {
+  name_prefix = "gli22-"
   port        = "22"
   vpc_id      = "${aws_vpc.main.id}"
   target_type = "ip"

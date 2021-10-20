@@ -39,6 +39,9 @@
     }, {
       "name": "IP_ADDRESS",
       "value": "${ip_address}"
+    }, {
+      "name": "GITLAB_INTERNAL_IP_ADDRESS",
+      "value": "${gitlab_internal_ip_address}"
     }]
   }
 ]

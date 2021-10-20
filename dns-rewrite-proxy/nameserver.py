@@ -11,8 +11,7 @@ from dnsrewriteproxy import DnsProxy
 
 
 async def async_main():
-    public_zone = re.escape(os.environ['AWS_ROUTE53_ZONE'])
-    private_zone = 'jupyterhub'
+    public_zone = os.environ['AWS_ROUTE53_ZONE']
     nameserver = os.environ['DNS_SERVER']
 
     stdout_handler = logging.StreamHandler(sys.stdout)
@@ -20,6 +19,8 @@ async def async_main():
     logger = logging.getLogger('dnsrewriteproxy')
     logger.setLevel(logging.INFO)
     logger.addHandler(stdout_handler)
+
+    gitlab_internal_ip_address = os.environ['GITLAB_INTERNAL_IP_ADDRESS']
 
     hosts = {
         # ECS seem to make these DNS queries. A query for localhost is
@@ -35,6 +36,9 @@ async def async_main():
         b'3.amazon.pool.ntp.org': {
             TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)
         },
+        (b'gitlab.' + public_zone.encode()): {
+            TYPES.A: IPv4AddressExpiresAt(gitlab_internal_ip_address, expires_at=0)
+        },
     }
 
     def get_resolver():
@@ -44,7 +48,7 @@ async def async_main():
 
         async def get_host(_, fqdn, qtype):
             try:
-                return hosts[qtype][fqdn]
+                return hosts[fqdn][qtype]
             except KeyError:
                 return None
 
@@ -52,13 +56,9 @@ async def async_main():
 
     start = DnsProxy(
         rules=(
-            # The docker registry host in the public zone will already correctly
-            # resolve to the private IP, so we pass that through
-            (r'^(registry\.' + public_zone + ')$', r'\1'),
-            # ... other public zone hosts should resolve to the IP of the
-            # private zone, e.g. gitlab
-            (r'^(.+)\.' + public_zone + '$', r'\1.' + private_zone),
-            # ... And amazon domains should remain as they are, e.g. S3, CloudWatch
+            # Allow requests for GitLab, returned as the fixed IP address as defined above
+            (r'^(gitlab\.' + re.escape(public_zone) + ')$', r'\1'),
+            # Amazon domains should remain as they are, e.g. S3, CloudWatch
             (r'(.+\.amazonaws\.com)$', r'\1'),
             (r'^(localhost)$', r'\1'),
             (r'^(1\.amazon\.pool\.ntp\.org)$', r'\1'),

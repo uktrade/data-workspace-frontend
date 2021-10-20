@@ -558,11 +558,11 @@ resource "aws_security_group_rule" "notebooks_egress_http_to_everywhere" {
   protocol  = "tcp"
 }
 
-resource "aws_security_group_rule" "notebooks_egress_ssh_to_gitlab_service" {
-  description = "ingress-ssh-from-nlb"
+resource "aws_security_group_rule" "notebooks_egress_ssh_to_gitlab_nlb_internal" {
+  description = "egress-ssh-to-nlb-internal"
 
   security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  cidr_blocks = ["${aws_lb.gitlab_internal.subnet_mapping.*.private_ipv4_address[0]}/32"]
 
   type        = "egress"
   from_port   = "22"
@@ -1045,11 +1045,11 @@ resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_notebooks" {
-  description = "ingress-ssh-from-nlb"
+resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb_internal" {
+  description = "ingress-ssh-from-nlb-internal"
 
   security_group_id = "${aws_security_group.gitlab_service.id}"
-  source_security_group_id = "${aws_security_group.notebooks.id}"
+  cidr_blocks = ["${aws_lb.gitlab_internal.subnet_mapping.*.private_ipv4_address[0]}/32"]
 
   type        = "ingress"
   from_port   = "22"

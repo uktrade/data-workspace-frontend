@@ -97,6 +97,8 @@ data "template_file" "dns_rewrite_proxy_container_definitions_new" {
     vpc_id       = "${aws_vpc.notebooks.id}"
     aws_route53_zone = "${var.aws_route53_zone}"
     ip_address   = "${aws_lb.dns_rewrite_proxy_new.subnet_mapping.*.private_ipv4_address[0]}"
+
+    gitlab_internal_ip_address  = "${aws_lb.gitlab_internal.subnet_mapping.*.private_ipv4_address[0]}"
   }
 }
 
