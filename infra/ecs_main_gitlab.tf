@@ -5,36 +5,6 @@ resource "aws_ecs_service" "gitlab" {
   desired_count   = 1
   launch_type     = "EC2"
   deployment_maximum_percent = 200
-
-  network_configuration {
-    subnets         = ["${aws_subnet.private_with_egress.*.id[0]}"]
-    security_groups = ["${aws_security_group.gitlab_service.id}"]
-  }
-
-  load_balancer {
-    target_group_arn = "${aws_lb_target_group.gitlab_80.arn}"
-    container_port   = "80"
-    container_name   = "gitlab"
-  }
-
-  load_balancer {
-    target_group_arn = "${aws_lb_target_group.gitlab_22.arn}"
-    container_port   = "22"
-    container_name   = "gitlab"
-  }
-
-  load_balancer {
-    target_group_arn = "${aws_lb_target_group.gitlab_internal_22.arn}"
-    container_port   = "22"
-    container_name   = "gitlab"
-  }
-
-  depends_on = [
-    # The target group must have been associated with the listener first
-    "aws_lb_listener.gitlab_443",
-    "aws_lb_listener.gitlab_22",
-    "aws_lb_listener.gitlab_internal_22",
-  ]
 }
 
 resource "aws_ecs_task_definition" "gitlab" {
@@ -42,7 +12,7 @@ resource "aws_ecs_task_definition" "gitlab" {
   container_definitions    = "${data.template_file.gitlab_container_definitions.rendered}"
   execution_role_arn       = "${aws_iam_role.gitlab_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.gitlab_task.arn}"
-  network_mode             = "awsvpc"
+  network_mode             = "bridge"
   memory                   = "${var.gitlab_memory}"
   cpu                      = "${var.gitlab_cpu}"
   requires_compatibilities = ["EC2"]
@@ -288,7 +258,7 @@ resource "aws_lb_target_group" "gitlab_80" {
   name_prefix = "gl80-"
   port        = "80"
   vpc_id      = "${aws_vpc.main.id}"
-  target_type = "ip"
+  target_type = "instance"
   protocol = "TCP"
 
   health_check {
@@ -305,9 +275,9 @@ resource "aws_lb_target_group" "gitlab_80" {
 
 resource "aws_lb_target_group" "gitlab_22" {
   name_prefix = "gl22-"
-  port        = "22"
+  port        = "2222"
   vpc_id      = "${aws_vpc.main.id}"
-  target_type = "ip"
+  target_type = "instance"
   protocol    = "TCP"
 
   health_check {
@@ -324,9 +294,9 @@ resource "aws_lb_target_group" "gitlab_22" {
 
 resource "aws_lb_target_group" "gitlab_internal_22" {
   name_prefix = "gli22-"
-  port        = "22"
+  port        = "2222"
   vpc_id      = "${aws_vpc.main.id}"
-  target_type = "ip"
+  target_type = "instance"
   protocol    = "TCP"
 
   health_check {
@@ -339,6 +309,24 @@ resource "aws_lb_target_group" "gitlab_internal_22" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_lb_target_group_attachment" "gitlab_80" {
+  target_group_arn = "${aws_lb_target_group.gitlab_80.arn}"
+  target_id        = "${aws_instance.gitlab.id}"
+  port             = 80
+}
+
+resource "aws_lb_target_group_attachment" "gitlab_22" {
+  target_group_arn = "${aws_lb_target_group.gitlab_22.arn}"
+  target_id        = "${aws_instance.gitlab.id}"
+  port             = 2222
+}
+
+resource "aws_lb_target_group_attachment" "gitlab_internal_22" {
+  target_group_arn = "${aws_lb_target_group.gitlab_internal_22.arn}"
+  target_id        = "${aws_instance.gitlab.id}"
+  port             = 2222
 }
 
 resource "aws_elasticache_cluster" "gitlab_redis" {

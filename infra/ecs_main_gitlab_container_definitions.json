@@ -20,7 +20,7 @@
         "awslogs-stream-prefix": "${container_name}"
       }
     },
-    "networkMode": "awsvpc",
+    "networkMode": "bridge",
     "memoryReservation": ${memory},
     "cpu": ${cpu},
     "mountPoints" : [{
@@ -34,7 +34,7 @@
         "protocol": "tcp"
     }, {
         "containerPort": 22,
-        "hostPort": 22,
+        "hostPort": 2222,
         "protocol": "tcp"
     }]
   }

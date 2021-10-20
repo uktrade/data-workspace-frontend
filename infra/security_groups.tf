@@ -325,27 +325,16 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_superset_lb" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_service" {
+resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_ec2" {
   description = "egress-http-to-gitlab-service"
 
   security_group_id = "${aws_security_group.admin_service.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  # Should probably go to internal NLB IP?
+  source_security_group_id = "${aws_security_group.gitlab-ec2.id}"
 
   type        = "egress"
   from_port   = "80"
   to_port     = "80"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "gitlab_service_egress_https_to_ecr_api" {
-  description = "egress-https-to-ecr-api"
-
-  security_group_id = "${aws_security_group.gitlab_service.id}"
-  source_security_group_id = "${aws_security_group.ecr_api.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
   protocol    = "tcp"
 }
 
@@ -983,24 +972,10 @@ resource "aws_security_group_rule" "prometheus_service_egress_http_to_notebooks"
   protocol    = "tcp"
 }
 
-resource "aws_security_group" "gitlab_service" {
-  name        = "${var.prefix}-gitlab-service"
-  description = "${var.prefix}-gitlab-service"
-  vpc_id      = "${aws_vpc.main.id}"
-
-  tags = {
-    Name = "${var.prefix}-gitlab-service"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_security_group_rule" "gitlab_service_ingress_http_from_nlb" {
+resource "aws_security_group_rule" "gitlab_ec2_ingress_https_from_nlb" {
   description = "ingress-https-from-nlb"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab-ec2.id}"
   cidr_blocks = ["${aws_eip.gitlab.private_ip}/32"]
 
   type        = "ingress"
@@ -1009,10 +984,22 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_nlb" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_service_ingress_http_from_admin_service" {
+resource "aws_security_group_rule" "gitlab_ec2_ingress_https_from_whitelist" {
+  description = "ingress-https-from-whitelist"
+
+  security_group_id = "${aws_security_group.gitlab-ec2.id}"
+  cidr_blocks = "${var.gitlab_ip_whitelist}"
+
+  type        = "ingress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "gitlab_ec2_ingress_http_from_admin_service" {
   description = "ingress-http-from-admin-service"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab-ec2.id}"
   source_security_group_id =  "${aws_security_group.admin_service.id}"
 
   type        = "ingress"
@@ -1021,10 +1008,10 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_admin_servi
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_service_ingress_https_from_gitlab_runner" {
+resource "aws_security_group_rule" "gitlab_ec2_ingress_https_from_gitlab_runner" {
   description = "ingress-https-from-gitlab-runner"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab-ec2.id}"
   source_security_group_id =  "${aws_security_group.gitlab_runner.id}"
 
   type        = "ingress"
@@ -1033,46 +1020,34 @@ resource "aws_security_group_rule" "gitlab_service_ingress_https_from_gitlab_run
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb" {
+resource "aws_security_group_rule" "gitlab_ec2_ingress_ssh_from_nlb" {
   description = "ingress-ssh-from-nlb"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab-ec2.id}"
   cidr_blocks = ["${aws_eip.gitlab.private_ip}/32"]
 
   type        = "ingress"
-  from_port   = "22"
-  to_port     = "22"
+  from_port   = "2222"
+  to_port     = "2222"
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb_internal" {
+resource "aws_security_group_rule" "gitlab_ec2_ingress_ssh_from_nlb_internal" {
   description = "ingress-ssh-from-nlb-internal"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab-ec2.id}"
   cidr_blocks = ["${aws_lb.gitlab_internal.subnet_mapping.*.private_ipv4_address[0]}/32"]
 
   type        = "ingress"
-  from_port   = "22"
-  to_port     = "22"
+  from_port   = "2222"
+  to_port     = "2222"
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_service_egress_https_to_everwhere" {
-  description = "egress-https-to-everywhere"
-
-  security_group_id = "${aws_security_group.gitlab_service.id}"
-  cidr_blocks       = ["0.0.0.0/0"]
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "gitlab_service_egress_postgres_to_gitlab_db" {
+resource "aws_security_group_rule" "gitlab_ec2_egress_postgres_to_gitlab_db" {
   description = "egress-postgres-to-gitlab-db"
 
-  security_group_id       = "${aws_security_group.gitlab_service.id}"
+  security_group_id       = "${aws_security_group.gitlab-ec2.id}"
   source_security_group_id = "${aws_security_group.gitlab_db.id}"
 
   type        = "egress"
@@ -1081,10 +1056,10 @@ resource "aws_security_group_rule" "gitlab_service_egress_postgres_to_gitlab_db"
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab_service_egress_redis" {
+resource "aws_security_group_rule" "gitlab_ec2_egress_redis" {
   description = "egress-redis"
 
-  security_group_id        = "${aws_security_group.gitlab_service.id}"
+  security_group_id        = "${aws_security_group.gitlab-ec2.id}"
   source_security_group_id = "${aws_security_group.gitlab_redis.id}"
 
   type        = "egress"
@@ -1107,11 +1082,11 @@ resource "aws_security_group" "gitlab_redis" {
   }
 }
 
-resource "aws_security_group_rule" "admin_gitlab_ingress_from_gitlab_service" {
+resource "aws_security_group_rule" "admin_gitlab_ingress_from_gitlab_ec2" {
   description = "ingress-gitlab-from-admin-service"
 
   security_group_id = "${aws_security_group.gitlab_redis.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id = "${aws_security_group.gitlab-ec2.id}"
 
   type        = "ingress"
   from_port   = "6379"
@@ -1133,11 +1108,11 @@ resource "aws_security_group" "gitlab_db" {
   }
 }
 
-resource "aws_security_group_rule" "gitlab_db_ingress_from_gitlab_service" {
+resource "aws_security_group_rule" "gitlab_db_ingress_from_gitlab_ec2" {
   description = "egress-postgres-to-gitlab-db"
 
   security_group_id        = "${aws_security_group.gitlab_db.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id = "${aws_security_group.gitlab-ec2.id}"
 
   type        = "ingress"
   from_port   = "${aws_rds_cluster.gitlab.port}"
@@ -1159,23 +1134,23 @@ resource "aws_security_group" "gitlab-ec2" {
   }
 }
 
-resource "aws_security_group_rule" "gitlab-ec2-egress-all" {
-  description = "egress-everything-to-everywhere"
+resource "aws_security_group_rule" "gitlab-ec2-egress-https" {
+  description = "egress-https-to-everywhere"
 
   security_group_id = "${aws_security_group.gitlab-ec2.id}"
   cidr_blocks = ["0.0.0.0/0"]
 
   type        = "egress"
-  from_port   = "0"
-  to_port     = "65535"
+  from_port   = "443"
+  to_port     = "443"
   protocol    = "tcp"
 }
 
 resource "aws_security_group_rule" "gitlab-ec2-ingress-ssh" {
-  description = "egress-ssh"
+  description = "ingress-ssh"
 
   security_group_id = "${aws_security_group.gitlab-ec2.id}"
-  cidr_blocks = ["0.0.0.0/0"]
+  cidr_blocks = "${var.gitlab_ip_whitelist}"
 
   type        = "ingress"
   from_port   = "22"
