@@ -2249,6 +2249,7 @@ class VisualisationLink(TimeStampedModel):
 class VisualisationLinkSqlQuery(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     data_set_id = models.UUIDField()
+    table_id = models.UUIDField()
     sql_query = models.TextField()
     is_latest = models.BooleanField()
     visualisation_link = models.ForeignKey(
