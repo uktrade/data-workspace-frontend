@@ -35,7 +35,7 @@
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Usage history</dt>
           <dd class="govuk-summary-list__value">
-            <a class="govuk-link" href="{% url "datasets:usage_history" dataset_uuid=dataset.id %}">View
+            <a class="govuk-link" href="{{ model.get_usage_history_url }}">View
               history</a> to see how often this data is accessed
           </dd>
         </div>

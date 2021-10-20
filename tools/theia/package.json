@@ -45,9 +45,9 @@
         "**/glob-parent": "^5.1.2",
         "**/serialize-javascript": "^4.0.0",
         "**/braces": "^3.0.2",
-        "**/glob-parent": "^5.1.2",
         "**/normalize-url": "^4.5.1",
-        "**/color-string": "^1.5.5"
+        "**/color-string": "^1.5.5",
+        "**/ansi-regex": "5.0.1"
     },
     "theiaPluginsDir": "plugins",
     "theiaPlugins": {

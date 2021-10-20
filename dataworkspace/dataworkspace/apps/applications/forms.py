@@ -9,9 +9,12 @@ from django.forms import (
 )
 
 from dataworkspace.apps.applications.models import VisualisationApproval
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.forms import (
+    GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemModelForm,
+    GOVUKDesignSystemSelectWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemSingleCheckboxWidget,
@@ -120,12 +123,11 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         required=False,
         widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
     )
-    user_access_type = GOVUKDesignSystemBooleanField(
+    user_access_type = GOVUKDesignSystemChoiceField(
         label='Open to all Data Workspace users',
-        required=False,
-        widget=GOVUKDesignSystemSingleCheckboxWidget(
-            check_test=lambda val: val == 'REQUIRES_AUTHENTICATION',
-        ),
+        initial=UserAccessType.REQUIRES_AUTHORIZATION,
+        choices=UserAccessType.choices,
+        widget=GOVUKDesignSystemSelectWidget(label_is_heading=False,),
     )
     eligibility_criteria = DWSplitArrayField(
         CharField(required=False),
@@ -165,7 +167,6 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
     def __init__(self, *args, **kwargs):
         kwargs['initial'] = kwargs.get("initial", {})
         super().__init__(*args, **kwargs)
-        is_instance = 'instance' in kwargs and kwargs['instance']
 
         self._email_fields = [
             'enquiries_contact',
@@ -178,19 +179,6 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         for field in self._email_fields:
             if getattr(self.instance, field):
                 self.initial[field] = getattr(self.instance, field).email
-
-        self.fields['user_access_type'].initial = (
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHORIZATION'
-            if is_instance
-            else True
-        )
-
-    def clean_user_access_type(self):
-        return (
-            'REQUIRES_AUTHORIZATION'
-            if self.cleaned_data['user_access_type']
-            else 'REQUIRES_AUTHENTICATION'
-        )
 
 
 class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
@@ -206,7 +194,7 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
         label="I have reviewed this visualisation",
         required=False,
         widget=GOVUKDesignSystemSingleCheckboxWidget(
-            check_test=lambda val: val == 'REQUIRES_AUTHORIZATION',
+            check_test=lambda val: val == UserAccessType.REQUIRES_AUTHORIZATION,
         ),
     )
 

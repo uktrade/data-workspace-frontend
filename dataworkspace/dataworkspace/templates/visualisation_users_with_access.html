@@ -35,7 +35,7 @@
 </dl>
 {% endif %}
 
-{% if catalogue_item.user_access_type == 'REQUIRES_AUTHENTICATION'  %}
+{% if catalogue_item.user_access_type == 'REQUIRES_AUTHENTICATION' or catalogue_item.user_access_type == 'OPEN' %}
 <p class="govuk-body">All logged in users can view {{ gitlab_project.name }}</p>
 {% endif %}
 

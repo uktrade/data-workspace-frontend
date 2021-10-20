@@ -16,6 +16,7 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     new_private_database_credentials,
 )
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
     Command as ensure_databases_configured,
 )
@@ -127,7 +128,7 @@ class TestNewPrivateDatabaseCredentials:
         user = UserFactory(email='test@foo.bar')
         st = SourceTableFactory(
             dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             )
         )
 

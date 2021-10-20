@@ -496,9 +496,6 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )
-    open_to_all_users = forms.BooleanField(
-        label='Open to all Data Workspace users', required=False,
-    )
     authorized_users = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('users', False),
@@ -520,12 +517,6 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
 
-        self.fields['open_to_all_users'].initial = (
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHENTICATION'
-            if is_instance
-            else False
-        )
-
         self.fields['authorized_users'].initial = (
             get_user_model().objects.filter(
                 datasetuserpermission__dataset=kwargs['instance']
@@ -536,7 +527,7 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         if not user.is_superuser and not user.has_perm(
             self.can_change_user_permission_codename
         ):
-            self.fields['open_to_all_users'].disabled = True
+            self.fields['user_access_type'].disabled = True
 
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(
@@ -694,9 +685,6 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
     eligibility_criteria = DynamicArrayField(
         base_field=forms.CharField(), required=False
     )
-    open_to_all_users = forms.BooleanField(
-        label='Open to all Data Workspace users', required=False,
-    )
     authorized_users = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple('users', False),
@@ -714,12 +702,6 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
         super().__init__(*args, **kwargs)
         is_instance = 'instance' in kwargs and kwargs['instance']
 
-        self.fields['open_to_all_users'].initial = (
-            kwargs['instance'].user_access_type == 'REQUIRES_AUTHENTICATION'
-            if is_instance
-            else False
-        )
-
         self.fields['authorized_users'].initial = (
             get_user_model().objects.filter(
                 visualisationuserpermission__visualisation=kwargs['instance']
@@ -730,7 +712,7 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
         if not user.is_superuser and not user.has_perm(
             self.can_change_user_permission_codename
         ):
-            self.fields['open_to_all_users'].disabled = True
+            self.fields['user_access_type'].disabled = True
 
             self.fields['authorized_users'].disabled = True
             self.fields['authorized_users'].widget = SelectMultiple(

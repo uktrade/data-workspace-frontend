@@ -1,10 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import CreateView, UpdateView, DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.apps.datasets.utils import find_dataset_or_visualisation
 from dataworkspace.apps.eventlog.models import EventLog
@@ -87,18 +88,28 @@ class DatasetAccessRequest(CreateView):
             reason_for_access=form.cleaned_data['reason_for_access'],
         )
 
-        if user_has_tools_access or isinstance(
-            catalogue_item, VisualisationCatalogueItem
-        ):
+        if user_has_tools_access or catalogue_item.type in [
+            DataSetType.VISUALISATION,
+            DataSetType.DATACUT,
+        ]:
             return HttpResponseRedirect(
                 reverse('request-access:summary-page', kwargs={"pk": access_request.pk})
             )
+
         return HttpResponseRedirect(
             reverse('request-access:tools-1', kwargs={"pk": access_request.pk})
         )
 
 
-class DatasetAccessRequestUpdate(UpdateView):
+class RequestAccessMixin:
+    def dispatch(self, request, *args, **kwargs):
+        access_request = self.get_object()
+        if access_request.requester != request.user:
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+
+class DatasetAccessRequestUpdate(RequestAccessMixin, UpdateView):
     model = models.AccessRequest
     template_name = 'request_access/dataset.html'
     form_class = DatasetAccessRequestForm
@@ -109,7 +120,7 @@ class DatasetAccessRequestUpdate(UpdateView):
         return reverse('request-access:tools-1', kwargs={"pk": self.object.pk})
 
 
-class ToolsAccessRequestPart1(UpdateView):
+class ToolsAccessRequestPart1(RequestAccessMixin, UpdateView):
     model = models.AccessRequest
     template_name = 'request_access/tools_1.html'
     form_class = ToolsAccessRequestFormPart1
@@ -118,7 +129,7 @@ class ToolsAccessRequestPart1(UpdateView):
         return reverse('request-access:tools-2', kwargs={"pk": self.object.pk})
 
 
-class ToolsAccessRequestPart2(UpdateView):
+class ToolsAccessRequestPart2(RequestAccessMixin, UpdateView):
     model = models.AccessRequest
     template_name = 'request_access/tools_2.html'
     form_class = ToolsAccessRequestFormPart2
@@ -138,7 +149,7 @@ class ToolsAccessRequestPart3(UpdateView):
         return reverse('request-access:summary-page', kwargs={"pk": self.object.pk})
 
 
-class AccessRequestSummaryPage(DetailView):
+class AccessRequestSummaryPage(RequestAccessMixin, DetailView):
     model = models.AccessRequest
     template_name = 'request_access/summary.html'
 
@@ -159,7 +170,7 @@ class AccessRequestSummaryPage(DetailView):
         )
 
 
-class AccessRequestConfirmationPage(DetailView):
+class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
     model = models.AccessRequest
     template_name = 'request_access/confirmation-page.html'
 

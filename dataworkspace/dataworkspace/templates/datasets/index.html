@@ -69,8 +69,8 @@
   <div class="govuk-grid-column-one-third">
     <h2 class="govuk-heading-l">Filters</h2>
     {{ form.bookmarked }}
-    {% if show_unpublished %}
-      {{ form.unpublished }}
+    {% if show_admin_filters %}
+      {{ form.admin_filters }}
     {% endif %}
     {{ form.use }}
     {{ form.user_access }}

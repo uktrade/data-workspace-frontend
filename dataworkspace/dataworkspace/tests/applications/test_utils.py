@@ -25,6 +25,7 @@ from dataworkspace.apps.applications.utils import (
     long_running_query_alert,
     sync_quicksight_permissions,
 )
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
 from dataworkspace.tests import factories
 
@@ -77,7 +78,7 @@ class TestSyncQuickSightPermissions:
         UserFactory.create(username='fake@email.com')
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             )
         )
 
@@ -169,7 +170,7 @@ class TestSyncQuickSightPermissions:
         UserFactory.create(username='fake2@email.com')
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             )
         )
 
@@ -240,7 +241,7 @@ class TestSyncQuickSightPermissions:
         UserFactory.create(username='fake@email.com')
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             )
         )
 
@@ -362,7 +363,7 @@ class TestSyncQuickSightPermissions:
         user2 = UserFactory.create(username='fake2@email.com')
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             )
         )
 
@@ -438,7 +439,7 @@ class TestSyncQuickSightPermissions:
         user = UserFactory.create(username='fake@email.com')
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             )
         )
 

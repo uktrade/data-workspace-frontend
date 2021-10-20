@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.test import Client
 import pytest
 
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     ReferenceDatasetField,
@@ -2460,6 +2460,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': UserAccessType.REQUIRES_AUTHORIZATION,
                 'sourcelink_set-TOTAL_FORMS': '0',
                 'sourcelink_set-INITIAL_FORMS': '0',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2495,6 +2496,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': UserAccessType.REQUIRES_AUTHORIZATION,
                 'sourcelink_set-TOTAL_FORMS': '0',
                 'sourcelink_set-INITIAL_FORMS': '0',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2530,6 +2532,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': UserAccessType.OPEN,
                 'sourcelink_set-TOTAL_FORMS': '1',
                 'sourcelink_set-INITIAL_FORMS': '1',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2581,6 +2584,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': UserAccessType.OPEN,
                 'sourcelink_set-TOTAL_FORMS': '1',
                 'sourcelink_set-INITIAL_FORMS': '1',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2625,6 +2629,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 'published': dataset.published,
                 'name': dataset.name,
                 'slug': dataset.slug,
+                'user_access_type': UserAccessType.OPEN,
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
@@ -2751,6 +2756,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': dataset.user_access_type,
                 'sourcelink_set-TOTAL_FORMS': '0',
                 'sourcelink_set-INITIAL_FORMS': '0',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2811,6 +2817,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': dataset.user_access_type,
                 'sourcelink_set-TOTAL_FORMS': '0',
                 'sourcelink_set-INITIAL_FORMS': '0',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2865,6 +2872,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': dataset.user_access_type,
                 'sourcelink_set-TOTAL_FORMS': '0',
                 'sourcelink_set-INITIAL_FORMS': '0',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -2956,6 +2964,7 @@ class TestDatasetAdminPytest:
                 'published': False,
                 'name': 'changed',
                 'slug': dataset.slug,
+                'user_access_type': dataset.user_access_type,
                 'short_description': 'some description',
                 'description': 'some description',
                 'type': 1,
@@ -2997,6 +3006,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'some description',
                 'description': 'some description',
                 'type': 2,
+                'user_access_type': dataset.user_access_type,
                 'sourcelink_set-TOTAL_FORMS': '0',
                 'sourcelink_set-INITIAL_FORMS': '0',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -3098,6 +3108,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': 2,
+                'user_access_type': dataset.user_access_type,
                 'sourcelink_set-TOTAL_FORMS': '0',
                 'sourcelink_set-INITIAL_FORMS': '0',
                 'sourcelink_set-MIN_NUM_FORMS': '0',
@@ -3135,8 +3146,9 @@ class TestDatasetAdminPytest:
         self, mock_sync, staff_client
     ):
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type=UserAccessType.OPEN
         )
+
         source_table = factories.SourceTableFactory(
             name='my-source', table='my_table', dataset=dataset,
         )
@@ -3153,6 +3165,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': UserAccessType.REQUIRES_AUTHORIZATION,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '1',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3171,7 +3184,6 @@ class TestDatasetAdminPytest:
             },
             follow=True,
         )
-
         assert response.status_code == 200
         assert mock_sync.delay.call_args_list == [mock.call()]
 
@@ -3185,7 +3197,7 @@ class TestDatasetAdminPytest:
         user_2 = factories.UserFactory()
 
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         source_table = factories.SourceTableFactory(
             name='my-source', table='my_table', dataset=dataset,
@@ -3203,6 +3215,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': dataset.user_access_type,
                 'authorized_users': [str(user_1.id), str(user_2.id)],
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '1',
@@ -3245,7 +3258,7 @@ class TestDatasetAdminPytest:
         user = factories.UserFactory()
 
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         source_table = factories.SourceTableFactory(
             name='my-source', table='my_table', dataset=dataset,
@@ -3267,6 +3280,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': UserAccessType.REQUIRES_AUTHENTICATION,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '1',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3300,7 +3314,7 @@ class TestDatasetAdminPytest:
     ):
         user = factories.UserFactory()
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHENTICATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         source_table = factories.SourceTableFactory(
             name='my-source', table='my_table', dataset=dataset,
@@ -3318,7 +3332,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
-                'open_to_all_users': 'on',
+                'user_access_type': UserAccessType.REQUIRES_AUTHORIZATION,
                 'authorized_users': str(user.id),
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '1',
@@ -3348,7 +3362,7 @@ class TestDatasetAdminPytest:
     def test_source_table_data_grid_enabled_without_config(self, staff_client):
         staff_client.post(reverse('admin:index'), follow=True)
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
@@ -3361,6 +3375,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': dataset.user_access_type,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3392,7 +3407,7 @@ class TestDatasetAdminPytest:
     def test_source_table_data_grid_enabled_invalid_config(self, staff_client):
         staff_client.post(reverse('admin:index'), follow=True)
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
@@ -3405,6 +3420,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': dataset.user_access_type,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3433,7 +3449,7 @@ class TestDatasetAdminPytest:
     def test_source_table_data_grid_enabled_invalid_config_item(self, staff_client):
         staff_client.post(reverse('admin:index'), follow=True)
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
@@ -3446,6 +3462,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': dataset.user_access_type,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3479,7 +3496,7 @@ class TestDatasetAdminPytest:
     ):
         staff_client.post(reverse('admin:index'), follow=True)
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
@@ -3492,6 +3509,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': dataset.user_access_type,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3523,7 +3541,7 @@ class TestDatasetAdminPytest:
     def test_source_table_data_grid_enabled(self, staff_client):
         staff_client.post(reverse('admin:index'), follow=True)
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
@@ -3536,6 +3554,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': dataset.user_access_type,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',
@@ -3565,7 +3584,7 @@ class TestDatasetAdminPytest:
     def test_source_table_reporting_disabled(self, staff_client):
         staff_client.post(reverse('admin:index'), follow=True)
         dataset = factories.MasterDataSetFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
@@ -3578,6 +3597,7 @@ class TestDatasetAdminPytest:
                 'short_description': 'test short description',
                 'description': 'test description',
                 'type': dataset.type,
+                'user_access_type': dataset.user_access_type,
                 'sourcetable_set-TOTAL_FORMS': '1',
                 'sourcetable_set-INITIAL_FORMS': '0',
                 'sourcetable_set-MIN_NUM_FORMS': '0',

@@ -21,7 +21,7 @@ from freezegun import freeze_time
 from lxml import html
 
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
@@ -227,6 +227,31 @@ def test_find_datasets_has_search_result_count_span_for_live_search_and_gtm(clie
     assert elem[0].get("role") == "status"
 
 
+def expected_search_result(catalogue_item, **kwargs):
+    result = {
+        'id': getattr(catalogue_item, 'uuid', catalogue_item.id),
+        'name': catalogue_item.name,
+        'slug': catalogue_item.slug,
+        'search_rank': mock.ANY,
+        'short_description': catalogue_item.short_description,
+        'published_at': mock.ANY,
+        'source_tag_names': mock.ANY,
+        'source_tag_ids': mock.ANY,
+        'topic_tag_names': mock.ANY,
+        'topic_tag_ids': mock.ANY,
+        'purpose': mock.ANY,
+        'data_type': mock.ANY,
+        'published': catalogue_item.published,
+        'has_access': True,
+        'is_bookmarked': False,
+        'has_visuals': mock.ANY,
+        'is_open_data': getattr(catalogue_item, 'user_access_type', None)
+        == UserAccessType.OPEN,
+    }
+    result.update(**kwargs)
+    return result
+
+
 def test_find_datasets_combines_results(client):
     factories.DataSetFactory.create(published=False, name='Unpublished search dataset')
     ds = factories.DataSetFactory.create(published=True, name='A search dataset')
@@ -241,57 +266,9 @@ def test_find_datasets_combines_results(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, has_access=False, purpose=DataSetType.DATACUT),
+        expected_search_result(rds, purpose=DataSetType.DATACUT),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
     assert "If you haven’t found what you’re looking for" in response.content.decode(
@@ -342,57 +319,11 @@ def test_find_datasets_filters_by_query(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, purpose=ds.type, has_access=False),
+        expected_search_result(
+            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE,
+        ),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
 
@@ -409,40 +340,8 @@ def test_find_datasets_filters_by_use(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, has_access=False),
+        expected_search_result(rds),
     ]
 
 
@@ -460,57 +359,11 @@ def test_find_datasets_filters_visualisations_by_use(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds, has_access=False),
+        expected_search_result(
+            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE,
+        ),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
 
@@ -552,57 +405,21 @@ def test_find_datasets_filters_by_source(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': 0.0,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': MatchUnorderedMembers([source.name, source_2.name]),
-            'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.0,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': 0.0,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds,
+            has_access=False,
+            source_tag_names=MatchUnorderedMembers([source.name, source_2.name]),
+            source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
+        ),
+        expected_search_result(
+            rds, source_tag_names=[source.name], source_tag_ids=[source.id]
+        ),
+        expected_search_result(
+            vis,
+            source_tag_names=[source.name],
+            source_tag_ids=[source.id],
+            purpose=DataSetType.VISUALISATION,
+        ),
     ]
 
     assert len(list(response.context["form"].fields['source'].choices)) == 3
@@ -646,57 +463,26 @@ def test_find_datasets_filters_by_topic(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds.id,
-            'name': ds.name,
-            'slug': ds.slug,
-            'search_rank': 0.0,
-            'short_description': ds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': MatchUnorderedMembers([topic.name, topic_2.name]),
-            'topic_tag_ids': MatchUnorderedMembers([topic.id, topic_2.id]),
-            'purpose': ds.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.0,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': [topic.name],
-            'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': 0.0,
-            'short_description': vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': [topic.name],
-            'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds,
+            has_access=False,
+            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
+            topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
+            search_rank=0.0,
+        ),
+        expected_search_result(
+            rds,
+            topic_tag_names=[topic.name],
+            topic_tag_ids=[topic.id],
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
+        ),
+        expected_search_result(
+            vis,
+            topic_tag_names=[topic.name],
+            topic_tag_ids=[topic.id],
+            purpose=DataSetType.VISUALISATION,
+        ),
     ]
 
     assert len(list(response.context["form"].fields['topic'].choices)) == 2
@@ -711,57 +497,11 @@ def test_find_datasets_order_by_name_asc(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds1.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': mock.ANY,
-            'short_description': rds.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-        {
-            'id': vis.id,
-            'name': vis.name,
-            'slug': vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': vis.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds1, has_access=False),
+        expected_search_result(
+            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE
+        ),
+        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
 
 
@@ -778,57 +518,9 @@ def test_find_datasets_order_by_newest_first(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ads1.id,
-            'name': ads1.name,
-            'slug': ads1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads1.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads1.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads2.id,
-            'name': ads2.name,
-            'slug': ads2.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads2.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads2.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads3.id,
-            'name': ads3.name,
-            'slug': ads3.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads3.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads3.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ads1, purpose=ads1.type, has_access=False),
+        expected_search_result(ads2, has_access=False),
+        expected_search_result(ads3, has_access=False),
     ]
 
 
@@ -847,61 +539,18 @@ def test_find_datasets_order_by_oldest_first(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ads3.id,
-            'name': ads3.name,
-            'slug': ads3.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads3.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads3.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads2.id,
-            'name': ads2.name,
-            'slug': ads2.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads2.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads2.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ads1.id,
-            'name': ads1.name,
-            'slug': ads1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ads1.short_description,
-            'published': True,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ads1.type,
-            'data_type': mock.ANY,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ads3, has_access=False, purpose=ads3.type),
+        expected_search_result(ads2, has_access=False, purpose=ads2.type),
+        expected_search_result(ads1, has_access=False, purpose=ads1.type),
     ]
 
 
-def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_client):
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
+def test_datasets_and_visualisations_doesnt_return_duplicate_results(
+    access_type, staff_client
+):
     normal_user = get_user_model().objects.create(
         username='bob.user@test.com', is_staff=False, is_superuser=False
     )
@@ -917,25 +566,25 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
         published=True,
         type=DataSetType.MASTER,
         name='A master',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     master2 = factories.DataSetFactory.create(
         published=False,
         type=DataSetType.MASTER,
         name='A master',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     datacut = factories.DataSetFactory.create(
         published=False,
         type=DataSetType.DATACUT,
         name='A datacut',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     datacut2 = factories.DataSetFactory.create(
         published=True,
         type=DataSetType.DATACUT,
         name='A datacut',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     factories.ReferenceDatasetFactory.create(
         published=True, name='A new reference dataset'
@@ -978,8 +627,11 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(staff_clien
         )
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 def test_finding_datasets_doesnt_query_database_excessively(
-    client, django_assert_num_queries
+    access_type, client, django_assert_num_queries
 ):
     """
     This test generates a random number of master datasets, datacuts, reference datasets and visualisations, and asserts
@@ -992,9 +644,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     masters = [
         factories.DataSetFactory(
-            type=DataSetType.MASTER,
-            published=True,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, published=True, user_access_type=access_type,
         )
         for _ in range(random.randint(10, 50))
     ]
@@ -1006,9 +656,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     datacuts = [
         factories.DataSetFactory(
-            type=DataSetType.DATACUT,
-            published=True,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT, published=True, user_access_type=access_type,
         )
         for _ in range(random.randint(10, 50))
     ]
@@ -1079,8 +727,11 @@ def test_finding_datasets_doesnt_query_database_excessively(
         assert response.status_code == 200
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_find_datasets_filters_by_access_requires_authenticate():
+def test_find_datasets_filters_by_access_requires_authenticate(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     user2 = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
@@ -1089,32 +740,14 @@ def test_find_datasets_filters_by_access_requires_authenticate():
         published=True,
         type=DataSetType.MASTER,
         name='Master - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
 
     factories.DataSetUserPermissionFactory.create(user=user2, dataset=public_master)
     response = client.get(reverse('datasets:find_datasets'), {"status": ["access"]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
-        {
-            'id': public_master.id,
-            'name': public_master.name,
-            'slug': public_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': public_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
-    ]
+    assert list(response.context["datasets"]) == [expected_search_result(public_master)]
 
 
 @pytest.mark.django_db
@@ -1126,32 +759,15 @@ def test_find_datasets_filters_by_bookmark_single():
         published=True,
         type=DataSetType.MASTER,
         name='Master - access granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
 
-    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
     response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': bookmarked_master.id,
-            'name': bookmarked_master.name,
-            'slug': bookmarked_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': bookmarked_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': bookmarked_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': True,
-        },
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True)
     ]
 
 
@@ -1164,7 +780,7 @@ def test_find_datasets_filters_by_bookmark_master():
         published=True,
         type=DataSetType.MASTER,
         name='Master - access granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
 
@@ -1172,7 +788,7 @@ def test_find_datasets_filters_by_bookmark_master():
         published=True,
         type=DataSetType.DATACUT,
         name='Datacut - access not granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
@@ -1180,36 +796,22 @@ def test_find_datasets_filters_by_bookmark_master():
     factories.VisualisationCatalogueItemFactory.create(
         published=True,
         name='Visualisation - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
     response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': bookmarked_master.id,
-            'name': bookmarked_master.name,
-            'slug': bookmarked_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': bookmarked_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': bookmarked_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': True,
-        },
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
     ]
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_find_datasets_filters_by_bookmark_reference():
+def test_find_datasets_filters_by_bookmark_reference(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
 
@@ -1217,20 +819,26 @@ def test_find_datasets_filters_by_bookmark_reference():
         published=True,
         type=DataSetType.MASTER,
         name='Master - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - open',
+        user_access_type=UserAccessType.OPEN,
     )
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.MASTER,
         name='Master - access granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.DATACUT,
         name='Datacut - access not granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     public_reference = factories.ReferenceDatasetFactory.create(
@@ -1241,38 +849,27 @@ def test_find_datasets_filters_by_bookmark_reference():
     )
 
     factories.VisualisationCatalogueItemFactory.create(
-        published=True,
-        name='Visualisation - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        published=True, name='Visualisation - public', user_access_type=access_type,
     )
 
-    # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
     response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': public_reference.uuid,
-            'name': public_reference.name,
-            'slug': public_reference.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_reference.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': True,
-        },
+        expected_search_result(
+            public_reference,
+            is_bookmarked=True,
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
+        )
     ]
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_find_datasets_filters_by_bookmark_visualisation():
+def test_find_datasets_filters_by_bookmark_visualisation(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
 
@@ -1280,28 +877,32 @@ def test_find_datasets_filters_by_bookmark_visualisation():
         published=True,
         type=DataSetType.MASTER,
         name='Master - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - open',
+        user_access_type=UserAccessType.OPEN,
     )
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.MASTER,
         name='Master - access granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.DATACUT,
         name='Datacut - access not granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
 
     public_vis = factories.VisualisationCatalogueItemFactory.create(
-        published=True,
-        name='Visualisation - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        published=True, name='Visualisation - public', user_access_type=access_type,
     )
     factories.VisualisationBookmarkFactory.create(user=user, visualisation=public_vis)
 
@@ -1310,28 +911,17 @@ def test_find_datasets_filters_by_bookmark_visualisation():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': public_vis.id,
-            'name': public_vis.name,
-            'slug': public_vis.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_vis.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.VISUALISATION,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': True,
-        },
+        expected_search_result(
+            public_vis, is_bookmarked=True, purpose=DataSetType.VISUALISATION
+        )
     ]
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_find_datasets_filters_by_bookmark_datacut():
+def test_find_datasets_filters_by_bookmark_datacut(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
 
@@ -1339,29 +929,33 @@ def test_find_datasets_filters_by_bookmark_datacut():
         published=True,
         type=DataSetType.MASTER,
         name='Master - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
+    )
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='Master - open',
+        user_access_type=UserAccessType.OPEN,
     )
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.MASTER,
         name='Master - access granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     public_datacut = factories.DataSetFactory.create(
         published=True,
         type=DataSetType.DATACUT,
         name='Datacut - access not granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     factories.DataSetBookmarkFactory.create(user=user, dataset=public_datacut)
 
     factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
 
     factories.VisualisationCatalogueItemFactory.create(
-        published=True,
-        name='Visualisation - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        published=True, name='Visualisation - public', user_access_type=access_type,
     )
 
     # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
@@ -1369,23 +963,12 @@ def test_find_datasets_filters_by_bookmark_datacut():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': public_datacut.id,
-            'name': public_datacut.name,
-            'slug': public_datacut.slug,
-            'search_rank': mock.ANY,
-            'short_description': public_datacut.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': True,
-        },
+        expected_search_result(
+            public_datacut,
+            purpose=DataSetType.DATACUT,
+            is_bookmarked=True,
+            has_access=False,
+        )
     ]
 
 
@@ -1394,7 +977,7 @@ def test_find_datasets_filters_by_show_unpublished():
     user = factories.UserFactory.create(is_superuser=True)
     client = Client(**get_http_sso_data(user))
 
-    publshed_master = factories.DataSetFactory.create(name='published dataset')
+    published_master = factories.DataSetFactory.create(name='published dataset')
     unpublished_master = factories.DataSetFactory.create(
         published=False, name='unpublished dataset'
     )
@@ -1403,68 +986,27 @@ def test_find_datasets_filters_by_show_unpublished():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': publshed_master.id,
-            'name': publshed_master.name,
-            'slug': publshed_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': publshed_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': publshed_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': mock.ANY,
-            'is_bookmarked': False,
-        },
+        expected_search_result(published_master, has_access=mock.ANY)
     ]
 
-    response = client.get(reverse('datasets:find_datasets'), {"unpublished": "yes"})
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "unpublished"}
+    )
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': publshed_master.id,
-            'name': publshed_master.name,
-            'slug': publshed_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': publshed_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': publshed_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': mock.ANY,
-            'is_bookmarked': False,
-        },
-        {
-            'id': unpublished_master.id,
-            'name': unpublished_master.name,
-            'slug': unpublished_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': unpublished_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': unpublished_master.type,
-            'data_type': mock.ANY,
-            'published': False,
-            'has_access': mock.ANY,
-            'is_bookmarked': False,
-        },
+        expected_search_result(published_master, has_access=mock.ANY),
+        expected_search_result(unpublished_master, has_access=mock.ANY),
     ]
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once():
+def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once(
+    access_type,
+):
     """Meant to prevent a regression where the combination of these two filters would return datasets multiple times
     based on the number of users with permissions to see that dataset, but the dataset didn't actually require any
     permission to use."""
@@ -1476,7 +1018,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
         published=True,
         type=DataSetType.MASTER,
         name='Master - access redundantly granted',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     factories.DataSetUserPermissionFactory.create(
         user=user, dataset=access_granted_master
@@ -1492,23 +1034,7 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once()
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': access_granted_master.id,
-            'name': access_granted_master.name,
-            'slug': access_granted_master.slug,
-            'search_rank': mock.ANY,
-            'short_description': access_granted_master.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': access_granted_master.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        }
+        expected_search_result(access_granted_master)
     ]
 
 
@@ -1585,7 +1111,9 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
         published=False, name='Visualisation'
     )
 
-    response = client.get(reverse('datasets:find_datasets'), {"unpublished": "yes"})
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "unpublished"}
+    )
 
     assert response.status_code == 200
     assert {
@@ -1629,7 +1157,7 @@ class DatasetsCommon:
         self,
         schema='public',
         table='test_dataset',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     ):
         master = factories.DataSetFactory.create(
             published=True,
@@ -1651,7 +1179,7 @@ class DatasetsCommon:
         schema='public',
         table='test_dataset',
         num=1,
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     ):
         datacuts = []
 
@@ -1691,11 +1219,14 @@ class TestDatasetVisualisations:
         )
 
     @pytest.mark.django_db
-    def test_maximum_of_three_visualisation_previews_are_displayed(self, staff_client):
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_maximum_of_three_visualisation_previews_are_displayed(
+        self, access_type, staff_client
+    ):
         master_dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER,
-            published=True,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, published=True, user_access_type=access_type,
         )
         for _ in range(4):
             factories.VisualisationDatasetFactory.create(dataset=master_dataset)
@@ -1705,12 +1236,13 @@ class TestDatasetVisualisations:
         response_text = response.content.decode(response.charset)
         assert response_text.count("visualisation-preview-container") == 3
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_prototype_label_is_visible(self, staff_client):
+    def test_prototype_label_is_visible(self, access_type, staff_client):
         master_dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER,
-            published=True,
-            user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, published=True, user_access_type=access_type,
         )
         expected_gds_phase_name = factory.fuzzy.FuzzyText().fuzz()
         factories.VisualisationDatasetFactory.create(
@@ -1730,7 +1262,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         ds = factories.DataSetFactory.create(
             type=DataSetType.MASTER,
             published=True,
-            user_access_type='REQUIRES_AUTHORIZATION',
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         )
         user = get_user_model().objects.create(
             email='test@example.com', is_superuser=False
@@ -1777,13 +1309,6 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 2
-
-        response_body = response.content.decode(response.charset)
-        doc = html.fromstring(response_body)
-
-        match = doc.xpath('//a[@class="govuk-link related-data"]')
-
-        assert len(match) == 2
 
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_link_to_related_data_cuts_if_more_than_four(
@@ -1996,7 +1521,9 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
 class TestRequestAccess(DatasetsCommon):
     @pytest.mark.django_db
     def test_unauthorised_dataset(self, staff_client, metadata_db):
-        master = self._create_master(user_access_type='REQUIRES_AUTHORIZATION')
+        master = self._create_master(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
 
         url = reverse('datasets:dataset_detail', args=(master.id,))
         response = staff_client.get(url)
@@ -2010,8 +1537,13 @@ class TestRequestAccess(DatasetsCommon):
             in response.content.decode(response.charset)
         )
 
-    def test_when_user_has_data_access_only(self, db, staff_user, metadata_db):
-        master = self._create_master(user_access_type='REQUIRES_AUTHENTICATION')
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
+    def test_when_user_has_data_access_only(
+        self, access_type, db, staff_user, metadata_db
+    ):
+        master = self._create_master(user_access_type=access_type)
         url = reverse('datasets:dataset_detail', args=(master.id,))
         client = get_staff_client(get_staff_user_data(db, staff_user))
         response = client.get(url)
@@ -2023,7 +1555,9 @@ class TestRequestAccess(DatasetsCommon):
         )
 
     def test_when_user_has_tools_access_only(self, db, staff_user, metadata_db):
-        master = self._create_master(user_access_type='REQUIRES_AUTHORIZATION')
+        master = self._create_master(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
         url = reverse('datasets:dataset_detail', args=(master.id,))
 
         # grant tools permissions
@@ -2045,11 +1579,11 @@ class TestRequestAccess(DatasetsCommon):
 
     @pytest.mark.django_db
     def test_unauthorised_datacut(self, staff_client, metadata_db):
-        self._create_master(user_access_type='REQUIRES_AUTHORIZATION')
+        self._create_master(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
         datacuts = self._create_related_data_cuts(num=1)
 
         datacut = datacuts[0]
-        datacut.user_access_type = 'REQUIRES_AUTHORIZATION'
+        datacut.user_access_type = UserAccessType.REQUIRES_AUTHORIZATION
         datacut.save()
 
         url = reverse('datasets:dataset_detail', args=(datacut.id,))
@@ -2063,7 +1597,7 @@ class TestRequestAccess(DatasetsCommon):
     @pytest.mark.django_db
     def test_unauthorised_visualisation(self, staff_client, metadata_db):
         ds = factories.VisualisationCatalogueItemFactory.create(
-            published=True, user_access_type='REQUIRES_AUTHORIZATION'
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
 
         url = reverse('datasets:dataset_detail', args=(ds.id,))
@@ -2075,103 +1609,31 @@ class TestRequestAccess(DatasetsCommon):
         )
 
 
-class TestDataCutDetailsView(DatasetsCommon):
-    @pytest.mark.django_db
-    def test_datacut_dataset_shows_code_snippets_to_tool_user(self, metadata_db):
-        ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
-        user = get_user_model().objects.create(
-            email='test@example.com', is_superuser=False
-        )
-        factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-        factories.CustomDatasetQueryFactory.create(
-            dataset=ds,
-            query='SELECT * FROM foo',
-            database=factories.DatabaseFactory(memorable_name='my_database'),
-        )
+@pytest.mark.django_db
+def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
+    ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
+    user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
+    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
+    factories.CustomDatasetQueryFactory.create(
+        dataset=ds,
+        query='SELECT * FROM foo',
+        database=factories.DatabaseFactory(memorable_name='my_database'),
+    )
 
-        client = Client(**get_http_sso_data(user))
-        response = client.get(ds.get_absolute_url())
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
 
-        assert response.status_code == 200
-        assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
+    assert response.status_code == 200
+    assert """SELECT * FROM foo""" not in response.content.decode(response.charset)
 
-        user.is_superuser = True
-        user.save()
+    user.is_superuser = True
+    user.save()
 
-        client = Client(**get_http_sso_data(user))
-        response = client.get(ds.get_absolute_url())
+    client = Client(**get_http_sso_data(user))
+    response = client.get(ds.get_absolute_url())
 
-        assert response.status_code == 200
-        assert """SELECT * FROM foo""" in response.content.decode(response.charset)
-
-    def test_warning_is_shown_for_external_data(self, metadata_db, staff_client):
-        self._create_master()
-        data_cut = self._create_related_data_cuts()[0]
-
-        # Create external sourcelink
-        factories.SourceLinkFactory(dataset=data_cut)
-
-        response = staff_client.get(data_cut.get_absolute_url())
-
-        assert response.status_code == 200
-        assert "This data set is on an external website." in response.content.decode(
-            response.charset
-        )
-
-    def test_external_link_shown_when_user_has_permissions(
-        self, metadata_db, staff_user
-    ):
-        self._create_master()
-        data_cut = self._create_related_data_cuts()[0]
-
-        factories.SourceLinkFactory.create(
-            dataset=data_cut, url="https://www.example.com/dataset.csv"
-        )
-
-        client = Client(**get_http_sso_data(staff_user))
-        response = client.get(data_cut.get_absolute_url())
-
-        response_text = response.content.decode(response.charset)
-        assert response.status_code == 200
-        doc = html.fromstring(response_text)
-
-        assert response.status_code == 200
-        assert len(doc.xpath("//a[@class = 'govuk-link external-link']")) == 1
-
-    def test_code_snippets_are_hidden_when_user_has_no_permissions(
-        self, metadata_db, user
-    ):
-        self._create_master()
-        data_cut = self._create_related_data_cuts(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )[0]
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(data_cut.get_absolute_url())
-
-        response_text = response.content.decode(response.charset)
-
-        assert response.status_code == 200
-        assert "Code snippets" not in response_text
-
-    @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
-    def test_data_structure_is_visible_when_user_has_no_permissions(
-        self, get_columns_mock, metadata_db, user
-    ):
-        get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(20)]
-
-        self._create_master()
-        data_cut = self._create_related_data_cuts(
-            user_access_type='REQUIRES_AUTHORIZATION'
-        )[0]
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(data_cut.get_absolute_url())
-
-        response_text = response.content.decode(response.charset)
-
-        assert response.status_code == 200
-        assert "View data structure" in response_text
+    assert response.status_code == 200
+    assert """SELECT * FROM foo""" in response.content.decode(response.charset)
 
 
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
@@ -2270,7 +1732,7 @@ class TestVisualisationsDetailView:
     def test_unauthorised_visualisation(self, has_access):
         user = UserFactory.create()
         vis = VisualisationCatalogueItemFactory.create(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
 
         if has_access:
@@ -2309,12 +1771,13 @@ class TestVisualisationsDetailView:
 
 
 class TestVisualisationLinkView:
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_quicksight_link(self, mocker):
+    def test_quicksight_link(self, access_type, mocker):
         user = UserFactory.create()
-        vis = VisualisationCatalogueItemFactory.create(
-            user_access_type='REQUIRES_AUTHENTICATION'
-        )
+        vis = VisualisationCatalogueItemFactory.create(user_access_type=access_type)
         link = VisualisationLinkFactory.create(
             visualisation_type='QUICKSIGHT',
             identifier='5d75e131-20f4-48f8-b0eb-f4ebf36434f4',
@@ -2356,7 +1819,7 @@ class TestVisualisationLinkView:
     def test_user_needs_access_via_catalogue_item(self, mocker):
         user = UserFactory.create()
         vis = VisualisationCatalogueItemFactory.create(
-            user_access_type='REQUIRES_AUTHORIZATION'
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         link = VisualisationLinkFactory.create(
             visualisation_type='QUICKSIGHT',
@@ -2412,40 +1875,19 @@ def test_find_datasets_search_by_source_name(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': 0.243171,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name, source_2.name],
-            'source_tag_ids': MatchUnorderedMembers([source.id, source_2.id]),
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.243171,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source.name],
-            'source_tag_ids': [source.id],
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds1,
+            search_rank=0.243171,
+            source_tag_names=[source.name, source_2.name],
+            source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
+            has_access=False,
+        ),
+        expected_search_result(
+            rds,
+            search_rank=0.243171,
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
+        ),
     ]
 
 
@@ -2467,40 +1909,19 @@ def test_find_datasets_search_by_topic_name(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': 0.243171,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': MatchUnorderedMembers([topic.name, topic_2.name]),
-            'topic_tag_ids': MatchUnorderedMembers([topic.id, topic_2.id]),
-            'purpose': ds1.type,
-            'data_type': ds1.type,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': rds.uuid,
-            'name': rds.name,
-            'slug': rds.slug,
-            'search_rank': 0.243171,
-            'short_description': rds.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': [topic.name],
-            'topic_tag_ids': [topic.id],
-            'purpose': DataSetType.DATACUT,
-            'data_type': DataSetType.REFERENCE,
-            'published': True,
-            'has_access': True,
-            'is_bookmarked': False,
-        },
+        expected_search_result(
+            ds1,
+            search_rank=0.243171,
+            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
+            topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
+            has_access=False,
+        ),
+        expected_search_result(
+            rds,
+            search_rank=0.243171,
+            topic_tag_names=[topic.name],
+            topic_tag_ids=[topic.id],
+        ),
     ]
 
 
@@ -2527,57 +1948,9 @@ def test_find_datasets_name_weighting(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds4.id,
-            'name': ds4.name,
-            'slug': ds4.slug,
-            'search_rank': 0.759909,
-            'short_description': ds4.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds4.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': 0.607927,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
-        {
-            'id': ds2.id,
-            'name': ds2.name,
-            'slug': ds2.slug,
-            'search_rank': 0.243171,
-            'short_description': ds2.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': mock.ANY,
-            'source_tag_ids': mock.ANY,
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds2.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        },
+        expected_search_result(ds4, has_access=False, search_rank=0.759909),
+        expected_search_result(ds1, has_access=False, search_rank=0.607927),
+        expected_search_result(ds2, has_access=False, search_rank=0.243171),
     ]
 
 
@@ -2595,23 +1968,12 @@ def test_find_datasets_matches_both_source_and_name(client):
     assert response.status_code == 200
     assert len(list(response.context["datasets"])) == 1
     assert list(response.context["datasets"]) == [
-        {
-            'id': ds1.id,
-            'name': ds1.name,
-            'slug': ds1.slug,
-            'search_rank': mock.ANY,
-            'short_description': ds1.short_description,
-            'published_at': mock.ANY,
-            'source_tag_names': [source_1.name, source_2.name],
-            'source_tag_ids': MatchUnorderedMembers([source_1.id, source_2.id]),
-            'topic_tag_names': mock.ANY,
-            'topic_tag_ids': mock.ANY,
-            'purpose': ds1.type,
-            'data_type': mock.ANY,
-            'published': True,
-            'has_access': False,
-            'is_bookmarked': False,
-        }
+        expected_search_result(
+            ds1,
+            source_tag_names=MatchUnorderedMembers([source_1.name, source_2.name]),
+            source_tag_ids=MatchUnorderedMembers([source_1.id, source_2.id]),
+            has_access=False,
+        )
     ]
 
 
@@ -2622,14 +1984,16 @@ class TestCustomQueryRelatedDataView:
     def _get_database(self):
         return factories.DatabaseFactory(memorable_name='my_database')
 
-    def _setup_datacut_with_masters(self, sql, master_count=1, published=True):
+    def _setup_datacut_with_masters(
+        self, access_type, sql, master_count=1, published=True
+    ):
         masters = []
         for _ in range(master_count):
             master = factories.DataSetFactory.create(
                 published=published,
                 type=DataSetType.MASTER,
                 name='A master 1',
-                user_access_type='REQUIRES_AUTHENTICATION',
+                user_access_type=access_type,
             )
             factories.SourceTableFactory.create(
                 dataset=master,
@@ -2642,7 +2006,7 @@ class TestCustomQueryRelatedDataView:
             published=True,
             type=DataSetType.DATACUT,
             name='A datacut',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=access_type,
         )
         query = factories.CustomDatasetQueryFactory(
             dataset=datacut, database=self._get_database(), query=sql,
@@ -2678,9 +2042,15 @@ class TestCustomQueryRelatedDataView:
         ),
         indirect=["request_client"],
     )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_related_dataset_dataset(self, request_client, master_count, status):
+    def test_related_dataset_dataset(
+        self, access_type, request_client, master_count, status
+    ):
         datacut, masters = self._setup_datacut_with_masters(
+            access_type,
             'SELECT * FROM test_dataset order by id desc limit 10',
             master_count=master_count,
             published=True,
@@ -2708,15 +2078,18 @@ class TestCustomQueryRelatedDataView:
         ),
         indirect=["request_client"],
     )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
     def test_related_dataset_hide_unpublished_master(
-        self, request_client, master_count, status
+        self, access_type, request_client, master_count, status
     ):
         published_master = factories.DataSetFactory.create(
             published=True,
             type=DataSetType.MASTER,
             name='Published master',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=access_type,
         )
         factories.SourceTableFactory.create(
             dataset=published_master,
@@ -2728,7 +2101,7 @@ class TestCustomQueryRelatedDataView:
             published=False,
             type=DataSetType.MASTER,
             name='Unpublished master',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=access_type,
         )
         factories.SourceTableFactory.create(
             dataset=unpublished_master,
@@ -2741,7 +2114,7 @@ class TestCustomQueryRelatedDataView:
             published=True,
             type=DataSetType.DATACUT,
             name='A datacut',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=access_type,
         )
         query = factories.CustomDatasetQueryFactory(
             dataset=datacut,
@@ -2762,14 +2135,19 @@ class TestCustomQueryRelatedDataView:
         (("sme_client", 200), ("staff_client", 200)),
         indirect=["request_client"],
     )
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_related_dataset_does_not_duplicate_masters(self, request_client, status):
+    def test_related_dataset_does_not_duplicate_masters(
+        self, access_type, request_client, status
+    ):
         self._setup_new_table()
         master1 = factories.DataSetFactory.create(
             published=True,
             type=DataSetType.MASTER,
             name='A master 1',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=access_type,
         )
         factories.SourceTableFactory.create(
             dataset=master1,
@@ -2788,7 +2166,7 @@ class TestCustomQueryRelatedDataView:
             published=True,
             type=DataSetType.MASTER,
             name='A master 1',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=access_type,
         )
         factories.SourceTableFactory.create(
             dataset=master2,
@@ -2801,7 +2179,7 @@ class TestCustomQueryRelatedDataView:
             published=True,
             type=DataSetType.DATACUT,
             name='A datacut',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=access_type,
         )
         query1 = factories.CustomDatasetQueryFactory(
             dataset=datacut,
@@ -2886,7 +2264,7 @@ class TestRelatedDataView:
             published=True,
             type=DataSetType.MASTER,
             name='A master',
-            user_access_type='REQUIRES_AUTHENTICATION',
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
         )
         factories.SourceTableFactory.create(
             dataset=master,
@@ -2905,7 +2283,7 @@ class TestRelatedDataView:
                 published=True,
                 type=DataSetType.DATACUT,
                 name=f'Datacut {i}',
-                user_access_type='REQUIRES_AUTHENTICATION',
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
             )
             query = factories.CustomDatasetQueryFactory.create(
                 dataset=datacut,
@@ -2935,7 +2313,8 @@ class TestDatasetUsageHistory:
     @pytest.fixture
     def dataset(self):
         return factories.DataSetFactory.create(
-            type=DataSetType.DATACUT, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.DATACUT,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
         )
 
     @pytest.fixture
@@ -3230,10 +2609,13 @@ class TestDatasetUsageHistory:
 
 
 class TestMasterDatasetUsageHistory:
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_one_event_by_one_user_on_the_same_day(self, staff_client):
+    def test_one_event_by_one_user_on_the_same_day(self, access_type, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         user = factories.UserFactory(email='test-user@example.com')
@@ -3255,10 +2637,15 @@ class TestMasterDatasetUsageHistory:
             'count': 1,
         } in response.context['rows']
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_multiple_events_by_one_user_on_the_same_day(self, staff_client):
+    def test_multiple_events_by_one_user_on_the_same_day(
+        self, access_type, staff_client
+    ):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3297,10 +2684,15 @@ class TestMasterDatasetUsageHistory:
             'count': 2,
         } in response.context['rows']
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_multiple_events_by_multiple_users_on_the_same_day(self, staff_client):
+    def test_multiple_events_by_multiple_users_on_the_same_day(
+        self, access_type, staff_client
+    ):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3353,10 +2745,15 @@ class TestMasterDatasetUsageHistory:
             'count': 1,
         } in response.context['rows']
 
+    @pytest.mark.parametrize(
+        'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    )
     @pytest.mark.django_db
-    def test_multiple_events_by_multiple_users_on_different_days(self, staff_client):
+    def test_multiple_events_by_multiple_users_on_different_days(
+        self, access_type, staff_client
+    ):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type='REQUIRES_AUTHENTICATION',
+            type=DataSetType.MASTER, user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3477,7 +2874,7 @@ class TestGridDataView:
     def custom_query(self):
         self._create_test_data()
         dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION', published=True
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION, published=True
         )
         return factories.CustomDatasetQueryFactory(
             dataset=dataset,
@@ -3490,7 +2887,7 @@ class TestGridDataView:
     def source_table(self):
         self._create_test_data()
         dataset = factories.DataSetFactory(
-            user_access_type='REQUIRES_AUTHENTICATION', published=True
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION, published=True
         )
         return factories.SourceTableFactory(
             dataset=dataset,
@@ -3919,8 +3316,11 @@ class TestGridDataView:
         )
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_filter_datasets_by_access_search_v2():
+def test_filter_datasets_by_access_search_v2(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     user2 = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
@@ -3929,13 +3329,13 @@ def test_filter_datasets_by_access_search_v2():
         published=True,
         type=DataSetType.MASTER,
         name='Master - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     access_granted_master = factories.DataSetFactory.create(
         published=True,
         type=DataSetType.MASTER,
         name='Master - access granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     factories.DataSetUserPermissionFactory.create(
@@ -3948,14 +3348,14 @@ def test_filter_datasets_by_access_search_v2():
         published=True,
         type=DataSetType.MASTER,
         name='Master - access not granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     access_not_granted_datacut = factories.DataSetFactory.create(
         published=True,
         type=DataSetType.DATACUT,
         name='Datacut - access not granted',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     factories.DataSetUserPermissionFactory.create(
         user=user2, dataset=access_not_granted_datacut
@@ -3964,7 +3364,9 @@ def test_filter_datasets_by_access_search_v2():
     factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
 
     access_vis = factories.VisualisationCatalogueItemFactory.create(
-        published=True, name='Visualisation', user_access_type='REQUIRES_AUTHORIZATION'
+        published=True,
+        name='Visualisation',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     factories.VisualisationUserPermissionFactory(user=user, visualisation=access_vis)
     factories.VisualisationUserPermissionFactory(user=user2, visualisation=access_vis)
@@ -3972,16 +3374,14 @@ def test_filter_datasets_by_access_search_v2():
     no_access_vis = factories.VisualisationCatalogueItemFactory.create(
         published=True,
         name='Visualisation - hidden',
-        user_access_type='REQUIRES_AUTHORIZATION',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
     )
     factories.VisualisationUserPermissionFactory(
         user=user2, visualisation=no_access_vis
     )
 
     factories.VisualisationCatalogueItemFactory.create(
-        published=True,
-        name='Visualisation - public',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        published=True, name='Visualisation - public', user_access_type=access_type,
     )
 
     # No access filter set
@@ -4007,21 +3407,24 @@ def test_filter_datasets_by_access_search_v2():
     assert len(response.context["datasets"]) == 8
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_filter_reference_datasets_search_v2():
+def test_filter_reference_datasets_search_v2(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.MASTER,
         name='Master',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.DATACUT,
         name='Datacut',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     factories.ReferenceDatasetFactory.create(published=True, name='Reference')
     response = client.get(
@@ -4031,21 +3434,24 @@ def test_filter_reference_datasets_search_v2():
     assert len(response.context["datasets"]) == 2
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_filter_bookmarked_search_v2():
+def test_filter_bookmarked_search_v2(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
     factories.DataSetFactory.create(
         published=True,
         type=DataSetType.MASTER,
         name='Master',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     bookmarked = factories.DataSetFactory.create(
         published=True,
         type=DataSetType.DATACUT,
         name='Datacut',
-        user_access_type='REQUIRES_AUTHENTICATION',
+        user_access_type=access_type,
     )
     factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked)
 
@@ -4055,15 +3461,18 @@ def test_filter_bookmarked_search_v2():
     assert len(response.context["datasets"]) == 1
 
 
+@pytest.mark.parametrize(
+    'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+)
 @pytest.mark.django_db
-def test_filter_data_type_datasets_search_v2():
+def test_filter_data_type_datasets_search_v2(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
     factories.MasterDataSetFactory.create(
-        published=True, name='Master', user_access_type='REQUIRES_AUTHENTICATION',
+        published=True, name='Master', user_access_type=access_type,
     )
     factories.DatacutDataSetFactory.create(
-        published=True, name='Datacut', user_access_type='REQUIRES_AUTHENTICATION',
+        published=True, name='Datacut', user_access_type=access_type,
     )
     factories.ReferenceDatasetFactory.create(published=True, name='Reference')
     response = client.get(
@@ -4083,3 +3492,73 @@ def test_filter_data_type_datasets_search_v2():
     )
     assert response.status_code == 200
     assert len(response.context["datasets"]) == 1
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_show_open_data():
+    user = factories.UserFactory.create(is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
+    requires_authorization = factories.DataSetFactory.create(
+        name='requires authorization',
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+    )
+    requires_authentication = factories.DataSetFactory.create(
+        name='requires authentication',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    is_open = factories.DataSetFactory.create(
+        name='open', user_access_type=UserAccessType.OPEN
+    )
+
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(is_open, has_access=mock.ANY),
+        expected_search_result(requires_authentication, has_access=mock.ANY),
+        expected_search_result(requires_authorization, has_access=mock.ANY),
+    ]
+
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "opendata"}
+    )
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(is_open, has_access=mock.ANY)
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_show_datasets_with_visualisations():
+    user = factories.UserFactory.create(is_superuser=True)
+    client = Client(**get_http_sso_data(user))
+
+    without_visuals = factories.DataSetFactory.create(
+        name='without visuals', user_access_type=UserAccessType.OPEN
+    )
+    with_visuals = factories.DataSetFactory.create(
+        name='with visuals',
+        user_access_type=UserAccessType.OPEN,
+        type=DataSetType.MASTER,
+        published=True,
+    )
+    factories.VisualisationDatasetFactory.create(dataset=with_visuals)
+
+    response = client.get(reverse('datasets:find_datasets'))
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(without_visuals, has_visuals=False),
+        expected_search_result(with_visuals, has_visuals=True),
+    ]
+
+    response = client.get(
+        reverse('datasets:find_datasets'), {"admin_filters": "withvisuals"}
+    )
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(with_visuals, has_visuals=True)
+    ]

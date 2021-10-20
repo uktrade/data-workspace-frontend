@@ -272,7 +272,7 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
       return;
     });
 
-    var jsonDownloadButton = document.querySelector('#data-grid-download');
+    var jsonDownloadButton = document.querySelector('#data-grid-json-download');
     if (jsonDownloadButton !== null) {
       jsonDownloadButton.addEventListener('click', function (e) {
         var rowData = [];
