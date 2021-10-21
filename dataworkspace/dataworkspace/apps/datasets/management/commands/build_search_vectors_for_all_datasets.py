@@ -1,5 +1,10 @@
 from django.core.management.base import BaseCommand
-from dataworkspace.apps.datasets.models import MasterDataset, DataCutDataset, ReferenceDataset, VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import (
+    MasterDataset,
+    DataCutDataset,
+    ReferenceDataset,
+    VisualisationCatalogueItem,
+)
 
 
 class Command(BaseCommand):

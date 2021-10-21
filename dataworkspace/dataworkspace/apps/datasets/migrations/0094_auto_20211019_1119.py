@@ -13,14 +13,20 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name='dataset',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['search_vector'], name='app_dataset_search__d970dd_gin'),
+            index=django.contrib.postgres.indexes.GinIndex(
+                fields=['search_vector'], name='app_dataset_search__d970dd_gin'
+            ),
         ),
         migrations.AddIndex(
             model_name='referencedataset',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['search_vector'], name='app_referen_search__d655d7_gin'),
+            index=django.contrib.postgres.indexes.GinIndex(
+                fields=['search_vector'], name='app_referen_search__d655d7_gin'
+            ),
         ),
         migrations.AddIndex(
             model_name='visualisationcatalogueitem',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['search_vector'], name='datasets_vi_search__d20f56_gin'),
+            index=django.contrib.postgres.indexes.GinIndex(
+                fields=['search_vector'], name='datasets_vi_search__d20f56_gin'
+            ),
         ),
     ]

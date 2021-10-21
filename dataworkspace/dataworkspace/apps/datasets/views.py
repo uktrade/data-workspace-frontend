@@ -168,9 +168,7 @@ def get_datasets_data_for_user_matching_query(
     # datasets = datasets.annotate(
     #     search_rank=SearchRank(search, search_query)
     # )
-    datasets = datasets.annotate(
-        search_rank=SearchRank(F('search_vector'), query)
-    )
+    datasets = datasets.annotate(search_rank=SearchRank(F('search_vector'), query))
     # datasets = datasets.annotate(
     #     search_rank=Value(1, IntegerField())
     # )
