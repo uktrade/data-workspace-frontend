@@ -44,6 +44,9 @@ class MultiTask:
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        help = "Continuously creates dummy datasets, master, datacut, reference and visualisation. Ctrl+C once you are done."
+        self.stdout.write(help)
+
         tasks = [
             ('create_master_dataset', []),
             ('create_datacut_dataset', []),

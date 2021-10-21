@@ -217,7 +217,7 @@ class DataSet(DeletableTimestampedUserModel):
         default=list,
         help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
     )
-    search_vector = SearchVectorField(null=True)
+    search_vector = SearchVectorField(null=True, blank=True)
 
     class Meta:
         db_table = 'app_dataset'
@@ -230,6 +230,7 @@ class DataSet(DeletableTimestampedUserModel):
     def __str__(self):
         return self.name
 
+    @transaction.atomic
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None
     ):
@@ -251,7 +252,6 @@ class DataSet(DeletableTimestampedUserModel):
                 SearchVector('name', weight='A')
                 + SearchVector('short_description', weight='B')
                 + SearchVector(models.Value(tag_names), weight='C')
-                + SearchVector('description', weight='D')
             )
         )
 
@@ -1076,7 +1076,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE
-    search_vector = SearchVectorField(null=True)
+    search_vector = SearchVectorField(null=True, blank=True)
 
     class Meta:
         db_table = 'app_referencedataset'
@@ -1183,7 +1183,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 SearchVector('name', weight='A')
                 + SearchVector('short_description', weight='B')
                 + SearchVector(models.Value(tag_names), weight='C')
-                + SearchVector('description', weight='D')
             )
         )
 
@@ -2134,7 +2133,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     licence_url = models.CharField(
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
     )
-    search_vector = SearchVectorField(null=True)
+    search_vector = SearchVectorField(null=True, blank=True)
 
     class Meta:
         permissions = [
@@ -2177,7 +2176,6 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
                 SearchVector('name', weight='A')
                 + SearchVector('short_description', weight='B')
                 + SearchVector(models.Value(tag_names), weight='C')
-                + SearchVector('description', weight='D')
             )
         )
 
