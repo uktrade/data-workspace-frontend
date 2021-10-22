@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from mock import call, Mock, MagicMock, patch
 
 from django.core.serializers.json import DjangoJSONEncoder
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from freezegun import freeze_time
 import pytest
 import six
@@ -94,6 +94,13 @@ class TestTasks(TestCase):
 
 
 class TestExecuteQuery:
+    @staticmethod
+    def _get_request(user):
+        request = RequestFactory()
+        request.user = user
+        request.session = {}
+        return request
+
     @pytest.fixture(autouse=True)
     def setUp(self):
         self.mock_cursor = MagicMock()  # pylint: disable=attribute-defined-outside-init
@@ -128,7 +135,13 @@ class TestExecuteQuery:
         query = SimpleQueryFactory(sql='select * from foo', connection='conn', id=1)
 
         submit_query_for_execution(
-            query.final_sql(), query.connection, query.id, self.user.id, 1, 100, 10000
+            self._get_request(self.user),
+            query.final_sql(),
+            query.connection,
+            query.id,
+            1,
+            100,
+            10000,
         )
         query_log_id = QueryLog.objects.first().id
 
@@ -157,7 +170,13 @@ class TestExecuteQuery:
         query = SimpleQueryFactory(sql='select * from foo', connection='conn', id=1)
 
         submit_query_for_execution(
-            query.final_sql(), query.connection, query.id, self.user.id, 2, 100, 10000
+            self._get_request(self.user),
+            query.final_sql(),
+            query.connection,
+            query.id,
+            2,
+            100,
+            10000,
         )
         query_log_id = QueryLog.objects.first().id
 
@@ -186,7 +205,13 @@ class TestExecuteQuery:
         query = SimpleQueryFactory(sql='select * from foo', connection='conn', id=1)
 
         submit_query_for_execution(
-            query.final_sql(), query.connection, query.id, self.user.id, 1, 100, 10000
+            self._get_request(self.user),
+            query.final_sql(),
+            query.connection,
+            query.id,
+            1,
+            100,
+            10000,
         )
         query_log_id = QueryLog.objects.first().id
 

@@ -49,6 +49,9 @@ def create_temporary_results_table(querylog):
         cursor.execute(
             f"ALTER TABLE {schema_and_user_name}._data_explorer_tmp_query_{querylog.id} OWNER TO {schema_and_user_name}"
         )
+        cursor.execute(
+            f"GRANT USAGE ON SCHEMA {schema_and_user_name} TO {schema_and_user_name};"
+        )
 
 
 def drop_temporary_results_table(querylog):

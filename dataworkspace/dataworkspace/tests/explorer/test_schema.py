@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 from django.conf import settings
 from django.core.cache import cache
+from django.test import RequestFactory
 
 from dataworkspace.apps.explorer import schema
 
@@ -11,6 +12,13 @@ class TestSchemaInfo:
     @pytest.fixture(scope='function', autouse=True)
     def _clear_cache(self):
         cache.clear()
+
+    @staticmethod
+    def _get_request(user):
+        req = RequestFactory()
+        req.user = user
+        req.session = {}
+        return req
 
     @staticmethod
     def _get_connection_data():
@@ -33,7 +41,9 @@ class TestSchemaInfo:
         mocked_includes.return_value = None
         mocked_excludes.return_value = []
         mock_connection_settings.return_value = self._get_connection_data()
-        res = schema.schema_info(staff_user, settings.EXPLORER_CONNECTIONS['Postgres'])
+        res = schema.schema_info(
+            self._get_request(staff_user), settings.EXPLORER_CONNECTIONS['Postgres']
+        )
         assert mocked_includes.called  # sanity check: ensure patch worked
         tables = [x.name.name for x in res]
         assert 'explorer_query' in tables
@@ -49,7 +59,9 @@ class TestSchemaInfo:
         mocked_includes.return_value = None
         mocked_excludes.return_value = ('explorer_',)
         mock_connection_settings.return_value = self._get_connection_data()
-        res = schema.schema_info(staff_user, settings.EXPLORER_CONNECTIONS['Postgres'])
+        res = schema.schema_info(
+            self._get_request(staff_user), settings.EXPLORER_CONNECTIONS['Postgres']
+        )
         tables = [x.name.name for x in res]
         assert 'explorer_query' not in tables
 
@@ -62,7 +74,9 @@ class TestSchemaInfo:
         mocked_includes.return_value = ('auth_',)
         mocked_excludes.return_value = []
         mock_connection_settings.return_value = self._get_connection_data()
-        res = schema.schema_info(staff_user, settings.EXPLORER_CONNECTIONS['Postgres'])
+        res = schema.schema_info(
+            self._get_request(staff_user), settings.EXPLORER_CONNECTIONS['Postgres']
+        )
         tables = [x.name.name for x in res]
         assert 'explorer_query' not in tables
         assert 'auth_user' in tables
@@ -77,6 +91,8 @@ class TestSchemaInfo:
         mocked_includes.return_value = ('explorer_',)
         mocked_excludes.return_value = ('explorer_',)
         mock_connection_settings.return_value = self._get_connection_data()
-        res = schema.schema_info(staff_user, settings.EXPLORER_CONNECTIONS['Postgres'])
+        res = schema.schema_info(
+            self._get_request(staff_user), settings.EXPLORER_CONNECTIONS['Postgres']
+        )
         tables = [x.name.name for x in res]
         assert 'explorer_query' in tables

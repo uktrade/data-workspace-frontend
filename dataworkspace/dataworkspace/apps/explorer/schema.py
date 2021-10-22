@@ -35,10 +35,12 @@ def connection_schema_cache_key(user, connection_alias):
 
 def schema_info(request, connection_alias):
     if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
+        from dataworkspace.apps.applications.utils import (  # pylint: disable=import-outside-toplevel
+            get_sso_user,
+        )
 
         return build_schema_info(
-            request.user, connection_alias, impersonator=get_sso_user(request)
+            request, connection_alias, impersonator=get_sso_user(request)
         )
     else:
         key = connection_schema_cache_key(request.user, connection_alias)
@@ -46,7 +48,7 @@ def schema_info(request, connection_alias):
         if ret:
             return ret
 
-        ret = build_schema_info(request.user, connection_alias)
+        ret = build_schema_info(request, connection_alias)
         cache.set(key, ret)
 
     return ret
@@ -68,7 +70,7 @@ class TableName(namedtuple("TableName", ['schema', 'name'])):
         return f'{self.schema}.{self.name}'
 
 
-def build_schema_info(user, connection_alias, impersonator=None):
+def build_schema_info(request, connection_alias, impersonator=None):
     """
         Construct schema information via engine-specific queries of the tables in the DB.
 
@@ -85,7 +87,7 @@ def build_schema_info(user, connection_alias, impersonator=None):
         """
 
     connection = get_user_explorer_connection_settings(
-        user, connection_alias, impersonator
+        request.user, connection_alias, impersonator
     )
     with psycopg2.connect(
         f'postgresql://{connection["db_user"]}:{connection["db_password"]}'

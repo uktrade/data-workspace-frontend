@@ -17,7 +17,8 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
         ):
             return request.session['impersonated_user']
         user = get_sso_user(request)
-        set_user({"id": str(user.profile.sso_id), "email": user.email})
+        if user is not None:
+            set_user({"id": str(user.profile.sso_id), "email": user.email})
         return user
 
     def get_user(self, user_id):

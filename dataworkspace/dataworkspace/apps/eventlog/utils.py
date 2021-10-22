@@ -8,17 +8,21 @@ from dataworkspace.apps.eventlog.models import EventLog
 
 
 def log_event(request, event_type, related_object=None, extra=None):
+    user = request.user
     if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
+        from dataworkspace.apps.applications.utils import (  # pylint: disable=import-outside-toplevel
+            get_sso_user,
+        )
 
         user = get_sso_user(request)
-        return EventLog.objects.create(
-            user=user,
-            event_type=event_type,
-            related_object=related_object,
-            extra=extra,
-            impersonated_user=request.session['impersonated_user'],
-        )
+
+    return EventLog.objects.create(
+        user=user,
+        event_type=event_type,
+        related_object=related_object,
+        extra=extra,
+        impersonated_user=request.session.get('impersonated_user', None),
+    )
 
 
 def log_permission_change(
