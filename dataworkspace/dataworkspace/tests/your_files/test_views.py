@@ -7,6 +7,8 @@ from django.urls import reverse
 from freezegun import freeze_time
 from mock import mock
 
+from dataworkspace.apps.eventlog.models import EventLog
+
 
 class TestCreateTableViews:
     def test_get_with_csv_file(self, client):
@@ -516,3 +518,21 @@ class TestCreateTableViews:
             )
             assert response.status_code == 200
             assert response.json() == {'state': 'success'}
+
+    def test_impersonation_logging(self, staff_client, staff_user, user):
+        log_count = EventLog.objects.filter(
+            event_type=EventLog.TYPE_IMPERSONATED_PAGE_VIEW
+        ).count()
+        staff_client.get(reverse("admin:index"), follow=True)
+        staff_client.get(reverse("impersonation:start", args=(user.id,)), follow=True)
+        resp = staff_client.get(reverse('your_files:files'))
+        assert resp.status_code == 200
+        assert (
+            EventLog.objects.filter(
+                event_type=EventLog.TYPE_IMPERSONATED_PAGE_VIEW
+            ).count()
+            == log_count + 1
+        )
+        log = EventLog.objects.latest()
+        assert log.user == staff_user
+        assert log.impersonated_user == user

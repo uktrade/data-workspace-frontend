@@ -55,6 +55,7 @@ from django.views.decorators.http import (
     require_http_methods,
 )
 from django.views.generic import DetailView, View
+from django.utils.decorators import method_decorator
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
@@ -98,7 +99,7 @@ from dataworkspace.apps.datasets.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-
+from dataworkspace.decorators import log_user_impersonation
 
 logger = logging.getLogger('app')
 
@@ -557,6 +558,7 @@ def find_datasets(request):
     )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DatasetDetailView(DetailView):
     def _is_reference_dataset(self):
         return isinstance(self.object, ReferenceDataset)
@@ -1074,6 +1076,7 @@ class CustomDatasetQueryDownloadView(DetailView):
         )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DatasetPreviewView(DetailView, metaclass=ABCMeta):
     @property
     @abstractmethod
@@ -1223,6 +1226,7 @@ class ReferenceDatasetGridView(View):
         )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class RelatedDataView(View):
     def get(self, request, dataset_uuid):
         try:
@@ -1257,6 +1261,7 @@ class RelatedDataView(View):
         return HttpResponse(status=500)
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DataCutPreviewView(WaffleFlagMixin, DetailView):
     waffle_flag = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
     template_name = 'datasets/data_cut_preview.html'
@@ -1297,6 +1302,7 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
         return ctx
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DatasetUsageHistoryView(View):
     def get(self, request, dataset_uuid, **kwargs):
         model_class = kwargs['model_class']
@@ -1358,6 +1364,7 @@ class DatasetUsageHistoryView(View):
         )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DataCutSourceDetailView(DetailView):
     template_name = 'datasets/data_cut_source_detail.html'
 
@@ -1490,6 +1497,7 @@ class DataGridDataView(DetailView):
         return JsonResponse({'records': records})
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DatasetVisualisationPreview(View):
     def _get_vega_definition(self, visualisation):
         vega_definition = json.loads(visualisation.vega_definition_json)
@@ -1531,6 +1539,7 @@ class DatasetVisualisationPreview(View):
         return JsonResponse(vega_definition)
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DatasetVisualisationView(View):
     def get(self, request, dataset_uuid, object_id, **kwargs):
         model_class = kwargs['model_class']

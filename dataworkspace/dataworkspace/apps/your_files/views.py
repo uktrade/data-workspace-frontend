@@ -11,6 +11,7 @@ from django.http import (
 )
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import FormView, TemplateView
 from requests import HTTPError
@@ -41,6 +42,7 @@ from dataworkspace.apps.your_files.utils import (
     trigger_dataflow_dag,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
 )
+from dataworkspace.decorators import log_user_impersonation
 
 
 def file_browser_html_view(request):
@@ -51,6 +53,7 @@ def file_browser_html_view(request):
     )
 
 
+@log_user_impersonation
 @csp_update(
     CONNECT_SRC=[settings.APPLICATION_ROOT_DOMAIN, "https://s3.eu-west-2.amazonaws.com"]
 )
@@ -75,6 +78,7 @@ class RequiredParameterGetRequestMixin:
         return super().get(request, *args, **kwargs)
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class CreateTableView(RequiredParameterGetRequestMixin, TemplateView):
     template_name = 'your_files/create-table-confirm.html'
     required_parameters = ['path']
@@ -93,6 +97,7 @@ class CreateTableView(RequiredParameterGetRequestMixin, TemplateView):
         return context
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
     template_name = 'your_files/create-table-confirm-schema.html'
     form_class = CreateTableSchemaForm
@@ -134,6 +139,7 @@ class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
         )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
     template_name = 'your_files/create-table-confirm-name.html'
     form_class = CreateTableForm
@@ -203,6 +209,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
         return super().form_invalid(form)
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class CreateTableConfirmDataTypesView(FormView):
     template_name = 'your_files/create-table-confirm-data-types.html'
     form_class = CreateTableDataTypesForm
@@ -281,6 +288,7 @@ class CreateTableConfirmDataTypesView(FormView):
         )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class BaseCreateTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
     required_parameters = [
         'filename',
@@ -304,6 +312,7 @@ class BaseCreateTableTemplateView(RequiredParameterGetRequestMixin, TemplateView
         return context
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class BaseCreateTableStepView(BaseCreateTableTemplateView):
     template_name = 'your_files/create-table-processing.html'
     task_name: str
@@ -395,6 +404,7 @@ class CreateTableSuccessView(BaseCreateTableTemplateView):
     step = 5
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
     template_name = 'your_files/create-table-failed.html'
     required_parameters = ['filename']
@@ -405,6 +415,7 @@ class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
         return context
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class CreateTableTableExists(RequiredParameterGetRequestMixin, TemplateView):
     template_name = 'your_files/create-table-table-exists.html'
     required_parameters = ['path', 'table_name']

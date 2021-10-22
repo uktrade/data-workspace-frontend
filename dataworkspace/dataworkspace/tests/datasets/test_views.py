@@ -4083,3 +4083,21 @@ def test_filter_data_type_datasets_search_v2():
     )
     assert response.status_code == 200
     assert len(response.context["datasets"]) == 1
+
+
+def test_impersonation_logging(staff_client, staff_user, user):
+    log_count = EventLog.objects.filter(
+        event_type=EventLog.TYPE_IMPERSONATED_PAGE_VIEW
+    ).count()
+    ds = factories.DataSetFactory.create(published=True, name='Test dataset')
+    staff_client.get(reverse("admin:index"), follow=True)
+    staff_client.get(reverse("impersonation:start", args=(user.id,)), follow=True)
+    resp = staff_client.get(reverse('datasets:dataset_detail', args=(ds.id,)))
+    assert resp.status_code == 200
+    assert (
+        EventLog.objects.filter(event_type=EventLog.TYPE_IMPERSONATED_PAGE_VIEW).count()
+        == log_count + 1
+    )
+    log = EventLog.objects.latest()
+    assert log.user == staff_user
+    assert log.impersonated_user == user

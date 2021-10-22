@@ -22,6 +22,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView
+from django.utils.decorators import method_decorator
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -30,6 +31,7 @@ from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm, ShareQueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
 from dataworkspace.apps.explorer.schema import get_user_schema_info
+from dataworkspace.decorators import log_user_impersonation
 from dataworkspace.notify import send_email
 from dataworkspace.apps.explorer.tasks import submit_query_for_execution
 from dataworkspace.apps.explorer.utils import (
@@ -79,6 +81,7 @@ def _export(request, querylog, download=True):
     return response
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DownloadFromQuerylogView(View):
     def get(self, request, querylog_id):
         querylog = get_object_or_404(
@@ -92,6 +95,7 @@ class DownloadFromQuerylogView(View):
             return redirect(redirect_url + f"?querylog_id={querylog.id}&error=download")
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class ListQueryView(ListView):
     def recently_viewed(self):
         qll = (
@@ -132,6 +136,7 @@ class ListQueryView(ListView):
     paginate_by = 15
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class ListQueryLogView(ListView):
     def get_queryset(self):
         kwargs = {
@@ -148,6 +153,7 @@ class ListQueryLogView(ListView):
     paginate_by = 15
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class CreateQueryView(CreateView):
     def form_valid(self, form):
         form.instance.created_by_user = self.request.user
@@ -248,6 +254,7 @@ class CreateQueryView(CreateView):
     template_name = 'explorer/query.html'
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class DeleteQueryView(DeleteView):
     model = Query
     success_url = reverse_lazy("explorer:list_queries")
@@ -256,6 +263,7 @@ class DeleteQueryView(DeleteView):
         return Query.objects.filter(created_by_user=self.request.user).all()
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class PlayQueryView(View):
     def get(self, request):
         if url_get_query_id(request):
@@ -398,6 +406,7 @@ class PlayQueryView(View):
         return render(self.request, 'explorer/home.html', context)
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class QueryView(View):
     def get(self, request, query_id):
         play_sql = get_playground_sql_from_request(request)
@@ -548,6 +557,7 @@ def query_viewmodel(
     return ret
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class QueryLogResultView(View):
     def get(self, request, querylog_id):
         html = None
@@ -584,6 +594,7 @@ class QueryLogResultView(View):
         )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class ShareQueryView(FormView):
     form_class = ShareQueryForm
     template_name = 'explorer/share.html'
@@ -647,6 +658,7 @@ class ShareQueryView(FormView):
         )
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class ShareQueryConfirmationView(TemplateView):
     template_name = 'explorer/share_confirmation.html'
 
@@ -658,6 +670,7 @@ class ShareQueryConfirmationView(TemplateView):
         return context
 
 
+@method_decorator(log_user_impersonation, 'dispatch')
 class RunningQueryView(View):
     def get(self, request, query_log_id):
         query_log = get_object_or_404(

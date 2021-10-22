@@ -29,6 +29,7 @@ class EventLog(models.Model):
     TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE = 22
     TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN = 23
     TYPE_TOOLS_ACCESS_REQUEST = 24
+    TYPE_IMPERSONATED_PAGE_VIEW = 24
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, 'Dataset source link download'),
@@ -57,6 +58,7 @@ class EventLog(models.Model):
             'Changed dataset authorized email domains',
         ),
         (TYPE_TOOLS_ACCESS_REQUEST, 'Tools access request'),
+        (TYPE_IMPERSONATED_PAGE_VIEW, 'Viewed page as impersonated user'),
     )
     user = models.ForeignKey(
         get_user_model(), on_delete=models.DO_NOTHING, related_name='events'

@@ -123,6 +123,29 @@ class TestQueryCreateView:
             in response.content.decode(response.charset)
         )
 
+    def test_impersonation_logging(self, staff_user, staff_client, user):
+        log_count = EventLog.objects.filter(
+            event_type=EventLog.TYPE_IMPERSONATED_PAGE_VIEW
+        ).count()
+        staff_client.get(reverse("admin:index"), follow=True)
+        staff_client.get(reverse("impersonation:start", args=(user.id,)), follow=True)
+        query = SimpleQueryFactory.build(sql='SELECT 1;', created_by_user=staff_user)
+        data = model_to_dict(query)
+        data['action'] = "save"
+        del data['id']
+        del data['created_by_user']
+        staff_client.post(reverse("explorer:query_create"), data)
+        assert Query.objects.all()[0].sql == 'SELECT 1;'
+        assert (
+            EventLog.objects.filter(
+                event_type=EventLog.TYPE_IMPERSONATED_PAGE_VIEW
+            ).count()
+            == log_count + 1
+        )
+        log = EventLog.objects.latest()
+        assert log.user == staff_user
+        assert log.impersonated_user == user
+
 
 class TestQueryDetailView:
     def test_query_with_bad_sql_fails_on_save(self, staff_user, staff_client):
