@@ -18,7 +18,7 @@ class EventLogAdmin(admin.ModelAdmin):
         'user_link',
         'event_type',
         'related_object_link',
-        'impersonated_user',
+        'impersonated_user_link',
     )
     list_filter = ('event_type',)
     list_display_links = ['timestamp']
@@ -28,6 +28,7 @@ class EventLogAdmin(admin.ModelAdmin):
         'event_type',
         'related_object_link',
         'event_data',
+        'impersonated_user',
     )
     search_fields = ('user__email', 'user__first_name', 'user__last_name')
     actions = ['export_events']
@@ -58,6 +59,18 @@ class EventLogAdmin(admin.ModelAdmin):
         return format_html('<a href="{}">{}</a>'.format(url, obj.related_object))
 
     related_object_link.short_description = 'Related Object'
+
+    def impersonated_user_link(self, obj):
+        if obj.impersonated_user is not None:
+            return format_html(
+                '<a href="{}">{}</a>'.format(
+                    reverse('admin:auth_user_change', args=(obj.impersonated_user.id,)),
+                    obj.impersonated_user.get_full_name(),
+                )
+            )
+        return None
+
+    impersonated_user_link.short_description = 'Impersonated user'
 
     def event_data(self, obj):
         return format_html('<pre>{0}</pre>', json.dumps(obj.extra, indent=2))
