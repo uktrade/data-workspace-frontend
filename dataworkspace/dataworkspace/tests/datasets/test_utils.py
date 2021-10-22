@@ -532,6 +532,93 @@ class TestUpdateQuickSightVisualisationsSqlQueries:
         assert original_sql_query.is_latest is False
         assert original_sql_query.sql_query == 'SELECT * FROM public.foo'
 
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
+    def test_sql_query_changes_multiple_table_mappings(self, mock_extract_tables):
+        self.mock_quicksight_client.describe_dashboard.return_value = {
+            'Dashboard': {
+                'Version': {'DataSetArns': ['testArn']},
+                'LastPublishedTime': datetime.datetime(2021, 1, 1),
+                'LastUpdatedTime': datetime.datetime(2021, 2, 1),
+            }
+        }
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.foo'}
+                    },
+                    '00000000-0000-0000-0000-000000000001': {
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.bar'}
+                    },
+                },
+            }
+        }
+        mock_extract_tables.return_value = [('public', 'foo')]
+
+        visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
+        process_quicksight_dashboard_visualisations()
+
+        visualisation_link.refresh_from_db()
+
+        sql_queries = visualisation_link.sql_queries.order_by('table_id')
+        assert len(sql_queries) == 2
+
+        assert str(sql_queries[0].data_set_id) == '00000000-0000-0000-0000-000000000001'
+        assert str(sql_queries[0].table_id) == '00000000-0000-0000-0000-000000000000'
+        assert sql_queries[0].is_latest is True
+        assert sql_queries[0].sql_query == 'SELECT * FROM public.foo'
+
+        assert str(sql_queries[1].data_set_id) == '00000000-0000-0000-0000-000000000001'
+        assert str(sql_queries[1].table_id) == '00000000-0000-0000-0000-000000000001'
+        assert sql_queries[1].is_latest is True
+        assert sql_queries[1].sql_query == 'SELECT * FROM public.bar'
+
+        self.mock_quicksight_client.describe_data_set.return_value = {
+            'DataSet': {
+                'ImportMode': 'DIRECT_QUERY',
+                'DataSetId': '00000000-0000-0000-0000-000000000001',
+                'LastUpdatedTime': datetime.datetime(2021, 3, 1),
+                'PhysicalTableMap': {
+                    '00000000-0000-0000-0000-000000000000': {
+                        'CustomSql': {
+                            'SqlQuery': 'SELECT * FROM public.foo WHERE bar = 1'
+                        }
+                    },
+                    '00000000-0000-0000-0000-000000000001': {
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.bar'}
+                    },
+                },
+            }
+        }
+        process_quicksight_dashboard_visualisations()
+        visualisation_link.refresh_from_db()
+
+        # only one new query should have been created as the sql changed for one mapping only
+        assert len(visualisation_link.sql_queries.all()) == 3
+
+        table_1_sql_queries = visualisation_link.sql_queries.filter(
+            table_id='00000000-0000-0000-0000-000000000000'
+        ).order_by('-created_date')
+
+        table_2_sql_queries = visualisation_link.sql_queries.filter(
+            table_id='00000000-0000-0000-0000-000000000001'
+        )
+
+        assert len(table_1_sql_queries) == 2
+        assert len(table_2_sql_queries) == 1
+
+        assert table_1_sql_queries[0].is_latest is True
+        assert (
+            table_1_sql_queries[0].sql_query == 'SELECT * FROM public.foo WHERE bar = 1'
+        )
+
+        assert table_1_sql_queries[1].is_latest is False
+        assert table_1_sql_queries[1].sql_query == 'SELECT * FROM public.foo'
+
 
 class TestLinkSupersetVisualisationsRelatedDatasets:
     @pytest.mark.django_db
