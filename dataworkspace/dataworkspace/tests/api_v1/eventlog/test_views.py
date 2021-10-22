@@ -61,23 +61,6 @@ class TestEventLogAPIView(BaseAPIViewTest):
             key=lambda x: x['id'],
         )
 
-    def test_visualisation_approval_success(self, unauthenticated_client):
-        # We create the visualisation approvals, which in turn create the event log items
-        approval_0 = factories.VisualisationApprovalFactory()
-        approval_1 = factories.VisualisationApprovalFactory()
-
-        response = unauthenticated_client.get(self.url)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()['results'][0]['event_type'] == 'Visualisation approved'
-        assert response.json()['results'][0]['related_object']['id'] == str(
-            approval_0.id
-        )
-        assert response.json()['results'][1]['event_type'] == 'Visualisation approved'
-        assert response.json()['results'][1]['related_object']['id'] == str(
-            approval_1.id
-        )
-
     def test_visualisation_view(self, unauthenticated_client):
         vis_link = VisualisationLinkFactory.create(
             visualisation_type='QUICKSIGHT',

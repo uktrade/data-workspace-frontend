@@ -10,6 +10,8 @@ from django.forms import (
 
 from dataworkspace.apps.applications.models import VisualisationApproval
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.forms import (
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemTextWidget,
@@ -218,6 +220,8 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
         else:
             self._initial_approved = False
 
+        self._request = kwargs.pop('request')
+
         super().__init__(*args, **kwargs)
 
         if self._initial_approved:
@@ -237,3 +241,20 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
             cleaned_data['approved'] = False
 
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=commit)
+        if not self._initial_approved and self.cleaned_data['approved']:
+            log_event(
+                self._request,
+                EventLog.TYPE_VISUALISATION_APPROVED,
+                related_object=instance,
+            )
+        elif self._initial_approved and not self.cleaned_data['approved']:
+            log_event(
+                self._request,
+                EventLog.TYPE_VISUALISATION_UNAPPROVED,
+                related_object=instance,
+            )
+
+        return instance

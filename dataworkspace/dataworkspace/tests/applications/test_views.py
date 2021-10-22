@@ -16,6 +16,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     UserToolConfiguration,
 )
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
@@ -141,6 +142,9 @@ class TestDataVisualisationUICataloguePage:
 class TestDataVisualisationUIApprovalPage:
     @pytest.mark.django_db
     def test_approve_visualisation_successfully(self):
+        logs = EventLog.objects.filter(
+            event_type=EventLog.TYPE_VISUALISATION_APPROVED
+        ).count()
         develop_visualisations_permission = Permission.objects.get(
             codename='develop_visualisations',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -176,6 +180,12 @@ class TestDataVisualisationUIApprovalPage:
 
         assert response.status_code == 200
         assert len(VisualisationApproval.objects.all()) == 1
+        assert (
+            EventLog.objects.filter(
+                event_type=EventLog.TYPE_VISUALISATION_APPROVED
+            ).count()
+            == logs + 1
+        )
 
     @pytest.mark.django_db
     def test_bad_post_data_approved_box_not_checked(self):
@@ -221,6 +231,9 @@ class TestDataVisualisationUIApprovalPage:
 
     @pytest.mark.django_db
     def test_unapprove_visualisation_successfully(self):
+        logs = EventLog.objects.filter(
+            event_type=EventLog.TYPE_VISUALISATION_UNAPPROVED
+        ).count()
         develop_visualisations_permission = Permission.objects.get(
             codename='develop_visualisations',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -262,6 +275,12 @@ class TestDataVisualisationUIApprovalPage:
         assert response.status_code == 200
         assert len(VisualisationApproval.objects.all()) == 1
         assert approval.approved is False
+        assert (
+            EventLog.objects.filter(
+                event_type=EventLog.TYPE_VISUALISATION_UNAPPROVED
+            ).count()
+            == logs + 1
+        )
 
 
 class TestQuickSightPollAndRedirect:

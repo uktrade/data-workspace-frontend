@@ -7,8 +7,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 
 from dataworkspace.apps.core.models import Database, TimeStampedModel
-from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.eventlog.utils import log_event
 
 
 class ApplicationTemplate(TimeStampedModel):
@@ -171,17 +169,6 @@ class VisualisationApproval(TimeStampedModel):
             )
 
         super().save(force_insert, force_update, using, update_fields)
-
-        if self.approved:
-            log_event(
-                self.approver, EventLog.TYPE_VISUALISATION_APPROVED, related_object=self
-            )
-        else:
-            log_event(
-                self.approver,
-                EventLog.TYPE_VISUALISATION_UNAPPROVED,
-                related_object=self,
-            )
         self._initial_approved = self.approved
 
 

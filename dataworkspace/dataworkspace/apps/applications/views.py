@@ -189,7 +189,9 @@ def tools_html_view(request):
 
 def tools_html_GET(request):
     if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
+        from dataworkspace.apps.applications.utils import (  # pylint: disable=import-outside-toplevel
+            get_sso_user,
+        )
 
         user = get_sso_user(request)
     else:
@@ -243,7 +245,9 @@ def tools_html_GET(request):
 
 def tools_html_POST(request):
     if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
+        from dataworkspace.apps.applications.utils import (  # pylint: disable=import-outside-toplevel
+            get_sso_user,
+        )
 
         user = get_sso_user(request)
     else:
@@ -1057,6 +1061,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
             "approver": request.user,
             "approved": False,
         },
+        request=request,
     )
 
     return _render_visualisation(
@@ -1090,6 +1095,7 @@ def visualisation_approvals_html_POST(request, gitlab_project):
             "approver": request.user,
             "approved": False,
         },
+        request=request,
     )
     if form.is_valid():
         form.save()
