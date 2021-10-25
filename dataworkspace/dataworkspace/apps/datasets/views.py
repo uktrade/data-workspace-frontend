@@ -18,9 +18,8 @@ from csp.decorators import csp_update
 from psycopg2 import sql
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.contrib.postgres.search import SearchRank
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -157,21 +156,10 @@ def get_datasets_data_for_user_matching_query(
     datasets = datasets.filter(visibility_filter)
 
     # Filter out datasets that don't match the search terms
-    search = (
-        SearchVector('name', weight='A', config='english')
-        + SearchVector('short_description', weight='B', config='english')
-        + SearchVector(
-            StringAgg('tags__name', delimiter='\n'), weight='B', config='english'
-        )
-    )
-    search_query = SearchQuery(query, config='english')
-
-    datasets = datasets.annotate(
-        search=search, search_rank=SearchRank(search, search_query)
-    )
+    datasets = datasets.annotate(search_rank=SearchRank(F('search_vector'), query))
 
     if query:
-        datasets = datasets.filter(search=search_query)
+        datasets = datasets.filter(search_vector=query)
 
     # Mark up whether the user can access the data in the dataset.
     access_filter = Q()
@@ -328,17 +316,13 @@ def get_visualisations_data_for_user_matching_query(
         visualisations = visualisations.filter(published=True)
 
     # Filter out visualisations that don't match the search terms
-    search = SearchVector('name', weight='A', config='english') + SearchVector(
-        'short_description', weight='B', config='english'
-    )
-    search_query = SearchQuery(query, config='english')
 
     visualisations = visualisations.annotate(
-        search=search, search_rank=SearchRank(search, search_query)
+        search_rank=SearchRank(F('search_vector'), query)
     )
 
     if query:
-        visualisations = visualisations.filter(search=search_query)
+        visualisations = visualisations.filter(search_vector=query)
 
     # Mark up whether the user can access the visualisation.
     if user:
