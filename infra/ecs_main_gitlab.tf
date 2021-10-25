@@ -283,6 +283,7 @@ resource "aws_lb_target_group" "gitlab_80" {
   vpc_id      = "${aws_vpc.main.id}"
   target_type = "ip"
   protocol = "TCP"
+  preserve_client_ip = true
 
   health_check {
     protocol = "TCP"
@@ -302,6 +303,7 @@ resource "aws_lb_target_group" "gitlab_22" {
   vpc_id      = "${aws_vpc.main.id}"
   target_type = "ip"
   protocol    = "TCP"
+  preserve_client_ip = true
 
   health_check {
     protocol = "TCP"
