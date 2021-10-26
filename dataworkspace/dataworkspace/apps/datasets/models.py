@@ -252,6 +252,7 @@ class DataSet(DeletableTimestampedUserModel):
                 SearchVector('name', weight='A')
                 + SearchVector('short_description', weight='B')
                 + SearchVector(models.Value(tag_names), weight='C')
+                + SearchVector('description', weight='D')
             )
         )
 
@@ -2176,6 +2177,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
                 SearchVector('name', weight='A')
                 + SearchVector('short_description', weight='B')
                 + SearchVector(models.Value(tag_names), weight='C')
+                + SearchVector('description', weight='D')
             )
         )
 
