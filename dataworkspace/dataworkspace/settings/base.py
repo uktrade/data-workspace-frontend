@@ -609,6 +609,7 @@ PGAUDIT_LOG_HEADERS = [
     'object_name',
     'statement',
     'parameter',
+    'connection_from',
 ]
 
 PGAUDIT_IGNORE_STATEMENTS_RE = [
