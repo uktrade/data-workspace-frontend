@@ -73,6 +73,9 @@ jobs:
       - <<: *prepare-docker-cache
       - <<: *save-docker-cache
       - run:
+          name: start test containers
+          command: docker-compose -f docker-compose-test.yml -p data-workspace-test up -d
+      - run:
           name: install dockerize
           command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
           environment:
@@ -84,7 +87,7 @@ jobs:
           name: Run test
           command: |
             touch .envs/dev.env
-            make docker-test-integration
+            docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest test/
 
   check-linting:
     docker:
