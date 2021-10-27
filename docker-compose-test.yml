@@ -38,7 +38,7 @@ services:
       dockerfile: Dockerfile
     image: data-workspace-postgres
     ports:
-      - "5432:5432"
+      - "5432"
     volumes:
       - db-logs-dev:/var/log/postgres
   data-workspace-redis:
