@@ -259,7 +259,7 @@ def test_footer_links(request_client):
         (True, "https://gitlab", "Open GitLab",),
     ),
 )
-@override_settings(GITLAB_URL='https://gitlab')
+@override_settings(GITLAB_URL_FOR_TOOLS='https://gitlab')
 @pytest.mark.django_db
 def test_gitlab_access(has_tools_access, expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False)
