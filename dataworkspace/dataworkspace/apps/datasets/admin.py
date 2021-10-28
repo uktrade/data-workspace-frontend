@@ -1020,6 +1020,7 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         'user',
         'rolename',
         'database',
+        'connection_from',
         'get_detail_truncated_query',
         'get_detail_related_datasets',
     ]
