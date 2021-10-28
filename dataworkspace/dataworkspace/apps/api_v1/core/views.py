@@ -19,6 +19,7 @@ from dataworkspace.apps.core.utils import (
     stable_identification_suffix,
 )
 from dataworkspace.apps.datasets.models import VisualisationLink
+from dataworkspace.utils import get_sso_headers
 
 
 class UserSatisfactionSurveyViewSet(viewsets.ModelViewSet):
@@ -49,63 +50,83 @@ def get_superset_credentials(request):
     superset_endpoint = {
         urlparse(url).netloc: name for name, url in settings.SUPERSET_DOMAINS.items()
     }[request.headers['host']]
+    is_impersonating_user = 'impersonated_user' in request.session
 
-    cache_key = get_cached_credentials_key(
-        request.headers['sso-profile-user-id'], superset_endpoint
-    )
-    response = cache.get(cache_key, None)
-    if not response:
-        dw_user = get_user_model().objects.get(
+    if not is_impersonating_user:
+        cache_key = get_cached_credentials_key(
+            request.headers['sso-profile-user-id'], superset_endpoint
+        )
+        response = cache.get(cache_key, None)
+        if response is not None:
+            return JsonResponse(response)
+
+    dw_user = (
+        get_user_model().objects.get(
             profile__sso_id=request.headers['sso-profile-user-id']
         )
-        if not dw_user.user_permissions.filter(
-            codename='start_all_applications',
-            content_type=ContentType.objects.get_for_model(ApplicationInstance),
-        ).exists():
-            return HttpResponse('Unauthorized', status=401)
+        if not is_impersonating_user
+        else request.session['impersonated_user']
+    )
 
-        duration = timedelta(hours=24)
-        cache_duration = (duration - timedelta(minutes=15)).total_seconds()
+    if not dw_user.user_permissions.filter(
+        codename='start_all_applications',
+        content_type=ContentType.objects.get_for_model(ApplicationInstance),
+    ).exists():
+        return HttpResponse('Unauthorized', status=401)
 
-        # Give "public" users full db credentials
-        if superset_endpoint == 'view':
-            dashboards_user_can_access = [
-                d.identifier
-                for d in VisualisationLink.objects.filter(visualisation_type='SUPERSET')
-                if d.visualisation_catalogue_item.user_has_access(dw_user)
-            ]
-            credentials = [
-                {
-                    'memorable_name': alias,
-                    'db_name': data['NAME'],
-                    'db_host': data['HOST'],
-                    'db_port': data['PORT'],
-                    'db_user': data['USER'],
-                    'db_password': data['PASSWORD'],
-                }
-                for alias, data in settings.DATABASES_DATA.items()
-            ]
+    duration = timedelta(hours=24)
+    cache_duration = (duration - timedelta(minutes=15)).total_seconds()
 
-        # Give "editor"/"admin" users temp private credentials
-        else:
-            dashboards_user_can_access = []
-            source_tables = source_tables_for_user(dw_user)
-            db_role_schema_suffix = stable_identification_suffix(
-                str(dw_user.profile.sso_id), short=True
-            )
-            credentials = new_private_database_credentials(
-                db_role_schema_suffix,
-                source_tables,
-                postgres_user(dw_user.email, suffix='superset'),
-                dw_user,
-                valid_for=duration,
-            )
+    # Give "public" users full db credentials
+    if superset_endpoint == 'view':
+        dashboards_user_can_access = [
+            d.identifier
+            for d in VisualisationLink.objects.filter(visualisation_type='SUPERSET')
+            if d.visualisation_catalogue_item.user_has_access(dw_user)
+        ]
+        credentials = [
+            {
+                'memorable_name': alias,
+                'db_name': data['NAME'],
+                'db_host': data['HOST'],
+                'db_port': data['PORT'],
+                'db_user': data['USER'],
+                'db_password': data['PASSWORD'],
+            }
+            for alias, data in settings.DATABASES_DATA.items()
+        ]
 
-        response = {
-            'credentials': credentials[0],
-            'dashboards': dashboards_user_can_access,
-        }
+    # Give "editor"/"admin" users temp private credentials
+    else:
+        dashboards_user_can_access = []
+        source_tables = source_tables_for_user(dw_user)
+        db_role_schema_suffix = stable_identification_suffix(
+            str(dw_user.profile.sso_id), short=True
+        )
+        credentials = new_private_database_credentials(
+            db_role_schema_suffix,
+            source_tables,
+            postgres_user(dw_user.email, suffix='superset'),
+            dw_user,
+            valid_for=duration,
+        )
 
+    response = {
+        'credentials': credentials[0],
+        'dashboards': dashboards_user_can_access,
+        'impersonation_sso_headers': get_sso_headers(
+            {
+                'email': dw_user.email,
+                'user_id': dw_user.id,
+                'first_name': dw_user.first_name,
+                'last_name': dw_user.last_name,
+            }
+        )
+        if is_impersonating_user
+        else None,
+    }
+
+    if not is_impersonating_user:
         cache.set(cache_key, response, timeout=cache_duration)
 
     return JsonResponse(response)

@@ -181,3 +181,17 @@ TYPE_CODES_REVERSED = {
     3912: 'daterange',
     3913: 'daterange[]',
 }
+
+
+def get_sso_headers(profile):
+    return (
+        ('sso-profile-email', profile['email']),
+        # The default value of '' should be able to be removed after the cached
+        # profile in Redis without contact_email has expired, i.e. 60 seconds after
+        # deployment of this change
+        ('sso-profile-contact-email', profile.get('contact_email', '')),
+        ('sso-profile-related-emails', ','.join(profile.get('related_emails', [])),),
+        ('sso-profile-user-id', profile['user_id']),
+        ('sso-profile-first-name', profile['first_name']),
+        ('sso-profile-last-name', profile['last_name']),
+    )

@@ -54,7 +54,11 @@ class TestGetSupersetCredentialsAPIView:
             mock.call('superset_credentials_version', 1, nx=True, timeout=None),
             mock.call(
                 f'superset_credentials_1_edit_{user.profile.sso_id}',
-                {'credentials': credentials[0], 'dashboards': []},
+                {
+                    'credentials': credentials[0],
+                    'dashboards': [],
+                    'impersonation_sso_headers': None,
+                },
                 timeout=mock.ANY,
             ),
         ]
@@ -134,6 +138,53 @@ class TestGetSupersetCredentialsAPIView:
         ]
 
     @pytest.mark.django_db
+    @mock.patch('dataworkspace.apps.api_v1.core.views.new_private_database_credentials')
+    def test_impersonating_user_succeeds(
+        self,
+        mock_new_credentials,
+        unauthenticated_client,
+        dataset_db,
+        admin_user,
+        user,
+    ):
+        credentials = [{'db_user': 'foo', 'db_password': 'bar'}]
+        mock_new_credentials.return_value = credentials
+
+        tools_permission = Permission.objects.get(
+            codename='start_all_applications',
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+        user.user_permissions.add(tools_permission)
+
+        header = {
+            'HTTP_SSO_PROFILE_USER_ID': admin_user.profile.sso_id,
+            'HTTP_HOST': f'superset-edit.{settings.APPLICATION_ROOT_DOMAIN}',
+        }
+
+        session = unauthenticated_client.session
+        session['impersonated_user'] = user
+        session.save()
+        unauthenticated_client.cookies[
+            settings.SESSION_COOKIE_NAME
+        ] = session.session_key
+        response = unauthenticated_client.get(
+            reverse('api-v1:core:get-superset-role-credentials'), **header
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['credentials'] == credentials[0]
+        assert response.json()['dashboards'] == []
+        assert response.json()['impersonation_sso_headers'] == [
+            ['sso-profile-email', user.email],
+            ['sso-profile-contact-email', ''],
+            ['sso-profile-related-emails', ''],
+            ['sso-profile-user-id', user.id],
+            ['sso-profile-first-name', user.first_name],
+            ['sso-profile-last-name', user.last_name],
+        ]
+
+        assert mock_new_credentials.called
+
+    @pytest.mark.django_db
     @mock.patch('dataworkspace.apps.api_v1.core.views.cache')
     def test_public_user_gets_db_access(
         self, mock_cache, unauthenticated_client, dataset_db
@@ -177,7 +228,11 @@ class TestGetSupersetCredentialsAPIView:
             mock.call('superset_credentials_version', 1, nx=True, timeout=None),
             mock.call(
                 f'superset_credentials_1_view_{user.profile.sso_id}',
-                {'credentials': credentials, 'dashboards': [visualisation.identifier]},
+                {
+                    'credentials': credentials,
+                    'dashboards': [visualisation.identifier],
+                    'impersonation_sso_headers': None,
+                },
                 timeout=mock.ANY,
             ),
         ]

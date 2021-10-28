@@ -26,7 +26,7 @@ from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yarl import URL
 from sentry import init_sentry
 
-from dataworkspace.utils import normalise_environment
+from dataworkspace.utils import get_sso_headers, normalise_environment
 from proxy_session import SESSION_KEY, redis_session_middleware
 
 
@@ -210,6 +210,7 @@ async def async_main():
         credentials = {}
         dashboards = []
 
+        impersonation_sso_headers = None
         if not path.startswith('/static/'):
             host_api_url = admin_root + '/api/v1/core/get-superset-role-credentials'
 
@@ -222,6 +223,9 @@ async def async_main():
                     response_json = await response.json()
                     credentials = response_json['credentials']
                     dashboards = response_json['dashboards']
+                    impersonation_sso_headers = response_json[
+                        'impersonation_sso_headers'
+                    ]
                 else:
                     raise UserException(
                         'Unable to fetch credentials for superset', response.status
@@ -244,7 +248,11 @@ async def async_main():
                 )
             )
             + (tuple([('Dashboards', ','.join(dashboards))]))
-            + downstream_request['sso_profile_headers']
+            + (
+                downstream_request['sso_profile_headers']
+                if impersonation_sso_headers is None
+                else tuple(tuple(x) for x in impersonation_sso_headers)
+            )
         )
 
     def is_service_discovery(request):
@@ -1019,20 +1027,7 @@ async def async_main():
             me_profile = json.loads(me_profile_raw) if me_profile_raw else None
 
             async def handler_with_sso_headers():
-                request['sso_profile_headers'] = (
-                    ('sso-profile-email', me_profile['email']),
-                    # The default value of '' should be able to be removed after the cached
-                    # profile in Redis without contact_email has expired, i.e. 60 seconds after
-                    # deployment of this change
-                    ('sso-profile-contact-email', me_profile.get('contact_email', '')),
-                    (
-                        'sso-profile-related-emails',
-                        ','.join(me_profile.get('related_emails', [])),
-                    ),
-                    ('sso-profile-user-id', me_profile['user_id']),
-                    ('sso-profile-first-name', me_profile['first_name']),
-                    ('sso-profile-last-name', me_profile['last_name']),
-                )
+                request['sso_profile_headers'] = get_sso_headers(me_profile)
 
                 request['logger'].info(
                     'SSO-authenticated: %s %s %s',

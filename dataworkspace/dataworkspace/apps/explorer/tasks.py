@@ -3,7 +3,6 @@ from time import time
 
 import psycopg2
 from celery.utils.log import get_task_logger
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections
 
@@ -181,7 +180,9 @@ def submit_query_for_execution(
     request, query_sql, query_connection, query_id, page, limit, timeout
 ):
     if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
+        from dataworkspace.apps.applications.utils import (  # pylint: disable=import-outside-toplevel
+            get_sso_user,
+        )
 
         impersonator = get_sso_user(request)
     else:
