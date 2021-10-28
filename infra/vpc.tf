@@ -189,65 +189,6 @@ resource "aws_route_table_association" "public_whitelisted_ingress" {
   route_table_id = "${aws_route_table.public.id}"
 }
 
-resource "aws_network_acl" "public_whitelisted_ingress" {
-  vpc_id     = "${aws_vpc.main.id}"
-  subnet_ids = "${aws_subnet.public_whitelisted_ingress.*.id}"
-
-  tags = {
-    Name = "${var.prefix}-public-whitelisted-ingress"
-  }
-}
-
-resource "aws_network_acl_rule" "public_whitelisted_ingress_ingress_all" {
-  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
-
-  count       = "${length(var.gitlab_ip_whitelist)}"
-  egress      = false
-  protocol    = "tcp"
-  rule_number = "${count.index + 1}"
-  rule_action = "allow"
-  cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
-  from_port   = 0
-  to_port     = 65535
-}
-
-resource "aws_network_acl_rule" "public_whitelisted_ingress_egress_ephemeral" {
-  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
-
-  count       = "${length(var.gitlab_ip_whitelist)}"
-  egress      = true
-  protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 2 + count.index + 1}"
-  rule_action = "allow"
-  cidr_block  = "${var.gitlab_ip_whitelist[count.index]}"
-  from_port   = 1024
-  to_port     = 65535
-}
-
-# Allow everything through to rest of VPC
-resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_ingress" {
-  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
-
-  egress      = false
-  protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 3 + 1}"
-  rule_action = "allow"
-  cidr_block  = "${aws_vpc.main.cidr_block}"
-  from_port   = 0
-  to_port     = 65535
-}
-resource "aws_network_acl_rule" "public_whitelisted_ingress_vpc_egress" {
-  network_acl_id = "${aws_network_acl.public_whitelisted_ingress.id}"
-
-  egress      = true
-  protocol    = "tcp"
-  rule_number = "${length(var.gitlab_ip_whitelist) * 3 + 2}"
-  rule_action = "allow"
-  cidr_block  = "${aws_vpc.main.cidr_block}"
-  from_port   = 0
-  to_port     = 65535
-}
-
 resource "aws_subnet" "private_without_egress" {
   count      = "${length(var.aws_availability_zones)}"
   vpc_id     = "${aws_vpc.notebooks.id}"
