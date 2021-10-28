@@ -1009,6 +1009,18 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_nlb" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "gitlab_service_ingress_http_from_whitelist" {
+  description = "ingress-http-from-whitelist"
+
+  security_group_id = "${aws_security_group.gitlab_service.id}"
+  cidr_blocks = "${var.gitlab_ip_whitelist}"
+
+  type        = "ingress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "gitlab_service_ingress_http_from_admin_service" {
   description = "ingress-http-from-admin-service"
 
@@ -1038,6 +1050,18 @@ resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb" {
 
   security_group_id = "${aws_security_group.gitlab_service.id}"
   cidr_blocks = ["${aws_eip.gitlab.private_ip}/32"]
+
+  type        = "ingress"
+  from_port   = "22"
+  to_port     = "22"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_whitelist" {
+  description = "ingress-http-from-whitelist"
+
+  security_group_id = "${aws_security_group.gitlab_service.id}"
+  cidr_blocks = "${var.gitlab_ip_whitelist}"
 
   type        = "ingress"
   from_port   = "22"
