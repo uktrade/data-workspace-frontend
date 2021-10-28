@@ -3,8 +3,8 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 
-def impersonate(request, id):
-    user = get_user_model().objects.get(id=id)
+def impersonate(request, user_id):
+    user = get_user_model().objects.get(id=user_id)
     request.session['impersonated_user'] = user
     return HttpResponseRedirect(reverse('root'))
 

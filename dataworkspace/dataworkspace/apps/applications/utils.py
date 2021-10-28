@@ -205,8 +205,6 @@ def application_api_is_allowed(request, public_host):
         )
 
     if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
-
         user = get_sso_user(request)
     else:
         user = request.user

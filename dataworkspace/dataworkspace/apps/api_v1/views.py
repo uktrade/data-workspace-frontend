@@ -171,7 +171,9 @@ def application_api_PUT(request, public_host):
     spawner_options = json.dumps(application_options(application_template))
 
     if 'impersonated_user' in request.session:
-        from dataworkspace.apps.applications.utils import get_sso_user
+        from dataworkspace.apps.applications.utils import (  # pylint: disable=import-outside-toplevel
+            get_sso_user,
+        )
 
         owner = get_sso_user(request)
         impersonated_user = request.user
