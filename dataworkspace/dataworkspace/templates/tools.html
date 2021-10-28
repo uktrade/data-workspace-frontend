@@ -72,7 +72,7 @@
         {% include 'partials/tool_section.html' with application_name="Data Explorer" application_summary=application_summary application_help_link=None instance=None application_url=data_explorer_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
       {% endwith %}
 
-      {% with application_summary='Use GitLab to store, maintain and collaborate on analysis projects and code with others in the department.' %}
+      {% with application_summary='Collaborate on and store analysis, projects and code with your colleagues.' %}
         {% include 'partials/tool_section.html' with application_name="GitLab" application_summary=application_summary application_help_link=None instance=None application_url=gitlab_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
       {% endwith %}
 
