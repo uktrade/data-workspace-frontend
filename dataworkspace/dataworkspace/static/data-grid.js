@@ -128,6 +128,9 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
         comparator: compareDates
       }
     }
+
+    // Ensure ag-grid does not capitalise actual column names
+    column.headerName = column.headerName ? column.headerName : column.field;
   }
 
   function suppressTabKey(params){
