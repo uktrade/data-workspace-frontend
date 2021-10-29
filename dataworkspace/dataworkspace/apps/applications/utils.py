@@ -1366,7 +1366,9 @@ def _do_sync_tool_query_logs():
                 rolename=log['user_name'],
                 query_sql=log['statement'],
                 timestamp=log['log_time'],
-                connection_from=log['connection_from'].split(':')[0],
+                connection_from=log['connection_from'].split(':')[0]
+                if log['connection_from'] is not None
+                else None,
             )
         except IntegrityError:
             logger.info('Skipping duplicate log record for %s', log['user_name'])
