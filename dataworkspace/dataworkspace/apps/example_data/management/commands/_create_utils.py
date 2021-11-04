@@ -1,5 +1,6 @@
 import uuid
 import datetime
+import random
 
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
@@ -11,6 +12,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
     VisualisationLink,
     ReferenceDataset,
+    Tag,
 )
 
 
@@ -65,6 +67,17 @@ class TestData:
         return None
 
 
+def get_random_tag():
+    all_tags = Tag.objects.all()
+
+    if not all_tags.exists():
+        return None
+
+    offset = random.randint(0, all_tags.count() - 1)
+
+    return all_tags[offset]
+
+
 def create_fake_dataset(dataset_type=DataSetType.MASTER):
 
     if dataset_type not in [DataSetType.MASTER, DataSetType.DATACUT]:
@@ -94,7 +107,7 @@ def create_fake_dataset(dataset_type=DataSetType.MASTER):
         published=True,
     )
 
-    return name, catalogue_item.id
+    return catalogue_item
 
 
 def create_fake_visualisation_dataset():
@@ -126,7 +139,7 @@ def create_fake_visualisation_dataset():
         visualisation_catalogue_item=catalogue_item,
     )
 
-    return name, catalogue_item.id
+    return catalogue_item
 
 
 def create_fake_reference_dataset():
@@ -139,7 +152,7 @@ def create_fake_reference_dataset():
     table_name = (
         "ref_"
         + fake.first_name().lower()
-        + datetime.datetime.now().strftime('%Y%m%d%H%M%s')
+        + datetime.datetime.now().strftime("%Y%m%d%H%M%s")
     )
 
     catalogue_item = ReferenceDataset.objects.create(
@@ -155,4 +168,4 @@ def create_fake_reference_dataset():
         published=True,
     )
 
-    return name, catalogue_item.id
+    return catalogue_item
