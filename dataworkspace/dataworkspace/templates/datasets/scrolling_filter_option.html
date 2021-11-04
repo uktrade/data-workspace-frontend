@@ -1,0 +1,7 @@
+<div class="govuk-checkboxes__item {% if hidden %}app-js-hidden{% endif %}" data-item-seach-text="{{ widget.label.search_text }}">
+  <input class="govuk-checkboxes__input" name="{{ widget.name }}" type="checkbox" {% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %}>
+
+  <label class="govuk-label govuk-checkboxes__label" for="{{ widget.attrs.id }}">
+    {{ widget.label.label }} ({{ widget.label.count }})
+  </label>
+</div>

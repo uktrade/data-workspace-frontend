@@ -46,7 +46,8 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
 
 
 class ScrollingFilterWidget(FilterWidget):
-    pass
+    template_name = 'datasets/scrolling_filter.html'
+    option_template_name = "datasets/scrolling_filter_option.html"
 
 
 class SortSelectWidget(forms.widgets.Select):
@@ -177,9 +178,9 @@ class DatasetSearchForm(forms.Form):
         required=False,
         widget=ScrollingFilterWidget(
             "Choose data source",
-            hint_text="Select all that apply",
-            limit_initial_options=10,
-            show_more_label="Show more sources",
+            # hint_text="Select all that apply",
+            # limit_initial_options=10,
+            # show_more_label="Show more sources",
         ),
     )
 
@@ -320,7 +321,16 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields['source'].choices = [
-            (source_id, source_text + f" ({counts['source'][source_id.value]})")
+            # (source_id, source_text + f" ({counts['source'][source_id.value]})")
+            (
+                source_id,
+                {
+                    'label': source_text,
+                    'count': counts['source'][source_id.value],
+                    'search_text': str(source_text).lower(),
+                },
+            )
+            # (source_id, source_text)
             for source_id, source_text in source_choices
             if source_id.value in selected_source_ids
             or counts['source'][source_id.value] != 0

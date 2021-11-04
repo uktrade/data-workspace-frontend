@@ -26,6 +26,11 @@ var ToggleInputClassOnFocus = function ($el) {
   }
 }
 
+var FilterTextSearch = function(formSelector){
+  console.log("hackery")
+}
+
+
 var LiveSearch = function(formSelector, wrapperSelector, GTM){
   this.wrapperSelector = wrapperSelector;
   this.$wrapper = $(wrapperSelector);
@@ -222,3 +227,4 @@ LiveSearch.prototype.getTextInputValue = function getTextInputValue(name){
   return '';
 }
 ;
+
