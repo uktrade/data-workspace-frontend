@@ -45,6 +45,6 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"created new {tag_type.name} tag {name} {tag.id}"
+                        f"{x+1:02}: created new {tag_type.name} tag {name} {tag.id}"
                     )
                 )

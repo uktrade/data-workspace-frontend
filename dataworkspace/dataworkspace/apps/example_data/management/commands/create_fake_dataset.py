@@ -66,6 +66,6 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"created new {dataset_type.name} dataset {catalogue_item.name} {catalogue_item.id}"
+                    f"{x+1:02}: created new {dataset_type.name} dataset {catalogue_item.name} {catalogue_item.id}"
                 )
             )
