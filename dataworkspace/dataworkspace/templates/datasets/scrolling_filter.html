@@ -12,7 +12,18 @@
       <div class="govuk-!-margin-bottom-4">
         <input class="govuk-input" id="event-name" name="event-name" type="text">
       </div>
-      <div style="overflow:hidden;height:13rem;overflow-y:scroll;">
+      <div class="govuk-!-margin-bottom-4">
+        {% for group, options, index in widget.optgroups %}
+          {% for option in options %}
+            {% if option.attrs.checked %}
+              <label class="govuk-label" for="{{ option.attrs.id }}">
+                <span style="font-size:90%;border-radius:2px;background-color:rgb(243, 242, 241);color:black;padding:3px;cursor: pointer">{{ option.label.label }}</span><span style="background-color:black;color:white;">x</span>
+              </label>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+      <div style="overflow:hidden;height:13rem;overflow-y:scroll;background-color:#efefef;padding: 0.5em;">
         <div class="govuk-checkboxes">
           {% for group, options, index in widget.optgroups %}
             {% for option in options %}
