@@ -672,7 +672,7 @@ class VisualisationLinkSqlQueryAdmin(admin.ModelAdmin):
         'is_latest',
         'visualisation_link',
     )
-    readonly_fields = ('data_set_id', 'sql_query', 'view_previous_versions')
+    readonly_fields = ('data_set_id', 'table_id', 'sql_query', 'view_previous_versions')
     list_display = ('id', 'is_latest', 'created_date')
 
     def get_model_perms(self, request):
@@ -683,9 +683,11 @@ class VisualisationLinkSqlQueryAdmin(admin.ModelAdmin):
 
     @mark_safe
     def view_previous_versions(self, obj):
-        url = (
-            reverse("admin:datasets_visualisationlinksqlquery_changelist")
-            + f'?o=-3&visualisation_link_id={obj.visualisation_link_id}&data_set_id={obj.data_set_id}'
+        url = reverse("admin:datasets_visualisationlinksqlquery_changelist") + (
+            '?o=-3'
+            f'&visualisation_link_id={obj.visualisation_link_id}'
+            f'&data_set_id={obj.data_set_id}'
+            f'&table_id={obj.table_id}'
         )
         return '<a href="%s">View previous versions</a>' % (url)
 
@@ -1018,6 +1020,7 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         'user',
         'rolename',
         'database',
+        'connection_from',
         'get_detail_truncated_query',
         'get_detail_related_datasets',
     ]

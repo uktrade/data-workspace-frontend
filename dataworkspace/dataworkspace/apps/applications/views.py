@@ -227,6 +227,7 @@ def tools_html_GET(request):
                 .order_by('nice_name')
             ],
             'appstream_url': settings.APPSTREAM_URL,
+            'gitlab_url': settings.GITLAB_URL_FOR_TOOLS,
             'quicksight_url': reverse('applications:quicksight_redirect'),
             'superset_url': settings.SUPERSET_DOMAINS['edit'],
             'your_files_enabled': settings.YOUR_FILES_ENABLED,

@@ -1098,7 +1098,7 @@ class TestSyncToolQueryLogs:
         '5fcfc36b.72,19041,"SELECT",2020-12-08 18:18:19 UTC,9/19034,0,LOG,00000,'
         '"AUDIT: SESSION,19041,1,READ,SELECT,,,""SELECT c FROM d"",<not logged>",,,,,,,,,""\n',
         # Valid user and db insert statement
-        '2020-12-08 18:00:40.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
+        '2020-12-08 18:00:40.400 UTC,"auser","test_datasets",114,"172.19.0.5:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
         '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO dataset_test VALUES(1);"",<not logged>"'
         ',,,,,,,,,""\n',
@@ -1187,7 +1187,9 @@ class TestSyncToolQueryLogs:
         assert queries.count() == log_count + 2
         assert tables.count() == table_count + 1
         assert list(queries)[-2].query_sql == 'SELECT * FROM dataset_test'
+        assert list(queries)[-2].connection_from == '172.19.0.4'
         assert list(queries)[-1].query_sql == 'INSERT INTO dataset_test VALUES(1);'
+        assert list(queries)[-1].connection_from == '172.19.0.5'
 
     @pytest.mark.django_db(transaction=True)
     @freeze_time('2020-12-08 18:04:00')

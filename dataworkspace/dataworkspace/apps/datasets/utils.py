@@ -251,12 +251,13 @@ def process_quicksight_dashboard_visualisations():
                     if data_set['ImportMode'] == 'SPICE':
                         last_updated_dates.append(data_set_last_updated_time)
 
-                        for table_map in data_set['PhysicalTableMap'].values():
+                        for table_id, table_map in data_set['PhysicalTableMap'].items():
                             data_set_type = list(table_map)[0]
                             if data_set_type == 'CustomSql':
                                 store_sql_query(
                                     visualisation_link,
                                     data_set['DataSetId'],
+                                    table_id,
                                     table_map['CustomSql']['SqlQuery'],
                                 )
                                 tables.extend(
@@ -266,7 +267,7 @@ def process_quicksight_dashboard_visualisations():
                                     )
                                 )
                     else:
-                        for table_map in data_set['PhysicalTableMap'].values():
+                        for table_id, table_map in data_set['PhysicalTableMap'].items():
                             data_set_type = list(table_map)[0]
                             if data_set_type == 'RelationalTable':
                                 last_updated_date_candidate = (
@@ -286,6 +287,7 @@ def process_quicksight_dashboard_visualisations():
                                 store_sql_query(
                                     visualisation_link,
                                     data_set['DataSetId'],
+                                    table_id,
                                     table_map['CustomSql']['SqlQuery'],
                                 )
                                 last_updated_date_candidate = max(
@@ -322,17 +324,21 @@ def process_quicksight_dashboard_visualisations():
     )
 
 
-def store_sql_query(visualisation_link, data_set_id, sql_query):
+def store_sql_query(visualisation_link, data_set_id, table_id, sql_query):
     try:
         visualisation_link.sql_queries.get(
-            is_latest=True, data_set_id=data_set_id, sql_query=sql_query
+            is_latest=True,
+            data_set_id=data_set_id,
+            table_id=table_id,
+            sql_query=sql_query,
         )
     except VisualisationLinkSqlQuery.DoesNotExist:
         visualisation_link.sql_queries.filter(
-            is_latest=True, data_set_id=data_set_id
+            is_latest=True, data_set_id=data_set_id, table_id=table_id
         ).update(is_latest=False)
         VisualisationLinkSqlQuery.objects.create(
             data_set_id=data_set_id,
+            table_id=table_id,
             sql_query=sql_query,
             is_latest=True,
             visualisation_link=visualisation_link,

@@ -421,6 +421,8 @@ GITLAB_VISUALISATIONS_GROUP = env.get('GITLAB_VISUALISATIONS_GROUP')
 GITLAB_ECR_PROJECT_ID = env.get('GITLAB_ECR_PROJECT_ID')
 GITLAB_ECR_PROJECT_TRIGGER_TOKEN = env.get('GITLAB_ECR_PROJECT_TRIGGER_TOKEN')
 
+GITLAB_URL_FOR_TOOLS = env.get('GITLAB_URL_FOR_TOOLS', '')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django_db_geventpool.backends.postgresql_psycopg2',
@@ -609,6 +611,7 @@ PGAUDIT_LOG_HEADERS = [
     'object_name',
     'statement',
     'parameter',
+    'connection_from',
 ]
 
 PGAUDIT_IGNORE_STATEMENTS_RE = [

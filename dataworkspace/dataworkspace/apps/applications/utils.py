@@ -1237,7 +1237,8 @@ def _parse_postgres_log(log_reader, from_date, to_date):
         log_line.update(
             next(
                 csv.DictReader(
-                    [log_line['message'][7:]], fieldnames=settings.PGAUDIT_LOG_HEADERS,
+                    [','.join([log_line['message'][7:], log_line['connection_from']])],
+                    fieldnames=settings.PGAUDIT_LOG_HEADERS,
                 )
             )
         )
@@ -1351,9 +1352,10 @@ def _do_sync_tool_query_logs():
         ).first()
         if not db_user:
             logger.info(
-                'Skipping log entry for user %s on db %s as no matching user could be found',
+                'Skipping log entry for user %s on db %s (%s) as no matching user could be found',
                 log['user_name'],
                 log['database_name'],
+                log['connection_from'],
             )
             continue
 
@@ -1364,6 +1366,9 @@ def _do_sync_tool_query_logs():
                 rolename=log['user_name'],
                 query_sql=log['statement'],
                 timestamp=log['log_time'],
+                connection_from=log['connection_from'].split(':')[0]
+                if log['connection_from'] is not None
+                else None,
             )
         except IntegrityError:
             logger.info('Skipping duplicate log record for %s', log['user_name'])
