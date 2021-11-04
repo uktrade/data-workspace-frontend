@@ -1,0 +1,29 @@
+{% with id=widget.attrs.id %}
+  <div class="govuk-form-group">
+    <fieldset{% if id %} id="{{ id }}"{% endif %} class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+        <h3 class="govuk-fieldset__heading">{{ widget.group_label }}</h3>
+      </legend>
+      {% if widget.hint_text %}
+        <span id="{{ id }}-hint" class="govuk-hint">
+        {{ widget.hint_text }}
+      </span>
+      {% endif %}
+      <div class="govuk-checkboxes" data-module="filter-show-more" data-show-more-id="{{ id }}">
+        {% for group, options, index in widget.optgroups %}
+          {% for option in options %}
+            {% if widget.limit_initial_options == 0 or forloop.parentloop.counter <= widget.limit_initial_options %}
+              {% include option.template_name with widget=option hidden=False %}
+            {% elif forloop.parentloop.counter == widget.limit_initial_options|add:1 %}
+              <button class="govuk-button govuk-button--secondary js-filter-show-more hidden"
+                      type="button">{{ widget.show_more_label }}</button>
+              {% include option.template_name with widget=option hidden=True %}
+            {% else %}
+              {% include option.template_name with widget=option hidden=True %}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </fieldset>
+  </div>
+{% endwith %}

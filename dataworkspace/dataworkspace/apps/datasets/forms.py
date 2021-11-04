@@ -45,6 +45,10 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         js = ('app-filter-show-more-v2.js',)
 
 
+class ScrollingFilterWidget(FilterWidget):
+    pass
+
+
 class SortSelectWidget(forms.widgets.Select):
     template_name = 'datasets/select.html'
     option_template_name = 'datasets/select_option.html'
@@ -171,7 +175,7 @@ class DatasetSearchForm(forms.Form):
     source = SourceTagField(
         queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
         required=False,
-        widget=FilterWidget(
+        widget=ScrollingFilterWidget(
             "Choose data source",
             hint_text="Select all that apply",
             limit_initial_options=10,
