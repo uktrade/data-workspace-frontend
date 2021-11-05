@@ -191,9 +191,6 @@ class DatasetSearchForm(forms.Form):
         required=False,
         widget=ScrollingFilterWidget(
             "Choose data source",
-            # hint_text="Select all that apply",
-            # limit_initial_options=10,
-            # show_more_label="Show more sources",
         ),
     )
 
