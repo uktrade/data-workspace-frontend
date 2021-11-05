@@ -86,107 +86,6 @@ resource "aws_security_group_rule" "sentryproxy_ingress_http_notebooks" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group" "registry_alb" {
-  name        = "${var.prefix}-registry-alb"
-  description = "${var.prefix}-registry-alb"
-  vpc_id      = "${aws_vpc.main.id}"
-
-  tags = {
-    Name = "${var.prefix}-registry-alb"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_security_group_rule" "registry_alb_egress_https_to_cloudwatch" {
-  description = "egress-https-to-cloudwatch"
-
-  security_group_id = "${aws_security_group.registry_alb.id}"
-  source_security_group_id = "${aws_security_group.cloudwatch.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "registry_alb_ingress_https_from_notebooks" {
-  description = "ingress-https-from-notebooks"
-
-  security_group_id = "${aws_security_group.registry_alb.id}"
-  source_security_group_id = "${aws_security_group.notebooks.id}"
-
-  type        = "ingress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "registry_alb_ingress_https_from_superset_service" {
-  description = "ingress-https-from-superset"
-
-  security_group_id = "${aws_security_group.registry_alb.id}"
-  source_security_group_id = "${aws_security_group.superset_service.id}"
-
-  type        = "ingress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "registry_alb_egress_https_to_service" {
-  description = "egress-https-to-service"
-
-  security_group_id = "${aws_security_group.registry_alb.id}"
-  source_security_group_id = "${aws_security_group.registry_service.id}"
-
-  type        = "egress"
-  from_port   = "${local.registry_container_port}"
-  to_port     = "${local.registry_container_port}"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group" "registry_service" {
-  name        = "${var.prefix}-registry-service"
-  description = "${var.prefix}-registry-service"
-  vpc_id      = "${aws_vpc.main.id}"
-
-  tags = {
-    Name = "${var.prefix}-registry-service"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_security_group_rule" "registry_service_ingress_https_from_alb" {
-  description = "ingress-https-from-alb"
-
-  security_group_id = "${aws_security_group.registry_service.id}"
-  source_security_group_id = "${aws_security_group.registry_alb.id}"
-
-  type        = "ingress"
-  from_port   = "${local.registry_container_port}"
-  to_port     = "${local.registry_container_port}"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "registry_service_egress_https_to_everywhere" {
-  description = "egress-https-to-everywhere"
-
-  security_group_id = "${aws_security_group.registry_service.id}"
-  cidr_blocks       = ["0.0.0.0/0"]
-  ipv6_cidr_blocks  = ["::/0"]
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
 resource "aws_security_group" "admin_alb" {
   name        = "${var.prefix}-admin-alb"
   description = "${var.prefix}-admin-alb"
@@ -1366,18 +1265,6 @@ resource "aws_security_group_rule" "superset_service_egress_https_to_ecr_api" {
 
   security_group_id = "${aws_security_group.superset_service.id}"
   source_security_group_id = "${aws_security_group.ecr_api.id}"
-
-  type        = "egress"
-  from_port   = "443"
-  to_port     = "443"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "superset_service_egress_https_registry_alb" {
-  description = "egress-https-to-registry"
-
-  security_group_id = "${aws_security_group.superset_service.id}"
-  source_security_group_id = "${aws_security_group.registry_alb.id}"
 
   type        = "egress"
   from_port   = "443"
