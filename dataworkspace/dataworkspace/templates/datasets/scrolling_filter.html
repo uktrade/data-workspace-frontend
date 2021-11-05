@@ -1,37 +1,31 @@
 {% with id=widget.attrs.id %}
-  <div class="govuk-form-group">
-    <fieldset{% if id %} id="{{ id }}"{% endif %} class="govuk-fieldset">
-      <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-        <h3 class="govuk-fieldset__heading">{{ widget.group_label }}</h3>
-      </legend>
-      {% if widget.hint_text %}
-        <span id="{{ id }}-hint" class="govuk-hint">
+  <div class="filter-widget">
+    <div class="govuk-form-group">
+      <fieldset{% if id %} id="{{ id }}"{% endif %} class="govuk-fieldset">
+        <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+          <h3 class="govuk-fieldset__heading">{{ widget.group_label }}</h3>
+        </legend>
+        {% if widget.hint_text %}
+          <span id="{{ id }}-hint" class="govuk-hint">
         {{ widget.hint_text }}
       </span>
-      {% endif %}
-      <div class="govuk-!-margin-bottom-4">
-        <input class="govuk-input" id="event-name" name="event-name" type="text">
-      </div>
-      <div class="govuk-!-margin-bottom-4">
-        {% for group, options, index in widget.optgroups %}
-          {% for option in options %}
-            {% if option.attrs.checked %}
-              <label class="govuk-label" for="{{ option.attrs.id }}">
-                <span style="font-size:90%;border-radius:2px;background-color:rgb(243, 242, 241);color:black;padding:3px;cursor: pointer">{{ option.label.label }}</span><span style="background-color:black;color:white;">x</span>
-              </label>
-            {% endif %}
-          {% endfor %}
-        {% endfor %}
-      </div>
-      <div style="overflow:hidden;height:13rem;overflow-y:scroll;background-color:#efefef;padding: 0.5em;">
-        <div class="govuk-checkboxes">
-          {% for group, options, index in widget.optgroups %}
-            {% for option in options %}
-              {% include option.template_name with widget=option hidden=False %}
+        {% endif %}
+        {% if widget.selected_count %}
+          <span id="{{ id }}-selected-count" class="govuk-hint">
+          {{ widget.selected_count }} selected</span>
+        {% endif %}
+
+        <div class="filter-container filter-container__scrolling">
+          <div class="govuk-checkboxes">
+            {% for group, options, index in widget.optgroups %}
+              {% for option in options %}
+                {% include option.template_name with widget=option hidden=False %}
+              {% endfor %}
             {% endfor %}
-          {% endfor %}
+          </div>
         </div>
-      </div>
-    </fieldset>
+      </fieldset>
+    </div>
+  <hr class="govuk-section-break govuk-section-break--visible"/>
   </div>
 {% endwith %}
