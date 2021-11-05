@@ -331,7 +331,6 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields['source'].choices = [
-            # (source_id, source_text + f" ({counts['source'][source_id.value]})")
             (
                 source_id,
                 {
@@ -340,7 +339,6 @@ class DatasetSearchForm(forms.Form):
                     'search_text': str(source_text).lower(),
                 },
             )
-            # (source_id, source_text)
             for source_id, source_text in source_choices
             if source_id.value in selected_source_ids
             or counts['source'][source_id.value] != 0
