@@ -679,6 +679,11 @@ class SourceTable(BaseSource):
     def data_grid_download_limit(self):
         return self.data_grid_column_config.get('download_limit', 5000)
 
+    def get_column_details_url(self):
+        return reverse(
+            'datasets:source_table_column_details', args=(self.dataset_id, self.id),
+        )
+
 
 class SourceView(BaseSource):
     view = models.CharField(
@@ -970,6 +975,11 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     @property
     def data_grid_download_limit(self):
         return None
+
+    def get_column_details_url(self):
+        return reverse(
+            'datasets:custom_query_column_details', args=(self.dataset_id, self.id),
+        )
 
 
 class CustomDatasetQueryTable(models.Model):

@@ -3,7 +3,7 @@
       <span class="govuk-details__summary-text">
         View data structure
         <span class="govuk-visually-hidden">
-          for "{{ source_table.schema }}"."{{ source_table.table }}"
+          for {% if source.schema %}"{{ source.schema }}"."{{ source.table }}"{% else %}{{ source.name }}{% endif %}
         </span>
       </span>
   </summary>
@@ -14,11 +14,13 @@
           <strong>{{ column }}</strong> ({{ data_type }})
         </li>
       {% endfor %}
-      {% if columns|length > 12 and dataset and source_table %}
+      {% if columns|length > 12 %}
         <a class="govuk-link"
-           href="{% url 'datasets:source_table_column_details' dataset_uuid=dataset.id table_uuid=source_table.id %}">
+           href="{{ source.get_column_details_url }}">
           View all columns <span
-          class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+          class="govuk-visually-hidden">
+            for {% if source.schema %}"{{ source.schema }}"."{{ source.table }}"{% else %}{{ source.name }}{% endif %}
+        </span>
         </a>
       {% endif %}
     </ul>

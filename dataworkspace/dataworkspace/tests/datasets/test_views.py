@@ -1636,19 +1636,23 @@ def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
     assert """SELECT * FROM foo""" in response.content.decode(response.charset)
 
 
+@pytest.mark.parametrize(
+    'dataset_type, source_factory,source_type',
+    (
+        (DataSetType.MASTER, factories.SourceTableFactory, 'table'),
+        (DataSetType.DATACUT, factories.CustomDatasetQueryFactory, 'datacut'),
+    ),
+)
 @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
 @pytest.mark.django_db
 def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
-    get_columns_mock, metadata_db
+    get_columns_mock, dataset_type, source_factory, source_type, metadata_db
 ):
-    ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
+    ds = factories.DataSetFactory.create(type=dataset_type, published=True)
     user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    st = factories.SourceTableFactory.create(
-        dataset=ds,
-        schema="public",
-        table="MY_LOVELY_TABLE",
-        database=factories.DatabaseFactory(memorable_name='my_database'),
+    st = source_factory.create(
+        dataset=ds, database=factories.DatabaseFactory(memorable_name='my_database'),
     )
     get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(20)]
 
@@ -1662,7 +1666,10 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
         assert f"<strong>column_{i}</strong> (integer)" in response_body
 
     assert (
-        len(doc.xpath(f"//a[@href = '/datasets/{ds.id}/table/{st.id}/columns']")) == 1
+        len(
+            doc.xpath(f"//a[@href = '/datasets/{ds.id}/{source_type}/{st.id}/columns']")
+        )
+        == 1
     )
 
 
@@ -2236,54 +2243,72 @@ class TestCustomQueryRelatedDataView:
         assert len(response.context["related_data"]) == 2
 
 
-class TestSourceTableColumnDetailsView:
+class TestColumnDetailsView:
+    @pytest.mark.parametrize(
+        'dataset_type,source_factory',
+        (
+            (DataSetType.MASTER, factories.SourceTableFactory),
+            (DataSetType.DATACUT, factories.CustomDatasetQueryFactory),
+        ),
+    )
     @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
     @pytest.mark.django_db
-    def test_page_shows_all_columns_for_dataset(self, get_columns_mock):
-        ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-        user = get_user_model().objects.create(is_superuser=False)
+    def test_page_shows_all_columns_for_dataset(
+        self, get_columns_mock, dataset_type, source_factory, user, client
+    ):
+        ds = factories.DataSetFactory.create(type=dataset_type, published=True)
         factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-        st = factories.SourceTableFactory.create(
+        source = source_factory.create(
             dataset=ds,
-            schema="public",
-            table="MY_LOVELY_TABLE",
             database=factories.DatabaseFactory(memorable_name='my_database'),
         )
         get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(100)]
-
-        client = Client(**get_http_sso_data(user))
-        response = client.get(
-            reverse(
-                'datasets:source_table_column_details',
-                kwargs=dict(dataset_uuid=ds.id, table_uuid=st.id),
-            )
-        )
+        response = client.get(source.get_column_details_url())
         response_body = response.content.decode(response.charset)
-
         assert response.status_code == 200
         for i in range(100):
             assert f"<strong>column_{i}</strong> (integer)" in response_body
 
+    @pytest.mark.parametrize(
+        'dataset_type,source_factory,source_type,url_param',
+        (
+            (
+                DataSetType.MASTER,
+                factories.SourceTableFactory,
+                'source_table',
+                'table_uuid',
+            ),
+            (
+                DataSetType.DATACUT,
+                factories.CustomDatasetQueryFactory,
+                'custom_query',
+                'query_id',
+            ),
+        ),
+    )
+    @mock.patch('dataworkspace.apps.datasets.views.datasets_db.get_columns')
     @pytest.mark.django_db
-    def test_404_if_wrong_dataset_for_source_table_in_url(self):
-        user = get_user_model().objects.create(is_superuser=False)
-        ds1 = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-        ds2 = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-        st = factories.SourceTableFactory.create(
+    def test_404_if_wrong_dataset_for_source_table_in_url(
+        self,
+        get_columns_mock,
+        dataset_type,
+        source_factory,
+        source_type,
+        url_param,
+        client,
+    ):
+        ds1 = factories.DataSetFactory.create(type=dataset_type, published=True)
+        ds2 = factories.DataSetFactory.create(type=dataset_type, published=True)
+        source = source_factory.create(
             dataset=ds2,
-            schema="public",
-            table="MY_LOVELY_TABLE",
             database=factories.DatabaseFactory(memorable_name='my_database'),
         )
-
-        client = Client(**get_http_sso_data(user))
         response = client.get(
             reverse(
-                'datasets:source_table_column_details',
-                kwargs=dict(dataset_uuid=ds1.id, table_uuid=st.id),
+                f'datasets:{source_type}_column_details',
+                kwargs={'dataset_uuid': ds1.id, url_param: source.id},
             )
         )
-
         assert response.status_code == 404
 
 
