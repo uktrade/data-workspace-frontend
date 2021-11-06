@@ -223,3 +223,31 @@ LiveSearch.prototype.getTextInputValue = function getTextInputValue(name){
 }
 ;
 
+var FilterSearch = function ($text) {
+  var targetId = $($text).attr("data-target");
+  var target = $("#" + targetId);
+
+  var $items = $(".search-target", target);
+
+  function filterOn(value) {
+    $($items).each(function (i, e) {
+      var searchText = $(e).attr("data-item-seach-text");
+      if (searchText.indexOf(value) >= 0) {
+        $(e).show();
+      } else {
+        $(e).hide();
+      }
+    });
+  }
+
+  $($text)
+    .on("keyup", function () {
+      var value = $(this).val().toLocaleLowerCase();
+      filterOn(value);
+    })
+    .on("search", function () {
+      var value = $(this).val().toLocaleLowerCase();
+      filterOn(value);
+    });
+};
+

@@ -15,8 +15,14 @@
           {{ widget.selected_count }} selected</span>
         {% endif %}
 
+        <div class="search-container govuk-!-margin-bottom-4">
+          <input class="govuk-input" type="search" id="filter_text_{{ id }}"
+                 data-target="filter_text_target_{{ id }}"
+                 data-module="filter-search" />
+        </div>
+
         <div class="filter-container filter-container__scrolling">
-          <div class="govuk-checkboxes">
+          <div class="govuk-checkboxes" id="filter_text_target_{{ id }}">
             {% for group, options, index in widget.optgroups %}
               {% for option in options %}
                 {% include option.template_name with widget=option hidden=False %}
@@ -26,6 +32,6 @@
         </div>
       </fieldset>
     </div>
-  <hr class="govuk-section-break govuk-section-break--visible"/>
+    <hr class="govuk-section-break govuk-section-break--visible"/>
   </div>
 {% endwith %}
