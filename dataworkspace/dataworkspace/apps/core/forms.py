@@ -1,5 +1,6 @@
 from django import forms
 from django.db import models
+from django.template.loader import render_to_string
 
 from dataworkspace.apps.core.models import HowSatisfiedType, TryingToDoType
 from dataworkspace.forms import (
@@ -90,9 +91,9 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
     improve_service = GOVUKDesignSystemTextareaField(
         required=False,
         label='3. How could we improve the service? (optional)',
-        help_text="""Do not include any personal information,
-                 like your name or email address. We'll delete any personal information you
-                 do include""",
+        help_html=render_to_string(
+            'core/partial/user-survey-improve-service-hint.html'
+        ),
         widget=GOVUKDesignSystemTextareaWidget(heading='h2', label_size='m'),
     )
 

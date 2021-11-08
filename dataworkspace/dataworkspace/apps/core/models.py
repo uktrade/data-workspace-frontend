@@ -118,7 +118,7 @@ class DatabaseUser(TimeStampedModel):
 class HowSatisfiedType(models.TextChoices):
     very_satified = 'very-satified', 'Very satisfied'
     satified = 'satified', 'Satisfied'
-    neither = 'neither', 'Neither satisfied or dissatisfied'
+    neither = 'neither', 'Neither satisfied nor dissatisfied'
     dissatisfied = 'dissatisfied', 'Dissatisfied'
     very_dissatisfied = 'very-dissatisfied', 'Very dissatisfied'
 
