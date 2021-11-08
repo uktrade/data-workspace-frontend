@@ -22,7 +22,10 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
     This is intended to be used to pass filters into Google Tag Manager's Data Layer as JSON for
     analytics.
     """
-    return ';'.join(sorted(x.data['label'] for x in field if x.data['selected']))
+
+    # NB: The str() *is* required here as the labels are overridden for scrolling_filter into
+    # a SearchableChoice object
+    return ';'.join(sorted(str(x.data['label']) for x in field if x.data['selected']))
 
 
 @register.filter

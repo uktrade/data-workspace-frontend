@@ -331,11 +331,7 @@ class DatasetSearchForm(forms.Form):
         self.fields['source'].choices = [
             (
                 source_id,
-                {
-                    'label': source_text,
-                    'count': counts['source'][source_id.value],
-                    'search_text': str(source_text).lower(),
-                },
+                SearchableChoice(source_text, counts['source'][source_id.value]),
             )
             for source_id, source_text in source_choices
             if source_id.value in selected_source_ids
@@ -348,6 +344,16 @@ class DatasetSearchForm(forms.Form):
             if topic_id.value in selected_topic_ids
             or counts['topic'][topic_id.value] != 0
         ]
+
+
+class SearchableChoice:
+    def __init__(self, label, count=0):
+        self.label = label
+        self.count = count
+        self.search_text = str(label).lower()
+
+    def __str__(self):
+        return self.label
 
 
 class RelatedMastersSortForm(forms.Form):

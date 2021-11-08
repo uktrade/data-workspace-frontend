@@ -159,6 +159,7 @@ LiveSearch.prototype.showLoadingIndicators = function showLoadingIndicators() {
 };
 
 LiveSearch.prototype.showErrorIndicator = function showErrorIndicator() {
+  this.$wrapper.css("opacity", "1");
   this.$wrapper.text(
     "Error. Please try modifying your search and trying again."
   );
