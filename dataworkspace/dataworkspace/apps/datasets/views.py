@@ -1603,9 +1603,6 @@ class CustomQueryColumnDetails(View):
         except (DataSet.DoesNotExist, CustomDatasetQuery.DoesNotExist):
             return HttpResponse(status=404)
 
-        if not dataset.user_has_access(request.user):
-            return HttpResponseForbidden()
-
         return render(
             request,
             'datasets/data_cut_column_details.html',
