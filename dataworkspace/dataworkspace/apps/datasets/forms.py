@@ -53,10 +53,10 @@ class ScrollingFilterWidget(FilterWidget):
         context = super().get_context(name, value, attrs)
 
         selected_count = 0
-        for _, options, __ in context['widget']['optgroups']:
-            for option in options:
-                if option['attrs'].get('checked', False):
-                    selected_count += 1
+        # for _, options, __ in context['widget']['optgroups']:
+        #     for option in options:
+        #         if option['attrs'].get('checked', False):
+        #             selected_count += 1
 
         context['widget']['selected_count'] = selected_count
 
