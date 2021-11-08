@@ -5,6 +5,9 @@ chown -R jovyan:jovyan /home/jovyan
 
 set -e
 
+# Java programs can error if $HOSTNAME is not resolvable
+echo "127.0.0.1 $HOSTNAME" >> /etc/hosts
+
 sudo -E -H -u jovyan jupyter \
 	lab \
 	--config=/etc/jupyter/jupyter_notebook_config.py \
