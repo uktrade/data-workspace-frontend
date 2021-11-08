@@ -193,7 +193,7 @@
               <tr class="govuk-table__row">
                 <td colspan="6" class="govuk-table__cell">
                   {% if columns %}
-                    {% include "partials/column_list.html" with columns=columns dataset=dataset source_table=source_table %}
+                    {% include "partials/column_list.html" with columns=columns dataset=dataset source=datacut_link %}
                   {% endif %}
                   {% if code_snippets and has_access %}
                     <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">

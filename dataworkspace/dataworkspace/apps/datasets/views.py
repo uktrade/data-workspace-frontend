@@ -1591,3 +1591,26 @@ class DatasetVisualisationView(View):
             'datasets/visualisation.html',
             context={"dataset_uuid": dataset_uuid, "visualisation": visualisation},
         )
+
+
+class CustomQueryColumnDetails(View):
+    def get(self, request, dataset_uuid, query_id):
+        try:
+            dataset = DataSet.objects.get(id=dataset_uuid, type=DataSetType.DATACUT)
+            query = CustomDatasetQuery.objects.get(
+                id=query_id, dataset__id=dataset_uuid
+            )
+        except (DataSet.DoesNotExist, CustomDatasetQuery.DoesNotExist):
+            return HttpResponse(status=404)
+
+        return render(
+            request,
+            'datasets/data_cut_column_details.html',
+            context={
+                'dataset': dataset,
+                'query': query,
+                'columns': datasets_db.get_columns(
+                    query.database.memorable_name, query=query.query, include_types=True
+                ),
+            },
+        )
