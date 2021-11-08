@@ -45,6 +45,24 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         js = ('app-filter-show-more-v2.js',)
 
 
+class ScrollingFilterWidget(FilterWidget):
+    template_name = 'datasets/scrolling_filter.html'
+    option_template_name = "datasets/scrolling_filter_option.html"
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+
+        selected_count = 0
+        # for _, options, __ in context['widget']['optgroups']:
+        #     for option in options:
+        #         if option['attrs'].get('checked', False):
+        #             selected_count += 1
+
+        context['widget']['selected_count'] = selected_count
+
+        return context
+
+
 class SortSelectWidget(forms.widgets.Select):
     template_name = 'datasets/select.html'
     option_template_name = 'datasets/select_option.html'
@@ -171,12 +189,7 @@ class DatasetSearchForm(forms.Form):
     source = SourceTagField(
         queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
         required=False,
-        widget=FilterWidget(
-            "Choose data source",
-            hint_text="Select all that apply",
-            limit_initial_options=10,
-            show_more_label="Show more sources",
-        ),
+        widget=ScrollingFilterWidget("Choose data source",),
     )
 
     topic = SourceTagField(
@@ -316,7 +329,14 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields['source'].choices = [
-            (source_id, source_text + f" ({counts['source'][source_id.value]})")
+            (
+                source_id,
+                {
+                    'label': source_text,
+                    'count': counts['source'][source_id.value],
+                    'search_text': str(source_text).lower(),
+                },
+            )
             for source_id, source_text in source_choices
             if source_id.value in selected_source_ids
             or counts['source'][source_id.value] != 0
