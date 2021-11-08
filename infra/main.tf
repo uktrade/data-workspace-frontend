@@ -35,12 +35,6 @@ variable admin_domain {}
 variable appstream_domain {}
 variable support_domain {}
 
-variable registry_container_image {}
-variable registry_proxy_remoteurl {}
-variable registry_proxy_username {}
-variable registry_proxy_password {}
-variable registry_internal_domain {}
-
 variable admin_db_instance_class {}
 variable admin_db_instance_version {
   default = "10.15"
@@ -149,18 +143,16 @@ variable quicksight_subnet_availability_zone {}
 variable shared_keypair_public_key {}
 
 variable datasets_finder_instance_type {}
+variable datasets_finder_instance_num {
+  type = number
+  default = 2
+}
 variable datasets_finder_ebs_size {
   type = number
   default = 100
 }
 
 locals {
-  registry_container_name    = "jupyterhub-registry"
-  registry_container_port    = "5000"
-  registry_container_memory  = 4096
-  registry_container_cpu     = 2048
-  registry_alb_port          = "443"
-
   admin_container_name    = "jupyterhub-admin"
   admin_container_port    = "8000"
   admin_container_memory  = 2048
