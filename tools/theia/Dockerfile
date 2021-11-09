@@ -30,6 +30,8 @@ RUN \
 		build-essential \
 		git \
 		curl \
+		python2.7 \
+		python2.7-dev \
 		python3 \
 		python3-dev \
 		python3-pip \
@@ -44,7 +46,7 @@ RUN \
 
 RUN \
 	update-alternatives --install /usr/bin/python python /usr/bin/python3 2 && \
-	update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+	update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
 
 COPY requirements.txt python-setup.sh /root/
 
