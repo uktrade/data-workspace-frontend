@@ -189,7 +189,9 @@ class DatasetSearchForm(forms.Form):
     source = SourceTagField(
         queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
         required=False,
-        widget=ScrollingFilterWidget("Choose data source",),
+        widget=ScrollingFilterWidget(
+            "Choose data source", hint_text="Select all that apply"
+        ),
     )
 
     topic = SourceTagField(
