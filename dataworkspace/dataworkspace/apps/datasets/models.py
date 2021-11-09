@@ -1332,8 +1332,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     field.relationship_name,
                     field.linked_reference_dataset_field.column_name,
                 )
-            elif field.data_type == field.DATA_TYPE_AUTO_ID:
-                order = 'id'
         return [''.join([prefix, order])]
 
     def get_record_model_class(self) -> object:
@@ -1439,16 +1437,26 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return record
 
     @transaction.atomic
-    def delete_record(self, internal_id: int, sync_externally=True):
+    def delete_record(self, internal_id: int):
         """
         Delete a record from the reference dataset table
         :param internal_id: the django id for the record
-        :param sync_externally: Whether to run a full sync on the external db
         :return:
         """
         self.increment_minor_version()
         self.get_record_by_internal_id(internal_id).delete()
-        if sync_externally and self.external_database is not None:
+        if self.external_database is not None:
+            self.sync_to_external_database(self.external_database.memorable_name)
+
+    @transaction.atomic
+    def delete_all_records(self):
+        """
+        Delete all records from the reference dataset table
+        :return:
+        """
+        self.increment_minor_version()
+        self.get_records().delete()
+        if self.external_database is not None:
             self.sync_to_external_database(self.external_database.memorable_name)
 
     def sync_to_external_database(self, external_database):
@@ -1461,11 +1469,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         saved_ids = []
 
         for record in self.get_records():
-            fields = self.fields.exclude(
-                data_type__in=ReferenceDatasetField.PROPERTY_DATA_TYPES
-            )
             record_data = {}
-            for field in fields:
+            for field in self.fields.all():
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     record_data[field.column_name] = getattr(record, field.column_name)
                 else:
@@ -1563,7 +1568,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             if data_type in [
                 field.DATA_TYPE_INT,
                 field.DATA_TYPE_FLOAT,
-                field.DATA_TYPE_AUTO_ID,
             ]:
                 col_def['filter'] = 'agNumberColumnFilter'
             elif data_type in [field.DATA_TYPE_DATE, field.DATA_TYPE_DATETIME]:
@@ -1576,13 +1580,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         Return all records of this reference dataset in a JSON
         serializable format for use by ag-grid.
         """
-        fields = self.fields.exclude(
-            data_type__in=ReferenceDatasetField.PROPERTY_DATA_TYPES
-        )
         records = []
         for record in self.get_records():
             record_data = {}
-            for field in fields:
+            for field in self.fields.all():
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     record_data[field.column_name] = getattr(record, field.column_name)
                     # ISO format dates for js compatibility
@@ -1638,7 +1639,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
     DATA_TYPE_BOOLEAN = 7
     DATA_TYPE_FOREIGN_KEY = 8
     DATA_TYPE_UUID = 9
-    DATA_TYPE_AUTO_ID = 10
     _DATA_TYPES = (
         (DATA_TYPE_CHAR, 'Character field'),
         (DATA_TYPE_INT, 'Integer field'),
@@ -1649,7 +1649,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
         (DATA_TYPE_BOOLEAN, 'Boolean field'),
         (DATA_TYPE_FOREIGN_KEY, 'Linked Reference Dataset field'),
         (DATA_TYPE_UUID, 'Universal unique identifier field'),
-        (DATA_TYPE_AUTO_ID, 'Auto incrementing integer field'),
     )
     DATA_TYPE_MAP = {
         DATA_TYPE_CHAR: 'varchar(255)',
@@ -1661,7 +1660,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_BOOLEAN: 'boolean',
         DATA_TYPE_FOREIGN_KEY: 'integer',
         DATA_TYPE_UUID: 'uuid',
-        DATA_TYPE_AUTO_ID: 'integer',
     }
     _DATA_TYPE_FORM_FIELD_MAP = {
         DATA_TYPE_CHAR: forms.CharField,
@@ -1673,7 +1671,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_BOOLEAN: forms.BooleanField,
         DATA_TYPE_FOREIGN_KEY: forms.ModelChoiceField,
         DATA_TYPE_UUID: forms.UUIDField,
-        DATA_TYPE_AUTO_ID: forms.IntegerField,
     }
     _DATA_TYPE_MODEL_FIELD_MAP = {
         DATA_TYPE_CHAR: models.CharField,
@@ -1685,7 +1682,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_BOOLEAN: models.BooleanField,
         DATA_TYPE_FOREIGN_KEY: models.ForeignKey,
         DATA_TYPE_UUID: models.UUIDField,
-        DATA_TYPE_AUTO_ID: models.AutoField,
     }
     EDITABLE_DATA_TYPES = (
         DATA_TYPE_CHAR,
@@ -1697,7 +1693,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_BOOLEAN,
         DATA_TYPE_FOREIGN_KEY,
     )
-    PROPERTY_DATA_TYPES = (DATA_TYPE_AUTO_ID,)
     reference_dataset = models.ForeignKey(
         ReferenceDataset, on_delete=models.CASCADE, related_name='fields'
     )
@@ -1785,19 +1780,18 @@ class ReferenceDatasetField(TimeStampedUserModel):
         """
         super().save()
         self.reference_dataset.increment_schema_version()
-        if self.data_type not in self.PROPERTY_DATA_TYPES:
-            model_class = self.reference_dataset.get_record_model_class()
-            for database in self.reference_dataset.get_database_names():
-                with connections[database].schema_editor() as editor:
-                    if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
-                        editor.add_field(
-                            model_class, model_class._meta.get_field(self.column_name)
-                        )
-                    else:
-                        editor.add_field(
-                            model_class,
-                            model_class._meta.get_field(self.relationship_name),
-                        )
+        model_class = self.reference_dataset.get_record_model_class()
+        for database in self.reference_dataset.get_database_names():
+            with connections[database].schema_editor() as editor:
+                if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
+                    editor.add_field(
+                        model_class, model_class._meta.get_field(self.column_name)
+                    )
+                else:
+                    editor.add_field(
+                        model_class,
+                        model_class._meta.get_field(self.relationship_name),
+                    )
 
     def _update_db_column_name(self):
         """
@@ -1812,38 +1806,34 @@ class ReferenceDatasetField(TimeStampedUserModel):
         super().save()
         # Increment the schema version
         self.reference_dataset.increment_schema_version()
-        if self.data_type not in self.PROPERTY_DATA_TYPES:
-            # Get a copy of the updated model class (post-save)
-            model_class = self.reference_dataset.get_record_model_class()
-            # Get a copy of the new field
-            to_field = model_class._meta.get_field(self.column_name)
-            # Migrate from old field to new field
-            with transaction.atomic():
-                for database in self.reference_dataset.get_database_names():
-                    with connections[database].schema_editor() as editor:
-                        editor.alter_field(model_class, from_field, to_field)
+        # Get a copy of the updated model class (post-save)
+        model_class = self.reference_dataset.get_record_model_class()
+        # Get a copy of the new field
+        to_field = model_class._meta.get_field(self.column_name)
+        # Migrate from old field to new field
+        with transaction.atomic():
+            for database in self.reference_dataset.get_database_names():
+                with connections[database].schema_editor() as editor:
+                    editor.alter_field(model_class, from_field, to_field)
 
     def _update_db_column_data_type(self):
         super().save()
         self.reference_dataset.increment_schema_version()
-        if self.data_type not in self.PROPERTY_DATA_TYPES:
-            for database in self.reference_dataset.get_database_names():
-                with connections[database].cursor() as cursor:
-                    cursor.execute(
-                        sql.SQL(
-                            '''
-                            ALTER TABLE {table_name}
-                            ALTER COLUMN {column_name} TYPE {data_type}
-                            USING {column_name}::text::{data_type}
-                            '''
-                        ).format(
-                            table_name=sql.Identifier(
-                                self.reference_dataset.table_name
-                            ),
-                            column_name=sql.Identifier(self.column_name),
-                            data_type=sql.SQL(self.get_postgres_datatype()),
-                        )
+        for database in self.reference_dataset.get_database_names():
+            with connections[database].cursor() as cursor:
+                cursor.execute(
+                    sql.SQL(
+                        '''
+                        ALTER TABLE {table_name}
+                        ALTER COLUMN {column_name} TYPE {data_type}
+                        USING {column_name}::text::{data_type}
+                        '''
+                    ).format(
+                        table_name=sql.Identifier(self.reference_dataset.table_name),
+                        column_name=sql.Identifier(self.column_name),
+                        data_type=sql.SQL(self.get_postgres_datatype()),
                     )
+                )
 
     @transaction.atomic
     def save(
@@ -1911,29 +1901,28 @@ class ReferenceDatasetField(TimeStampedUserModel):
 
     @transaction.atomic
     def delete(self, using=None, keep_parents=False):
-        if self.data_type not in self.PROPERTY_DATA_TYPES:
-            model_class = self.reference_dataset.get_record_model_class()
-            for database in self.reference_dataset.get_database_names():
-                with connections[database].schema_editor() as editor:
-                    if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
-                        editor.remove_field(
-                            model_class,
-                            model_class._meta.get_field(self._original_column_name),
+        model_class = self.reference_dataset.get_record_model_class()
+        for database in self.reference_dataset.get_database_names():
+            with connections[database].schema_editor() as editor:
+                if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
+                    editor.remove_field(
+                        model_class,
+                        model_class._meta.get_field(self._original_column_name),
+                    )
+                else:
+                    # Don't delete the relationship if there are other fields still referencing it
+                    if (
+                        self.reference_dataset.fields.filter(
+                            relationship_name=self.relationship_name
                         )
-                    else:
-                        # Don't delete the relationship if there are other fields still referencing it
-                        if (
-                            self.reference_dataset.fields.filter(
-                                relationship_name=self.relationship_name
-                            )
-                            .exclude(id=self.id)
-                            .count()
-                        ):
-                            continue
-                        editor.remove_field(
-                            model_class,
-                            model_class._meta.get_field(self.relationship_name),
-                        )
+                        .exclude(id=self.id)
+                        .count()
+                    ):
+                        continue
+                    editor.remove_field(
+                        model_class,
+                        model_class._meta.get_field(self.relationship_name),
+                    )
 
         # Remove reference dataset sort field if it is set to this field
         if self.reference_dataset.sort_field == self:
@@ -2002,8 +1991,6 @@ class ReferenceDatasetField(TimeStampedUserModel):
             )
         elif self.data_type == self.DATA_TYPE_UUID:
             model_config.update({'default': uuid.uuid4, 'editable': False})
-        elif self.data_type == self.DATA_TYPE_AUTO_ID:
-            return property(lambda x: x.id)
         return model_field(**model_config)
 
     @property

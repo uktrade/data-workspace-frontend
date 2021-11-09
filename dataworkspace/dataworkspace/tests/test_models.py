@@ -605,12 +605,6 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 is_identifier=True
             ),
         )
-        auto_id_field = ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='auto id',
-            column_name='auto_id',
-            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
-        )
 
         # Create some records in the linked_to dataset
         linked_to_record1 = linked_to_dataset.save_record(
@@ -705,17 +699,6 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             if x.link is not None
         ]
         self.assertEqual(linked_names, list(reversed(sorted(linked_names))))
-
-        # Test sorting by auto id field
-        ref_dataset.sort_direction = ref_dataset.SORT_DIR_ASC
-        ref_dataset.sort_field = auto_id_field
-        ref_dataset.save()
-        ids = [x.auto_id for x in ref_dataset.get_records()]
-        self.assertEqual(ids, list(sorted(ids)))
-        ref_dataset.sort_direction = ref_dataset.SORT_DIR_DESC
-        ref_dataset.save()
-        ids = [x.auto_id for x in ref_dataset.get_records()]
-        self.assertEqual(ids, list(reversed(sorted(ids))))
 
     def test_data_grid_column_config(self):
         ds = factories.ReferenceDatasetFactory.create()
@@ -962,12 +945,6 @@ class TestExternalModels(BaseModelsTests):
             column_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
         )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='field3',
-            column_name='field3',
-            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
-        )
         ref_dataset.save_record(
             None,
             {
@@ -1173,12 +1150,6 @@ class TestExternalModels(BaseModelsTests):
             column_name='field3',
             data_type=ReferenceDatasetField.DATA_TYPE_UUID,
         )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='field4',
-            column_name='field4',
-            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
-        )
         ref_dataset.save_record(
             None,
             {
@@ -1209,12 +1180,6 @@ class TestExternalModels(BaseModelsTests):
             name='field3',
             column_name='field3',
             data_type=ReferenceDatasetField.DATA_TYPE_UUID,
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='field4',
-            column_name='field4',
-            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
         )
         self.assertEqual(ref_dataset.major_version, 1)
         ref_dataset.save_record(
@@ -1247,12 +1212,6 @@ class TestExternalModels(BaseModelsTests):
             name='field3',
             column_name='field3',
             data_type=ReferenceDatasetField.DATA_TYPE_UUID,
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='field4',
-            column_name='field4',
-            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
         )
         ref_dataset.save_record(
             None,
@@ -1424,12 +1383,6 @@ class TestExternalModels(BaseModelsTests):
             name='field3',
             column_name='field3',
             data_type=ReferenceDatasetField.DATA_TYPE_UUID,
-        )
-        ReferenceDatasetField.objects.create(
-            reference_dataset=ref_dataset,
-            name='field4',
-            column_name='field4',
-            data_type=ReferenceDatasetField.DATA_TYPE_AUTO_ID,
         )
         ref_dataset.save_record(
             None,
