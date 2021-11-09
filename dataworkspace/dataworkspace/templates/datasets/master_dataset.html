@@ -1,4 +1,5 @@
 {% extends '_main.html' %}
+{% load waffle_tags %}
 {% load humanize static datasets_tags core_tags %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
@@ -82,6 +83,11 @@
     </div>
 
     <div class="govuk-grid-column-one-third">
+      {% flag "NOTIFY_ON_DATASET_CHANGE" %}
+        <p class="govuk-body">
+          {% include "partials/notify_link.html" with subscription=subscription dataset=dataset %}
+        </p>
+      {% endflag %}
       {% if related_data %}
         <aside class="app-related-items" role="complementary">
           <h3 class="govuk-heading-s" id="subsection-title">

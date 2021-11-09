@@ -1,0 +1,9 @@
+{% if subscription.current_user_is_subscribed %}
+  <a href="#" class="govuk-link">
+    {% include "partials/subscription_icon.html" with text="Change your email preferences or unsubscribe" %}
+  </a>
+{% else %}
+  <a href="#" class="govuk-link">
+    {% include "partials/subscription_icon.html" with text="Get updated when this dataset changes" %}
+  </a>
+{% endif %}
