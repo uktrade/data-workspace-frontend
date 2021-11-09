@@ -10,16 +10,22 @@
         {{ widget.hint_text }}
       </span>
         {% endif %}
+
+        <div class="search-container govuk-!-margin-bottom-4">
+          <div class="search-input__container">
+            <input class="govuk-input search-input__textbox" type="search" id="filter_text_{{ id }}"
+                   data-target="filter_text_target_{{ id }}"
+                   data-module="filter-search"/>
+
+            <label class="search-input__icon" for="filter_text_{{ id }}"></label>
+          </div>
+        </div>
+
         {% if widget.selected_count %}
           <span id="{{ id }}-selected-count" class="govuk-hint">
           {{ widget.selected_count }} selected</span>
         {% endif %}
 
-        <div class="search-container govuk-!-margin-bottom-4">
-          <input class="govuk-input" type="search" id="filter_text_{{ id }}"
-                 data-target="filter_text_target_{{ id }}"
-                 data-module="filter-search" />
-        </div>
 
         <div class="filter-container filter-container__scrolling">
           <div class="govuk-checkboxes" id="filter_text_target_{{ id }}">
