@@ -83,9 +83,9 @@
     </div>
 
     <div class="govuk-grid-column-one-third">
-      {% flag "NOTIFY_ON_DATASET_CHANGE" %}
+      {% flag NOTIFY_ON_DATASET_CHANGE_FLAG %}
         <p class="govuk-body">
-          {% include "partials/notify_link.html" with subscription=subscription dataset=dataset %}
+          {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset %}
         </p>
       {% endflag %}
       {% if related_data %}

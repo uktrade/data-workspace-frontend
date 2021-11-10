@@ -1,0 +1,61 @@
+{% extends '_main.html' %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a href="{{ dataset.get_absolute_url }}">
+              {{ dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Subscribe
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-xl">{{ dataset.name }}</span>
+      <h1 class="govuk-heading-l">Please review your selections before submitting
+      </h1>
+
+
+      <div class="govuk-form-group">
+        <dl class="govuk-summary-list">
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">
+              What changes would you like to get emails about?
+            </dt>
+            <dd class="govuk-summary-list__value">
+              Each time columns are added, renamed or removed
+              <br>
+              <div class="govuk-!-padding-bottom-2"></div>
+              Each time data has been changed
+            </dd>
+            <dd class="govuk-summary-list__actions">
+              <a class="govuk-link" href="/baris/data-workspace/get-email/dataset-change-q2">
+                Change<span class="govuk-visually-hidden"> name</span>
+              </a>
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="govuk-form-group">
+        <a class="govuk-button" href="{% url "datasets:subscription_confirm" dataset.id %}">Submit</a>
+      </div>
+    </div>
+
+
+  </div>
+{% endblock %}

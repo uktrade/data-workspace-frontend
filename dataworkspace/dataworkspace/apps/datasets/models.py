@@ -400,14 +400,6 @@ class DataSetSubscription(TimeStampedUserModel):
     notify_on_schema_change = models.BooleanField(default=False)
     notify_on_data_change = models.BooleanField(default=False)
 
-    # TODO - Should we use the default user email if this is blank?
-    email = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text='Email address to send notifications to. Leave blank to use SSO user email address',
-    )
-
     class Meta:
         verbose_name = "DataSet Subscription"
         verbose_name_plural = "DataSet Subscriptions"

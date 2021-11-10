@@ -140,4 +140,19 @@ urlpatterns = [
         login_required(views.CustomQueryColumnDetails.as_view()),
         name='custom_query_column_details',
     ),
+    path(
+        '<uuid:dataset_uuid>/subscription_options',
+        login_required(views.DataSetSubscriptionView.as_view()),
+        name='subscription_options',
+    ),
+    path(
+        '<uuid:dataset_uuid>/subscription_review',
+        login_required(views.DataSetSubscriptionReview.as_view()),
+        name='subscription_review',
+    ),
+    path(
+        '<uuid:dataset_uuid>/subscription_confirm',
+        login_required(views.DataSetSubscriptionConfirm.as_view()),
+        name='subscription_confirm',
+    ),
 ]
