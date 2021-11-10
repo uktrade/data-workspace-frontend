@@ -1,0 +1,32 @@
+<p>
+  <strong>Error deleting all records</strong>
+</p>
+<p>The records below could not be deleted as they are linked to by other reference data records</p>
+<p>A list of datasets linking to this record can be found below.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Reference Dataset</th>
+      <th>Record</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for conflict in conflicts %}
+      <tr>
+        <td>
+          <a href="{% url 'admin:datasets_referencedataset_change' conflict.reference_dataset.id %}">
+            {{ conflict.reference_dataset.name }}
+          </a>
+        </td>
+        <td>
+          <a href="{% url 'dw_admin:reference-dataset-record-edit' conflict.reference_dataset.id conflict.id %}">
+            {{ conflict.get_display_name }}
+          </a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<br />
+<hr />
+<br />

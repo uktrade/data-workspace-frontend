@@ -1485,13 +1485,6 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
             sort_order=4,
         )
         factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name='auto id',
-            column_name='auto_id',
-            data_type=10,
-            sort_order=5,
-        )
-        factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, name='name1', data_type=1
         )
         factories.ReferenceDatasetFieldFactory.create(

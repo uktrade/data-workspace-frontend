@@ -222,13 +222,6 @@ class TestDatasetViews:
             data_type=9,
             sort_order=4,
         )
-        factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name='auto id',
-            column_name='auto_id',
-            data_type=10,
-            sort_order=5,
-        )
         link_record = linked_rds.save_record(
             None,
             {
@@ -272,7 +265,6 @@ class TestDatasetViews:
                 'linked: name': 'Linked Display Name',
                 'name': 'Test record',
                 'auto uuid': str(rec1.auto_uuid),
-                'auto id': 1,
             },
             {
                 'id': 2,
@@ -280,7 +272,6 @@ class TestDatasetViews:
                 'linked: name': None,
                 'name': 'Ánd again',
                 'auto uuid': str(rec2.auto_uuid),
-                'auto id': 2,
             },
         ]
         assert EventLog.objects.count() == log_count + 1
@@ -341,13 +332,6 @@ class TestDatasetViews:
             data_type=9,
             sort_order=5,
         )
-        factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name='auto id',
-            column_name='auto_id',
-            data_type=10,
-            sort_order=6,
-        )
         link_record = linked_rds.save_record(
             None,
             {
@@ -384,9 +368,9 @@ class TestDatasetViews:
         )
         assert response.status_code == 200
         assert response.content == (
-            b'"id","name","linked: id","linked: name","auto uuid","auto id"\r\n'
-            b'1,"Test record",1,"Linked Display Name",%s,1\r\n'
-            b'2,"\xc3\x81nd again","","",%s,2\r\n'
+            b'"id","name","linked: id","linked: name","auto uuid"\r\n'
+            b'1,"Test record",1,"Linked Display Name",%s\r\n'
+            b'2,"\xc3\x81nd again","","",%s\r\n'
             % (str(rec1.auto_uuid).encode(), str(rec2.auto_uuid).encode())
         )
         assert EventLog.objects.count() == log_count + 1

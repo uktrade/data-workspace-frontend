@@ -25,6 +25,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataRowDeleteForm,
+    ReferenceDataRowDeleteAllForm,
     SourceLinkUploadForm,
     ReferenceDataRecordUploadForm,
     clean_identifier,
@@ -186,6 +187,38 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
 
     def get_success_url(self):
         messages.success(self.request, 'Reference dataset record deleted successfully')
+        return reverse(
+            'admin:datasets_referencedataset_change',
+            args=(self._get_reference_dataset().id,),
+        )
+
+
+class ReferenceDatasetAdminDeleteAllView(ReferenceDataRecordMixin, FormView):
+    template_name = 'admin/reference_data_delete_all_records.html'
+    form_class = ReferenceDataRowDeleteAllForm
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super().get_context_data(*args, **kwargs)
+        ctx['reference_dataset'] = self._get_reference_dataset()
+        ctx['records'] = self._get_reference_dataset().get_records()
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'reference_dataset': self._get_reference_dataset()})
+        return kwargs
+
+    def form_valid(self, form):
+        instance = self._get_reference_dataset()
+        try:
+            instance.delete_all_records()
+        except Exception as e:  # pylint: disable=broad-except
+            form.add_error(None, e)
+            return self.form_invalid(form)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        messages.success(self.request, 'Reference dataset records deleted successfully')
         return reverse(
             'admin:datasets_referencedataset_change',
             args=(self._get_reference_dataset().id,),

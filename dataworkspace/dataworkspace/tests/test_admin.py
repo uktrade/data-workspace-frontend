@@ -1788,6 +1788,92 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             'by other reference data records',
         )
 
+    def test_delete_all_records(self):
+        ref_ds = self._create_reference_dataset(
+            table_name='test_change_linked_dataset1'
+        )
+
+        ReferenceDatasetField.objects.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds,
+            data_type=1,
+            is_identifier=True,
+        )
+
+        ref_ds.save_record(None, {'reference_dataset': ref_ds, 'refid': 'test'})
+        ref_ds.save_record(None, {'reference_dataset': ref_ds, 'refid': 'test 2'})
+
+        assert len(ref_ds.get_records()) == 2
+
+        response = self._authenticated_post(
+            reverse('dw-admin:reference-dataset-record-delete-all', args=(ref_ds.id,),),
+        )
+
+        assert len(ref_ds.get_records()) == 0
+        self.assertContains(
+            response, 'Reference dataset records deleted successfully',
+        )
+
+    def test_delete_all_fails_with_linked_reference_dataset_records(self):
+        ref_ds1 = self._create_reference_dataset(
+            table_name='test_change_linked_dataset1'
+        )
+        ref_ds2 = self._create_reference_dataset(
+            table_name='test_change_linked_dataset2'
+        )
+        ReferenceDatasetField.objects.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds1,
+            data_type=1,
+            is_identifier=True,
+        )
+        ReferenceDatasetField.objects.create(
+            name='refid',
+            column_name='refid',
+            reference_dataset=ref_ds2,
+            data_type=1,
+            is_identifier=True,
+        )
+        ReferenceDatasetField.objects.create(
+            name='link',
+            relationship_name='link',
+            reference_dataset=ref_ds1,
+            data_type=8,
+            linked_reference_dataset_field=ref_ds2.fields.get(is_identifier=True),
+        )
+
+        # Save a record in the linked to dataset
+        linked_to = ref_ds2.save_record(
+            None, {'reference_dataset': ref_ds2, 'refid': 'test'}
+        )
+
+        # Save a record in the linked from dataset (linking to the record above)
+        ref_ds1.save_record(
+            None,
+            {
+                'reference_dataset': ref_ds1,
+                'refid': 'another_test',
+                'link_id': linked_to.id,
+            },
+        )
+
+        assert len(ref_ds2.get_records()) == 1
+
+        response = self._authenticated_post(
+            reverse(
+                'dw-admin:reference-dataset-record-delete-all', args=(ref_ds2.id,),
+            ),
+        )
+
+        assert len(ref_ds2.get_records()) == 1
+        self.assertContains(
+            response,
+            'The records below could not be deleted as they are linked to '
+            'by other reference data records',
+        )
+
     def test_change_linked_reference_dataset(self):
         # If no records with links exist we should be able to edit the ref dataset link
         ref_ds1 = self._create_reference_dataset(
