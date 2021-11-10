@@ -140,4 +140,10 @@ urlpatterns = [
         login_required(views.CustomQueryColumnDetails.as_view()),
         name='custom_query_column_details',
     ),
+    path(
+        '<uuid:dataset_uuid>/<uuid:source_id>/changelog/',
+        login_required(views.SourceChangelogView.as_view()),
+        {'model_class': models.SourceTable},
+        name='source_table_changelog',
+    ),
 ]

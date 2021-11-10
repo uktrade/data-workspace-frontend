@@ -1614,3 +1614,26 @@ class CustomQueryColumnDetails(View):
                 ),
             },
         )
+
+
+class SourceChangelogView(DetailView):
+    template_name = 'datasets/source_changelog.html'
+    context_object_name = 'source'
+
+    def _user_can_access(self):
+        return self.request.user.is_superuser
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            self.kwargs['model_class'],
+            dataset__id=self.kwargs.get('dataset_uuid'),
+            pk=self.kwargs['source_id'],
+            **{'dataset__published': True}
+            if not self.request.user.is_superuser
+            else {},
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self._user_can_access():
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)

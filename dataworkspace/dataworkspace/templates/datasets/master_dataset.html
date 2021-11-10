@@ -136,6 +136,9 @@
           <th class="govuk-table__header">Identifier</th>
           <th class="govuk-table__header">Last updated</th>
           <th class="govuk-table__header">Action</th>
+          {% if user.is_superuser %}
+            <th class="govuk-table__header">Admin</th>
+          {% endif %}
         </tr>
         </thead>
         <tbody>
@@ -172,14 +175,21 @@
               {% else %}
                 No preview available
               {% endif %}
-
             </td>
+            {% if user.is_superuser %}
+              <td class="govuk-table__cell app-table_cell--no-border">
+                <a class="govuk-link govuk-link--no-visited-state"
+                   href="{% url 'datasets:source_table_changelog' dataset_uuid=dataset.id source_id=source_table.id %}">
+                  Changelog
+                </a>
+              </td>
+            {% endif %}
 
 
           </tr>
           {% if code_snippets or columns %}
             <tr class="govuk-table__row">
-              <td colspan="4" class="govuk-table__cell">
+              <td colspan="{% if user.is_superuser %}5{% else %}4{% endif %}" class="govuk-table__cell">
                 {% if columns %}
                   <div class="govuk-!-margin-bottom-6">
                   {% include "partials/column_list.html" with columns=columns dataset=dataset source=source_table %}

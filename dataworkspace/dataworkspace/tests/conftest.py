@@ -144,13 +144,13 @@ def metadata_db(db):
             '''
             CREATE SCHEMA IF NOT EXISTS dataflow;
             CREATE TABLE IF NOT EXISTS dataflow.metadata (
-                id int, table_schema text, table_name text, source_data_modified_utc timestamp
+                id int, table_schema text, table_name text, table_structure text, source_data_modified_utc timestamp
             );
             TRUNCATE TABLE dataflow.metadata;
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-09-02 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '2020-09-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-01-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', NULL);
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '', '2020-09-02 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '', '2020-09-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '', '2020-01-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', '', NULL);
             '''
         )
         conn.commit()
