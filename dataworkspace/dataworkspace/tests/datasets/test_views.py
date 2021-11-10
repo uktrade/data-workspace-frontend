@@ -3619,3 +3619,64 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     assert list(response.context["datasets"]) == [
         expected_search_result(with_visuals, has_visuals=True)
     ]
+
+
+@pytest.mark.django_db
+def test_changelog_non_admin(metadata_db, client):
+    master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='A master',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    source = factories.SourceTableFactory.create(
+        dataset=master,
+        schema='public',
+        table='table1',
+        database=factories.DatabaseFactory.create(memorable_name='my_database'),
+    )
+    response = client.get(
+        reverse('datasets:source_table_changelog', args=(master.id, source.id))
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_changelog_no_changes(metadata_db, staff_client):
+    master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='A master',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    source = factories.SourceTableFactory.create(
+        dataset=master,
+        schema='public',
+        table='table2',
+        database=factories.DatabaseFactory.create(memorable_name='my_database'),
+    )
+    response = staff_client.get(
+        reverse('datasets:source_table_changelog', args=(master.id, source.id))
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_changelog(metadata_db, staff_client):
+    master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name='A master',
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    source = factories.SourceTableFactory.create(
+        dataset=master,
+        schema='public',
+        table='table1',
+        database=factories.DatabaseFactory.create(memorable_name='my_database'),
+    )
+    response = staff_client.get(
+        reverse('datasets:source_table_changelog', args=(master.id, source.id))
+    )
+    assert response.status_code == 200
+    assert 'Table structure updated' in str(response.content)
