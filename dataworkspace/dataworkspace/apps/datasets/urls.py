@@ -2,6 +2,7 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets import models, views
+from dataworkspace.apps.datasets.subscriptions import views as subscription_views
 
 urlpatterns = [
     path('', login_required(views.find_datasets), name='find_datasets'),
@@ -141,18 +142,23 @@ urlpatterns = [
         name='custom_query_column_details',
     ),
     path(
+        '<uuid:dataset_uuid>/subscription_start',
+        login_required(subscription_views.DataSetSubscriptionStartView.as_view()),
+        name='subscription_start',
+    ),
+    path(
         '<uuid:dataset_uuid>/subscription_options',
-        login_required(views.DataSetSubscriptionView.as_view()),
+        login_required(subscription_views.DataSetSubscriptionView.as_view()),
         name='subscription_options',
     ),
     path(
         '<uuid:dataset_uuid>/subscription_review',
-        login_required(views.DataSetSubscriptionReview.as_view()),
+        login_required(subscription_views.DataSetSubscriptionReview.as_view()),
         name='subscription_review',
     ),
     path(
         '<uuid:dataset_uuid>/subscription_confirm',
-        login_required(views.DataSetSubscriptionConfirm.as_view()),
+        login_required(subscription_views.DataSetSubscriptionConfirm.as_view()),
         name='subscription_confirm',
     ),
 ]

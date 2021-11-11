@@ -4,7 +4,6 @@ from collections import namedtuple
 from contextlib import closing
 import csv
 import io
-from http import HTTPStatus
 from itertools import chain
 import json
 from typing import Set
@@ -801,17 +800,6 @@ class DatasetDetailView(DetailView):
         ctx = super().get_context_data()
         ctx['model'] = self.object
         ctx['DATA_CUT_ENHANCED_PREVIEW_FLAG'] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
-
-        subscription = self.object.datasetsubscription_set.filter(
-            user=self.request.user
-        )
-
-        ctx['subscription'] = {
-            'current_user_is_subscribed': True
-            if subscription.exists() and subscription.first().is_active()
-            else False,
-            'details': subscription.first(),
-        }
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
@@ -1626,48 +1614,3 @@ class CustomQueryColumnDetails(View):
                 ),
             },
         )
-
-
-class DataSetSubscriptionView(View):
-    def get(self, request, dataset_uuid):
-        dataset = get_object_or_404(DataSet, id=dataset_uuid)
-
-        subscription = dataset.datasetsubscription_set.filter(user=request.user)
-
-        if not subscription.exists():
-            subscription = dataset.datasetsubscription_set.create(user=request.user)
-
-        return render(request, 'datasets/subscriptions/step_1.html', context={
-            'dataset': dataset,
-            'subscription': subscription
-        })
-
-
-class DataSetSubscriptionReview(View):
-    def get(self, request, dataset_uuid):
-        dataset = get_object_or_404(DataSet, id=dataset_uuid)
-
-        subscription = dataset.datasetsubscription_set.filter(user=request.user)
-
-        if not subscription.exists():
-            subscription = dataset.datasetsubscription_set.create(user=request.user)
-
-        return render(request, 'datasets/subscriptions/step_2.html', context={
-            'dataset': dataset,
-            'subscription': subscription
-        })
-
-
-class DataSetSubscriptionConfirm(View):
-    def get(self, request, dataset_uuid):
-        dataset = get_object_or_404(DataSet, id=dataset_uuid)
-
-        subscription = dataset.datasetsubscription_set.filter(user=request.user)
-
-        if not subscription.exists():
-            subscription = dataset.datasetsubscription_set.create(user=request.user)
-
-        return render(request, 'datasets/subscriptions/step_3.html', context={
-            'dataset': dataset,
-            'subscription': subscription
-        })

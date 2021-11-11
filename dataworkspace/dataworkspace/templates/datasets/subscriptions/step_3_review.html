@@ -25,8 +25,7 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <span class="govuk-caption-xl">{{ dataset.name }}</span>
-      <h1 class="govuk-heading-l">Please review your selections before submitting
+      <h1 class="govuk-heading-xl">Please review your selections before submitting
       </h1>
 
 
@@ -49,6 +48,18 @@
             </dd>
           </div>
         </dl>
+      </div>
+
+      <div class="form-group">
+        <div class="govuk-form-group">
+        <label class="govuk-label" for="email-address">
+          Email address
+        </label>
+
+        <input class="govuk-input govuk-input--width-20" id="email-address"
+               value="{{ user.email }}" disabled
+               name="emailAddress" type="text" required>
+      </div>
       </div>
 
       <div class="govuk-form-group">
