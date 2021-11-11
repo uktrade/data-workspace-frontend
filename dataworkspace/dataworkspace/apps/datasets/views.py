@@ -800,6 +800,7 @@ class DatasetDetailView(DetailView):
         ctx = super().get_context_data()
         ctx['model'] = self.object
         ctx['DATA_CUT_ENHANCED_PREVIEW_FLAG'] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
+        ctx['DATASET_CHANGELOG_PAGE_FLAG'] = settings.DATASET_CHANGELOG_PAGE_FLAG
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
@@ -1616,12 +1617,10 @@ class CustomQueryColumnDetails(View):
         )
 
 
-class SourceChangelogView(DetailView):
+class SourceChangelogView(WaffleFlagMixin, DetailView):
+    waffle_flag = settings.DATASET_CHANGELOG_PAGE_FLAG
     template_name = 'datasets/source_changelog.html'
     context_object_name = 'source'
-
-    def _user_can_access(self):
-        return self.request.user.is_superuser
 
     def get_object(self, queryset=None):
         return get_object_or_404(
@@ -1632,8 +1631,3 @@ class SourceChangelogView(DetailView):
             if not self.request.user.is_superuser
             else {},
         )
-
-    def dispatch(self, request, *args, **kwargs):
-        if not self._user_can_access():
-            return HttpResponseForbidden()
-        return super().dispatch(request, *args, **kwargs)

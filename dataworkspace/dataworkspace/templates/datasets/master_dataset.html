@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load humanize static datasets_tags core_tags %}
+{% load humanize static datasets_tags core_tags waffle_tags %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -136,9 +136,9 @@
           <th class="govuk-table__header">Identifier</th>
           <th class="govuk-table__header">Last updated</th>
           <th class="govuk-table__header">Action</th>
-          {% if user.is_superuser %}
-            <th class="govuk-table__header">Admin</th>
-          {% endif %}
+          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
+            <th class="govuk-table__header">History</th>
+          {% endflag %}
         </tr>
         </thead>
         <tbody>
@@ -176,20 +176,18 @@
                 No preview available
               {% endif %}
             </td>
-            {% if user.is_superuser %}
+            {% flag DATASET_CHANGELOG_PAGE_FLAG %}
               <td class="govuk-table__cell app-table_cell--no-border">
                 <a class="govuk-link govuk-link--no-visited-state"
                    href="{% url 'datasets:source_table_changelog' dataset_uuid=dataset.id source_id=source_table.id %}">
                   Changelog
                 </a>
               </td>
-            {% endif %}
-
-
+            {% endflag %}
           </tr>
           {% if code_snippets or columns %}
             <tr class="govuk-table__row">
-              <td colspan="{% if user.is_superuser %}5{% else %}4{% endif %}" class="govuk-table__cell">
+              <td colspan="{% flag DATASET_CHANGELOG_PAGE_FLAG %}5{% else %}4{% endflag %}" class="govuk-table__cell">
                 {% if columns %}
                   <div class="govuk-!-margin-bottom-6">
                   {% include "partials/column_list.html" with columns=columns dataset=dataset source=source_table %}
