@@ -801,6 +801,17 @@ class DatasetDetailView(DetailView):
         ctx['model'] = self.object
         ctx['DATA_CUT_ENHANCED_PREVIEW_FLAG'] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
 
+        subscription = self.object.datasetsubscription_set.filter(
+            user=self.request.user
+        )
+
+        ctx['subscription'] = {
+            'current_user_is_subscribed': True
+            if subscription.exists() and subscription.first().is_active()
+            else False,
+            'details': subscription.first(),
+        }
+
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
 

@@ -9,12 +9,12 @@
             <a class="govuk-breadcrumbs__link" href="/">Home</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            <a href="{{ dataset.get_absolute_url }}">
-              {{ dataset.name }}
+            <a href="{{ object.dataset.get_absolute_url }}">
+              {{ object.dataset.name }}
             </a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            Subscribe
+            Review
           </li>
         </ol>
       </div>
@@ -25,46 +25,63 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">Please review your selections before submitting
+      <h1 class="govuk-heading-xl">Please review your selections
       </h1>
 
 
       <div class="govuk-form-group">
-        <dl class="govuk-summary-list">
-          <div class="govuk-summary-list__row">
-            <dt class="govuk-summary-list__key">
-              What changes would you like to get emails about?
-            </dt>
-            <dd class="govuk-summary-list__value">
-              Each time columns are added, renamed or removed
-              <br>
-              <div class="govuk-!-padding-bottom-2"></div>
-              Each time data has been changed
-            </dd>
-            <dd class="govuk-summary-list__actions">
-              <a class="govuk-link" href="/baris/data-workspace/get-email/dataset-change-q2">
-                Change<span class="govuk-visually-hidden"> name</span>
-              </a>
-            </dd>
-          </div>
+        <h2 class="govuk-heading-m">What changes would you like to get emails about?</h2>
+        <dl class="govuk-summary-list govuk-summary-list--no-border">
+
+
+          {% for option in object.get_list_of_selected_options %}
+            <div class="govuk-summary-list__row">
+              <dd class="govuk-summary-list__value">
+                {{ option }}
+              </dd>
+              <dd class="govuk-summary-list__actions">
+                <a class="govuk-link" href="{% url "datasets:subscription_options" object.id %}">
+                  Change<span class="govuk-visually-hidden"> name</span>
+                </a>
+              </dd>
+            </div>
+          {% empty %}
+            <div class="govuk-summary-list__row">
+              <dd class="govuk-summary-list__value">
+                You have not selected any options
+              </dd>
+              <dd class="govuk-summary-list__actions">
+                <a class="govuk-link" href="{% url "datasets:subscription_options" object.id %}">
+                  Change<span class="govuk-visually-hidden"> name</span>
+                </a>
+              </dd>
+            </div>
+          {% endfor %}
+
         </dl>
       </div>
 
-      <div class="form-group">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="{{ form.notify_on_data_change.name }}" value="{{ form.notify_on_data_change.value }}" />
+        <input type="hidden" name="{{ form.notify_on_schema_change.name }}" value="{{ form.notify_on_schema_change.value }}" />
+        <div class="form-group">
+          <div class="govuk-form-group">
+            <label class="govuk-label" for="email-address">
+              Email address
+            </label>
+
+            <input class="govuk-input govuk-input--width-20" id="email-address"
+                   value="{{ user.email }}" disabled
+                   name="emailAddress" type="text" required>
+          </div>
+        </div>
+
         <div class="govuk-form-group">
-        <label class="govuk-label" for="email-address">
-          Email address
-        </label>
+          <button type="submit" class="govuk-button">Submit</button>
 
-        <input class="govuk-input govuk-input--width-20" id="email-address"
-               value="{{ user.email }}" disabled
-               name="emailAddress" type="text" required>
-      </div>
-      </div>
-
-      <div class="govuk-form-group">
-        <a class="govuk-button" href="{% url "datasets:subscription_confirm" dataset.id %}">Submit</a>
-      </div>
+        </div>
+      </form>
     </div>
 
 

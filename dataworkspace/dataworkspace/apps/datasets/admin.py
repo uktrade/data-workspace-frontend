@@ -1018,7 +1018,7 @@ class DataSetSubscriptionAdmin(admin.ModelAdmin):
         'user',
         'notify_on_schema_change',
         'notify_on_data_change',
-        'is_active'
+        'is_active',
     ]
 
 

@@ -29,7 +29,7 @@
       </h1>
 
       <p class="govuk-body">
-        You’ll get emails when we add or update dataset about: <a href="{{ dataset.get_absolute_url }}">
+        You’ll get emails when we add or update dataset about: <a class="govuk-link govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">
               {{ dataset.name }}
             </a>
         <br>
@@ -37,7 +37,7 @@
       </p>
 
       <div class="govuk-form-group">
-        <a class="govuk-button" href="{% url "datasets:subscription_options" dataset.id %}">Continue</a>
+        <a class="govuk-button" href="{% url "datasets:subscription_options" subscription.id %}">Continue</a>
       </div>
     </div>
 

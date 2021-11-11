@@ -147,17 +147,17 @@ urlpatterns = [
         name='subscription_start',
     ),
     path(
-        '<uuid:dataset_uuid>/subscription_options',
+        '<uuid:pk>/subscription_options',
         login_required(subscription_views.DataSetSubscriptionView.as_view()),
         name='subscription_options',
     ),
     path(
-        '<uuid:dataset_uuid>/subscription_review',
+        '<uuid:pk>/subscription_review',
         login_required(subscription_views.DataSetSubscriptionReview.as_view()),
         name='subscription_review',
     ),
     path(
-        '<uuid:dataset_uuid>/subscription_confirm',
+        '<uuid:subscription_id>/subscription_confirm',
         login_required(subscription_views.DataSetSubscriptionConfirm.as_view()),
         name='subscription_confirm',
     ),

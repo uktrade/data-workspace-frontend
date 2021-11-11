@@ -408,8 +408,20 @@ class DataSetSubscription(TimeStampedUserModel):
         # TODO - Make this more descriptive
         return f"{self.user.email} {self.dataset.name}"
 
-    def is_active(self  ):
+    def is_active(self):
         return self.notify_on_data_change or self.notify_on_schema_change
+
+    def get_list_of_selected_options(self):
+        selected = []
+
+        if self.notify_on_data_change:
+            selected.append("Each time data has been changed")
+
+        if self.notify_on_schema_change:
+            selected.append("Each time columns are added, removed or renamed")
+
+        return selected
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
