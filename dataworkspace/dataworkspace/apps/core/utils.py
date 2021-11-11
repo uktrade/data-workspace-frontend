@@ -31,6 +31,7 @@ from django.conf import settings
 from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
+from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = logging.getLogger('app')
 
@@ -1173,3 +1174,20 @@ def close_admin_db_connection_if_not_in_atomic_block():
     # the middle of a transaction.
     if not connection.in_atomic_block:
         connection.close()
+
+
+def extract_columns_from_query(cursor, sql):
+    def _prefix_column(index, column):
+        return f'col_{index}_{column}'
+
+    cursor.execute(f'SELECT * FROM ({sql}) sq LIMIT 0')
+    column_names = list(zip(*cursor.description))[0]
+    duplicated_column_names = set(c for c in column_names if column_names.count(c) > 1)
+    prefixed_sql_columns = [
+        (
+            f'"{_prefix_column(i, col[0]) if col[0] in duplicated_column_names else col[0]}" '
+            f'{TYPE_CODES_REVERSED[col[1]]}'
+        )
+        for i, col in enumerate(cursor.description, 1)
+    ]
+    return prefixed_sql_columns

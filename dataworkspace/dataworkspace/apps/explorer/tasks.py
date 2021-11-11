@@ -13,6 +13,7 @@ from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
     close_all_connections_if_not_in_atomic_block,
     db_role_schema_suffix_for_user,
+    extract_columns_from_query,
 )
 from dataworkspace.apps.explorer.constants import QueryLogState
 from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
@@ -85,10 +86,6 @@ def cleanup_temporary_query_tables():
                 cursor.execute(f"REVOKE {db_role} FROM {server_db_user}")
 
 
-def _prefix_column(index, column):
-    return f'col_{index}_{column}'
-
-
 def _mark_query_log_failed(query_log, exc):
     # Remove the select statement wrapper used for getting the query fields
     query_log.error = (
@@ -133,19 +130,7 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
             # It adds a prefix of col_x_ to duplicated column returned from the query and
             # these prefixed column names are used to create a table containing the
             # query results. The prefixes are removed when the results are returned.
-            cursor.execute(f'SELECT * FROM ({sql}) sq LIMIT 0')
-            column_names = list(zip(*cursor.description))[0]
-            duplicated_column_names = set(
-                c for c in column_names if column_names.count(c) > 1
-            )
-            prefixed_sql_columns = [
-                (
-                    f'"{_prefix_column(i, col[0]) if col[0] in duplicated_column_names else col[0]}" '
-                    f'{TYPE_CODES_REVERSED[col[1]]}'
-                )
-                for i, col in enumerate(cursor.description, 1)
-            ]
-
+            prefixed_sql_columns = extract_columns_from_query(cursor, sql)
             cursor.execute(
                 f'CREATE TABLE {table_name} ({", ".join(prefixed_sql_columns)})'
             )
