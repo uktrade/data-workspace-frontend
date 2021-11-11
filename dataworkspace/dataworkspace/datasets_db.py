@@ -101,6 +101,7 @@ def get_table_changelog(database_name: str, schema: str, table: str):
             FROM dataflow.metadata
             WHERE table_schema = %s
             AND table_name = %s
+            AND source_data_modified_utc IS NOT NULL
             GROUP BY table_structure
             ORDER BY change_date DESC;
             ''',
