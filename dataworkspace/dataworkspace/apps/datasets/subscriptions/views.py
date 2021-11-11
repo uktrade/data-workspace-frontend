@@ -43,22 +43,6 @@ class DataSetSubscriptionReview(UpdateView):
     form_class = DataSetSubscriptionForm
     model = DataSetSubscription
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # Adding the model fields to a list so we can iterate over them in the template
-        selected_options = []
-
-        if self.object.notify_on_data_change:
-            selected_options.append("Each time data has been changed.")
-
-        if self.object.notify_on_schema_change:
-            selected_options.append("Each time columns are added, renamed or removed.")
-
-        context['selected_options'] = selected_options
-
-        return context
-
     def get_success_url(self):
         return reverse("datasets:subscription_confirm", args=[self.object.id])
 

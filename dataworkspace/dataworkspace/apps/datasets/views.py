@@ -806,9 +806,8 @@ class DatasetDetailView(DetailView):
         )
 
         ctx['subscription'] = {
-            'current_user_is_subscribed': True
-            if subscription.exists() and subscription.first().is_active()
-            else False,
+            'current_user_is_subscribed': subscription.exists()
+            and subscription.first().is_active(),
             'details': subscription.first(),
         }
 

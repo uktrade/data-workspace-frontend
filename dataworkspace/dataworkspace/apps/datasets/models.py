@@ -405,7 +405,6 @@ class DataSetSubscription(TimeStampedUserModel):
         verbose_name_plural = "DataSet Subscriptions"
 
     def __str__(self):
-        # TODO - Make this more descriptive
         return f"{self.user.email} {self.dataset.name}"
 
     def is_active(self):
