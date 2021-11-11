@@ -61,7 +61,11 @@ from dataworkspace.apps.datasets.constants import (
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.datasets_db import get_table_changelog, get_tables_last_updated_date
+from dataworkspace.datasets_db import (
+    get_custom_dataset_query_changelog,
+    get_table_changelog,
+    get_tables_last_updated_date
+)
 
 
 class DataGroupingManager(DeletableQuerySet):
@@ -993,7 +997,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         )
 
     def get_changelog(self):
-        return []
+        return get_custom_dataset_query_changelog(self.database.memorable_name, self.id)
 
 
 class CustomDatasetQueryTable(models.Model):

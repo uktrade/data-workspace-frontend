@@ -115,3 +115,29 @@ def get_table_changelog(database_name: str, schema: str, table: str):
             record['change_date'] = record['change_date'].replace(tzinfo=pytz.UTC)
             records.append(record)
         return records
+
+
+def get_custom_dataset_query_changelog(database_name: str, query_id: int):
+    with connections[database_name].cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT
+                MIN(source_data_modified_utc) change_date,
+                table_structure,
+                'Table structure updated' change_type
+            FROM dataflow.metadata
+            WHERE data_id = %s
+            GROUP BY table_structure
+            ORDER BY change_date DESC;
+            ''',
+            [query_id],
+        )
+        columns = [x.name for x in cursor.description]
+        records = []
+        for row in cursor.fetchall():
+            record = {}
+            for idx, field in enumerate(row):
+                record[columns[idx]] = field
+            record['change_date'] = record['change_date'].replace(tzinfo=pytz.UTC)
+            records.append(record)
+        return records
