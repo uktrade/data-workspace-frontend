@@ -1,25 +1,7 @@
 {% extends '_main.html' %}
 
 {% block breadcrumbs %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-three-quarters">
-      <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-          <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link" href="/">Home</a>
-          </li>
-          <li class="govuk-breadcrumbs__list-item">
-            <a href="{{ object.dataset.get_absolute_url }}">
-              {{ object.dataset.name }}
-            </a>
-          </li>
-          <li class="govuk-breadcrumbs__list-item">
-            Review
-          </li>
-        </ol>
-      </div>
-    </div>
-  </div>
+  {% include 'datasets/subscriptions/partials/wizard_breadcrumbs.html' with dataset=object.dataset final_text='Review' %}
 {% endblock %}
 
 {% block content %}
@@ -63,8 +45,10 @@
 
       <form method="post">
         {% csrf_token %}
-        <input type="hidden" name="{{ form.notify_on_data_change.name }}" value="{{ form.notify_on_data_change.value }}" />
-        <input type="hidden" name="{{ form.notify_on_schema_change.name }}" value="{{ form.notify_on_schema_change.value }}" />
+        <input type="hidden" name="{{ form.notify_on_data_change.name }}"
+               value="{{ form.notify_on_data_change.value }}"/>
+        <input type="hidden" name="{{ form.notify_on_schema_change.name }}"
+               value="{{ form.notify_on_schema_change.value }}"/>
         <div class="form-group">
           <div class="govuk-form-group">
             <label class="govuk-label" for="email-address">

@@ -161,4 +161,15 @@ urlpatterns = [
         login_required(subscription_views.DataSetSubscriptionConfirm.as_view()),
         name='subscription_confirm',
     ),
+    path(
+        'email_preferences',
+        login_required(subscription_views.current_user_email_preferences_list),
+        name='email_preferences',
+    ),
+    path(
+        '<str:subscription_id>/unsubscribe',
+        login_required(subscription_views.DataSetSubscriptionUnsubscribe.as_view()),
+        name='subscription_unsubscribe',
+    ),
+
 ]

@@ -1,25 +1,7 @@
 {% extends '_main.html' %}
 
 {% block breadcrumbs %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-three-quarters">
-      <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-          <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link" href="/">Home</a>
-          </li>
-          <li class="govuk-breadcrumbs__list-item">
-            <a href="{{ object.dataset.get_absolute_url }}">
-              {{ object.dataset.name }}
-            </a>
-          </li>
-          <li class="govuk-breadcrumbs__list-item">
-            Subscribe
-          </li>
-        </ol>
-      </div>
-    </div>
-  </div>
+  {% include 'datasets/subscriptions/partials/wizard_breadcrumbs.html' with dataset=object.dataset final_text='Subscribe' %}
 {% endblock %}
 
 {% block content %}
