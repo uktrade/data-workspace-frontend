@@ -31,10 +31,8 @@ from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
     get_tables_last_updated_date,
 )
-from dataworkspace.apps.core.utils import (
-    close_all_connections_if_not_in_atomic_block,
-    extract_columns_from_query,
-)
+from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
+from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = logging.getLogger('app')
 
@@ -598,15 +596,18 @@ def store_datacut_table_structures():
             )
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
+                cursor.execute(f'SELECT * FROM ({query.query}) sq LIMIT 0')
+                columns = [
+                    (col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description
+                ]
+
                 cursor.execute(
                     SQL(
                         "INSERT INTO dataflow.metadata (source_data_modified_utc, table_structure, data_id, data_type)"
                         "VALUES ({},{},{},{})"
                     ).format(
                         Literal(last_updated_date),
-                        Literal(
-                            json.dumps(extract_columns_from_query(cursor, query.query))
-                        ),
+                        Literal(json.dumps(columns)),
                         Literal(query.id),
                         Literal(DataSetType.DATACUT.value),
                     )

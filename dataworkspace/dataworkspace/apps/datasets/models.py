@@ -64,7 +64,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.datasets_db import (
     get_custom_dataset_query_changelog,
     get_table_changelog,
-    get_tables_last_updated_date
+    get_tables_last_updated_date,
 )
 
 
