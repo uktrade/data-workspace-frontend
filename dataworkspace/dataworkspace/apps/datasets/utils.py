@@ -25,7 +25,6 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLink,
     VisualisationLinkSqlQuery,
 )
-from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
@@ -577,8 +576,8 @@ def build_filtered_dataset_query(inner_query, column_config, params):
 
 
 @celery_app.task()
-def store_datacut_table_structures():
-    for query in CustomDatasetQuery.objects.all():
+def store_custom_dataset_query_table_structures():
+    for query in CustomDatasetQuery.objects.filter(dataset__published=True):
         tables = extract_queried_tables_from_sql_query(
             query.database.memorable_name, query.query
         )
@@ -591,7 +590,8 @@ def store_datacut_table_structures():
         with connections[query.database.memorable_name].cursor() as cursor:
             cursor.execute(
                 SQL(
-                    "SELECT DISTINCT ON(source_data_modified_utc) source_data_modified_utc::TIMESTAMP AT TIME ZONE 'UTC' FROM dataflow.metadata WHERE data_id={} ORDER BY source_data_modified_utc DESC"
+                    "SELECT DISTINCT ON(source_data_modified_utc) source_data_modified_utc::TIMESTAMP AT TIME ZONE 'UTC' "
+                    "FROM dataflow.metadata WHERE data_id={} ORDER BY source_data_modified_utc DESC"
                 ).format(Literal(query.id))
             )
             metadata = cursor.fetchone()
@@ -609,6 +609,6 @@ def store_datacut_table_structures():
                         Literal(last_updated_date),
                         Literal(json.dumps(columns)),
                         Literal(query.id),
-                        Literal(DataSetType.DATACUT.value),
+                        Literal(int(DataSetType.DATACUT)),
                     )
                 )

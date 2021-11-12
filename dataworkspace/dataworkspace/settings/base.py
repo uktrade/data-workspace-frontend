@@ -347,6 +347,11 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
             'schedule': 60 * 5,
             'args': (),
         },
+        'store-custom-dataset-query-table-structures': {
+            'task': 'dataworkspace.apps.datasets.utils.store_custom_dataset_query_table_structures',
+            'schedule': 60 * 5,
+            'args': (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env['REDIS_URL']

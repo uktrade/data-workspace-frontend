@@ -117,7 +117,7 @@ def get_table_changelog(database_name: str, schema: str, table: str):
         return records
 
 
-def get_custom_dataset_query_changelog(database_name: str, query_id: int):
+def get_custom_dataset_query_changelog(database_name: str, query):
     with connections[database_name].cursor() as cursor:
         cursor.execute(
             '''
@@ -130,7 +130,7 @@ def get_custom_dataset_query_changelog(database_name: str, query_id: int):
             GROUP BY table_structure
             ORDER BY change_date DESC;
             ''',
-            [query_id],
+            [query.id],
         )
         columns = [x.name for x in cursor.description]
         records = []
