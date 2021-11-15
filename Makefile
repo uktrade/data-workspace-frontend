@@ -1,3 +1,29 @@
+SHELL := /bin/bash
+APPLICATION_NAME="uktrade / data-workspace"
+APPLICATION_VERSION=1.0
+
+# Colour coding for output
+COLOUR_NONE=\033[0m
+COLOUR_GREEN=\033[1;36m
+COLOUR_YELLOW=\033[33;01m
+
+.PHONY: help test
+help:
+	@echo -e "$(COLOUR_GREEN)|--- $(APPLICATION_NAME) [$(APPLICATION_VERSION)] ---|$(COLOUR_NONE)"
+	@echo -e "$(COLOUR_YELLOW)make up$(COLOUR_NONE) : launches containers for local development"
+	@echo -e "$(COLOUR_YELLOW)make docker-test-unit$(COLOUR_NONE) : runs the unit tests in a container"
+	@echo -e "$(COLOUR_YELLOW)make docker-test-integration$(COLOUR_NONE) : runs the integration tests in a container (10 minutes min)"
+
+
+.PHONY: first-use
+first-use:
+	docker network create data-infrastructure-shared-network || true
+
+.PHONY: up
+up: first-use
+	docker-compose -f docker-compose-dev.yml up
+
+
 .PHONY: docker-build
 docker-build:
 	docker-compose -f docker-compose-test.yml build
@@ -47,8 +73,8 @@ format:
 
 .PHONY: save-requirements
 save-requirements:
-	pip-compile requirements.in
-	pip-compile requirements-dev.in
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
 
 .PHONY: docker-test-unit-local
 docker-test-unit-local:
