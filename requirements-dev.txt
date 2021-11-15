@@ -323,7 +323,7 @@ psycogreen==1.0.2
     # via
     #   -r requirements.txt
     #   django-db-geventpool
-psycopg2-binary==2.8.6
+psycopg2-binary==2.9.2
     # via
     #   -r requirements.txt
     #   aiopg
