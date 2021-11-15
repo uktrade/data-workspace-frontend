@@ -66,6 +66,10 @@ check-pylint:
 .PHONY: check
 check: check-flake8 check-black check-pylint
 
+.PHONY: docker-format
+docker-format:
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && black --exclude=venv --skip-string-normalization ."
+
 
 .PHONY: format
 format:
