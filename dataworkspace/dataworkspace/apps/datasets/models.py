@@ -997,7 +997,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         )
 
     def get_changelog(self):
-        return get_custom_dataset_query_changelog(self.database.memorable_name, self.id)
+        return get_custom_dataset_query_changelog(self.database.memorable_name, self)
 
 
 class CustomDatasetQueryTable(models.Model):
