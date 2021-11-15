@@ -1,3 +1,30 @@
+SHELL := /bin/bash
+APPLICATION_NAME="uktrade / data-workspace"
+APPLICATION_VERSION=1.0
+
+# Colour coding for output
+COLOUR_NONE=\033[0m
+COLOUR_GREEN=\033[1;36m
+COLOUR_YELLOW=\033[33;01m
+
+.PHONY: help test
+help:
+	@echo -e "$(COLOUR_GREEN)|--- $(APPLICATION_NAME) [$(APPLICATION_VERSION)] ---|$(COLOUR_NONE)"
+	@echo -e "$(COLOUR_YELLOW)make up$(COLOUR_NONE) : launches containers for local development"
+	@echo -e "$(COLOUR_YELLOW)make docker-test-shell$(COLOUR_NONE) : bash shell for the unit tests in a container with your local volume mounted"
+	@echo -e "$(COLOUR_YELLOW)make docker-test-unit-local$(COLOUR_NONE) : runs the unit tests in a container with your local volume mounted"
+	@echo -e "$(COLOUR_YELLOW)make docker-test-integration$(COLOUR_NONE) : runs the integration tests in a container (10 minutes min)"
+
+
+.PHONY: first-use
+first-use:
+	docker network create data-infrastructure-shared-network || true
+
+.PHONY: up
+up: first-use
+	docker-compose -f docker-compose-dev.yml up
+
+
 .PHONY: docker-build
 docker-build:
 	docker-compose -f docker-compose-test.yml build
@@ -40,6 +67,10 @@ check-pylint:
 .PHONY: check
 check: check-flake8 check-black check-pylint
 
+.PHONY: docker-format
+docker-format:
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && black --exclude=venv --skip-string-normalization ."
+
 
 .PHONY: format
 format:
@@ -47,8 +78,14 @@ format:
 
 .PHONY: save-requirements
 save-requirements:
-	pip-compile requirements.in
-	pip-compile requirements-dev.in
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
+
+
+.PHONY: docker-test-shell
+docker-test-shell:
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test bash
+
 
 .PHONY: docker-test-unit-local
 docker-test-unit-local:
@@ -58,9 +95,6 @@ docker-test-unit-local:
  	fi; \
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v
 
-.PHONY: docker-test-shell-local
-docker-test-shell-local:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test bash
 
 .PHONY: docker-test-integration-local
 docker-test-integration-local:

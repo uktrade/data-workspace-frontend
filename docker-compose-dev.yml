@@ -21,6 +21,7 @@ services:
       - "data-workspace-es"
     volumes:
       - ./dataworkspace:/dataworkspace
+      - .:/app      
   data-workspace-celery:
     build:
       context: .
