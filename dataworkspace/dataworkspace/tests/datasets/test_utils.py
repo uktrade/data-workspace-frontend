@@ -2,8 +2,11 @@ import datetime
 from unittest.mock import call, MagicMock, patch
 import pytz
 
+from django.conf import settings
+from freezegun import freeze_time
 import pytest
 
+from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
@@ -11,8 +14,11 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_table,
     link_superset_visualisations_to_related_datasets,
     process_quicksight_dashboard_visualisations,
+    store_custom_dataset_query_table_structures,
 )
+from dataworkspace.datasets_db import get_custom_dataset_query_changelog
 from dataworkspace.tests.factories import (
+    CustomDatasetQueryFactory,
     DataSetFactory,
     SourceTableFactory,
     VisualisationLinkFactory,
@@ -656,3 +662,179 @@ class TestLinkSupersetVisualisationsRelatedDatasets:
                 'id', flat=True
             )
         ) == [ds.id]
+
+
+def get_dsn():
+    return database_dsn(settings.DATABASES_DATA['my_database'])
+
+
+class TestStoreCustomDatasetQueryTableStructures:
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
+    def test_stores_table_structure_first_run_query_updated_after_table(
+        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+    ):
+        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+            '2021-01-01 14:00', '%Y-%m-%d %H:%M'
+        ).replace(tzinfo=pytz.UTC)
+
+        with freeze_time('2021-01-01 15:00:00'):
+            query = CustomDatasetQueryFactory(
+                query='SELECT * FROM foo', database__memorable_name='my_database'
+            )
+
+        store_custom_dataset_query_table_structures()
+
+        records = get_custom_dataset_query_changelog('my_database', query)
+
+        # change_date should be that of the query because it was created / modified more recently
+        # than the underlying tables were last updated
+        assert records == [
+            {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'change_type': 'Table structure updated',
+                'table_structure': '[["a", "text"], ["b", "integer"]]',
+            },
+        ]
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
+    def test_stores_table_structure_first_run_table_updated_after_query(
+        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+    ):
+        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+            '2021-01-01 16:00', '%Y-%m-%d %H:%M'
+        ).replace(tzinfo=pytz.UTC)
+
+        with freeze_time('2021-01-01 15:00:00'):
+            query = CustomDatasetQueryFactory(
+                query='SELECT * FROM foo', database__memorable_name='my_database'
+            )
+
+        store_custom_dataset_query_table_structures()
+
+        records = get_custom_dataset_query_changelog('my_database', query)
+
+        # change_date should be that of the underlying table because it was updated more recently
+        # than the query was created / modified
+        assert records == [
+            {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 16:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'change_type': 'Table structure updated',
+                'table_structure': '[["a", "text"], ["b", "integer"]]',
+            },
+        ]
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
+    def test_multiple_runs_without_change_doesnt_result_in_new_changelog_records(
+        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+    ):
+        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+            '2021-01-01 14:00', '%Y-%m-%d %H:%M'
+        ).replace(tzinfo=pytz.UTC)
+
+        with freeze_time('2021-01-01 15:00:00'):
+            query = CustomDatasetQueryFactory(
+                query='SELECT * FROM foo', database__memorable_name='my_database'
+            )
+
+        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_table_structures()
+
+        records = get_custom_dataset_query_changelog('my_database', query)
+
+        # There should only be one record record as the structure hasn't changed.
+        assert records == [
+            {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'change_type': 'Table structure updated',
+                'table_structure': '[["a", "text"], ["b", "integer"]]',
+            },
+        ]
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
+    def test_update_query_where_clause_doesnt_result_in_new_changelog_record(
+        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+    ):
+        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+            '2021-01-01 14:00', '%Y-%m-%d %H:%M'
+        ).replace(tzinfo=pytz.UTC)
+
+        with freeze_time('2021-01-01 15:00:00'):
+            query = CustomDatasetQueryFactory(
+                query='SELECT * FROM foo', database__memorable_name='my_database'
+            )
+
+        store_custom_dataset_query_table_structures()
+
+        with freeze_time('2021-01-01 16:00:00'):
+            query.query = 'SELECT * FROM foo WHERE b > 10'
+            query.save()
+
+        store_custom_dataset_query_table_structures()
+
+        records = get_custom_dataset_query_changelog('my_database', query)
+
+        # There should only be one record record as the structure hasn't changed
+
+        assert records == [
+            {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'change_type': 'Table structure updated',
+                'table_structure': '[["a", "text"], ["b", "integer"]]',
+            },
+        ]
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
+    def test_update_query_select_clause_results_in_new_changelog_record(
+        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+    ):
+        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+            '2021-01-01 14:00', '%Y-%m-%d %H:%M'
+        ).replace(tzinfo=pytz.UTC)
+
+        with freeze_time('2021-01-01 15:00:00'):
+            query = CustomDatasetQueryFactory(
+                query='SELECT * FROM foo', database__memorable_name='my_database'
+            )
+
+        store_custom_dataset_query_table_structures()
+
+        with freeze_time('2021-01-01 16:00:00'):
+            query.query = 'SELECT a FROM foo'
+            query.save()
+
+        store_custom_dataset_query_table_structures()
+
+        records = get_custom_dataset_query_changelog('my_database', query)
+
+        # There should be two records as the query structure has changed
+
+        assert records == [
+            {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 16:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'change_type': 'Table structure updated',
+                'table_structure': '[["a", "text"]]',
+            },
+            {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'change_type': 'Table structure updated',
+                'table_structure': '[["a", "text"], ["b", "integer"]]',
+            },
+        ]
