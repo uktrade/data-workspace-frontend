@@ -38,7 +38,7 @@ def unsubscribe_from_all(user):
 
 
 def unsubscribe(subscription_id: str, user):
-    logger.info("unsubscribe %s from %s" % (user, subscription_id))
+    logger.info("unsubscribe %s from %s", user, subscription_id)
 
     subscription = get_object_or_404(DataSetSubscription, pk=subscription_id)
 
