@@ -145,15 +145,18 @@ def metadata_db(db):
             CREATE SCHEMA IF NOT EXISTS dataflow;
             CREATE TABLE IF NOT EXISTS dataflow.metadata (
                 id int, table_schema text, table_name text, table_structure text,
-                source_data_modified_utc timestamp, data_id int, data_type int
+                data_hash_v1 bytea, source_data_modified_utc timestamp, data_id int, data_type int
             );
             TRUNCATE TABLE dataflow.metadata;
             INSERT INTO dataflow.metadata VALUES(
-                1, 'public', 'table1', '{"field1":"int","field2":"varchar"}', '2020-09-02 00:01:00.0'
+                1, 'public', 'table1', '{"field1":"int","field2":"varchar"}', NULL, '2020-09-02 00:01:00.0'
             );
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '', '2020-09-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '', '2020-01-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', '', NULL);
+            INSERT INTO dataflow.metadata VALUES(2, 'public', 'table2', '', NULL, '2020-09-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(3, 'public', 'table1', '', NULL, '2020-01-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(4, 'public', 'table4', '', NULL, NULL);
+            INSERT INTO dataflow.metadata VALUES(
+                5, 'public', 'table1', '{"field1":"int","field2":"varchar"}', 'a-hash-of-data', '2020-09-02 00:01:00.0'
+            );
             '''
         )
         conn.commit()

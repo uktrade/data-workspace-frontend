@@ -94,18 +94,29 @@ def get_table_changelog(database_name: str, schema: str, table: str):
     with connections[database_name].cursor() as cursor:
         cursor.execute(
             '''
-            SELECT
-                MIN(source_data_modified_utc) change_date,
-                table_structure,
-                'Table structure updated' change_type
-            FROM dataflow.metadata
-            WHERE table_schema = %s
-            AND table_name = %s
-            AND source_data_modified_utc IS NOT NULL
-            GROUP BY table_structure
+            SELECT *
+            FROM (
+                SELECT
+                    MIN(source_data_modified_utc) change_date,
+                    'Table structure updated' change_type
+                FROM dataflow.metadata
+                WHERE table_schema = %(schema)s
+                AND table_name = %(table)s
+                AND source_data_modified_utc IS NOT NULL
+                GROUP BY table_structure
+                UNION
+                SELECT
+                    MIN(source_data_modified_utc) change_date,
+                    'Table data updated' change_type
+                FROM dataflow.metadata
+                WHERE table_schema = %(schema)s
+                AND table_name = %(table)s
+                AND source_data_modified_utc IS NOT NULL
+                GROUP BY data_hash_v1
+            ) changelog
             ORDER BY change_date DESC;
             ''',
-            [schema, table],
+            {'schema': schema, 'table': table},
         )
         columns = [x.name for x in cursor.description]
         records = []
