@@ -171,7 +171,6 @@ urlpatterns = [
         login_required(subscription_views.DataSetSubscriptionUnsubscribe.as_view()),
         name='subscription_unsubscribe',
     ),
-
     path(
         '<uuid:dataset_uuid>/<uuid:source_id>/changelog/',
         login_required(views.SourceChangelogView.as_view()),
