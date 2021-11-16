@@ -85,3 +85,60 @@ def extract_queried_tables_from_sql_query(database_name, query):
             cursor.execute("drop view get_tables")
 
         return tables
+
+
+def get_table_changelog(database_name: str, schema: str, table: str):
+    """
+    Fetch a list of distinct changes to a datasets db table
+    """
+    with connections[database_name].cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT
+                MIN(source_data_modified_utc) change_date,
+                table_structure,
+                'Table structure updated' change_type
+            FROM dataflow.metadata
+            WHERE table_schema = %s
+            AND table_name = %s
+            AND source_data_modified_utc IS NOT NULL
+            GROUP BY table_structure
+            ORDER BY change_date DESC;
+            ''',
+            [schema, table],
+        )
+        columns = [x.name for x in cursor.description]
+        records = []
+        for row in cursor.fetchall():
+            record = {}
+            for idx, field in enumerate(row):
+                record[columns[idx]] = field
+            record['change_date'] = record['change_date'].replace(tzinfo=pytz.UTC)
+            records.append(record)
+        return records
+
+
+def get_custom_dataset_query_changelog(database_name: str, query):
+    with connections[database_name].cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT
+                MIN(source_data_modified_utc) change_date,
+                table_structure,
+                'Table structure updated' change_type
+            FROM dataflow.metadata
+            WHERE data_id = %s
+            GROUP BY table_structure
+            ORDER BY change_date DESC;
+            ''',
+            [query.id],
+        )
+        columns = [x.name for x in cursor.description]
+        records = []
+        for row in cursor.fetchall():
+            record = {}
+            for idx, field in enumerate(row):
+                record[columns[idx]] = field
+            record['change_date'] = record['change_date'].replace(tzinfo=pytz.UTC)
+            records.append(record)
+        return records

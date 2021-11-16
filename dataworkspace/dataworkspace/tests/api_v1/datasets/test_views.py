@@ -312,13 +312,6 @@ class TestAPIReferenceDatasetView(TestCase):
             data_type=9,
             sort_order=4,
         )
-        factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name='auto id',
-            column_name='auto_id',
-            data_type=10,
-            sort_order=5,
-        )
         link_record = linked_rds.save_record(
             None,
             {
@@ -357,24 +350,10 @@ class TestAPIReferenceDatasetView(TestCase):
         self.assertEqual(
             json.loads(output.decode('utf-8')),
             {
-                'headers': [
-                    'auto id',
-                    'auto uuid',
-                    'id',
-                    'linked: id',
-                    'linked: name',
-                    'name',
-                ],
+                'headers': ['auto uuid', 'id', 'linked: id', 'linked: name', 'name'],
                 'values': [
-                    [
-                        1,
-                        str(rec1.auto_uuid),
-                        1,
-                        1,
-                        'Linked Display Name',
-                        'Test record',
-                    ],
-                    [2, str(rec2.auto_uuid), 2, None, None, 'Ánd again'],
+                    [str(rec1.auto_uuid), 1, 1, 'Linked Display Name', 'Test record'],
+                    [str(rec2.auto_uuid), 2, None, None, 'Ánd again'],
                 ],
                 'next': None,
             },

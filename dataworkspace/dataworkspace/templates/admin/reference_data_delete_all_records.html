@@ -1,0 +1,42 @@
+{% extends "admin/delete_selected_confirmation.html" %}
+{% load static admin_urls core_tags %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='datasets' %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}">{{ ref_model }}</a>
+    &rsaquo; Delete all records
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <h1>Are you sure?</h1>
+  <form method="post">{% csrf_token %}
+    {{ form }}
+    <p>Are you sure you want to delete all records from the reference data item "{{ ref_model }}"?</p>
+    <p>This will permanently remove them from the database.</p>
+    <h2>Summary</h2>
+    <table>
+      <tr>
+        {% for field in reference_dataset.fields.all %}
+          <th>{{ field.name }}</th>
+        {% endfor %}
+      </tr>
+      {% for record in records %}
+        <tr>
+          {% for field in record.reference_dataset.fields.all %}
+            <td>
+              {% with record|get_attr:field.column_name as value %}
+                {{ value|default_if_none:"Not set" }}
+              {% endwith %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+    <br />
+    <div>
+      <input type="submit" value="Yes, I'm sure">
+      <a href="{% url 'admin:datasets_referencedataset_change' ref_model.id %}" class="button cancel-link">No, take me back</a>
+    </div>
+  </form>
+{% endblock content %}

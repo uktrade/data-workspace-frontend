@@ -200,6 +200,7 @@ def new_private_database_credentials(
                     schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
                     AND schemaname NOT LIKE 'pg_temp_%'
                     AND schemaname NOT LIKE 'pg_toast_temp_%'
+                    AND schemaname NOT LIKE '_team_%'
                     AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
                         quote_ident(tablename), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
                 UNION ALL
@@ -212,6 +213,7 @@ def new_private_database_credentials(
                     schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
                     AND schemaname NOT LIKE 'pg_temp_%'
                     AND schemaname NOT LIKE 'pg_toast_temp_%'
+                    AND schemaname NOT LIKE '_team_%'
                     AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
                         quote_ident(viewname), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
                 UNION ALL
@@ -224,6 +226,7 @@ def new_private_database_credentials(
                     schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
                     AND schemaname NOT LIKE 'pg_temp_%'
                     AND schemaname NOT LIKE 'pg_toast_temp_%'
+                    AND schemaname NOT LIKE '_team_%'
                     AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
                         quote_ident(matviewname), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
                 ORDER BY schema, name;

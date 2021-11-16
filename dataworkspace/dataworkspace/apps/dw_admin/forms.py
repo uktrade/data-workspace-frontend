@@ -439,6 +439,33 @@ class ReferenceDataRowDeleteForm(forms.Form):
             )
 
 
+class ReferenceDataRowDeleteAllForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.reference_dataset = kwargs.pop('reference_dataset')
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        # Do not allow deletion of records that are linked to by other records
+        linking_fields = ReferenceDatasetField.objects.filter(
+            linked_reference_dataset_field__reference_dataset=self.reference_dataset
+        )
+
+        conflicts = []
+        for field in linking_fields:
+            for record in self.reference_dataset.get_records():
+                conflicts += field.reference_dataset.get_records().filter(
+                    **{'{}__id'.format(field.relationship_name): record.id}
+                )
+
+        if conflicts:
+            error_template = get_template(
+                'admin/inc/delete_all_linked_to_record_error.html'
+            )
+            raise forms.ValidationError(
+                mark_safe(error_template.render({'conflicts': conflicts}))
+            )
+
+
 class ReferenceDataRecordUploadForm(forms.Form):
     file = forms.FileField(
         label='CSV file',

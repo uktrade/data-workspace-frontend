@@ -809,6 +809,7 @@ class DatasetDetailView(DetailView):
         ctx = super().get_context_data()
         ctx['model'] = self.object
         ctx['DATA_CUT_ENHANCED_PREVIEW_FLAG'] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
+        ctx['DATASET_CHANGELOG_PAGE_FLAG'] = settings.DATASET_CHANGELOG_PAGE_FLAG
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
@@ -1622,4 +1623,20 @@ class CustomQueryColumnDetails(View):
                     query.database.memorable_name, query=query.query, include_types=True
                 ),
             },
+        )
+
+
+class SourceChangelogView(WaffleFlagMixin, DetailView):
+    waffle_flag = settings.DATASET_CHANGELOG_PAGE_FLAG
+    template_name = 'datasets/source_changelog.html'
+    context_object_name = 'source'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            self.kwargs['model_class'],
+            dataset__id=self.kwargs.get('dataset_uuid'),
+            pk=self.kwargs['source_id'],
+            **{'dataset__published': True}
+            if not self.request.user.is_superuser
+            else {},
         )
