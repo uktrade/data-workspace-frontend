@@ -1,6 +1,6 @@
 import logging
 
-from django.http import HttpResponse, Http404
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import View
@@ -66,11 +66,8 @@ class DataSetSubscriptionUnsubscribe(View):
         return render(
             request,
             "datasets/subscriptions/unsubscribe_confirm.html",
-            context={
-                "subscriptions": unsubscribed
-            }
+            context={"subscriptions": unsubscribed},
         )
-
 
 
 class DataSetSubscriptionStartView(View):
