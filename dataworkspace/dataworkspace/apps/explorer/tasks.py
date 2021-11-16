@@ -145,7 +145,6 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
                 )
                 for i, col in enumerate(cursor.description, 1)
             ]
-
             cursor.execute(
                 f'CREATE TABLE {table_name} ({", ".join(prefixed_sql_columns)})'
             )

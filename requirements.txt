@@ -180,7 +180,7 @@ psycogreen==1.0.2
     # via
     #   -r requirements.in
     #   django-db-geventpool
-psycopg2-binary==2.8.6
+psycopg2-binary==2.9.2
     # via -r requirements.in
 pycparser==2.20
     # via cffi

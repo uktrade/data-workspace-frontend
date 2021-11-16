@@ -144,17 +144,31 @@ def metadata_db(db):
             '''
             CREATE SCHEMA IF NOT EXISTS dataflow;
             CREATE TABLE IF NOT EXISTS dataflow.metadata (
-                id int, table_schema text, table_name text, source_data_modified_utc timestamp
+                id int, table_schema text, table_name text, table_structure text,
+                source_data_modified_utc timestamp, data_id int, data_type int
             );
             TRUNCATE TABLE dataflow.metadata;
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-09-02 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '2020-09-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '2020-01-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', NULL);
+            INSERT INTO dataflow.metadata VALUES(
+                1, 'public', 'table1', '{"field1":"int","field2":"varchar"}', '2020-09-02 00:01:00.0'
+            );
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '', '2020-09-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '', '2020-01-01 00:01:00.0');
+            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', '', NULL);
             '''
         )
         conn.commit()
     return database
+
+
+@pytest.fixture
+def test_dataset(db):
+    with psycopg2.connect(
+        database_dsn(settings.DATABASES_DATA['my_database'])
+    ) as conn, conn.cursor() as cursor:
+        cursor.execute(
+            "CREATE TABLE IF NOT EXISTS foo AS SELECT a,b FROM (VALUES ('test',30)) AS temp_table(a,b);"
+        )
+        conn.commit()
 
 
 @pytest.fixture(autouse=True, scope='session')

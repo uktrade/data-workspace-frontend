@@ -145,6 +145,9 @@
           <th class="govuk-table__header">Format</th>
           <th class="govuk-table__header">Last updated</th>
           <th class="govuk-table__header">Action</th>
+          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
+            <th class="govuk-table__header">History</th>
+          {% endflag %}
         </tr>
         </thead>
         <tbody>
@@ -186,8 +189,15 @@
                   </a>
                 {% endif %}
               {% endif %}
-
             </td>
+            {% flag DATASET_CHANGELOG_PAGE_FLAG %}
+              <td class="govuk-table__cell app-table_cell--no-border">
+                <a class="govuk-link govuk-link--no-visited-state"
+                  href="{% url 'datasets:custom_dataset_query_changelog' dataset_uuid=dataset.id source_id=datacut_link.id %}">
+                  Changelog
+                </a>
+              </td>
+            {% endflag %}
 
             {% if columns or code_snippets and has_access %}
               <tr class="govuk-table__row">

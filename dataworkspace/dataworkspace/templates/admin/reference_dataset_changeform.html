@@ -60,6 +60,13 @@
                       </a>
                     </td>
                   </tr>
+                  <tr class="deletelink-box">
+                    <td class="deletelink-box" colspan="{{ instance.fields.count|add:1 }}">
+                      <a class="deletelink-box" href="{% url 'dw-admin:reference-dataset-record-delete-all' reference_dataset_id=instance.id %}">
+                        Delete all
+                      </a>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </fieldset>
