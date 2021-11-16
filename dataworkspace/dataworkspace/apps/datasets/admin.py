@@ -54,6 +54,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLink,
     VisualisationLinkSqlQuery,
     ToolQueryAuditLog,
+    DataSetSubscription,
 )
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
@@ -1008,6 +1009,17 @@ class VisualisationCatalogueItemAdmin(
 class DatasetReferenceCodeAdmin(admin.ModelAdmin):
     search_fields = ['code', 'description']
     fields = ['code', 'description']
+
+
+@admin.register(DataSetSubscription)
+class DataSetSubscriptionAdmin(admin.ModelAdmin):
+    list_display = [
+        'dataset',
+        'user',
+        'notify_on_schema_change',
+        'notify_on_data_change',
+        'is_active',
+    ]
 
 
 @admin.register(ToolQueryAuditLog)
