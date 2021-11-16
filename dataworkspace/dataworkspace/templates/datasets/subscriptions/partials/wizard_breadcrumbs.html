@@ -1,0 +1,19 @@
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-three-quarters">
+    <div class="govuk-breadcrumbs">
+      <ol class="govuk-breadcrumbs__list">
+        <li class="govuk-breadcrumbs__list-item">
+          <a class="govuk-breadcrumbs__link" href="/">Home</a>
+        </li>
+        <li class="govuk-breadcrumbs__list-item">
+          <a href="{{ dataset.get_absolute_url }}">
+            {{ dataset.name }}
+          </a>
+        </li>
+        <li class="govuk-breadcrumbs__list-item">
+          {{ final_text }}
+        </li>
+      </ol>
+    </div>
+  </div>
+</div>

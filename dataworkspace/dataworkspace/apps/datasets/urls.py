@@ -162,6 +162,16 @@ urlpatterns = [
         name='subscription_confirm',
     ),
     path(
+        'email_preferences',
+        login_required(subscription_views.current_user_email_preferences_list),
+        name='email_preferences',
+    ),
+    path(
+        '<str:subscription_id>/unsubscribe',
+        login_required(subscription_views.DataSetSubscriptionUnsubscribe.as_view()),
+        name='subscription_unsubscribe',
+    ),
+    path(
         '<uuid:dataset_uuid>/<uuid:source_id>/changelog/',
         login_required(views.SourceChangelogView.as_view()),
         {'model_class': models.SourceTable},

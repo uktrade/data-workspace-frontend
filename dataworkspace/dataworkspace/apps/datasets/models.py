@@ -414,6 +414,10 @@ class DataSetSubscription(TimeStampedUserModel):
     def is_active(self):
         return self.notify_on_data_change or self.notify_on_schema_change
 
+    def make_inactive(self):
+        self.notify_on_data_change = False
+        self.notify_on_schema_change = False
+
     def get_list_of_selected_options(self):
         selected = []
 

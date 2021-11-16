@@ -1,7 +1,27 @@
 {% extends '_main.html' %}
 
 {% block breadcrumbs %}
-  {% include 'datasets/subscriptions/partials/wizard_breadcrumbs.html' with dataset=dataset final_text='Review' %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{% url "datasets:email_preferences" %}">
+              Change your email preferences
+            </a>
+          </li>
+
+          <li class="govuk-breadcrumbs__list-item">
+            Unsubscribe
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block content %}
@@ -12,28 +32,21 @@
           Success
         </h1>
         <div class="govuk-panel__body">
-          {% if subscription.is_active %}
-            Your preferences have been saved.
-          {% else %}
-            Your subscription has been cancelled.
-          {% endif %}
+          You have been unsubscribed.
         </div>
       </div>
 
-      {% if subscription.is_active %}
-        <p class="govuk-body">You’ll get an email from Data Workspace:</p>
+
+
+      {% if subscriptions %}
+        <p class="govuk-body">You won't receive any emails about</p>
         <ul class="govuk-list govuk-list--bullet">
-          {% for option in subscription.get_list_of_selected_options %}
-            <li><span style="text-transform: lowercase">{{ option }}</span></li>
+          {% for subscription in subscriptions %}
+            <li>{{ subscription.dataset.name }}</li>
           {% endfor %}
         </ul>
-        <p class="govuk-body">about <a class="govuk-link--no-visited-state"
-                                       href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>.</p>
-      {% else %}
-        <p class="govuk-body">You wont receive any emails about <a class="govuk-link--no-visited-state"
-                                                                   href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>
-        </p>
       {% endif %}
+
 
       <h2 class="govuk-heading-m">How to change your email preferences</h2>
       <p class="govuk-body">

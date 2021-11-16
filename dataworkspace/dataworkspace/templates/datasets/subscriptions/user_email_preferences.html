@@ -1,0 +1,104 @@
+{% extends '_main.html' %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+
+          <li class="govuk-breadcrumbs__list-item">
+            Change your email preferences
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+      <h2 class="govuk-heading-xl">Change your email preferences</h2>
+
+
+    </div>
+  </div>
+
+  {% if not subscriptions %}
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        <p class="govuk-body">You don't have any subscriptions right now.
+        </p>
+      </div>
+    </div>
+  {% else %}
+    <div class="govuk-grid-row" style="overflow-x: auto;">
+
+      <div class="govuk-grid-column-full">
+        <p class="govuk-body">You can
+          unsubscribe or change your email preferences at any time.
+        </p>
+
+        <table class="govuk-table">
+          <thead>
+          <tr class="govuk-table__row">
+            <th class="govuk-table__header">Name</th>
+            <th class="govuk-table__header">Changes</th>
+            <th class="govuk-table__header"></th>
+            <th class="govuk-table__header"></th>
+          </tr>
+          </thead>
+
+          <tbody>
+          {% for subscription in subscriptions %}
+
+            <tr class="govuk-table__row">
+
+              <td class="govuk-table__cell">
+                <a class="govuk-link" href="{{ subscription.dataset.get_absolute_url }}">
+                  {{ subscription.dataset.name }}
+                </a>
+
+              </td>
+              <td class="govuk-table__cell">
+                {% for option in subscription.get_list_of_selected_options %}
+                  {{ option }}<br>
+                {% endfor %}
+
+              </td>
+
+              <td class="govuk-table__cell">
+                <a class="govuk-link--no-visited-state"
+                   href="{% url "datasets:subscription_options" subscription.id %}">
+                  Change preferences</a>
+              </td>
+              <td class="govuk-table__cell">
+                <a class="govuk-link--no-visited-state"
+                   href="{% url "datasets:subscription_unsubscribe" subscription.id %}">
+                  Unsubscribe</a>
+              </td>
+            </tr>
+
+          {% endfor %}
+
+          </tbody>
+
+        </table>
+
+
+        <div class="govuk-inset-text">
+          <a class="govuk-link--no-visited-state" href="{% url "datasets:subscription_unsubscribe" "__all__" %}">Unsubscribe
+            from
+            everything</a>
+        </div>
+
+      </div>
+    </div>
+  {% endif %}
+
+
+{% endblock %}
