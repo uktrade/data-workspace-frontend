@@ -1,3 +1,4 @@
+import json
 import logging
 import operator
 import os
@@ -8,26 +9,29 @@ import boto3
 import botocore
 from django.conf import settings
 from django.http import Http404
+from django.db import connections
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from psycopg2.sql import Identifier, SQL
+from psycopg2.sql import Identifier, Literal, SQL
 import requests
 
 from dataworkspace.apps.datasets.models import (
+    CustomDatasetQuery,
     CustomDatasetQueryTable,
     DataSet,
+    DataSetType,
     ReferenceDataset,
     VisualisationCatalogueItem,
     VisualisationLink,
     VisualisationLinkSqlQuery,
 )
-from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
     get_tables_last_updated_date,
 )
 from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
+from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = logging.getLogger('app')
 
@@ -569,3 +573,42 @@ def build_filtered_dataset_query(inner_query, column_config, params):
     )
 
     return query, query_params
+
+
+@celery_app.task()
+def store_custom_dataset_query_table_structures():
+    for query in CustomDatasetQuery.objects.filter(dataset__published=True):
+        tables = extract_queried_tables_from_sql_query(
+            query.database.memorable_name, query.query
+        )
+        tables_last_updated_date = get_tables_last_updated_date(
+            query.database.memorable_name, tuple(tables)
+        )
+        query_last_updated_date = query.modified_date
+
+        last_updated_date = max(tables_last_updated_date, query_last_updated_date)
+        with connections[query.database.memorable_name].cursor() as cursor:
+            cursor.execute(
+                SQL(
+                    "SELECT DISTINCT ON(source_data_modified_utc) source_data_modified_utc::TIMESTAMP AT TIME ZONE 'UTC' "
+                    "FROM dataflow.metadata WHERE data_id={} ORDER BY source_data_modified_utc DESC"
+                ).format(Literal(query.id))
+            )
+            metadata = cursor.fetchone()
+            if not metadata or last_updated_date != metadata[0]:
+                cursor.execute(f'SELECT * FROM ({query.query}) sq LIMIT 0')
+                columns = [
+                    (col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description
+                ]
+
+                cursor.execute(
+                    SQL(
+                        "INSERT INTO dataflow.metadata (source_data_modified_utc, table_structure, data_id, data_type)"
+                        "VALUES ({},{},{},{})"
+                    ).format(
+                        Literal(last_updated_date),
+                        Literal(json.dumps(columns)),
+                        Literal(query.id),
+                        Literal(int(DataSetType.DATACUT)),
+                    )
+                )
