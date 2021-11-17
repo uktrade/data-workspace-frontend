@@ -9,7 +9,7 @@ import boto3
 import botocore
 from django.conf import settings
 from django.http import Http404
-from django.db import connections
+from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from psycopg2.sql import Identifier, Literal, SQL
@@ -20,7 +20,10 @@ from dataworkspace.apps.datasets.models import (
     CustomDatasetQueryTable,
     DataSet,
     DataSetType,
+    Notification,
     ReferenceDataset,
+    SourceTable,
+    UserNotification,
     VisualisationCatalogueItem,
     VisualisationLink,
     VisualisationLinkSqlQuery,
@@ -28,9 +31,11 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
+    get_table_changelog,
     get_tables_last_updated_date,
 )
 from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
+from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = logging.getLogger('app')
@@ -614,3 +619,84 @@ def store_custom_dataset_query_table_structures():
                         Literal(int(DataSetType.DATACUT)),
                     )
                 )
+
+
+@celery_app.task()
+def send_notification_emails():
+    def create_notifications():
+        for table in SourceTable.objects.order_by('id'):
+            changelog = get_table_changelog(
+                table.database.memorable_name, table.schema, table.table
+            )
+            if len(changelog) == 0:
+                return
+
+            # For now only notify about the most recent change
+            change = changelog[0]
+            notification, created = Notification.objects.get_or_create(
+                changelog_id=change['change_id'],
+                defaults={'change_date': change['change_date']},
+            )
+            if created:
+                dataset = table.dataset
+                logger.info(
+                    'Processing notifications for dataset %s', dataset.name,
+                )
+                for subscription in dataset.subscriptions.filter(
+                    notify_on_schema_change=True
+                ):
+                    UserNotification.objects.create(
+                        notification=notification, subscription=subscription,
+                    )
+
+    def send_notifications():
+        user_notification_ids = list(
+            UserNotification.objects.filter(email_id=None).values_list('id', flat=True)
+        )
+
+        for user_notification_id in user_notification_ids:
+            try:
+                with transaction.atomic():
+                    user_notification = UserNotification.objects.select_for_update().get(
+                        id=user_notification_id
+                    )
+                    user_notification.refresh_from_db()
+                    if user_notification.email_id is not None:
+                        # This means another task has updated the email_id field since
+                        # the filter above was executed
+                        continue
+
+                    change_date = user_notification.notification.change_date
+                    email_address = user_notification.subscription.user.email
+                    dataset_name = user_notification.subscription.dataset.name
+
+                    logger.info(
+                        'Sending notification about dataset %s changing structure at %s to user %s',
+                        dataset_name,
+                        change_date,
+                        email_address,
+                    )
+                    try:
+                        email_id = send_email(
+                            settings.NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID,
+                            email_address,
+                            personalisation={
+                                'dataset_name': dataset_name,
+                                'change_date': change_date,
+                            },
+                        )
+                    except EmailSendFailureException:
+                        logger.exception('Failed to send email')
+                    else:
+                        user_notification.email_id = email_id
+                        user_notification.save(update_fields=['email_id'])
+            except IntegrityError as e:
+                logger.error('Exception when sending notifications: %s', e)
+
+    try:
+        with transaction.atomic():
+            create_notifications()
+    except IntegrityError as e:
+        logger.error('Exception when creating notifications: %s', e)
+    else:
+        send_notifications()

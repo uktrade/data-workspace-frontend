@@ -17,12 +17,20 @@ def decrypt_token(token):
     return json.loads(fernet.decrypt(token).decode('utf-8'))
 
 
+class EmailSendFailureException(Exception):
+    pass
+
+
 def send_email(template_id, email_address, personalisation=None, reference=None):
     client = NotificationsAPIClient(settings.NOTIFY_API_KEY)
 
-    client.send_email_notification(
+    response = client.send_email_notification(
         template_id=template_id,
         email_address=email_address,
         personalisation=personalisation,
         reference=reference,
     )
+    if 'id' in response:
+        return response['id']
+    else:
+        raise EmailSendFailureException(response)
