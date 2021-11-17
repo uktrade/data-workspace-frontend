@@ -578,8 +578,10 @@ def build_filtered_dataset_query(inner_query, column_config, params):
 @celery_app.task()
 def store_custom_dataset_query_table_structures():
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
+        sql = query.query.rstrip().rstrip(';')
+
         tables = extract_queried_tables_from_sql_query(
-            query.database.memorable_name, query.query
+            query.database.memorable_name, sql
         )
         tables_last_updated_date = get_tables_last_updated_date(
             query.database.memorable_name, tuple(tables)
@@ -596,7 +598,7 @@ def store_custom_dataset_query_table_structures():
             )
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
-                cursor.execute(f'SELECT * FROM ({query.query}) sq LIMIT 0')
+                cursor.execute(f'SELECT * FROM ({sql}) sq LIMIT 0')
                 columns = [
                     (col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description
                 ]
