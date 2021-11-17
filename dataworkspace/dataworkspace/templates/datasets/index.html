@@ -17,6 +17,7 @@
   <script nonce="{{ request.csp_nonce }}">
     dataLayer.push(
       {
+        "UserId": "{{ sso_user_id }}",
         "event": "filter",
         "searchTerms": "{{ query }}",
         "resultsReturned": {{ datasets.paginator.count }},
