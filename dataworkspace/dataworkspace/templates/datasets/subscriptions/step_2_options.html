@@ -1,0 +1,75 @@
+{% extends '_main.html' %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a href="{{ object.dataset.get_absolute_url }}">
+              {{ object.dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Subscribe
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">What changes would you like to get emails about?
+      </h1>
+
+      <div class="govuk-hint">
+        Select all that apply.
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="govuk-form-group">
+          <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input"
+                     id="{{ form.notify_on_schema_change.id_for_label }}"
+                     name="{{ form.notify_on_schema_change.name }}"
+                     type="checkbox"
+                {% if form.notify_on_schema_change.value %} checked{% endif %}
+
+              >
+              <label class="govuk-label govuk-checkboxes__label" for="{{ form.notify_on_schema_change.id_for_label }}">
+                Each time columns are added, removed or renamed
+              </label>
+            </div>
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input"
+                     id="{{ form.notify_on_data_change.id_for_label }}"
+                     name="{{ form.notify_on_data_change.name }}"
+                     type="checkbox"
+                {% if form.notify_on_data_change.value %} checked{% endif %}
+
+              >
+              <label class="govuk-label govuk-checkboxes__label" for="{{ form.notify_on_data_change.id_for_label }}">
+                Each time data has been changed
+              </label>
+            </div>
+
+          </div>
+        </div>
+        <div class="govuk-form-group">
+          <button type="submit" class="govuk-button">
+            Continue
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+{% endblock %}

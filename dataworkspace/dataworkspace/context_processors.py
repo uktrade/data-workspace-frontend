@@ -18,4 +18,6 @@ def common(request):
         'gtm_container_id': settings.GTM_CONTAINER_ID,
         'gtm_container_environment_params': settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
         'CASE_STUDIES_FLAG': settings.CASE_STUDIES_FLAG,
+        'NOTIFY_ON_DATASET_CHANGE_FLAG': settings.NOTIFY_ON_DATASET_CHANGE_FLAG,
+        'ZENDESK_EMAIL': settings.ZENDESK_EMAIL,
     }

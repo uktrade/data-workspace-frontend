@@ -396,6 +396,36 @@ class DataSet(DeletableTimestampedUserModel):
         return reverse('datasets:usage_history', args=(self.id,))
 
 
+class DataSetSubscription(TimeStampedUserModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+
+    notify_on_schema_change = models.BooleanField(default=False)
+    notify_on_data_change = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "DataSet Subscription"
+        verbose_name_plural = "DataSet Subscriptions"
+
+    def __str__(self):
+        return f"{self.user.email} {self.dataset.name}"
+
+    def is_active(self):
+        return self.notify_on_data_change or self.notify_on_schema_change
+
+    def get_list_of_selected_options(self):
+        selected = []
+
+        if self.notify_on_data_change:
+            selected.append("Each time data has been changed")
+
+        if self.notify_on_schema_change:
+            selected.append("Each time columns are added, removed or renamed")
+
+        return selected
+
+
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
     summary = models.TextField()

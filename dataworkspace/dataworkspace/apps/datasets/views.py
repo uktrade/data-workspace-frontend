@@ -674,6 +674,10 @@ class DatasetDetailView(DetailView):
             sorted({t.get_frequency_display() for t in source_tables})
         )
 
+        subscription = self.object.datasetsubscription_set.filter(
+            user=self.request.user
+        )
+
         ctx.update(
             {
                 'summarised_update_frequency': summarised_update_frequency,
@@ -687,6 +691,11 @@ class DatasetDetailView(DetailView):
                 'related_visualisations': self.object.related_visualisations.filter(
                     published=True
                 ),
+                'subscription': {
+                    'current_user_is_subscribed': subscription.exists()
+                    and subscription.first().is_active(),
+                    'details': subscription.first(),
+                },
             }
         )
         return ctx
