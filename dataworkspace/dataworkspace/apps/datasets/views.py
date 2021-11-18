@@ -592,7 +592,7 @@ def find_datasets(request):
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
-            "sso_user_id": request.META['HTTP_SSO_PROFILE_USER_ID']
+            "sso_user_id": request.META['HTTP_SSO_PROFILE_USER_ID'],
         },
     )
 
