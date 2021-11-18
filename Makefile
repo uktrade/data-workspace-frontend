@@ -11,7 +11,8 @@ COLOUR_YELLOW=\033[33;01m
 help:
 	@echo -e "$(COLOUR_GREEN)|--- $(APPLICATION_NAME) [$(APPLICATION_VERSION)] ---|$(COLOUR_NONE)"
 	@echo -e "$(COLOUR_YELLOW)make up$(COLOUR_NONE) : launches containers for local development"
-	@echo -e "$(COLOUR_YELLOW)make docker-test-unit$(COLOUR_NONE) : runs the unit tests in a container"
+	@echo -e "$(COLOUR_YELLOW)make docker-test-shell$(COLOUR_NONE) : bash shell for the unit tests in a container with your local volume mounted"
+	@echo -e "$(COLOUR_YELLOW)make docker-test-unit-local$(COLOUR_NONE) : runs the unit tests in a container with your local volume mounted"
 	@echo -e "$(COLOUR_YELLOW)make docker-test-integration$(COLOUR_NONE) : runs the integration tests in a container (10 minutes min)"
 
 
@@ -80,6 +81,12 @@ save-requirements:
 	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
 	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
 
+
+.PHONY: docker-test-shell
+docker-test-shell:
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test bash
+
+
 .PHONY: docker-test-unit-local
 docker-test-unit-local:
 	TEST_DIR="$(TARGET)" ; \
@@ -88,9 +95,6 @@ docker-test-unit-local:
  	fi; \
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v
 
-.PHONY: docker-test-shell-local
-docker-test-shell-local:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test bash
 
 .PHONY: docker-test-integration-local
 docker-test-integration-local:
