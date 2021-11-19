@@ -59,13 +59,16 @@ class Command(BaseCommand):
             else:
                 catalogue_item = create_fake_dataset(dataset_type=dataset_type)
 
+            tag_msg = ""
+
             if should_add_tag:
                 tag = get_random_tag()
                 catalogue_item.tags.add(tag)
                 catalogue_item.save()
+                tag_msg = f" using tag {tag.name}"
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"{x+1:02}: created new {dataset_type.name} dataset {catalogue_item.name} {catalogue_item.id}"
+                    f"{x + 1:02}: created new {dataset_type.name} dataset {catalogue_item.name} {catalogue_item.id}{tag_msg}"
                 )
             )
