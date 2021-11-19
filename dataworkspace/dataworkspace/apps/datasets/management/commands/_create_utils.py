@@ -1,5 +1,19 @@
+import uuid
+import datetime
+import random
+
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 from faker import Faker  # noqa
+
+from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.models import (
+    MasterDataset,
+    VisualisationCatalogueItem,
+    VisualisationLink,
+    ReferenceDataset,
+    Tag,
+)
 
 
 class TestData:
@@ -51,3 +65,107 @@ class TestData:
             return user[0]
 
         return None
+
+
+def get_random_tag():
+    all_tags = Tag.objects.all()
+
+    if not all_tags.exists():
+        return None
+
+    offset = random.randint(0, all_tags.count() - 1)
+
+    return all_tags[offset]
+
+
+def create_fake_dataset(dataset_type=DataSetType.MASTER):
+
+    if dataset_type not in [DataSetType.MASTER, DataSetType.DATACUT]:
+        raise Exception(f"Can't handle a DatasetType of {dataset_type.name}")
+
+    fake = Faker("en-GB")
+    test_data = TestData()
+
+    name = test_data.get_dataset_name()
+    user = test_data.get_new_user()
+
+    catalogue_item = MasterDataset.objects.create(
+        name=name,
+        type=dataset_type,
+        slug=slugify(name),
+        short_description=fake.sentence(nb_words=20),
+        description="<br>".join(fake.paragraphs(nb=3)),
+        enquiries_contact=user,
+        information_asset_owner=user,
+        information_asset_manager=user,
+        licence=test_data.get_licence_text(),
+        licence_url=test_data.get_licence_url(),
+        personal_data=test_data.get_personal_data_text(),
+        restrictions_on_usage=test_data.get_no_restrictions_on_usage_text(),
+        retention_policy=test_data.get_no_retention_policy_text(),
+        user_access_type="REQUIRES_AUTHORIZATION",
+        published=True,
+    )
+
+    return catalogue_item
+
+
+def create_fake_visualisation_dataset():
+    fake = Faker("en-GB")
+    test_data = TestData()
+
+    name = test_data.get_dataset_name()
+    user = test_data.get_new_user()
+
+    catalogue_item = VisualisationCatalogueItem.objects.create(
+        name=name,
+        slug=slugify(name),
+        short_description=fake.sentence(nb_words=20),
+        description="<br>".join(fake.paragraphs(nb=3)),
+        enquiries_contact=user,
+        information_asset_owner=user,
+        information_asset_manager=user,
+        licence=test_data.get_licence_text(),
+        personal_data=test_data.get_personal_data_text(),
+        restrictions_on_usage=test_data.get_restrictions_on_usage_text(),
+        user_access_type="REQUIRES_AUTHORIZATION",
+        published=True,
+    )
+
+    VisualisationLink.objects.create(
+        visualisation_type="QUICKSIGHT",
+        name=name,
+        identifier=str(uuid.uuid4().hex),
+        visualisation_catalogue_item=catalogue_item,
+    )
+
+    return catalogue_item
+
+
+def create_fake_reference_dataset():
+    fake = Faker("en-GB")
+    test_data = TestData()
+
+    name = test_data.get_dataset_name()
+    user = test_data.get_new_user()
+
+    table_name = (
+        "ref_"
+        + fake.first_name().lower()
+        + datetime.datetime.now().strftime("%Y%m%d%H%M%s")
+    )
+
+    catalogue_item = ReferenceDataset.objects.create(
+        name=name,
+        table_name=table_name,
+        slug=slugify(name),
+        short_description=fake.sentence(nb_words=20),
+        description="<br>".join(fake.paragraphs(nb=3)),
+        enquiries_contact=user,
+        licence=test_data.get_licence_text(),
+        # licence_url=test_data.get_licence_url(),
+        restrictions_on_usage=test_data.get_no_restrictions_on_usage_text(),
+        published=True,
+    )
+
+    return catalogue_item
