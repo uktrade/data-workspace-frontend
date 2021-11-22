@@ -77,13 +77,13 @@ class DataSetSubscriptionStartView(View):
         )
         return render(
             request,
-            'datasets/subscriptions/step_1_start.html',
-            context={'dataset': dataset, 'subscription': subscription},
+            "datasets/subscriptions/step_1_start.html",
+            context={"dataset": dataset, "subscription": subscription},
         )
 
 
 class DataSetSubscriptionView(UpdateView):
-    template_name = 'datasets/subscriptions/step_2_options.html'
+    template_name = "datasets/subscriptions/step_2_options.html"
     form_class = DataSetSubscriptionForm
     model = DataSetSubscription
 
@@ -92,7 +92,7 @@ class DataSetSubscriptionView(UpdateView):
 
 
 class DataSetSubscriptionReview(UpdateView):
-    template_name = 'datasets/subscriptions/step_3_review.html'
+    template_name = "datasets/subscriptions/step_3_review.html"
     form_class = DataSetSubscriptionForm
     model = DataSetSubscription
 
@@ -106,6 +106,6 @@ class DataSetSubscriptionConfirm(View):
 
         return render(
             request,
-            'datasets/subscriptions/step_4_confirm.html',
-            context={'dataset': subscription.dataset, 'subscription': subscription},
+            "datasets/subscriptions/step_4_confirm.html",
+            context={"dataset": subscription.dataset, "subscription": subscription},
         )

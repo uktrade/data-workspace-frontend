@@ -7,6 +7,7 @@ from dataworkspace.apps.datasets.models import DataSet, DataSetSubscription
 
 logger = logging.getLogger(__name__)
 
+
 def unsubscribe_from_all(user):
     logger.info("unsubscribe from all subscriptions for %s", user)
 
