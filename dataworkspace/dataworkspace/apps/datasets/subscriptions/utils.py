@@ -22,16 +22,16 @@ def get_or_create_dataset_subscription_for_user(
 def unsubscribe_from_all(user):
     logger.info("unsubscribe from all subscriptions for %s", user)
 
-    subscriptions = [
-        s for s in DataSetSubscription.objects.filter(user=user) if s.is_active()
-    ]
+    subscriptions = DataSetSubscription.objects.active(user=user)
 
-    for subscription in subscriptions:
-        subscription.make_inactive()
+    subscriptions.update(notify_on_data_change=False, notify_on_schema_change=False)
 
-    DataSetSubscription.objects.bulk_update(
-        subscriptions, ["notify_on_data_change", "notify_on_schema_change"]
-    )
+    # for subscription in subscriptions:
+    #     subscription.make_inactive()
+    #
+    # DataSetSubscription.objects.bulk_update(
+    #     subscriptions, ["notify_on_data_change", "notify_on_schema_change"]
+    # )
 
     return subscriptions
 

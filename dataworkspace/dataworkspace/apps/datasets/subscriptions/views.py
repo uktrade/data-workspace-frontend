@@ -20,12 +20,12 @@ logger = logging.getLogger("app")
 def current_user_email_preferences_list(request):
     user = request.user
 
-    subscriptions = DataSetSubscription.objects.filter(user=user)
+    subscriptions = DataSetSubscription.objects.active(user=user)
 
     return render(
         request,
         "datasets/subscriptions/user_email_preferences.html",
-        context={"subscriptions": [s for s in subscriptions if s.is_active()]},
+        context={"subscriptions": subscriptions},
     )
 
 
