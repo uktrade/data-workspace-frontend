@@ -26,7 +26,6 @@ def unsubscribe_from_all(user):
         s for s in DataSetSubscription.objects.filter(user=user) if s.is_active()
     ]
 
-    logger.info(len(subscriptions))
     for subscription in subscriptions:
         subscription.make_inactive()
 

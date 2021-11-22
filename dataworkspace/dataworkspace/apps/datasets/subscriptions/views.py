@@ -58,7 +58,6 @@ class DataSetSubscriptionUnsubscribe(View):
     def post(self, request, subscription_id):
         if subscription_id == "__all__":
             # Ignore the post values and just delete all subscriptions
-            logger.debug("__all__")
             unsubscribed = unsubscribe_from_all(request.user)
         else:
             unsubscribed = [unsubscribe(subscription_id, request.user)]
