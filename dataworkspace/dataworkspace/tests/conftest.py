@@ -144,16 +144,22 @@ def metadata_db(db):
             '''
             CREATE SCHEMA IF NOT EXISTS dataflow;
             CREATE TABLE IF NOT EXISTS dataflow.metadata (
-                id int, table_schema text, table_name text, table_structure text,
-                source_data_modified_utc timestamp, data_id int, data_type int
+                id SERIAL,
+                table_schema TEXT,
+                table_name TEXT,
+                source_data_modified_utc TIMESTAMP WITHOUT TIME ZONE,
+                dataflow_swapped_tables_utc TIMESTAMP WITHOUT TIME ZONE,
+                table_structure JSONB,
+                data_id INTEGER,
+                data_type INTEGER NOT NULL
             );
             TRUNCATE TABLE dataflow.metadata;
-            INSERT INTO dataflow.metadata VALUES(
-                1, 'public', 'table1', '{"field1":"int","field2":"varchar"}', '2020-09-02 00:01:00.0'
-            );
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table2', '', '2020-09-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table1', '', '2020-01-01 00:01:00.0');
-            INSERT INTO dataflow.metadata VALUES(1, 'public', 'table4', '', NULL);
+            INSERT INTO dataflow.metadata (table_schema, table_name, source_data_modified_utc, table_structure, data_type)
+            VALUES
+                ('public', 'table1', '2020-09-02 00:01:00.0', '{"field1":"int","field2":"varchar"}', 1),
+                ('public', 'table2', '2020-09-01 00:01:00.0', NULL, 1),
+                ('public', 'table1', '2020-01-01 00:01:00.0', NULL, 1),
+                ('public', 'table4', NULL, NULL, 1);
             '''
         )
         conn.commit()
@@ -168,7 +174,27 @@ def test_dataset(db):
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS foo AS SELECT a,b FROM (VALUES ('test',30)) AS temp_table(a,b);"
         )
+        cursor.execute(
+            """
+            CREATE SCHEMA IF NOT EXISTS dataflow;
+            CREATE TABLE IF NOT EXISTS dataflow.metadata (
+                id SERIAL,
+                table_schema TEXT,
+                table_name TEXT,
+                source_data_modified_utc TIMESTAMP WITHOUT TIME ZONE,
+                dataflow_swapped_tables_utc TIMESTAMP WITHOUT TIME ZONE,
+                table_structure JSONB,
+                data_id INTEGER,
+                data_type INTEGER NOT NULL
+            );
+            TRUNCATE TABLE dataflow.metadata;
+            INSERT INTO dataflow.metadata (table_schema, table_name, source_data_modified_utc, table_structure, data_type)
+            VALUES
+            ('public', 'foo', '2021-01-01 00:00:00.0', '{"a":"text","b":"int"}', 1);
+            """
+        )
         conn.commit()
+    return ('public', 'foo')
 
 
 @pytest.fixture(autouse=True, scope='session')

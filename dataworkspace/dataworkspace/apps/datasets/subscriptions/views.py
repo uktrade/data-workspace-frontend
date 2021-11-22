@@ -7,9 +7,6 @@ from django.views.generic import UpdateView
 
 from dataworkspace.apps.datasets.models import DataSet, DataSetSubscription
 from dataworkspace.apps.datasets.subscriptions.forms import DataSetSubscriptionForm
-from dataworkspace.apps.datasets.subscriptions.utils import (
-    get_or_create_dataset_subscription_for_user,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +15,9 @@ class DataSetSubscriptionStartView(View):
     def get(self, request, dataset_uuid):
         dataset = get_object_or_404(DataSet, id=dataset_uuid)
 
-        subscription = get_or_create_dataset_subscription_for_user(
+        subscription, _ = DataSetSubscription.objects.get_or_create(
             dataset=dataset, user=request.user
         )
-
         return render(
             request,
             'datasets/subscriptions/step_1_start.html',
