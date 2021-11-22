@@ -178,7 +178,7 @@ urlpatterns = [
         name='source_table_changelog',
     ),
     path(
-        '<uuid:dataset_uuid>/<int:source_id>/changelog/',
+        '<uuid:dataset_uuid>/<uuid:source_id>/changelog/',
         login_required(views.SourceChangelogView.as_view()),
         {'model_class': models.CustomDatasetQuery},
         name='custom_dataset_query_changelog',
