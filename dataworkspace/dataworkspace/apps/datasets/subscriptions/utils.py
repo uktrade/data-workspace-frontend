@@ -3,7 +3,7 @@ import logging
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 
-from dataworkspace.apps.datasets.models import DataSet, DataSetSubscription
+from dataworkspace.apps.datasets.models import DataSetSubscription
 
 logger = logging.getLogger(__name__)
 
