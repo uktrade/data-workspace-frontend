@@ -7,31 +7,11 @@ from dataworkspace.apps.datasets.models import DataSet, DataSetSubscription
 
 logger = logging.getLogger(__name__)
 
-
-def get_or_create_dataset_subscription_for_user(
-    dataset: DataSet, user
-) -> DataSetSubscription:
-    subscription = dataset.datasetsubscription_set.filter(user=user)
-    if subscription.exists():
-        return subscription.first()
-
-    subscription = dataset.datasetsubscription_set.create(user=user)
-    return subscription
-
-
 def unsubscribe_from_all(user):
     logger.info("unsubscribe from all subscriptions for %s", user)
 
     subscriptions = DataSetSubscription.objects.active(user=user)
-
     subscriptions.update(notify_on_data_change=False, notify_on_schema_change=False)
-
-    # for subscription in subscriptions:
-    #     subscription.make_inactive()
-    #
-    # DataSetSubscription.objects.bulk_update(
-    #     subscriptions, ["notify_on_data_change", "notify_on_schema_change"]
-    # )
 
     return subscriptions
 

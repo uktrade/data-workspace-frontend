@@ -279,8 +279,8 @@ FERNET_EMAIL_TOKEN_KEY = env['FERNET_EMAIL_TOKEN_KEY']
 
 NOTIFY_VISUALISATION_ACCESS_REQUEST_TEMPLATE_ID = '7cf395da-2f1b-4084-a526-f2fd68a15491'
 NOTIFY_VISUALISATION_ACCESS_GRANTED_TEMPLATE_ID = '139d5e94-1044-49f9-99a9-2a094b8986ea'
-
 NOTIFY_SHARE_EXPLORER_QUERY_TEMPLATE_ID = '8fe771ef-e8b6-4ff2-98a9-8ba208b5a3fa'
+NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID = '9f992c0d-f6c0-4569-9d06-9e415304f5f9'
 
 CELERY_BROKER_URL = env['REDIS_URL']
 CELERY_RESULT_BACKEND = env['REDIS_URL']
@@ -349,6 +349,11 @@ if not strtobool(env.get('DISABLE_CELERY_BEAT_SCHEDULE', '0')):
         },
         'store-custom-dataset-query-table-structures': {
             'task': 'dataworkspace.apps.datasets.utils.store_custom_dataset_query_table_structures',
+            'schedule': 60 * 5,
+            'args': (),
+        },
+        'send-notification-emails': {
+            'task': 'dataworkspace.apps.datasets.utils.send_notification_emails',
             'schedule': 60 * 5,
             'args': (),
         },

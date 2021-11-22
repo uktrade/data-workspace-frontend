@@ -3,23 +3,27 @@ from unittest.mock import call, MagicMock, patch
 import pytz
 
 from django.conf import settings
+from django.test import override_settings
 from freezegun import freeze_time
 import pytest
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.models import Notification, UserNotification
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     get_code_snippets_for_query,
     get_code_snippets_for_table,
     link_superset_visualisations_to_related_datasets,
     process_quicksight_dashboard_visualisations,
+    send_notification_emails,
     store_custom_dataset_query_table_structures,
 )
 from dataworkspace.datasets_db import get_custom_dataset_query_changelog
 from dataworkspace.tests.factories import (
     CustomDatasetQueryFactory,
     DataSetFactory,
+    DataSetSubscriptionFactory,
     SourceTableFactory,
     VisualisationLinkFactory,
 )
@@ -672,7 +676,7 @@ class TestStoreCustomDatasetQueryTableStructures:
     @pytest.mark.django_db
     @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
     def test_stores_table_structure_first_run_query_updated_after_table(
-        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+        self, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             '2021-01-01 14:00', '%Y-%m-%d %H:%M'
@@ -689,20 +693,20 @@ class TestStoreCustomDatasetQueryTableStructures:
 
         # change_date should be that of the query because it was created / modified more recently
         # than the underlying tables were last updated
-        assert records == [
-            {
+        assert (
+            records[0].items()
+            >= {
                 'change_date': datetime.datetime.strptime(
                     '2021-01-01 15:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
-                'change_type': 'Table structure updated',
                 'table_structure': '[["a", "text"], ["b", "integer"]]',
-            },
-        ]
+            }.items()
+        )
 
     @pytest.mark.django_db
     @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
     def test_stores_table_structure_first_run_table_updated_after_query(
-        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+        self, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             '2021-01-01 16:00', '%Y-%m-%d %H:%M'
@@ -719,20 +723,20 @@ class TestStoreCustomDatasetQueryTableStructures:
 
         # change_date should be that of the underlying table because it was updated more recently
         # than the query was created / modified
-        assert records == [
-            {
+        assert (
+            records[0].items()
+            >= {
                 'change_date': datetime.datetime.strptime(
                     '2021-01-01 16:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
-                'change_type': 'Table structure updated',
                 'table_structure': '[["a", "text"], ["b", "integer"]]',
-            },
-        ]
+            }.items()
+        )
 
     @pytest.mark.django_db
     @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
     def test_multiple_runs_without_change_doesnt_result_in_new_changelog_records(
-        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+        self, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             '2021-01-01 14:00', '%Y-%m-%d %H:%M'
@@ -750,20 +754,20 @@ class TestStoreCustomDatasetQueryTableStructures:
         records = get_custom_dataset_query_changelog('my_database', query)
 
         # There should only be one record record as the structure hasn't changed.
-        assert records == [
-            {
+        assert (
+            records[0].items()
+            >= {
                 'change_date': datetime.datetime.strptime(
                     '2021-01-01 15:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
-                'change_type': 'Table structure updated',
                 'table_structure': '[["a", "text"], ["b", "integer"]]',
-            },
-        ]
+            }.items()
+        )
 
     @pytest.mark.django_db
     @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
     def test_update_query_where_clause_doesnt_result_in_new_changelog_record(
-        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+        self, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             '2021-01-01 14:00', '%Y-%m-%d %H:%M'
@@ -786,20 +790,20 @@ class TestStoreCustomDatasetQueryTableStructures:
 
         # There should only be one record record as the structure hasn't changed
 
-        assert records == [
-            {
+        assert (
+            records[0].items()
+            >= {
                 'change_date': datetime.datetime.strptime(
                     '2021-01-01 15:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
-                'change_type': 'Table structure updated',
                 'table_structure': '[["a", "text"], ["b", "integer"]]',
-            },
-        ]
+            }.items()
+        )
 
     @pytest.mark.django_db
     @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
     def test_update_query_select_clause_results_in_new_changelog_record(
-        self, mock_get_tables_last_updated_date, metadata_db, test_dataset
+        self, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             '2021-01-01 14:00', '%Y-%m-%d %H:%M'
@@ -822,19 +826,388 @@ class TestStoreCustomDatasetQueryTableStructures:
 
         # There should be two records as the query structure has changed
 
-        assert records == [
-            {
+        assert (
+            records[0].items()
+            >= {
                 'change_date': datetime.datetime.strptime(
                     '2021-01-01 16:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
-                'change_type': 'Table structure updated',
                 'table_structure': '[["a", "text"]]',
-            },
-            {
+            }.items()
+        )
+
+        assert (
+            records[1].items()
+            >= {
                 'change_date': datetime.datetime.strptime(
                     '2021-01-01 15:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
-                'change_type': 'Table structure updated',
                 'table_structure': '[["a", "text"], ["b", "integer"]]',
+            }.items()
+        )
+
+    @pytest.mark.django_db
+    @patch('dataworkspace.apps.datasets.utils.get_tables_last_updated_date')
+    def test_update_query_select_clause_and_change_back_results_in_new_changelog_records(
+        self, mock_get_tables_last_updated_date, test_dataset
+    ):
+        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+            '2021-01-01 14:00', '%Y-%m-%d %H:%M'
+        ).replace(tzinfo=pytz.UTC)
+
+        with freeze_time('2021-01-01 15:00:00'):
+            query = CustomDatasetQueryFactory(
+                query='SELECT * FROM foo', database__memorable_name='my_database'
+            )
+
+        store_custom_dataset_query_table_structures()
+
+        with freeze_time('2021-01-01 16:00:00'):
+            query.query = 'SELECT a FROM foo'
+            query.save()
+
+        store_custom_dataset_query_table_structures()
+
+        with freeze_time('2021-01-01 17:00:00'):
+            query.query = 'SELECT * FROM foo'
+            query.save()
+
+        store_custom_dataset_query_table_structures()
+
+        records = get_custom_dataset_query_changelog('my_database', query)
+
+        # There should be three records as the query structure changed and then changed back
+
+        assert (
+            records[0].items()
+            >= {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 17:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'table_structure': '[["a", "text"], ["b", "integer"]]',
+            }.items()
+        )
+
+        assert (
+            records[1].items()
+            >= {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 16:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'table_structure': '[["a", "text"]]',
+            }.items()
+        )
+
+        assert (
+            records[2].items()
+            >= {
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
+                ).replace(tzinfo=pytz.UTC),
+                'table_structure': '[["a", "text"], ["b", "integer"]]',
+            }.items()
+        )
+
+
+class TestSendNotificationEmails:
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
+    )
+    @patch('dataworkspace.apps.datasets.utils.send_email')
+    @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
+    def test_structure_change_sends_notification(
+        self, mock_get_table_changelog, mock_send_email, user
+    ):
+        mock_get_table_changelog.return_value = [
+            {
+                'change_id': 1,
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            }
+        ]
+        mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        DataSetSubscriptionFactory(user=user, dataset=ds)
+        SourceTableFactory.create(dataset=ds, database__memorable_name='my_database')
+
+        send_notification_emails()
+
+        assert mock_send_email.call_args_list == [
+            call(
+                '000000000000000000000000000',
+                'frank.exampleson@test.com',
+                personalisation={
+                    'dataset_name': ds.name,
+                    'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                        tzinfo=pytz.UTC
+                    ),
+                },
+            )
+        ]
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+        assert user_notifications[0].notification == notifications[0]
+        assert user_notifications[0].subscription.dataset == ds
+        assert (
+            user_notifications[0].subscription.user.email == 'frank.exampleson@test.com'
+        )
+        assert (
+            str(user_notifications[0].email_id)
+            == '00000000-0000-0000-0000-000000000000'
+        )
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
+    )
+    @patch('dataworkspace.apps.datasets.utils.send_email')
+    @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
+    def test_multiple_runs_dont_send_duplicate_notifications(
+        self, mock_get_table_changelog, mock_send_email, user
+    ):
+        mock_get_table_changelog.return_value = [
+            {
+                'change_id': 1,
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            }
+        ]
+        mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        DataSetSubscriptionFactory(user=user, dataset=ds)
+        SourceTableFactory.create(dataset=ds, database__memorable_name='my_database')
+
+        send_notification_emails()
+
+        assert mock_send_email.call_args_list == [
+            call(
+                '000000000000000000000000000',
+                'frank.exampleson@test.com',
+                personalisation={
+                    'dataset_name': ds.name,
+                    'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                        tzinfo=pytz.UTC
+                    ),
+                },
+            )
+        ]
+        mock_send_email.reset_mock()
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
+    )
+    @patch('dataworkspace.apps.datasets.utils.send_email')
+    @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
+    def test_changelog_records_with_different_structures_sends_single_notification(
+        self, mock_get_table_changelog, mock_send_email, user
+    ):
+        mock_get_table_changelog.return_value = [
+            {
+                'change_id': 2,
+                'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            },
+            {
+                'change_id': 1,
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
             },
         ]
+        mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        DataSetSubscriptionFactory(user=user, dataset=ds)
+        SourceTableFactory.create(dataset=ds, database__memorable_name='my_database')
+
+        send_notification_emails()
+
+        # Only most recent change should be emailed
+        assert mock_send_email.call_args_list == [
+            call(
+                '000000000000000000000000000',
+                'frank.exampleson@test.com',
+                personalisation={
+                    'dataset_name': ds.name,
+                    'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
+                        tzinfo=pytz.UTC
+                    ),
+                },
+            ),
+        ]
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
+    )
+    @patch('dataworkspace.apps.datasets.utils.send_email')
+    @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
+    def test_changelog_records_with_no_subscribers_doesnt_send_notifications(
+        self, mock_get_table_changelog, mock_send_email, user
+    ):
+        mock_get_table_changelog.return_value = [
+            {
+                'change_id': 1,
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            }
+        ]
+        mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        SourceTableFactory.create(dataset=ds, database__memorable_name='my_database')
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
+    )
+    @patch('dataworkspace.apps.datasets.utils.send_email')
+    @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
+    def test_subscription_after_changelog_gets_processed_doesnt_send_notifications(
+        self, mock_get_table_changelog, mock_send_email, user
+    ):
+        mock_get_table_changelog.return_value = [
+            {
+                'change_id': 1,
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            }
+        ]
+        mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        SourceTableFactory.create(dataset=ds, database__memorable_name='my_database')
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+        DataSetSubscriptionFactory(user=user, dataset=ds)
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
+    )
+    @patch('dataworkspace.apps.datasets.utils.send_email')
+    @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
+    def test_subscription_after_changelog_gets_processed_but_before_new_structure_change_sends_one_notification(
+        self, mock_get_table_changelog, mock_send_email, user
+    ):
+        mock_get_table_changelog.return_value = [
+            {
+                'change_id': 1,
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            }
+        ]
+        mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        SourceTableFactory.create(dataset=ds, database__memorable_name='my_database')
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+        DataSetSubscriptionFactory(user=user, dataset=ds)
+
+        mock_get_table_changelog.return_value = [
+            {
+                'change_id': 2,
+                'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            },
+            {
+                'change_id': 1,
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
+                    tzinfo=pytz.UTC
+                ),
+            },
+        ]
+        send_notification_emails()
+
+        assert mock_send_email.call_args_list == [
+            call(
+                '000000000000000000000000000',
+                'frank.exampleson@test.com',
+                personalisation={
+                    'dataset_name': ds.name,
+                    'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
+                        tzinfo=pytz.UTC
+                    ),
+                },
+            )
+        ]
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 2
+        assert len(user_notifications) == 1

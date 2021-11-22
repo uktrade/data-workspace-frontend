@@ -406,7 +406,9 @@ class DataSetSubscriptionManager(models.Manager):
 class DataSetSubscription(TimeStampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(
+        DataSet, on_delete=models.CASCADE, related_name='subscriptions'
+    )
 
     notify_on_schema_change = models.BooleanField(default=False)
     notify_on_data_change = models.BooleanField(default=False)
@@ -416,6 +418,7 @@ class DataSetSubscription(TimeStampedUserModel):
     class Meta:
         verbose_name = "DataSet Subscription"
         verbose_name_plural = "DataSet Subscriptions"
+        unique_together = ['user', 'dataset']
 
     def __str__(self):
         return f"{self.user.email} {self.dataset.name}"
@@ -2380,3 +2383,17 @@ class ToolQueryAuditLogTable(models.Model):
     table = models.CharField(
         max_length=63, validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
+
+
+class Notification(TimeStampedModel):
+    changelog_id = models.IntegerField(unique=True)
+    change_date = models.DateTimeField()
+
+
+class UserNotification(TimeStampedModel):
+    notification = models.ForeignKey(Notification, on_delete=models.PROTECT)
+    subscription = models.ForeignKey(DataSetSubscription, on_delete=models.PROTECT)
+    email_id = models.UUIDField(null=True)
+
+    class Meta:
+        unique_together = ['notification', 'subscription']

@@ -29,7 +29,7 @@
         {% for entry in source.get_changelog %}
           <tr class="govuk-table__row">
             <td>{{ entry.change_date|gmt_date }} {{ entry.change_date|time_with_gmt_offset }}</td>
-            <td>{{ entry.change_type }}</td>
+            <td>{{ change_type }}</td>
           </tr>
         {% empty %}
           <tr class="govuk-table__row">
