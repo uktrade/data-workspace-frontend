@@ -675,9 +675,7 @@ class DatasetDetailView(DetailView):
             sorted({t.get_frequency_display() for t in source_tables})
         )
 
-        subscription = self.object.datasetsubscription_set.filter(
-            user=self.request.user
-        )
+        subscription = self.object.subscriptions.filter(user=self.request.user)
 
         ctx.update(
             {
@@ -1632,7 +1630,18 @@ class SourceChangelogView(WaffleFlagMixin, DetailView):
     template_name = 'datasets/source_changelog.html'
     context_object_name = 'source'
 
+    def get_context_data(self, **kwargs):
+        if self.kwargs['model_class'] == SourceTable:
+            change_type = 'Table structure updated'
+        elif self.kwargs['model_class'] == CustomDatasetQuery:
+            change_type = 'Dataset query structure updated'
+
+        ctx = super().get_context_data(**kwargs)
+        ctx['change_type'] = change_type
+        return ctx
+
     def get_object(self, queryset=None):
+
         return get_object_or_404(
             self.kwargs['model_class'],
             dataset__id=self.kwargs.get('dataset_uuid'),

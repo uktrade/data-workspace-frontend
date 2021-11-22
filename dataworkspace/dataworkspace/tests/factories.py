@@ -471,3 +471,10 @@ class CaseStudyFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'case_studies.CaseStudy'
+
+
+class DataSetSubscriptionFactory(factory.django.DjangoModelFactory):
+    notify_on_schema_change = True
+
+    class Meta:
+        model = 'datasets.DataSetSubscription'
