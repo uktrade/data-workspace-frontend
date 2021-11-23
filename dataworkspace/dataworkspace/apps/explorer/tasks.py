@@ -60,18 +60,12 @@ def cleanup_playground_sql_table():
 @close_all_connections_if_not_in_atomic_block
 def cleanup_temporary_query_tables():
     one_day_ago = datetime.utcnow() - timedelta(days=1)
-    logger.info(
-        "Cleaning up Data Explorer temporary query tables older than %s", one_day_ago
-    )
+    logger.info("Cleaning up Data Explorer temporary query tables older than %s", one_day_ago)
 
     for query_log in QueryLog.objects.filter(run_at__lte=one_day_ago):
         server_db_user = DATABASES_DATA[query_log.connection]['USER']
-        db_role = (
-            f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(query_log.run_by_user)}'
-        )
-        table_schema_and_name = tempory_query_table_name(
-            query_log.run_by_user, query_log.id
-        )
+        db_role = f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(query_log.run_by_user)}'
+        table_schema_and_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
 
         with cache.lock(
             f'database-grant--{DATABASES_DATA[query_log.connection]["NAME"]}--{db_role}--v4',
@@ -91,9 +85,7 @@ def _prefix_column(index, column):
 
 def _mark_query_log_failed(query_log, exc):
     # Remove the select statement wrapper used for getting the query fields
-    query_log.error = (
-        str(exc).replace('SELECT * FROM (', '').replace(') sq LIMIT 0', '')
-    )
+    query_log.error = str(exc).replace('SELECT * FROM (', '').replace(') sq LIMIT 0', '')
     query_log.state = QueryLogState.FAILED
     query_log.save()
 
@@ -135,9 +127,7 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
             # query results. The prefixes are removed when the results are returned.
             cursor.execute(f'SELECT * FROM ({sql}) sq LIMIT 0')
             column_names = list(zip(*cursor.description))[0]
-            duplicated_column_names = set(
-                c for c in column_names if column_names.count(c) > 1
-            )
+            duplicated_column_names = set(c for c in column_names if column_names.count(c) > 1)
             prefixed_sql_columns = [
                 (
                     f'"{_prefix_column(i, col[0]) if col[0] in duplicated_column_names else col[0]}" '
@@ -145,9 +135,7 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
                 )
                 for i, col in enumerate(cursor.description, 1)
             ]
-            cursor.execute(
-                f'CREATE TABLE {table_name} ({", ".join(prefixed_sql_columns)})'
-            )
+            cursor.execute(f'CREATE TABLE {table_name} ({", ".join(prefixed_sql_columns)})')
             offset = ''
             if page and page > 1:
                 offset = f' OFFSET {(page - 1) * limit}'

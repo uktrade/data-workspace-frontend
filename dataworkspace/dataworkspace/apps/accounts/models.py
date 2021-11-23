@@ -13,9 +13,7 @@ class Profile(models.Model):
 
     # The access point ID is a combination of a root directory, POSIX user and group IDs under
     # which all requests come from: effectively overriding anything sent by the client
-    home_directory_efs_access_point_id = models.CharField(
-        unique=True, null=True, max_length=128
-    )
+    home_directory_efs_access_point_id = models.CharField(unique=True, null=True, max_length=128)
 
     class Meta:
         db_table = 'app_profile'

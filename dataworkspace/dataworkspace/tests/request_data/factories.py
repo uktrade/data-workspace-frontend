@@ -11,9 +11,7 @@ class DataRequestFactory(factory.django.DjangoModelFactory):
         model = models.DataRequest
 
     requester = factory.SubFactory(UserFactory)
-    requester_role = factory.LazyFunction(
-        lambda: random.choice(models.RoleType.choices)[0]
-    )
+    requester_role = factory.LazyFunction(lambda: random.choice(models.RoleType.choices)[0])
     data_description = factory.Faker('paragraph')
     data_purpose = factory.Faker('paragraph')
     data_location = factory.Faker('paragraph')
@@ -21,6 +19,4 @@ class DataRequestFactory(factory.django.DjangoModelFactory):
         lambda: random.choice(models.SecurityClassificationType.choices)[0]
     )
     name_of_owner_or_manager = factory.Faker('name')
-    status = factory.LazyFunction(
-        lambda: random.choice(models.DataRequestStatus.choices)[0]
-    )
+    status = factory.LazyFunction(lambda: random.choice(models.DataRequestStatus.choices)[0])

@@ -112,28 +112,20 @@ class AppUserEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         instance = kwargs['instance']
 
-        self.fields[
-            'tools_access_role_arn'
-        ].initial = instance.profile.tools_access_role_arn
+        self.fields['tools_access_role_arn'].initial = instance.profile.tools_access_role_arn
         self.fields['tools_access_role_arn'].widget.attrs['class'] = 'vTextField'
 
         self.fields[
             'home_directory_efs_access_point_id'
         ].initial = instance.profile.home_directory_efs_access_point_id
-        self.fields['home_directory_efs_access_point_id'].widget.attrs[
-            'class'
-        ] = 'vTextField'
+        self.fields['home_directory_efs_access_point_id'].widget.attrs['class'] = 'vTextField'
 
-        self.fields[
-            'can_start_all_applications'
-        ].initial = instance.user_permissions.filter(
+        self.fields['can_start_all_applications'].initial = instance.user_permissions.filter(
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields[
-            'can_develop_visualisations'
-        ].initial = instance.user_permissions.filter(
+        self.fields['can_develop_visualisations'].initial = instance.user_permissions.filter(
             codename='develop_visualisations',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
@@ -148,14 +140,10 @@ class AppUserEditForm(forms.ModelForm):
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields[
-            'authorized_master_datasets'
-        ].initial = MasterDataset.objects.live().filter(
+        self.fields['authorized_master_datasets'].initial = MasterDataset.objects.live().filter(
             datasetuserpermission__user=instance
         )
-        self.fields[
-            'authorized_data_cut_datasets'
-        ].initial = DataCutDataset.objects.live().filter(
+        self.fields['authorized_data_cut_datasets'].initial = DataCutDataset.objects.live().filter(
             datasetuserpermission__user=instance
         )
         self.fields[
@@ -411,16 +399,10 @@ class AppUserAdmin(UserAdmin):
                     'Removed can_access_quicksight permission',
                 )
 
-        current_datasets = set(
-            DataSet.objects.live().filter(datasetuserpermission__user=obj)
-        )
+        current_datasets = set(DataSet.objects.live().filter(datasetuserpermission__user=obj))
         authorized_datasets = set(
-            form.cleaned_data.get(
-                'authorized_master_datasets', DataSet.objects.none()
-            ).union(
-                form.cleaned_data.get(
-                    'authorized_data_cut_datasets', DataSet.objects.none()
-                )
+            form.cleaned_data.get('authorized_master_datasets', DataSet.objects.none()).union(
+                form.cleaned_data.get('authorized_data_cut_datasets', DataSet.objects.none())
             )
         )
 
@@ -460,9 +442,7 @@ class AppUserAdmin(UserAdmin):
             current_visualisations = VisualisationCatalogueItem.objects.filter(
                 visualisationuserpermission__user=obj
             )
-            for visualisation_catalogue_item in form.cleaned_data[
-                'authorized_visualisations'
-            ]:
+            for visualisation_catalogue_item in form.cleaned_data['authorized_visualisations']:
                 if visualisation_catalogue_item not in current_visualisations.all():
                     VisualisationUserPermission.objects.create(
                         visualisation=visualisation_catalogue_item, user=obj
@@ -471,9 +451,7 @@ class AppUserAdmin(UserAdmin):
                         request.user,
                         obj,
                         EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
-                        serializers.serialize('python', [visualisation_catalogue_item])[
-                            0
-                        ],
+                        serializers.serialize('python', [visualisation_catalogue_item])[0],
                         f"Added application {visualisation_catalogue_item} permission",
                     )
             for visualisation_catalogue_item in current_visualisations:
@@ -488,9 +466,7 @@ class AppUserAdmin(UserAdmin):
                         request.user,
                         obj,
                         EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
-                        serializers.serialize('python', [visualisation_catalogue_item])[
-                            0
-                        ],
+                        serializers.serialize('python', [visualisation_catalogue_item])[0],
                         f"Removed application {visualisation_catalogue_item} permission",
                     )
 
@@ -500,16 +476,12 @@ class AppUserAdmin(UserAdmin):
             ]
 
         if 'tools_access_role_arn' in form.cleaned_data:
-            obj.profile.tools_access_role_arn = form.cleaned_data[
-                'tools_access_role_arn'
-            ]
+            obj.profile.tools_access_role_arn = form.cleaned_data['tools_access_role_arn']
 
         super().save_model(request, obj, form, change)
 
         if update_quicksight_permissions:
-            sync_quicksight_permissions.delay(
-                user_sso_ids_to_update=(str(obj.profile.sso_id),)
-            )
+            sync_quicksight_permissions.delay(user_sso_ids_to_update=(str(obj.profile.sso_id),))
 
     def sso_id(self, instance):
         return instance.profile.sso_id

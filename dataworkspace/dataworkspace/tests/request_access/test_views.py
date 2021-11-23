@@ -15,9 +15,7 @@ from dataworkspace.tests.request_access import factories
 
 
 class TestDatasetAccessOnly:
-    def test_user_sees_appropriate_message_on_dataset_page(
-        self, client, user, metadata_db
-    ):
+    def test_user_sees_appropriate_message_on_dataset_page(self, client, user, metadata_db):
         dataset = DatasetsCommon()._create_master(
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
@@ -30,9 +28,7 @@ class TestDatasetAccessOnly:
         resp = client.get(dataset.get_absolute_url())
 
         assert resp.status_code == 200
-        assert "You need to request access to view this data." in resp.content.decode(
-            resp.charset
-        )
+        assert "You need to request access to view this data." in resp.content.decode(resp.charset)
         assert (
             "We will ask you some questions so we can give you access to the tools you need to analyse this data."
             not in resp.content.decode(resp.charset)
@@ -48,9 +44,7 @@ class TestDatasetAccessOnly:
         )
         user.user_permissions.add(permission)
 
-        resp = client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        resp = client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
 
         assert resp.status_code == 200
         assert "Submit" in resp.content.decode(resp.charset)
@@ -132,9 +126,7 @@ class TestDatasetAccessOnly:
 
         # Submit summary page
         client.post(
-            reverse(
-                'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
-            ),
+            reverse('request_access:summary-page', kwargs={"pk": access_requests[0].pk}),
             {'contact_email': 'test@example.com', 'reason_for_access': 'I need it'},
             follow=True,
         )
@@ -167,16 +159,13 @@ class TestToolsAccessOnly:
     @pytest.mark.parametrize(
         'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
-    def test_user_sees_appropriate_message_on_dataset_page(
-        self, access_type, client, metadata_db
-    ):
+    def test_user_sees_appropriate_message_on_dataset_page(self, access_type, client, metadata_db):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         resp = client.get(dataset.get_absolute_url())
 
         assert resp.status_code == 200
-        assert (
-            "You need to request access to tools to analyse this data."
-            in resp.content.decode(resp.charset)
+        assert "You need to request access to tools to analyse this data." in resp.content.decode(
+            resp.charset
         )
         assert (
             "We will ask you some questions so we can give you access to the tools you need to analyse this data."
@@ -186,23 +175,15 @@ class TestToolsAccessOnly:
     @pytest.mark.parametrize(
         'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
-    def test_request_access_form_is_multipage_form(
-        self, access_type, client, metadata_db
-    ):
+    def test_request_access_form_is_multipage_form(self, access_type, client, metadata_db):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
-        resp = client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        resp = client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
         assert resp.status_code == 302
-        assert resp.url == reverse(
-            'request_access:tools-1', kwargs={"pk": access_requests[0].pk}
-        )
+        assert resp.url == reverse('request_access:tools-1', kwargs={"pk": access_requests[0].pk})
 
-        resp = client.get(
-            reverse('request_access:tools-1', kwargs={"pk": access_requests[0].pk})
-        )
+        resp = client.get(reverse('request_access:tools-1', kwargs={"pk": access_requests[0].pk}))
         assert "Continue" in resp.content.decode(resp.charset)
 
     @pytest.mark.parametrize(
@@ -213,9 +194,7 @@ class TestToolsAccessOnly:
         self, mock_boto, access_type, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
-        client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
         screenshot = SimpleUploadedFile("file.txt", b"file_content")
@@ -227,9 +206,7 @@ class TestToolsAccessOnly:
         assert len(access_requests) == 1
         assert access_requests[0].training_screenshot.name.startswith('file.txt')
         assert resp.status_code == 302
-        assert resp.url == reverse(
-            'request_access:tools-2', kwargs={"pk": access_requests[0].pk}
-        )
+        assert resp.url == reverse('request_access:tools-2', kwargs={"pk": access_requests[0].pk})
 
     @pytest.mark.parametrize(
         'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
@@ -238,9 +215,7 @@ class TestToolsAccessOnly:
         self, access_type, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
-        client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
         resp = client.post(
@@ -251,9 +226,7 @@ class TestToolsAccessOnly:
         assert len(access_requests) == 1
         assert access_requests[0].spss_and_stata is True
         assert resp.status_code == 302
-        assert resp.url == reverse(
-            'request_access:tools-3', kwargs={"pk": access_requests[0].pk}
-        )
+        assert resp.url == reverse('request_access:tools-3', kwargs={"pk": access_requests[0].pk})
 
     @pytest.mark.parametrize(
         'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
@@ -262,9 +235,7 @@ class TestToolsAccessOnly:
         self, access_type, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
-        client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
         resp = client.post(
@@ -285,9 +256,7 @@ class TestToolsAccessOnly:
         self, access_type, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
-        client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
         resp = client.post(
@@ -326,9 +295,7 @@ class TestToolsAccessOnly:
         mock_zendesk_client.return_value = mock_zenpy_client
 
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
-        client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
         screenshot = SimpleUploadedFile("file.txt", b"file_content")
@@ -341,9 +308,7 @@ class TestToolsAccessOnly:
             follow=True,
         )
         client.post(
-            reverse(
-                'request_access:summary-page', kwargs={"pk": access_requests[0].pk}
-            ),
+            reverse('request_access:summary-page', kwargs={"pk": access_requests[0].pk}),
             follow=True,
         )
 
@@ -379,9 +344,7 @@ class TestDatasetAndToolsAccess:
         resp = client.get(dataset.get_absolute_url())
 
         assert resp.status_code == 200
-        assert "You need to request access to view this data." in resp.content.decode(
-            resp.charset
-        )
+        assert "You need to request access to view this data." in resp.content.decode(resp.charset)
         assert (
             "We will ask you some questions so we can give you access to the tools you need to analyse this data."
             in resp.content.decode(resp.charset)
@@ -391,9 +354,7 @@ class TestDatasetAndToolsAccess:
         dataset = DatasetsCommon()._create_master(
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
-        resp = client.get(
-            reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
-        )
+        resp = client.get(reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id}))
         assert "Continue" in resp.content.decode(resp.charset)
 
     def test_user_redirected_to_tools_form_after_dataset_request_access_form_submission(
@@ -414,9 +375,7 @@ class TestDatasetAndToolsAccess:
         assert access_requests[0].reason_for_access == 'I need it'
         assert access_requests[0].journey == AccessRequest.JOURNEY_DATASET_ACCESS
         assert resp.status_code == 302
-        assert resp.url == reverse(
-            'request_access:tools-1', kwargs={"pk": access_requests[0].pk}
-        )
+        assert resp.url == reverse('request_access:tools-1', kwargs={"pk": access_requests[0].pk})
 
     def test_tools_not_required_for_data_cut(self, client, metadata_db):
         datacut = DataSetFactory.create(
@@ -481,9 +440,7 @@ class TestEditAccessRequest:
             {'meet_criteria': 'yes'},
         )
         assert resp.status_code == 302
-        assert resp.url == reverse(
-            'request_access:dataset', kwargs={"dataset_uuid": dataset.id}
-        )
+        assert resp.url == reverse('request_access:dataset', kwargs={"dataset_uuid": dataset.id})
         assert access_request.id == AccessRequest.objects.latest('created_date').id
 
     def test_edit_dataset_request_fields(self, client, user):
@@ -522,9 +479,7 @@ class TestEditAccessRequest:
         )
 
         # Ensure the original file name is displayed in the form
-        resp = client.get(
-            reverse('request_access:tools-1', kwargs={"pk": access_request.pk})
-        )
+        resp = client.get(reverse('request_access:tools-1', kwargs={"pk": access_request.pk}))
         assert 'original-file.txt' in resp.content.decode(resp.charset)
 
         # Ensure the file can be updated

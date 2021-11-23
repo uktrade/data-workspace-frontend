@@ -40,9 +40,7 @@ def get_cached_credentials_key(user_profile_sso_id, endpoint):
     # or gains access to a dashboard
     cache.set(credentials_version_key, 1, nx=True, timeout=None)
     credentials_version = cache.get(credentials_version_key, None)
-    return (
-        f"superset_credentials_{credentials_version}_{endpoint}_{user_profile_sso_id}"
-    )
+    return f"superset_credentials_{credentials_version}_{endpoint}_{user_profile_sso_id}"
 
 
 def get_superset_credentials(request):

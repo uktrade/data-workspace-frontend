@@ -37,9 +37,7 @@ class ReferenceDataRecordMixin(UserPassesTestMixin):
         return self.request.user.is_superuser
 
     def _get_reference_dataset(self):
-        return get_object_or_404(
-            ReferenceDataset, pk=self.kwargs['reference_dataset_id']
-        )
+        return get_object_or_404(ReferenceDataset, pk=self.kwargs['reference_dataset_id'])
 
     def get_context_data(self, *args, **kwargs):
         ctx = super().get_context_data(*args, **kwargs)
@@ -133,9 +131,7 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
     def form_valid(self, form):
         reference_dataset = self._get_reference_dataset()
         try:
-            reference_dataset.save_record(
-                self.kwargs.get('record_id'), form.form.cleaned_data
-            )
+            reference_dataset.save_record(self.kwargs.get('record_id'), form.form.cleaned_data)
         except Exception as e:  # pylint: disable=broad-except
             form.form.add_error(None, e)
             return self.form_invalid(form)
@@ -171,9 +167,7 @@ class ReferenceDatasetAdminDeleteView(ReferenceDataRecordMixin, FormView):
         record = reference_dataset.get_record_by_internal_id(record_id)
         if record is None:
             raise Http404
-        kwargs.update(
-            {'reference_dataset': reference_dataset, 'initial': {'id': record_id}}
-        )
+        kwargs.update({'reference_dataset': reference_dataset, 'initial': {'id': record_id}})
         return kwargs
 
     def form_valid(self, form):
@@ -248,9 +242,7 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        reader = csv.DictReader(
-            chunk.decode('utf-8-sig') for chunk in form.cleaned_data['file']
-        )
+        reader = csv.DictReader(chunk.decode('utf-8-sig') for chunk in form.cleaned_data['file'])
         reader.fieldnames = [x.lower() for x in reader.fieldnames]
         reference_dataset = self._get_reference_dataset()
         record_model_class = reference_dataset.get_record_model_class()
@@ -266,9 +258,7 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
             updated_by=self.request.user,
         )
         for row in reader:
-            log_row = ReferenceDatasetUploadLogRecord(
-                upload_log=self.upload_log, row_data=row
-            )
+            log_row = ReferenceDatasetUploadLogRecord(upload_log=self.upload_log, row_data=row)
             errors = {}
             form_data = {'reference_dataset': reference_dataset}
 
@@ -293,9 +283,7 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
                         except linked_dataset.get_record_model_class().DoesNotExist:
                             errors[
                                 header_name
-                            ] = 'Identifier {} does not exist in linked dataset'.format(
-                                value
-                            )
+                            ] = 'Identifier {} does not exist in linked dataset'.format(value)
                     form_data[field.relationship_name + '_id'] = link_id
                 else:
                     # Otherwise validate using the associated form field
@@ -314,21 +302,15 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
 
             if not errors:
                 try:
-                    reference_dataset.save_record(
-                        record_id, form_data, sync_externally=False
-                    )
+                    reference_dataset.save_record(record_id, form_data, sync_externally=False)
                 except Exception as e:  # pylint: disable=broad-except
                     log_row.status = ReferenceDatasetUploadLogRecord.STATUS_FAILURE
                     log_row.errors = [{'Error': str(e)}]
                 else:
                     if record_id is not None:
-                        log_row.status = (
-                            ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED
-                        )
+                        log_row.status = ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED
                     else:
-                        log_row.status = (
-                            ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED
-                        )
+                        log_row.status = ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED
             else:
                 log_row.status = ReferenceDatasetUploadLogRecord.STATUS_FAILURE
                 log_row.errors = errors
@@ -341,18 +323,14 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        messages.success(
-            self.request, 'Reference dataset upload completed successfully'
-        )
+        messages.success(self.request, 'Reference dataset upload completed successfully')
         return reverse(
             'dw-admin:reference-dataset-record-upload-log',
             args=(self._get_reference_dataset().id, self.upload_log.id),
         )
 
 
-class SourceLinkUploadView(
-    UserPassesTestMixin, CreateView
-):  # pylint: disable=too-many-ancestors
+class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=too-many-ancestors
     model = SourceLink
     form_class = SourceLinkUploadForm
     template_name = 'admin/dataset_source_link_upload.html'
@@ -376,9 +354,7 @@ class SourceLinkUploadView(
 
     def get_form(self, form_class=None):
         form = self.get_form_class()(**self.get_form_kwargs())
-        return helpers.AdminForm(
-            form, list([(None, {'fields': list(form.fields.keys())})]), {}
-        )
+        return helpers.AdminForm(form, list([(None, {'fields': list(form.fields.keys())})]), {})
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()

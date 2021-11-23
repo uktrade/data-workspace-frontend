@@ -29,9 +29,7 @@ from dataworkspace.tests.explorer.factories import (
 
 def create_temporary_results_table(querylog):
     # ID hardcoded in conftest.staff_user_data
-    suffix = stable_identification_suffix(
-        'aae8901a-082f-4f12-8c6c-fdf4aeba2d68', short=True
-    )
+    suffix = stable_identification_suffix('aae8901a-082f-4f12-8c6c-fdf4aeba2d68', short=True)
     schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
 
     with connections['my_database'].cursor() as cursor:
@@ -53,9 +51,7 @@ def create_temporary_results_table(querylog):
 
 def drop_temporary_results_table(querylog):
     # ID hardcoded in conftest.staff_user_data
-    suffix = stable_identification_suffix(
-        'aae8901a-082f-4f12-8c6c-fdf4aeba2d68', short=True
-    )
+    suffix = stable_identification_suffix('aae8901a-082f-4f12-8c6c-fdf4aeba2d68', short=True)
     schema_and_user_name = f'{USER_SCHEMA_STEM}{suffix}'
 
     with connections['my_database'].cursor() as cursor:
@@ -77,9 +73,7 @@ class TestQueryListView:
 class TestQueryCreateView:
     def test_renders_with_title(self, staff_user, staff_client):
         play_sql = PlaygroundSQLFactory(sql="", created_by_user=staff_user)
-        resp = staff_client.get(
-            reverse("explorer:query_create"), {"play_id": play_sql.id}
-        )
+        resp = staff_client.get(reverse("explorer:query_create"), {"play_id": play_sql.id})
         assert resp.template_name == ['explorer/query.html']
         assert "New Query" in resp.content.decode(resp.charset)
 
@@ -109,12 +103,8 @@ class TestQueryCreateView:
 
     @pytest.mark.django_db(transaction=True)
     def test_renders_back_link(self, staff_user, staff_client):
-        play_sql = PlaygroundSQLFactory(
-            sql="select 1, 2, 3", created_by_user=staff_user
-        )
-        response = staff_client.get(
-            reverse("explorer:query_create"), {"play_id": play_sql.id}
-        )
+        play_sql = PlaygroundSQLFactory(sql="select 1, 2, 3", created_by_user=staff_user)
+        response = staff_client.get(reverse("explorer:query_create"), {"play_id": play_sql.id})
         assert (
             f'<a href="/data-explorer/?play_id={play_sql.id}" class="govuk-back-link">Back</a>'
             in response.content.decode(response.charset)
@@ -142,9 +132,7 @@ class TestQueryDetailView:
         data['sql'] = expected
         data['action'] = 'save'
 
-        staff_client.post(
-            reverse("explorer:query_detail", kwargs={'query_id': query.id}), data
-        )
+        staff_client.post(reverse("explorer:query_detail", kwargs={'query_id': query.id}), data)
 
         assert Query.objects.get(pk=query.id).sql == expected
 
@@ -157,14 +145,10 @@ class TestQueryDetailView:
 
         eventlog_count = EventLog.objects.count()
 
-        staff_client.post(
-            reverse("explorer:query_detail", kwargs={'query_id': query.id}), data
-        )
+        staff_client.post(reverse("explorer:query_detail", kwargs={'query_id': query.id}), data)
 
         assert (
-            EventLog.objects.filter(
-                event_type=EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY
-            ).count()
+            EventLog.objects.filter(event_type=EventLog.TYPE_DATA_EXPLORER_SAVED_QUERY).count()
             == eventlog_count + 1
         )
 
@@ -172,9 +156,7 @@ class TestQueryDetailView:
         query = SimpleQueryFactory(created_by_user=staff_user)
         expected = query.sql
 
-        staff_client.get(
-            reverse("explorer:query_detail", kwargs={'query_id': query.id})
-        )
+        staff_client.get(reverse("explorer:query_detail", kwargs={'query_id': query.id}))
         staff_client.post(
             reverse("explorer:query_detail", kwargs={'query_id': query.id}),
             {'sql': 'select 1;'},
@@ -182,16 +164,12 @@ class TestQueryDetailView:
 
         assert Query.objects.get(pk=query.id).sql == expected
 
-    def test_modified_date_gets_updated_after_viewing_query(
-        self, staff_user, staff_client
-    ):
+    def test_modified_date_gets_updated_after_viewing_query(self, staff_user, staff_client):
         query = SimpleQueryFactory(created_by_user=staff_user)
         old = query.last_run_date
         time.sleep(0.1)
 
-        staff_client.get(
-            reverse("explorer:query_detail", kwargs={'query_id': query.id})
-        )
+        staff_client.get(reverse("explorer:query_detail", kwargs={'query_id': query.id}))
 
         assert old != Query.objects.get(pk=query.id).last_run_date
 
@@ -225,9 +203,7 @@ class TestQueryDetailView:
 
     def test_renders_back_link(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql='select 6870+1;', created_by_user=staff_user)
-        play_sql = PlaygroundSQLFactory(
-            sql='select 1+6870;', created_by_user=staff_user
-        )
+        play_sql = PlaygroundSQLFactory(sql='select 1+6870;', created_by_user=staff_user)
 
         response = staff_client.get(
             reverse("explorer:query_detail", kwargs={"query_id": query.id}),
@@ -273,25 +249,18 @@ class TestHomePage:
         resp = staff_client.get(reverse("explorer:index"))
 
         doc = html.fromstring(resp.content.decode(resp.charset))
-        assert (
-            doc.xpath('//a[normalize-space(text()) = "feedback"]/@href')[0]
-            == '/feedback/'
-        )
+        assert doc.xpath('//a[normalize-space(text()) = "feedback"]/@href')[0] == '/feedback/'
 
     def test_playground_renders_with_query_sql(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="select 1;", created_by_user=staff_user)
-        resp = staff_client.get(
-            '%s?query_id=%s' % (reverse("explorer:index"), query.id)
-        )
+        resp = staff_client.get('%s?query_id=%s' % (reverse("explorer:index"), query.id))
         assert resp.status_code == 200
         assert 'select 1;' in resp.content.decode(resp.charset)
 
     def test_cannot_open_playground_with_another_users_query(self, staff_client):
         other_user = UserFactory(email='foo@bar.net')
         query = SimpleQueryFactory(sql="select 1;", created_by_user=other_user)
-        resp = staff_client.get(
-            '%s?query_id=%s' % (reverse("explorer:index"), query.id)
-        )
+        resp = staff_client.get('%s?query_id=%s' % (reverse("explorer:index"), query.id))
         assert resp.status_code == 404
 
     def test_cannot_post_to_another_users_query(self, staff_client):
@@ -320,35 +289,25 @@ class TestHomePage:
         resp = staff_client.post(
             reverse("explorer:index"), {'sql': 'select 1+3400;', "action": "save"}
         )
-        play_sql = PlaygroundSQL.objects.get(
-            sql='select 1+3400;', created_by_user=staff_user
-        )
+        play_sql = PlaygroundSQL.objects.get(sql='select 1+3400;', created_by_user=staff_user)
 
         assert resp.url == f'/data-explorer/queries/create/?play_id={play_sql.id}'
 
     def test_playground_renders_with_empty_posted_sql(self, staff_client):
-        resp = staff_client.post(
-            reverse("explorer:index"), {'sql': '', "action": "run"}
-        )
+        resp = staff_client.post(reverse("explorer:index"), {'sql': '', "action": "run"})
         assert resp.status_code == 200
 
     def test_query_with_no_resultset_doesnt_throw_error(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="", created_by_user=staff_user)
-        resp = staff_client.get(
-            '%s?query_id=%s' % (reverse("explorer:index"), query.id)
-        )
+        resp = staff_client.get('%s?query_id=%s' % (reverse("explorer:index"), query.id))
         assert resp.status_code == 200
 
-    def test_can_only_load_query_log_run_by_current_user(
-        self, staff_user, staff_client
-    ):
+    def test_can_only_load_query_log_run_by_current_user(self, staff_user, staff_client):
         user = UserFactory(email='test@foo.bar')
         my_querylog = QueryLogFactory(run_by_user=staff_user)
         other_querylog = QueryLogFactory(run_by_user=user)
 
-        resp = staff_client.get(
-            '%s?querylog_id=%s' % (reverse("explorer:index"), my_querylog.id)
-        )
+        resp = staff_client.get('%s?querylog_id=%s' % (reverse("explorer:index"), my_querylog.id))
         assert resp.status_code == 200
         assert "FOUR" in resp.content.decode(resp.charset)
 
@@ -389,10 +348,7 @@ class TestCSVFromSQL:
         )
 
         assert resp.status_code == 302
-        assert (
-            resp['Location']
-            == f'/data-explorer/?querylog_id={querylog.id}&error=download'
-        )
+        assert resp['Location'] == f'/data-explorer/?querylog_id={querylog.id}&error=download'
 
 
 class TestSQLDownloadViews:
@@ -419,9 +375,7 @@ class TestSQLDownloadViews:
         assert response['content-type'] == 'text/csv'
 
     def test_sql_download_csv_with_custom_delim(self, staff_user, staff_client):
-        my_querylog = QueryLogFactory(
-            sql="select 1 as id, 2 as data", run_by_user=staff_user
-        )
+        my_querylog = QueryLogFactory(sql="select 1 as id, 2 as data", run_by_user=staff_user)
         create_temporary_results_table(my_querylog)
 
         url = (
@@ -439,9 +393,7 @@ class TestSQLDownloadViews:
         assert response.content.decode('utf-8') == 'id|data\r\n1|2\r\n'
 
     def test_sql_download_csv_with_tab_delim(self, staff_user, staff_client):
-        my_querylog = QueryLogFactory(
-            sql="select 1 as id, 2 as data", run_by_user=staff_user
-        )
+        my_querylog = QueryLogFactory(sql="select 1 as id, 2 as data", run_by_user=staff_user)
         create_temporary_results_table(my_querylog)
 
         url = (
@@ -459,9 +411,7 @@ class TestSQLDownloadViews:
         assert response.content.decode('utf-8') == 'id\tdata\r\n1\t2\r\n'
 
     def test_sql_download_csv_with_bad_delim(self, staff_user, staff_client):
-        my_querylog = QueryLogFactory(
-            sql="select 1 as id, 2 as data", run_by_user=staff_user
-        )
+        my_querylog = QueryLogFactory(sql="select 1 as id, 2 as data", run_by_user=staff_user)
         create_temporary_results_table(my_querylog)
 
         url = (
@@ -563,9 +513,7 @@ class TestQueryLog:
         staff_client.post(reverse("explorer:index") + f"?query_id={query.id}", data)
         assert QueryLog.objects.count() == 1
 
-    def test_user_can_only_see_their_own_queries_on_log_page(
-        self, staff_user, staff_client
-    ):
+    def test_user_can_only_see_their_own_queries_on_log_page(self, staff_user, staff_client):
         other_user = UserFactory(email='foo@bar.net')
         QueryLogFactory(sql="select 1234", run_by_user=other_user)
         QueryLogFactory(sql="select 9876", run_by_user=staff_user)
@@ -587,8 +535,7 @@ class TestQueryLogEndpoint:
         resp = staff_client.get(reverse('explorer:querylog_results', args=(999,)))
         assert resp.status_code == 200
         assert (
-            resp.json()['error']
-            == 'Error fetching results. Please try running your query again.'
+            resp.json()['error'] == 'Error fetching results. Please try running your query again.'
         )
 
     def test_query_owned_by_other_user(self, staff_user, staff_client):
@@ -596,31 +543,23 @@ class TestQueryLogEndpoint:
         query_log = QueryLogFactory(
             sql="select 456", run_by_user=UserFactory(email='bob@test.com')
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
+        resp = staff_client.get(reverse('explorer:querylog_results', args=(query_log.id,)))
         assert resp.status_code == 200
         assert (
-            resp.json()['error']
-            == 'Error fetching results. Please try running your query again.'
+            resp.json()['error'] == 'Error fetching results. Please try running your query again.'
         )
 
     def test_query_running(self, staff_user, staff_client):
         query_log = QueryLogFactory(
             sql="select 123", run_by_user=staff_user, state=QueryLogState.RUNNING
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
+        resp = staff_client.get(reverse('explorer:querylog_results', args=(query_log.id,)))
         assert resp.status_code == 200
         json_response = resp.json()
         assert json_response['query_log_id'] == query_log.id
         assert json_response['state'] == query_log.state
         assert json_response['error'] is None
-        assert (
-            'Your query is currently being executed by Data Explorer'
-            in json_response['html']
-        )
+        assert 'Your query is currently being executed by Data Explorer' in json_response['html']
 
     def test_query_failed(self, staff_user, staff_client):
         query_log = QueryLogFactory(
@@ -629,9 +568,7 @@ class TestQueryLogEndpoint:
             state=QueryLogState.FAILED,
             error='This is an error message',
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
+        resp = staff_client.get(reverse('explorer:querylog_results', args=(query_log.id,)))
         assert resp.status_code == 200
         json_response = resp.json()
         assert json_response['query_log_id'] == query_log.id
@@ -640,9 +577,7 @@ class TestQueryLogEndpoint:
         assert json_response['html'] is None
 
     def test_query_complete(self, staff_user, staff_client, mocker):
-        mock_fetch = mocker.patch(
-            'dataworkspace.apps.explorer.views.fetch_query_results'
-        )
+        mock_fetch = mocker.patch('dataworkspace.apps.explorer.views.fetch_query_results')
         mock_fetch.return_value = (
             ['col1', 'col2'],
             [[1, 'record1'], [2, 'record2']],
@@ -654,9 +589,7 @@ class TestQueryLogEndpoint:
             state=QueryLogState.COMPLETE,
             rows=100,
         )
-        resp = staff_client.get(
-            reverse('explorer:querylog_results', args=(query_log.id,))
-        )
+        resp = staff_client.get(reverse('explorer:querylog_results', args=(query_log.id,)))
         assert resp.status_code == 200
         json_response = resp.json()
         assert json_response['query_log_id'] == query_log.id
@@ -713,9 +646,7 @@ class TestShareQuery:
         (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
     )
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
-    def test_invalid_recipient(
-        self, mock_send_email, query_param, query_factory, client, user
-    ):
+    def test_invalid_recipient(self, mock_send_email, query_param, query_factory, client, user):
         query_obj = query_factory.create(created_by_user=user)
         response = client.post(
             f"{reverse('explorer:share_query')}?{query_param}={query_obj.id}",
@@ -726,8 +657,7 @@ class TestShareQuery:
             },
         )
         assert (
-            b'The user you are sharing with must have a DIT staff SSO account'
-            in response.content
+            b'The user you are sharing with must have a DIT staff SSO account' in response.content
         )
         mock_send_email.assert_not_called()
 
@@ -736,9 +666,7 @@ class TestShareQuery:
         (('play_id', PlaygroundSQLFactory), ('query_id', SimpleQueryFactory)),
     )
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
-    def test_share_query(
-        self, mock_send_email, query_param, query_factory, client, user
-    ):
+    def test_share_query(self, mock_send_email, query_param, query_factory, client, user):
         query_obj = query_factory.create(created_by_user=user)
         response = client.post(
             f"{reverse('explorer:share_query')}?{query_param}={query_obj.id}",

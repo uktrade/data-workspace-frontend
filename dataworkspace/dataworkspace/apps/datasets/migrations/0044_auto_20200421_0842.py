@@ -8,7 +8,5 @@ class Migration(migrations.Migration):
     dependencies = [('datasets', '0043_merge_20200420_1541')]
 
     operations = [
-        migrations.AlterModelOptions(
-            name='datasetreferencecode', options={'ordering': ('code')}
-        )
+        migrations.AlterModelOptions(name='datasetreferencecode', options={'ordering': ('code')})
     ]

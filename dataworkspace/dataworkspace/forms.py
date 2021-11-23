@@ -69,27 +69,19 @@ class GOVUKDesignSystemFieldMixin:
         self.widget.custom_context['help_html'] = self.help_html
 
 
-class GOVUKDesignSystemTextWidget(
-    GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput
-):
+class GOVUKDesignSystemTextWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput):
     template_name = 'design_system/textinput.html'
 
 
-class GOVUKDesignSystemEmailWidget(
-    GOVUKDesignSystemWidgetMixin, forms.widgets.EmailInput
-):
+class GOVUKDesignSystemEmailWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.EmailInput):
     template_name = 'design_system/textinput.html'
 
 
-class GOVUKDesignSystemTextareaWidget(
-    GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea
-):
+class GOVUKDesignSystemTextareaWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea):
     template_name = 'design_system/textarea.html'
 
 
-class GOVUKDesignSystemRadiosWidget(
-    GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect
-):
+class GOVUKDesignSystemRadiosWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect):
     template_name = 'design_system/radio.html'
     option_template_name = "design_system/radio_option.html"
 
@@ -101,9 +93,7 @@ class GOVUKDesignSystemCheckboxesWidget(
     option_template_name = "design_system/checkbox_option.html"
 
 
-class GOVUKDesignSystemFileInputWidget(
-    GOVUKDesignSystemWidgetMixin, forms.widgets.FileInput
-):
+class GOVUKDesignSystemFileInputWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.FileInput):
     template_name = 'design_system/file.html'
 
     def format_value(self, value):
@@ -115,9 +105,7 @@ class GOVUKDesignSystemFileInputWidget(
         return super().format_value(value)
 
 
-class GOVUKDesignSystemMultipleChoiceField(
-    GOVUKDesignSystemFieldMixin, forms.MultipleChoiceField
-):
+class GOVUKDesignSystemMultipleChoiceField(GOVUKDesignSystemFieldMixin, forms.MultipleChoiceField):
     widget = GOVUKDesignSystemCheckboxesWidget
 
 
@@ -137,9 +125,7 @@ class GOVUKDesignSystemRadioField(GOVUKDesignSystemFieldMixin, forms.ChoiceField
     widget = GOVUKDesignSystemRadiosWidget
 
 
-class GOVUKDesignSystemSingleCheckboxWidget(
-    GOVUKDesignSystemWidgetMixin, CheckboxInput
-):
+class GOVUKDesignSystemSingleCheckboxWidget(GOVUKDesignSystemWidgetMixin, CheckboxInput):
     template_name = 'design_system/single_checkbox.html'
 
 
@@ -182,9 +168,9 @@ class GOVUKDesignSystemModelForm(forms.ModelForm):
                 if self.errors.get(field.name) and not isinstance(
                     self.fields[field.name].widget, forms.HiddenInput
                 ):
-                    self.fields[field.name].widget.custom_context[
-                        'errors'
-                    ] = self.errors[field.name]
+                    self.fields[field.name].widget.custom_context['errors'] = self.errors[
+                        field.name
+                    ]
 
         return cleaned_data
 
@@ -194,9 +180,7 @@ class GOVUKDesignSystemModelForm(forms.ModelForm):
         Prepare a data structure containing all of the errors in order to render an `error summary` GOV.UK Design
         System component.
         """
-        field_errors = [
-            (field.id_for_label, field.errors[0]) for field in self if field.errors
-        ]
+        field_errors = [(field.id_for_label, field.errors[0]) for field in self if field.errors]
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
@@ -216,9 +200,9 @@ class GOVUKDesignSystemForm(forms.Form):
                 if self.errors.get(field.name) and not isinstance(
                     self.fields[field.name].widget, forms.HiddenInput
                 ):
-                    self.fields[field.name].widget.custom_context[
-                        'errors'
-                    ] = self.errors[field.name]
+                    self.fields[field.name].widget.custom_context['errors'] = self.errors[
+                        field.name
+                    ]
 
         return cleaned_data
 
@@ -228,9 +212,7 @@ class GOVUKDesignSystemForm(forms.Form):
         Prepare a data structure containing all of the errors in order to render an `error summary` GOV.UK Design
         System component.
         """
-        field_errors = [
-            (field.id_for_label, field.errors[0]) for field in self if field.errors
-        ]
+        field_errors = [(field.id_for_label, field.errors[0]) for field in self if field.errors]
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors

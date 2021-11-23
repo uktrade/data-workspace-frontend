@@ -16,9 +16,7 @@ def add_dataset_iam_info(apps, _):
     ReferenceDataset = apps.get_model('datasets', 'ReferenceDataset')
     for ref_dataset in ReferenceDataset.objects.exclude(group__isnull=True).all():
         ref_dataset.information_asset_owner = ref_dataset.group.information_asset_owner
-        ref_dataset.information_asset_manager = (
-            ref_dataset.group.information_asset_manager
-        )
+        ref_dataset.information_asset_manager = ref_dataset.group.information_asset_manager
         ref_dataset.save()
 
 

@@ -27,9 +27,7 @@ async def async_main():
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(
-                        psycopg2.sql.SQL('SELECT * FROM {}').format(
-                            psycopg2.sql.Identifier(table)
-                        )
+                        psycopg2.sql.SQL('SELECT * FROM {}').format(psycopg2.sql.Identifier(table))
                     )
                     rows = [row[0] for row in await cur.fetchall()]
 
@@ -91,12 +89,8 @@ async def async_main():
     upstream = web.Application()
     upstream.add_routes([web.post('/stop', handle_stop)])
     upstream.add_routes([web.get('/{database}/{table}', handle_dataset)])
-    upstream.add_routes(
-        [web.get('/{database}/{schema}/{table}', handle_get_schema_table)]
-    )
-    upstream.add_routes(
-        [web.post('/{database}/{schema}/{table}', handle_post_schema_table)]
-    )
+    upstream.add_routes([web.get('/{database}/{schema}/{table}', handle_get_schema_table)])
+    upstream.add_routes([web.post('/{database}/{schema}/{table}', handle_post_schema_table)])
     upstream_runner = web.AppRunner(upstream)
     await upstream_runner.setup()
     upstream_site = web.TCPSite(upstream_runner, '0.0.0.0', 8888)

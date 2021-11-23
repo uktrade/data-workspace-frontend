@@ -11,6 +11,4 @@ class Command(BaseCommand):
 
         CustomDatasetQuery.objects.all().update(data_grid_enabled=False)
 
-        self.stdout.write(
-            self.style.SUCCESS("enabling ag-grid for CustomDatasetQuery (done)")
-        )
+        self.stdout.write(self.style.SUCCESS("enabling ag-grid for CustomDatasetQuery (done)"))

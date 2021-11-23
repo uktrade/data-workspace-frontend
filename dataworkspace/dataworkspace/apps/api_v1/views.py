@@ -79,9 +79,7 @@ logger = logging.getLogger('app')
 
 def applications_api_view(request):
     return (
-        applications_api_GET(request)
-        if request.method == 'GET'
-        else JsonResponse({}, status=405)
+        applications_api_GET(request) if request.method == 'GET' else JsonResponse({}, status=405)
     )
 
 
@@ -117,9 +115,7 @@ def application_api_view(request, public_host):
 
 def application_api_GET(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
@@ -131,15 +127,11 @@ def application_api_PUT(request, public_host):
     # key prevents duplicate spawning/running applications at the same
     # public host
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         pass
     else:
-        return JsonResponse(
-            {'message': 'Application instance already exists'}, status=409
-        )
+        return JsonResponse({'message': 'Application instance already exists'}, status=409)
 
     try:
         (
@@ -149,17 +141,13 @@ def application_api_PUT(request, public_host):
             commit_id,
         ) = application_template_tag_user_commit_from_host(public_host)
     except ApplicationTemplate.DoesNotExist:
-        return JsonResponse(
-            {'message': 'Application template does not exist'}, status=400
-        )
+        return JsonResponse({'message': 'Application template does not exist'}, status=400)
 
     app_type = application_template.application_type
 
     if app_type == 'TOOL':
         tool_configuration = (
-            application_template.user_tool_configuration.filter(
-                user=request.user
-            ).first()
+            application_template.user_tool_configuration.filter(user=request.user).first()
             or UserToolConfiguration.default_config()
         )
         cpu = tool_configuration.size_config.cpu
@@ -185,9 +173,7 @@ def application_api_PUT(request, public_host):
             commit_id=commit_id,
         )
     except IntegrityError:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     else:
         spawn.delay(
             application_template.spawner,
@@ -202,9 +188,7 @@ def application_api_PUT(request, public_host):
 
 def application_api_PATCH(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
@@ -221,9 +205,7 @@ def application_api_PATCH(request, public_host):
 
 def application_api_DELETE(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=200)
 
@@ -390,9 +372,7 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
         schema_sql = sql.Identifier(sourcetable.schema)
         table_sql = sql.Identifier(sourcetable.table)
 
-        query_sql, vars_sql = query_var(
-            fields_sql, schema_sql, table_sql, primary_key_sql
-        )
+        query_sql, vars_sql = query_var(fields_sql, schema_sql, table_sql, primary_key_sql)
         cur.execute(query_sql, vars_sql)
 
         while True:

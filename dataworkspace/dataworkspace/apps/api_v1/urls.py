@@ -23,9 +23,7 @@ urlpatterns = [
     ),
     path(
         'dataset/',
-        include(
-            ('dataworkspace.apps.api_v1.datasets.urls', 'dataset'), namespace='dataset'
-        ),
+        include(('dataworkspace.apps.api_v1.datasets.urls', 'dataset'), namespace='dataset'),
     ),
     path(
         'reference-dataset/',
@@ -43,9 +41,7 @@ urlpatterns = [
     ),
     path(
         'account/',
-        include(
-            ('dataworkspace.apps.api_v1.accounts.urls', 'account'), namespace='account'
-        ),
+        include(('dataworkspace.apps.api_v1.accounts.urls', 'account'), namespace='account'),
     ),
     path(
         'application-instance/',

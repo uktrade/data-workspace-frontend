@@ -113,9 +113,7 @@ class ApplicationFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         try:
-            queryset_filter = {
-                'application_template__id': request.GET['application_template__id']
-            }
+            queryset_filter = {'application_template__id': request.GET['application_template__id']}
         except KeyError:
             queryset_filter = {}
         return queryset.filter(**queryset_filter)
@@ -140,11 +138,8 @@ class ApplicationGroup(SimpleListFilter):
     def choices(self, changelist):
         for i, (lookup, title) in enumerate(self.lookup_choices):
             yield {
-                'selected': self.value() == str(lookup)
-                or (i == 0 and self.value() is None),
-                'query_string': changelist.get_query_string(
-                    {self.parameter_name: lookup}
-                ),
+                'selected': self.value() == str(lookup) or (i == 0 and self.value() is None),
+                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
                 'display': title,
             }
 
@@ -185,12 +180,8 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             # NULL values are ordered as greater than non-NULL values, so to order rows without
             # runtime as lower in the list as those that have runtime, but still order rows with
             # runtime in decreasing order, we need an extra field
-            'has_runtime': Least(
-                Count(F('spawner_stopped_at') - F('spawner_created_at')), 1
-            ),
-            'num_with_runtime': Count(
-                F('spawner_stopped_at') - F('spawner_created_at')
-            ),
+            'has_runtime': Least(Count(F('spawner_stopped_at') - F('spawner_created_at')), 1),
+            'num_with_runtime': Count(F('spawner_stopped_at') - F('spawner_created_at')),
             'min_runtime': Min(
                 Func(Value('second'), F('spawner_stopped_at'), function='date_trunc')
                 - Func(Value('second'), F('spawner_created_at'), function='date_trunc')
@@ -272,8 +263,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                 ApplicationTemplate.objects.filter(**app_filter).order_by('nice_name')
             )
             applications_run = set(
-                item['application_template__nice_name']
-                for item in summary_with_applications
+                item['application_template__nice_name'] for item in summary_with_applications
             )
             return [
                 {
@@ -289,8 +279,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
 
         def group_by_cpu_memory_missing_rows():
             launched_cpu_memory_combos = set(
-                (item['spawner_cpu'], item['spawner_memory'])
-                for item in summary_with_applications
+                (item['spawner_cpu'], item['spawner_memory']) for item in summary_with_applications
             )
             return [
                 {
@@ -339,8 +328,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                     'num_with_runtime': 0,
                 }
                 for user, application_template in product(users, application_templates)
-                if (user.username, application_template.nice_name)
-                not in users_with_applications
+                if (user.username, application_template.nice_name) not in users_with_applications
             ]
 
         summary_without_applications = (
@@ -355,9 +343,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             else group_by_user_and_application_missing_rows()
         )
 
-        response.context_data['summary'] = (
-            summary_with_applications + summary_without_applications
-        )
+        response.context_data['summary'] = summary_with_applications + summary_without_applications
 
         response.context_data['summary_total'] = dict(qs.aggregate(**metrics))
 
@@ -421,9 +407,7 @@ class VisualisationTemplateEditForm(forms.ModelForm):
         except KeyError:
             return
 
-        self.fields[
-            'authorized_master_datasets'
-        ].initial = MasterDataset.objects.live().filter(
+        self.fields['authorized_master_datasets'].initial = MasterDataset.objects.live().filter(
             datasetapplicationtemplatepermission__application_template=instance
         )
 
@@ -473,9 +457,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
                 datasetapplicationtemplatepermission__application_template=obj
             )
         )
-        authorized_master_datasets = set(
-            form.cleaned_data['authorized_master_datasets']
-        )
+        authorized_master_datasets = set(form.cleaned_data['authorized_master_datasets'])
 
         for dataset in authorized_master_datasets - current_master_datasets:
             DataSetApplicationTemplatePermission.objects.create(

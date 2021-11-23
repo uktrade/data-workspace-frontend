@@ -70,14 +70,10 @@ class _BasePage:
     def get_html(self) -> str:
         return self._driver.page_source
 
-    def _check_url_and_return_page(
-        self, new_page_class: Type[_PageClassType]
-    ) -> _PageClassType:
+    def _check_url_and_return_page(self, new_page_class: Type[_PageClassType]) -> _PageClassType:
         if new_page_class._url_regex:
             parsed_url = urlparse(self._driver.current_url)
-            current_path = parsed_url.path + (
-                '?' + parsed_url.query if parsed_url.query else ''
-            )
+            current_path = parsed_url.path + ('?' + parsed_url.query if parsed_url.query else '')
             url_data = new_page_class.parse_url(current_path)
             new_page = new_page_class(self._driver, url_data=url_data)
 

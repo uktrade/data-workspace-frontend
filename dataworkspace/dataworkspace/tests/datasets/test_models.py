@@ -61,9 +61,7 @@ def test_clone_dataset_copies_related_objects(db):
 def test_dataset_source_reference_code(db, factory):
     ref_code1 = factories.DatasetReferenceCodeFactory(code='Abc')
     ref_code2 = factories.DatasetReferenceCodeFactory(code='Def')
-    ds = factories.DataSetFactory(
-        reference_code=ref_code1, user_access_type=UserAccessType.OPEN
-    )
+    ds = factories.DataSetFactory(reference_code=ref_code1, user_access_type=UserAccessType.OPEN)
     source = factory(dataset=ds)
     assert source.source_reference == 'ABC00001'
 
@@ -108,9 +106,7 @@ def test_dataset_source_reference_code(db, factory):
     ),
 )
 def test_dataset_source_filename(db, factory):
-    ds1 = factories.DataSetFactory(
-        reference_code=factories.DatasetReferenceCodeFactory(code='DW')
-    )
+    ds1 = factories.DataSetFactory(reference_code=factories.DatasetReferenceCodeFactory(code='DW'))
     source1 = factory(dataset=ds1, name='A test source')
     assert source1.get_filename() == 'DW00001-a-test-source.csv'
 
@@ -120,9 +116,7 @@ def test_dataset_source_filename(db, factory):
 
 
 def test_source_link_filename(db):
-    ds1 = factories.DataSetFactory(
-        reference_code=factories.DatasetReferenceCodeFactory(code='DW')
-    )
+    ds1 = factories.DataSetFactory(reference_code=factories.DatasetReferenceCodeFactory(code='DW'))
     source1 = factories.SourceLinkFactory(
         dataset=ds1,
         name='A test source',
@@ -156,9 +150,7 @@ def test_source_table_data_last_updated(metadata_db):
     table = factories.SourceTableFactory(
         dataset=dataset, database=metadata_db, schema='public', table='table1'
     )
-    assert table.get_data_last_updated_date() == datetime(
-        2020, 9, 2, 0, 1, 0, tzinfo=UTC
-    )
+    assert table.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0, tzinfo=UTC)
 
     table = factories.SourceTableFactory(
         dataset=dataset, database=metadata_db, schema='public', table='doesntexist'
@@ -177,15 +169,9 @@ def test_custom_query_data_last_updated(metadata_db):
         database=metadata_db,
         query='select * from table1 join table2 on 1=1',
     )
-    factories.CustomDatasetQueryTableFactory(
-        query=query, schema='public', table='table1'
-    )
-    factories.CustomDatasetQueryTableFactory(
-        query=query, schema='public', table='table2'
-    )
-    assert query.get_data_last_updated_date() == datetime(
-        2020, 9, 1, 0, 1, 0, tzinfo=UTC
-    )
+    factories.CustomDatasetQueryTableFactory(query=query, schema='public', table='table1')
+    factories.CustomDatasetQueryTableFactory(query=query, schema='public', table='table2')
+    assert query.get_data_last_updated_date() == datetime(2020, 9, 1, 0, 1, 0, tzinfo=UTC)
 
     # Ensure a single table returns the last update date
     query = factories.CustomDatasetQueryFactory(
@@ -193,12 +179,8 @@ def test_custom_query_data_last_updated(metadata_db):
         database=metadata_db,
         query='select * from table1',
     )
-    factories.CustomDatasetQueryTableFactory(
-        query=query, schema='public', table='table1'
-    )
-    assert query.get_data_last_updated_date() == datetime(
-        2020, 9, 2, 0, 1, 0, tzinfo=UTC
-    )
+    factories.CustomDatasetQueryTableFactory(query=query, schema='public', table='table1')
+    assert query.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0, tzinfo=UTC)
 
     # Ensure None is returned if we don't have any metadata for the tables
     query = factories.CustomDatasetQueryFactory(

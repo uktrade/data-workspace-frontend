@@ -37,12 +37,8 @@ def ec2_request(query):
                 (urllib.parse.quote(key, safe='~'), urllib.parse.quote(value, safe='~'))
                 for key, value in query.items()
             )
-            canonical_querystring = '&'.join(
-                f'{key}={value}' for key, value in quoted_query
-            )
-            canonical_headers = ''.join(
-                f'{key}:{headers[key]}\n' for key in header_keys
-            )
+            canonical_querystring = '&'.join(f'{key}={value}' for key, value in quoted_query)
+            canonical_headers = ''.join(f'{key}:{headers[key]}\n' for key in header_keys)
 
             return (
                 f'POST\n{canonical_uri}\n{canonical_querystring}\n'
@@ -73,9 +69,7 @@ def ec2_request(query):
     url = f'https://{aws_ec2_host}/?{query_string}'
 
     logger.debug('Making request to %s...', url)
-    request = urllib.request.Request(
-        url, headers=final_headers, data=b'', method='POST'
-    )
+    request = urllib.request.Request(url, headers=final_headers, data=b'', method='POST')
     try:
         with urllib.request.urlopen(request) as response:
             response_bytes = response.read()
@@ -103,9 +97,7 @@ vpc_id = os.environ['VPC_ID']
 logger.debug('Parsing environment... (vpc_id: %s)', vpc_id)
 ip_address = os.environ['IP_ADDRESS']
 logger.debug('Parsing environment... (ip_address: %s)', ip_address)
-aws_container_credentials_relative_uri = os.environ[
-    'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'
-]
+aws_container_credentials_relative_uri = os.environ['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI']
 logger.debug(
     'Parsing environment... (aws_container_credentials_relative_uri: %s)',
     aws_container_credentials_relative_uri,
@@ -147,9 +139,7 @@ create_dhcp_options_response = ec2_request(
 new_dhcp_options_id = re.search(
     b'<dhcpOptionsId>([^<]+)</dhcpOptionsId>', create_dhcp_options_response
 )[1]
-logger.debug(
-    'Creating DHCP options set... (new_dhcp_options_id:  %s)', new_dhcp_options_id
-)
+logger.debug('Creating DHCP options set... (new_dhcp_options_id:  %s)', new_dhcp_options_id)
 logger.debug('Creating DHCP options set... (done)')
 
 logger.debug('Tagging DHCP options set...')

@@ -4,15 +4,11 @@ from django.db import migrations
 
 
 def copy_permissions(apps, schema_editor):
-    VisualisationCatalogueItem = apps.get_model(
-        'datasets', 'VisualisationCatalogueItem'
-    )
+    VisualisationCatalogueItem = apps.get_model('datasets', 'VisualisationCatalogueItem')
 
     visualisations = VisualisationCatalogueItem.objects.all()
     for visualisation in visualisations:
-        visualisation.user_access_type = (
-            visualisation.visualisation_template.user_access_type
-        )
+        visualisation.user_access_type = visualisation.visualisation_template.user_access_type
         visualisation.save()
 
 

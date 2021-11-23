@@ -139,9 +139,7 @@ class TestDataVisualisationUICataloguePage:
         visualisation.refresh_from_db()
         assert response.status_code == 400
         assert visualisation.short_description == "old"
-        assert "The visualisation must have a summary" in response.content.decode(
-            response.charset
-        )
+        assert "The visualisation must have a summary" in response.content.decode(response.charset)
 
 
 class TestDataVisualisationUIApprovalPage:
@@ -280,9 +278,7 @@ class TestQuickSightPollAndRedirect:
         client = Client(**get_http_sso_data(user))
         client.post(reverse('admin:index'), follow=True)
 
-        with mock.patch(
-            "dataworkspace.apps.applications.views.sync_quicksight_permissions"
-        ):
+        with mock.patch("dataworkspace.apps.applications.views.sync_quicksight_permissions"):
             resp = client.get(reverse("applications:quicksight_redirect"), follow=False)
 
         assert resp['Location'] == 'https://sso.quicksight'
@@ -319,17 +315,10 @@ class TestToolsPage:
 
         assert len(response.context['applications']) == 1
         assert (
-            response.context['applications'][0]['tool_configuration'].size_config.name
-            == 'Medium'
+            response.context['applications'][0]['tool_configuration'].size_config.name == 'Medium'
         )
-        assert (
-            response.context['applications'][0]['tool_configuration'].size_config.cpu
-            == 1024
-        )
-        assert (
-            response.context['applications'][0]['tool_configuration'].size_config.memory
-            == 8192
-        )
+        assert response.context['applications'][0]['tool_configuration'].size_config.cpu == 1024
+        assert response.context['applications'][0]['tool_configuration'].size_config.memory == 8192
 
     @pytest.mark.django_db
     def test_user_with_size_config_shows_correct_config(self):
@@ -347,13 +336,9 @@ class TestToolsPage:
             response.context['applications'][0]['tool_configuration'].size_config.name
             == 'Extra Large'
         )
+        assert response.context['applications'][0]['tool_configuration'].size_config.cpu == 4096
         assert (
-            response.context['applications'][0]['tool_configuration'].size_config.cpu
-            == 4096
-        )
-        assert (
-            response.context['applications'][0]['tool_configuration'].size_config.memory
-            == 30720
+            response.context['applications'][0]['tool_configuration'].size_config.memory == 30720
         )
 
 
@@ -457,9 +442,7 @@ class TestVisualisationLogs:
             spawner_application_template_options=json.dumps(
                 {'CONTAINER_NAME': 'user-defined-container'}
             ),
-            spawner_application_instance_id=json.dumps(
-                {'task_arn': 'arn:test:vis/task-id/999'}
-            ),
+            spawner_application_instance_id=json.dumps({'task_arn': 'arn:test:vis/task-id/999'}),
         )
         mock_get_application_template = mocker.patch(
             'dataworkspace.apps.applications.views._application_template'
@@ -491,20 +474,16 @@ class TestVisualisationLogs:
             spawner_application_template_options=json.dumps(
                 {'CONTAINER_NAME': 'user-defined-container'}
             ),
-            spawner_application_instance_id=json.dumps(
-                {'task_arn': 'arn:test:vis/task-id/999'}
-            ),
+            spawner_application_instance_id=json.dumps({'task_arn': 'arn:test:vis/task-id/999'}),
         )
         mock_get_application_template = mocker.patch(
             'dataworkspace.apps.applications.views._application_template'
         )
         mock_get_application_template.return_value = application_template
         mock_boto = mocker.patch('dataworkspace.apps.applications.utils.boto3.client')
-        mock_boto.return_value.get_log_events.side_effect = (
-            botocore.exceptions.ClientError(
-                error_response={'Error': {'Code': 'ResourceNotFoundException'}},
-                operation_name='get_log_events',
-            )
+        mock_boto.return_value.get_log_events.side_effect = botocore.exceptions.ClientError(
+            error_response={'Error': {'Code': 'ResourceNotFoundException'}},
+            operation_name='get_log_events',
         )
         develop_visualisations_permission = Permission.objects.get(
             codename='develop_visualisations',
@@ -532,9 +511,7 @@ class TestVisualisationLogs:
             spawner_application_template_options=json.dumps(
                 {'CONTAINER_NAME': 'user-defined-container'}
             ),
-            spawner_application_instance_id=json.dumps(
-                {'task_arn': 'arn:test:vis/task-id/999'}
-            ),
+            spawner_application_instance_id=json.dumps({'task_arn': 'arn:test:vis/task-id/999'}),
         )
         mock_get_application_template = mocker.patch(
             'dataworkspace.apps.applications.views._application_template'

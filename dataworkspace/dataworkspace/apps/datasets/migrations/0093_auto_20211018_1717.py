@@ -15,23 +15,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataset',
             name='search_vector',
-            field=django.contrib.postgres.search.SearchVectorField(
-                null=True, blank=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(null=True, blank=True),
         ),
         migrations.AddField(
             model_name='referencedataset',
             name='search_vector',
-            field=django.contrib.postgres.search.SearchVectorField(
-                null=True, blank=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(null=True, blank=True),
         ),
         migrations.AddField(
             model_name='visualisationcatalogueitem',
             name='search_vector',
-            field=django.contrib.postgres.search.SearchVectorField(
-                null=True, blank=True
-            ),
+            field=django.contrib.postgres.search.SearchVectorField(null=True, blank=True),
         ),
         migrations.AddIndex(
             model_name='dataset',

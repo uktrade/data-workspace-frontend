@@ -127,9 +127,7 @@ class QueryLog(models.Model):
     run_at = models.DateTimeField(auto_now_add=True)
     duration = models.FloatField(blank=True, null=True)  # milliseconds
     connection = models.CharField(max_length=128)
-    state = models.IntegerField(
-        choices=QueryLogState.choices, default=QueryLogState.RUNNING
-    )
+    state = models.IntegerField(choices=QueryLogState.choices, default=QueryLogState.RUNNING)
     rows = models.IntegerField(null=True, blank=True)
     page = models.IntegerField(default=1)
     page_size = models.IntegerField(default=settings.EXPLORER_DEFAULT_ROWS, null=True)

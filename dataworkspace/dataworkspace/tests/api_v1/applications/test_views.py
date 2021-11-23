@@ -24,9 +24,7 @@ class TestEventLogAPIView(BaseAPIViewTest):
             'proxy_url': app_instance.proxy_url,
             'public_host': app_instance.public_host,
             'spawner': app_instance.spawner,
-            'spawner_application_instance_id': str(
-                app_instance.spawner_application_instance_id
-            ),
+            'spawner_application_instance_id': str(app_instance.spawner_application_instance_id),
             'spawner_cpu': app_instance.spawner_cpu,
             'spawner_created_at': DateTimeField().to_representation(
                 app_instance.spawner_created_at
@@ -42,9 +40,7 @@ class TestEventLogAPIView(BaseAPIViewTest):
     def test_success(self, unauthenticated_client):
         instance1 = factories.ApplicationInstanceFactory()
         instance2 = factories.ApplicationInstanceFactory()
-        response = unauthenticated_client.get(
-            reverse('api-v1:application-instance:instances')
-        )
+        response = unauthenticated_client.get(reverse('api-v1:application-instance:instances'))
         assert response.status_code == status.HTTP_200_OK
         assert response.json()['results'] == sorted(
             [self.expected_response(instance1), self.expected_response(instance2)],

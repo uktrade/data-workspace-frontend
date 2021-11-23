@@ -154,9 +154,7 @@ async def async_main():
     spawning_http_timeout = aiohttp.ClientTimeout(sock_read=5, sock_connect=2)
 
     def get_random_context_logger():
-        return ContextAdapter(
-            logger, {'context': ''.join(random.choices(CONTEXT_ALPHABET, k=8))}
-        )
+        return ContextAdapter(logger, {'context': ''.join(random.choices(CONTEXT_ALPHABET, k=8))})
 
     def without_transfer_encoding(request_or_response):
         return tuple(
@@ -182,8 +180,7 @@ async def async_main():
             tuple(
                 (key, value)
                 for key, value in downstream_request.headers.items()
-                if key.lower()
-                in required_admin_headers + ('content-length', 'content-type')
+                if key.lower() in required_admin_headers + ('content-length', 'content-type')
             )
             + downstream_request['sso_profile_headers']
         )
@@ -229,18 +226,13 @@ async def async_main():
 
         def standardise_header(header):
             # converts 'multi_word_header' to 'Multi-Word-Header'
-            return '-'.join(
-                [s.capitalize() for s in header.replace('_', '-').split('-')]
-            )
+            return '-'.join([s.capitalize() for s in header.replace('_', '-').split('-')])
 
         return CIMultiDict(
             without_transfer_encoding(downstream_request)
             + (
                 tuple(
-                    [
-                        (f'Credentials-{standardise_header(k)}', v)
-                        for k, v in credentials.items()
-                    ]
+                    [(f'Credentials-{standardise_header(k)}', v) for k, v in credentials.items()]
                 )
             )
             + (tuple([('Dashboards', ','.join(dashboards))]))
@@ -323,9 +315,7 @@ async def async_main():
 
     def get_peer_ip(request):
         peer_ip = (
-            request.headers['x-forwarded-for']
-            .split(',')[-x_forwarded_for_trusted_hops]
-            .strip()
+            request.headers['x-forwarded-for'].split(',')[-x_forwarded_for_trusted_hops].strip()
         )
 
         is_private = True
@@ -403,12 +393,8 @@ async def async_main():
             )
 
     async def handle_application(is_websocket, downstream_request, method, path, query):
-        public_host, _, _ = downstream_request.url.host.partition(
-            f'.{root_domain_no_port}'
-        )
-        possible_public_host, _, public_host_or_port_override = public_host.rpartition(
-            '--'
-        )
+        public_host, _, _ = downstream_request.url.host.partition(f'.{root_domain_no_port}')
+        possible_public_host, _, public_host_or_port_override = public_host.rpartition('--')
         try:
             port_override = int(public_host_or_port_override)
         except ValueError:
@@ -433,10 +419,7 @@ async def async_main():
             raise UserException('Unable to start the application', response.status)
 
         if host_exists and application['state'] not in ['SPAWNING', 'RUNNING']:
-            if (
-                'x-data-workspace-no-modify-application-instance'
-                not in downstream_request.headers
-            ):
+            if 'x-data-workspace-no-modify-application-instance' not in downstream_request.headers:
                 async with client_session.request(
                     'DELETE',
                     host_api_url,
@@ -446,10 +429,7 @@ async def async_main():
             raise UserException('Application ' + application['state'], 500)
 
         if not host_exists:
-            if (
-                'x-data-workspace-no-modify-application-instance'
-                not in downstream_request.headers
-            ):
+            if 'x-data-workspace-no-modify-application-instance' not in downstream_request.headers:
                 async with client_session.request(
                     'PUT',
                     host_api_url,
@@ -520,9 +500,7 @@ async def async_main():
     async def handle_application_websocket(
         downstream_request, proxy_url, path, query, port_override
     ):
-        upstream_url = application_upstream(proxy_url, path, port_override).with_query(
-            query
-        )
+        upstream_url = application_upstream(proxy_url, path, port_override).with_query(query)
         return await handle_websocket(
             downstream_request,
             CIMultiDict(application_headers(downstream_request)),
@@ -789,9 +767,7 @@ async def async_main():
                 },
                 timeout=default_http_timeout,
             )
-            logger.info(
-                "Sending to Google Analytics %s... %s", downstream_request.url, response
-            )
+            logger.info("Sending to Google Analytics %s... %s", downstream_request.url, response)
 
         asyncio.create_task(_send())
 
@@ -893,13 +869,9 @@ async def async_main():
 
         async def get_redirect_uri_authenticate(set_session_value, redirect_uri_final):
             scheme = URL(redirect_uri_final).scheme
-            sso_state = await set_redirect_uri_final(
-                set_session_value, redirect_uri_final
-            )
+            sso_state = await set_redirect_uri_final(set_session_value, redirect_uri_final)
 
-            redirect_uri_callback = urllib.parse.quote(
-                get_redirect_uri_callback(scheme), safe=''
-            )
+            redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(scheme), safe='')
             return (
                 f'{sso_base_url}{auth_path}?'
                 f'scope={scope}&state={sso_state}&'
@@ -920,18 +892,14 @@ async def async_main():
 
         async def set_redirect_uri_final(set_session_value, redirect_uri_final):
             session_key = secrets.token_hex(32)
-            sso_state = urllib.parse.quote(
-                f'{session_key}_{redirect_uri_final}', safe=''
-            )
+            sso_state = urllib.parse.quote(f'{session_key}_{redirect_uri_final}', safe='')
 
             await set_session_value(session_key, redirect_uri_final)
 
             return sso_state
 
         async def get_redirect_uri_final(get_session_value, sso_state):
-            session_key, _, state_redirect_url = urllib.parse.unquote(
-                sso_state
-            ).partition('_')
+            session_key, _, state_redirect_url = urllib.parse.unquote(sso_state).partition('_')
             return state_redirect_url, await get_session_value(session_key)
 
         async def redirection_to_sso(
@@ -956,9 +924,7 @@ async def async_main():
                 request.setdefault('sso_profile_headers', ())
                 return await handler(request)
 
-            get_session_value, set_session_value, with_new_session_cookie, _ = request[
-                SESSION_KEY
-            ]
+            get_session_value, set_session_value, with_new_session_cookie, _ = request[SESSION_KEY]
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
@@ -992,15 +958,11 @@ async def async_main():
                         'code': code,
                         'client_id': sso_client_id,
                         'client_secret': sso_client_secret,
-                        'redirect_uri': get_redirect_uri_callback(
-                            request_scheme(request)
-                        ),
+                        'redirect_uri': get_redirect_uri_callback(request_scheme(request)),
                     },
                 ) as sso_response:
                     sso_response_json = await sso_response.json()
-                await set_session_value(
-                    session_token_key, sso_response_json['access_token']
-                )
+                await set_session_value(session_token_key, sso_response_json['access_token'])
                 return await with_new_session_cookie(
                     web.Response(
                         status=302,
@@ -1009,10 +971,8 @@ async def async_main():
                 )
 
             # Get profile from Redis cache to avoid calling SSO on every request
-            redis_profile_key = (
-                f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode(
-                    'ascii'
-                )
+            redis_profile_key = f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode(
+                'ascii'
             )
             with await redis_pool as conn:
                 me_profile_raw = await conn.execute('GET', redis_profile_key)
@@ -1052,9 +1012,7 @@ async def async_main():
                 f'{sso_base_url}{me_path}',
                 headers={'Authorization': f'Bearer {token}'},
             ) as me_response:
-                me_profile_full = (
-                    await me_response.json() if me_response.status == 200 else None
-                )
+                me_profile_full = await me_response.json() if me_response.status == 200 else None
 
             if not me_profile_full:
                 return await redirection_to_sso(
@@ -1095,9 +1053,7 @@ async def async_main():
 
             basic_auth_prefix = 'Basic '
             auth_value = (
-                request.headers['Authorization'][len(basic_auth_prefix) :]
-                .strip()
-                .encode('ascii')
+                request.headers['Authorization'][len(basic_auth_prefix) :].strip().encode('ascii')
             )
             required_auth_value = base64.b64encode(
                 f'{basic_auth_user}:{basic_auth_password}'.encode('ascii')
@@ -1185,8 +1141,7 @@ async def async_main():
 
             peer_ip, _ = get_peer_ip(request)
             peer_ip_in_whitelist = any(
-                ipaddress.IPv4Address(peer_ip)
-                in ipaddress.IPv4Network(address_or_subnet)
+                ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
                 for address_or_subnet in application_ip_whitelist
             )
 

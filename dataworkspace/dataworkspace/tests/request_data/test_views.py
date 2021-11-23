@@ -42,15 +42,11 @@ class TestRequestDataWhoAreYou:
         doc = html.fromstring(resp.content.decode(resp.charset))
 
         if role_type == '':
-            assert len(doc.xpath('//input[@type="radio" and not(@checked)]')) == len(
-                RoleType
-            )
+            assert len(doc.xpath('//input[@type="radio" and not(@checked)]')) == len(RoleType)
 
         else:
             label = RoleType(dr.requester_role).label
-            element = doc.xpath(
-                f'//input[@id = //label[contains(text(), "{label}")]/@for]'
-            )[0]
+            element = doc.xpath(f'//input[@id = //label[contains(text(), "{label}")]/@for]')[0]
             assert element.checked is True
             assert len(doc.xpath('//input[@type="radio" and not(@checked)]')) == (
                 len(RoleType) - 1
@@ -60,17 +56,13 @@ class TestRequestDataWhoAreYou:
 class TestRequestDataOwnerOrManager:
     def test_page_available(self, client):
         dr = DataRequestFactory.create()
-        resp = client.get(
-            reverse('request-data:owner-or-manager', kwargs={"pk": dr.pk})
-        )
+        resp = client.get(reverse('request-data:owner-or-manager', kwargs={"pk": dr.pk}))
         assert resp.status_code == 200
 
     @pytest.mark.parametrize('text', ['', 'Mr Blobby'])
     def test_page_prefills_existing_data(self, client, text):
         dr = DataRequestFactory.create(name_of_owner_or_manager=text)
-        resp = client.get(
-            reverse('request-data:owner-or-manager', kwargs={"pk": dr.pk})
-        )
+        resp = client.get(reverse('request-data:owner-or-manager', kwargs={"pk": dr.pk}))
 
         doc = html.fromstring(resp.content.decode(resp.charset))
 
@@ -120,17 +112,13 @@ class TestRequestDataPurpose:
 class TestRequestDataLocation:
     def test_page_available(self, client):
         dr = DataRequestFactory.create()
-        resp = client.get(
-            reverse('request-data:location-of-data', kwargs={"pk": dr.pk})
-        )
+        resp = client.get(reverse('request-data:location-of-data', kwargs={"pk": dr.pk}))
         assert resp.status_code == 200
 
     @pytest.mark.parametrize('text', ['', 'in this very easy to access API'])
     def test_page_prefills_existing_data(self, client, text):
         dr = DataRequestFactory.create(data_location=text)
-        resp = client.get(
-            reverse('request-data:location-of-data', kwargs={"pk": dr.pk})
-        )
+        resp = client.get(reverse('request-data:location-of-data', kwargs={"pk": dr.pk}))
 
         doc = html.fromstring(resp.content.decode(resp.charset))
 
@@ -144,19 +132,13 @@ class TestRequestDataLocation:
 class TestRequestDataSecurityClassification:
     def test_page_available(self, client):
         dr = DataRequestFactory.create()
-        resp = client.get(
-            reverse('request-data:security-classification', kwargs={"pk": dr.pk})
-        )
+        resp = client.get(reverse('request-data:security-classification', kwargs={"pk": dr.pk}))
         assert resp.status_code == 200
 
-    @pytest.mark.parametrize(
-        'security_classification', ['', *SecurityClassificationType.values]
-    )
+    @pytest.mark.parametrize('security_classification', ['', *SecurityClassificationType.values])
     def test_page_prefills_existing_data(self, client, security_classification):
         dr = DataRequestFactory.create(security_classification=security_classification)
-        resp = client.get(
-            reverse('request-data:security-classification', kwargs={"pk": dr.pk})
-        )
+        resp = client.get(reverse('request-data:security-classification', kwargs={"pk": dr.pk}))
 
         doc = html.fromstring(resp.content.decode(resp.charset))
 
@@ -167,9 +149,7 @@ class TestRequestDataSecurityClassification:
 
         else:
             label = SecurityClassificationType(dr.security_classification).label
-            element = doc.xpath(
-                f'//input[@id = //label[contains(text(), "{label}")]/@for]'
-            )[0]
+            element = doc.xpath(f'//input[@id = //label[contains(text(), "{label}")]/@for]')[0]
             assert element.checked is True
             assert len(doc.xpath('//input[@type="radio" and not(@checked)]')) == (
                 len(SecurityClassificationType) - 1
@@ -194,9 +174,7 @@ class TestRequestDataCheckAnswers:
         assert dr.data_location in body
         assert dr.get_security_classification_display() in body
 
-    def test_page_prefills_existing_data_for_someone_else_with_alternative_name(
-        self, client
-    ):
+    def test_page_prefills_existing_data_for_someone_else_with_alternative_name(self, client):
         dr = DataRequestFactory.create(requester_role=RoleType.other)
         resp = client.get(reverse('request-data:check-answers', kwargs={"pk": dr.pk}))
 
@@ -240,9 +218,7 @@ class TestRequestDataCheckAnswers:
         resp = client.post(reverse('request-data:check-answers', kwargs={"pk": dr.pk}))
 
         assert resp.status_code == 302
-        assert resp.url == reverse(
-            'request-data:confirmation-page', kwargs={"pk": dr.pk}
-        )
+        assert resp.url == reverse('request-data:confirmation-page', kwargs={"pk": dr.pk})
         assert create_support_request_mock.call_count == 0
 
     @mock.patch('dataworkspace.apps.request_data.views.create_support_request')
@@ -255,26 +231,18 @@ class TestRequestDataCheckAnswers:
         resp = client.post(reverse('request-data:check-answers', kwargs={"pk": dr.pk}))
 
         assert resp.status_code == 302
-        assert resp.url == reverse(
-            'request-data:confirmation-page', kwargs={"pk": dr.pk}
-        )
+        assert resp.url == reverse('request-data:confirmation-page', kwargs={"pk": dr.pk})
         assert create_support_request_mock.call_count == 1
 
 
 class TestRequestDataConfirmationPage:
     def test_page_available(self, client):
         dr = DataRequestFactory.create()
-        resp = client.get(
-            reverse('request-data:confirmation-page', kwargs={"pk": dr.pk})
-        )
+        resp = client.get(reverse('request-data:confirmation-page', kwargs={"pk": dr.pk}))
         assert resp.status_code == 200
 
     def test_shows_zendesk_ticket_id(self, client):
-        dr = DataRequestFactory.create(
-            zendesk_ticket_id='123456789-IM-A-REFERENCE-987654321'
-        )
-        resp = client.get(
-            reverse('request-data:confirmation-page', kwargs={"pk": dr.pk})
-        )
+        dr = DataRequestFactory.create(zendesk_ticket_id='123456789-IM-A-REFERENCE-987654321')
+        resp = client.get(reverse('request-data:confirmation-page', kwargs={"pk": dr.pk}))
         assert resp.status_code == 200
         assert '123456789-IM-A-REFERENCE-987654321' in resp.content.decode(resp.charset)

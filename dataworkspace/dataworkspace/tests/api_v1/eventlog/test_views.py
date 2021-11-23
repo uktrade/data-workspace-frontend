@@ -16,9 +16,7 @@ from dataworkspace.tests.factories import EventLogFactory, VisualisationLinkFact
 class TestEventLogAPIView(BaseAPIViewTest):
     url = reverse('api-v1:eventlog:events')
     factory = factories.DatasetLinkDownloadEventFactory
-    pagination_class = (
-        'dataworkspace.apps.api_v1.pagination.TimestampCursorPagination.page_size'
-    )
+    pagination_class = 'dataworkspace.apps.api_v1.pagination.TimestampCursorPagination.page_size'
 
     def expected_response(self, eventlog):
         return {
@@ -70,13 +68,9 @@ class TestEventLogAPIView(BaseAPIViewTest):
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json()['results'][0]['event_type'] == 'Visualisation approved'
-        assert response.json()['results'][0]['related_object']['id'] == str(
-            approval_0.id
-        )
+        assert response.json()['results'][0]['related_object']['id'] == str(approval_0.id)
         assert response.json()['results'][1]['event_type'] == 'Visualisation approved'
-        assert response.json()['results'][1]['related_object']['id'] == str(
-            approval_1.id
-        )
+        assert response.json()['results'][1]['related_object']['id'] == str(approval_1.id)
 
     def test_visualisation_view(self, unauthenticated_client):
         vis_link = VisualisationLinkFactory.create(
@@ -91,12 +85,7 @@ class TestEventLogAPIView(BaseAPIViewTest):
         response = unauthenticated_client.get(self.url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert (
-            response.json()['results'][0]['event_type']
-            == 'View AWS QuickSight visualisation'
-        )
+        assert response.json()['results'][0]['event_type'] == 'View AWS QuickSight visualisation'
         assert response.json()['results'][0]['related_object']['id'] == str(vis_link.id)
-        assert response.json()['results'][0]['related_object']['name'] == str(
-            vis_link.name
-        )
+        assert response.json()['results'][0]['related_object']['name'] == str(vis_link.name)
         assert response.json()['results'][0]['related_object']['type'] == 'QUICKSIGHT'

@@ -26,9 +26,7 @@ class _DatasetMatch:
         return sum(m.count for m in self.table_matches)
 
 
-def group_tables_by_master_dataset(
-    matches: List[_TableMatchResult], user
-) -> List[_DatasetMatch]:
+def group_tables_by_master_dataset(matches: List[_TableMatchResult], user) -> List[_DatasetMatch]:
     if matches == []:
         return []
 
@@ -78,9 +76,9 @@ def _enrich_and_suppress_matches(request, matches: Iterable[_TableMatchResult]):
 
     queryset = SourceTable.objects.filter(match_table_filter)
 
-    no_access_filter = Q(
-        dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
-    ) & ~Q(dataset__datasetuserpermission__user=request.user)
+    no_access_filter = Q(dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION) & ~Q(
+        dataset__datasetuserpermission__user=request.user
+    )
 
     # Pull out just the information we need
     tables_with_access_info = queryset.values(
@@ -206,15 +204,7 @@ def build_grid_filters(column_config, params):
 
             elif filter_data['type'] in ['lessThan', 'greaterThan']:
                 es_filters.append(
-                    {
-                        'range': {
-                            field: {
-                                'lt'
-                                if filter_data['type'] == 'lessThan'
-                                else 'gt': term
-                            }
-                        }
-                    }
+                    {'range': {field: {'lt' if filter_data['type'] == 'lessThan' else 'gt': term}}}
                 )
 
             elif filter_data['type'] == 'inRange':

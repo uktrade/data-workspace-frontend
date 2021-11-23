@@ -17,9 +17,7 @@ def test_subscription_appears_when_flag_is_active(client):
 
     response = client.get(ds.get_absolute_url())
     assert response.status_code == 200
-    assert 'Get updated when this dataset changes' in response.content.decode(
-        response.charset
-    )
+    assert 'Get updated when this dataset changes' in response.content.decode(response.charset)
 
 
 @pytest.mark.django_db
@@ -33,6 +31,4 @@ def test_subscription_hidden_when_flag_is_false(client):
 
     response = client.get(ds.get_absolute_url())
     assert response.status_code == 200
-    assert 'Get updated when this dataset changes' not in response.content.decode(
-        response.charset
-    )
+    assert 'Get updated when this dataset changes' not in response.content.decode(response.charset)

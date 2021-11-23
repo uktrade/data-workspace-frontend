@@ -7,12 +7,8 @@ from django.db import migrations, transaction
 def update_linked_reference_datasets(apps, schema_editor):
     ReferenceDatasetField = apps.get_model('datasets', 'ReferenceDatasetField')
     for field in ReferenceDatasetField.objects.filter(data_type=8):
-        linked_identifier_field = field.linked_reference_dataset.fields.get(
-            is_identifier=True
-        )
-        linked_display_name_field = field.linked_reference_dataset.fields.get(
-            is_display_name=True
-        )
+        linked_identifier_field = field.linked_reference_dataset.fields.get(is_identifier=True)
+        linked_display_name_field = field.linked_reference_dataset.fields.get(is_display_name=True)
 
         # This will be used as the prefix in the new field name
         original_field_name = field.name

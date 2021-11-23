@@ -54,9 +54,7 @@ class RequestDataWhoAreYou(UpdateView):
                 and not self.object.name_of_owner_or_manager
             ):
                 return (
-                    reverse(
-                        'request-data:owner-or-manager', kwargs={"pk": self.object.pk}
-                    )
+                    reverse('request-data:owner-or-manager', kwargs={"pk": self.object.pk})
                     + '?change'
                 )
 
@@ -147,9 +145,7 @@ class RequestDataPurpose(UpdateView):
         if 'change' in self.request.GET:
             return reverse('request-data:check-answers', kwargs={"pk": self.object.pk})
 
-        return reverse(
-            'request-data:security-classification', kwargs={"pk": self.object.pk}
-        )
+        return reverse('request-data:security-classification', kwargs={"pk": self.object.pk})
 
 
 class RequestDataSecurityClassification(UpdateView):

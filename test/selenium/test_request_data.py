@@ -80,15 +80,11 @@ class TestRequestData:
         # Answer the "who are you" question - we aren't IAM/IAO so will need to say who one of them is in next
         # question.
         who_are_you_page.select_role(RoleType.other)
-        owner_or_manager_page = who_are_you_page.click_continue(
-            RequestDataOwnerOrManagerPage
-        )
+        owner_or_manager_page = who_are_you_page.click_continue(RequestDataOwnerOrManagerPage)
 
         # Answer the "name of IAM/IAO" question
         owner_or_manager_page.enter_name("Bobby Tables")
-        description_page = owner_or_manager_page.click_continue(
-            RequestDataDescriptionPage
-        )
+        description_page = owner_or_manager_page.click_continue(RequestDataDescriptionPage)
 
         # Answer the "describe the data" question
         description_page.enter_description("It’s data about DIT")
@@ -106,9 +102,7 @@ class TestRequestData:
         security_classification_page.select_security_classification(
             SecurityClassificationType.personal
         )
-        location_page = security_classification_page.click_continue(
-            RequestDataLocationPage
-        )
+        location_page = security_classification_page.click_continue(RequestDataLocationPage)
 
         # Answer the "location of data" question
         location_page.enter_location("It’s in this very easy to access API")
@@ -136,8 +130,6 @@ class TestRequestData:
             in ticket_data['description']
         )
         assert "It’s in this very easy to access API" in ticket_data['description']
-        assert (
-            "Completely public, open data with no licence" in ticket_data['description']
-        )
+        assert "Completely public, open data with no licence" in ticket_data['description']
         assert "request-data@test.com" in ticket_data['description']
         assert "Iwantsome Lovelydata" in ticket_data['description']

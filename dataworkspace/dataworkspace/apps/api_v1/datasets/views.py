@@ -139,9 +139,7 @@ def _get_streaming_http_response(streaming_class, request, primary_key, columns,
             )
             queue = [to_send_bytes] if to_send_bytes else []
             num_bytes_queued = len(to_send_bytes)
-            num_bytes_sent += (
-                len(chunk) + _len_chunk_header(len(chunk)) + len_chunk_footer
-            )
+            num_bytes_sent += len(chunk) + _len_chunk_header(len(chunk)) + len_chunk_footer
             yield chunk
 
     def yield_data(columns, rows, base_url):
@@ -157,13 +155,9 @@ def _get_streaming_http_response(streaming_class, request, primary_key, columns,
             if num_bytes_sent_and_queued > num_bytes_max:
                 search_after = [columns.index(k) for k in primary_key]
                 search_after = [row[i] for i in search_after]
-                search_after = '&'.join(
-                    ['$searchAfter={}'.format(k) for k in search_after]
-                )
+                search_after = '&'.join(['$searchAfter={}'.format(k) for k in search_after])
                 next_url = '{}?{}'.format(base_url, search_after)
-                yield from yield_chunks(
-                    b'], "next": "' + next_url.encode('utf-8') + b'"}'
-                )
+                yield from yield_chunks(b'], "next": "' + next_url.encode('utf-8') + b'"}')
                 break
         else:
             yield from yield_chunks(b'], "next": null}')
@@ -198,9 +192,7 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
     with psycopg2.connect(
         database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
     ) as connection:
-        primary_key = _get_dataset_primary_key(
-            connection, source_table.schema, source_table.table
-        )
+        primary_key = _get_dataset_primary_key(connection, source_table.schema, source_table.table)
 
         if not primary_key:
             raise ValueError(
@@ -234,9 +226,7 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
                 psycopg2.sql.Identifier(source_table.schema),
                 psycopg2.sql.Identifier(source_table.table),
                 psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
-                psycopg2.sql.SQL(',').join(
-                    psycopg2.sql.Placeholder() * len(search_after)
-                ),
+                psycopg2.sql.SQL(',').join(psycopg2.sql.Placeholder() * len(search_after)),
                 psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
             )
 
@@ -285,9 +275,7 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
                         else None
                     )
                 else:
-                    values[field_names.index(field.name)] = getattr(
-                        record, field.column_name
-                    )
+                    values[field_names.index(field.name)] = getattr(record, field.column_name)
             yield values
 
     field_names = ref_dataset.export_field_names

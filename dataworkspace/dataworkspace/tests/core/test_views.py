@@ -66,8 +66,7 @@ class TestSupportViews(BaseTestCase):
         )
         self.assertContains(
             response,
-            'Your request has been received. Your reference is: '
-            '<strong>999</strong>.',
+            'Your request has been received. Your reference is: ' '<strong>999</strong>.',
             html=True,
         )
         mock_create_request.assert_called_once()
@@ -85,8 +84,7 @@ class TestSupportViews(BaseTestCase):
         )
         self.assertContains(
             response,
-            'Your request has been received. Your reference is: '
-            '<strong>999</strong>.',
+            'Your request has been received. Your reference is: ' '<strong>999</strong>.',
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -107,8 +105,7 @@ class TestSupportViews(BaseTestCase):
         )
         self.assertContains(
             response,
-            'Your request has been received. Your reference is: '
-            '<strong>999</strong>.',
+            'Your request has been received. Your reference is: ' '<strong>999</strong>.',
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -116,9 +113,7 @@ class TestSupportViews(BaseTestCase):
         )
 
     def test_tech_support_page(self):
-        response = self._authenticated_get(
-            reverse('technical-support') + '?email=a@b.com'
-        )
+        response = self._authenticated_get(reverse('technical-support') + '?email=a@b.com')
         assert response.status_code == 200
         self.assertContains(response, 'What were you trying to do?')
         self.assertContains(response, 'What happened?')
@@ -156,8 +151,7 @@ class TestSupportViews(BaseTestCase):
         assert response.status_code == 200
         self.assertContains(
             response,
-            'Your request has been received. Your reference is: '
-            '<strong>999</strong>.',
+            'Your request has been received. Your reference is: ' '<strong>999</strong>.',
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -174,15 +168,10 @@ def test_csp_on_files_endpoint_includes_s3(client):
     assert response.status_code == 200
 
     policies = get_response_csp_as_set(response)
-    assert (
-        "connect-src dataworkspace.test:8000 https://s3.eu-west-2.amazonaws.com"
-        in policies
-    )
+    assert "connect-src dataworkspace.test:8000 https://s3.eu-west-2.amazonaws.com" in policies
 
 
-@pytest.mark.parametrize(
-    "request_client", ('client', 'staff_client'), indirect=["request_client"]
-)
+@pytest.mark.parametrize("request_client", ('client', 'staff_client'), indirect=["request_client"])
 def test_header_links(request_client):
     response = request_client.get(reverse("root"))
 
@@ -207,9 +196,7 @@ def test_header_links(request_client):
     assert link_labels == expected_links
 
 
-@pytest.mark.parametrize(
-    "request_client", ("client", "staff_client"), indirect=["request_client"]
-)
+@pytest.mark.parametrize("request_client", ("client", "staff_client"), indirect=["request_client"])
 def test_footer_links(request_client):
     response = request_client.get(reverse("root"))
 
@@ -348,9 +335,7 @@ def test_media_serve_unauthenticated(mocker, unauthenticated_client):
             operation_name='head_object',
         ),
     ]
-    response = unauthenticated_client.get(
-        reverse('uploaded-media') + '?path=a/path.txt'
-    )
+    response = unauthenticated_client.get(reverse('uploaded-media') + '?path=a/path.txt')
     assert response.status_code == 403
 
 

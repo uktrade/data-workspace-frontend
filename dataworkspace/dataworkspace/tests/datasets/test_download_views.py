@@ -35,10 +35,7 @@ def test_master_dataset_with_access_preview(access_type, client, dataset_db):
     response = client.get(ds.get_absolute_url())
 
     assert response.status_code == 200
-    assert (
-        f'href="/datasets/{ds.id}/table/{source_table.id}/preview"'
-        in response.rendered_content
-    )
+    assert f'href="/datasets/{ds.id}/table/{source_table.id}/preview"' in response.rendered_content
     assert 'Preview' in response.rendered_content
 
 
@@ -83,9 +80,7 @@ def test_query_data_cut_preview_staff_user(access_type, staff_client, dataset_db
     response = staff_client.get(ds.get_absolute_url())
 
     # non reviewed query should have a preview link
-    assert (
-        f'href="/datasets/{ds.id}/query/{cut.id}/preview"' in response.rendered_content
-    )
+    assert f'href="/datasets/{ds.id}/query/{cut.id}/preview"' in response.rendered_content
     assert 'Preview' in response.rendered_content
 
 
@@ -103,10 +98,7 @@ def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
     response = staff_client.get(ds.get_absolute_url())
 
     # staff user with no access should not have a preview link
-    assert (
-        f'href="/datasets/{ds.id}/query/{cut.id}/preview"'
-        not in response.rendered_content
-    )
+    assert f'href="/datasets/{ds.id}/query/{cut.id}/preview"' not in response.rendered_content
     assert 'Preview' not in response.rendered_content
 
 
@@ -284,14 +276,8 @@ class TestDatasetViews:
             },
         ]
         assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
-        )
-        assert (
-            ReferenceDataset.objects.get(pk=rds.id).number_of_downloads
-            == download_count + 1
-        )
+        assert EventLog.objects.latest().event_type == EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
+        assert ReferenceDataset.objects.get(pk=rds.id).number_of_downloads == download_count + 1
 
     @pytest.mark.parametrize(
         'request_client,published',
@@ -383,20 +369,12 @@ class TestDatasetViews:
             % (str(rec1.auto_uuid).encode(), str(rec2.auto_uuid).encode())
         )
         assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
-        )
-        assert (
-            ReferenceDataset.objects.get(pk=rds.id).number_of_downloads
-            == download_count + 1
-        )
+        assert EventLog.objects.latest().event_type == EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
+        assert ReferenceDataset.objects.get(pk=rds.id).number_of_downloads == download_count + 1
 
     def test_reference_dataset_unknown_download(self, client):
         rds = factories.ReferenceDatasetFactory.create(table_name='test_csv')
-        factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds, is_identifier=True
-        )
+        factories.ReferenceDatasetFieldFactory.create(reference_dataset=rds, is_identifier=True)
         log_count = EventLog.objects.count()
         download_count = rds.number_of_downloads
         response = client.get(
@@ -407,10 +385,7 @@ class TestDatasetViews:
         )
         assert response.status_code == 404
         assert EventLog.objects.count() == log_count
-        assert (
-            ReferenceDataset.objects.get(pk=rds.id).number_of_downloads
-            == download_count
-        )
+        assert ReferenceDataset.objects.get(pk=rds.id).number_of_downloads == download_count
 
     @override_settings(REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS=1)
     @pytest.mark.django_db
@@ -509,13 +484,8 @@ class TestSourceLinkDownloadView:
         )
         assert response.status_code == 302
         assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
-        )
-        assert (
-            DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
-        )
+        assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
+        assert DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
 
     @pytest.mark.parametrize(
         'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
@@ -527,9 +497,7 @@ class TestSourceLinkDownloadView:
     )
     @pytest.mark.django_db
     @mock.patch('dataworkspace.apps.datasets.views.boto3.client')
-    def test_download_local_file(
-        self, mock_client, request_client, published, access_type
-    ):
+    def test_download_local_file(self, mock_client, request_client, published, access_type):
         dataset = factories.DataSetFactory.create(
             published=published, user_access_type=access_type
         )
@@ -544,9 +512,7 @@ class TestSourceLinkDownloadView:
         mock_client().get_object.return_value = {
             'ContentType': 'text/plain',
             'ContentLength': len(b'This is a test file'),
-            'Body': StreamingBody(
-                io.BytesIO(b'This is a test file'), len(b'This is a test file')
-            ),
+            'Body': StreamingBody(io.BytesIO(b'This is a test file'), len(b'This is a test file')),
         }
         response = request_client.get(
             reverse(
@@ -561,20 +527,13 @@ class TestSourceLinkDownloadView:
             Bucket=settings.AWS_UPLOADS_BUCKET, Key=link.url
         )
         assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
-        )
-        assert (
-            DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
-        )
+        assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
+        assert DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
 
 
 class TestSourceViewDownloadView:
     def test_forbidden_dataset(self, client):
-        dataset = factories.DataSetFactory(
-            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
-        )
+        dataset = factories.DataSetFactory(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
         source_view = factories.SourceViewFactory(dataset=dataset)
         log_count = EventLog.objects.count()
         download_count = dataset.number_of_downloads
@@ -619,9 +578,7 @@ class TestSourceViewDownloadView:
                 '''
             )
 
-        dataset = factories.DataSetFactory(
-            user_access_type=access_type, published=published
-        )
+        dataset = factories.DataSetFactory(user_access_type=access_type, published=published)
         source_view = factories.SourceViewFactory(
             dataset=dataset,
             database=factories.DatabaseFactory(memorable_name='my_database'),
@@ -637,13 +594,8 @@ class TestSourceViewDownloadView:
             == b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n'
         )
         assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD
-        )
-        assert (
-            DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
-        )
+        assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD
+        assert DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
 
     @pytest.mark.parametrize(
         'request_client,published',
@@ -668,9 +620,7 @@ class TestSourceViewDownloadView:
                 SELECT * FROM materialized_test_table;
                 '''
             )
-        dataset = factories.DataSetFactory(
-            user_access_type=access_type, published=published
-        )
+        dataset = factories.DataSetFactory(user_access_type=access_type, published=published)
         source_view = factories.SourceViewFactory(
             dataset=dataset,
             database=factories.DatabaseFactory(memorable_name='my_database'),
@@ -686,13 +636,8 @@ class TestSourceViewDownloadView:
             == b'"field2","field1"\r\n1,"record1"\r\n2,"record2"\r\n"Number of rows: 2"\r\n'
         )
         assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD
-        )
-        assert (
-            DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
-        )
+        assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD
+        assert DataSet.objects.get(pk=dataset.id).number_of_downloads == download_count + 1
 
 
 class TestCustomQueryDownloadView:
@@ -702,9 +647,7 @@ class TestCustomQueryDownloadView:
     def _get_database(self):
         return factories.DatabaseFactory(memorable_name='my_database')
 
-    def _create_query(
-        self, sql, reviewed=True, published=True, data_grid_enabled=False
-    ):
+    def _create_query(self, sql, reviewed=True, published=True, data_grid_enabled=False):
         with psycopg2.connect(self._get_dsn()) as conn, conn.cursor() as cursor:
             cursor.execute(
                 '''
@@ -731,9 +674,7 @@ class TestCustomQueryDownloadView:
         )
 
     def test_forbidden_dataset(self, client):
-        dataset = factories.DataSetFactory(
-            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
-        )
+        dataset = factories.DataSetFactory(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
         query = factories.CustomDatasetQueryFactory(
             dataset=dataset,
             database=self._get_database(),
@@ -776,15 +717,11 @@ class TestCustomQueryDownloadView:
             list(client.get(query.get_absolute_url()).streaming_content)
 
         with psycopg2.connect(self._get_dsn()) as conn, conn.cursor() as cursor:
-            cursor.execute(
-                'SELECT COUNT(*) FROM custom_query_test WHERE name=\'updated\''
-            )
+            cursor.execute('SELECT COUNT(*) FROM custom_query_test WHERE name=\'updated\'')
             assert cursor.fetchone()[0] == 0
 
         # Test insert record
-        query = self._create_query(
-            'INSERT INTO custom_query_test (id, name) VALUES(4, \'added\')'
-        )
+        query = self._create_query('INSERT INTO custom_query_test (id, name) VALUES(4, \'added\')')
         with pytest.raises(Exception):
             list(client.get(query.get_absolute_url()).streaming_content)
 
@@ -811,14 +748,8 @@ class TestCustomQueryDownloadView:
             b'3,"the last record",""\r\n"Number of rows: 2"\r\n'
         )
         assert EventLog.objects.count() == log_count + 1
-        assert (
-            EventLog.objects.latest().event_type
-            == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
-        )
-        assert (
-            DataSet.objects.get(pk=query.dataset.id).number_of_downloads
-            == download_count + 1
-        )
+        assert EventLog.objects.latest().event_type == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
+        assert DataSet.objects.get(pk=query.dataset.id).number_of_downloads == download_count + 1
 
     @pytest.mark.parametrize(
         'request_client,published',
@@ -854,14 +785,9 @@ class TestCustomQueryDownloadView:
 
         latest_events = EventLog.objects.all().order_by('-id')[:2]
 
-        assert (
-            latest_events[0].event_type
-            == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE
-        )
+        assert latest_events[0].event_type == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE
 
-        assert (
-            latest_events[1].event_type == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
-        )
+        assert latest_events[1].event_type == EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
 
     @pytest.mark.parametrize(
         "request_client, reviewed, status",
@@ -874,9 +800,7 @@ class TestCustomQueryDownloadView:
         indirect=["request_client"],
     )
     @pytest.mark.django_db
-    def test_only_superuser_can_download_unreviewed_query(
-        self, request_client, reviewed, status
-    ):
+    def test_only_superuser_can_download_unreviewed_query(self, request_client, reviewed, status):
         query = self._create_query(
             'SELECT * FROM custom_query_test', published=False, reviewed=reviewed
         )

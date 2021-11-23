@@ -136,9 +136,7 @@ class TestGetSupersetCredentialsAPIView:
 
     @pytest.mark.django_db
     @mock.patch('dataworkspace.apps.api_v1.core.views.cache')
-    def test_public_user_gets_db_access(
-        self, mock_cache, unauthenticated_client, dataset_db
-    ):
+    def test_public_user_gets_db_access(self, mock_cache, unauthenticated_client, dataset_db):
         visualisation = factories.VisualisationLinkFactory(
             visualisation_type='SUPERSET',
             visualisation_catalogue_item__user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,

@@ -44,16 +44,10 @@ from dataworkspace.apps.your_files.utils import (
 
 
 def file_browser_html_view(request):
-    return (
-        file_browser_html_GET(request)
-        if request.method == 'GET'
-        else HttpResponse(status=405)
-    )
+    return file_browser_html_GET(request) if request.method == 'GET' else HttpResponse(status=405)
 
 
-@csp_update(
-    CONNECT_SRC=[settings.APPLICATION_ROOT_DOMAIN, "https://s3.eu-west-2.amazonaws.com"]
-)
+@csp_update(CONNECT_SRC=[settings.APPLICATION_ROOT_DOMAIN, "https://s3.eu-west-2.amazonaws.com"])
 def file_browser_html_GET(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
 
@@ -186,10 +180,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
             )
 
         # If table name validation failed due to a duplicate table in the db confirm overwrite
-        if (
-            errors.get('table_name')
-            and errors['table_name'][0].code == 'duplicate-table'
-        ):
+        if errors.get('table_name') and errors['table_name'][0].code == 'duplicate-table':
             params = {
                 'path': form.cleaned_data['path'],
                 'table_name': form.data['table_name'],
@@ -296,15 +287,11 @@ class BaseCreateTableTemplateView(RequiredParameterGetRequestMixin, TemplateView
     step: int
 
     def _get_query_parameters(self):
-        return {
-            param: self.request.GET.get(param) for param in self.required_parameters
-        }
+        return {param: self.request.GET.get(param) for param in self.required_parameters}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(
-            **{'steps': self.steps, 'step': self.step}, **self._get_query_parameters()
-        )
+        context.update(**{'steps': self.steps, 'step': self.step}, **self._get_query_parameters())
         return context
 
 
@@ -450,8 +437,6 @@ class CreateTableDAGStatusView(View):
 class CreateTableDAGTaskStatusView(View):
     def get(self, request, execution_date, task_id):
         try:
-            return JsonResponse(
-                {'state': get_dataflow_task_status(execution_date, task_id)}
-            )
+            return JsonResponse({'state': get_dataflow_task_status(execution_date, task_id)})
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)

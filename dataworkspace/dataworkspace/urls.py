@@ -38,9 +38,7 @@ urlpatterns = [
     path('error_404', public_error_404_html_view),
     path('error_500', public_error_500_html_view),
     path('appstream/', login_required(appstream_view), name='appstream'),
-    path(
-        'appstream-admin/', login_required(appstream_admin_view), name='appstream_admin'
-    ),
+    path('appstream-admin/', login_required(appstream_admin_view), name='appstream_admin'),
     path(
         'appstream-restart/',
         login_required(appstream_restart),
@@ -67,9 +65,7 @@ urlpatterns = [
     ),
     path(
         'catalogue/',
-        include(
-            ('dataworkspace.apps.catalogue.urls', 'catalogue'), namespace='catalogue'
-        ),
+        include(('dataworkspace.apps.catalogue.urls', 'catalogue'), namespace='catalogue'),
     ),
     path(
         'datasets/',
@@ -105,9 +101,7 @@ urlpatterns = [
         include(('dataworkspace.apps.finder.urls', 'finder'), namespace='finder'),
     ),
     path('healthcheck', healthcheck_view),  # No authentication
-    path(
-        'support-and-feedback/', login_required(SupportView.as_view()), name='support'
-    ),
+    path('support-and-feedback/', login_required(SupportView.as_view()), name='support'),
     path(
         'support/success/<str:ticket_id>',
         login_required(SupportView.as_view()),

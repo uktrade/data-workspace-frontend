@@ -138,9 +138,7 @@ class TryingToDoType(models.TextChoices):
 
 class UserSatisfactionSurvey(TimeStampedModel):
     how_satisfied = models.CharField(max_length=32, choices=HowSatisfiedType.choices)
-    trying_to_do = models.TextField(
-        null=True, blank=True, choices=TryingToDoType.choices
-    )
+    trying_to_do = models.TextField(null=True, blank=True, choices=TryingToDoType.choices)
     improve_service = models.TextField(null=True, blank=True)
 
 
@@ -158,13 +156,9 @@ class Team(TimeStampedModel):
     def __str__(self):
         return self.name
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.schema_name:
-            self.schema_name = (
-                '_team_' + re.sub('[^a-z0-9]', '_', self.name.lower())[:63]
-            )
+            self.schema_name = '_team_' + re.sub('[^a-z0-9]', '_', self.name.lower())[:63]
         super().save(
             force_insert=force_insert,
             force_update=force_update,

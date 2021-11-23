@@ -75,9 +75,7 @@ class EventLogAdmin(admin.ModelAdmin):
     def export_events(self, request, queryset):
         field_names = ['timestamp', 'user', 'event_type', 'related_object', 'extra']
         response = HttpResponse(content_type='text/csv')
-        response[
-            'Content-Disposition'
-        ] = 'attachment; filename=event-log-{}.csv'.format(
+        response['Content-Disposition'] = 'attachment; filename=event-log-{}.csv'.format(
             datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         )
         writer = csv.DictWriter(response, field_names, quoting=csv.QUOTE_NONNUMERIC)

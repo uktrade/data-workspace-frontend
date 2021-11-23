@@ -58,9 +58,7 @@ class EventLog(models.Model):
         ),
         (TYPE_TOOLS_ACCESS_REQUEST, 'Tools access request'),
     )
-    user = models.ForeignKey(
-        get_user_model(), on_delete=models.DO_NOTHING, related_name='events'
-    )
+    user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name='events')
     id = models.BigAutoField(primary_key=True)
     timestamp = models.DateTimeField(auto_now=True, db_index=True)
     event_type = models.IntegerField(choices=_TYPE_CHOICES)

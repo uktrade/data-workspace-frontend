@@ -8,9 +8,7 @@ from test.selenium.common import (  # pylint: disable=wrong-import-order
 
 
 class _BaseWorkspacePage(_BasePage):
-    def click_header_link(
-        self, label, new_page_class: Type[_PageClassType]
-    ) -> _PageClassType:
+    def click_header_link(self, label, new_page_class: Type[_PageClassType]) -> _PageClassType:
         link = self._driver.find_element_by_xpath(
             f'//a[contains(@class, "govuk-header__link") and normalize-space(text()) = "{label}"]'
         )
@@ -113,9 +111,7 @@ class RequestDataSecurityClassificationPage(_BaseWorkspacePage):
     def _url_path(self):
         return f"/request-data/{self._url_data['pk']}/security-classification"
 
-    def select_security_classification(
-        self, security_classification: SecurityClassificationType
-    ):
+    def select_security_classification(self, security_classification: SecurityClassificationType):
         element = self._get_input_field(security_classification.label)
         element.click()
 

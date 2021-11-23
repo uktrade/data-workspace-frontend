@@ -71,9 +71,7 @@ class TestExporters:
             None,
         )
 
-        res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output(
-            delim='|'
-        )
+        res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output(delim='|')
         assert res == '?column?|?column?\r\n1|2\r\n'
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
@@ -84,9 +82,7 @@ class TestExporters:
             None,
         )
 
-        res = JSONExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': None}, {'a': 'Jenét', 'b': '1'}])
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
@@ -97,9 +93,7 @@ class TestExporters:
             None,
         )
 
-        res = JSONExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': date.today()}], cls=DjangoJSONEncoder)
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
@@ -110,9 +104,7 @@ class TestExporters:
             None,
         )
 
-        res = ExcelExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res[:2] == six.b('PK')
 
     @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
@@ -123,7 +115,5 @@ class TestExporters:
             None,
         )
 
-        res = ExcelExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res[:2] == six.b('PK')

@@ -26,15 +26,9 @@ async def async_main():
         # particularly odd, since it would typically be hard coded in
         # /etc/hosts
         b'localhost': {TYPES.A: IPv4AddressExpiresAt('127.0.0.1', expires_at=0)},
-        b'1.amazon.pool.ntp.org': {
-            TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)
-        },
-        b'2.amazon.pool.ntp.org': {
-            TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)
-        },
-        b'3.amazon.pool.ntp.org': {
-            TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)
-        },
+        b'1.amazon.pool.ntp.org': {TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)},
+        b'2.amazon.pool.ntp.org': {TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)},
+        b'3.amazon.pool.ntp.org': {TYPES.A: IPv4AddressExpiresAt('169.254.169.123', expires_at=0)},
     }
 
     def get_resolver():
@@ -85,15 +79,11 @@ async def async_main():
         else:
             status = '200 OK'
 
-        writer.write(
-            b'HTTP/1.1 %b \r\ncontent-length: 0\r\n\r\n' % status.encode('utf8')
-        )
+        writer.write(b'HTTP/1.1 %b \r\ncontent-length: 0\r\n\r\n' % status.encode('utf8'))
         await writer.drain()
         writer.close()
 
-    healthcheck_task = await create_task(
-        asyncio.start_server(handle_client, '0.0.0.0', 8888)
-    )
+    healthcheck_task = await create_task(asyncio.start_server(handle_client, '0.0.0.0', 8888))
     logger.info('[Healthcheck] server started')
 
     loop = asyncio.get_running_loop()

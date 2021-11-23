@@ -7,12 +7,8 @@ import django.db.models.deletion
 
 
 def copy_permissions(apps, schema_editor):
-    VisualisationCatalogueItem = apps.get_model(
-        'datasets', 'VisualisationCatalogueItem'
-    )
-    VisualisationUserPermission = apps.get_model(
-        'datasets', 'VisualisationUserPermission'
-    )
+    VisualisationCatalogueItem = apps.get_model('datasets', 'VisualisationCatalogueItem')
+    VisualisationUserPermission = apps.get_model('datasets', 'VisualisationUserPermission')
 
     visualisations = VisualisationCatalogueItem.objects.all()
     for visualisation in visualisations:

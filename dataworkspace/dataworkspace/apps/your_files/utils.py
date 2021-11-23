@@ -36,9 +36,7 @@ def get_s3_csv_column_types(path):
     # could be incredibly long and possibly even crash the server?
     # Django's default permitted size for a request body is 2.5MiB, so reading 100KiB here doesn't feel like an
     # additional vector for denial-of-service.
-    file = client.get_object(
-        Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
-    )
+    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
 
     fh = StringIO(file['Body'].read().decode('utf-8-sig'))
     rows = list(csv.reader(fh))

@@ -38,9 +38,7 @@ def flush_database(connection):
 
 class TestAPIDatasetView(TestCase):
     def flush_database(self):
-        with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA[self.memorable_name])
-        ) as conn:
+        with psycopg2.connect(database_dsn(settings.DATABASES_DATA[self.memorable_name])) as conn:
             flush_database(conn)
 
     def setUp(self):
@@ -140,9 +138,7 @@ class TestAPIDatasetView(TestCase):
         database = Database.objects.get_or_create(memorable_name=memorable_name)[0]
         data_grouping = DataGrouping.objects.get_or_create()[0]
         dataset = DataSet.objects.get_or_create(grouping=data_grouping)[0]
-        _ = SourceTable.objects.get_or_create(
-            dataset=dataset, database=database, table=table
-        )[0]
+        _ = SourceTable.objects.get_or_create(dataset=dataset, database=database, table=table)[0]
         view_source_table = SourceTable.objects.get_or_create(
             dataset=dataset, database=database, table=f"view_{table}"
         )[0]
@@ -267,9 +263,7 @@ class TestAPIReferenceDatasetView(TestCase):
     def test_route(self):
         url = '/api/v1/reference-dataset/testgroup/reference/test'
         resolver = resolve(url)
-        self.assertEqual(
-            resolver.view_name, 'api-v1:reference-dataset:api-reference-dataset-view'
-        )
+        self.assertEqual(resolver.view_name, 'api-v1:reference-dataset:api-reference-dataset-view')
 
     def test_get_data_linked_reference_table(self):
         group = factories.DataGroupingFactory.create()
@@ -282,9 +276,7 @@ class TestAPIReferenceDatasetView(TestCase):
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_rds, name='name', data_type=1
         )
-        rds = factories.ReferenceDatasetFactory.create(
-            group=group, table_name='test_get_ref_data'
-        )
+        rds = factories.ReferenceDatasetFactory.create(group=group, table_name='test_get_ref_data')
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds, name='id', data_type=2, is_identifier=True
         )
@@ -429,9 +421,7 @@ class TestAPIReferenceDatasetView(TestCase):
 class TestCatalogueItemsAPIView(BaseAPIViewTest):
     url = reverse('api-v1:dataset:catalogue-items')
     factory = factories.DataSetFactory
-    pagination_class = (
-        'dataworkspace.apps.api_v1.datasets.views.PageNumberPagination.page_size'
-    )
+    pagination_class = 'dataworkspace.apps.api_v1.datasets.views.PageNumberPagination.page_size'
 
     def expected_response(
         self,
@@ -442,9 +432,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         eligibility_criteria=None,
     ):
         return {
-            'id': str(dataset.uuid)
-            if isinstance(dataset, ReferenceDataset)
-            else str(dataset.id),
+            'id': str(dataset.uuid) if isinstance(dataset, ReferenceDataset) else str(dataset.id),
             'name': dataset.name,
             'short_description': dataset.short_description,
             'description': dataset.description or None,
@@ -464,14 +452,10 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             else None,
             'licence': dataset.licence or None,
             'purpose': purpose,
-            'source_tags': [t.name for t in dataset.tags.all()]
-            if dataset.tags.all()
-            else None,
+            'source_tags': [t.name for t in dataset.tags.all()] if dataset.tags.all() else None,
             'personal_data': personal_data,
             'retention_policy': retention_policy,
-            'eligibility_criteria': list(eligibility_criteria)
-            if eligibility_criteria
-            else None,
+            'eligibility_criteria': list(eligibility_criteria) if eligibility_criteria else None,
             'source_tables': [
                 {'id': str(x.id), 'name': x.name, 'schema': x.schema, 'table': x.table}
                 for x in dataset.sourcetable_set.all()
@@ -498,12 +482,8 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             personal_data='personal',
             retention_policy='retention',
         )
-        factories.SourceTableFactory(
-            dataset=master_dataset, schema='public', table='test_table1'
-        )
-        factories.SourceTableFactory(
-            dataset=master_dataset, schema='public', table='test_table1'
-        )
+        factories.SourceTableFactory(dataset=master_dataset, schema='public', table='test_table1')
+        factories.SourceTableFactory(dataset=master_dataset, schema='public', table='test_table1')
         reference_dataset = factories.ReferenceDatasetFactory(
             information_asset_owner=factories.UserFactory(),
         )
@@ -534,9 +514,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 reference_dataset,
                 'Reference data',
             ),
-            self.expected_response(
-                visualisation, 'Visualisation', visualisation.personal_data
-            ),
+            self.expected_response(visualisation, 'Visualisation', visualisation.personal_data),
             self.expected_response(visualisation2, 'Visualisation'),
         ]
 
@@ -545,9 +523,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
 class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
     url = reverse('api-v1:dataset:tool-query-audit-logs')
     factory = factories.ToolQueryAuditLogFactory
-    pagination_class = (
-        'dataworkspace.apps.api_v1.pagination.TimestampCursorPagination.page_size'
-    )
+    pagination_class = 'dataworkspace.apps.api_v1.pagination.TimestampCursorPagination.page_size'
 
     def expected_response(
         self,
@@ -557,9 +533,7 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             'id': log.id,
             'user': log.user_id,
             'database': log.database.memorable_name,
-            'query_sql': log.query_sql[
-                : settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
-            ],
+            'query_sql': log.query_sql[: settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH],
             'rolename': log.rolename,
             'timestamp': log.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'tables': [

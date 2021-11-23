@@ -33,9 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataset',
             name='type',
-            field=models.IntegerField(
-                choices=[(1, 'Master Dataset'), (2, 'Data Cut')], default=2
-            ),
+            field=models.IntegerField(choices=[(1, 'Master Dataset'), (2, 'Data Cut')], default=2),
         ),
         migrations.CreateModel(
             name='DataCutDatasetUserPermission',

@@ -28,9 +28,7 @@ class S3FileStorage(FileSystemStorage):
                 Key=key,
             )
         except ClientError as ex:
-            raise Exception(
-                'Error saving file: {}'.format(ex.response['Error']['Message'])
-            )
+            raise Exception('Error saving file: {}'.format(ex.response['Error']['Message']))
 
         return filename
 

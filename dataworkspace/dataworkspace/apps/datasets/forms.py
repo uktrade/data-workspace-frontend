@@ -173,9 +173,7 @@ class DatasetSearchForm(forms.Form):
         ],
         coerce=int,
         required=False,
-        widget=FilterWidget(
-            "What do you want to do?", hint_text="Select all that apply"
-        ),
+        widget=FilterWidget("What do you want to do?", hint_text="Select all that apply"),
     )
 
     data_type = forms.TypedMultipleChoiceField(
@@ -192,9 +190,7 @@ class DatasetSearchForm(forms.Form):
     source = SourceTagField(
         queryset=Tag.objects.order_by('name').filter(type=TagType.SOURCE),
         required=False,
-        widget=ScrollingFilterWidget(
-            "Choose data source", hint_text="Select all that apply"
-        ),
+        widget=ScrollingFilterWidget("Choose data source", hint_text="Select all that apply"),
     )
 
     topic = SourceTagField(
@@ -324,8 +320,7 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields['use'].choices = [
-            (use_id, use_text + f" ({counts['use'][use_id]})")
-            for use_id, use_text in use_choices
+            (use_id, use_text + f" ({counts['use'][use_id]})") for use_id, use_text in use_choices
         ]
 
         self.fields['data_type'].choices = [
@@ -339,15 +334,13 @@ class DatasetSearchForm(forms.Form):
                 SearchableChoice(source_text, counts['source'][source_id.value]),
             )
             for source_id, source_text in source_choices
-            if source_id.value in selected_source_ids
-            or counts['source'][source_id.value] != 0
+            if source_id.value in selected_source_ids or counts['source'][source_id.value] != 0
         ]
 
         self.fields['topic'].choices = [
             (topic_id, topic_text + f" ({counts['topic'][topic_id.value]})")
             for topic_id, topic_text in topic_choices
-            if topic_id.value in selected_topic_ids
-            or counts['topic'][topic_id.value] != 0
+            if topic_id.value in selected_topic_ids or counts['topic'][topic_id.value] != 0
         ]
 
 

@@ -241,9 +241,7 @@ def fetch_query_results(query_log_id):
     query_log = get_object_or_404(QueryLog, pk=query_log_id)
 
     user = query_log.run_by_user
-    user_connection_settings = get_user_explorer_connection_settings(
-        user, query_log.connection
-    )
+    user_connection_settings = get_user_explorer_connection_settings(user, query_log.connection)
     table_name = tempory_query_table_name(user, query_log.id)
     with user_explorer_connection(user_connection_settings) as conn:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -256,9 +254,7 @@ def fetch_query_results(query_log_id):
         description = [(re.sub(r'col_\d*_', '', s.name),) for s in cursor.description]
         headers = [d[0].strip() for d in description] if description else ['--']
         data_list = [list(r) for r in cursor]
-        types = [
-            'jsonb' if t.type_code == jsonb_code else None for t in cursor.description
-        ]
+        types = ['jsonb' if t.type_code == jsonb_code else None for t in cursor.description]
         data = [
             [
                 json.dumps(row, indent=2) if types[i] == 'jsonb' else row

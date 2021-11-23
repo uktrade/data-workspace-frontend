@@ -39,9 +39,7 @@ class DatasetAccessRequest(CreateView):
         )
         context = super().get_context_data(**kwargs)
         context['catalogue_item'] = catalogue_item
-        context['is_visualisation'] = isinstance(
-            catalogue_item, VisualisationCatalogueItem
-        )
+        context['is_visualisation'] = isinstance(catalogue_item, VisualisationCatalogueItem)
         context['user_has_tools_access'] = user_has_tools_access
         return context
 
@@ -156,18 +154,14 @@ class AccessRequestSummaryPage(RequestAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['catalogue_item'] = (
-            find_dataset_or_visualisation(
-                ctx['object'].catalogue_item_id, self.request.user
-            )
+            find_dataset_or_visualisation(ctx['object'].catalogue_item_id, self.request.user)
             if ctx['object'].catalogue_item_id
             else None
         )
         return ctx
 
     def post(self, request, pk):
-        return HttpResponseRedirect(
-            reverse('request-access:confirmation-page', kwargs={"pk": pk})
-        )
+        return HttpResponseRedirect(reverse('request-access:confirmation-page', kwargs={"pk": pk}))
 
 
 class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
@@ -178,9 +172,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
         access_request = self.get_object()
         if not access_request.zendesk_reference_number:
             catalogue_item = (
-                find_dataset_or_visualisation(
-                    access_request.catalogue_item_id, self.request.user
-                )
+                find_dataset_or_visualisation(access_request.catalogue_item_id, self.request.user)
                 if access_request.catalogue_item_id
                 else None
             )
@@ -226,9 +218,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['catalogue_item'] = (
-            find_dataset_or_visualisation(
-                self.object.catalogue_item_id, self.request.user
-            )
+            find_dataset_or_visualisation(self.object.catalogue_item_id, self.request.user)
             if self.object.catalogue_item_id
             else None
         )

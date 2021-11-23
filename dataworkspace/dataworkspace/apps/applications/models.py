@@ -44,9 +44,7 @@ class ApplicationTemplate(TimeStampedModel):
 
     # We expect lots of visualisations with fixed hosts, so we use a undex to ensure
     # that lookups from hostname to application templates are fast...
-    host_basename = models.CharField(
-        max_length=128, blank=False, null=False, unique=True
-    )
+    host_basename = models.CharField(max_length=128, blank=False, null=False, unique=True)
 
     nice_name = models.CharField(
         verbose_name='application', max_length=128, blank=False, unique=False
@@ -119,9 +117,7 @@ class ToolTemplate(ApplicationTemplate):
         proxy = True
         verbose_name = 'Tool'
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.application_type = 'TOOL'
 
         super(ToolTemplate, self).save(force_insert, force_update, using, update_fields)
@@ -137,14 +133,10 @@ class VisualisationTemplate(ApplicationTemplate):
         root_domain = settings.APPLICATION_ROOT_DOMAIN
         return f'//{host_basename}.{root_domain}/'
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.application_type = 'VISUALISATION'
 
-        super(VisualisationTemplate, self).save(
-            force_insert, force_update, using, update_fields
-        )
+        super(VisualisationTemplate, self).save(force_insert, force_update, using, update_fields)
 
 
 class VisualisationApproval(TimeStampedModel):
@@ -158,24 +150,18 @@ class VisualisationApproval(TimeStampedModel):
         self._initial_approved = self.approved
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self._initial_approved is False and self.approved is True:
             raise ValueError(
                 "A new record must be created for a new approval - you cannot flip a rescinded approval."
             )
         elif self._initial_approved is self.approved and self.modified_date is not None:
-            raise ValueError(
-                "The only change that can be made to an approval is to unapprove it."
-            )
+            raise ValueError("The only change that can be made to an approval is to unapprove it.")
 
         super().save(force_insert, force_update, using, update_fields)
 
         if self.approved:
-            log_event(
-                self.approver, EventLog.TYPE_VISUALISATION_APPROVED, related_object=self
-            )
+            log_event(self.approver, EventLog.TYPE_VISUALISATION_APPROVED, related_object=self)
         else:
             log_event(
                 self.approver,
@@ -197,9 +183,7 @@ class ApplicationInstance(TimeStampedModel):
     )
 
     # Copy of the options to allow for spawners to be changed after (or during) spawning
-    application_template = models.ForeignKey(
-        ApplicationTemplate, on_delete=models.PROTECT
-    )
+    application_template = models.ForeignKey(ApplicationTemplate, on_delete=models.PROTECT)
     spawner = models.CharField(
         max_length=15, help_text='The spawner used to start the application'
     )
@@ -276,9 +260,7 @@ class ApplicationInstanceDbUsers(TimeStampedModel):
     db = models.ForeignKey(Database, on_delete=models.CASCADE)
     db_username = models.CharField(max_length=256)
     db_persistent_role = models.CharField(max_length=256)
-    application_instance = models.ForeignKey(
-        ApplicationInstance, on_delete=models.CASCADE
-    )
+    application_instance = models.ForeignKey(ApplicationInstance, on_delete=models.CASCADE)
 
     class Meta:
         indexes = [models.Index(fields=['db_username'])]

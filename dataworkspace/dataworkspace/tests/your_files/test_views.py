@@ -11,8 +11,7 @@ from mock import mock
 class TestCreateTableViews:
     def test_get_with_csv_file(self, client):
         response = client.get(
-            reverse('your-files:create-table-confirm')
-            + "?path=user/federated/abc/i-am-a.csv"
+            reverse('your-files:create-table-confirm') + "?path=user/federated/abc/i-am-a.csv"
         )
         assert response.status_code == 200
         assert "You can create a table from i-am-a.csv" in response.content.decode(
@@ -326,10 +325,7 @@ class TestCreateTableViews:
             },
             follow=True,
         )
-        assert (
-            b'Table names can contain only letters, numbers and underscores'
-            in response.content
-        )
+        assert b'Table names can contain only letters, numbers and underscores' in response.content
 
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')
@@ -349,9 +345,7 @@ class TestCreateTableViews:
             },
             follow=True,
         )
-        assert (
-            b'Table names must be no longer than 42 characters long' in response.content
-        )
+        assert b'Table names must be no longer than 42 characters long' in response.content
 
     @freeze_time('2021-01-01 01:01:01')
     @mock.patch('dataworkspace.apps.your_files.views.get_s3_csv_column_types')

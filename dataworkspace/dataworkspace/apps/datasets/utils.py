@@ -44,9 +44,7 @@ logger = logging.getLogger('app')
 def find_dataset(dataset_uuid, user):
     dataset = get_object_or_404(DataSet.objects.live(), id=dataset_uuid)
 
-    if user.has_perm(
-        dataset_type_to_manage_unpublished_permission_codename(dataset.type)
-    ):
+    if user.has_perm(dataset_type_to_manage_unpublished_permission_codename(dataset.type)):
         return dataset
 
     if not dataset.published:
@@ -61,9 +59,7 @@ def find_visualisation(visualisation_uuid, user):
     )
 
     if user.has_perm(
-        dataset_type_to_manage_unpublished_permission_codename(
-            DataSetType.VISUALISATION
-        )
+        dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
     ):
         return visualisation
 
@@ -325,13 +321,9 @@ def process_quicksight_dashboard_visualisations():
                 visualisation_link.save()
 
             if tables:
-                set_dataset_related_visualisation_catalogue_items(
-                    visualisation_link, tables
-                )
+                set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
 
-    logger.info(
-        'Finished fetching last updated dates for QuickSight visualisation links'
-    )
+    logger.info('Finished fetching last updated dates for QuickSight visualisation links')
 
 
 def store_sql_query(visualisation_link, data_set_id, table_id, sql_query):
@@ -382,9 +374,7 @@ def link_superset_visualisations_to_related_datasets():
         visualisation_type='SUPERSET', visualisation_catalogue_item__deleted=False
     ):
         dashboard_id = int(visualisation_link.identifier)
-        logger.info(
-            "Setting related visualisations for Superset dashboard id %d", dashboard_id
-        )
+        logger.info("Setting related visualisations for Superset dashboard id %d", dashboard_id)
 
         tables = []
         datasets_response = requests.get(
@@ -413,14 +403,10 @@ def link_superset_visualisations_to_related_datasets():
                 dataset['id'],
             )
 
-            tables.extend(
-                extract_queried_tables_from_sql_query(database_name, dataset['sql'])
-            )
+            tables.extend(extract_queried_tables_from_sql_query(database_name, dataset['sql']))
 
         if tables:
-            set_dataset_related_visualisation_catalogue_items(
-                visualisation_link, tables
-            )
+            set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
 
 
 def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables):
@@ -428,12 +414,7 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
         DataSet.objects.filter(
             reduce(
                 operator.or_,
-                (
-                    [
-                        Q(sourcetable__schema=t[0], sourcetable__table=t[1])
-                        for t in tables
-                    ]
-                ),
+                ([Q(sourcetable__schema=t[0], sourcetable__table=t[1]) for t in tables]),
             )
         )
         .distinct()
@@ -492,54 +473,38 @@ def build_filtered_dataset_query(inner_query, column_config, params):
             if data_type == 'text' and filter_data['type'] == 'contains':
                 query_params[field] = f'%{terms[0]}%'
                 where_clause.append(
-                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(
-                        Identifier(field)
-                    )
+                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(Identifier(field))
                 )
             elif data_type == 'text' and filter_data['type'] == 'notContains':
                 query_params[field] = f'%{terms[0]}%'
                 where_clause.append(
-                    SQL(f'lower({{}}) NOT LIKE lower(%({field})s)').format(
-                        Identifier(field)
-                    )
+                    SQL(f'lower({{}}) NOT LIKE lower(%({field})s)').format(Identifier(field))
                 )
             elif filter_data['type'] == 'equals':
                 query_params[field] = terms[0]
                 if data_type == 'text':
                     where_clause.append(
-                        SQL(f'lower({{}}) = lower(%({field})s)').format(
-                            Identifier(field)
-                        )
+                        SQL(f'lower({{}}) = lower(%({field})s)').format(Identifier(field))
                     )
                 else:
-                    where_clause.append(
-                        SQL(f'{{}} = %({field})s').format(Identifier(field))
-                    )
+                    where_clause.append(SQL(f'{{}} = %({field})s').format(Identifier(field)))
 
             elif filter_data['type'] == 'notEqual':
                 query_params[field] = terms[0]
                 if data_type == 'text':
                     where_clause.append(
-                        SQL(f'lower({{}}) != lower(%({field})s)').format(
-                            Identifier(field)
-                        )
+                        SQL(f'lower({{}}) != lower(%({field})s)').format(Identifier(field))
                     )
                 else:
                     where_clause.append(
-                        SQL(f'{{}} is distinct from %({field})s').format(
-                            Identifier(field)
-                        )
+                        SQL(f'{{}} is distinct from %({field})s').format(Identifier(field))
                     )
             elif filter_data['type'] in ['startsWith', 'endsWith']:
                 query_params[field] = (
-                    f'{terms[0]}%'
-                    if filter_data['type'] == 'startsWith'
-                    else f'%{terms[0]}'
+                    f'{terms[0]}%' if filter_data['type'] == 'startsWith' else f'%{terms[0]}'
                 )
                 where_clause.append(
-                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(
-                        Identifier(field)
-                    )
+                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(Identifier(field))
                 )
             elif filter_data['type'] == 'inRange':
                 where_clause.append(
@@ -551,16 +516,12 @@ def build_filtered_dataset_query(inner_query, column_config, params):
                 query_params[f'{field}_to'] = terms[1]
             elif filter_data['type'] in ['greaterThan', 'greaterThanOrEqual']:
                 operator = '>' if filter_data['type'] == 'greaterThan' else '>='
-                where_clause.append(
-                    SQL(f'{{}} {operator} %({field})s').format(Identifier(field))
-                )
+                where_clause.append(SQL(f'{{}} {operator} %({field})s').format(Identifier(field)))
                 query_params[field] = terms[0]
             elif filter_data['type'] in ['lessThan', 'lessThanOrEqual']:
                 query_params[field] = terms[0]
                 operator = '<' if filter_data['type'] == 'lessThan' else '<='
-                where_clause.append(
-                    SQL(f'{{}} {operator} %({field})s').format(Identifier(field))
-                )
+                where_clause.append(SQL(f'{{}} {operator} %({field})s').format(Identifier(field)))
 
     if where_clause:
         where_clause = SQL('WHERE') + SQL(' AND ').join(where_clause)
@@ -589,9 +550,7 @@ def store_custom_dataset_query_table_structures():
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
         sql = query.query.rstrip().rstrip(';')
 
-        tables = extract_queried_tables_from_sql_query(
-            query.database.memorable_name, sql
-        )
+        tables = extract_queried_tables_from_sql_query(query.database.memorable_name, sql)
         tables_last_updated_date = get_tables_last_updated_date(
             query.database.memorable_name, tuple(tables)
         )
@@ -608,9 +567,7 @@ def store_custom_dataset_query_table_structures():
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
                 cursor.execute(f'SELECT * FROM ({sql}) sq LIMIT 0')
-                columns = [
-                    (col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description
-                ]
+                columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
                 cursor.execute(
                     SQL(
@@ -647,9 +604,7 @@ def send_notification_emails():
                     'Processing notifications for dataset %s',
                     dataset.name,
                 )
-                for subscription in dataset.subscriptions.filter(
-                    notify_on_schema_change=True
-                ):
+                for subscription in dataset.subscriptions.filter(notify_on_schema_change=True):
                     UserNotification.objects.create(
                         notification=notification,
                         subscription=subscription,
@@ -663,10 +618,8 @@ def send_notification_emails():
         for user_notification_id in user_notification_ids:
             try:
                 with transaction.atomic():
-                    user_notification = (
-                        UserNotification.objects.select_for_update().get(
-                            id=user_notification_id
-                        )
+                    user_notification = UserNotification.objects.select_for_update().get(
+                        id=user_notification_id
                     )
                     user_notification.refresh_from_db()
                     if user_notification.email_id is not None:

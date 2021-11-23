@@ -180,17 +180,13 @@ class SSOServer(multiprocessing.Process):
                 latest_code = next(codes)
 
                 self.send_response(302)
-                self.send_header(
-                    'Location', f"{location}?state={state}&code={latest_code}"
-                )
+                self.send_header('Location', f"{location}?state={state}&code={latest_code}")
                 self.end_headers()
 
             def handle_token(self):
                 nonlocal latest_code
 
-                body = self.rfile.read(int(self.headers['Content-Length'])).decode(
-                    'ascii'
-                )
+                body = self.rfile.read(int(self.headers['Content-Length'])).decode('ascii')
 
                 data = parse_qs(body)
                 if data['code'][0] != latest_code:
@@ -218,9 +214,7 @@ class SSOServer(multiprocessing.Process):
 
                     response = BytesIO()
                     response.write(
-                        json.dumps(auth_to_me[self.headers['authorization']]).encode(
-                            'ascii'
-                        )
+                        json.dumps(auth_to_me[self.headers['authorization']]).encode('ascii')
                     )
 
                     self.wfile.write(response.getvalue())
@@ -288,9 +282,7 @@ class ZendeskServer(multiprocessing.Process):
 
                     submitted_tickets.append(
                         json.loads(
-                            self.rfile.read(int(self.headers['content-length'])).decode(
-                                'ascii'
-                            )
+                            self.rfile.read(int(self.headers['content-length'])).decode('ascii')
                         )
                     )
 

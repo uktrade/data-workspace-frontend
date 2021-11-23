@@ -142,27 +142,21 @@ class SourceLinkInline(admin.TabularInline, SourceReferenceInlineMixin):
     form = SourceLinkForm
     model = SourceLink
     extra = 1
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_datacut_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_datacut_datasets'
 
 
 class SourceTableInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceTable
     form = SourceTableForm
     extra = 1
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_master_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_master_datasets'
 
 
 class DataSetVisualisationInline(DeletableTimeStampedUserTabularInline):
     model = DataSetVisualisation
     form = DataSetVisualisationForm
     extra = 1
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_master_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_master_datasets'
 
     def get_queryset(self, request):
         return super().get_queryset(request).filter(deleted=False)
@@ -171,18 +165,14 @@ class DataSetVisualisationInline(DeletableTimeStampedUserTabularInline):
 class SourceViewInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceView
     extra = 1
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_datacut_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_datacut_datasets'
 
 
 class CustomDatasetQueryInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = CustomDatasetQuery
     form = CustomDatasetQueryInlineForm
     extra = 0
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_datacut_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_datacut_datasets'
     readonly_fields = ('tables',)
 
     def tables(self, obj):
@@ -213,9 +203,7 @@ def clone_dataset(modeladmin, request, queryset):
         dataset.clone()
 
 
-class PermissionedDatasetAdmin(
-    DeletableTimeStampedUserAdmin, ManageUnpublishedDatasetsMixin
-):
+class PermissionedDatasetAdmin(DeletableTimeStampedUserAdmin, ManageUnpublishedDatasetsMixin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
 
@@ -299,12 +287,8 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
         form_class = super().get_form(request, obj=None, **kwargs)
-        form_class.base_fields['authorized_email_domains'].widget.attrs[
-            'style'
-        ] = 'width: 30em;'
-        form_class.base_fields['eligibility_criteria'].widget.attrs[
-            'style'
-        ] = 'width: 30em;'
+        form_class.base_fields['authorized_email_domains'].widget.attrs['style'] = 'width: 30em;'
+        form_class.base_fields['eligibility_criteria'].widget.attrs['style'] = 'width: 30em;'
         return functools.partial(form_class, user=request.user)
 
     def get_tags(self, obj):
@@ -387,9 +371,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 if len(changed_users) >= 50:
                     sync_quicksight_permissions.delay()
                 else:
-                    changed_user_sso_ids = [
-                        str(u.profile.sso_id) for u in changed_users
-                    ]
+                    changed_user_sso_ids = [str(u.profile.sso_id) for u in changed_users]
                     sync_quicksight_permissions.delay(
                         user_sso_ids_to_update=tuple(changed_user_sso_ids)
                     )
@@ -401,9 +383,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = MasterDatasetForm
     inlines = [SourceTableInline, DataSetVisualisationInline]
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_master_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_master_datasets'
 
     def save_formset(self, request, form, formset, change):
         if formset.model != DataSetVisualisation:
@@ -432,9 +412,7 @@ class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
         SourceViewInline,
         CustomDatasetQueryInline,
     ]
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_datacut_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_datacut_datasets'
 
 
 @admin.register(Tag)
@@ -448,9 +426,7 @@ class TagAdmin(admin.ModelAdmin):
         Override to allow autocomplete search to work with tag type as well as tag name
         """
         search_term = search_term.lower()
-        queryset, use_distinct = super().get_search_results(
-            request, queryset, search_term
-        )
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
         type_choices = {b.lower(): a for a, b in TagType.choices}
 
         if search_term in type_choices:
@@ -486,9 +462,7 @@ class ReferenceDataFieldInline(
             },
         )
     ]
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_reference_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_reference_datasets'
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Do not allow a link between a reference dataset field and it's parent reference dataset
@@ -551,9 +525,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         )
     ]
     readonly_fields = ('get_published_version',)
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_reference_datasets'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_reference_datasets'
 
     def get_published_version(self, obj):
         if obj.published_version == '0.0':
@@ -608,9 +580,7 @@ class CustomDatasetQueryAdmin(admin.ModelAdmin):
     def export_queries(self, request, queryset):
         field_names = ['dataset_name', 'query_name', 'query_admin_url', 'query']
         response = HttpResponse(content_type='text/csv')
-        response[
-            'Content-Disposition'
-        ] = 'attachment; filename=dataset-queries-{}.csv'.format(
+        response['Content-Disposition'] = 'attachment; filename=dataset-queries-{}.csv'.format(
             datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         )
         writer = csv.DictWriter(response, field_names, quoting=csv.QUOTE_NONNUMERIC)
@@ -621,9 +591,7 @@ class CustomDatasetQueryAdmin(admin.ModelAdmin):
                     'dataset_name': query.dataset.name,
                     'query_name': query.name,
                     'query_admin_url': request.build_absolute_uri(
-                        reverse(
-                            'admin:datasets_customdatasetquery_change', args=(query.id,)
-                        )
+                        reverse('admin:datasets_customdatasetquery_change', args=(query.id,))
                     ),
                     'query': query.query,
                 }
@@ -722,9 +690,7 @@ class VisualisationLinkAdmin(admin.ModelAdmin):
         ]
         return my_urls + urls
 
-    def clone_quicksight_dataset(
-        self, dataset_id, new_dataset_name, new_data_source_owner
-    ):
+    def clone_quicksight_dataset(self, dataset_id, new_dataset_name, new_data_source_owner):
         user_region = settings.QUICKSIGHT_USER_REGION
         account_id = boto3.client('sts').get_caller_identity().get('Account')
         quicksight_client = boto3.client('quicksight')
@@ -790,9 +756,7 @@ class VisualisationLinkAdmin(admin.ModelAdmin):
             dataset = quicksight_client.describe_data_set(
                 AwsAccountId=account_id, DataSetId=dataset_id
             )['DataSet']
-            initial.append(
-                {'dataset_id': dataset_id, 'existing_dataset_name': dataset['Name']}
-            )
+            initial.append({'dataset_id': dataset_id, 'existing_dataset_name': dataset['Name']})
 
         CloneDatasetFormset = formset_factory(CloneDatasetForm, extra=0)
         if request.method == 'POST':
@@ -819,9 +783,7 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
     form = VisualisationLinkForm
     model = VisualisationLink
     extra = 1
-    manage_unpublished_permission_codename = (
-        'datasets.manage_unpublished_visualisations'
-    )
+    manage_unpublished_permission_codename = 'datasets.manage_unpublished_visualisations'
     readonly_fields = (
         'sql_queries',
         'clone_quicksight_dataset',
@@ -850,9 +812,7 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
 
 
 @admin.register(VisualisationCatalogueItem)
-class VisualisationCatalogueItemAdmin(
-    CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
-):
+class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     form = VisualisationCatalogueItemForm
     list_display = (
         'name',
@@ -913,12 +873,8 @@ class VisualisationCatalogueItemAdmin(
 
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
         form_class = super().get_form(request, obj=None, **kwargs)
-        form_class.base_fields['authorized_email_domains'].widget.attrs[
-            'style'
-        ] = 'width: 30em;'
-        form_class.base_fields['eligibility_criteria'].widget.attrs[
-            'style'
-        ] = 'width: 30em;'
+        form_class.base_fields['authorized_email_domains'].widget.attrs['style'] = 'width: 30em;'
+        form_class.base_fields['eligibility_criteria'].widget.attrs['style'] = 'width: 30em;'
         return functools.partial(form_class, user=request.user)
 
     def get_tags(self, obj):
@@ -945,9 +901,7 @@ class VisualisationCatalogueItemAdmin(
             obj.name = obj.visualisation_template.nice_name
 
         current_authorized_users = set(
-            get_user_model().objects.filter(
-                visualisationuserpermission__visualisation=obj
-            )
+            get_user_model().objects.filter(visualisationuserpermission__visualisation=obj)
         )
 
         authorized_users = set(
@@ -971,9 +925,7 @@ class VisualisationCatalogueItemAdmin(
             changed_users.add(user)
 
         for user in current_authorized_users - authorized_users:
-            VisualisationUserPermission.objects.filter(
-                visualisation=obj, user=user
-            ).delete()
+            VisualisationUserPermission.objects.filter(visualisation=obj, user=user).delete()
             log_permission_change(
                 request.user,
                 obj,
@@ -1087,31 +1039,22 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         return format_html(f'<a href="{self._get_user_link(obj)}">{obj.user.email}</a>')
 
     def get_user_name_link(self, obj):
-        return format_html(
-            f'<a href="{self._get_user_link(obj)}">{obj.user.get_full_name()}</a>'
-        )
+        return format_html(f'<a href="{self._get_user_link(obj)}">{obj.user.get_full_name()}</a>')
 
     get_user_name_link.short_description = 'User'
 
     def _get_related_datasets(self, obj, separator):
         datasets = set()
         for table in obj.tables.all():
-            for source_table in self.source_tables.filter(
-                schema=table.schema, table=table.table
-            ):
+            for source_table in self.source_tables.filter(schema=table.schema, table=table.table):
                 datasets.add(source_table.dataset)
             if table.schema == 'public':
-                for ref_dataset in self.reference_datasets.filter(
-                    table_name=table.table
-                ):
+                for ref_dataset in self.reference_datasets.filter(table_name=table.table):
                     datasets.add(ref_dataset)
         return (
             format_html(
                 separator.join(
-                    [
-                        f'<a href="{d.get_admin_edit_url()}">{d.name}</a>'
-                        for d in datasets
-                    ]
+                    [f'<a href="{d.get_admin_edit_url()}">{d.name}</a>' for d in datasets]
                 )
             )
             if datasets

@@ -148,9 +148,7 @@ def application_options(application_template):
 
 
 def api_application_dict(application_instance):
-    spawner_state = get_spawner(
-        application_instance.application_template.spawner
-    ).state(
+    spawner_state = get_spawner(application_instance.application_template.spawner).state(
         application_instance.spawner_application_template_options,
         application_instance.created_date.replace(tzinfo=None),
         application_instance.spawner_application_instance_id,
@@ -160,9 +158,7 @@ def api_application_dict(application_instance):
     # Only pass through the database state if the spawner is running,
     # Otherwise, we are in an error condition, and so return the spawner
     # state, so the client (i.e. the proxy) knows to take action
-    api_state = (
-        application_instance.state if spawner_state == 'RUNNING' else spawner_state
-    )
+    api_state = application_instance.state if spawner_state == 'RUNNING' else spawner_state
 
     sso_id_hex_short = stable_identification_suffix(
         str(application_instance.owner.profile.sso_id), short=True
@@ -242,9 +238,7 @@ def application_api_is_allowed(request, public_host):
         return (
             is_preview
             and visualisation_catalogue_item
-            and gitlab_has_developer_access(
-                request.user, application_template.gitlab_project_id
-            )
+            and gitlab_has_developer_access(request.user, application_template.gitlab_project_id)
         )
 
     return (
@@ -262,12 +256,8 @@ def stop_spawner_and_application(application_instance):
 
 def set_application_stopped(application_instance):
     application_instance.state = 'STOPPED'
-    application_instance.single_running_or_spawning_integrity = str(
-        application_instance.id
-    )
-    application_instance.save(
-        update_fields=['state', 'single_running_or_spawning_integrity']
-    )
+    application_instance.single_running_or_spawning_integrity = str(application_instance.id)
+    application_instance.save(update_fields=['state', 'single_running_or_spawning_integrity'])
 
 
 def application_instance_max_cpu(application_instance):
@@ -314,9 +304,7 @@ def application_instance_max_cpu(application_instance):
 def kill_idle_fargate():
     logger.info('kill_idle_fargate: Start')
 
-    two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-        hours=-2
-    )
+    two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=-2)
     instances = ApplicationInstance.objects.filter(
         spawner='FARGATE',
         state__in=['RUNNING', 'SPAWNING'],
@@ -335,9 +323,7 @@ def kill_idle_fargate():
             logger.info('kill_idle_fargate: Unable to find CPU usage for %s', instance)
             continue
         except Exception:  # pylint: disable=broad-except
-            logger.exception(
-                'kill_idle_fargate: Unable to find CPU usage for %s', instance
-            )
+            logger.exception('kill_idle_fargate: Unable to find CPU usage for %s', instance)
             continue
 
         logger.info('kill_idle_fargate: CPU usage for %s is %s', instance, max_cpu)
@@ -402,9 +388,7 @@ def populate_created_stopped_fargate():
             try:
                 options = json.loads(instance.spawner_application_template_options)
                 cluster_name = options['CLUSTER_NAME']
-                task_arn = json.loads(instance.spawner_application_instance_id)[
-                    'task_arn'
-                ]
+                task_arn = json.loads(instance.spawner_application_instance_id)['task_arn']
             except (ValueError, KeyError):
                 continue
 
@@ -452,9 +436,7 @@ def populate_created_stopped_fargate():
 @close_all_connections_if_not_in_atomic_block
 def delete_unused_datasets_users():
     try:
-        with cache.lock(
-            "delete_unused_datasets_users", blocking_timeout=0, timeout=1800
-        ):
+        with cache.lock("delete_unused_datasets_users", blocking_timeout=0, timeout=1800):
             _do_delete_unused_datasets_users()
     except redis.exceptions.LockError:
         logger.info(
@@ -499,9 +481,7 @@ def _do_delete_unused_datasets_users():
             )
             usenames = [result[0] for result in cur.fetchall()]
 
-        logger.info(
-            'delete_unused_datasets_users: waiting in case they were just created'
-        )
+        logger.info('delete_unused_datasets_users: waiting in case they were just created')
         gevent.sleep(15)
 
         # We want to be able to delete db users created, but then _not_ associated with an
@@ -514,9 +494,7 @@ def _do_delete_unused_datasets_users():
                 application_instance__state__in=['RUNNING', 'SPAWNING'],
             ).values_list('db_username', flat=True)
         )
-        not_in_use_usernames = [
-            usename for usename in usenames if usename not in in_use_usenames
-        ]
+        not_in_use_usernames = [usename for usename in usenames if usename not in in_use_usenames]
         logger.info(
             'delete_unused_datasets_users: not_in_use_usernames %s',
             not_in_use_usernames,
@@ -555,18 +533,14 @@ def _do_delete_unused_datasets_users():
                             )
 
                             cur.execute(
-                                sql.SQL(
-                                    'REVOKE CONNECT ON DATABASE {} FROM {};'
-                                ).format(
+                                sql.SQL('REVOKE CONNECT ON DATABASE {} FROM {};').format(
                                     sql.Identifier(database_name),
                                     sql.Identifier(usename),
                                 )
                             )
 
                             cur.execute(
-                                sql.SQL(
-                                    'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'
-                                ).format(
+                                sql.SQL('REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};').format(
                                     sql.Identifier(database_name),
                                     sql.Identifier(usename),
                                 )
@@ -611,14 +585,10 @@ def _do_delete_unused_datasets_users():
                                 # remaining permissions by the temporary user, so it can then get
                                 # deleted below
                                 cur.execute(
-                                    sql.SQL('DROP OWNED BY {};').format(
-                                        sql.Identifier(usename)
-                                    )
+                                    sql.SQL('DROP OWNED BY {};').format(sql.Identifier(usename))
                                 )
 
-                            cur.execute(
-                                sql.SQL('DROP USER {};').format(sql.Identifier(usename))
-                            )
+                            cur.execute(sql.SQL('DROP USER {};').format(sql.Identifier(usename)))
                         except Exception:  # pylint: disable=broad-except
                             logger.exception(
                                 'delete_unused_datasets_users: Failed deleting %s',
@@ -647,9 +617,9 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     sts = boto3.client('sts')
     account_id = sts.get_caller_identity().get('Account')
 
-    role_credentials = sts.assume_role(
-        RoleArn=embed_role_arn, RoleSessionName=user.email
-    )['Credentials']
+    role_credentials = sts.assume_role(RoleArn=embed_role_arn, RoleSessionName=user.email)[
+        'Credentials'
+    ]
 
     session = boto3.Session(
         aws_access_key_id=role_credentials['AccessKeyId'],
@@ -776,9 +746,7 @@ def create_update_delete_quicksight_user_data_sources(
 
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == 'ResourceExistsException':
-                logger.info(
-                    "-> Data source already exists: %s. Updating ...", data_source_id
-                )
+                logger.info("-> Data source already exists: %s. Updating ...", data_source_id)
                 data_client.update_data_source(**create_and_update_params)
                 logger.info("-> Updated data source: %s", data_source_id)
 
@@ -793,8 +761,7 @@ def create_update_delete_quicksight_user_data_sources(
         for db_name in settings.DATABASES_DATA.keys()
     }
     unauthorized_data_source_ids = all_data_source_ids - {
-        get_data_source_id(cred['memorable_name'], quicksight_user['Arn'])
-        for cred in creds
+        get_data_source_id(cred['memorable_name'], quicksight_user['Arn']) for cred in creds
     }
     logger.info(all_data_source_ids)
     logger.info(unauthorized_data_source_ids)
@@ -892,16 +859,12 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                 )
 
         except redis.exceptions.LockError:
-            logger.exception(
-                "Unable to sync permissions for %s", quicksight_user['Arn']
-            )
+            logger.exception("Unable to sync permissions for %s", quicksight_user['Arn'])
 
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
-def sync_quicksight_permissions(
-    user_sso_ids_to_update=tuple(), poll_for_user_creation=False
-):
+def sync_quicksight_permissions(user_sso_ids_to_update=tuple(), poll_for_user_creation=False):
     logger.info(
         'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) started',
         user_sso_ids_to_update,
@@ -952,9 +915,7 @@ def sync_quicksight_permissions(
                             )
                     elif e.response['Error']['Code'] == 'ThrottlingException':
                         if attempts > 0:
-                            logger.info(
-                                'Requests throttled. Trying again in 1 second...'
-                            )
+                            logger.info('Requests throttled. Trying again in 1 second...')
                             gevent.sleep(1)
                         else:
                             logger.exception(
@@ -1122,9 +1083,7 @@ def _do_create_tools_access_iam_role(user_id):
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 @close_all_connections_if_not_in_atomic_block
 def sync_activity_stream_sso_users():
-    with cache.lock(
-        "activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800
-    ):
+    with cache.lock("activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800):
         _do_sync_activity_stream_sso_users()
 
 
@@ -1204,9 +1163,7 @@ def _do_sync_activity_stream_sso_users():
                 logger.exception('Failed to create user record')
 
         last_published_str = records[-1]['_source']['published']
-        last_published = datetime.datetime.strptime(
-            last_published_str, '%Y-%m-%dT%H:%M:%S.%fZ'
-        )
+        last_published = datetime.datetime.strptime(last_published_str, '%Y-%m-%dT%H:%M:%S.%fZ')
         # paginate to next batch of records
         query['search_after'] = records[-1]['sort']
 
@@ -1282,15 +1239,11 @@ def _fetch_docker_pgaudit_logs(from_date, to_date):
         if not filename.endswith('.csv'):
             continue
         path = os.path.join(log_dir, filename)
-        last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(path)).replace(
-            tzinfo=utc
-        )
+        last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(path)).replace(tzinfo=utc)
         if last_modified <= from_date or last_modified > to_date:
             continue
         with open(path, 'r') as log_fh:
-            log_reader = csv.DictReader(
-                log_fh, fieldnames=settings.POSTGRES_LOG_HEADERS
-            )
+            log_reader = csv.DictReader(log_fh, fieldnames=settings.POSTGRES_LOG_HEADERS)
             logs += _parse_postgres_log(log_reader, from_date, to_date)
     return logs
 
@@ -1344,9 +1297,7 @@ def _do_sync_tool_query_logs():
 
     for log in logs:
         try:
-            database = databases.get(
-                memorable_name=db_name_map.get(log['database_name'])
-            )
+            database = databases.get(memorable_name=db_name_map.get(log['database_name']))
         except Database.DoesNotExist:
             logger.info(
                 'Skipping log entry for user %s on db %s as the db is not configured',
@@ -1355,9 +1306,7 @@ def _do_sync_tool_query_logs():
             )
             continue
 
-        db_user = DatabaseUser.objects.filter(
-            deleted_date=None, username=log['user_name']
-        ).first()
+        db_user = DatabaseUser.objects.filter(deleted_date=None, username=log['user_name']).first()
         if not db_user:
             logger.info(
                 'Skipping log entry for user %s on db %s (%s) as no matching user could be found',
@@ -1421,9 +1370,7 @@ def _do_sync_tool_query_logs():
 def sync_tool_query_logs():
     if waffle.switch_is_active('enable_tool_query_log_sync'):
         try:
-            with cache.lock(
-                'query_tool_logs_last_run_lock', blocking_timeout=0, timeout=1800
-            ):
+            with cache.lock('query_tool_logs_last_run_lock', blocking_timeout=0, timeout=1800):
                 _do_sync_tool_query_logs()
         except redis.exceptions.LockError:
             logger.info('Unable to acquire lock to sync tool query logs')
@@ -1443,9 +1390,7 @@ def _send_slack_message(text):
 def long_running_query_alert():
     if waffle.switch_is_active('enable_long_running_query_alerts'):
         interval = settings.LONG_RUNNING_QUERY_ALERT_THRESHOLD
-        logger.info(
-            'Checking for queries running longer than %s on the datasets db.', interval
-        )
+        logger.info('Checking for queries running longer than %s on the datasets db.', interval)
         with connections[settings.EXPLORER_DEFAULT_CONNECTION].cursor() as cursor:
             cursor.execute(
                 '''
@@ -1471,19 +1416,15 @@ def long_running_query_alert():
 def push_tool_monitoring_dashboard_datasets():
 
     geckboard_api_key = os.environ['GECKOBOARD_API_KEY']
-    cluster = os.environ[
-        'APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME'
-    ]
-    task_role_prefix = os.environ[
-        'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX'
-    ]
-    geckoboard_endpoint = f'https://api.geckoboard.com/datasets/data-workspace.{os.environ["ENVIRONMENT"]}.'
+    cluster = os.environ['APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME']
+    task_role_prefix = os.environ['APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX']
+    geckoboard_endpoint = (
+        f'https://api.geckoboard.com/datasets/data-workspace.{os.environ["ENVIRONMENT"]}.'
+    )
 
     def report_running_tools(client, session):
 
-        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
-            'taskArns'
-        ]
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')['taskArns']
 
         pending_tasks = (
             client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
@@ -1509,9 +1450,9 @@ def push_tool_monitoring_dashboard_datasets():
 
     def report_failed_tools(client, session):
 
-        stopped_tasks_arns = client.list_tasks(
-            cluster=cluster, desiredStatus='STOPPED'
-        )['taskArns']
+        stopped_tasks_arns = client.list_tasks(cluster=cluster, desiredStatus='STOPPED')[
+            'taskArns'
+        ]
 
         stopped_tasks = (
             client.describe_tasks(cluster=cluster, tasks=stopped_tasks_arns)['tasks']
@@ -1537,12 +1478,10 @@ def push_tool_monitoring_dashboard_datasets():
         payload = {
             'data': [
                 {
-                    'user': t['overrides']['taskRoleArn'][31:].replace(
-                        task_role_prefix, ''
-                    ),
-                    'tool': t['group'].replace(
-                        f'family:{cluster.replace("-notebooks", "")}-', ''
-                    )[:-9],
+                    'user': t['overrides']['taskRoleArn'][31:].replace(task_role_prefix, ''),
+                    'tool': t['group'].replace(f'family:{cluster.replace("-notebooks", "")}-', '')[
+                        :-9
+                    ],
                     'time_started': t['createdAt'].isoformat(),
                     'stopped_reason': t['stoppedReason'],
                 }
@@ -1557,9 +1496,7 @@ def push_tool_monitoring_dashboard_datasets():
 
     def report_tool_average_start_times(client, session):
 
-        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
-            'taskArns'
-        ]
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')['taskArns']
 
         pending_tasks = (
             client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
@@ -1604,9 +1541,7 @@ def push_tool_monitoring_dashboard_datasets():
                 payload['data'].append(
                     {
                         'time_taken': 0,
-                        'hour_of_day': datetime.datetime(2021, 1, 1, x, 0, 0).strftime(
-                            '%H'
-                        ),
+                        'hour_of_day': datetime.datetime(2021, 1, 1, x, 0, 0).strftime('%H'),
                     }
                 )
 
@@ -1617,9 +1552,7 @@ def push_tool_monitoring_dashboard_datasets():
 
     def report_recent_tool_start_times(client, session):
 
-        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
-            'taskArns'
-        ]
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')['taskArns']
 
         pending_tasks = (
             client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
@@ -1651,18 +1584,14 @@ def push_tool_monitoring_dashboard_datasets():
         payload = {
             'data': [
                 {
-                    'user': t['overrides']['taskRoleArn'][31:].replace(
-                        task_role_prefix, ''
-                    ),
-                    'tool': t['group'].replace(
-                        f'family:{cluster.replace("-notebooks", "")}-', ''
-                    )[:-9],
+                    'user': t['overrides']['taskRoleArn'][31:].replace(task_role_prefix, ''),
+                    'tool': t['group'].replace(f'family:{cluster.replace("-notebooks", "")}-', '')[
+                        :-9
+                    ],
                     'time_started': t['createdAt'].isoformat(),
                     'time_taken': (t['startedAt'] - t['createdAt']).seconds,
                 }
-                for t in sorted(
-                    running_tasks, key=lambda x: x['startedAt'], reverse=True
-                )[:10]
+                for t in sorted(running_tasks, key=lambda x: x['startedAt'], reverse=True)[:10]
             ]
         }
 

@@ -20,9 +20,7 @@ class Command(BaseCommand):
         self.stdout.write('ensure_database_configured...')
 
         for database_name, database_data in settings.DATABASES_DATA.items():
-            self.stdout.write(
-                f'ensure_database_configured ensuring {database_name} is in db'
-            )
+            self.stdout.write(f'ensure_database_configured ensuring {database_name} is in db')
             Database.objects.get_or_create(memorable_name=database_name)
 
             self.stdout.write(

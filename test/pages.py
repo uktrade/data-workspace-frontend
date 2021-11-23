@@ -16,9 +16,7 @@ async def get_browser() -> Browser:
 class _BasePage:
     _url_path = ''
 
-    def __init__(
-        self, browser: Browser, base_url='http://dataworkspace.test:8000', page=None
-    ):
+    def __init__(self, browser: Browser, base_url='http://dataworkspace.test:8000', page=None):
         self._browser = browser
         self._page = page
         self._base_url = base_url
@@ -44,9 +42,7 @@ class HomePage(_BasePage):
             await self.open()
 
         element = (
-            await self._page.xpath(
-                f"//input[@id = //label[contains(text(), '{label}')]/@for]"
-            )
+            await self._page.xpath(f"//input[@id = //label[contains(text(), '{label}')]/@for]")
         )[0]
         await asyncio.gather(
             self._page.waitForNavigation(),

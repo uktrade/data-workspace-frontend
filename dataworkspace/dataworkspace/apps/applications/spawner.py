@@ -192,9 +192,7 @@ class ProcessSpawner:
 
     @staticmethod
     def stop(application_instance_id):
-        application_instance = ApplicationInstance.objects.get(
-            id=application_instance_id
-        )
+        application_instance = ApplicationInstance.objects.get(id=application_instance_id)
         spawner_application_id = application_instance.spawner_application_instance_id
         spawner_application_id_parsed = json.loads(spawner_application_id)
         try:
@@ -308,9 +306,7 @@ class FargateSpawner:
                 application_instance.spawner_application_instance_id = json.dumps(
                     {'pipeline_id': pipeline_id, 'task_arn': None}
                 )
-                application_instance.save(
-                    update_fields=['spawner_application_instance_id']
-                )
+                application_instance.save(update_fields=['spawner_application_instance_id'])
 
                 for _ in range(0, 900):
                     gevent.sleep(3)
@@ -330,9 +326,7 @@ class FargateSpawner:
 
             # It doesn't really matter what the suffix is: it could even be a random
             # number, but we choose the short hashed version of the SSO ID to help debugging
-            task_family_suffix = stable_identification_suffix(
-                str(user.profile.sso_id), short=True
-            )
+            task_family_suffix = stable_identification_suffix(str(user.profile.sso_id), short=True)
             definition_arn_with_image = _fargate_new_task_definition(
                 role_arn,
                 definition_arn,
@@ -485,14 +479,10 @@ class FargateSpawner:
 
     @staticmethod
     def stop(application_instance_id):
-        application_instance = ApplicationInstance.objects.get(
-            id=application_instance_id
-        )
+        application_instance = ApplicationInstance.objects.get(id=application_instance_id)
         options = json.loads(application_instance.spawner_application_template_options)
         cluster_name = options['CLUSTER_NAME']
-        task_arn = json.loads(application_instance.spawner_application_instance_id)[
-            'task_arn'
-        ]
+        task_arn = json.loads(application_instance.spawner_application_instance_id)['task_arn']
         _fargate_task_stop(cluster_name, task_arn)
 
         sleep_time = 1
@@ -518,9 +508,7 @@ class FargateSpawner:
 
 
 def _gitlab_ecr_pipeline_cancel(pipeline_id):
-    return gitlab_api_v4(
-        'POST', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}/cancel'
-    )
+    return gitlab_api_v4('POST', f'/projects/{ECR_PROJECT_ID}/pipelines/{pipeline_id}/cancel')
 
 
 def _gitlab_ecr_pipeline_get(pipeline_id):
@@ -531,9 +519,9 @@ def _ecr_tag_exists(repositoryName, tag):
     client = _ecr_client()
     try:
         return bool(
-            client.describe_images(
-                repositoryName=repositoryName, imageIds=[{'imageTag': tag}]
-            )['imageDetails']
+            client.describe_images(repositoryName=repositoryName, imageIds=[{'imageTag': tag}])[
+                'imageDetails'
+            ]
         )
     except client.exceptions.ImageNotFoundException:
         return False
@@ -542,9 +530,9 @@ def _ecr_tag_exists(repositoryName, tag):
 def _ecr_tags_for_tag(repositoryName, tag):
     client = _ecr_client()
     try:
-        return client.describe_images(
-            repositoryName=repositoryName, imageIds=[{'imageTag': tag}]
-        )['imageDetails'][0]['imageTags']
+        return client.describe_images(repositoryName=repositoryName, imageIds=[{'imageTag': tag}])[
+            'imageDetails'
+        ][0]['imageTags']
     except client.exceptions.ImageNotFoundException:
         return []
 
@@ -557,9 +545,7 @@ def _ecr_retag(repositoryName, existing_tag, new_tag):
     )['images'][0]['imageManifest']
 
     try:
-        client.put_image(
-            repositoryName=repositoryName, imageTag=new_tag, imageManifest=manifest
-        )
+        client.put_image(repositoryName=repositoryName, imageTag=new_tag, imageManifest=manifest)
     except client.exceptions.ImageAlreadyExistsException:
         # Swallow the exception to support idempotency in the case of
         # duplicated submissions
@@ -583,9 +569,7 @@ def _fargate_new_task_definition(
     describe_task_response = client.describe_task_definition(taskDefinition=task_family)
     container = [
         container
-        for container in describe_task_response['taskDefinition'][
-            'containerDefinitions'
-        ]
+        for container in describe_task_response['taskDefinition']['containerDefinitions']
         if container['name'] == container_name
     ][0]
     container['image'] += (':' + tag) if tag else ''
@@ -640,9 +624,7 @@ def _fargate_task_ip(cluster_name, arn):
             for attachment in described_task['attachments'][0]['details']
             if attachment['name'] == 'privateIPv4Address'
         ]
-        if described_task
-        and 'attachments' in described_task
-        and described_task['attachments']
+        if described_task and 'attachments' in described_task and described_task['attachments']
         else []
     )
     ip_address = ip_address_attachements[0] if ip_address_attachements else ''
@@ -706,9 +688,7 @@ def _fargate_task_run(
             'containerOverrides': [
                 {
                     **({'command': command_and_args} if command_and_args else {}),
-                    'environment': [
-                        {'name': name, 'value': value} for name, value in env.items()
-                    ],
+                    'environment': [{'name': name, 'value': value} for name, value in env.items()],
                     'name': container_name,
                 }
             ]
@@ -717,8 +697,7 @@ def _fargate_task_run(
                     {
                         'name': 's3sync',
                         'environment': [
-                            {'name': name, 'value': value}
-                            for name, value in env.items()
+                            {'name': name, 'value': value} for name, value in env.items()
                         ],
                     }
                 ]

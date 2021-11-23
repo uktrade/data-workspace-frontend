@@ -6,9 +6,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('datasets', '0038_add_permissions_and_customdatasetquery_defaults')
-    ]
+    dependencies = [('datasets', '0038_add_permissions_and_customdatasetquery_defaults')]
 
     operations = [
         migrations.AlterField(

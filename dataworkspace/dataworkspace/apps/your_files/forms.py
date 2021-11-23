@@ -55,9 +55,7 @@ class CreateTableForm(GOVUKDesignSystemForm):
             raise ValidationError('You don\'t have permission to access this file')
 
         if not path.endswith('.csv'):
-            raise ValidationError(
-                'Invalid file type. Only CSV files are currently supported'
-            )
+            raise ValidationError('Invalid file type. Only CSV files are currently supported')
 
         try:
             client.head_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path)
@@ -79,9 +77,7 @@ class CreateTableForm(GOVUKDesignSystemForm):
             ):
                 self.add_error(
                     'table_name',
-                    ValidationError(
-                        'This table already exists', code='duplicate-table'
-                    ),
+                    ValidationError('This table already exists', code='duplicate-table'),
                 )
 
         return super().clean()
@@ -134,6 +130,4 @@ class CreateTableDataTypesForm(CreateTableForm):
 
     def get_data_type_fields(self):
         for col_def in self.column_definitions:
-            yield self[col_def['column_name']], ', '.join(
-                map(str, col_def['sample_data'])
-            )
+            yield self[col_def['column_name']], ', '.join(map(str, col_def['sample_data']))

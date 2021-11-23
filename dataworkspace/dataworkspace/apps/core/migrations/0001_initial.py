@@ -32,9 +32,7 @@ class Migration(migrations.Migration):
                         help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__',
                         max_length=128,
                         unique=True,
-                        validators=[
-                            django.core.validators.RegexValidator(regex='[A-Za-z0-9_]')
-                        ],
+                        validators=[django.core.validators.RegexValidator(regex='[A-Za-z0-9_]')],
                     ),
                 ),
                 (

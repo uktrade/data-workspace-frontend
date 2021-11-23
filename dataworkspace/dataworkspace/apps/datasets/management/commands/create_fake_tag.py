@@ -30,9 +30,7 @@ class Command(BaseCommand):
         tag_type_text = options["type"].upper()
 
         if tag_type_text not in TagType.__members__:
-            self.stderr.write(
-                self.style.ERROR(f"{options['type']} is not a valid TagType")
-            )
+            self.stderr.write(self.style.ERROR(f"{options['type']} is not a valid TagType"))
             self.print_help("manage.py", "create_fake_dataset")
             sys.exit(1)
 

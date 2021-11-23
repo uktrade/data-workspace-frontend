@@ -15,9 +15,9 @@ from time import time
 import urllib
 import xml.etree.ElementTree as ET
 
+from bs4 import BeautifulSoup
 from lowhaio import HttpDataError, HttpConnectionError, Pool, buffered, streamed
 from lowhaio_redirect import redirectable
-from bs4 import BeautifulSoup
 
 AwsCredentials = namedtuple(
     'AwsCredentials', ['access_key_id', 'secret_access_key', 'pre_auth_headers']
@@ -584,7 +584,7 @@ async def pypi_mirror(logger, request, s3_context):
 
             try:
                 await transfer_project(project_name, project_url)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 logger.exception('Exception crawling %s', project_url)
             finally:
                 queue.task_done()
@@ -713,7 +713,7 @@ async def cran_mirror(logger, request, s3_context):
                         await asyncio.sleep(10)
                     else:
                         break
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 logger.exception('Exception crawling %s', url)
             finally:
                 queue.task_done()
@@ -803,7 +803,7 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
             'UNSIGNED-PAYLOAD',
         )
         if code != b'200':
-            raise Exception(
+            raise Exception(  # pylint: disable=broad-except
                 'Exception PUT {} {} {}'.format('/' + target_package_key, code, body)
             )
 
@@ -819,7 +819,7 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
                         await asyncio.sleep(10)
                     else:
                         break
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 logger.exception('Exception transferring %s', package_suffix)
             finally:
                 queue.task_done()
@@ -932,7 +932,7 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
                         await asyncio.sleep(10)
                     else:
                         break
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 logger.exception('Exception crawling %s', url)
             finally:
                 queue.task_done()

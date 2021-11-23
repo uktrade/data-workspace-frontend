@@ -33,13 +33,9 @@ from dataworkspace.tests.factories import UserFactory
 class TestTasks(TestCase):
     def test_truncating_querylogs(self):
         QueryLogFactory(sql='foo')
-        QueryLog.objects.filter(sql='foo').update(
-            run_at=datetime.now() - timedelta(days=30)
-        )
+        QueryLog.objects.filter(sql='foo').update(run_at=datetime.now() - timedelta(days=30))
         QueryLogFactory(sql='bar')
-        QueryLog.objects.filter(sql='bar').update(
-            run_at=datetime.now() - timedelta(days=29)
-        )
+        QueryLog.objects.filter(sql='bar').update(run_at=datetime.now() - timedelta(days=29))
         truncate_querylogs(30)
         self.assertEqual(QueryLog.objects.count(), 1)
 
@@ -54,9 +50,7 @@ class TestTasks(TestCase):
 
     @patch('dataworkspace.apps.explorer.tasks.DATABASES_DATA')
     @patch('dataworkspace.apps.explorer.tasks.connections')
-    def test_cleanup_temporary_query_tables(
-        self, mock_connections, mock_databases_data
-    ):
+    def test_cleanup_temporary_query_tables(self, mock_connections, mock_databases_data):
         mock_cursor = Mock()
         mock_connection = Mock()
         mock_cursor_ctx_manager = MagicMock()
@@ -70,7 +64,9 @@ class TestTasks(TestCase):
         }
 
         user = UserFactory()
-        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'  # yields a short hexdigest of 12b9377c
+        user.profile.sso_id = (
+            '00000000-0000-0000-0000-000000000000'  # yields a short hexdigest of 12b9377c
+        )
         user.profile.save()
 
         # last run 1 day and 1 hour ago so its materialized view should be deleted
@@ -85,9 +81,7 @@ class TestTasks(TestCase):
 
         expected_calls = [
             call('GRANT _user_12b9377c TO postgres'),
-            call(
-                f'DROP TABLE IF EXISTS _user_12b9377c._data_explorer_tmp_query_{query_log_1.id}'
-            ),
+            call(f'DROP TABLE IF EXISTS _user_12b9377c._data_explorer_tmp_query_{query_log_1.id}'),
             call('REVOKE _user_12b9377c FROM postgres'),
         ]
         mock_cursor.execute.assert_has_calls(expected_calls)
@@ -108,9 +102,7 @@ class TestExecuteQuery:
         )
         mock_user_explorer_connection = user_explorer_connection_patcher.start()
 
-        mock_user_explorer_connection.return_value.__enter__.return_value = (
-            mock_connection
-        )
+        mock_user_explorer_connection.return_value.__enter__.return_value = mock_connection
 
         self.user = UserFactory()
         self.request = MagicMock(user=self.user)
@@ -119,9 +111,7 @@ class TestExecuteQuery:
 
     @patch('dataworkspace.apps.explorer.utils.db_role_schema_suffix_for_user')
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
-    def test_submit_query_for_execution(
-        self, mock_connection_settings, mock_schema_suffix
-    ):
+    def test_submit_query_for_execution(self, mock_connection_settings, mock_schema_suffix):
         mock_schema_suffix.return_value = '12b9377c'
         # See utils.TYPE_CODES_REVERSED for data type codes returned in cursor description
         self.mock_cursor.description = [('foo', 23), ('bar', 25)]
@@ -220,9 +210,7 @@ class TestExecuteQuery:
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
     @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
-    def test_writing_csv_unicode(
-        self, mock_fetch_query_results, mock_connection_settings
-    ):
+    def test_writing_csv_unicode(self, mock_fetch_query_results, mock_connection_settings):
         # Mock the field names returned by SELECT * FROM ({query}) sq LIMIT 0
         self.mock_cursor.description = [(None, 23)]
         mock_fetch_query_results.return_value = (
@@ -247,17 +235,13 @@ class TestExecuteQuery:
             None,
         )
 
-        res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output(
-            delim='|'
-        )
+        res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output(delim='|')
         assert res == '?column?|?column?\r\n1|2\r\n'
 
     @pytest.mark.skip(reason="Async downloads are still a WIP")
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
     @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
-    def test_writing_json_unicode_async(
-        self, mock_fetch_query_results, mock_connection_settings
-    ):
+    def test_writing_json_unicode_async(self, mock_fetch_query_results, mock_connection_settings):
         # Mock the field names returned by SELECT * FROM ({query}) sq LIMIT 0
         self.mock_cursor.description = [(None, 23)]
         mock_fetch_query_results.return_value = (
@@ -266,9 +250,7 @@ class TestExecuteQuery:
             None,
         )
 
-        res = JSONExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': None}, {'a': 'Jenét', 'b': '1'}])
 
     @pytest.mark.skip(reason="Async downloads are still a WIP")
@@ -281,17 +263,13 @@ class TestExecuteQuery:
         self.mock_cursor.description = [(None, 23)]
         mock_fetch_query_results.return_value = (['a', 'b'], [[1, date.today()]], None)
 
-        res = JSONExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res == json.dumps([{'a': 1, 'b': date.today()}], cls=DjangoJSONEncoder)
 
     @pytest.mark.skip(reason="Async downloads are still a WIP")
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')
     @patch('dataworkspace.apps.explorer.exporters.fetch_query_results')
-    def test_writing_excel_async(
-        self, mock_fetch_query_results, mock_connection_settings
-    ):
+    def test_writing_excel_async(self, mock_fetch_query_results, mock_connection_settings):
         # Mock the field names returned by SELECT * FROM ({query}) sq LIMIT 0
         self.mock_cursor.description = [(None, 23)]
         mock_fetch_query_results.return_value = (
@@ -300,9 +278,7 @@ class TestExecuteQuery:
             None,
         )
 
-        res = ExcelExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res[:2] == six.b('PK')
 
     @pytest.mark.skip(reason="Async downloads are still a WIP")
@@ -319,7 +295,5 @@ class TestExecuteQuery:
             None,
         )
 
-        res = ExcelExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
+        res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res[:2] == six.b('PK')

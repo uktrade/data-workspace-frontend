@@ -19,9 +19,7 @@ def test_find_datasets_default(client, mocker):
     response = client.get(reverse('finder:find_datasets'))
 
     assert response.status_code == 200
-    assert (
-        b"Find the datasets which mention for example a particular:" in response.content
-    )
+    assert b"Find the datasets which mention for example a particular:" in response.content
 
 
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
@@ -48,9 +46,7 @@ def test_find_datasets_with_no_results(client, mocker):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
 def test_find_datasets_with_results(client, mocker, dataset_finder_db):
-    user = get_user_model().objects.create(
-        is_staff=True, is_superuser=True, email='test@test.com'
-    )
+    user = get_user_model().objects.create(is_staff=True, is_superuser=True, email='test@test.com')
     client = Client(**get_http_sso_data(user))
 
     master_dataset = factories.MasterDataSetFactory.create(

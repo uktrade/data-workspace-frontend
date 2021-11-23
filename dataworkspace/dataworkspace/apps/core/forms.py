@@ -19,9 +19,7 @@ from dataworkspace.forms import (
 )
 
 
-class ConditionalSupportTypeRadioWidget(
-    GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect
-):
+class ConditionalSupportTypeRadioWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect):
     template_name = 'design_system/radio.html'
     option_template_name = "core/partial/support_type_radio_option.html"
 
@@ -66,13 +64,8 @@ class SupportForm(GOVUKDesignSystemForm):
         ):
             raise forms.ValidationError({'email': 'Please enter your email address'})
 
-        if (
-            cleaned['support_type'] == self.SupportTypes.OTHER
-            and not cleaned['message']
-        ):
-            raise forms.ValidationError(
-                {'message': 'Please enter your support message'}
-            )
+        if cleaned['support_type'] == self.SupportTypes.OTHER and not cleaned['message']:
+            raise forms.ValidationError({'message': 'Please enter your support message'})
 
 
 class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
@@ -87,18 +80,14 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         required=False,
         label='2. What were you trying to do today? (optional)',
         help_text='Select all options that are relevant to you.',
-        widget=GOVUKDesignSystemCheckboxesWidget(
-            heading='h2', label_size='m', small=True
-        ),
+        widget=GOVUKDesignSystemCheckboxesWidget(heading='h2', label_size='m', small=True),
         choices=[(t.value, t.label) for t in TryingToDoType],
     )
 
     improve_service = GOVUKDesignSystemTextareaField(
         required=False,
         label='3. How could we improve the service? (optional)',
-        help_html=render_to_string(
-            'core/partial/user-survey-improve-service-hint.html'
-        ),
+        help_html=render_to_string('core/partial/user-survey-improve-service-hint.html'),
         widget=GOVUKDesignSystemTextareaWidget(heading='h2', label_size='m'),
     )
 

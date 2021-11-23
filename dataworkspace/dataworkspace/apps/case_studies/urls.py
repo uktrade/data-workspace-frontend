@@ -5,7 +5,5 @@ from dataworkspace.apps.case_studies.views import CaseStudyDetailView, CaseStudy
 
 urlpatterns = [
     path('', login_required(CaseStudyListView.as_view()), name='case-studies'),
-    path(
-        '<str:slug>', login_required(CaseStudyDetailView.as_view()), name='case-study'
-    ),
+    path('<str:slug>', login_required(CaseStudyDetailView.as_view()), name='case-study'),
 ]

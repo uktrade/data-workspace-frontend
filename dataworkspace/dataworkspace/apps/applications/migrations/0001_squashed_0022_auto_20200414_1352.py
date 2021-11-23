@@ -115,9 +115,7 @@ class Migration(migrations.Migration):
                         help_text='Used in URLs: only lowercase letters allowed',
                         max_length=128,
                         unique=True,
-                        validators=[
-                            django.core.validators.RegexValidator(regex='^[a-z]+$')
-                        ],
+                        validators=[django.core.validators.RegexValidator(regex='^[a-z]+$')],
                     ),
                 ),
                 (
@@ -126,9 +124,7 @@ class Migration(migrations.Migration):
                         max_length=128,
                         unique=True,
                         validators=[
-                            django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z0-9\\- ]+$'
-                            )
+                            django.core.validators.RegexValidator(regex='^[a-zA-Z0-9\\- ]+$')
                         ],
                     ),
                 ),
@@ -220,9 +216,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 max_length=128,
                 unique=True,
-                validators=[
-                    django.core.validators.RegexValidator(regex='^[a-zA-Z0-9\\- ]+$')
-                ],
+                validators=[django.core.validators.RegexValidator(regex='^[a-zA-Z0-9\\- ]+$')],
                 verbose_name='application',
             ),
         ),
@@ -238,9 +232,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='applicationinstance',
-            index=models.Index(
-                fields=['created_date'], name='app_applica_created_29c0c8_idx'
-            ),
+            index=models.Index(fields=['created_date'], name='app_applica_created_29c0c8_idx'),
         ),
         migrations.AddField(
             model_name='applicationinstance',
@@ -334,9 +326,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='applicationtemplate',
-            index=models.Index(
-                fields=['host_exact'], name='app_applica_host_ex_7bfb56_idx'
-            ),
+            index=models.Index(fields=['host_exact'], name='app_applica_host_ex_7bfb56_idx'),
         ),
         migrations.AddField(
             model_name='applicationtemplateuserpermission',
@@ -359,9 +349,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='applicationtemplate',
-            index=models.Index(
-                fields=['application_type'], name='app_applica_applica_dd47f1_idx'
-            ),
+            index=models.Index(fields=['application_type'], name='app_applica_applica_dd47f1_idx'),
         ),
         migrations.CreateModel(
             name='ApplicationInstanceDbUsers',
@@ -396,9 +384,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='applicationinstancedbusers',
-            index=models.Index(
-                fields=['db_username'], name='application_db_user_1e30c1_idx'
-            ),
+            index=models.Index(fields=['db_username'], name='application_db_user_1e30c1_idx'),
         ),
         migrations.AlterModelOptions(
             name='applicationinstance',
@@ -421,9 +407,7 @@ class Migration(migrations.Migration):
             },
             bases=('applications.applicationtemplate',),
         ),
-        migrations.AlterUniqueTogether(
-            name='applicationtemplate', unique_together=set()
-        ),
+        migrations.AlterUniqueTogether(name='applicationtemplate', unique_together=set()),
         migrations.AddField(
             model_name='applicationtemplate',
             name='gitlab_project_id',
@@ -453,8 +437,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='applicationtemplate',
-            index=models.Index(
-                fields=['host_basename'], name='app_applica_host_ba_d9ab7e_idx'
-            ),
+            index=models.Index(fields=['host_basename'], name='app_applica_host_ba_d9ab7e_idx'),
         ),
     ]

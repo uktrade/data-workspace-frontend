@@ -16,9 +16,7 @@ class Migration(migrations.Migration):
             name='image',
             field=models.FileField(
                 blank=True,
-                storage=dataworkspace.apps.core.storage.S3FileStorage(
-                    location='case-studies'
-                ),
+                storage=dataworkspace.apps.core.storage.S3FileStorage(location='case-studies'),
                 upload_to='',
             ),
         ),

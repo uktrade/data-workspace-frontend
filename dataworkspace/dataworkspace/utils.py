@@ -60,9 +60,7 @@ def normalise_environment(key_values):
             return get_first_component(item[0])
 
         # groupby requires the items to be sorted by the grouping key
-        return itertools.groupby(
-            sorted(items, key=by_first_component), by_first_component
-        )
+        return itertools.groupby(sorted(items, key=by_first_component), by_first_component)
 
     def items_with_first_component(items, first_component):
         return {
@@ -77,9 +75,7 @@ def normalise_environment(key_values):
             first_component: normalise_environment(
                 items_with_first_component(items, first_component)
             )
-            for first_component, items in grouped_by_first_component(
-                with_more_components.items()
-            )
+            for first_component, items in grouped_by_first_component(with_more_components.items())
         },
     }
 

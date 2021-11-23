@@ -20,9 +20,7 @@ class Command(BaseCommand):
         user = test_data.get_new_user()
 
         table_name = (
-            "ref_"
-            + fake.first_name().lower()
-            + datetime.datetime.now().strftime('%Y%m%d%H%M%s')
+            "ref_" + fake.first_name().lower() + datetime.datetime.now().strftime('%Y%m%d%H%M%s')
         )
 
         self.stdout.write(f"creating new master dataset {name}")

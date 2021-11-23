@@ -90,9 +90,7 @@ class EventLogDataUserSerializer(serializers.ModelSerializer):
 
 
 class EventLogRelatedObjectField(serializers.RelatedField):
-    def to_representation(  # pylint: disable=inconsistent-return-statements
-        self, value
-    ):
+    def to_representation(self, value):  # pylint: disable=inconsistent-return-statements
         if isinstance(value, DataSet):
             return EventLogDatasetSerializer(value).data
         if isinstance(value, ReferenceDataset):

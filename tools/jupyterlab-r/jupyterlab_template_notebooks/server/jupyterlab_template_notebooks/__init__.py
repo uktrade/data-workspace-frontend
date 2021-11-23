@@ -36,8 +36,7 @@ class TemplateListHandler(IPythonHandler):
                         'name': PurePosixPath(path).name,
                     }
                     for path in glob(
-                        str(PurePosixPath(os.path.realpath(__file__)).parent)
-                        + '/*.ipynb'
+                        str(PurePosixPath(os.path.realpath(__file__)).parent) + '/*.ipynb'
                     )
                 ]
             }

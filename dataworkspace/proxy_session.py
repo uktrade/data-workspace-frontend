@@ -57,9 +57,7 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
                 return None
 
             with await redis_pool as conn:
-                redis_key = f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode(
-                    'ascii'
-                )
+                redis_key = f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode('ascii')
                 raw = await conn.execute('GET', redis_key)
             return raw.decode('ascii') if raw is not None else None
 
@@ -84,23 +82,16 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
             if to_set:
                 with await redis_pool as conn:
                     for key, value in to_set.items():
-                        redis_key = (
-                            f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode(
-                                'ascii'
-                            )
-                        )
+                        redis_key = f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode('ascii')
                         redis_value = value.encode('ascii')
-                        await conn.execute(
-                            'SET', redis_key, redis_value, 'EX', REDIS_MAX_AGE
-                        )
+                        await conn.execute('SET', redis_key, redis_value, 'EX', REDIS_MAX_AGE)
 
             expires = time.strftime(
                 '%a, %d-%b-%Y %T GMT', time.gmtime(time.time() + COOKIE_MAX_AGE)
             )
             secure = (
                 '; Secure'
-                if request.headers.get('x-forwarded-proto', request.url.scheme)
-                == 'https'
+                if request.headers.get('x-forwarded-proto', request.url.scheme) == 'https'
                 else ''
             )
 

@@ -14,9 +14,7 @@ def reorder(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('datasets', '0013_referencedatasetuploadlog_referencedatasetuploadlogrecord')
-    ]
+    dependencies = [('datasets', '0013_referencedatasetuploadlog_referencedatasetuploadlogrecord')]
 
     operations = [
         migrations.AlterModelOptions(
@@ -29,9 +27,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='referencedataset',
             name='sort_direction',
-            field=models.IntegerField(
-                choices=[(1, 'Ascending'), (2, 'Descending')], default=1
-            ),
+            field=models.IntegerField(choices=[(1, 'Ascending'), (2, 'Descending')], default=1),
         ),
         migrations.AddField(
             model_name='referencedataset',

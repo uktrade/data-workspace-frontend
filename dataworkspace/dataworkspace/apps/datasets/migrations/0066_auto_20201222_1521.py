@@ -18,9 +18,7 @@ class Migration(migrations.Migration):
                 default='public',
                 max_length=63,
                 validators=[
-                    django.core.validators.RegexValidator(
-                        regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
-                    )
+                    django.core.validators.RegexValidator(regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$')
                 ],
             ),
         ),
@@ -30,9 +28,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 max_length=63,
                 validators=[
-                    django.core.validators.RegexValidator(
-                        regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
-                    )
+                    django.core.validators.RegexValidator(regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$')
                 ],
             ),
         ),

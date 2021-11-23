@@ -91,9 +91,7 @@ def gitlab_has_developer_access(user, gitlab_project_id):
     )
 
     if status != 200:
-        raise Exception(
-            f'Unable to find GitLab user for {user.profile.sso_id}: received {status}'
-        )
+        raise Exception(f'Unable to find GitLab user for {user.profile.sso_id}: received {status}')
 
     if len(gitlab_users) > 1:
         raise Exception(f'Too many GitLab users matching {user.profile.sso_id}')

@@ -10,9 +10,7 @@ from dataworkspace.apps.core.utils import (
 
 
 def migrate_existing_application_instance_db_users(apps, _):
-    ApplicationInstanceDbUsers = apps.get_model(
-        'applications', 'ApplicationInstanceDbUsers'
-    )
+    ApplicationInstanceDbUsers = apps.get_model('applications', 'ApplicationInstanceDbUsers')
     for db_user in ApplicationInstanceDbUsers.objects.all():
         if db_user.application_instance.application_template.application_type == 'TOOL':
             db_role_and_schema_suffix = db_role_schema_suffix_for_user(

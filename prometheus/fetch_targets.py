@@ -47,7 +47,7 @@ async def async_main(logger, target_file, url, username, password):
             logger.debug('Saving %s to %s', file_sd_config, target_file)
             with open(target_file, 'w') as file:
                 file.write(json.dumps(file_sd_config))
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception('Exception fetching targets')
 
 

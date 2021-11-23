@@ -77,17 +77,12 @@ class DataGroupingManager(DeletableQuerySet):
         return (
             self.live()
             .annotate(
-                num_published_datasets=Count(
-                    'dataset', filter=Q(dataset__published=True)
-                ),
+                num_published_datasets=Count('dataset', filter=Q(dataset__published=True)),
                 num_published_reference_datasets=Count(
                     'referencedataset', filter=Q(referencedataset__published=True)
                 ),
             )
-            .filter(
-                Q(num_published_datasets__gt=0)
-                | Q(num_published_reference_datasets__gt=0)
-            )
+            .filter(Q(num_published_datasets__gt=0) | Q(num_published_reference_datasets__gt=0))
         )
 
 
@@ -115,9 +110,7 @@ class DataGrouping(DeletableTimestampedUserModel):
         blank=True,
     )
 
-    slug = models.SlugField(
-        max_length=50, db_index=True, unique=True, null=False, blank=False
-    )
+    slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
 
     objects = DataGroupingManager()
 
@@ -235,9 +228,7 @@ class DataSet(DeletableTimestampedUserModel):
         return self.name
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.update_published_timestamp()
         super().save(force_insert, force_update, using, update_fields)
 
@@ -272,16 +263,12 @@ class DataSet(DeletableTimestampedUserModel):
         ]
         related = []
         for related_field in RELATED_FIELDS:
-            related += [
-                copy.copy(obj) for obj in getattr(self, related_field + '_set').all()
-            ]
+            related += [copy.copy(obj) for obj in getattr(self, related_field + '_set').all()]
         return related
 
     def related_datasets(self, order=None):
         if self.type == DataSetType.DATACUT:
-            custom_queries = self.customdatasetquery_set.all().prefetch_related(
-                'tables'
-            )
+            custom_queries = self.customdatasetquery_set.all().prefetch_related('tables')
 
             query_tables = []
             for query in custom_queries:
@@ -336,8 +323,7 @@ class DataSet(DeletableTimestampedUserModel):
     def user_has_access(self, user):
         user_email_domain = user.email.split('@')[1]
         return (
-            self.user_access_type
-            in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
+            self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.datasetuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )
@@ -388,9 +374,7 @@ class DataSet(DeletableTimestampedUserModel):
         return reverse('admin:datasets_datacutdataset_change', args=(self.id,))
 
     def get_absolute_url(self):
-        return '{}#{}'.format(
-            reverse('datasets:dataset_detail', args=(self.id,)), self.slug
-        )
+        return '{}#{}'.format(reverse('datasets:dataset_detail', args=(self.id,)), self.slug)
 
     def get_usage_history_url(self):
         return reverse('datasets:usage_history', args=(self.id,))
@@ -406,9 +390,7 @@ class DataSetSubscriptionManager(models.Manager):
 class DataSetSubscription(TimeStampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    dataset = models.ForeignKey(
-        DataSet, on_delete=models.CASCADE, related_name='subscriptions'
-    )
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name='subscriptions')
 
     notify_on_schema_change = models.BooleanField(default=False)
     notify_on_data_change = models.BooleanField(default=False)
@@ -449,9 +431,7 @@ class DataSetVisualisation(DeletableTimestampedUserModel):
     database = models.ForeignKey(Database, default=None, on_delete=models.CASCADE)
     query = models.TextField(null=True, blank=True)
 
-    dataset = models.ForeignKey(
-        DataSet, on_delete=models.CASCADE, related_name='visualisations'
-    )
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name='visualisations')
 
     gds_phase_name = models.CharField(max_length=25, default='', blank=True)
 
@@ -475,9 +455,7 @@ class DataSetBookmark(models.Model):
 
 
 class DataSetApplicationTemplatePermission(models.Model):
-    application_template = models.ForeignKey(
-        ApplicationTemplate, on_delete=models.CASCADE
-    )
+    application_template = models.ForeignKey(ApplicationTemplate, on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     class Meta:
@@ -560,15 +538,11 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
     class Meta:
         abstract = True
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # If a reference code is set on the dataset, add a reference number to this source
         # by incrementing the counter on the reference code model
         if self.reference_number is None and self.dataset.reference_code is not None:
-            self.reference_number = (
-                self.dataset.reference_code.get_next_reference_number()
-            )
+            self.reference_number = self.dataset.reference_code.get_next_reference_number()
         # If the dataset's reference code was unset, unset this source's reference number
         elif self.reference_number is not None and self.dataset.reference_code is None:
             self.reference_number = None
@@ -576,10 +550,7 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
 
     @property
     def source_reference(self):
-        if (
-            self.dataset.reference_code is not None
-            and self.reference_number is not None
-        ):
+        if self.dataset.reference_code is not None and self.reference_number is not None:
             return ''.join(
                 [
                     self.dataset.reference_code.code.upper(),
@@ -736,9 +707,7 @@ class SourceTable(BaseSource):
         )
 
     def get_changelog(self):
-        return get_table_changelog(
-            self.database.memorable_name, self.schema, self.table
-        )
+        return get_table_changelog(self.database.memorable_name, self.schema, self.table)
 
 
 class SourceView(BaseSource):
@@ -749,9 +718,7 @@ class SourceView(BaseSource):
     )
 
     def get_absolute_url(self):
-        return reverse(
-            'datasets:dataset_source_view_download', args=(self.dataset.id, self.id)
-        )
+        return reverse('datasets:dataset_source_view_download', args=(self.dataset.id, self.id))
 
     def can_show_link_for_user(self, user):
         return True
@@ -814,9 +781,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
             client = boto3.client('s3')
             client.delete_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # Allow users to change a url from local to external and vice versa
         is_s3_link = self._is_s3_link()
         was_s3_link = self._original_url.startswith('s3://')
@@ -833,14 +798,10 @@ class SourceLink(ReferenceNumberedDatasetSource):
         super().delete(using, keep_parents)
 
     def get_absolute_url(self):
-        return reverse(
-            'datasets:dataset_source_link_download', args=(self.dataset_id, self.id)
-        )
+        return reverse('datasets:dataset_source_link_download', args=(self.dataset_id, self.id))
 
     def get_preview_url(self):
-        return reverse(
-            'datasets:data_cut_source_link_preview', args=(self.dataset_id, self.id)
-        )
+        return reverse('datasets:data_cut_source_link_preview', args=(self.dataset_id, self.id))
 
     def show_column_filter(self):
         # this will be enabled in subsequent PR
@@ -943,14 +904,10 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         return f'{self.dataset.name}: {self.name}'
 
     def get_absolute_url(self):
-        return reverse(
-            'datasets:dataset_query_download', args=(self.dataset_id, self.id)
-        )
+        return reverse('datasets:dataset_query_download', args=(self.dataset_id, self.id))
 
     def get_preview_url(self):
-        return reverse(
-            'datasets:data_cut_query_preview', args=(self.dataset_id, self.id)
-        )
+        return reverse('datasets:data_cut_query_preview', args=(self.dataset_id, self.id))
 
     def show_column_filter(self):
         return True
@@ -975,9 +932,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         return None
 
     def user_can_preview(self, user):
-        return self.dataset.user_has_access(user) and (
-            self.reviewed or user.is_superuser
-        )
+        return self.dataset.user_has_access(user) and (self.reviewed or user.is_superuser)
 
     def get_preview_data(self):
         from dataworkspace.apps.core.utils import (  # pylint: disable=cyclic-import,import-outside-toplevel
@@ -1002,9 +957,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         return columns, records
 
     def get_grid_data_url(self):
-        return reverse(
-            'datasets:custom_dataset_query_data', args=(self.dataset_id, self.id)
-        )
+        return reverse('datasets:custom_dataset_query_data', args=(self.dataset_id, self.id))
 
     @property
     def cleaned_query(self):
@@ -1053,9 +1006,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
 
 class CustomDatasetQueryTable(models.Model):
-    query = models.ForeignKey(
-        CustomDatasetQuery, on_delete=models.CASCADE, related_name='tables'
-    )
+    query = models.ForeignKey(CustomDatasetQuery, on_delete=models.CASCADE, related_name='tables')
     table = models.CharField(
         max_length=1024,
         blank=False,
@@ -1119,8 +1070,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        help_text='Name of the analysts database to keep in '
-        'sync with this reference dataset',
+        help_text='Name of the analysts database to keep in ' 'sync with this reference dataset',
     )
     sort_field = models.ForeignKey(
         'ReferenceDatasetField',
@@ -1130,9 +1080,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         help_text='The field to order records by in any outputs. '
         'If not set records will be sorted by last updated date.',
     )
-    sort_direction = models.IntegerField(
-        default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES
-    )
+    sort_direction = models.IntegerField(default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES)
     number_of_downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name='+', blank=True)
     information_asset_owner = models.ForeignKey(
@@ -1210,9 +1158,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self.minor_version = self.published_minor_version
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
         if not create and self._schema_has_changed():
             self.schema_version += 1
@@ -1227,24 +1173,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 editor.create_model(model_class)
             # Create the external database table
             if self.external_database is not None:
-                self._create_external_database_table(
-                    self.external_database.memorable_name
-                )
+                self._create_external_database_table(self.external_database.memorable_name)
         else:
             if self.external_database != self._original_ext_db:
                 # If external db has been changed delete the original table
                 if self._original_ext_db is not None:
-                    self._drop_external_database_table(
-                        self._original_ext_db.memorable_name
-                    )
+                    self._drop_external_database_table(self._original_ext_db.memorable_name)
                 # if external db is now set create the table and sync existing records
                 if self.external_database is not None:
-                    self._create_external_database_table(
-                        self.external_database.memorable_name
-                    )
-                    self.sync_to_external_database(
-                        self.external_database.memorable_name
-                    )
+                    self._create_external_database_table(self.external_database.memorable_name)
+                    self.sync_to_external_database(self.external_database.memorable_name)
 
             # If the db has been changed update it
             if self._schema_has_changed():
@@ -1319,9 +1257,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             f.name
             if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
             else f.relationship_name: f
-            for f in self.fields.filter(
-                data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES
-            )
+            for f in self.fields.filter(data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES)
         }
 
     @property
@@ -1381,9 +1317,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     @property
     def published_version(self):
-        return '{}.{}'.format(
-            self.published_major_version, self.published_minor_version
-        )
+        return '{}.{}'.format(self.published_major_version, self.published_minor_version)
 
     @property
     def record_sort_order(self):
@@ -1484,9 +1418,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return self.get_records().get(**{field_name: identifier})
 
     @transaction.atomic
-    def save_record(
-        self, internal_id: Optional[int], form_data: dict, sync_externally=True
-    ):
+    def save_record(self, internal_id: Optional[int], form_data: dict, sync_externally=True):
         """
         Save a record to the local database and associate it with this reference dataset.
         Replicate the record in any linked external databases.
@@ -1544,19 +1476,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     record_data[field.column_name] = getattr(record, field.column_name)
                 else:
-                    record_data[field.relationship_name] = getattr(
-                        record, field.relationship_name
-                    )
+                    record_data[field.relationship_name] = getattr(record, field.relationship_name)
 
-            if (
-                model_class.objects.using(external_database)
-                .filter(pk=record.id)
-                .exists()
-            ):
+            if model_class.objects.using(external_database).filter(pk=record.id).exists():
                 with external_model_class(model_class) as mc:
-                    mc.objects.using(external_database).filter(pk=record.id).update(
-                        **record_data
-                    )
+                    mc.objects.using(external_database).filter(pk=record.id).update(**record_data)
             else:
                 with external_model_class(model_class) as mc:
                     mc.objects.using(external_database).create(
@@ -1586,9 +1510,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return ['default']
 
     def get_absolute_url(self):
-        return '{}#{}'.format(
-            reverse('datasets:dataset_detail', args=(self.uuid,)), self.slug
-        )
+        return '{}#{}'.format(reverse('datasets:dataset_detail', args=(self.uuid,)), self.slug)
 
     def get_admin_edit_url(self):
         return reverse('admin:datasets_referencedataset_change', args=(self.id,))
@@ -1658,9 +1580,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     record_data[field.column_name] = getattr(record, field.column_name)
                     # ISO format dates for js compatibility
                     if isinstance(record_data[field.column_name], datetime):
-                        record_data[field.column_name] = record_data[
-                            field.column_name
-                        ].isoformat()
+                        record_data[field.column_name] = record_data[field.column_name].isoformat()
                 else:
                     relationship = getattr(record, field.relationship_name)
                     record_data[field.linked_reference_dataset_field.column_name] = (
@@ -1694,9 +1614,7 @@ class ReferenceDatasetRecordBase(models.Model):
         abstract = True
 
     def __str__(self):
-        return str(
-            getattr(self, self.reference_dataset.display_name_field.column_name, None)
-        )
+        return str(getattr(self, self.reference_dataset.display_name_field.column_name, None))
 
 
 class ReferenceDatasetField(TimeStampedUserModel):
@@ -1854,9 +1772,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         for database in self.reference_dataset.get_database_names():
             with connections[database].schema_editor() as editor:
                 if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
-                    editor.add_field(
-                        model_class, model_class._meta.get_field(self.column_name)
-                    )
+                    editor.add_field(model_class, model_class._meta.get_field(self.column_name))
                 else:
                     editor.add_field(
                         model_class,
@@ -1906,9 +1822,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
                 )
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """
         On ReferenceDatasetField save update the associated table.
         :param force_insert:
@@ -1923,8 +1837,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         # to another reference dataset field
         if (
             self.linked_reference_dataset_field
-            and self.linked_reference_dataset_field.data_type
-            == self.DATA_TYPE_FOREIGN_KEY
+            and self.linked_reference_dataset_field.data_type == self.DATA_TYPE_FOREIGN_KEY
         ):
             raise ValidationError(
                 'Unable to link reference dataset fields to another field that is itself linked'
@@ -2088,19 +2001,13 @@ class ReferenceDatasetUploadLog(TimeStampedUserModel):
         ordering = ('created_date',)
 
     def additions(self):
-        return self.records.filter(
-            status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED
-        )
+        return self.records.filter(status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED)
 
     def updates(self):
-        return self.records.filter(
-            status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED
-        )
+        return self.records.filter(status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED)
 
     def errors(self):
-        return self.records.filter(
-            status=ReferenceDatasetUploadLogRecord.STATUS_FAILURE
-        )
+        return self.records.filter(status=ReferenceDatasetUploadLogRecord.STATUS_FAILURE)
 
 
 class ReferenceDatasetUploadLogRecord(TimeStampedModel):
@@ -2134,9 +2041,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True
     )
     name = models.CharField(max_length=255, null=False, blank=False)
-    slug = models.SlugField(
-        max_length=50, db_index=True, unique=True, null=False, blank=False
-    )
+    slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
     tags = models.ManyToManyField(Tag, related_name='+', blank=True)
     short_description = models.CharField(max_length=255)
     description = RichTextField(null=True, blank=True)
@@ -2184,9 +2089,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         default=UserAccessType.REQUIRES_AUTHENTICATION,
     )
     events = GenericRelation(EventLog)
-    datasets = models.ManyToManyField(
-        DataSet, related_name='related_visualisations', blank=True
-    )
+    datasets = models.ManyToManyField(DataSet, related_name='related_visualisations', blank=True)
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
@@ -2213,14 +2116,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         indexes = (GinIndex(fields=["search_vector"]),)
 
     def get_admin_edit_url(self):
-        return reverse(
-            'admin:datasets_visualisationcatalogueitem_change', args=(self.id,)
-        )
+        return reverse('admin:datasets_visualisationcatalogueitem_change', args=(self.id,))
 
     def get_absolute_url(self):
-        return '{}#{}'.format(
-            reverse('datasets:dataset_detail', args=(self.id,)), self.slug
-        )
+        return '{}#{}'.format(reverse('datasets:dataset_detail', args=(self.id,)), self.slug)
 
     def update_published_and_updated_timestamps(self):
         if not self.published:
@@ -2232,9 +2131,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         self.updated_at = timezone.now()
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.update_published_and_updated_timestamps()
         super().save(force_insert, force_update, using, update_fields)
 
@@ -2274,8 +2171,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         user_email_domain = user.email.split('@')[1]
 
         return (
-            self.user_access_type
-            in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
+            self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.visualisationuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )
@@ -2301,9 +2197,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
 class VisualisationUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    visualisation = models.ForeignKey(
-        VisualisationCatalogueItem, on_delete=models.CASCADE
-    )
+    visualisation = models.ForeignKey(VisualisationCatalogueItem, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'app_visualisationuserpermission'
@@ -2312,9 +2206,7 @@ class VisualisationUserPermission(models.Model):
 
 class VisualisationBookmark(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    visualisation = models.ForeignKey(
-        VisualisationCatalogueItem, on_delete=models.CASCADE
-    )
+    visualisation = models.ForeignKey(VisualisationCatalogueItem, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'app_visualisationbookmark'

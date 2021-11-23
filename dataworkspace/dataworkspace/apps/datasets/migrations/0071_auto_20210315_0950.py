@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name='toolqueryauditlog',
-            index=models.Index(
-                fields=['timestamp', 'id'], name='datasets_to_timesta_a37b49_idx'
-            ),
+            index=models.Index(fields=['timestamp', 'id'], name='datasets_to_timesta_a37b49_idx'),
         ),
     ]

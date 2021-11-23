@@ -9,12 +9,8 @@ def set_explorer_connection_defaults(apps, _):
     Query = apps.get_model('explorer', 'Query')
     QueryLog = apps.get_model('explorer', 'QueryLog')
 
-    Query.objects.filter(connection__isnull=True).update(
-        connection=EXPLORER_DEFAULT_CONNECTION
-    )
-    QueryLog.objects.filter(connection__isnull=True).update(
-        connection=EXPLORER_DEFAULT_CONNECTION
-    )
+    Query.objects.filter(connection__isnull=True).update(connection=EXPLORER_DEFAULT_CONNECTION)
+    QueryLog.objects.filter(connection__isnull=True).update(connection=EXPLORER_DEFAULT_CONNECTION)
 
 
 class Migration(migrations.Migration):

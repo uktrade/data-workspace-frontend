@@ -5,9 +5,7 @@ from dataworkspace.apps.applications.models import ApplicationInstance
 
 class ApplicationInstanceSerializer(serializers.ModelSerializer):
     state = serializers.SerializerMethodField()
-    application_template_name = serializers.CharField(
-        source='application_template.name'
-    )
+    application_template_name = serializers.CharField(source='application_template.name')
 
     class Meta:
         model = ApplicationInstance

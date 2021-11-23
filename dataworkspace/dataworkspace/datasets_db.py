@@ -11,9 +11,7 @@ from dataworkspace.utils import TYPE_CODES_REVERSED
 logger = logging.getLogger('app')
 
 
-def get_columns(
-    database_name, schema=None, table=None, query=None, include_types=False
-):
+def get_columns(database_name, schema=None, table=None, query=None, include_types=False):
     if table is not None and schema is not None:
         source = psycopg2.sql.SQL("{}.{}").format(
             psycopg2.sql.Identifier(schema), psycopg2.sql.Identifier(table)
@@ -25,14 +23,11 @@ def get_columns(
 
     with connections[database_name].cursor() as cursor:
         try:
-            cursor.execute(
-                psycopg2.sql.SQL('SELECT * from {} WHERE false').format(source)
-            )
+            cursor.execute(psycopg2.sql.SQL('SELECT * from {} WHERE false').format(source))
 
             if include_types:
                 return [
-                    (c[0], TYPE_CODES_REVERSED.get(c[1], "Unknown"))
-                    for c in cursor.description
+                    (c[0], TYPE_CODES_REVERSED.get(c[1], "Unknown")) for c in cursor.description
                 ]
 
             return [c[0] for c in cursor.description]

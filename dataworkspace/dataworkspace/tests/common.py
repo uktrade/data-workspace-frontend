@@ -37,9 +37,7 @@ class BaseTestCaseMixin:
         return self.client.get(url, data=params, **self.user_data)
 
     def _authenticated_post(self, url, data=None, post_format=None):
-        return self.client.post(
-            url, data=data, follow=True, format=post_format, **self.user_data
-        )
+        return self.client.post(url, data=data, follow=True, format=post_format, **self.user_data)
 
     def _authenticated_put(self, url, data=None):
         return self.client.put(url, data=data, **self.user_data)

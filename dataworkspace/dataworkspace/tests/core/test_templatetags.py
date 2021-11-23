@@ -15,9 +15,7 @@ class _ExampleForm(Form):
     )
 
 
-@pytest.mark.parametrize(
-    'selections, expected_string', (([], ''), ([1], 'one'), ([3], 'three'))
-)
+@pytest.mark.parametrize('selections, expected_string', (([], ''), ([1], 'one'), ([3], 'three')))
 def test_get_single_choice_field_data_for_gtm(selections, expected_string):
     form = _ExampleForm(data={'single': selections})
 

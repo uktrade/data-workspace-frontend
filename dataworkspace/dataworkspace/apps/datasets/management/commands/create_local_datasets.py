@@ -19,7 +19,7 @@ class CommandRunner(threading.Thread):
         while not self.stop_command.is_set():
             try:
                 call_command(self.command, *self.args)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 logging.error(e)
             time.sleep(1)
 

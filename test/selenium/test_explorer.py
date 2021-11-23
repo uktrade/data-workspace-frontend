@@ -206,9 +206,7 @@ class TestDataExplorer:
         assert home_page.read_result_rows() == []
         assert "permission denied for relation" in home_page.get_html()
 
-    def test_data_explorer_cached_credentials_can_be_reset_using_admin_action(
-        self, _application
-    ):
+    def test_data_explorer_cached_credentials_can_be_reset_using_admin_action(self, _application):
         # This doesn't strictly test that the action is available to an admin, but it does test the routine
         # that the admin action uses.
 
@@ -257,9 +255,7 @@ class TestDataExplorer:
         assert "Columns in public.explorer_dataset" in home_page.get_html()
         assert "Columns in public.explorer_2_dataset" in home_page.get_html()
 
-        reset_data_explorer_credentials(
-            user_sso_id='9931f73c-469d-4110-9f58-92a74ab1bbfa'
-        )
+        reset_data_explorer_credentials(user_sso_id='9931f73c-469d-4110-9f58-92a74ab1bbfa')
 
         home_page.open()  # Reset the page, i.e. to remove the existing query
         home_page.enter_query("select count(*) as count from public.explorer_dataset")

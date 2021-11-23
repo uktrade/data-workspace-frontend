@@ -51,9 +51,7 @@ def find_datasets(request):
             else None
         )
         if matches:
-            visible_matches, has_suppressed_tables = _enrich_and_suppress_matches(
-                request, matches
-            )
+            visible_matches, has_suppressed_tables = _enrich_and_suppress_matches(request, matches)
             results = group_tables_by_master_dataset(visible_matches, request.user)
 
         if search_term:
@@ -126,9 +124,7 @@ class BaseResultsView(WaffleFlagMixin, DetailView):
                 'sortable': False,
                 'dataType': GRID_DATA_TYPE_MAP.get(column[1], 'text'),
                 'filterParams': {
-                    'filterOptions': filter_map.get(
-                        GRID_DATA_TYPE_MAP.get(column[1], column[1])
-                    )
+                    'filterOptions': filter_map.get(GRID_DATA_TYPE_MAP.get(column[1], column[1]))
                 },
             }
             for column in self._get_columns()
@@ -155,9 +151,7 @@ class ResultsView(BaseResultsView):
                 'dataset': self.object.dataset,
                 'source_table': self.object,
                 'columns': self._get_columns(),
-                'total_results': es_client.get_count(
-                    search_term, self._get_index_alias()
-                ),
+                'total_results': es_client.get_count(search_term, self._get_index_alias()),
                 'grid_column_definitions': self._get_column_config(),
             }
         )
@@ -174,13 +168,9 @@ class DataGridResultsView(BaseResultsView):
         start = int(post_data.get('start', 0))
         limit = int(post_data.get('limit', 100))
 
-        filters = build_grid_filters(
-            self._get_column_config(), post_data.get('filters', {})
-        )
+        filters = build_grid_filters(self._get_column_config(), post_data.get('filters', {}))
 
-        result_count = es_client.get_count(
-            search_term, self._get_index_alias(), filters=filters
-        )
+        result_count = es_client.get_count(search_term, self._get_index_alias(), filters=filters)
 
         results_proxy = ResultsProxy(
             es_client=es_client,

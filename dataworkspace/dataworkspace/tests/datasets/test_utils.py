@@ -47,18 +47,11 @@ def test_dataset_type_to_manage_unpublished_permission_codename():
 @pytest.mark.django_db
 def test_get_code_snippets_for_table(metadata_db):
     ds = DataSetFactory.create(type=DataSetType.MASTER)
-    sourcetable = SourceTableFactory.create(
-        dataset=ds, schema="public", table="MY_LOVELY_TABLE"
-    )
+    sourcetable = SourceTableFactory.create(dataset=ds, schema="public", table="MY_LOVELY_TABLE")
 
     snippets = get_code_snippets_for_table(sourcetable)
-    assert (
-        """SELECT * FROM \\"public\\".\\"MY_LOVELY_TABLE\\" LIMIT 50"""
-        in snippets['python']
-    )
-    assert (
-        """SELECT * FROM \\"public\\".\\"MY_LOVELY_TABLE\\" LIMIT 50""" in snippets['r']
-    )
+    assert """SELECT * FROM \\"public\\".\\"MY_LOVELY_TABLE\\" LIMIT 50""" in snippets['python']
+    assert """SELECT * FROM \\"public\\".\\"MY_LOVELY_TABLE\\" LIMIT 50""" in snippets['r']
     assert snippets['sql'] == """SELECT * FROM "public"."MY_LOVELY_TABLE" LIMIT 50"""
 
 
@@ -192,9 +185,7 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
                 'ImportMode': 'DIRECT_QUERY',
                 'DataSetId': '00000000-0000-0000-0000-000000000001',
                 'LastUpdatedTime': datetime.datetime(2021, 1, 1),
-                'PhysicalTableMap': {
-                    '00000000-0000-0000-0000-000000000000': {'S3Source': {}}
-                },
+                'PhysicalTableMap': {'00000000-0000-0000-0000-000000000000': {'S3Source': {}}},
             }
         }
         visualisation_link = VisualisationLinkFactory(visualisation_type='QUICKSIGHT')
@@ -517,9 +508,7 @@ class TestUpdateQuickSightVisualisationsSqlQueries:
                 'LastUpdatedTime': datetime.datetime(2021, 3, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
-                        'CustomSql': {
-                            'SqlQuery': 'SELECT * FROM public.foo WHERE bar = 1'
-                        }
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.foo WHERE bar = 1'}
                     }
                 },
             }
@@ -529,12 +518,8 @@ class TestUpdateQuickSightVisualisationsSqlQueries:
 
         assert len(visualisation_link.sql_queries.all()) == 2
 
-        new_sql_query = visualisation_link.sql_queries.all().order_by('-created_date')[
-            0
-        ]
-        original_sql_query = visualisation_link.sql_queries.all().order_by(
-            '-created_date'
-        )[1]
+        new_sql_query = visualisation_link.sql_queries.all().order_by('-created_date')[0]
+        original_sql_query = visualisation_link.sql_queries.all().order_by('-created_date')[1]
 
         assert new_sql_query.is_latest is True
         assert new_sql_query.sql_query == 'SELECT * FROM public.foo WHERE bar = 1'
@@ -594,9 +579,7 @@ class TestUpdateQuickSightVisualisationsSqlQueries:
                 'LastUpdatedTime': datetime.datetime(2021, 3, 1),
                 'PhysicalTableMap': {
                     '00000000-0000-0000-0000-000000000000': {
-                        'CustomSql': {
-                            'SqlQuery': 'SELECT * FROM public.foo WHERE bar = 1'
-                        }
+                        'CustomSql': {'SqlQuery': 'SELECT * FROM public.foo WHERE bar = 1'}
                     },
                     '00000000-0000-0000-0000-000000000001': {
                         'CustomSql': {'SqlQuery': 'SELECT * FROM public.bar'}
@@ -622,9 +605,7 @@ class TestUpdateQuickSightVisualisationsSqlQueries:
         assert len(table_2_sql_queries) == 1
 
         assert table_1_sql_queries[0].is_latest is True
-        assert (
-            table_1_sql_queries[0].sql_query == 'SELECT * FROM public.foo WHERE bar = 1'
-        )
+        assert table_1_sql_queries[0].sql_query == 'SELECT * FROM public.foo WHERE bar = 1'
 
         assert table_1_sql_queries[1].is_latest is False
         assert table_1_sql_queries[1].sql_query == 'SELECT * FROM public.foo'
@@ -633,9 +614,7 @@ class TestUpdateQuickSightVisualisationsSqlQueries:
 class TestLinkSupersetVisualisationsRelatedDatasets:
     @pytest.mark.django_db
     @patch('dataworkspace.apps.datasets.utils.extract_queried_tables_from_sql_query')
-    def test_links_superset_dashboard_to_dataset(
-        self, mock_extract_tables, requests_mock
-    ):
+    def test_links_superset_dashboard_to_dataset(self, mock_extract_tables, requests_mock):
         requests_mock.post(
             'http://superset.test/api/v1/security/login', json={'access_token': '123'}
         )
@@ -911,9 +890,7 @@ class TestStoreCustomDatasetQueryTableStructures:
 
 class TestSendNotificationEmails:
     @pytest.mark.django_db
-    @override_settings(
-        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
-    )
+    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000')
     @patch('dataworkspace.apps.datasets.utils.send_email')
     @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
     def test_structure_change_sends_notification(
@@ -922,9 +899,7 @@ class TestSendNotificationEmails:
         mock_get_table_changelog.return_value = [
             {
                 'change_id': 1,
-                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
             }
         ]
         mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
@@ -941,9 +916,7 @@ class TestSendNotificationEmails:
                 'frank.exampleson@test.com',
                 personalisation={
                     'dataset_name': ds.name,
-                    'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                        tzinfo=pytz.UTC
-                    ),
+                    'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
                 },
             )
         ]
@@ -956,18 +929,11 @@ class TestSendNotificationEmails:
 
         assert user_notifications[0].notification == notifications[0]
         assert user_notifications[0].subscription.dataset == ds
-        assert (
-            user_notifications[0].subscription.user.email == 'frank.exampleson@test.com'
-        )
-        assert (
-            str(user_notifications[0].email_id)
-            == '00000000-0000-0000-0000-000000000000'
-        )
+        assert user_notifications[0].subscription.user.email == 'frank.exampleson@test.com'
+        assert str(user_notifications[0].email_id) == '00000000-0000-0000-0000-000000000000'
 
     @pytest.mark.django_db
-    @override_settings(
-        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
-    )
+    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000')
     @patch('dataworkspace.apps.datasets.utils.send_email')
     @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
     def test_multiple_runs_dont_send_duplicate_notifications(
@@ -976,9 +942,7 @@ class TestSendNotificationEmails:
         mock_get_table_changelog.return_value = [
             {
                 'change_id': 1,
-                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
             }
         ]
         mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
@@ -995,9 +959,7 @@ class TestSendNotificationEmails:
                 'frank.exampleson@test.com',
                 personalisation={
                     'dataset_name': ds.name,
-                    'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                        tzinfo=pytz.UTC
-                    ),
+                    'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
                 },
             )
         ]
@@ -1017,9 +979,7 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 1
 
     @pytest.mark.django_db
-    @override_settings(
-        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
-    )
+    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000')
     @patch('dataworkspace.apps.datasets.utils.send_email')
     @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
     def test_changelog_records_with_different_structures_sends_single_notification(
@@ -1028,15 +988,11 @@ class TestSendNotificationEmails:
         mock_get_table_changelog.return_value = [
             {
                 'change_id': 2,
-                'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
             },
             {
                 'change_id': 1,
-                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
             },
         ]
         mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
@@ -1054,9 +1010,7 @@ class TestSendNotificationEmails:
                 'frank.exampleson@test.com',
                 personalisation={
                     'dataset_name': ds.name,
-                    'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
-                        tzinfo=pytz.UTC
-                    ),
+                    'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
                 },
             ),
         ]
@@ -1068,9 +1022,7 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 1
 
     @pytest.mark.django_db
-    @override_settings(
-        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
-    )
+    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000')
     @patch('dataworkspace.apps.datasets.utils.send_email')
     @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
     def test_changelog_records_with_no_subscribers_doesnt_send_notifications(
@@ -1079,9 +1031,7 @@ class TestSendNotificationEmails:
         mock_get_table_changelog.return_value = [
             {
                 'change_id': 1,
-                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
             }
         ]
         mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
@@ -1100,9 +1050,7 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 0
 
     @pytest.mark.django_db
-    @override_settings(
-        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
-    )
+    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000')
     @patch('dataworkspace.apps.datasets.utils.send_email')
     @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
     def test_subscription_after_changelog_gets_processed_doesnt_send_notifications(
@@ -1111,9 +1059,7 @@ class TestSendNotificationEmails:
         mock_get_table_changelog.return_value = [
             {
                 'change_id': 1,
-                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
             }
         ]
         mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
@@ -1144,9 +1090,7 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 0
 
     @pytest.mark.django_db
-    @override_settings(
-        NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000'
-    )
+    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID='000000000000000000000000000')
     @patch('dataworkspace.apps.datasets.utils.send_email')
     @patch('dataworkspace.apps.datasets.utils.get_table_changelog')
     def test_subscription_after_changelog_gets_processed_but_before_new_structure_change_sends_one_notification(
@@ -1155,9 +1099,7 @@ class TestSendNotificationEmails:
         mock_get_table_changelog.return_value = [
             {
                 'change_id': 1,
-                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
             }
         ]
         mock_send_email.return_value = '00000000-0000-0000-0000-000000000000'
@@ -1180,15 +1122,11 @@ class TestSendNotificationEmails:
         mock_get_table_changelog.return_value = [
             {
                 'change_id': 2,
-                'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
             },
             {
                 'change_id': 1,
-                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(
-                    tzinfo=pytz.UTC
-                ),
+                'change_date': datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
             },
         ]
         send_notification_emails()
@@ -1199,9 +1137,7 @@ class TestSendNotificationEmails:
                 'frank.exampleson@test.com',
                 personalisation={
                     'dataset_name': ds.name,
-                    'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(
-                        tzinfo=pytz.UTC
-                    ),
+                    'change_date': datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
                 },
             )
         ]

@@ -344,9 +344,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     'name',
-                    models.CharField(
-                        help_text='The display name for the field', max_length=255
-                    ),
+                    models.CharField(help_text='The display name for the field', max_length=255),
                 ),
                 ('description', models.TextField(blank=True, null=True)),
                 ('required', models.BooleanField(default=False)),

@@ -64,26 +64,20 @@ def _export(request, querylog, download=True):
         ):
             # If the temp query table has been cleaned up, we don't care, so don't log the exception (e.g. to sentry)
             logger = logging.getLogger('app')
-            logger.exception(
-                'Unable to fetch results for querylog %s: %s', querylog.id, e
-            )
+            logger.exception('Unable to fetch results for querylog %s: %s', querylog.id, e)
 
         # But we still need to raise it here for handling to present the user a more friendly error.
         raise e
 
     response = HttpResponse(output, content_type=exporter.content_type)
     if download:
-        response['Content-Disposition'] = 'attachment; filename="%s"' % (
-            exporter.get_filename()
-        )
+        response['Content-Disposition'] = 'attachment; filename="%s"' % (exporter.get_filename())
     return response
 
 
 class DownloadFromQuerylogView(View):
     def get(self, request, querylog_id):
-        querylog = get_object_or_404(
-            QueryLog, pk=querylog_id, run_by_user=self.request.user
-        )
+        querylog = get_object_or_404(QueryLog, pk=querylog_id, run_by_user=self.request.user)
 
         try:
             return _export(request, querylog)
@@ -121,11 +115,7 @@ class ListQueryView(ListView):
         return context
 
     def get_queryset(self):
-        qs = (
-            Query.objects.filter(created_by_user=self.request.user)
-            .order_by('-created_at')
-            .all()
-        )
+        qs = Query.objects.filter(created_by_user=self.request.user).order_by('-created_at').all()
         return qs.annotate(run_count=Count('querylog'))
 
     model = Query
@@ -163,9 +153,7 @@ class CreateQueryView(CreateView):
 
         play_sql = get_playground_sql_from_request(request)
         extra_context['disable_sql'] = True
-        extra_context['backlink'] = (
-            reverse("explorer:index") + f"?play_id={play_sql.id}"
-        )
+        extra_context['backlink'] = reverse("explorer:index") + f"?play_id={play_sql.id}"
 
         extra_context['form_action'] = request.get_full_path()
 
@@ -224,18 +212,14 @@ class CreateQueryView(CreateView):
                     extra={"sql": query.sql},
                 )
                 return HttpResponseRedirect(
-                    reverse_lazy(
-                        'explorer:query_detail', kwargs={'query_id': self.object.id}
-                    )
+                    reverse_lazy('explorer:query_detail', kwargs={'query_id': self.object.id})
                 )
 
             return ret
 
         elif action == 'edit':
             query_params = (('sql', request.POST.get('sql')),)
-            return HttpResponseRedirect(
-                reverse('explorer:index') + f"?{urlencode(query_params)}"
-            )
+            return HttpResponseRedirect(reverse('explorer:index') + f"?{urlencode(query_params)}")
 
         else:
             return HttpResponse(f"Unknown form action: {action}", 400)
@@ -296,9 +280,7 @@ class PlayQueryView(View):
                 Query, pk=existing_query_id, created_by_user=self.request.user
             )
         else:
-            query = Query(
-                sql=sql, title="Playground", connection=request.POST.get('connection')
-            )
+            query = Query(sql=sql, title="Playground", connection=request.POST.get('connection'))
 
         if action == 'save':
             play_sql, _ = PlaygroundSQL.objects.get_or_create(
@@ -326,18 +308,14 @@ class PlayQueryView(View):
             query.params = url_get_params(request)
             rows = url_get_rows(request)
             page = url_get_page(request)
-            return self.render_with_sql(
-                request, query, run_query=True, rows=rows, page=page
-            )
+            return self.render_with_sql(request, query, run_query=True, rows=rows, page=page)
 
         elif action == 'share':
             play_sql, _ = PlaygroundSQL.objects.get_or_create(
                 sql=sql, created_by_user=request.user
             )
             play_sql.save()
-            return HttpResponseRedirect(
-                f"{reverse('explorer:share_query')}?play_id={play_sql.id}"
-            )
+            return HttpResponseRedirect(f"{reverse('explorer:share_query')}?play_id={play_sql.id}")
 
         else:
             return HttpResponse(f"Unknown form action: {action}", 400)
@@ -367,9 +345,7 @@ class PlayQueryView(View):
     ):
 
         download_failed = request.GET.get('error') == 'download'
-        form = QueryForm(
-            request.POST if request.method == 'POST' else None, instance=query
-        )
+        form = QueryForm(request.POST if request.method == 'POST' else None, instance=query)
 
         # If there's custom SQL in URL params, override anything from the query. This may happen if someone is editing
         # a query, goes to save it, then clicks the backlink. We need to preserve their edited SQL rather than just
@@ -413,9 +389,7 @@ class PlayQueryView(View):
 class QueryView(View):
     def get(self, request, query_id):
         play_sql = get_playground_sql_from_request(request)
-        query, form = QueryView.get_instance_and_form(
-            request, query_id, play_sql=play_sql
-        )
+        query, form = QueryView.get_instance_and_form(request, query_id, play_sql=play_sql)
         query.save()  # updates the modified date
 
         context = {
@@ -432,9 +406,7 @@ class QueryView(View):
 
         if action == 'save':
             show = url_get_show(request)
-            query, form = QueryView.get_instance_and_form(
-                request, query_id, play_sql=play_sql
-            )
+            query, form = QueryView.get_instance_and_form(request, query_id, play_sql=play_sql)
             success = form.is_valid() and form.save()
             vm = query_viewmodel(
                 request,
@@ -453,17 +425,13 @@ class QueryView(View):
                     related_object=query,
                     extra={"sql": query.sql},
                 )
-                return redirect(
-                    reverse('explorer:query_detail', kwargs={"query_id": query.id})
-                )
+                return redirect(reverse('explorer:query_detail', kwargs={"query_id": query.id}))
 
             vm['form_action'] = request.get_full_path()
             return render(self.request, 'explorer/query.html', vm)
 
         elif action == 'edit':
-            query, _ = QueryView.get_instance_and_form(
-                request, query_id, play_sql=play_sql
-            )
+            query, _ = QueryView.get_instance_and_form(request, query_id, play_sql=play_sql)
 
             return HttpResponseRedirect(self.get_edit_sql_url(request, query))
 
@@ -484,9 +452,7 @@ class QueryView(View):
     def get_instance_and_form(request, query_id, play_sql=None):
         query = get_object_or_404(Query, pk=query_id, created_by_user=request.user)
         query.params = url_get_params(request)
-        form = QueryForm(
-            request.POST if len(request.POST) > 0 else None, instance=query
-        )
+        form = QueryForm(request.POST if len(request.POST) > 0 else None, instance=query)
 
         if play_sql:
             form.initial['sql'] = play_sql.sql
@@ -565,9 +531,7 @@ class QueryLogResultView(View):
         html = None
 
         try:
-            query_log = get_object_or_404(
-                QueryLog, pk=querylog_id, run_by_user=self.request.user
-            )
+            query_log = get_object_or_404(QueryLog, pk=querylog_id, run_by_user=self.request.user)
         except Http404:
             state = QueryLogState.FAILED
             error = 'Error fetching results. Please try running your query again.'
@@ -631,9 +595,7 @@ class ShareQueryView(FormView):
         initial.update(
             {
                 'query': self.query_object.sql,
-                'message': email_template.render(
-                    {'query': self.query_object.sql}, self.request
-                ),
+                'message': email_template.render({'query': self.query_object.sql}, self.request),
             }
         )
         return initial
@@ -666,17 +628,13 @@ class ShareQueryConfirmationView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context['user'] = get_object_or_404(
-            get_user_model(), id=self.kwargs['recipient_id']
-        )
+        context['user'] = get_object_or_404(get_user_model(), id=self.kwargs['recipient_id'])
         return context
 
 
 class RunningQueryView(View):
     def get(self, request, query_log_id):
-        query_log = get_object_or_404(
-            QueryLog, pk=query_log_id, run_by_user=self.request.user
-        )
+        query_log = get_object_or_404(QueryLog, pk=query_log_id, run_by_user=self.request.user)
         query_instance = None
         query_id = url_get_query_id(request)
         if query_id:

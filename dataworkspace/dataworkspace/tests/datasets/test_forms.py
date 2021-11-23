@@ -37,8 +37,7 @@ class TestFilterWidget:
             len(soup.find_all("div", class_="govuk-checkboxes__item")) == num_choices
         ), "Widget should renderall of the choices"
         assert (
-            bool(soup.find_all("button", text="Show more choices"))
-            is expect_show_more_button
+            bool(soup.find_all("button", text="Show more choices")) is expect_show_more_button
         ), "Widget should render a 'show more' button if there are more choices than we want to initially show."
         assert (
             len(soup.find_all("div", class_="govuk-checkboxes__item app-js-hidden"))

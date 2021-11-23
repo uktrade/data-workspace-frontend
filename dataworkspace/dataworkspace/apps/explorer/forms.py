@@ -55,11 +55,7 @@ class QueryForm(ModelForm):
 
     @property
     def created_by_user_email(self):
-        return (
-            self.instance.created_by_user.email
-            if self.instance.created_by_user
-            else '--'
-        )
+        return self.instance.created_by_user.email if self.instance.created_by_user else '--'
 
     @property
     def created_at_time(self):

@@ -24,9 +24,7 @@ def get_people_url(name):
     )
 
 
-def build_ticket_description_text(
-    access_request, access_request_url, catalogue_item=None
-):
+def build_ticket_description_text(access_request, access_request_url, catalogue_item=None):
     username = get_username(access_request.requester)
     people_url = get_people_url(username)
     ticket_description = f"""Access request for
@@ -94,9 +92,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
     )
 
     private_comment = (
-        build_private_comment_text(catalogue_item, authorize_url)
-        if catalogue_item
-        else None
+        build_private_comment_text(catalogue_item, authorize_url) if catalogue_item else None
     )
 
     username = get_username(access_request.requester)
@@ -109,9 +105,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
             description=ticket_description,
             requester=User(email=access_request.requester.email, name=username),
             custom_fields=[
-                CustomField(
-                    id=zendesk_service_field_id, value=zendesk_service_field_value
-                )
+                CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
             ],
         )
     )
@@ -218,9 +212,7 @@ def create_support_request(user, email, message, tag=None, subject=None):
             requester=User(email=email, name=user.get_full_name()),
             tags=[tag] if tag else None,
             custom_fields=[
-                CustomField(
-                    id=zendesk_service_field_id, value=zendesk_service_field_value
-                )
+                CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
             ],
         )
     )

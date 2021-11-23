@@ -4,9 +4,7 @@ from dataworkspace.tests import factories
 
 
 def test_group_detail_view_redirects_to_search(client):
-    response = client.get(
-        reverse('catalogue:datagroup_item', kwargs={'slug': 'test-slug'})
-    )
+    response = client.get(reverse('catalogue:datagroup_item', kwargs={'slug': 'test-slug'}))
     assert response.status_code == 302
     assert response['Location'] == reverse('datasets:find_datasets') + "?"
 

@@ -34,9 +34,7 @@ class CaseStudy(TimeStampedUserModel):
         super().__init__(*args, **kwargs)
         self._original_publish_date = self.publish_date
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # If the case study is changing from unpublished to published state
         # update the publish date before saving
         if self.published and not self._original_publish_date:

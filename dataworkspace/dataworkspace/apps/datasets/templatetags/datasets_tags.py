@@ -90,7 +90,7 @@ def gmt_date(utc_date: Optional[datetime]) -> Optional[str]:
     if not utc_date:
         return None
 
-    localised_date, offset = _get_localised_date(utc_date)
+    localised_date, _ = _get_localised_date(utc_date)
     return localised_date.strftime("%-d %B %Y")
 
 

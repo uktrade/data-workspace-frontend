@@ -45,9 +45,7 @@ class DatasetAccessRequestForm(GOVUKDesignSystemModelForm):
 
         initial_email = self.initial.get("contact_email")
         if initial_email:
-            self.fields[
-                'contact_email'
-            ].help_text = f"You are logged in as {initial_email}"
+            self.fields['contact_email'].help_text = f"You are logged in as {initial_email}"
             self.fields['contact_email'].widget.custom_context[
                 'help_text'
             ] = f"You are logged in as {initial_email}"
@@ -68,9 +66,7 @@ class ToolsAccessRequestFormPart1(GOVUKDesignSystemModelForm):
             extra_label_classes='govuk-!-font-weight-bold',
             show_selected_file=True,
         ),
-        error_messages={
-            "required": "You must upload proof that you've completed the training."
-        },
+        error_messages={"required": "You must upload proof that you've completed the training."},
     )
 
 
@@ -102,9 +98,7 @@ class ToolsAccessRequestFormPart3(GOVUKDesignSystemModelForm):
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=False, extra_label_classes='govuk-!-font-weight-bold'
         ),
-        error_messages={
-            "required": "You must provide your line manager's email address."
-        },
+        error_messages={"required": "You must provide your line manager's email address."},
     )
 
     reason_for_spss_and_stata = GOVUKDesignSystemTextareaField(

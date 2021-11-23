@@ -46,9 +46,7 @@ class BaseModelsTests(BaseTestCase):
             column_name=field_name,
             data_type=field_type,
         )
-        column = self._get_column_data(
-            ref_dataset.table_name, rdf.column_name, database=database
-        )
+        column = self._get_column_data(ref_dataset.table_name, rdf.column_name, database=database)
         self.assertIsNotNone(column)
         self.assertEqual(column['column_name'], rdf.column_name)
         self.assertEqual(ref_dataset.major_version, major_version)
@@ -130,12 +128,8 @@ class TestTransactionReferenceDatasets(ReferenceDatasetsMixin, BaseTransactionTe
             required=False,
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
         )
-        ref_dataset.save_record(
-            field6.pk, {'reference_dataset': ref_dataset, field6.name: 1}
-        )
-        ref_dataset.save_record(
-            field6.pk, {'reference_dataset': ref_dataset, field6.name: 2}
-        )
+        ref_dataset.save_record(field6.pk, {'reference_dataset': ref_dataset, field6.name: 1})
+        ref_dataset.save_record(field6.pk, {'reference_dataset': ref_dataset, field6.name: 2})
 
         self.assertEqual(ref_dataset.version, '1.3')
         self.assertEqual(ref_dataset.published_version, '1.1')
@@ -158,9 +152,7 @@ class TestDatasets(BaseModelsTests):
             description='Long description',
             published=True,
         )
-        self.assertEqual(
-            dataset.published_at, datetime(2019, 2, 1, 2, 0, 0, tzinfo=timezone.utc)
-        )
+        self.assertEqual(dataset.published_at, datetime(2019, 2, 1, 2, 0, 0, tzinfo=timezone.utc))
 
         # Changing the dataset should and saving should not update the published_at date
         frozen_datetime.tick()
@@ -168,9 +160,7 @@ class TestDatasets(BaseModelsTests):
         dataset.save()
 
         self.assertEqual(dataset.description, 'Modified long description')
-        self.assertEqual(
-            dataset.published_at, datetime(2019, 2, 1, 2, 0, 0, tzinfo=timezone.utc)
-        )
+        self.assertEqual(dataset.published_at, datetime(2019, 2, 1, 2, 0, 0, tzinfo=timezone.utc))
 
 
 class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
@@ -187,9 +177,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             ref_dataset.initial_published_at,
             datetime(2019, 2, 1, 2, 0, tzinfo=timezone.utc),
         )
-        self.assertEqual(
-            ref_dataset.published_at, datetime(2019, 2, 1, 2, 0, tzinfo=timezone.utc)
-        )
+        self.assertEqual(ref_dataset.published_at, datetime(2019, 2, 1, 2, 0, tzinfo=timezone.utc))
 
     def test_create_unpublished_reference_dataset(self):
         ref_dataset = self._create_reference_dataset(published=False)
@@ -340,17 +328,13 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         self.assertEqual(ref_dataset.schema_version, schema_version + 1)
 
     def test_add_record_to_published_dataset(self):
-        ref_dataset = self._create_reference_dataset(
-            table_name='test_add_record', published=True
-        )
+        ref_dataset = self._create_reference_dataset(table_name='test_add_record', published=True)
         self._add_record_to_dataset(ref_dataset)
         self.assertEqual(ref_dataset.version, '1.1')
         self.assertEqual(ref_dataset.published_version, '1.1')
 
     def test_add_record_to_unpublished_dataset_then_publish(self):
-        ref_dataset = self._create_reference_dataset(
-            table_name='test_add_record', published=False
-        )
+        ref_dataset = self._create_reference_dataset(table_name='test_add_record', published=False)
         self._add_record_to_dataset(ref_dataset)
         self.assertEqual(ref_dataset.version, '1.1')
         self.assertEqual(ref_dataset.published_version, '0.0')
@@ -388,9 +372,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             self.assertEqual(ref_dataset.major_version, 1)
             self.assertEqual(ref_dataset.minor_version, 1)
             record = ref_dataset.get_record_by_custom_id(1)
-            self.assertEqual(
-                record.updated_date, datetime(2020, 1, 1, 0, 0, tzinfo=timezone.utc)
-            )
+            self.assertEqual(record.updated_date, datetime(2020, 1, 1, 0, 0, tzinfo=timezone.utc))
             updated_date = datetime(2020, 1, 1, 0, 10, tzinfo=timezone.utc)
             frozen_time.move_to(updated_date)
             ref_dataset.save_record(
@@ -403,9 +385,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             )
             record = ref_dataset.get_record_by_custom_id(999)
             self.assertEqual(record.updated_date, updated_date)
-            self.assertRaises(
-                ObjectDoesNotExist, ref_dataset.get_record_by_custom_id, 1
-            )
+            self.assertRaises(ObjectDoesNotExist, ref_dataset.get_record_by_custom_id, 1)
             self.assertEqual(ref_dataset.major_version, 1)
             self.assertEqual(ref_dataset.minor_version, 2)
             self.assertIsNotNone(ref_dataset.get_record_by_custom_id(999))
@@ -447,18 +427,14 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         # Test that ref dataset deletion fails if other datasets link to it
 
         # Create a linked_to dataset and id field
-        linked_to_dataset = factories.ReferenceDatasetFactory.create(
-            table_name='linked_to'
-        )
+        linked_to_dataset = factories.ReferenceDatasetFactory.create(table_name='linked_to')
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_to_dataset,
             is_identifier=True,
         )
 
         # Create a linked from dataset and id, link fields
-        linked_from_dataset = factories.ReferenceDatasetFactory.create(
-            table_name='linked_from'
-        )
+        linked_from_dataset = factories.ReferenceDatasetFactory.create(table_name='linked_from')
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_from_dataset,
             is_identifier=True,
@@ -468,9 +444,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             is_identifier=True,
             relationship_name='rel',
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset_field=linked_to_dataset.fields.get(
-                is_identifier=True
-            ),
+            linked_reference_dataset_field=linked_to_dataset.fields.get(is_identifier=True),
         )
 
         # Deleting the dataset should fail
@@ -554,9 +528,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 name='link',
                 column_name='link',
                 data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-                linked_reference_dataset_field=ref_dataset1.fields.get(
-                    name='identifier'
-                ),
+                linked_reference_dataset_field=ref_dataset1.fields.get(name='identifier'),
             )
 
     def test_reference_dataset_ordering(self):
@@ -603,9 +575,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             name='link',
             relationship_name='link',
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset_field=linked_to_dataset.fields.get(
-                is_identifier=True
-            ),
+            linked_reference_dataset_field=linked_to_dataset.fields.get(is_identifier=True),
         )
 
         # Create some records in the linked_to dataset
@@ -713,9 +683,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         field3 = factories.ReferenceDatasetFieldFactory(
             reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_DATE
         )
-        linked_to_dataset = self._create_reference_dataset(
-            table_name='linked_to_external_dataset'
-        )
+        linked_to_dataset = self._create_reference_dataset(table_name='linked_to_external_dataset')
         ReferenceDatasetField.objects.create(
             reference_dataset=linked_to_dataset,
             name='field1',
@@ -727,9 +695,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             reference_dataset=ds,
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
             relationship_name='link',
-            linked_reference_dataset_field=linked_to_dataset.fields.get(
-                is_identifier=True
-            ),
+            linked_reference_dataset_field=linked_to_dataset.fields.get(is_identifier=True),
         )
         assert ds.get_column_config() == [
             {
@@ -759,9 +725,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         ]
 
     def test_data_grid_data(self):
-        linked_to_dataset = self._create_reference_dataset(
-            table_name='linked_to_external_dataset'
-        )
+        linked_to_dataset = self._create_reference_dataset(table_name='linked_to_external_dataset')
         ReferenceDatasetField.objects.create(
             reference_dataset=linked_to_dataset,
             name='field1',
@@ -795,17 +759,13 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             reference_dataset=ds,
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
             relationship_name='link1',
-            linked_reference_dataset_field=linked_to_dataset.fields.get(
-                is_identifier=True
-            ),
+            linked_reference_dataset_field=linked_to_dataset.fields.get(is_identifier=True),
         )
         field5 = factories.ReferenceDatasetFieldFactory(
             reference_dataset=ds,
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
             relationship_name='link2',
-            linked_reference_dataset_field=linked_to_dataset.fields.get(
-                is_display_name=True
-            ),
+            linked_reference_dataset_field=linked_to_dataset.fields.get(is_display_name=True),
         )
         ds.save_record(
             None,
@@ -861,9 +821,7 @@ class TestSourceLinkModel(BaseTestCase):
         )
         link.delete()
         self.assertFalse(
-            SourceLink.objects.filter(
-                id='158776ec-5c40-4c58-ba7c-a3425905ec45'
-            ).exists()
+            SourceLink.objects.filter(id='158776ec-5c40-4c58-ba7c-a3425905ec45').exists()
         )
         mock_client().head_object.assert_called_once()
         mock_client().delete_object.assert_called_once_with(
@@ -883,9 +841,7 @@ class TestSourceLinkModel(BaseTestCase):
         )
         link.delete()
         self.assertFalse(
-            SourceLink.objects.filter(
-                id='158776ec-5c40-4c58-ba7c-a3425905ec45'
-            ).exists()
+            SourceLink.objects.filter(id='158776ec-5c40-4c58-ba7c-a3425905ec45').exists()
         )
         mock_client.assert_not_called()
 
@@ -899,37 +855,25 @@ class TestExternalModels(BaseModelsTests):
         )
 
     @staticmethod
-    def _record_exists(
-        table_name, identifier_field, record_id, database='test_external_db'
-    ):
+    def _record_exists(table_name, identifier_field, record_id, database='test_external_db'):
         with connections[database].cursor() as cursor:
             cursor.execute(
-                'SELECT COUNT(*) FROM {} WHERE {}=%s'.format(
-                    table_name, identifier_field
-                ),
+                'SELECT COUNT(*) FROM {} WHERE {}=%s'.format(table_name, identifier_field),
                 [record_id],
             )
             return cursor.fetchone()[0] == 1
 
     def test_create_reference_dataset_external(self):
         ref_dataset = self._create_reference_dataset()
-        self.assertTrue(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
-        )
+        self.assertTrue(self._table_exists(ref_dataset.table_name, database='test_external_db'))
 
     def test_edit_reference_dataset_table_name_external(self):
         ref_dataset = self._create_reference_dataset(table_name='test_edit_table')
-        self.assertTrue(
-            self._table_exists('test_edit_table', database='test_external_db')
-        )
+        self.assertTrue(self._table_exists('test_edit_table', database='test_external_db'))
         ref_dataset.table_name = 'new_table_name'
         ref_dataset.save()
-        self.assertFalse(
-            self._table_exists('test_edit_table', database='test_external_db')
-        )
-        self.assertTrue(
-            self._table_exists('new_table_name', database='test_external_db')
-        )
+        self.assertFalse(self._table_exists('test_edit_table', database='test_external_db'))
+        self.assertTrue(self._table_exists('new_table_name', database='test_external_db'))
 
     def test_delete_reference_dataset_external(self):
         # Ensure external tables are removed when the reference dataset deleted
@@ -955,13 +899,9 @@ class TestExternalModels(BaseModelsTests):
                 field2.column_name: 'testing...',
             },
         )
-        self.assertTrue(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
-        )
+        self.assertTrue(self._table_exists(ref_dataset.table_name, database='test_external_db'))
         ref_dataset.delete()
-        self.assertFalse(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
-        )
+        self.assertFalse(self._table_exists(ref_dataset.table_name, database='test_external_db'))
 
     def test_create_reference_dataset_field_external(self):
         ref_dataset = self._create_reference_dataset(table_name='thisisatest')
@@ -1244,12 +1184,8 @@ class TestExternalModels(BaseModelsTests):
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        ref_dataset.save_record(
-            None, {'reference_dataset': ref_dataset, field1.column_name: 1}
-        )
-        ref_dataset.save_record(
-            None, {'reference_dataset': ref_dataset, field1.column_name: 2}
-        )
+        ref_dataset.save_record(None, {'reference_dataset': ref_dataset, field1.column_name: 1})
+        ref_dataset.save_record(None, {'reference_dataset': ref_dataset, field1.column_name: 2})
         self.assertTrue(self._record_exists('ext_db_test', 'field1', 1))
         self.assertTrue(self._record_exists('ext_db_test', 'field1', 2))
 
@@ -1268,24 +1204,16 @@ class TestExternalModels(BaseModelsTests):
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        ref_dataset.save_record(
-            None, {'reference_dataset': ref_dataset, field1.column_name: 1}
-        )
+        ref_dataset.save_record(None, {'reference_dataset': ref_dataset, field1.column_name: 1})
         ref_dataset.external_database = Database.objects.get_or_create(
             memorable_name='test_external_db2'
         )[0]
         ref_dataset.save()
 
-        self.assertFalse(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
-        )
+        self.assertFalse(self._table_exists(ref_dataset.table_name, database='test_external_db'))
+        self.assertTrue(self._table_exists(ref_dataset.table_name, database='test_external_db2'))
         self.assertTrue(
-            self._table_exists(ref_dataset.table_name, database='test_external_db2')
-        )
-        self.assertTrue(
-            self._record_exists(
-                'ext_db_edit_test', 'field1', 1, database='test_external_db2'
-            )
+            self._record_exists('ext_db_edit_test', 'field1', 1, database='test_external_db2')
         )
 
     def test_edit_change_external_database(self):
@@ -1304,34 +1232,20 @@ class TestExternalModels(BaseModelsTests):
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        ref_dataset.save_record(
-            None, {'reference_dataset': ref_dataset, field1.column_name: 1}
-        )
-        ref_dataset.save_record(
-            None, {'reference_dataset': ref_dataset, field1.column_name: 2}
-        )
-        self.assertTrue(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
-        )
+        ref_dataset.save_record(None, {'reference_dataset': ref_dataset, field1.column_name: 1})
+        ref_dataset.save_record(None, {'reference_dataset': ref_dataset, field1.column_name: 2})
+        self.assertTrue(self._table_exists(ref_dataset.table_name, database='test_external_db'))
         ref_dataset.external_database = factories.DatabaseFactory.create(
             memorable_name='test_external_db2'
         )
         ref_dataset.save()
-        self.assertFalse(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
+        self.assertFalse(self._table_exists(ref_dataset.table_name, database='test_external_db'))
+        self.assertTrue(self._table_exists(ref_dataset.table_name, database='test_external_db2'))
+        self.assertTrue(
+            self._record_exists('ext_db_change_test', 'field1', 1, database='test_external_db2')
         )
         self.assertTrue(
-            self._table_exists(ref_dataset.table_name, database='test_external_db2')
-        )
-        self.assertTrue(
-            self._record_exists(
-                'ext_db_change_test', 'field1', 1, database='test_external_db2'
-            )
-        )
-        self.assertTrue(
-            self._record_exists(
-                'ext_db_change_test', 'field1', 2, database='test_external_db2'
-            )
+            self._record_exists('ext_db_change_test', 'field1', 2, database='test_external_db2')
         )
 
     def test_edit_remove_external_database(self):
@@ -1350,20 +1264,12 @@ class TestExternalModels(BaseModelsTests):
             data_type=ReferenceDatasetField.DATA_TYPE_INT,
             is_identifier=True,
         )
-        ref_dataset.save_record(
-            None, {'reference_dataset': ref_dataset, field1.column_name: 1}
-        )
-        ref_dataset.save_record(
-            None, {'reference_dataset': ref_dataset, field1.column_name: 2}
-        )
-        self.assertTrue(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
-        )
+        ref_dataset.save_record(None, {'reference_dataset': ref_dataset, field1.column_name: 1})
+        ref_dataset.save_record(None, {'reference_dataset': ref_dataset, field1.column_name: 2})
+        self.assertTrue(self._table_exists(ref_dataset.table_name, database='test_external_db'))
         ref_dataset.external_database = None
         ref_dataset.save()
-        self.assertFalse(
-            self._table_exists(ref_dataset.table_name, database='test_external_db')
-        )
+        self.assertFalse(self._table_exists(ref_dataset.table_name, database='test_external_db'))
 
     def test_external_database_full_sync(self):
         ref_dataset = self._create_reference_dataset(table_name='test_full_sync')
@@ -1436,9 +1342,7 @@ class TestExternalModels(BaseModelsTests):
             pass
         self.assertFalse(self._table_exists('test_create_external_error'))
         self.assertFalse(
-            self._table_exists(
-                'test_create_external_error', database='test_external_db'
-            )
+            self._table_exists('test_create_external_error', database='test_external_db')
         )
 
     def test_edit_reference_dataset_external_error(self):
@@ -1465,14 +1369,10 @@ class TestExternalModels(BaseModelsTests):
         # We should still have two tables with the original table name and no
         # tables with the updated table name
         self.assertTrue(self._table_exists('edit_table_ext_error'))
-        self.assertTrue(
-            self._table_exists('edit_table_ext_error', database='test_external_db')
-        )
+        self.assertTrue(self._table_exists('edit_table_ext_error', database='test_external_db'))
         self.assertFalse(self._table_exists('updated_edit_table_ext_error'))
         self.assertFalse(
-            self._table_exists(
-                'updated_edit_table_ext_error', database='test_external_db'
-            )
+            self._table_exists('updated_edit_table_ext_error', database='test_external_db')
         )
 
     def test_create_linked_reference_datasets(self):
@@ -1480,9 +1380,7 @@ class TestExternalModels(BaseModelsTests):
         # from table is external
 
         # Create a non-external ref dataset
-        linked_to_dataset = self._create_reference_dataset(
-            table_name='linked_to_external_dataset'
-        )
+        linked_to_dataset = self._create_reference_dataset(table_name='linked_to_external_dataset')
 
         # Create an identifier field for the internal dataset
         ReferenceDatasetField.objects.create(
@@ -1511,29 +1409,21 @@ class TestExternalModels(BaseModelsTests):
             name='field2',
             relationship_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset_field=linked_to_dataset.fields.get(
-                is_identifier=True
-            ),
+            linked_reference_dataset_field=linked_to_dataset.fields.get(is_identifier=True),
         )
 
         self.assertTrue(self._table_exists('linked_to_external_dataset'))
         self.assertTrue(
-            self._table_exists(
-                'linked_to_external_dataset', database='test_external_db'
-            )
+            self._table_exists('linked_to_external_dataset', database='test_external_db')
         )
         self.assertTrue(self._table_exists('linked_from_external_dataset'))
         self.assertTrue(
-            self._table_exists(
-                'linked_from_external_dataset', database='test_external_db'
-            )
+            self._table_exists('linked_from_external_dataset', database='test_external_db')
         )
 
     def test_delete_reference_dataset_sort_field(self):
         # Create a dataset to link to
-        linked_to_dataset = self._create_reference_dataset(
-            table_name='linked_to_external_dataset'
-        )
+        linked_to_dataset = self._create_reference_dataset(table_name='linked_to_external_dataset')
         # Create an identifier field
         ReferenceDatasetField.objects.create(
             reference_dataset=linked_to_dataset,
@@ -1571,9 +1461,7 @@ class TestExternalModels(BaseModelsTests):
             name='field2',
             relationship_name='field2',
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
-            linked_reference_dataset_field=linked_to_dataset.fields.get(
-                is_identifier=True
-            ),
+            linked_reference_dataset_field=linked_to_dataset.fields.get(is_identifier=True),
         )
 
         # Deleting the name field should work even though it's the sort field

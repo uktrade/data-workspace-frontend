@@ -110,17 +110,12 @@ def build_schema_info(user, connection_alias):
               pg_namespace.nspname, pg_class.relname, attnum
         '''
         )
-        results = [
-            row for row in cursor.fetchall() if _include_table(row['table_name'])
-        ]
+        results = [row for row in cursor.fetchall() if _include_table(row['table_name'])]
 
     return [
         Table(
             TableName(schema_name, table_name),
-            [
-                Column(column['column_name'], column['column_type'])
-                for column in columns
-            ],
+            [Column(column['column_name'], column['column_type']) for column in columns],
         )
         for (schema_name, table_name), columns in groupby(
             results, lambda row: (row['schema_name'], row['table_name'])
@@ -129,8 +124,6 @@ def build_schema_info(user, connection_alias):
 
 
 def get_user_schema_info(request):
-    schema = schema_info(
-        user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION
-    )
+    schema = schema_info(user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION)
     tables_columns = ['.'.join(schema_table) for schema_table, _ in schema]
     return schema, tables_columns

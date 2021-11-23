@@ -120,8 +120,7 @@ class TestCustomQueryPreviewView:
         )
         response_content = response.content.decode(response.charset)
         assert (
-            f'Showing <strong>{preview_rows}</strong> random rows from data.'
-            in response_content
+            f'Showing <strong>{preview_rows}</strong> random rows from data.' in response_content
         )
 
     def _preview_unreviewed_datacut(self, client, test_db):
@@ -142,9 +141,7 @@ class TestCustomQueryPreviewView:
         )
 
     def test_staff_user_can_preview_unreviewed_datacut(self, staff_client, test_db):
-        assert (
-            self._preview_unreviewed_datacut(staff_client, test_db).status_code == 200
-        )
+        assert self._preview_unreviewed_datacut(staff_client, test_db).status_code == 200
 
     def test_normal_user_cannot_preview_unreviewed_datacut(self, client, test_db):
         assert self._preview_unreviewed_datacut(client, test_db).status_code == 403
@@ -154,9 +151,7 @@ class TestSourceTablePreviewView:
     @pytest.fixture
     def test_db(self, db):
         database = factories.DatabaseFactory(memorable_name='my_database')
-        with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA['my_database'])
-        ) as conn:
+        with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
             conn.cursor().execute(
                 '''
                 CREATE TABLE IF NOT EXISTS test_table AS (
@@ -236,9 +231,7 @@ class TestDataCutPreviewDownloadView:
     @pytest.fixture
     def test_db(self, db):
         database = factories.DatabaseFactory(memorable_name='my_database')
-        with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA['my_database'])
-        ) as conn:
+        with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
             conn.cursor().execute(
                 '''
                 CREATE TABLE IF NOT EXISTS test_table AS (
@@ -253,9 +246,7 @@ class TestDataCutPreviewDownloadView:
     def test_unauthorised_link(self, client):
         link = factories.SourceLinkFactory()
         response = client.get(
-            reverse(
-                'datasets:data_cut_source_link_preview', args=(link.dataset.id, link.id)
-            )
+            reverse('datasets:data_cut_source_link_preview', args=(link.dataset.id, link.id))
         )
         assert response.status_code == 403
 
@@ -325,9 +316,7 @@ class TestDataCutPreviewDownloadView:
         'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     def test_authorised_query(self, access_type, client, test_db):
-        dataset = factories.DataSetFactory(
-            type=DataSetType.MASTER, user_access_type=access_type
-        )
+        dataset = factories.DataSetFactory(type=DataSetType.MASTER, user_access_type=access_type)
 
         query = factories.CustomDatasetQueryFactory(
             dataset=dataset,

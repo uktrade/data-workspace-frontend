@@ -23,9 +23,7 @@ class RequestDataWhoAreYouForm(GOVUKDesignSystemModelForm):
         label="Are you the information asset owner or manager for the data?",
         choices=[(t.value, t.label) for t in RoleType],
         widget=GOVUKDesignSystemRadiosWidget,
-        error_messages={
-            "required": "You must declare your role in this request for data."
-        },
+        error_messages={"required": "You must declare your role in this request for data."},
     )
 
 
@@ -68,9 +66,7 @@ class RequestDataSecurityClassificationForm(GOVUKDesignSystemModelForm):
         help_html=render_to_string('request_data/security-classification-hint.html'),
         choices=[(t.value, t.label) for t in SecurityClassificationType],
         widget=GOVUKDesignSystemRadiosWidget,
-        error_messages={
-            "required": "You must declare the security classification of the data."
-        },
+        error_messages={"required": "You must declare the security classification of the data."},
     )
 
 

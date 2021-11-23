@@ -35,9 +35,7 @@ class TestGetRandomSample:
     @pytest.fixture
     def test_db(self, db):
         database = factories.DatabaseFactory(memorable_name='my_database')
-        with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA['my_database'])
-        ) as conn:
+        with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
             conn.cursor().execute(
                 '''
             CREATE TABLE IF NOT EXISTS test_sample AS (
@@ -164,9 +162,7 @@ class TestDeleteUnusedDatasetsUsers:
 
         user = UserFactory(email='test@foo.bar')
         st = SourceTableFactory(
-            dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
-            )
+            dataset=MasterDataSetFactory.create(user_access_type='REQUIRES_AUTHENTICATION')
         )
 
         source_tables = source_tables_for_user(user)

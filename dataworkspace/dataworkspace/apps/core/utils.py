@@ -114,9 +114,7 @@ def new_private_database_credentials(
         valid_until = (datetime.datetime.now() + valid_for).isoformat()
 
         with connections[database_obj.memorable_name].cursor() as cur:
-            existing_tables_and_views_set = set(
-                tables_and_views_that_exist(cur, tables)
-            )
+            existing_tables_and_views_set = set(tables_and_views_that_exist(cur, tables))
 
             allowed_tables_that_exist = [
                 (schema, table)
@@ -181,8 +179,7 @@ def new_private_database_credentials(
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
                         sql.SQL(',').join(
-                            sql.Identifier(missing_db_role)
-                            for missing_db_role in missing_db_roles
+                            sql.Identifier(missing_db_role) for missing_db_role in missing_db_roles
                         ),
                         sql.Identifier(database_data["USER"]),
                     )
@@ -374,9 +371,7 @@ def new_private_database_credentials(
             if schemas_to_revoke:
                 cur.execute(
                     sql.SQL('REVOKE ALL PRIVILEGES ON SCHEMA {} FROM {};').format(
-                        sql.SQL(',').join(
-                            sql.Identifier(schema) for schema in schemas_to_revoke
-                        ),
+                        sql.SQL(',').join(sql.Identifier(schema) for schema in schemas_to_revoke),
                         sql.Identifier(db_role),
                     )
                 )
@@ -391,10 +386,7 @@ def new_private_database_credentials(
                 cur.execute(
                     sql.SQL('REVOKE ALL PRIVILEGES ON {} FROM {};').format(
                         sql.SQL(',').join(
-                            [
-                                sql.Identifier(schema, table)
-                                for schema, table in tables_to_revoke
-                            ]
+                            [sql.Identifier(schema, table) for schema, table in tables_to_revoke]
                         ),
                         sql.Identifier(db_role),
                     )
@@ -409,9 +401,7 @@ def new_private_database_credentials(
             if schemas_to_grant:
                 cur.execute(
                     sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                        sql.SQL(',').join(
-                            [sql.Identifier(schema) for schema in schemas_to_grant]
-                        ),
+                        sql.SQL(',').join([sql.Identifier(schema) for schema in schemas_to_grant]),
                         sql.Identifier(db_role),
                     )
                 )
@@ -425,10 +415,7 @@ def new_private_database_credentials(
                 cur.execute(
                     sql.SQL('GRANT SELECT ON {} TO {};').format(
                         sql.SQL(',').join(
-                            [
-                                sql.Identifier(schema, table)
-                                for schema, table in tables_to_grant
-                            ]
+                            [sql.Identifier(schema, table) for schema, table in tables_to_grant]
                         ),
                         sql.Identifier(db_role),
                     )
@@ -475,9 +462,7 @@ def new_private_database_credentials(
                 )
             )
             cur.execute(
-                sql.SQL('GRANT {} TO {};').format(
-                    sql.Identifier(db_role), sql.Identifier(db_user)
-                )
+                sql.SQL('GRANT {} TO {};').format(sql.Identifier(db_role), sql.Identifier(db_user))
             )
 
         # Make it so by default, objects created by the user are owned by the role
@@ -699,9 +684,7 @@ def source_tables_for_app(application_template):
 
 
 def view_exists(database, schema, view):
-    with connect(
-        database_dsn(settings.DATABASES_DATA[database])
-    ) as conn, conn.cursor() as cur:
+    with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor() as cur:
         return _view_exists(cur, schema, view)
 
 
@@ -724,9 +707,7 @@ def _view_exists(cur, schema, view):
 
 
 def table_exists(database, schema, table):
-    with connect(
-        database_dsn(settings.DATABASES_DATA[database])
-    ) as conn, conn.cursor() as cur:
+    with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor() as cur:
         return _table_exists(cur, schema, table)
 
 
@@ -871,18 +852,14 @@ def streaming_query_response(
 
                 if i == 0:
                     # Column names are not populated until the first row fetched
-                    filtered_columns = [
-                        column_desc[0] for column_desc in cur.description
-                    ]
+                    filtered_columns = [column_desc[0] for column_desc in cur.description]
                     # don't block this q.put call as it is the first thing to be pushed
                     q.put(csv_writer.writerow(filtered_columns))
 
                 if not rows:
                     break
 
-                bytes_fetched = ''.join(
-                    csv_writer.writerow(row) for row in rows
-                ).encode('utf-8')
+                bytes_fetched = ''.join(csv_writer.writerow(row) for row in rows).encode('utf-8')
 
                 i += len(rows)
                 total_bytes += len(bytes_fetched)
@@ -1032,9 +1009,7 @@ def get_random_data_sample(database, query, sample_size):
 
         rows = cur.fetchmany(batch_size)
         sample = random.sample(rows, min(minimize_nulls_sample_size, len(rows)))
-        sample.sort(
-            key=lambda row: sum(value is not None for value in row), reverse=True
-        )
+        sample.sort(key=lambda row: sum(value is not None for value in row), reverse=True)
         sample = sample[:sample_size]
         random.shuffle(sample)
 
@@ -1045,18 +1020,14 @@ def table_data(user_email, database, schema, table, filename=None):
     # There is no ordering here. We just want a full dump.
     # Also, there are not likely to be updates, so a long-running
     # query shouldn't cause problems with concurrency/locking
-    query = sql.SQL('SELECT * FROM {}.{}').format(
-        sql.Identifier(schema), sql.Identifier(table)
-    )
+    query = sql.SQL('SELECT * FROM {}.{}').format(sql.Identifier(schema), sql.Identifier(table))
     if filename is None:
         filename = F'{schema}_{table}.csv'
     return streaming_query_response(user_email, database, query, filename)
 
 
 def get_s3_prefix(user_sso_id):
-    return (
-        'user/federated/' + stable_identification_suffix(user_sso_id, short=False) + '/'
-    )
+    return 'user/federated/' + stable_identification_suffix(user_sso_id, short=False) + '/'
 
 
 def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_id):
@@ -1102,9 +1073,7 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
     for i in range(0, max_attempts):
         try:
             role_arn = iam_client.get_role(RoleName=role_name)['Role']['Arn']
-            logger.info(
-                'User (%s) set up AWS role... done (%s)', user_email_address, role_arn
-            )
+            logger.info('User (%s) set up AWS role... done (%s)', user_email_address, role_arn)
         except iam_client.exceptions.NoSuchEntityException:
             if i == max_attempts - 1:
                 raise
