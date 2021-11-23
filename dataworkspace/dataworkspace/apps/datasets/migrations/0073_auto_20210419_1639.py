@@ -6,15 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0072_sourcetable_dataset_finder_opted_in'),
+        ("datasets", "0072_sourcetable_dataset_finder_opted_in"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='visualisationlink',
-            name='visualisation_type',
+            model_name="visualisationlink",
+            name="visualisation_type",
             field=models.CharField(
-                choices=[('QUICKSIGHT', 'AWS QuickSight'), ('SUPERSET', 'Superset')],
+                choices=[("QUICKSIGHT", "AWS QuickSight"), ("SUPERSET", "Superset")],
                 max_length=64,
             ),
         ),

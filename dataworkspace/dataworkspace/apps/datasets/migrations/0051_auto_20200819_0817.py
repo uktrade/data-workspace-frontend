@@ -6,25 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0050_auto_20200805_1226'),
+        ("datasets", "0050_auto_20200805_1226"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='visualisationlink',
-            name='identifier',
+            model_name="visualisationlink",
+            name="identifier",
             field=models.CharField(
-                help_text='For Google Data Studio, the dashboard URL. For QuickSight, the dashboard ID.',
+                help_text="For Google Data Studio, the dashboard URL. For QuickSight, the dashboard ID.",
                 max_length=256,
             ),
         ),
         migrations.AlterField(
-            model_name='visualisationlink',
-            name='visualisation_type',
+            model_name="visualisationlink",
+            name="visualisation_type",
             field=models.CharField(
                 choices=[
-                    ('DATASTUDIO', 'Google Data Studio'),
-                    ('QUICKSIGHT', 'AWS QuickSight'),
+                    ("DATASTUDIO", "Google Data Studio"),
+                    ("QUICKSIGHT", "AWS QuickSight"),
                 ],
                 max_length=64,
             ),

@@ -8,22 +8,22 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.remote.webdriver import WebDriver
 
 
-_PageClassType = TypeVar('_PageClassType')
+_PageClassType = TypeVar("_PageClassType")
 
 
 def get_driver():
     if os.environ.get("REMOTE_SELENIUM_URL"):
         options = webdriver.ChromeOptions()
         driver = webdriver.Remote(
-            command_executor=os.environ['REMOTE_SELENIUM_URL'],
+            command_executor=os.environ["REMOTE_SELENIUM_URL"],
             desired_capabilities=DesiredCapabilities.CHROME,
             options=options,
         )
     else:
         options = webdriver.ChromeOptions()
-        options.add_argument('--no-sandbox')
-        options.add_argument('--headless')
-        options.add_argument('--disable-gpu')
+        options.add_argument("--no-sandbox")
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
 
         # Desktop size in order to ensure the browser has desktop styling (less than this hides certain elements
         # under test)
@@ -37,12 +37,12 @@ def get_driver():
 
 class _BasePage:
     _url_regex = None
-    _url_path = ''
+    _url_path = ""
 
     def __init__(
         self,
         driver: WebDriver,
-        base_url='http://dataworkspace.test:8000',
+        base_url="http://dataworkspace.test:8000",
         url_data: Optional[Dict] = None,
     ):
         self._driver = driver
@@ -70,14 +70,10 @@ class _BasePage:
     def get_html(self) -> str:
         return self._driver.page_source
 
-    def _check_url_and_return_page(
-        self, new_page_class: Type[_PageClassType]
-    ) -> _PageClassType:
+    def _check_url_and_return_page(self, new_page_class: Type[_PageClassType]) -> _PageClassType:
         if new_page_class._url_regex:
             parsed_url = urlparse(self._driver.current_url)
-            current_path = parsed_url.path + (
-                '?' + parsed_url.query if parsed_url.query else ''
-            )
+            current_path = parsed_url.path + ("?" + parsed_url.query if parsed_url.query else "")
             url_data = new_page_class.parse_url(current_path)
             new_page = new_page_class(self._driver, url_data=url_data)
 

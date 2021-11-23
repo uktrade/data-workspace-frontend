@@ -6,14 +6,12 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0070_auto_20210311_1233'),
+        ("datasets", "0070_auto_20210311_1233"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='toolqueryauditlog',
-            index=models.Index(
-                fields=['timestamp', 'id'], name='datasets_to_timesta_a37b49_idx'
-            ),
+            model_name="toolqueryauditlog",
+            index=models.Index(fields=["timestamp", "id"], name="datasets_to_timesta_a37b49_idx"),
         ),
     ]

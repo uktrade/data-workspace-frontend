@@ -7,11 +7,11 @@ class DatasetFinderQueryLog(models.Model):
     query = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now=True, db_index=True)
     user = models.ForeignKey(
-        get_user_model(), on_delete=models.DO_NOTHING, related_name='finder_searches'
+        get_user_model(), on_delete=models.DO_NOTHING, related_name="finder_searches"
     )
 
     def __str__(self):
-        return '{} – {} – {}'.format(
+        return "{} – {} – {}".format(
             self.timestamp,
             self.user.get_full_name(),  # pylint: disable=no-member
             self.query,

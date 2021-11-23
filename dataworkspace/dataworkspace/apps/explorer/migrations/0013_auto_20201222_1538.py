@@ -6,23 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('explorer', '0012_playgroundsql'),
+        ("explorer", "0012_playgroundsql"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='querylog', name='page', field=models.IntegerField(default=1),
+            model_name="querylog",
+            name="page",
+            field=models.IntegerField(default=1),
         ),
         migrations.AddField(
-            model_name='querylog',
-            name='rows',
+            model_name="querylog",
+            name="rows",
             field=models.IntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='querylog',
-            name='state',
+            model_name="querylog",
+            name="state",
             field=models.IntegerField(
-                choices=[(0, 'Running'), (1, 'Failed'), (2, 'Complete')], default=0
+                choices=[(0, "Running"), (1, "Failed"), (2, "Complete")], default=0
             ),
         ),
     ]

@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0080_auto_20210611_0932'),
+        ("datasets", "0080_auto_20210611_0932"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='authorized_email_domains',
+            model_name="dataset",
+            name="authorized_email_domains",
             field=django.contrib.postgres.fields.ArrayField(
                 base_field=models.CharField(max_length=256),
                 blank=True,
@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name='visualisationcatalogueitem',
-            name='authorized_email_domains',
+            model_name="visualisationcatalogueitem",
+            name="authorized_email_domains",
             field=django.contrib.postgres.fields.ArrayField(
                 base_field=models.CharField(max_length=256),
                 blank=True,

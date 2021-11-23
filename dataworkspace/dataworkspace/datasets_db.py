@@ -8,12 +8,10 @@ from django.db.utils import DatabaseError
 
 from dataworkspace.utils import TYPE_CODES_REVERSED
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
-def get_columns(
-    database_name, schema=None, table=None, query=None, include_types=False
-):
+def get_columns(database_name, schema=None, table=None, query=None, include_types=False):
     if table is not None and schema is not None:
         source = psycopg2.sql.SQL("{}.{}").format(
             psycopg2.sql.Identifier(schema), psycopg2.sql.Identifier(table)
@@ -25,14 +23,11 @@ def get_columns(
 
     with connections[database_name].cursor() as cursor:
         try:
-            cursor.execute(
-                psycopg2.sql.SQL('SELECT * from {} WHERE false').format(source)
-            )
+            cursor.execute(psycopg2.sql.SQL("SELECT * from {} WHERE false").format(source))
 
             if include_types:
                 return [
-                    (c[0], TYPE_CODES_REVERSED.get(c[1], "Unknown"))
-                    for c in cursor.description
+                    (c[0], TYPE_CODES_REVERSED.get(c[1], "Unknown")) for c in cursor.description
                 ]
 
             return [c[0] for c in cursor.description]
@@ -47,7 +42,7 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
     """
     with connections[database_name].cursor() as cursor:
         cursor.execute(
-            '''
+            """
             SELECT MIN(modified_date)
             FROM (
                 SELECT
@@ -58,7 +53,7 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
                 WHERE (table_schema, table_name) IN %s
                 GROUP BY (1, 2)
             ) a
-            ''',
+            """,
             [tables],
         )
         dt = cursor.fetchone()[0]
@@ -93,14 +88,14 @@ def get_table_changelog(database_name: str, schema: str, table: str):
     """
     with connections[database_name].cursor() as cursor:
         cursor.execute(
-            '''
+            """
             SELECT id, source_data_modified_utc, table_structure
             FROM dataflow.metadata
             WHERE table_schema = %s
             AND table_name = %s
             AND source_data_modified_utc IS NOT NULL
             ORDER BY id ASC;
-            ''',
+            """,
             [schema, table],
         )
         return get_changelog_from_metadata_rows(cursor.fetchall())
@@ -109,13 +104,13 @@ def get_table_changelog(database_name: str, schema: str, table: str):
 def get_custom_dataset_query_changelog(database_name: str, query):
     with connections[database_name].cursor() as cursor:
         cursor.execute(
-            '''
+            """
             SELECT id, source_data_modified_utc, table_structure
             FROM dataflow.metadata
             WHERE data_id = %s
             AND source_data_modified_utc IS NOT NULL
             ORDER BY id ASC;
-            ''',
+            """,
             [query.id],
         )
         return get_changelog_from_metadata_rows(cursor.fetchall())
@@ -125,9 +120,9 @@ def get_changelog_from_metadata_rows(rows):
     # Always add the first row to the change log
     changelog = [
         {
-            'change_id': rows[0][0],
-            'change_date': rows[0][1].replace(tzinfo=pytz.UTC),
-            'table_structure': rows[0][2],
+            "change_id": rows[0][0],
+            "change_date": rows[0][1].replace(tzinfo=pytz.UTC),
+            "table_structure": rows[0][2],
         }
     ]
 
@@ -138,9 +133,9 @@ def get_changelog_from_metadata_rows(rows):
         if row_table_structure != next_row_table_structure:
             changelog.append(
                 {
-                    'change_id': next_row_id,
-                    'change_date': next_row_change_date.replace(tzinfo=pytz.UTC),
-                    'table_structure': next_row_table_structure,
+                    "change_id": next_row_id,
+                    "change_date": next_row_change_date.replace(tzinfo=pytz.UTC),
+                    "table_structure": next_row_table_structure,
                 }
             )
     return list(reversed(changelog))

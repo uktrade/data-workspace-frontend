@@ -8,27 +8,27 @@ from test.selenium.common import _BasePage  # pylint: disable=wrong-import-order
 
 class _BaseExplorerPage(_BasePage):
     def click_home(self):
-        link = self._driver.find_element_by_link_text('Home')
+        link = self._driver.find_element_by_link_text("Home")
         link.click()
 
         self._check_url_and_return_page(HomePage)
 
     def click_saved_queries(self):
-        link = self._driver.find_element_by_link_text('Saved queries')
+        link = self._driver.find_element_by_link_text("Saved queries")
         link.click()
 
     def click_query_log(self):
-        link = self._driver.find_element_by_link_text('Logs')
+        link = self._driver.find_element_by_link_text("Logs")
         link.click()
 
         return self._check_url_and_return_page(QueryLogPage)
 
 
 class HomePage(_BaseExplorerPage):
-    _url_path = '/data-explorer/'
+    _url_path = "/data-explorer/"
 
     def enter_query(self, sql):
-        textarea = self._driver.find_element_by_class_name('ace_text-input')
+        textarea = self._driver.find_element_by_class_name("ace_text-input")
         textarea.send_keys(sql)
 
     def click_run(self):
@@ -65,28 +65,26 @@ class HomePage(_BaseExplorerPage):
             results.append(
                 [
                     cell.text.strip()
-                    for cell in row.xpath(
-                        ".//td[contains(@class, 'govuk-table__cell')]//pre"
-                    )
+                    for cell in row.xpath(".//td[contains(@class, 'govuk-table__cell')]//pre")
                 ]
             )
 
         return results
 
     def read_sql(self):
-        textarea = self._driver.find_element_by_id('original-sql')
-        return textarea.get_attribute('value')
+        textarea = self._driver.find_element_by_id("original-sql")
+        return textarea.get_attribute("value")
 
     def read_sql_error(self):
-        span = self._driver.find_element_by_id('sql-error')
+        span = self._driver.find_element_by_id("sql-error")
         return span.text
 
     def change_results_pagination(self, page, results_per_page):
-        query_page = self._driver.find_element_by_id('query-page')
+        query_page = self._driver.find_element_by_id("query-page")
         query_page.clear()
         query_page.send_keys(str(page))
 
-        query_rows = self._driver.find_element_by_id('query-rows')
+        query_rows = self._driver.find_element_by_id("query-rows")
         query_rows.clear()
         query_rows.send_keys(str(results_per_page))
 
@@ -97,18 +95,18 @@ class HomePage(_BaseExplorerPage):
 
 
 class CreateQueryPage(_BaseExplorerPage):
-    _url_regex = r'/data-explorer/queries/create/\?play_id=(?P<play_id>\d+)'
+    _url_regex = r"/data-explorer/queries/create/\?play_id=(?P<play_id>\d+)"
 
     @property
     def _url_path(self):
         return f'/data-explorer/queries/create/?play_id={self._url_data["play_id"]}'
 
     def set_title(self, title):
-        field = self._driver.find_element_by_name('title')
+        field = self._driver.find_element_by_name("title")
         field.send_keys(title)
 
     def set_description(self, description):
-        field = self._driver.find_element_by_name('description')
+        field = self._driver.find_element_by_name("description")
         field.send_keys(description)
 
     def click_save(self):
@@ -117,20 +115,20 @@ class CreateQueryPage(_BaseExplorerPage):
 
 
 class QueryDetailPage(_BaseExplorerPage):
-    _url_regex = r'/data-explorer/queries/(?P<query_id>\d+)/'
+    _url_regex = r"/data-explorer/queries/(?P<query_id>\d+)/"
 
     @property
     def _url_path(self):
         return f"/data-explorer/queries/{self._url_data['query_id']}/"
 
     def read_title(self):
-        return self._get_input_field('Title').get_attribute('value')
+        return self._get_input_field("Title").get_attribute("value")
 
     def read_description(self):
-        return self._get_input_field('Description').get_attribute('value')
+        return self._get_input_field("Description").get_attribute("value")
 
     def read_sql(self):
-        return self._get_input_field('SQL').get_attribute('value')
+        return self._get_input_field("SQL").get_attribute("value")
 
     def click_edit(self):
         self._submit("Edit SQL")
@@ -141,4 +139,4 @@ class QueryDetailPage(_BaseExplorerPage):
 
 
 class QueryLogPage(_BaseExplorerPage):
-    _url_path = '/data-explorer/logs/'
+    _url_path = "/data-explorer/logs/"

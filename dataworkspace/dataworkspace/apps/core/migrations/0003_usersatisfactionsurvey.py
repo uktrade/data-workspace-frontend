@@ -6,58 +6,58 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_databaseuser'),
+        ("core", "0002_databaseuser"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserSatisfactionSurvey',
+            name="UserSatisfactionSurvey",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'how_satisfied',
+                    "how_satisfied",
                     models.CharField(
                         choices=[
-                            ('very-satified', 'Very satisfied'),
-                            ('satified', 'Satisfied'),
-                            ('neither', 'Neither satisfied or dissatisfied'),
-                            ('dissatisfied', 'Dissatisfied'),
-                            ('very-dissatisfied', 'Very dissatisfied'),
+                            ("very-satified", "Very satisfied"),
+                            ("satified", "Satisfied"),
+                            ("neither", "Neither satisfied or dissatisfied"),
+                            ("dissatisfied", "Dissatisfied"),
+                            ("very-dissatisfied", "Very dissatisfied"),
                         ],
                         max_length=32,
                     ),
                 ),
                 (
-                    'trying_to_do',
+                    "trying_to_do",
                     models.TextField(
                         blank=True,
                         choices=[
-                            ('looking', 'Looking for data'),
-                            ('access-data', 'Trying to access data'),
-                            ('analyse-data', 'Analyse data'),
-                            ('use-tool', 'Use a tool'),
-                            ('create-visualisation', 'Create a data visualisation'),
-                            ('share-date', 'Share data'),
-                            ('share-visualisation', 'Share a data visualisation'),
-                            ('view-visualisation', 'View a data visualisation'),
-                            ('other', 'Other'),
-                            ('dont-know', 'Don’t know'),
+                            ("looking", "Looking for data"),
+                            ("access-data", "Trying to access data"),
+                            ("analyse-data", "Analyse data"),
+                            ("use-tool", "Use a tool"),
+                            ("create-visualisation", "Create a data visualisation"),
+                            ("share-date", "Share data"),
+                            ("share-visualisation", "Share a data visualisation"),
+                            ("view-visualisation", "View a data visualisation"),
+                            ("other", "Other"),
+                            ("dont-know", "Don’t know"),
                         ],
                         null=True,
                     ),
                 ),
-                ('improve_service', models.TextField(blank=True, null=True)),
+                ("improve_service", models.TextField(blank=True, null=True)),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
     ]

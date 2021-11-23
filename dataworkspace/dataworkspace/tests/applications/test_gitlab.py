@@ -14,12 +14,12 @@ from dataworkspace.tests import factories
 
 class TestGitlabHasDeveloperAccess:
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     @pytest.mark.django_db
     def test_grants_manage_unpublished_visualisations_permission(self):
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -33,11 +33,11 @@ class TestGitlabHasDeveloperAccess:
 
         with requests_mock.Mocker() as rmock:
             rmock.get(
-                f'http://127.0.0.1:8007/api/v4/users?extern_uid={user.profile.sso_id}&provider=oauth2_generic',
+                f"http://127.0.0.1:8007/api/v4/users?extern_uid={user.profile.sso_id}&provider=oauth2_generic",
                 json=[{"id": 1}],
             )
             rmock.get(
-                'http://127.0.0.1:8007/api/v4/projects/1/members/all?user_ids=1',
+                "http://127.0.0.1:8007/api/v4/projects/1/members/all?user_ids=1",
                 json=[{"id": 1, "access_level": 50}],
             )
             has_access = gitlab_has_developer_access(

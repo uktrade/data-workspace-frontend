@@ -6,18 +6,18 @@ from sentry_sdk import set_user
 
 from dataworkspace.apps.applications.utils import create_user_from_sso
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 class AuthbrokerBackendUsernameIsEmail(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
-            email = request.META['HTTP_SSO_PROFILE_EMAIL']
-            contact_email = request.META['HTTP_SSO_PROFILE_CONTACT_EMAIL']
-            related_emails = request.META['HTTP_SSO_PROFILE_RELATED_EMAILS'].split(',')
-            user_id = request.META['HTTP_SSO_PROFILE_USER_ID']
-            first_name = request.META['HTTP_SSO_PROFILE_FIRST_NAME']
-            last_name = request.META['HTTP_SSO_PROFILE_LAST_NAME']
+            email = request.META["HTTP_SSO_PROFILE_EMAIL"]
+            contact_email = request.META["HTTP_SSO_PROFILE_CONTACT_EMAIL"]
+            related_emails = request.META["HTTP_SSO_PROFILE_RELATED_EMAILS"].split(",")
+            user_id = request.META["HTTP_SSO_PROFILE_USER_ID"]
+            first_name = request.META["HTTP_SSO_PROFILE_FIRST_NAME"]
+            last_name = request.META["HTTP_SSO_PROFILE_LAST_NAME"]
         except KeyError:
             return None
 

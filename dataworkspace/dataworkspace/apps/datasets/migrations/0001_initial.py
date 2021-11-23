@@ -14,18 +14,18 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DataGrouping',
+            name="DataGrouping",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('deleted', models.BooleanField(default=False)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("deleted", models.BooleanField(default=False)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -33,60 +33,60 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('name', models.CharField(max_length=128, unique=True)),
-                ('short_description', models.CharField(max_length=256)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('slug', models.SlugField(unique=True)),
+                ("name", models.CharField(max_length=128, unique=True)),
+                ("short_description", models.CharField(max_length=256)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("slug", models.SlugField(unique=True)),
                 (
-                    'created_by',
+                    "created_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='created+',
+                        related_name="created+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'information_asset_manager',
+                    "information_asset_manager",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='asset_manager',
+                        related_name="asset_manager",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'information_asset_owner',
+                    "information_asset_owner",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='asset_owner',
+                        related_name="asset_owner",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'updated_by',
+                    "updated_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='updated+',
+                        related_name="updated+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
-            options={'db_table': 'app_datagrouping'},
+            options={"db_table": "app_datagrouping"},
         ),
         migrations.CreateModel(
-            name='DataSet',
+            name="DataSet",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -94,33 +94,33 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('name', models.CharField(max_length=128)),
-                ('slug', models.SlugField()),
-                ('short_description', models.CharField(max_length=256)),
-                ('description', models.TextField()),
-                ('redactions', models.TextField(blank=True, null=True)),
-                ('licence', models.CharField(blank=True, max_length=256, null=True)),
-                ('volume', models.IntegerField()),
-                ('retention_policy', models.TextField(blank=True, null=True)),
+                ("name", models.CharField(max_length=128)),
+                ("slug", models.SlugField()),
+                ("short_description", models.CharField(max_length=256)),
+                ("description", models.TextField()),
+                ("redactions", models.TextField(blank=True, null=True)),
+                ("licence", models.CharField(blank=True, max_length=256, null=True)),
+                ("volume", models.IntegerField()),
+                ("retention_policy", models.TextField(blank=True, null=True)),
                 (
-                    'personal_data',
+                    "personal_data",
                     models.CharField(blank=True, max_length=128, null=True),
                 ),
-                ('restrictions_on_usage', models.TextField(blank=True, null=True)),
+                ("restrictions_on_usage", models.TextField(blank=True, null=True)),
                 (
-                    'user_access_type',
+                    "user_access_type",
                     models.CharField(
                         choices=[
-                            ('REQUIRES_AUTHENTICATION', 'Requires authentication'),
-                            ('REQUIRES_AUTHORIZATION', 'Requires authorization'),
+                            ("REQUIRES_AUTHENTICATION", "Requires authentication"),
+                            ("REQUIRES_AUTHORIZATION", "Requires authorization"),
                         ],
-                        default='REQUIRES_AUTHORIZATION',
+                        default="REQUIRES_AUTHORIZATION",
                         max_length=64,
                     ),
                 ),
-                ('published', models.BooleanField(default=False)),
+                ("published", models.BooleanField(default=False)),
                 (
-                    'enquiries_contact',
+                    "enquiries_contact",
                     models.ForeignKey(
                         blank=True,
                         null=True,
@@ -129,54 +129,54 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'grouping',
+                    "grouping",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.DataGrouping',
+                        to="datasets.DataGrouping",
                     ),
                 ),
             ],
-            options={'db_table': 'app_dataset'},
+            options={"db_table": "app_dataset"},
         ),
         migrations.CreateModel(
-            name='ReferenceDataset',
+            name="ReferenceDataset",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('deleted', models.BooleanField(default=False)),
-                ('name', models.CharField(max_length=255)),
-                ('slug', models.SlugField()),
-                ('short_description', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('licence', models.CharField(blank=True, max_length=256)),
-                ('restrictions_on_usage', models.TextField(blank=True, null=True)),
-                ('valid_from', models.DateField(blank=True, null=True)),
-                ('valid_to', models.DateField(blank=True, null=True)),
-                ('published', models.BooleanField(default=False)),
-                ('schema_version', models.IntegerField(default=0)),
-                ('major_version', models.IntegerField(default=1)),
-                ('minor_version', models.IntegerField(default=0)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("deleted", models.BooleanField(default=False)),
+                ("name", models.CharField(max_length=255)),
+                ("slug", models.SlugField()),
+                ("short_description", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("licence", models.CharField(blank=True, max_length=256)),
+                ("restrictions_on_usage", models.TextField(blank=True, null=True)),
+                ("valid_from", models.DateField(blank=True, null=True)),
+                ("valid_to", models.DateField(blank=True, null=True)),
+                ("published", models.BooleanField(default=False)),
+                ("schema_version", models.IntegerField(default=0)),
+                ("major_version", models.IntegerField(default=1)),
+                ("minor_version", models.IntegerField(default=0)),
                 (
-                    'created_by',
+                    "created_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='created+',
+                        related_name="created+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'enquiries_contact',
+                    "enquiries_contact",
                     models.ForeignKey(
                         blank=True,
                         null=True,
@@ -185,33 +185,33 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'group',
+                    "group",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.DataGrouping',
+                        to="datasets.DataGrouping",
                     ),
                 ),
                 (
-                    'updated_by',
+                    "updated_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='updated+',
+                        related_name="updated+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Reference Data Set',
-                'db_table': 'app_referencedataset',
+                "verbose_name": "Reference Data Set",
+                "db_table": "app_referencedataset",
             },
         ),
         migrations.CreateModel(
-            name='SourceTable',
+            name="SourceTable",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -220,60 +220,60 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'name',
+                    "name",
                     models.CharField(
-                        help_text='Used as the displayed text in the download link',
+                        help_text="Used as the displayed text in the download link",
                         max_length=1024,
                     ),
                 ),
                 (
-                    'schema',
+                    "schema",
                     models.CharField(
-                        default='public',
+                        default="public",
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'table',
+                    "table",
                     models.CharField(
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'database',
+                    "database",
                     models.ForeignKey(
                         default=None,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='core.Database',
+                        to="core.Database",
                     ),
                 ),
                 (
-                    'dataset',
+                    "dataset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.DataSet',
+                        to="datasets.DataSet",
                     ),
                 ),
             ],
-            options={'db_table': 'app_sourcetable'},
+            options={"db_table": "app_sourcetable"},
         ),
         migrations.CreateModel(
-            name='SourceLink',
+            name="SourceLink",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -282,131 +282,129 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'link_type',
+                    "link_type",
                     models.IntegerField(
-                        choices=[(1, 'External Link'), (2, 'Local Link')], default=1
+                        choices=[(1, "External Link"), (2, "Local Link")], default=1
                     ),
                 ),
                 (
-                    'name',
+                    "name",
                     models.CharField(
-                        help_text='Used as the displayed text in the download link',
+                        help_text="Used as the displayed text in the download link",
                         max_length=128,
                     ),
                 ),
-                ('url', models.CharField(max_length=256)),
-                ('format', models.CharField(max_length=10)),
-                ('frequency', models.CharField(max_length=50)),
+                ("url", models.CharField(max_length=256)),
+                ("format", models.CharField(max_length=10)),
+                ("frequency", models.CharField(max_length=50)),
                 (
-                    'dataset',
+                    "dataset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.DataSet',
+                        to="datasets.DataSet",
                     ),
                 ),
             ],
-            options={'db_table': 'app_sourcelink'},
+            options={"db_table": "app_sourcelink"},
         ),
         migrations.CreateModel(
-            name='ReferenceDatasetField',
+            name="ReferenceDatasetField",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'data_type',
+                    "data_type",
                     models.IntegerField(
                         choices=[
-                            (1, 'Character field'),
-                            (2, 'Integer field'),
-                            (3, 'Float field'),
-                            (4, 'Date field'),
-                            (5, 'Time field'),
-                            (6, 'Datetime field'),
-                            (7, 'Boolean field'),
+                            (1, "Character field"),
+                            (2, "Integer field"),
+                            (3, "Float field"),
+                            (4, "Date field"),
+                            (5, "Time field"),
+                            (6, "Datetime field"),
+                            (7, "Boolean field"),
                         ]
                     ),
                 ),
                 (
-                    'is_identifier',
+                    "is_identifier",
                     models.BooleanField(
                         default=False,
-                        help_text='This field is the unique identifier for the record',
+                        help_text="This field is the unique identifier for the record",
                     ),
                 ),
                 (
-                    'name',
-                    models.CharField(
-                        help_text='The display name for the field', max_length=255
-                    ),
+                    "name",
+                    models.CharField(help_text="The display name for the field", max_length=255),
                 ),
-                ('description', models.TextField(blank=True, null=True)),
-                ('required', models.BooleanField(default=False)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("required", models.BooleanField(default=False)),
                 (
-                    'created_by',
+                    "created_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='created+',
+                        related_name="created+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'reference_dataset',
+                    "reference_dataset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='fields',
-                        to='datasets.ReferenceDataset',
+                        related_name="fields",
+                        to="datasets.ReferenceDataset",
                     ),
                 ),
                 (
-                    'updated_by',
+                    "updated_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='updated+',
+                        related_name="updated+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Reference Data Set Field',
-                'db_table': 'app_referencedatasetfield',
-                'ordering': ('id',),
-                'unique_together': {('reference_dataset', 'name')},
+                "verbose_name": "Reference Data Set Field",
+                "db_table": "app_referencedatasetfield",
+                "ordering": ("id",),
+                "unique_together": {("reference_dataset", "name")},
             },
         ),
         migrations.CreateModel(
-            name='DataSetUserPermission',
+            name="DataSetUserPermission",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'dataset',
+                    "dataset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.DataSet',
+                        to="datasets.DataSet",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
@@ -414,8 +412,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                'db_table': 'app_datasetuserpermission',
-                'unique_together': {('user', 'dataset')},
+                "db_table": "app_datasetuserpermission",
+                "unique_together": {("user", "dataset")},
             },
         ),
     ]

@@ -6,20 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0071_auto_20210315_0950'),
+        ("datasets", "0071_auto_20210315_0950"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='sourcetable',
-            name='dataset_finder_opted_in',
+            model_name="sourcetable",
+            name="dataset_finder_opted_in",
             field=models.BooleanField(
                 default=False,
                 help_text=(
-                    'Should this dataset be discoverable through Dataset Finder for all users, '
-                    'even if they haven’t been explicitly granted access?'
+                    "Should this dataset be discoverable through Dataset Finder for all users, "
+                    "even if they haven’t been explicitly granted access?"
                 ),
-                verbose_name='IAM/IAO opt-in for Dataset Finder',
+                verbose_name="IAM/IAO opt-in for Dataset Finder",
             ),
         ),
     ]

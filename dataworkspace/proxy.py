@@ -39,7 +39,7 @@ class ContextAdapter(logging.LoggerAdapter):
         return f'[{self.extra["context"]}] {msg}', kwargs
 
 
-PROFILE_CACHE_PREFIX = 'data_workspace_profile'
+PROFILE_CACHE_PREFIX = "data_workspace_profile"
 CONTEXT_ALPHABET = string.ascii_letters + string.digits
 
 
@@ -47,66 +47,66 @@ async def async_main():
     env = normalise_environment(os.environ)
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    if 'dataworkspace.test' not in env['ALLOWED_HOSTS']:
+    if "dataworkspace.test" not in env["ALLOWED_HOSTS"]:
         stdout_handler.setFormatter(
-            ecs_logging.StdlibFormatter(exclude_fields=('log.original', 'message'))
+            ecs_logging.StdlibFormatter(exclude_fields=("log.original", "message"))
         )
-    for logger_name in ['aiohttp.server', 'aiohttp.web', 'aiohttp.access', 'proxy']:
+    for logger_name in ["aiohttp.server", "aiohttp.web", "aiohttp.access", "proxy"]:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.INFO)
         logger.addHandler(stdout_handler)
 
-    port = int(env['PROXY_PORT'])
-    admin_root = env['UPSTREAM_ROOT']
-    superset_root = env['SUPERSET_ROOT']
-    hawk_senders = env['HAWK_SENDERS']
-    sso_base_url = env['AUTHBROKER_URL']
+    port = int(env["PROXY_PORT"])
+    admin_root = env["UPSTREAM_ROOT"]
+    superset_root = env["SUPERSET_ROOT"]
+    hawk_senders = env["HAWK_SENDERS"]
+    sso_base_url = env["AUTHBROKER_URL"]
     sso_host = URL(sso_base_url).host
-    sso_client_id = env['AUTHBROKER_CLIENT_ID']
-    sso_client_secret = env['AUTHBROKER_CLIENT_SECRET']
-    redis_url = env['REDIS_URL']
-    root_domain = env['APPLICATION_ROOT_DOMAIN']
-    basic_auth_user = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
-    basic_auth_password = env['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
-    x_forwarded_for_trusted_hops = int(env['X_FORWARDED_FOR_TRUSTED_HOPS'])
-    application_ip_whitelist = env['APPLICATION_IP_WHITELIST']
-    ga_tracking_id = env.get('GA_TRACKING_ID')
-    mirror_remote_root = env['MIRROR_REMOTE_ROOT']
-    mirror_local_root = '/__mirror/'
+    sso_client_id = env["AUTHBROKER_CLIENT_ID"]
+    sso_client_secret = env["AUTHBROKER_CLIENT_SECRET"]
+    redis_url = env["REDIS_URL"]
+    root_domain = env["APPLICATION_ROOT_DOMAIN"]
+    basic_auth_user = env["METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER"]
+    basic_auth_password = env["METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD"]
+    x_forwarded_for_trusted_hops = int(env["X_FORWARDED_FOR_TRUSTED_HOPS"])
+    application_ip_whitelist = env["APPLICATION_IP_WHITELIST"]
+    ga_tracking_id = env.get("GA_TRACKING_ID")
+    mirror_remote_root = env["MIRROR_REMOTE_ROOT"]
+    mirror_local_root = "/__mirror/"
     required_admin_headers = (
-        'cookie',
-        'host',
-        'x-csrftoken',
-        'x-data-workspace-no-modify-application-instance',
-        'x-scheme',
-        'x-forwarded-proto',
-        'referer',
-        'user-agent',
+        "cookie",
+        "host",
+        "x-csrftoken",
+        "x-data-workspace-no-modify-application-instance",
+        "x-scheme",
+        "x-forwarded-proto",
+        "referer",
+        "user-agent",
     )
 
     # Cookies on the embed path must be allowed to be SameSite=None, so they
     # will be sent when the site is embedded in an iframe
-    embed_path = '/visualisations/link'
+    embed_path = "/visualisations/link"
 
-    root_domain_no_port, _, root_port_str = root_domain.partition(':')
+    root_domain_no_port, _, root_port_str = root_domain.partition(":")
     try:
         root_port = int(root_port_str)
     except ValueError:
         root_port = None
 
     csp_common = "object-src 'none';"
-    if root_domain not in ['dataworkspace.test:8000']:
-        csp_common += 'upgrade-insecure-requests;'
+    if root_domain not in ["dataworkspace.test:8000"]:
+        csp_common += "upgrade-insecure-requests;"
 
     # A spawning application on <my-application>.<root_domain> shows the admin-styled site,
     # fetching assets from <root_domain>, but also makes requests to the current domain
     csp_application_spawning = csp_common + (
-        f'default-src {root_domain};'
-        f'base-uri {root_domain};'
-        f'font-src {root_domain} data:  https://fonts.gstatic.com;'
-        f'form-action {root_domain} *.{root_domain};'
-        f'frame-ancestors {root_domain};'
-        f'img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'  # pylint: disable=line-too-long
+        f"default-src {root_domain};"
+        f"base-uri {root_domain};"
+        f"font-src {root_domain} data:  https://fonts.gstatic.com;"
+        f"form-action {root_domain} *.{root_domain};"
+        f"frame-ancestors {root_domain};"
+        f"img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;"  # pylint: disable=line-too-long
         f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"  # pylint: disable=line-too-long
         f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
         f"connect-src {root_domain} 'self';"
@@ -117,11 +117,11 @@ async def async_main():
     def csp_application_running_wrapped(direct_host):
         return csp_common + (
             f"default-src 'none';"
-            f'base-uri {root_domain};'
+            f"base-uri {root_domain};"
             f"form-action 'none';"
             f"frame-ancestors 'none';"
-            f'frame-src {direct_host} {sso_host} https://www.googletagmanager.com;'
-            f'img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;'  # pylint: disable=line-too-long
+            f"frame-src {direct_host} {sso_host} https://www.googletagmanager.com;"
+            f"img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;"  # pylint: disable=line-too-long
             f"font-src {root_domain} data: https://fonts.gstatic.com;"
             f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"  # pylint: disable=line-too-long
             f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
@@ -154,15 +154,13 @@ async def async_main():
     spawning_http_timeout = aiohttp.ClientTimeout(sock_read=5, sock_connect=2)
 
     def get_random_context_logger():
-        return ContextAdapter(
-            logger, {'context': ''.join(random.choices(CONTEXT_ALPHABET, k=8))}
-        )
+        return ContextAdapter(logger, {"context": "".join(random.choices(CONTEXT_ALPHABET, k=8))})
 
     def without_transfer_encoding(request_or_response):
         return tuple(
             (key, value)
             for key, value in request_or_response.headers.items()
-            if key.lower() != 'transfer-encoding'
+            if key.lower() != "transfer-encoding"
         )
 
     def admin_headers_request(downstream_request):
@@ -174,7 +172,7 @@ async def async_main():
                 for key, value in downstream_request.headers.items()
                 if key.lower() in required_admin_headers
             )
-            + downstream_request['sso_profile_headers']
+            + downstream_request["sso_profile_headers"]
         )
 
     def admin_headers_proxy(downstream_request):
@@ -182,94 +180,88 @@ async def async_main():
             tuple(
                 (key, value)
                 for key, value in downstream_request.headers.items()
-                if key.lower()
-                in required_admin_headers + ('content-length', 'content-type')
+                if key.lower() in required_admin_headers + ("content-length", "content-type")
             )
-            + downstream_request['sso_profile_headers']
+            + downstream_request["sso_profile_headers"]
         )
 
     def mirror_headers(downstream_request):
         return tuple(
             (key, value)
             for key, value in downstream_request.headers.items()
-            if key.lower() not in ['host', 'transfer-encoding']
+            if key.lower() not in ["host", "transfer-encoding"]
         )
 
     def application_headers(downstream_request):
         return (
             without_transfer_encoding(downstream_request)
             + (
-                (('x-scheme', downstream_request.headers['x-forwarded-proto']),)
-                if 'x-forwarded-proto' in downstream_request.headers
+                (("x-scheme", downstream_request.headers["x-forwarded-proto"]),)
+                if "x-forwarded-proto" in downstream_request.headers
                 else ()
             )
-            + downstream_request['sso_profile_headers']
+            + downstream_request["sso_profile_headers"]
         )
 
     async def superset_headers(downstream_request, path):
         credentials = {}
         dashboards = []
 
-        if not path.startswith('/static/'):
-            host_api_url = admin_root + '/api/v1/core/get-superset-role-credentials'
+        if not path.startswith("/static/"):
+            host_api_url = admin_root + "/api/v1/core/get-superset-role-credentials"
 
             async with client_session.request(
-                'GET',
+                "GET",
                 host_api_url,
                 headers=CIMultiDict(admin_headers_request(downstream_request)),
             ) as response:
                 if response.status == 200:
                     response_json = await response.json()
-                    credentials = response_json['credentials']
-                    dashboards = response_json['dashboards']
+                    credentials = response_json["credentials"]
+                    dashboards = response_json["dashboards"]
                 else:
                     raise UserException(
-                        'Unable to fetch credentials for superset', response.status
+                        "Unable to fetch credentials for superset", response.status
                     )
 
         def standardise_header(header):
             # converts 'multi_word_header' to 'Multi-Word-Header'
-            return '-'.join(
-                [s.capitalize() for s in header.replace('_', '-').split('-')]
-            )
+            return "-".join([s.capitalize() for s in header.replace("_", "-").split("-")])
 
         return CIMultiDict(
             without_transfer_encoding(downstream_request)
             + (
                 tuple(
-                    [
-                        (f'Credentials-{standardise_header(k)}', v)
-                        for k, v in credentials.items()
-                    ]
+                    [(f"Credentials-{standardise_header(k)}", v) for k, v in credentials.items()]
                 )
             )
-            + (tuple([('Dashboards', ','.join(dashboards))]))
-            + downstream_request['sso_profile_headers']
+            + (tuple([("Dashboards", ",".join(dashboards))]))
+            + downstream_request["sso_profile_headers"]
         )
 
     def is_service_discovery(request):
         return (
-            request.url.path == '/api/v1/application'
+            request.url.path == "/api/v1/application"
             and request.url.host == root_domain_no_port
-            and request.method == 'GET'
+            and request.method == "GET"
         )
 
     def is_superset_requested(request):
         return (
-            request.url.host == f'superset.{root_domain_no_port}'
-            or request.url.host == f'superset-edit.{root_domain_no_port}'
-            or request.url.host == f'superset-admin.{root_domain_no_port}'
+            request.url.host == f"superset.{root_domain_no_port}"
+            or request.url.host == f"superset-edit.{root_domain_no_port}"
+            or request.url.host == f"superset-admin.{root_domain_no_port}"
         )
 
     def is_data_explorer_requested(request):
         return (
-            request.url.path.startswith('/data-explorer/')
+            request.url.path.startswith("/data-explorer/")
             and request.url.host == root_domain_no_port
         )
 
     def is_app_requested(request):
         return (
-            request.url.host.endswith(f'.{root_domain_no_port}')
+            request.url.host.endswith(f".{root_domain_no_port}")
             and not request.url.path.startswith(mirror_local_root)
             and not is_superset_requested(request)
         )
@@ -280,20 +272,20 @@ async def async_main():
     def is_requesting_credentials(request):
         return (
             request.url.host == root_domain_no_port
-            and request.url.path == '/api/v1/aws_credentials'
+            and request.url.path == "/api/v1/aws_credentials"
         )
 
     def is_requesting_files(request):
-        return request.url.host == root_domain_no_port and request.url.path == '/files'
+        return request.url.host == root_domain_no_port and request.url.path == "/files"
 
     def is_dataset_requested(request):
         return (
-            request.url.path.startswith('/api/v1/dataset/')
-            or request.url.path.startswith('/api/v1/reference-dataset/')
-            or request.url.path.startswith('/api/v1/eventlog/')
-            or request.url.path.startswith('/api/v1/account/')
-            or request.url.path.startswith('/api/v1/application-instance/')
-            or request.url.path.startswith('/api/v1/core/')
+            request.url.path.startswith("/api/v1/dataset/")
+            or request.url.path.startswith("/api/v1/reference-dataset/")
+            or request.url.path.startswith("/api/v1/eventlog/")
+            or request.url.path.startswith("/api/v1/account/")
+            or request.url.path.startswith("/api/v1/application-instance/")
+            or request.url.path.startswith("/api/v1/core/")
         ) and request.url.host == root_domain_no_port
 
     def is_hawk_auth_required(request):
@@ -301,16 +293,16 @@ async def async_main():
 
     def is_healthcheck_requested(request):
         return (
-            request.url.path == '/healthcheck'
-            and request.method == 'GET'
+            request.url.path == "/healthcheck"
+            and request.method == "GET"
             and not is_app_requested(request)
         )
 
     def is_table_requested(request):
         return (
-            request.url.path.startswith('/api/v1/table/')
+            request.url.path.startswith("/api/v1/table/")
             and request.url.host == root_domain_no_port
-            and request.method == 'POST'
+            and request.method == "POST"
         )
 
     def is_sso_auth_required(request):
@@ -323,9 +315,7 @@ async def async_main():
 
     def get_peer_ip(request):
         peer_ip = (
-            request.headers['x-forwarded-for']
-            .split(',')[-x_forwarded_for_trusted_hops]
-            .strip()
+            request.headers["x-forwarded-for"].split(",")[-x_forwarded_for_trusted_hops].strip()
         )
 
         is_private = True
@@ -337,7 +327,7 @@ async def async_main():
         return peer_ip, is_private
 
     def request_scheme(request):
-        return request.headers.get('x-forwarded-proto', request.url.scheme)
+        return request.headers.get("x-forwarded-proto", request.url.scheme)
 
     def request_url(request):
         return str(request.url.with_scheme(request_scheme(request)))
@@ -354,8 +344,8 @@ async def async_main():
         # - tend to close unexpectedly, both from the client and app
         # - don't need to show anything nice to the user on error
         is_websocket = (
-            downstream_request.headers.get('connection', '').lower() == 'upgrade'
-            and downstream_request.headers.get('upgrade', '').lower() == 'websocket'
+            downstream_request.headers.get("connection", "").lower() == "upgrade"
+            and downstream_request.headers.get("upgrade", "").lower() == "websocket"
         )
 
         try:
@@ -379,7 +369,7 @@ async def async_main():
             user_exception = isinstance(exception, UserException)
             if not user_exception or (user_exception and exception.args[1] == 500):
                 logger.exception(
-                    'Exception during %s %s %s',
+                    "Exception during %s %s %s",
                     downstream_request.method,
                     downstream_request.url,
                     type(exception),
@@ -388,27 +378,23 @@ async def async_main():
             if is_websocket:
                 raise
 
-            params = {'message': exception.args[0]} if user_exception else {}
+            params = {"message": exception.args[0]} if user_exception else {}
 
             status = exception.args[1] if user_exception else 500
 
             return await handle_http(
                 downstream_request,
-                'GET',
+                "GET",
                 CIMultiDict(admin_headers_request(downstream_request)),
-                URL(admin_root).with_path(f'/error_{status}'),
+                URL(admin_root).with_path(f"/error_{status}"),
                 params,
-                b'',
+                b"",
                 default_http_timeout,
             )
 
     async def handle_application(is_websocket, downstream_request, method, path, query):
-        public_host, _, _ = downstream_request.url.host.partition(
-            f'.{root_domain_no_port}'
-        )
-        possible_public_host, _, public_host_or_port_override = public_host.rpartition(
-            '--'
-        )
+        public_host, _, _ = downstream_request.url.host.partition(f".{root_domain_no_port}")
+        possible_public_host, _, public_host_or_port_override = public_host.rpartition("--")
         try:
             port_override = int(public_host_or_port_override)
         except ValueError:
@@ -418,11 +404,11 @@ async def async_main():
                 public_host = possible_public_host
             else:
                 port_override = None
-        host_api_url = admin_root + '/api/v1/application/' + public_host
-        host_html_path = '/tools/' + public_host
+        host_api_url = admin_root + "/api/v1/application/" + public_host
+        host_html_path = "/tools/" + public_host
 
         async with client_session.request(
-            'GET',
+            "GET",
             host_api_url,
             headers=CIMultiDict(admin_headers_request(downstream_request)),
         ) as response:
@@ -430,67 +416,61 @@ async def async_main():
             application = await response.json()
 
         if response.status != 200 and response.status != 404:
-            raise UserException('Unable to start the application', response.status)
+            raise UserException("Unable to start the application", response.status)
 
-        if host_exists and application['state'] not in ['SPAWNING', 'RUNNING']:
-            if (
-                'x-data-workspace-no-modify-application-instance'
-                not in downstream_request.headers
-            ):
+        if host_exists and application["state"] not in ["SPAWNING", "RUNNING"]:
+            if "x-data-workspace-no-modify-application-instance" not in downstream_request.headers:
                 async with client_session.request(
-                    'DELETE',
+                    "DELETE",
                     host_api_url,
                     headers=CIMultiDict(admin_headers_request(downstream_request)),
                 ) as delete_response:
                     await delete_response.read()
-            raise UserException('Application ' + application['state'], 500)
+            raise UserException("Application " + application["state"], 500)
 
         if not host_exists:
-            if (
-                'x-data-workspace-no-modify-application-instance'
-                not in downstream_request.headers
-            ):
+            if "x-data-workspace-no-modify-application-instance" not in downstream_request.headers:
                 async with client_session.request(
-                    'PUT',
+                    "PUT",
                     host_api_url,
                     headers=CIMultiDict(admin_headers_request(downstream_request)),
                 ) as response:
                     host_exists = response.status == 200
                     application = await response.json()
             else:
-                raise UserException('Application stopped while starting', 500)
+                raise UserException("Application stopped while starting", 500)
 
         if response.status != 200:
-            raise UserException('Unable to start the application', response.status)
+            raise UserException("Unable to start the application", response.status)
 
-        if application['state'] not in ['SPAWNING', 'RUNNING']:
+        if application["state"] not in ["SPAWNING", "RUNNING"]:
             raise UserException(
-                'Attempted to start the application, but it ' + application['state'],
+                "Attempted to start the application, but it " + application["state"],
                 500,
             )
 
-        if not application['proxy_url']:
+        if not application["proxy_url"]:
             return await handle_http(
                 downstream_request,
-                'GET',
+                "GET",
                 CIMultiDict(admin_headers_request(downstream_request)),
-                admin_root + host_html_path + '/spawning',
+                admin_root + host_html_path + "/spawning",
                 {},
-                b'',
+                b"",
                 default_http_timeout,
-                (('content-security-policy', csp_application_spawning),),
+                (("content-security-policy", csp_application_spawning),),
             )
 
         if is_websocket:
             return await handle_application_websocket(
-                downstream_request, application['proxy_url'], path, query, port_override
+                downstream_request, application["proxy_url"], path, query, port_override
             )
 
-        if application['state'] == 'SPAWNING':
+        if application["state"] == "SPAWNING":
             return await handle_application_http_spawning(
                 downstream_request,
                 method,
-                application_upstream(application['proxy_url'], path, port_override),
+                application_upstream(application["proxy_url"], path, port_override),
                 query,
                 host_html_path,
                 host_api_url,
@@ -498,13 +478,13 @@ async def async_main():
             )
 
         if (
-            application['state'] == 'RUNNING'
-            and application['wrap'] != 'NONE'
+            application["state"] == "RUNNING"
+            and application["wrap"] != "NONE"
             and not port_override
         ):
             return await handle_application_http_running_wrapped(
                 downstream_request,
-                application_upstream(application['proxy_url'], path, port_override),
+                application_upstream(application["proxy_url"], path, port_override),
                 host_html_path,
                 public_host,
             )
@@ -512,7 +492,7 @@ async def async_main():
         return await handle_application_http_running_direct(
             downstream_request,
             method,
-            application_upstream(application['proxy_url'], path, port_override),
+            application_upstream(application["proxy_url"], path, port_override),
             query,
             public_host,
         )
@@ -520,9 +500,7 @@ async def async_main():
     async def handle_application_websocket(
         downstream_request, proxy_url, path, query, port_override
     ):
-        upstream_url = application_upstream(proxy_url, path, port_override).with_query(
-            query
-        )
+        upstream_url = application_upstream(proxy_url, path, port_override).with_query(query)
         return await handle_websocket(
             downstream_request,
             CIMultiDict(application_headers(downstream_request)),
@@ -545,9 +523,9 @@ async def async_main():
         host_api_url,
         public_host,
     ):
-        host = downstream_request.headers['host']
+        host = downstream_request.headers["host"]
         try:
-            logger.info('Spawning: Attempting to connect to %s', upstream_url)
+            logger.info("Spawning: Attempting to connect to %s", upstream_url)
             response = await handle_http(
                 downstream_request,
                 method,
@@ -560,23 +538,23 @@ async def async_main():
                 # we know the application is running, so we return the _running_ CSP headers
                 (
                     (
-                        'content-security-policy',
+                        "content-security-policy",
                         csp_application_running_direct(host, public_host),
                     ),
                 ),
             )
 
         except Exception:  # pylint: disable=broad-except
-            logger.info('Spawning: Failed to connect to %s', upstream_url)
+            logger.info("Spawning: Failed to connect to %s", upstream_url)
             return await handle_http(
                 downstream_request,
-                'GET',
+                "GET",
                 CIMultiDict(admin_headers_request(downstream_request)),
-                admin_root + host_html_path + '/spawning',
+                admin_root + host_html_path + "/spawning",
                 {},
-                b'',
+                b"",
                 default_http_timeout,
-                (('content-security-policy', csp_application_spawning),),
+                (("content-security-policy", csp_application_spawning),),
             )
 
         else:
@@ -585,9 +563,9 @@ async def async_main():
             # task. We set RUNNING in another task to avoid it being cancelled
             async def set_application_running():
                 async with client_session.request(
-                    'PATCH',
+                    "PATCH",
                     host_api_url,
-                    json={'state': 'RUNNING'},
+                    json={"state": "RUNNING"},
                     headers=CIMultiDict(admin_headers_request(downstream_request)),
                     timeout=default_http_timeout,
                 ) as patch_response:
@@ -601,18 +579,18 @@ async def async_main():
         downstream_request, upstream_url, host_html_path, public_host
     ):
         upstream = URL(upstream_url)
-        direct_host = f'{public_host}--{upstream.port}.{root_domain}'
+        direct_host = f"{public_host}--{upstream.port}.{root_domain}"
         return await handle_http(
             downstream_request,
-            'GET',
+            "GET",
             CIMultiDict(admin_headers_request(downstream_request)),
-            admin_root + host_html_path + '/running',
+            admin_root + host_html_path + "/running",
             {},
-            b'',
+            b"",
             default_http_timeout,
             (
                 (
-                    'content-security-policy',
+                    "content-security-policy",
                     csp_application_running_wrapped(direct_host),
                 ),
             ),
@@ -621,7 +599,7 @@ async def async_main():
     async def handle_application_http_running_direct(
         downstream_request, method, upstream_url, query, public_host
     ):
-        host = downstream_request.headers['host']
+        host = downstream_request.headers["host"]
 
         await send_to_google_analytics(downstream_request)
 
@@ -635,7 +613,7 @@ async def async_main():
             default_http_timeout,
             (
                 (
-                    'content-security-policy',
+                    "content-security-policy",
                     csp_application_running_direct(host, public_host),
                 ),
             ),
@@ -656,7 +634,7 @@ async def async_main():
 
     async def handle_superset(downstream_request, method, path, query):
         upstream_url = URL(superset_root).with_path(path)
-        host = downstream_request.headers['host']
+        host = downstream_request.headers["host"]
         return await handle_http(
             downstream_request,
             method,
@@ -667,8 +645,8 @@ async def async_main():
             default_http_timeout,
             (
                 (
-                    'content-security-policy',
-                    csp_application_running_direct(host, 'superset'),
+                    "content-security-policy",
+                    csp_application_running_direct(host, "superset"),
                 ),
             ),
         )
@@ -686,7 +664,7 @@ async def async_main():
         )
 
     async def handle_websocket(downstream_request, upstream_headers, upstream_url):
-        protocol = downstream_request.headers.get('Sec-WebSocket-Protocol')
+        protocol = downstream_request.headers.get("Sec-WebSocket-Protocol")
         protocols = (protocol,) if protocol else ()
 
         async def proxy_msg(msg, to_ws):
@@ -754,15 +732,15 @@ async def async_main():
         # Not perfect, but a good enough guide for usage
         _, extension = os.path.splitext(downstream_request.url.path)
         send_to_google = ga_tracking_id and extension in {
-            '',
-            '.doc',
-            '.docx',
-            '.html',
-            '.pdf',
-            '.ppt',
-            '.pptx',
-            '.xlsx',
-            '.xlsx',
+            "",
+            ".doc",
+            ".docx",
+            ".html",
+            ".pdf",
+            ".ppt",
+            ".pptx",
+            ".xlsx",
+            ".xlsx",
         }
 
         if not send_to_google:
@@ -773,25 +751,23 @@ async def async_main():
             peer_ip, _ = get_peer_ip(downstream_request)
 
             response = await client_session.request(
-                'POST',
-                'https://www.google-analytics.com/collect',
+                "POST",
+                "https://www.google-analytics.com/collect",
                 data={
-                    'v': '1',
-                    'tid': ga_tracking_id,
-                    'cid': str(uuid.uuid4()),
-                    't': 'pageview',
-                    'uip': peer_ip,
-                    'dh': downstream_request.url.host,
-                    'dp': downstream_request.url.path_qs,
-                    'ds': 'data-workspace-server',
-                    'dr': downstream_request.headers.get('referer', ''),
-                    'ua': downstream_request.headers.get('user-agent', ''),
+                    "v": "1",
+                    "tid": ga_tracking_id,
+                    "cid": str(uuid.uuid4()),
+                    "t": "pageview",
+                    "uip": peer_ip,
+                    "dh": downstream_request.url.host,
+                    "dp": downstream_request.url.path_qs,
+                    "ds": "data-workspace-server",
+                    "dr": downstream_request.headers.get("referer", ""),
+                    "ua": downstream_request.headers.get("user-agent", ""),
                 },
                 timeout=default_http_timeout,
             )
-            logger.info(
-                "Sending to Google Analytics %s... %s", downstream_request.url, response
-            )
+            logger.info("Sending to Google Analytics %s... %s", downstream_request.url, response)
 
         asyncio.create_task(_send())
 
@@ -852,25 +828,25 @@ async def async_main():
         async def _server_logger(request, handler):
 
             request_logger = get_random_context_logger()
-            request['logger'] = request_logger
+            request["logger"] = request_logger
             url = request_url(request)
 
             request_logger.info(
-                'Receiving (%s) (%s) (%s) (%s)',
+                "Receiving (%s) (%s) (%s) (%s)",
                 request.method,
                 url,
-                request.headers.get('User-Agent', '-'),
-                request.headers.get('X-Forwarded-For', '-'),
+                request.headers.get("User-Agent", "-"),
+                request.headers.get("X-Forwarded-For", "-"),
             )
 
             response = await handler(request)
 
             request_logger.info(
-                'Responding (%s) (%s) (%s) (%s) (%s) (%s)',
+                "Responding (%s) (%s) (%s) (%s) (%s) (%s)",
                 request.method,
                 url,
-                request.headers.get('User-Agent', '-'),
-                request.headers.get('X-Forwarded-For', '-'),
+                request.headers.get("User-Agent", "-"),
+                request.headers.get("X-Forwarded-For", "-"),
                 response.status,
                 response.content_length,
             )
@@ -881,31 +857,27 @@ async def async_main():
 
     def authenticate_by_staff_sso():
 
-        auth_path = 'o/authorize/'
-        token_path = 'o/token/'
-        me_path = 'api/v1/user/me/'
-        grant_type = 'authorization_code'
-        scope = 'read write'
-        response_type = 'code'
+        auth_path = "o/authorize/"
+        token_path = "o/token/"
+        me_path = "api/v1/user/me/"
+        grant_type = "authorization_code"
+        scope = "read write"
+        response_type = "code"
 
-        redirect_from_sso_path = '/__redirect_from_sso'
-        session_token_key = 'staff_sso_access_token'
+        redirect_from_sso_path = "/__redirect_from_sso"
+        session_token_key = "staff_sso_access_token"
 
         async def get_redirect_uri_authenticate(set_session_value, redirect_uri_final):
             scheme = URL(redirect_uri_final).scheme
-            sso_state = await set_redirect_uri_final(
-                set_session_value, redirect_uri_final
-            )
+            sso_state = await set_redirect_uri_final(set_session_value, redirect_uri_final)
 
-            redirect_uri_callback = urllib.parse.quote(
-                get_redirect_uri_callback(scheme), safe=''
-            )
+            redirect_uri_callback = urllib.parse.quote(get_redirect_uri_callback(scheme), safe="")
             return (
-                f'{sso_base_url}{auth_path}?'
-                f'scope={scope}&state={sso_state}&'
-                f'redirect_uri={redirect_uri_callback}&'
-                f'response_type={response_type}&'
-                f'client_id={sso_client_id}'
+                f"{sso_base_url}{auth_path}?"
+                f"scope={scope}&state={sso_state}&"
+                f"redirect_uri={redirect_uri_callback}&"
+                f"response_type={response_type}&"
+                f"client_id={sso_client_id}"
             )
 
         def get_redirect_uri_callback(scheme):
@@ -920,18 +892,14 @@ async def async_main():
 
         async def set_redirect_uri_final(set_session_value, redirect_uri_final):
             session_key = secrets.token_hex(32)
-            sso_state = urllib.parse.quote(
-                f'{session_key}_{redirect_uri_final}', safe=''
-            )
+            sso_state = urllib.parse.quote(f"{session_key}_{redirect_uri_final}", safe="")
 
             await set_session_value(session_key, redirect_uri_final)
 
             return sso_state
 
         async def get_redirect_uri_final(get_session_value, sso_state):
-            session_key, _, state_redirect_url = urllib.parse.unquote(
-                sso_state
-            ).partition('_')
+            session_key, _, state_redirect_url = urllib.parse.unquote(sso_state).partition("_")
             return state_redirect_url, await get_session_value(session_key)
 
         async def redirection_to_sso(
@@ -941,7 +909,7 @@ async def async_main():
                 web.Response(
                     status=302,
                     headers={
-                        'Location': await get_redirect_uri_authenticate(
+                        "Location": await get_redirect_uri_authenticate(
                             set_session_value, redirect_uri_final
                         )
                     },
@@ -953,12 +921,10 @@ async def async_main():
             sso_auth_required = is_sso_auth_required(request)
 
             if not sso_auth_required:
-                request.setdefault('sso_profile_headers', ())
+                request.setdefault("sso_profile_headers", ())
                 return await handler(request)
 
-            get_session_value, set_session_value, with_new_session_cookie, _ = request[
-                SESSION_KEY
-            ]
+            get_session_value, set_session_value, with_new_session_cookie, _ = request[SESSION_KEY]
 
             token = await get_session_value(session_token_key)
             if request.path != redirect_from_sso_path and token is None:
@@ -967,8 +933,8 @@ async def async_main():
                 )
 
             if request.path == redirect_from_sso_path:
-                code = request.query['code']
-                sso_state = request.query['state']
+                code = request.query["code"]
+                sso_state = request.query["state"]
                 (
                     redirect_uri_final_from_url,
                     redirect_uri_final_from_session,
@@ -986,60 +952,56 @@ async def async_main():
                     )
 
                 async with client_session.post(
-                    f'{sso_base_url}{token_path}',
+                    f"{sso_base_url}{token_path}",
                     data={
-                        'grant_type': grant_type,
-                        'code': code,
-                        'client_id': sso_client_id,
-                        'client_secret': sso_client_secret,
-                        'redirect_uri': get_redirect_uri_callback(
-                            request_scheme(request)
-                        ),
+                        "grant_type": grant_type,
+                        "code": code,
+                        "client_id": sso_client_id,
+                        "client_secret": sso_client_secret,
+                        "redirect_uri": get_redirect_uri_callback(request_scheme(request)),
                     },
                 ) as sso_response:
                     sso_response_json = await sso_response.json()
-                await set_session_value(
-                    session_token_key, sso_response_json['access_token']
-                )
+                await set_session_value(session_token_key, sso_response_json["access_token"])
                 return await with_new_session_cookie(
                     web.Response(
                         status=302,
-                        headers={'Location': redirect_uri_final_from_session},
+                        headers={"Location": redirect_uri_final_from_session},
                     )
                 )
 
             # Get profile from Redis cache to avoid calling SSO on every request
-            redis_profile_key = f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode(
-                'ascii'
+            redis_profile_key = f"{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}".encode(
+                "ascii"
             )
             with await redis_pool as conn:
-                me_profile_raw = await conn.execute('GET', redis_profile_key)
+                me_profile_raw = await conn.execute("GET", redis_profile_key)
             me_profile = json.loads(me_profile_raw) if me_profile_raw else None
 
             async def handler_with_sso_headers():
-                request['sso_profile_headers'] = (
-                    ('sso-profile-email', me_profile['email']),
+                request["sso_profile_headers"] = (
+                    ("sso-profile-email", me_profile["email"]),
                     # The default value of '' should be able to be removed after the cached
                     # profile in Redis without contact_email has expired, i.e. 60 seconds after
                     # deployment of this change
-                    ('sso-profile-contact-email', me_profile.get('contact_email', '')),
+                    ("sso-profile-contact-email", me_profile.get("contact_email", "")),
                     (
-                        'sso-profile-related-emails',
-                        ','.join(me_profile.get('related_emails', [])),
+                        "sso-profile-related-emails",
+                        ",".join(me_profile.get("related_emails", [])),
                     ),
-                    ('sso-profile-user-id', me_profile['user_id']),
-                    ('sso-profile-first-name', me_profile['first_name']),
-                    ('sso-profile-last-name', me_profile['last_name']),
+                    ("sso-profile-user-id", me_profile["user_id"]),
+                    ("sso-profile-first-name", me_profile["first_name"]),
+                    ("sso-profile-last-name", me_profile["last_name"]),
                 )
 
-                request['logger'].info(
-                    'SSO-authenticated: %s %s %s',
-                    me_profile['email'],
-                    me_profile['user_id'],
+                request["logger"].info(
+                    "SSO-authenticated: %s %s %s",
+                    me_profile["email"],
+                    me_profile["user_id"],
                     request_url(request),
                 )
 
-                set_user({"id": me_profile['user_id'], "email": me_profile['email']})
+                set_user({"id": me_profile["user_id"], "email": me_profile["email"]})
 
                 return await handler(request)
 
@@ -1047,12 +1009,10 @@ async def async_main():
                 return await handler_with_sso_headers()
 
             async with client_session.get(
-                f'{sso_base_url}{me_path}',
-                headers={'Authorization': f'Bearer {token}'},
+                f"{sso_base_url}{me_path}",
+                headers={"Authorization": f"Bearer {token}"},
             ) as me_response:
-                me_profile_full = (
-                    await me_response.json() if me_response.status == 200 else None
-                )
+                me_profile_full = await me_response.json() if me_response.status == 200 else None
 
             if not me_profile_full:
                 return await redirection_to_sso(
@@ -1060,19 +1020,19 @@ async def async_main():
                 )
 
             me_profile = {
-                'email': me_profile_full['email'],
-                'related_emails': me_profile_full['related_emails'],
-                'contact_email': me_profile_full['contact_email'],
-                'user_id': me_profile_full['user_id'],
-                'first_name': me_profile_full['first_name'],
-                'last_name': me_profile_full['last_name'],
+                "email": me_profile_full["email"],
+                "related_emails": me_profile_full["related_emails"],
+                "contact_email": me_profile_full["contact_email"],
+                "user_id": me_profile_full["user_id"],
+                "first_name": me_profile_full["first_name"],
+                "last_name": me_profile_full["last_name"],
             }
             with await redis_pool as conn:
                 await conn.execute(
-                    'SET',
+                    "SET",
                     redis_profile_key,
-                    json.dumps(me_profile).encode('utf-8'),
-                    'EX',
+                    json.dumps(me_profile).encode("utf-8"),
+                    "EX",
                     60,
                 )
 
@@ -1088,17 +1048,15 @@ async def async_main():
             if not basic_auth_required:
                 return await handler(request)
 
-            if 'Authorization' not in request.headers:
+            if "Authorization" not in request.headers:
                 return web.Response(status=401)
 
-            basic_auth_prefix = 'Basic '
+            basic_auth_prefix = "Basic "
             auth_value = (
-                request.headers['Authorization'][len(basic_auth_prefix) :]
-                .strip()
-                .encode('ascii')
+                request.headers["Authorization"][len(basic_auth_prefix) :].strip().encode("ascii")
             )
             required_auth_value = base64.b64encode(
-                f'{basic_auth_user}:{basic_auth_password}'.encode('ascii')
+                f"{basic_auth_user}:{basic_auth_password}".encode("ascii")
             )
 
             if len(auth_value) != len(required_auth_value) or not hmac.compare_digest(
@@ -1106,7 +1064,7 @@ async def async_main():
             ):
                 return web.Response(status=401)
 
-            request['logger'].info('Basic-authenticated: %s', basic_auth_user)
+            request["logger"].info("Basic-authenticated: %s", basic_auth_user)
 
             set_user({"id": basic_auth_user})
 
@@ -1117,14 +1075,14 @@ async def async_main():
     def authenticate_by_hawk_auth():
         async def lookup_credentials(sender_id):
             for hawk_sender in hawk_senders:
-                if hawk_sender['id'] == sender_id:
+                if hawk_sender["id"] == sender_id:
                     return hawk_sender
 
         async def seen_nonce(nonce, sender_id):
-            nonce_key = f'nonce-{sender_id}-{nonce}'
+            nonce_key = f"nonce-{sender_id}-{nonce}"
             with await redis_pool as conn:
-                response = await conn.execute('SET', nonce_key, '1', 'EX', 60, 'NX')
-                seen_nonce = response != b'OK'
+                response = await conn.execute("SET", nonce_key, "1", "EX", 60, "NX")
+                seen_nonce = response != b"OK"
                 return seen_nonce
 
         @web.middleware
@@ -1135,9 +1093,9 @@ async def async_main():
                 return await handler(request)
 
             try:
-                authorization_header = request.headers['Authorization']
+                authorization_header = request.headers["Authorization"]
             except KeyError:
-                request['logger'].info('Hawk missing header')
+                request["logger"].info("Hawk missing header")
                 return web.Response(status=401)
 
             content = await request.read()
@@ -1151,16 +1109,16 @@ async def async_main():
                 request.url.host,
                 request.url.port,
                 request.url.path_qs,
-                request.headers['Content-Type'],
+                request.headers["Content-Type"],
                 content,
             )
             if error_message is not None:
-                request['logger'].info('Hawk unauthenticated: %s', error_message)
+                request["logger"].info("Hawk unauthenticated: %s", error_message)
                 return web.Response(status=401)
 
-            request['logger'].info('Hawk authenticated: %s', creds['id'])
+            request["logger"].info("Hawk authenticated: %s", creds["id"])
 
-            set_user({"id": creds['id']})
+            set_user({"id": creds["id"]})
 
             return await handler(request)
 
@@ -1183,23 +1141,22 @@ async def async_main():
 
             peer_ip, _ = get_peer_ip(request)
             peer_ip_in_whitelist = any(
-                ipaddress.IPv4Address(peer_ip)
-                in ipaddress.IPv4Network(address_or_subnet)
+                ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
                 for address_or_subnet in application_ip_whitelist
             )
 
             if not peer_ip_in_whitelist:
-                request['logger'].info('IP-whitelist unauthenticated: %s', peer_ip)
+                request["logger"].info("IP-whitelist unauthenticated: %s", peer_ip)
                 return await handle_admin(
                     request,
-                    'GET',
+                    "GET",
                     CIMultiDict(admin_headers_request(request)),
-                    '/error_403',
+                    "/error_403",
                     {},
-                    b'',
+                    b"",
                 )
 
-            request['logger'].info('IP-whitelist authenticated: %s', peer_ip)
+            request["logger"].info("IP-whitelist authenticated: %s", peer_ip)
             return await handler(request)
 
         return _authenticate_by_ip_whitelist
@@ -1207,7 +1164,7 @@ async def async_main():
     async with aiohttp.ClientSession(
         auto_decompress=False,
         cookie_jar=aiohttp.DummyCookieJar(),
-        skip_auto_headers=['Accept-Encoding'],
+        skip_auto_headers=["Accept-Encoding"],
     ) as client_session:
         app = web.Application(
             middlewares=[
@@ -1221,15 +1178,15 @@ async def async_main():
         )
         app.add_routes(
             [
-                getattr(web, method)(r'/{path:.*}', handle)
+                getattr(web, method)(r"/{path:.*}", handle)
                 for method in [
-                    'delete',
-                    'get',
-                    'head',
-                    'options',
-                    'patch',
-                    'post',
-                    'put',
+                    "delete",
+                    "get",
+                    "head",
+                    "options",
+                    "patch",
+                    "post",
+                    "put",
                 ]
             ]
         )
@@ -1238,23 +1195,23 @@ async def async_main():
         elastic_apm_secret_token = env.get("ELASTIC_APM_SECRET_TOKEN")
         elastic_apm = (
             {
-                'SERVICE_NAME': 'data-workspace',
-                'SECRET_TOKEN': elastic_apm_secret_token,
-                'SERVER_URL': elastic_apm_url,
-                'ENVIRONMENT': env.get('ENVIRONMENT', 'development'),
+                "SERVICE_NAME": "data-workspace",
+                "SECRET_TOKEN": elastic_apm_secret_token,
+                "SERVER_URL": elastic_apm_url,
+                "ENVIRONMENT": env.get("ENVIRONMENT", "development"),
             }
             if elastic_apm_secret_token
             else {}
         )
 
-        app['ELASTIC_APM'] = elastic_apm
+        app["ELASTIC_APM"] = elastic_apm
 
         if elastic_apm:
             ElasticAPM(app)
 
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', port)
+        site = web.TCPSite(runner, "0.0.0.0", port)
         await site.start()
         await asyncio.Future()
 
@@ -1266,5 +1223,5 @@ def main():
     loop.run_until_complete(async_main())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

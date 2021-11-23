@@ -6,14 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0092_auto_20211007_1219'),
+        ("datasets", "0092_auto_20211007_1219"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='visualisationlinksqlquery',
-            name='table_id',
-            field=models.UUIDField(default='00000000-0000-0000-0000-000000000000'),
+            model_name="visualisationlinksqlquery",
+            name="table_id",
+            field=models.UUIDField(default="00000000-0000-0000-0000-000000000000"),
             preserve_default=False,
         ),
     ]

@@ -8,13 +8,13 @@ from notifications_python_client.notifications import NotificationsAPIClient
 def generate_token(data):
     fernet = Fernet(settings.FERNET_EMAIL_TOKEN_KEY)
 
-    return fernet.encrypt(json.dumps(data).encode('utf-8'))
+    return fernet.encrypt(json.dumps(data).encode("utf-8"))
 
 
 def decrypt_token(token):
     fernet = Fernet(settings.FERNET_EMAIL_TOKEN_KEY)
 
-    return json.loads(fernet.decrypt(token).decode('utf-8'))
+    return json.loads(fernet.decrypt(token).decode("utf-8"))
 
 
 class EmailSendFailureException(Exception):
@@ -30,7 +30,7 @@ def send_email(template_id, email_address, personalisation=None, reference=None)
         personalisation=personalisation,
         reference=reference,
     )
-    if 'id' in response:
-        return response['id']
+    if "id" in response:
+        return response["id"]
     else:
         raise EmailSendFailureException(response)

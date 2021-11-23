@@ -5,16 +5,16 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0030_reference_dataset_unique_uuid')]
+    dependencies = [("datasets", "0030_reference_dataset_unique_uuid")]
 
     operations = [
         migrations.AddField(
-            model_name='referencedataset',
-            name='source_tags',
+            model_name="referencedataset",
+            name="source_tags",
             field=models.ManyToManyField(
                 blank=True,
-                related_name='_referencedataset_source_tags_+',
-                to='datasets.SourceTag',
+                related_name="_referencedataset_source_tags_+",
+                to="datasets.SourceTag",
             ),
         )
     ]

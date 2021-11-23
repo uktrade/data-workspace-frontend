@@ -10,89 +10,89 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('datasets', '0012_auto_20190827_1553'),
+        ("datasets", "0012_auto_20190827_1553"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ReferenceDatasetUploadLog',
+            name="ReferenceDatasetUploadLog",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'created_by',
+                    "created_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='created+',
+                        related_name="created+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'reference_dataset',
+                    "reference_dataset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.ReferenceDataset',
+                        to="datasets.ReferenceDataset",
                     ),
                 ),
                 (
-                    'updated_by',
+                    "updated_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='updated+',
+                        related_name="updated+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
-            options={'ordering': ('created_date',)},
+            options={"ordering": ("created_date",)},
         ),
         migrations.CreateModel(
-            name='ReferenceDatasetUploadLogRecord',
+            name="ReferenceDatasetUploadLogRecord",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'status',
+                    "status",
                     models.IntegerField(
                         choices=[
-                            (1, 'Record added successfully'),
-                            (2, 'Record updated successfully'),
-                            (3, 'Record upload failed'),
+                            (1, "Record added successfully"),
+                            (2, "Record updated successfully"),
+                            (3, "Record upload failed"),
                         ]
                     ),
                 ),
-                ('row_data', django.contrib.postgres.fields.jsonb.JSONField()),
-                ('errors', django.contrib.postgres.fields.jsonb.JSONField(null=True)),
+                ("row_data", django.contrib.postgres.fields.jsonb.JSONField()),
+                ("errors", django.contrib.postgres.fields.jsonb.JSONField(null=True)),
                 (
-                    'upload_log',
+                    "upload_log",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='records',
-                        to='datasets.ReferenceDatasetUploadLog',
+                        related_name="records",
+                        to="datasets.ReferenceDatasetUploadLog",
                     ),
                 ),
             ],
-            options={'ordering': ('created_date',)},
+            options={"ordering": ("created_date",)},
         ),
     ]

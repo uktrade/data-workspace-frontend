@@ -10,17 +10,17 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DatabaseUser',
+            name="DatabaseUser",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -28,17 +28,17 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('username', models.CharField(max_length=256)),
-                ('deleted_date', models.DateTimeField(blank=True, null=True)),
+                ("username", models.CharField(max_length=256)),
+                ("deleted_date", models.DateTimeField(blank=True, null=True)),
                 (
-                    'owner',
+                    "owner",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='db_user',
+                        related_name="db_user",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
     ]

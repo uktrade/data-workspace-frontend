@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class AccountsConfig(AppConfig):
-    name = 'dataworkspace.apps.accounts'
+    name = "dataworkspace.apps.accounts"

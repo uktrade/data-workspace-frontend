@@ -7,32 +7,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0065_merge_20201222_1521'),
+        ("datasets", "0065_merge_20201222_1521"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='toolqueryauditlogtable',
-            name='schema',
+            model_name="toolqueryauditlogtable",
+            name="schema",
             field=models.CharField(
-                default='public',
+                default="public",
                 max_length=63,
                 validators=[
-                    django.core.validators.RegexValidator(
-                        regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
-                    )
+                    django.core.validators.RegexValidator(regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$")
                 ],
             ),
         ),
         migrations.AlterField(
-            model_name='toolqueryauditlogtable',
-            name='table',
+            model_name="toolqueryauditlogtable",
+            name="table",
             field=models.CharField(
                 max_length=63,
                 validators=[
-                    django.core.validators.RegexValidator(
-                        regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
-                    )
+                    django.core.validators.RegexValidator(regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$")
                 ],
             ),
         ),

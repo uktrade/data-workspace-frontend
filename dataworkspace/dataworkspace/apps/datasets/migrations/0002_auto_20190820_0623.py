@@ -5,14 +5,14 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0001_initial')]
+    dependencies = [("datasets", "0001_initial")]
 
     operations = [
         migrations.AlterModelOptions(
-            name='referencedataset', options={'verbose_name': 'Reference dataset'}
+            name="referencedataset", options={"verbose_name": "Reference dataset"}
         ),
         migrations.AlterModelOptions(
-            name='referencedatasetfield',
-            options={'ordering': ('id',), 'verbose_name': 'Reference dataset field'},
+            name="referencedatasetfield",
+            options={"ordering": ("id",), "verbose_name": "Reference dataset field"},
         ),
     ]

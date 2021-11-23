@@ -6,9 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('explorer', '0010_auto_20200429_1250'),
+        ("explorer", "0010_auto_20200429_1250"),
     ]
 
     operations = [
-        migrations.RemoveField(model_name='query', name='snapshot',),
+        migrations.RemoveField(
+            model_name="query",
+            name="snapshot",
+        ),
     ]

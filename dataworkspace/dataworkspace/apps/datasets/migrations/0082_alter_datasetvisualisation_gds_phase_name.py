@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0081_datasetvisualisation_gds_phase_name'),
+        ("datasets", "0081_datasetvisualisation_gds_phase_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='datasetvisualisation',
-            name='gds_phase_name',
-            field=models.CharField(blank=True, default='', max_length=25),
+            model_name="datasetvisualisation",
+            name="gds_phase_name",
+            field=models.CharField(blank=True, default="", max_length=25),
         ),
     ]

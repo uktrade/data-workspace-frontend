@@ -5,22 +5,22 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('applications', '0007_applicationtemplate_wrap')]
+    dependencies = [("applications", "0007_applicationtemplate_wrap")]
 
     operations = [
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='wrap',
+            model_name="applicationtemplate",
+            name="wrap",
             field=models.CharField(
                 choices=[
-                    ('NONE', 'No wrapping'),
-                    ('FULL_HEIGHT_IFRAME', 'Wrapped in full height iframe'),
+                    ("NONE", "No wrapping"),
+                    ("FULL_HEIGHT_IFRAME", "Wrapped in full height iframe"),
                     (
-                        'IFRAME_WITH_VISUALISATIONS_HEADER',
-                        'Wrapped in iframe with visualisations header',
+                        "IFRAME_WITH_VISUALISATIONS_HEADER",
+                        "Wrapped in iframe with visualisations header",
                     ),
                 ],
-                default='NONE',
+                default="NONE",
                 max_length=128,
             ),
         )

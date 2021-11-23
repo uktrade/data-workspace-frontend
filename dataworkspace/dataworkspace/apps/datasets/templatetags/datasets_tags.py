@@ -24,7 +24,7 @@ def visualisation_link_or_plain_text(text, condition, dataset_uuid, object_id):
 @register.simple_tag(takes_context=True)
 def url_replace(context, **kwargs):
 
-    query = context['request'].GET.copy()
+    query = context["request"].GET.copy()
     for key, value in kwargs.items():
         query[key] = value
 
@@ -40,11 +40,9 @@ def _get_localised_date(utc_date: datetime) -> datetime:
     if timezone.is_naive(utc_date):
         utc_date = utc_date.replace(tzinfo=pytz.UTC)
 
-    timezone.activate(pytz.timezone('Europe/London'))
+    timezone.activate(pytz.timezone("Europe/London"))
     localised_date = timezone.localtime(utc_date)
-    offset = relativedelta(
-        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
-    )
+    offset = relativedelta(localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None))
 
     return localised_date, offset
 
@@ -60,9 +58,7 @@ def time_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
         return None
 
     localised_date, offset = _get_localised_date(utc_date)
-    return localised_date.strftime(
-        f'%-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
-    )
+    return localised_date.strftime(f'%-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}')
 
 
 @register.filter
@@ -90,7 +86,7 @@ def gmt_date(utc_date: Optional[datetime]) -> Optional[str]:
     if not utc_date:
         return None
 
-    localised_date, offset = _get_localised_date(utc_date)
+    localised_date, _ = _get_localised_date(utc_date)
     return localised_date.strftime("%-d %B %Y")
 
 

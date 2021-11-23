@@ -19,9 +19,9 @@ def test_clone_dataset(db):
 
     assert clone.id
     assert clone.id != ds.id
-    assert clone.slug == ''
+    assert clone.slug == ""
     assert clone.number_of_downloads == 0
-    assert clone.name == f'Copy of {ds.name}'
+    assert clone.name == f"Copy of {ds.name}"
     assert not clone.published
 
 
@@ -50,7 +50,7 @@ def test_clone_dataset_copies_related_objects(db):
 
 
 @pytest.mark.parametrize(
-    'factory',
+    "factory",
     (
         factories.SourceTableFactory,
         factories.SourceViewFactory,
@@ -59,13 +59,11 @@ def test_clone_dataset_copies_related_objects(db):
     ),
 )
 def test_dataset_source_reference_code(db, factory):
-    ref_code1 = factories.DatasetReferenceCodeFactory(code='Abc')
-    ref_code2 = factories.DatasetReferenceCodeFactory(code='Def')
-    ds = factories.DataSetFactory(
-        reference_code=ref_code1, user_access_type=UserAccessType.OPEN
-    )
+    ref_code1 = factories.DatasetReferenceCodeFactory(code="Abc")
+    ref_code2 = factories.DatasetReferenceCodeFactory(code="Def")
+    ds = factories.DataSetFactory(reference_code=ref_code1, user_access_type=UserAccessType.OPEN)
     source = factory(dataset=ds)
-    assert source.source_reference == 'ABC00001'
+    assert source.source_reference == "ABC00001"
 
     # Change to a new reference code
     ds.reference_code = ref_code2
@@ -73,7 +71,7 @@ def test_dataset_source_reference_code(db, factory):
     ds.refresh_from_db()
 
     source.refresh_from_db()
-    assert source.source_reference == 'DEF00001'
+    assert source.source_reference == "DEF00001"
 
     # Unset the reference code
     ds.reference_code = None
@@ -89,7 +87,7 @@ def test_dataset_source_reference_code(db, factory):
     ds.refresh_from_db()
 
     source.refresh_from_db()
-    assert source.source_reference == 'ABC00002'
+    assert source.source_reference == "ABC00002"
 
     # Delete the reference code
     ref_code1.delete()
@@ -100,7 +98,7 @@ def test_dataset_source_reference_code(db, factory):
 
 
 @pytest.mark.parametrize(
-    'factory',
+    "factory",
     (
         factories.SourceTableFactory,
         factories.SourceViewFactory,
@@ -108,60 +106,54 @@ def test_dataset_source_reference_code(db, factory):
     ),
 )
 def test_dataset_source_filename(db, factory):
-    ds1 = factories.DataSetFactory(
-        reference_code=factories.DatasetReferenceCodeFactory(code='DW')
-    )
-    source1 = factory(dataset=ds1, name='A test source')
-    assert source1.get_filename() == 'DW00001-a-test-source.csv'
+    ds1 = factories.DataSetFactory(reference_code=factories.DatasetReferenceCodeFactory(code="DW"))
+    source1 = factory(dataset=ds1, name="A test source")
+    assert source1.get_filename() == "DW00001-a-test-source.csv"
 
     ds2 = factories.DataSetFactory()
-    source2 = factory(dataset=ds2, name='A test source')
-    assert source2.get_filename() == 'a-test-source.csv'
+    source2 = factory(dataset=ds2, name="A test source")
+    assert source2.get_filename() == "a-test-source.csv"
 
 
 def test_source_link_filename(db):
-    ds1 = factories.DataSetFactory(
-        reference_code=factories.DatasetReferenceCodeFactory(code='DW')
-    )
+    ds1 = factories.DataSetFactory(reference_code=factories.DatasetReferenceCodeFactory(code="DW"))
     source1 = factories.SourceLinkFactory(
         dataset=ds1,
-        name='A test source',
+        name="A test source",
         url="s3://csv-pipelines/my-data.csv.zip",
         link_type=SourceLink.TYPE_LOCAL,
     )
-    assert source1.get_filename() == 'DW00001-a-test-source.zip'
+    assert source1.get_filename() == "DW00001-a-test-source.zip"
 
     ds2 = factories.DataSetFactory()
     source2 = factories.SourceLinkFactory(
         dataset=ds2,
-        name='A test source',
+        name="A test source",
         url="s3://csv-pipelines/my-data.csv",
         link_type=SourceLink.TYPE_LOCAL,
     )
-    assert source2.get_filename() == 'a-test-source.csv'
+    assert source2.get_filename() == "a-test-source.csv"
 
     ds3 = factories.DataSetFactory()
     source3 = factories.SourceLinkFactory(
         dataset=ds3,
-        name='A test source',
+        name="A test source",
         url="http://www.google.com/index.html",
         link_type=SourceLink.TYPE_EXTERNAL,
     )
-    assert source3.get_filename() == 'a-test-source.csv'
+    assert source3.get_filename() == "a-test-source.csv"
 
 
 @pytest.mark.django_db
 def test_source_table_data_last_updated(metadata_db):
     dataset = factories.DataSetFactory()
     table = factories.SourceTableFactory(
-        dataset=dataset, database=metadata_db, schema='public', table='table1'
+        dataset=dataset, database=metadata_db, schema="public", table="table1"
     )
-    assert table.get_data_last_updated_date() == datetime(
-        2020, 9, 2, 0, 1, 0, tzinfo=UTC
-    )
+    assert table.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0, tzinfo=UTC)
 
     table = factories.SourceTableFactory(
-        dataset=dataset, database=metadata_db, schema='public', table='doesntexist'
+        dataset=dataset, database=metadata_db, schema="public", table="doesntexist"
     )
     assert table.get_data_last_updated_date() is None
 
@@ -175,64 +167,60 @@ def test_custom_query_data_last_updated(metadata_db):
     query = factories.CustomDatasetQueryFactory(
         dataset=dataset,
         database=metadata_db,
-        query='select * from table1 join table2 on 1=1',
+        query="select * from table1 join table2 on 1=1",
     )
-    factories.CustomDatasetQueryTableFactory(
-        query=query, schema='public', table='table1'
-    )
-    factories.CustomDatasetQueryTableFactory(
-        query=query, schema='public', table='table2'
-    )
-    assert query.get_data_last_updated_date() == datetime(
-        2020, 9, 1, 0, 1, 0, tzinfo=UTC
-    )
+    factories.CustomDatasetQueryTableFactory(query=query, schema="public", table="table1")
+    factories.CustomDatasetQueryTableFactory(query=query, schema="public", table="table2")
+    assert query.get_data_last_updated_date() == datetime(2020, 9, 1, 0, 1, 0, tzinfo=UTC)
 
     # Ensure a single table returns the last update date
     query = factories.CustomDatasetQueryFactory(
-        dataset=dataset, database=metadata_db, query='select * from table1',
+        dataset=dataset,
+        database=metadata_db,
+        query="select * from table1",
     )
-    factories.CustomDatasetQueryTableFactory(
-        query=query, schema='public', table='table1'
-    )
-    assert query.get_data_last_updated_date() == datetime(
-        2020, 9, 2, 0, 1, 0, tzinfo=UTC
-    )
+    factories.CustomDatasetQueryTableFactory(query=query, schema="public", table="table1")
+    assert query.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0, tzinfo=UTC)
 
     # Ensure None is returned if we don't have any metadata for the tables
     query = factories.CustomDatasetQueryFactory(
-        dataset=dataset, database=metadata_db, query='select * from table3',
+        dataset=dataset,
+        database=metadata_db,
+        query="select * from table3",
     )
     assert query.get_data_last_updated_date() is None
 
     # Ensure None is returned if the last updated date is null
     query = factories.CustomDatasetQueryFactory(
-        dataset=dataset, database=metadata_db, query='select * from table4',
+        dataset=dataset,
+        database=metadata_db,
+        query="select * from table4",
     )
     assert query.get_data_last_updated_date() is None
 
 
 @pytest.mark.django_db
-@mock.patch('dataworkspace.apps.datasets.views.boto3.client')
+@mock.patch("dataworkspace.apps.datasets.views.boto3.client")
 def test_source_link_data_last_updated(mock_client):
     dataset = factories.DataSetFactory.create()
     local_link = factories.SourceLinkFactory(
         dataset=dataset,
         link_type=SourceLink.TYPE_LOCAL,
-        url='s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt',
+        url="s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.txt",
     )
 
     # Returns last modified date if the file exists
     mock_client().head_object.return_value = {
-        'ContentType': 'text/plain',
-        'LastModified': datetime(2020, 9, 2, 0, 1, 0),
+        "ContentType": "text/plain",
+        "LastModified": datetime(2020, 9, 2, 0, 1, 0),
     }
     assert local_link.get_data_last_updated_date() == datetime(2020, 9, 2, 0, 1, 0)
 
     # Returns None if file does not exist on s3
     mock_client().head_object.side_effect = [
         botocore.exceptions.ClientError(
-            error_response={'Error': {'Message': 'it failed'}},
-            operation_name='head_object',
+            error_response={"Error": {"Message": "it failed"}},
+            operation_name="head_object",
         )
     ]
     assert local_link.get_data_last_updated_date() is None
@@ -241,7 +229,7 @@ def test_source_link_data_last_updated(mock_client):
     external_link = factories.SourceLinkFactory(
         dataset=dataset,
         link_type=SourceLink.TYPE_EXTERNAL,
-        url='http://www.example.com',
+        url="http://www.example.com",
     )
     assert external_link.get_data_last_updated_date() is None
 
@@ -250,40 +238,40 @@ def test_source_link_data_last_updated(mock_client):
 class TestSourceLinkPreview:
     @pytest.fixture
     def mock_client(self, mocker):
-        return mocker.patch('dataworkspace.apps.datasets.models.boto3.client')
+        return mocker.patch("dataworkspace.apps.datasets.models.boto3.client")
 
     def test_not_s3_link(self):
-        link = factories.SourceLinkFactory(url='http://example.com/a-file.csv')
+        link = factories.SourceLinkFactory(url="http://example.com/a-file.csv")
         assert link.get_preview_data() == (None, [])
 
     def test_failed_reading_from_s3(self, mock_client):
-        link = factories.SourceLinkFactory(url='s3://a/path/to/a/file.csv')
+        link = factories.SourceLinkFactory(url="s3://a/path/to/a/file.csv")
         mock_client().head_object.side_effect = [
             botocore.exceptions.ClientError(
-                error_response={'Error': {'Message': 'it failed'}},
-                operation_name='head_object',
+                error_response={"Error": {"Message": "it failed"}},
+                operation_name="head_object",
             )
         ]
         assert link.get_preview_data() == (None, [])
 
     def test_file_not_csv(self, mock_client):
-        link = factories.SourceLinkFactory(url='s3://a/path/to/a/file.txt')
-        mock_client().head_object.return_value = {'ContentType': 'text/csv'}
+        link = factories.SourceLinkFactory(url="s3://a/path/to/a/file.txt")
+        mock_client().head_object.return_value = {"ContentType": "text/csv"}
         assert link.get_preview_data() == (None, [])
 
     def test_preview_csv(self, mock_client):
-        link = factories.SourceLinkFactory(url='s3://a/path/to/a/file.csv')
-        mock_client().head_object.return_value = {'ContentType': 'text/csv'}
-        csv_content = b'col1,col2\nrow1-col1, row1-col2\nrow2-col1, row2-col2\ntrailing'
+        link = factories.SourceLinkFactory(url="s3://a/path/to/a/file.csv")
+        mock_client().head_object.return_value = {"ContentType": "text/csv"}
+        csv_content = b"col1,col2\nrow1-col1, row1-col2\nrow2-col1, row2-col2\ntrailing"
         mock_client().get_object.return_value = {
-            'ContentType': 'text/plain',
-            'ContentLength': len(csv_content),
-            'Body': StreamingBody(io.BytesIO(csv_content), len(csv_content)),
+            "ContentType": "text/plain",
+            "ContentLength": len(csv_content),
+            "Body": StreamingBody(io.BytesIO(csv_content), len(csv_content)),
         }
         assert link.get_preview_data() == (
-            ['col1', 'col2'],
+            ["col1", "col2"],
             [
-                OrderedDict([('col1', 'row1-col1'), ('col2', ' row1-col2')]),
-                OrderedDict([('col1', 'row2-col1'), ('col2', ' row2-col2')]),
+                OrderedDict([("col1", "row1-col1"), ("col2", " row1-col2")]),
+                OrderedDict([("col1", "row2-col1"), ("col2", " row2-col2")]),
             ],
         )

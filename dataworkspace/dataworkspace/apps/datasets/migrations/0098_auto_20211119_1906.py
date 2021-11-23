@@ -9,71 +9,72 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('datasets', '0097_merge_20211116_1641'),
+        ("datasets", "0097_merge_20211116_1641"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('changelog_id', models.IntegerField(unique=True)),
-                ('change_date', models.DateTimeField()),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("changelog_id", models.IntegerField(unique=True)),
+                ("change_date", models.DateTimeField()),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.AlterField(
-            model_name='datasetsubscription',
-            name='dataset',
+            model_name="datasetsubscription",
+            name="dataset",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='subscriptions',
-                to='datasets.dataset',
+                related_name="subscriptions",
+                to="datasets.dataset",
             ),
         ),
         migrations.AlterUniqueTogether(
-            name='datasetsubscription', unique_together={('user', 'dataset')},
+            name="datasetsubscription",
+            unique_together={("user", "dataset")},
         ),
         migrations.CreateModel(
-            name='UserNotification',
+            name="UserNotification",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('email_id', models.UUIDField(null=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("email_id", models.UUIDField(null=True)),
                 (
-                    'notification',
+                    "notification",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to='datasets.notification',
+                        to="datasets.notification",
                     ),
                 ),
                 (
-                    'subscription',
+                    "subscription",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        to='datasets.datasetsubscription',
+                        to="datasets.datasetsubscription",
                     ),
                 ),
             ],
-            options={'unique_together': {('notification', 'subscription')}},
+            options={"unique_together": {("notification", "subscription")}},
         ),
     ]

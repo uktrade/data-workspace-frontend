@@ -24,61 +24,60 @@ class CreateTableForm(GOVUKDesignSystemForm):
     path = forms.CharField(required=True, widget=forms.HiddenInput())
     schema = forms.CharField(required=True, widget=forms.HiddenInput())
     table_name = GOVUKDesignSystemCharField(
-        label='How do you want to name your table?',
-        help_text='This will be the name you will see your table with, in your personal database schema.',
+        label="How do you want to name your table?",
+        help_text="This will be the name you will see your table with, in your personal database schema.",
         required=True,
-        widget=GOVUKDesignSystemTextWidget(label_size='xl', label_is_heading=True),
+        widget=GOVUKDesignSystemTextWidget(label_size="xl", label_is_heading=True),
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z][a-zA-Z0-9_]*$',
-                message='Table names can contain only letters, numbers and underscores',
-                code='invalid-table-name',
+                regex=r"^[a-zA-Z][a-zA-Z0-9_]*$",
+                message="Table names can contain only letters, numbers and underscores",
+                code="invalid-table-name",
             ),
             MaxLengthValidator(
-                42, message='Table names must be no longer than 42 characters long'
+                42, message="Table names must be no longer than 42 characters long"
             ),
         ],
     )
     force_overwrite = forms.BooleanField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
-        if self.initial.get('force_overwrite'):
-            self.fields['table_name'].widget = forms.HiddenInput()
+        if self.initial.get("force_overwrite"):
+            self.fields["table_name"].widget = forms.HiddenInput()
 
     def clean_path(self):
-        path = self.cleaned_data['path']
-        client = boto3.client('s3')
+        path = self.cleaned_data["path"]
+        client = boto3.client("s3")
 
         if not path.startswith(get_s3_prefix(str(self.user.profile.sso_id))):
-            raise ValidationError('You don\'t have permission to access this file')
+            raise ValidationError("You don't have permission to access this file")
 
-        if not path.endswith('.csv'):
-            raise ValidationError(
-                'Invalid file type. Only CSV files are currently supported'
-            )
+        if not path.endswith(".csv"):
+            raise ValidationError("Invalid file type. Only CSV files are currently supported")
 
         try:
             client.head_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path)
         except ClientError:
-            raise ValidationError('This file does not exist in S3')
+            raise ValidationError("This file does not exist in S3")
 
         return path
 
     def clean(self):
-        table_name = self.cleaned_data.get('table_name')
+        table_name = self.cleaned_data.get("table_name")
         if table_name:
-            if table_exists(
-                settings.EXPLORER_DEFAULT_CONNECTION,
-                self.cleaned_data['schema'],
-                table_name,
-            ) and not self.cleaned_data.get('force_overwrite'):
+            if (
+                table_exists(
+                    settings.EXPLORER_DEFAULT_CONNECTION,
+                    self.cleaned_data["schema"],
+                    table_name,
+                )
+                and not self.cleaned_data.get("force_overwrite")
+            ):
                 self.add_error(
-                    'table_name',
-                    ValidationError(
-                        'This table already exists', code='duplicate-table'
-                    ),
+                    "table_name",
+                    ValidationError("This table already exists", code="duplicate-table"),
                 )
 
         return super().clean()
@@ -92,44 +91,43 @@ class CreateTableSchemaForm(GOVUKDesignSystemForm):
     )
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         user_schema = get_schema_for_user(self.user)
-        user_choice = [('user', f"{user_schema} (your private schema)")]
+        user_choice = [("user", f"{user_schema} (your private schema)")]
         team_schemas = get_team_schemas_for_user(self.user)
         team_choices = [
             (
-                team_schema['name'],
+                team_schema["name"],
                 f"{team_schema['schema_name']} ({team_schema['name']} shared schema)",
             )
             for team_schema in team_schemas
         ]
         schema_choices = user_choice + team_choices
-        self.fields['schema'].choices = schema_choices
+        self.fields["schema"].choices = schema_choices
 
 
 class CreateTableDataTypesForm(CreateTableForm):
     def __init__(self, *args, **kwargs):
-        self.column_definitions = kwargs.pop('column_definitions')
+        self.column_definitions = kwargs.pop("column_definitions")
         if not self.column_definitions:
-            raise ValueError('Definitions for at least one column must be provided')
+            raise ValueError("Definitions for at least one column must be provided")
         super().__init__(*args, **kwargs)
 
         for col_def in self.column_definitions:
-            self.fields[col_def['column_name']] = GOVUKDesignSystemChoiceField(
-                label=col_def['column_name'],
-                initial=col_def['data_type'],
+            self.fields[col_def["column_name"]] = GOVUKDesignSystemChoiceField(
+                label=col_def["column_name"],
+                initial=col_def["data_type"],
                 choices=(
                     (value, name.capitalize())
                     for name, value in SCHEMA_POSTGRES_DATA_TYPE_MAP.items()
                 ),
                 widget=GOVUKDesignSystemSelectWidget(
-                    label_is_heading=False, extra_label_classes='govuk-visually-hidden',
+                    label_is_heading=False,
+                    extra_label_classes="govuk-visually-hidden",
                 ),
             )
 
     def get_data_type_fields(self):
         for col_def in self.column_definitions:
-            yield self[col_def['column_name']], ', '.join(
-                map(str, col_def['sample_data'])
-            )
+            yield self[col_def["column_name"]], ", ".join(map(str, col_def["sample_data"]))

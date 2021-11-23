@@ -34,9 +34,9 @@ class DataSetSubscriptionUnsubscribe(View):
         # for unsubscribe all. If subscription_id == __all__ this means unsubscribe all.
 
         if subscription_id == "__all__":
-            subscriptions = DataSetSubscription.objects.filter(
-                user=request.user
-            ).order_by("dataset__name")
+            subscriptions = DataSetSubscription.objects.filter(user=request.user).order_by(
+                "dataset__name"
+            )
         else:
             subscription = get_object_or_404(DataSetSubscription, pk=subscription_id)
             if request.user.id != subscription.user.id:

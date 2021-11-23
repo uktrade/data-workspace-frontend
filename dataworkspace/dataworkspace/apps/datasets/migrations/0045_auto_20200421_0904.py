@@ -5,10 +5,8 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0044_auto_20200421_0842')]
+    dependencies = [("datasets", "0044_auto_20200421_0842")]
 
     operations = [
-        migrations.AlterModelOptions(
-            name='datasetreferencecode', options={'ordering': ('code',)}
-        )
+        migrations.AlterModelOptions(name="datasetreferencecode", options={"ordering": ("code",)})
     ]

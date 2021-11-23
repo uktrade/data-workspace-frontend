@@ -5,17 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0022_joint_datasets_linked_field_name_change')]
+    dependencies = [("datasets", "0022_joint_datasets_linked_field_name_change")]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='number_of_downloads',
+            model_name="dataset",
+            name="number_of_downloads",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='number_of_downloads',
+            model_name="referencedataset",
+            name="number_of_downloads",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

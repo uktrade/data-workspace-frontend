@@ -32,7 +32,7 @@ from dataworkspace.apps.finder.utils import (
 )
 
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 @waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
@@ -51,9 +51,7 @@ def find_datasets(request):
             else None
         )
         if matches:
-            visible_matches, has_suppressed_tables = _enrich_and_suppress_matches(
-                request, matches
-            )
+            visible_matches, has_suppressed_tables = _enrich_and_suppress_matches(request, matches)
             results = group_tables_by_master_dataset(visible_matches, request.user)
 
         if search_term:
@@ -63,7 +61,7 @@ def find_datasets(request):
 
     return render(
         request,
-        'finder/index.html',
+        "finder/index.html",
         {
             "form": form,
             "request": request,
@@ -88,9 +86,9 @@ class BaseResultsView(WaffleFlagMixin, DetailView):
             SourceTable,
             dataset__deleted=False,
             dataset__published=True,
-            dataset__id=self.request.GET.get('uuid'),
-            schema=self.kwargs['schema'],
-            table=self.kwargs['table'],
+            dataset__id=self.request.GET.get("uuid"),
+            schema=self.kwargs["schema"],
+            table=self.kwargs["table"],
         )
 
     def _get_columns(self):
@@ -113,22 +111,20 @@ class BaseResultsView(WaffleFlagMixin, DetailView):
         es_fields = es_client.get_fields(self._get_index_alias())
 
         filter_map = {
-            'text': ['contains', 'notContains'],
-            'date': ['equals', 'notEqual', 'greaterThan', 'lessThan', 'inRange'],
-            'numeric': ['equals', 'greaterThan', 'lessThan'],
-            'boolean': ['equals'],
-            'uuid': ['contains', 'notContains'],
+            "text": ["contains", "notContains"],
+            "date": ["equals", "notEqual", "greaterThan", "lessThan", "inRange"],
+            "numeric": ["equals", "greaterThan", "lessThan"],
+            "boolean": ["equals"],
+            "uuid": ["contains", "notContains"],
         }
         return [
             {
-                'field': column[0],
-                'filter': GRID_DATA_TYPE_MAP.get(column[1], 'text') in filter_map,
-                'sortable': False,
-                'dataType': GRID_DATA_TYPE_MAP.get(column[1], 'text'),
-                'filterParams': {
-                    'filterOptions': filter_map.get(
-                        GRID_DATA_TYPE_MAP.get(column[1], column[1])
-                    )
+                "field": column[0],
+                "filter": GRID_DATA_TYPE_MAP.get(column[1], "text") in filter_map,
+                "sortable": False,
+                "dataType": GRID_DATA_TYPE_MAP.get(column[1], "text"),
+                "filterParams": {
+                    "filterOptions": filter_map.get(GRID_DATA_TYPE_MAP.get(column[1], column[1]))
                 },
             }
             for column in self._get_columns()
@@ -142,7 +138,7 @@ class BaseResultsView(WaffleFlagMixin, DetailView):
 
 
 class ResultsView(BaseResultsView):
-    template_name = 'finder/results.html'
+    template_name = "finder/results.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -150,15 +146,13 @@ class ResultsView(BaseResultsView):
 
         ctx.update(
             {
-                'search_term': search_term,
-                'backlink': f'{reverse("finder:find_datasets")}?q={search_term}',
-                'dataset': self.object.dataset,
-                'source_table': self.object,
-                'columns': self._get_columns(),
-                'total_results': es_client.get_count(
-                    search_term, self._get_index_alias()
-                ),
-                'grid_column_definitions': self._get_column_config(),
+                "search_term": search_term,
+                "backlink": f'{reverse("finder:find_datasets")}?q={search_term}',
+                "dataset": self.object.dataset,
+                "source_table": self.object,
+                "columns": self._get_columns(),
+                "total_results": es_client.get_count(search_term, self._get_index_alias()),
+                "grid_column_definitions": self._get_column_config(),
             }
         )
         return ctx
@@ -169,18 +163,14 @@ class DataGridResultsView(BaseResultsView):
         raise Http404
 
     def post(self, request, *args, **kwargs):
-        search_term = request.GET.get('q')
-        post_data = json.loads(request.body.decode('utf-8'))
-        start = int(post_data.get('start', 0))
-        limit = int(post_data.get('limit', 100))
+        search_term = request.GET.get("q")
+        post_data = json.loads(request.body.decode("utf-8"))
+        start = int(post_data.get("start", 0))
+        limit = int(post_data.get("limit", 100))
 
-        filters = build_grid_filters(
-            self._get_column_config(), post_data.get('filters', {})
-        )
+        filters = build_grid_filters(self._get_column_config(), post_data.get("filters", {}))
 
-        result_count = es_client.get_count(
-            search_term, self._get_index_alias(), filters=filters
-        )
+        result_count = es_client.get_count(search_term, self._get_index_alias(), filters=filters)
 
         results_proxy = ResultsProxy(
             es_client=es_client,
@@ -192,7 +182,7 @@ class DataGridResultsView(BaseResultsView):
         paginator = Paginator(results_proxy, limit)
         results = paginator.get_page(1 if start <= 0 else int(start / limit) + 1)
         records = []
-        if len(results) > 0 and '_source' in results[0]:
-            records = [result['_source'] for result in results]
+        if len(results) > 0 and "_source" in results[0]:
+            records = [result["_source"] for result in results]
 
-        return JsonResponse({'total': result_count, 'records': records})
+        return JsonResponse({"total": result_count, "records": records})
