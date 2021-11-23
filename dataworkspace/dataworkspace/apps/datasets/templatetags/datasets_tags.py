@@ -42,9 +42,7 @@ def _get_localised_date(utc_date: datetime) -> datetime:
 
     timezone.activate(pytz.timezone('Europe/London'))
     localised_date = timezone.localtime(utc_date)
-    offset = relativedelta(
-        localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None)
-    )
+    offset = relativedelta(localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None))
 
     return localised_date, offset
 
@@ -60,9 +58,7 @@ def time_with_gmt_offset(utc_date: Optional[datetime]) -> Optional[str]:
         return None
 
     localised_date, offset = _get_localised_date(utc_date)
-    return localised_date.strftime(
-        f'%-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}'
-    )
+    return localised_date.strftime(f'%-I:%M%P, GMT{(f"+{offset.hours}" if offset.hours else "")}')
 
 
 @register.filter

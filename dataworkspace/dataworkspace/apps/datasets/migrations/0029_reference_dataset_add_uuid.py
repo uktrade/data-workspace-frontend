@@ -23,9 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='referencedataset',
             name='uuid',
-            field=models.UUIDField(
-                blank=True, default=uuid.uuid4, editable=False, null=True
-            ),
+            field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
         ),
         # Create unique uuids for ReferenceDatasets
         migrations.RunPython(generate_uuids, migrations.RunPython.noop),

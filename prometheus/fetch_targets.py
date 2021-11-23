@@ -19,8 +19,7 @@ async def async_main(logger, target_file, url, username, password):
             headers = (
                 (
                     b'Authorization',
-                    b'Basic '
-                    + base64.b64encode(f'{username}:{password}'.encode('ascii')),
+                    b'Basic ' + base64.b64encode(f'{username}:{password}'.encode('ascii')),
                 ),
             )
             code, _, body = await request(b'GET', url, headers=headers)
@@ -37,8 +36,7 @@ async def async_main(logger, target_file, url, username, password):
                         'user': application['user'],
                     },
                     'targets': [
-                        urllib.parse.urlsplit(application['proxy_url']).hostname
-                        + ':8889'
+                        urllib.parse.urlsplit(application['proxy_url']).hostname + ':8889'
                     ],
                 }
                 for application in applications

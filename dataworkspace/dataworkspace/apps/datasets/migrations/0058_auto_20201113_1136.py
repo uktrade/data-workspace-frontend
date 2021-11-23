@@ -18,15 +18,11 @@ class Migration(migrations.Migration):
                 ('modified_date', models.DateTimeField(auto_now=True)),
                 (
                     'id',
-                    models.UUIDField(
-                        default=uuid.uuid4, primary_key=True, serialize=False
-                    ),
+                    models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False),
                 ),
                 (
                     'type',
-                    models.IntegerField(
-                        choices=[(1, 'Source'), (2, 'Topic')], default=1
-                    ),
+                    models.IntegerField(choices=[(1, 'Source'), (2, 'Topic')], default=1),
                 ),
                 ('name', models.CharField(max_length=255, unique=True)),
             ],

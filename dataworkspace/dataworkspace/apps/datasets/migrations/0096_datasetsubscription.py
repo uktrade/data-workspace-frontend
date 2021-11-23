@@ -21,9 +21,7 @@ class Migration(migrations.Migration):
                 ('modified_date', models.DateTimeField(auto_now=True)),
                 (
                     'id',
-                    models.UUIDField(
-                        default=uuid.uuid4, primary_key=True, serialize=False
-                    ),
+                    models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False),
                 ),
                 ('notify_on_schema_change', models.BooleanField(default=False)),
                 ('notify_on_data_change', models.BooleanField(default=False)),

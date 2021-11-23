@@ -114,9 +114,7 @@ def _aws_sig_v4_headers(
                 (urllib.parse.quote(key, safe='~'), urllib.parse.quote(value, safe='~'))
                 for key, value in query
             )
-            canonical_querystring = '&'.join(
-                f'{key}={value}' for key, value in quoted_query
-            )
+            canonical_querystring = '&'.join(f'{key}={value}' for key, value in quoted_query)
             canonical_headers = ''.join(f'{key}:{value}\n' for key, value in headers)
 
             return (
@@ -324,9 +322,7 @@ async def async_main(logger):
     s3_context = S3Context(request=request, credentials=credentials, bucket=bucket)
 
     if os.environ['MIRROR_ANACONDA_R'] == 'True':
-        await conda_mirror(
-            logger, request, s3_context, 'https://conda.anaconda.org/r/', 'r/'
-        )
+        await conda_mirror(logger, request, s3_context, 'https://conda.anaconda.org/r/', 'r/')
 
     if os.environ['MIRROR_ANACONDA_CONDA_FORGE'] == 'True':
         await conda_mirror(
@@ -517,9 +513,9 @@ async def pypi_mirror(logger, request, s3_context):
                         await blackhole(body)
                         raise Exception('Failed GET {}'.format(code))
 
-                    content_length = dict(
-                        (key.lower(), value) for key, value in headers
-                    )[b'content-length']
+                    content_length = dict((key.lower(), value) for key, value in headers)[
+                        b'content-length'
+                    ]
                     headers = ((b'content-length', content_length),)
                     code, _ = await s3_request_full(
                         logger,
@@ -639,10 +635,7 @@ async def cran_mirror(logger, request, s3_context):
 
     logger.info('Finding existing files')
     existing_files = {
-        key
-        async for key in s3_list_keys_relative_to_prefix(
-            logger, s3_context, cran_prefix
-        )
+        key async for key in s3_list_keys_relative_to_prefix(logger, s3_context, cran_prefix)
     }
 
     async def crawl(url):
@@ -675,8 +668,7 @@ async def cran_mirror(logger, request, s3_context):
                 absolute = urllib.parse.urljoin(url, link.get('href'))
                 absolute_no_frag = absolute.split('#')[0]
                 is_done = (
-                    urllib.parse.urlparse(absolute_no_frag).netloc
-                    == source_base_parsed.netloc
+                    urllib.parse.urlparse(absolute_no_frag).netloc == source_base_parsed.netloc
                     and absolute_no_frag not in done
                 )
                 if is_done:
@@ -749,14 +741,11 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
 
     logger.info('Finding existing files')
     existing_files = {
-        key
-        async for key in s3_list_keys_relative_to_prefix(logger, s3_context, s3_prefix)
+        key async for key in s3_list_keys_relative_to_prefix(logger, s3_context, s3_prefix)
     }
 
     for arch_dir in arch_dirs:
-        code, _, body = await request(
-            b'GET', source_base_url + arch_dir + 'repodata.json'
-        )
+        code, _, body = await request(b'GET', source_base_url + arch_dir + 'repodata.json')
         if code != b'200':
             raise Exception()
 
@@ -768,9 +757,7 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
 
         repodatas.append((arch_dir + 'repodata.json', source_repodata_raw))
 
-        code, _, body = await request(
-            b'GET', source_base_url + arch_dir + 'repodata.json.bz2'
-        )
+        code, _, body = await request(b'GET', source_base_url + arch_dir + 'repodata.json.bz2')
         if code != b'200':
             raise Exception()
         repodatas.append((arch_dir + 'repodata.json.bz2', await buffered(body)))
@@ -787,9 +774,7 @@ async def conda_mirror(logger, request, s3_context, source_base_url, s3_prefix):
         code, headers, body = await request(b'GET', source_package_url)
         if code != b'200':
             response = await buffered(body)
-            raise Exception(
-                'Exception GET {} {} {}'.format(source_package_url, code, response)
-            )
+            raise Exception('Exception GET {} {} {}'.format(source_package_url, code, response))
         headers_lower = dict((key.lower(), value) for key, value in headers)
         headers = ((b'content-length', headers_lower[b'content-length']),)
         code, body = await s3_request_full(
@@ -859,8 +844,7 @@ async def debian_mirror(logger, request, s3_context, source_base_url, s3_prefix)
 
     logger.info('Finding existing files')
     existing_relative_keys = {
-        key
-        async for key in s3_list_keys_relative_to_prefix(logger, s3_context, s3_prefix)
+        key async for key in s3_list_keys_relative_to_prefix(logger, s3_context, s3_prefix)
     }
 
     def get_relative_key(url):
