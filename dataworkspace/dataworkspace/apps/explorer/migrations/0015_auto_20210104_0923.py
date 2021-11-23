@@ -6,36 +6,32 @@ from dataworkspace.settings.base import EXPLORER_DEFAULT_CONNECTION
 
 
 def set_explorer_connection_defaults(apps, _):
-    Query = apps.get_model('explorer', 'Query')
-    QueryLog = apps.get_model('explorer', 'QueryLog')
+    Query = apps.get_model("explorer", "Query")
+    QueryLog = apps.get_model("explorer", "QueryLog")
 
-    Query.objects.filter(connection__isnull=True).update(
-        connection=EXPLORER_DEFAULT_CONNECTION
-    )
-    QueryLog.objects.filter(connection__isnull=True).update(
-        connection=EXPLORER_DEFAULT_CONNECTION
-    )
+    Query.objects.filter(connection__isnull=True).update(connection=EXPLORER_DEFAULT_CONNECTION)
+    QueryLog.objects.filter(connection__isnull=True).update(connection=EXPLORER_DEFAULT_CONNECTION)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('explorer', '0014_querylog_error_message'),
+        ("explorer", "0014_querylog_error_message"),
     ]
 
     operations = [
         migrations.RunPython(set_explorer_connection_defaults),
         migrations.AlterField(
-            model_name='query',
-            name='connection',
+            model_name="query",
+            name="connection",
             field=models.CharField(
-                help_text='Name of DB connection (as specified in settings) to use for this query.',
+                help_text="Name of DB connection (as specified in settings) to use for this query.",
                 max_length=128,
             ),
         ),
         migrations.AlterField(
-            model_name='querylog',
-            name='connection',
+            model_name="querylog",
+            name="connection",
             field=models.CharField(max_length=128),
         ),
     ]

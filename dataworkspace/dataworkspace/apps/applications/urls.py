@@ -10,22 +10,22 @@ from dataworkspace.apps.applications.views import (
 )
 
 urlpatterns = [
-    path('', login_required(tools_html_view), name='tools'),
-    path('<str:public_host>/spawning', login_required(application_spawning_html_view)),
-    path('<str:public_host>/running', login_required(application_running_html_view)),
+    path("", login_required(tools_html_view), name="tools"),
+    path("<str:public_host>/spawning", login_required(application_spawning_html_view)),
+    path("<str:public_host>/running", login_required(application_running_html_view)),
     path(
-        'quicksight/redirect',
+        "quicksight/redirect",
         login_required(quicksight_start_polling_sync_and_redirect),
-        name='quicksight_redirect',
+        name="quicksight_redirect",
     ),
     path(
-        'quicksight/redirect',
+        "quicksight/redirect",
         login_required(quicksight_start_polling_sync_and_redirect),
-        name='quicksight_redirect',
+        name="quicksight_redirect",
     ),
     path(
-        'configure-size/<str:tool_host_basename>/',
+        "configure-size/<str:tool_host_basename>/",
         login_required(UserToolSizeConfigurationView.as_view()),
-        name='configure_tool_size',
+        name="configure_tool_size",
     ),
 ]

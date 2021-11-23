@@ -150,9 +150,7 @@ def create_fake_reference_dataset():
     user = test_data.get_new_user()
 
     table_name = (
-        "ref_"
-        + fake.first_name().lower()
-        + datetime.datetime.now().strftime("%Y%m%d%H%M%s")
+        "ref_" + fake.first_name().lower() + datetime.datetime.now().strftime("%Y%m%d%H%M%s")
     )
 
     catalogue_item = ReferenceDataset.objects.create(

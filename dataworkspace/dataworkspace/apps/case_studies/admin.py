@@ -9,41 +9,44 @@ from dataworkspace.apps.core.admin import CSPRichTextEditorMixin, TimeStampedUse
 @admin.register(CaseStudy)
 class CaseStudyAdmin(CSPRichTextEditorMixin, TimeStampedUserAdmin):
     list_display = (
-        'name',
-        'short_description',
-        'published',
-        'publish_date',
-        'created_by_link',
-        'updated_by_link',
+        "name",
+        "short_description",
+        "published",
+        "publish_date",
+        "created_by_link",
+        "updated_by_link",
     )
-    search_fields = ('name', 'short_description')
+    search_fields = ("name", "short_description")
     fieldsets = (
-        (None, {'fields': ['published', 'name', 'slug', 'short_description']}),
+        (None, {"fields": ["published", "name", "slug", "short_description"]}),
         (
-            'Overview',
-            {'fields': ['department_name', 'service_name', 'outcome', 'image']},
+            "Overview",
+            {"fields": ["department_name", "service_name", "outcome", "image"]},
         ),
-        ('Details', {'fields': ['background', 'solution', 'impact']},),
         (
-            'Quote',
+            "Details",
+            {"fields": ["background", "solution", "impact"]},
+        ),
+        (
+            "Quote",
             {
-                'fields': [
-                    'quote_title',
-                    'quote_text',
-                    'quote_full_name',
-                    'quote_department_name',
+                "fields": [
+                    "quote_title",
+                    "quote_text",
+                    "quote_full_name",
+                    "quote_department_name",
                 ]
             },
         ),
     )
     readonly_fields = (
-        'publish_date',
-        'created_by',
-        'created_date',
-        'updated_by',
-        'modified_date',
+        "publish_date",
+        "created_by",
+        "created_date",
+        "updated_by",
+        "modified_date",
     )
-    prepopulated_fields = {'slug': ('name',)}
+    prepopulated_fields = {"slug": ("name",)}
 
     def _user_link(self, user):
         return format_html(
@@ -53,9 +56,9 @@ class CaseStudyAdmin(CSPRichTextEditorMixin, TimeStampedUserAdmin):
     def created_by_link(self, obj):
         return self._user_link(obj.created_by)
 
-    created_by_link.short_description = 'Created by'
+    created_by_link.short_description = "Created by"
 
     def updated_by_link(self, obj):
         return self._user_link(obj.updated_by)
 
-    updated_by_link.short_description = 'Updated  by'
+    updated_by_link.short_description = "Updated  by"

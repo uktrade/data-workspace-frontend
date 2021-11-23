@@ -47,6 +47,4 @@ class Command(BaseCommand):
             visualisation_catalogue_item=catalogue_item,
         )
 
-        self.stdout.write(
-            self.style.SUCCESS(f"created new visualisation dataset {name} (done)")
-        )
+        self.stdout.write(self.style.SUCCESS(f"created new visualisation dataset {name} (done)"))

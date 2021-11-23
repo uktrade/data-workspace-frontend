@@ -5,14 +5,14 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('applications', '0011_auto_20200810_1124')]
+    dependencies = [("applications", "0011_auto_20200810_1124")]
 
     operations = [
         migrations.AlterField(
-            model_name='applicationinstance',
-            name='spawner_application_instance_id',
+            model_name="applicationinstance",
+            name="spawner_application_instance_id",
             field=models.CharField(
-                help_text='An ID that the spawner understands to control and report on the application',
+                help_text="An ID that the spawner understands to control and report on the application",
                 max_length=10240,
             ),
         )

@@ -9,7 +9,12 @@ from dataworkspace.apps.datasets.forms import FilterWidget
 class TestFilterWidget:
     @pytest.mark.parametrize(
         "num_choices, limit_options, expect_show_more_button, expect_hidden_choices",
-        ((5, 0, False, 0), (5, 2, True, 3), (5, 5, False, 0), (5, 10, False, 0),),
+        (
+            (5, 0, False, 0),
+            (5, 2, True, 3),
+            (5, 5, False, 0),
+            (5, 10, False, 0),
+        ),
     )
     def test_limit_initial_choices(
         self, num_choices, limit_options, expect_show_more_button, expect_hidden_choices
@@ -32,8 +37,7 @@ class TestFilterWidget:
             len(soup.find_all("div", class_="govuk-checkboxes__item")) == num_choices
         ), "Widget should renderall of the choices"
         assert (
-            bool(soup.find_all("button", text="Show more choices"))
-            is expect_show_more_button
+            bool(soup.find_all("button", text="Show more choices")) is expect_show_more_button
         ), "Widget should render a 'show more' button if there are more choices than we want to initially show."
         assert (
             len(soup.find_all("div", class_="govuk-checkboxes__item app-js-hidden"))

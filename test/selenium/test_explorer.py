@@ -20,19 +20,19 @@ class TestDataExplorer:
     driver = None
     sso = None
 
-    @pytest.fixture(scope='function')
+    @pytest.fixture(scope="function")
     def _application(self, create_application):
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'explorer@test.com',
-                'contact_email': 'explorer@test.com',
-                'related_emails': [],
-                'first_name': 'Eddie',
-                'last_name': 'Eagle',
-                'user_id': '9931f73c-469d-4110-9f58-92a74ab1bbfa',
+            "Bearer token-1": {
+                "email": "explorer@test.com",
+                "contact_email": "explorer@test.com",
+                "related_emails": [],
+                "first_name": "Eddie",
+                "last_name": "Eagle",
+                "user_id": "9931f73c-469d-4110-9f58-92a74ab1bbfa",
             }
         }
         with create_sso(is_logged_in, codes, tokens, auth_to_me) as sso:
@@ -63,7 +63,7 @@ class TestDataExplorer:
         home_page.click_run()
         home_page.wait_for_results()
 
-        assert home_page.read_result_headers() == ['?column?', '?column?', '?column?']
+        assert home_page.read_result_headers() == ["?column?", "?column?", "?column?"]
         assert home_page.read_result_rows() == [["1", "2", "3"]]
 
     def test_query_exception_returned_as_friendly_error(self, _application):
@@ -77,7 +77,7 @@ class TestDataExplorer:
 
         assert (
             sql_error_lines
-            == "column \"invalid identifier\" does not exist LINE 3: select \"invalid identifier\" ^"
+            == 'column "invalid identifier" does not exist LINE 3: select "invalid identifier" ^'
         )
 
     def test_results_pagination(self, _application):
@@ -89,12 +89,12 @@ class TestDataExplorer:
 
         home_page.change_results_pagination(page=1, results_per_page=2)
 
-        assert home_page.read_result_headers() == ['numbers']
+        assert home_page.read_result_headers() == ["numbers"]
         assert home_page.read_result_rows() == [["1"], ["2"]]
 
         home_page.change_results_pagination(page=2, results_per_page=2)
 
-        assert home_page.read_result_headers() == ['numbers']
+        assert home_page.read_result_headers() == ["numbers"]
         assert home_page.read_result_rows() == [["3"]]
 
     def test_format_sql(self, _application):
@@ -120,16 +120,16 @@ class TestDataExplorer:
         query_detail_page = save_page.click_save()
 
         assert query_detail_page.read_title() == str(title)
-        assert query_detail_page.read_description() == 'I am a lovely query'
-        assert query_detail_page.read_sql() == 'select 1, 2, 3'
+        assert query_detail_page.read_description() == "I am a lovely query"
+        assert query_detail_page.read_sql() == "select 1, 2, 3"
 
         edit_query_on_home_page = query_detail_page.click_edit()
         edit_query_on_home_page.click_run()
 
         assert edit_query_on_home_page.read_result_headers() == [
-            '?column?',
-            '?column?',
-            '?column?',
+            "?column?",
+            "?column?",
+            "?column?",
         ]
         assert edit_query_on_home_page.read_result_rows() == [["1", "2", "3"]]
 
@@ -151,16 +151,16 @@ class TestDataExplorer:
         query_detail_page = save_page.click_save()
 
         assert query_detail_page.read_title() == str(title)
-        assert query_detail_page.read_description() == 'I am a lovely query'
-        assert query_detail_page.read_sql() == 'select 1, 2, 3'
+        assert query_detail_page.read_description() == "I am a lovely query"
+        assert query_detail_page.read_sql() == "select 1, 2, 3"
 
         edit_query_on_home_page = query_detail_page.click_edit()
         edit_query_on_home_page.click_run()
 
         assert edit_query_on_home_page.read_result_headers() == [
-            '?column?',
-            '?column?',
-            '?column?',
+            "?column?",
+            "?column?",
+            "?column?",
         ]
         assert edit_query_on_home_page.read_result_rows() == [["1", "2", "3"]]
 
@@ -169,22 +169,22 @@ class TestDataExplorer:
         assert "select 1, 2, 3" in query_log_page.get_html()
 
     def test_user_can_only_read_from_datasets_they_have_access_to(self, _application):
-        dataset_1_id = '47146cc4-1668-4522-82b6-eb5e5de7b044'
-        table_1_id = '164acfc5-3852-400e-a99d-2c7c4eff8555'
-        dataset_2_id = '73534d36-72f7-41b7-ad92-4d277980229e'
-        table_2_id = '0a5a7f68-9e38-422d-94d6-92a366da1ab5'
+        dataset_1_id = "47146cc4-1668-4522-82b6-eb5e5de7b044"
+        table_1_id = "164acfc5-3852-400e-a99d-2c7c4eff8555"
+        dataset_2_id = "73534d36-72f7-41b7-ad92-4d277980229e"
+        table_2_id = "0a5a7f68-9e38-422d-94d6-92a366da1ab5"
         create_dataset(
             dataset_1_id,
-            'explorer_dataset',
+            "explorer_dataset",
             table_1_id,
-            'my_database',
+            "my_database",
             UserAccessType.REQUIRES_AUTHENTICATION,
         )
         create_dataset(
             dataset_2_id,
-            'explorer_dataset_2',
+            "explorer_dataset_2",
             table_2_id,
-            'my_database',
+            "my_database",
             UserAccessType.REQUIRES_AUTHORIZATION,
         )
 
@@ -194,7 +194,7 @@ class TestDataExplorer:
         home_page.enter_query("select count(*) as count from public.explorer_dataset")
         home_page.click_run()
 
-        assert home_page.read_result_headers() == ['count']
+        assert home_page.read_result_headers() == ["count"]
         assert home_page.read_result_rows() == [["0"]]
         assert "permission denied for relation" not in home_page.get_html()
 
@@ -206,28 +206,26 @@ class TestDataExplorer:
         assert home_page.read_result_rows() == []
         assert "permission denied for relation" in home_page.get_html()
 
-    def test_data_explorer_cached_credentials_can_be_reset_using_admin_action(
-        self, _application
-    ):
+    def test_data_explorer_cached_credentials_can_be_reset_using_admin_action(self, _application):
         # This doesn't strictly test that the action is available to an admin, but it does test the routine
         # that the admin action uses.
 
-        dataset_1_id = '47146cc4-1668-4522-82b6-eb5e5de7b044'
-        table_1_id = '164acfc5-3852-400e-a99d-2c7c4eff8555'
-        dataset_2_id = '73534d36-72f7-41b7-ad92-4d277980229e'
-        table_2_id = '0a5a7f68-9e38-422d-94d6-92a366da1ab5'
+        dataset_1_id = "47146cc4-1668-4522-82b6-eb5e5de7b044"
+        table_1_id = "164acfc5-3852-400e-a99d-2c7c4eff8555"
+        dataset_2_id = "73534d36-72f7-41b7-ad92-4d277980229e"
+        table_2_id = "0a5a7f68-9e38-422d-94d6-92a366da1ab5"
         create_dataset(
             dataset_1_id,
-            'explorer_dataset',
+            "explorer_dataset",
             table_1_id,
-            'my_database',
+            "my_database",
             UserAccessType.REQUIRES_AUTHENTICATION,
         )
         create_dataset(
             dataset_2_id,
-            'explorer_2_dataset',
+            "explorer_2_dataset",
             table_2_id,
-            'my_database',
+            "my_database",
             UserAccessType.REQUIRES_AUTHENTICATION,
         )
 
@@ -237,7 +235,7 @@ class TestDataExplorer:
         home_page.enter_query("select count(*) as count from public.explorer_dataset")
         home_page.click_run()
 
-        assert home_page.read_result_headers() == ['count']
+        assert home_page.read_result_headers() == ["count"]
         assert home_page.read_result_rows() == [["0"]]
         assert "permission denied for relation" not in home_page.get_html()
         assert "Columns in public.explorer_dataset" in home_page.get_html()
@@ -251,15 +249,13 @@ class TestDataExplorer:
 
         # Should still be using cached credentials, so still available. (Note: this isn't ideal, but _is_ how things
         # should be working based on the current implementation.
-        assert home_page.read_result_headers() == ['count']
+        assert home_page.read_result_headers() == ["count"]
         assert home_page.read_result_rows() == [["0"]]
         assert "permission denied for relation" not in home_page.get_html()
         assert "Columns in public.explorer_dataset" in home_page.get_html()
         assert "Columns in public.explorer_2_dataset" in home_page.get_html()
 
-        reset_data_explorer_credentials(
-            user_sso_id='9931f73c-469d-4110-9f58-92a74ab1bbfa'
-        )
+        reset_data_explorer_credentials(user_sso_id="9931f73c-469d-4110-9f58-92a74ab1bbfa")
 
         home_page.open()  # Reset the page, i.e. to remove the existing query
         home_page.enter_query("select count(*) as count from public.explorer_dataset")

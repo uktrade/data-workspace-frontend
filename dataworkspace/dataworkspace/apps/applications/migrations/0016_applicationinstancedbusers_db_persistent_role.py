@@ -10,11 +10,9 @@ from dataworkspace.apps.core.utils import (
 
 
 def migrate_existing_application_instance_db_users(apps, _):
-    ApplicationInstanceDbUsers = apps.get_model(
-        'applications', 'ApplicationInstanceDbUsers'
-    )
+    ApplicationInstanceDbUsers = apps.get_model("applications", "ApplicationInstanceDbUsers")
     for db_user in ApplicationInstanceDbUsers.objects.all():
-        if db_user.application_instance.application_template.application_type == 'TOOL':
+        if db_user.application_instance.application_template.application_type == "TOOL":
             db_role_and_schema_suffix = db_role_schema_suffix_for_user(
                 db_user.application_instance.owner
             )
@@ -23,21 +21,21 @@ def migrate_existing_application_instance_db_users(apps, _):
                 db_user.application_instance.application_template
             )
 
-        db_user.db_persistent_role = f'{USER_SCHEMA_STEM}{db_role_and_schema_suffix}'
+        db_user.db_persistent_role = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
         db_user.save()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0015_auto_20201113_1103'),
+        ("applications", "0015_auto_20201113_1103"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicationinstancedbusers',
-            name='db_persistent_role',
-            field=models.CharField(default='', max_length=256),
+            model_name="applicationinstancedbusers",
+            name="db_persistent_role",
+            field=models.CharField(default="", max_length=256),
             preserve_default=False,
         ),
         migrations.RunPython(

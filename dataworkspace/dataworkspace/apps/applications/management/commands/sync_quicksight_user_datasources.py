@@ -5,10 +5,9 @@ from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 
 
 class Command(BaseCommand):
-    '''Sync master datasets and user permissions from Data Workspace to AWS QuickSight.
-    '''
+    """Sync master datasets and user permissions from Data Workspace to AWS QuickSight."""
 
-    help = 'Sync master datasets and user permissions from Data Workspace to AWS QuickSight.'
+    help = "Sync master datasets and user permissions from Data Workspace to AWS QuickSight."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,6 +16,6 @@ class Command(BaseCommand):
         sync_quicksight_permissions()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     settings.configure()
     Command().handle()

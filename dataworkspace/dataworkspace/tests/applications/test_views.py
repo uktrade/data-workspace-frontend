@@ -24,22 +24,22 @@ from dataworkspace.tests.common import get_http_sso_data
 @contextmanager
 def _visualisation_ui_gitlab_mocks():
     with mock.patch(
-        'dataworkspace.apps.applications.views._visualisation_gitlab_project'
+        "dataworkspace.apps.applications.views._visualisation_gitlab_project"
     ) as projects_mock, mock.patch(
-        'dataworkspace.apps.applications.views._visualisation_branches'
+        "dataworkspace.apps.applications.views._visualisation_branches"
     ) as branches_mock, mock.patch(
-        'dataworkspace.apps.applications.views.gitlab_has_developer_access'
+        "dataworkspace.apps.applications.views.gitlab_has_developer_access"
     ) as access_mock:
         access_mock.return_value = True
         projects_mock.return_value = {
-            'id': 1,
-            'default_branch': 'master',
-            'name': 'test-gitlab-project',
+            "id": 1,
+            "default_branch": "master",
+            "name": "test-gitlab-project",
         }
         branches_mock.return_value = [
             {
-                'name': 'master',
-                'commit': {'committed_date': '2020-04-14T21:25:22.000+00:00'},
+                "name": "master",
+                "commit": {"committed_date": "2020-04-14T21:25:22.000+00:00"},
             }
         ]
 
@@ -49,18 +49,18 @@ def _visualisation_ui_gitlab_mocks():
 class TestDataVisualisationUICataloguePage:
     def test_successful_post_data(self, staff_client):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
-            short_description='old',
+            short_description="old",
             published=False,
             visualisation_template__gitlab_project_id=1,
         )
 
         # Login to admin site
-        staff_client.post(reverse('admin:index'), follow=True)
+        staff_client.post(reverse("admin:index"), follow=True)
 
         with _visualisation_ui_gitlab_mocks():
             response = staff_client.post(
                 reverse(
-                    'visualisations:catalogue-item',
+                    "visualisations:catalogue-item",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
                 {
@@ -99,12 +99,12 @@ class TestDataVisualisationUICataloguePage:
         )
 
         # Login to admin site
-        staff_client.post(reverse('admin:index'), follow=True)
+        staff_client.post(reverse("admin:index"), follow=True)
 
         with _visualisation_ui_gitlab_mocks():
             response = staff_client.post(
                 reverse(
-                    'visualisations:catalogue-item',
+                    "visualisations:catalogue-item",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
                 {"short_description": "summary", "user_access_type": expected_type},
@@ -118,18 +118,18 @@ class TestDataVisualisationUICataloguePage:
 
     def test_bad_post_data_no_short_description(self, staff_client):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
-            short_description='old',
+            short_description="old",
             published=False,
             visualisation_template__gitlab_project_id=1,
         )
 
         # Login to admin site
-        staff_client.post(reverse('admin:index'), follow=True)
+        staff_client.post(reverse("admin:index"), follow=True)
 
         with _visualisation_ui_gitlab_mocks():
             response = staff_client.post(
                 reverse(
-                    'visualisations:catalogue-item',
+                    "visualisations:catalogue-item",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
                 {"summary": ""},
@@ -139,20 +139,18 @@ class TestDataVisualisationUICataloguePage:
         visualisation.refresh_from_db()
         assert response.status_code == 400
         assert visualisation.short_description == "old"
-        assert "The visualisation must have a summary" in response.content.decode(
-            response.charset
-        )
+        assert "The visualisation must have a summary" in response.content.decode(response.charset)
 
 
 class TestDataVisualisationUIApprovalPage:
     @pytest.mark.django_db
     def test_approve_visualisation_successfully(self):
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -163,12 +161,12 @@ class TestDataVisualisationUIApprovalPage:
 
         # Login to admin site
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
 
         with _visualisation_ui_gitlab_mocks():
             response = client.post(
                 reverse(
-                    'visualisations:approvals',
+                    "visualisations:approvals",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
                 {
@@ -186,11 +184,11 @@ class TestDataVisualisationUIApprovalPage:
     @pytest.mark.django_db
     def test_bad_post_data_approved_box_not_checked(self):
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -201,12 +199,12 @@ class TestDataVisualisationUIApprovalPage:
 
         # Login to admin site
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
 
         with _visualisation_ui_gitlab_mocks():
             response = client.post(
                 reverse(
-                    'visualisations:approvals',
+                    "visualisations:approvals",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
                 {
@@ -228,11 +226,11 @@ class TestDataVisualisationUIApprovalPage:
     @pytest.mark.django_db
     def test_unapprove_visualisation_successfully(self):
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -248,12 +246,12 @@ class TestDataVisualisationUIApprovalPage:
 
         # Login to admin site
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
 
         with _visualisation_ui_gitlab_mocks():
             response = client.post(
                 reverse(
-                    'visualisations:approvals',
+                    "visualisations:approvals",
                     args=(vis_cat_item.visualisation_template.gitlab_project_id,),
                 ),
                 {
@@ -272,20 +270,18 @@ class TestDataVisualisationUIApprovalPage:
 
 class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db
-    @override_settings(QUICKSIGHT_SSO_URL='https://sso.quicksight')
+    @override_settings(QUICKSIGHT_SSO_URL="https://sso.quicksight")
     def test_view_redirects_to_quicksight_sso_url(self):
         user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
         # Login to admin site
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
 
-        with mock.patch(
-            "dataworkspace.apps.applications.views.sync_quicksight_permissions"
-        ):
+        with mock.patch("dataworkspace.apps.applications.views.sync_quicksight_permissions"):
             resp = client.get(reverse("applications:quicksight_redirect"), follow=False)
 
-        assert resp['Location'] == 'https://sso.quicksight'
+        assert resp["Location"] == "https://sso.quicksight"
 
     @pytest.mark.django_db
     def test_view_starts_celery_polling_job(self):
@@ -293,7 +289,7 @@ class TestQuickSightPollAndRedirect:
 
         # Login to admin site
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
 
         with mock.patch(
             "dataworkspace.apps.applications.views.sync_quicksight_permissions"
@@ -315,21 +311,14 @@ class TestToolsPage:
         user = get_user_model().objects.create()
 
         client = Client(**get_http_sso_data(user))
-        response = client.get(reverse('applications:tools'), follow=True)
+        response = client.get(reverse("applications:tools"), follow=True)
 
-        assert len(response.context['applications']) == 1
+        assert len(response.context["applications"]) == 1
         assert (
-            response.context['applications'][0]['tool_configuration'].size_config.name
-            == 'Medium'
+            response.context["applications"][0]["tool_configuration"].size_config.name == "Medium"
         )
-        assert (
-            response.context['applications'][0]['tool_configuration'].size_config.cpu
-            == 1024
-        )
-        assert (
-            response.context['applications'][0]['tool_configuration'].size_config.memory
-            == 8192
-        )
+        assert response.context["applications"][0]["tool_configuration"].size_config.cpu == 1024
+        assert response.context["applications"][0]["tool_configuration"].size_config.memory == 8192
 
     @pytest.mark.django_db
     def test_user_with_size_config_shows_correct_config(self):
@@ -340,20 +329,16 @@ class TestToolsPage:
         )
 
         client = Client(**get_http_sso_data(user))
-        response = client.get(reverse('applications:tools'), follow=True)
+        response = client.get(reverse("applications:tools"), follow=True)
 
-        assert len(response.context['applications']) == 1
+        assert len(response.context["applications"]) == 1
         assert (
-            response.context['applications'][0]['tool_configuration'].size_config.name
-            == 'Extra Large'
+            response.context["applications"][0]["tool_configuration"].size_config.name
+            == "Extra Large"
         )
+        assert response.context["applications"][0]["tool_configuration"].size_config.cpu == 4096
         assert (
-            response.context['applications'][0]['tool_configuration'].size_config.cpu
-            == 4096
-        )
-        assert (
-            response.context['applications'][0]['tool_configuration'].size_config.memory
-            == 30720
+            response.context["applications"][0]["tool_configuration"].size_config.memory == 30720
         )
 
 
@@ -366,19 +351,19 @@ class TestUserToolSizeConfigurationView:
         client = Client(**get_http_sso_data(user))
         response = client.get(
             reverse(
-                'applications:configure_tool_size',
-                kwargs={'tool_host_basename': tool.host_basename},
+                "applications:configure_tool_size",
+                kwargs={"tool_host_basename": tool.host_basename},
             ),
         )
         assert response.status_code == 200
-        assert b'Small' in response.content
-        assert b'Medium (default)' in response.content
-        assert b'Large' in response.content
-        assert b'Extra Large' in response.content
+        assert b"Small" in response.content
+        assert b"Medium (default)" in response.content
+        assert b"Large" in response.content
+        assert b"Extra Large" in response.content
 
     @pytest.mark.django_db
     def test_post_creates_new_tool_configuration(self):
-        tool = factories.ApplicationTemplateFactory(nice_name='RStudio')
+        tool = factories.ApplicationTemplateFactory(nice_name="RStudio")
         user = get_user_model().objects.create()
 
         assert not tool.user_tool_configuration.filter(user=user).first()
@@ -386,14 +371,14 @@ class TestUserToolSizeConfigurationView:
         client = Client(**get_http_sso_data(user))
         response = client.post(
             reverse(
-                'applications:configure_tool_size',
-                kwargs={'tool_host_basename': tool.host_basename},
+                "applications:configure_tool_size",
+                kwargs={"tool_host_basename": tool.host_basename},
             ),
-            {'size': UserToolConfiguration.SIZE_EXTRA_LARGE},
+            {"size": UserToolConfiguration.SIZE_EXTRA_LARGE},
             follow=True,
         )
         assert response.status_code == 200
-        assert str(list(response.context['messages'])[0]) == 'Saved RStudio size'
+        assert str(list(response.context["messages"])[0]) == "Saved RStudio size"
         assert (
             tool.user_tool_configuration.filter(user=user).first().size
             == UserToolConfiguration.SIZE_EXTRA_LARGE
@@ -401,7 +386,7 @@ class TestUserToolSizeConfigurationView:
 
     @pytest.mark.django_db
     def test_post_updates_existing_tool_configuration(self):
-        tool = factories.ApplicationTemplateFactory(nice_name='RStudio')
+        tool = factories.ApplicationTemplateFactory(nice_name="RStudio")
         user = get_user_model().objects.create()
         UserToolConfiguration.objects.create(
             user=user, tool_template=tool, size=UserToolConfiguration.SIZE_EXTRA_LARGE
@@ -410,14 +395,14 @@ class TestUserToolSizeConfigurationView:
         client = Client(**get_http_sso_data(user))
         response = client.post(
             reverse(
-                'applications:configure_tool_size',
-                kwargs={'tool_host_basename': tool.host_basename},
+                "applications:configure_tool_size",
+                kwargs={"tool_host_basename": tool.host_basename},
             ),
-            {'size': UserToolConfiguration.SIZE_SMALL},
+            {"size": UserToolConfiguration.SIZE_SMALL},
             follow=True,
         )
         assert response.status_code == 200
-        assert str(list(response.context['messages'])[0]) == 'Saved RStudio size'
+        assert str(list(response.context["messages"])[0]) == "Saved RStudio size"
         assert (
             tool.user_tool_configuration.filter(user=user).first().size
             == UserToolConfiguration.SIZE_SMALL
@@ -428,24 +413,24 @@ class TestVisualisationLogs:
     @pytest.mark.django_db
     def test_not_developer(self):
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
         user.user_permissions.add(develop_visualisations_permission)
 
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
 
         with mock.patch(
-            'dataworkspace.apps.applications.views.gitlab_has_developer_access'
+            "dataworkspace.apps.applications.views.gitlab_has_developer_access"
         ) as access_mock:
             access_mock.return_value = False
-            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+            response = client.get(reverse("visualisations:logs", args=(1, "xxx")))
         assert response.status_code == 403
 
     @pytest.mark.django_db
@@ -453,117 +438,111 @@ class TestVisualisationLogs:
         application_template = factories.ApplicationTemplateFactory()
         factories.ApplicationInstanceFactory(
             application_template=application_template,
-            commit_id='',
+            commit_id="",
             spawner_application_template_options=json.dumps(
-                {'CONTAINER_NAME': 'user-defined-container'}
+                {"CONTAINER_NAME": "user-defined-container"}
             ),
-            spawner_application_instance_id=json.dumps(
-                {'task_arn': 'arn:test:vis/task-id/999'}
-            ),
+            spawner_application_instance_id=json.dumps({"task_arn": "arn:test:vis/task-id/999"}),
         )
         mock_get_application_template = mocker.patch(
-            'dataworkspace.apps.applications.views._application_template'
+            "dataworkspace.apps.applications.views._application_template"
         )
         mock_get_application_template.return_value = application_template
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
         user.user_permissions.add(develop_visualisations_permission)
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
         with _visualisation_ui_gitlab_mocks():
-            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+            response = client.get(reverse("visualisations:logs", args=(1, "xxx")))
             assert response.status_code == 200
-            assert response.content == b'No logs were found for this visualisation.'
+            assert response.content == b"No logs were found for this visualisation."
 
     @pytest.mark.django_db
     def test_no_events(self, mocker):
         application_template = factories.ApplicationTemplateFactory()
         factories.ApplicationInstanceFactory(
             application_template=application_template,
-            commit_id='xxx',
+            commit_id="xxx",
             spawner_application_template_options=json.dumps(
-                {'CONTAINER_NAME': 'user-defined-container'}
+                {"CONTAINER_NAME": "user-defined-container"}
             ),
-            spawner_application_instance_id=json.dumps(
-                {'task_arn': 'arn:test:vis/task-id/999'}
-            ),
+            spawner_application_instance_id=json.dumps({"task_arn": "arn:test:vis/task-id/999"}),
         )
         mock_get_application_template = mocker.patch(
-            'dataworkspace.apps.applications.views._application_template'
+            "dataworkspace.apps.applications.views._application_template"
         )
         mock_get_application_template.return_value = application_template
-        mock_boto = mocker.patch('dataworkspace.apps.applications.utils.boto3.client')
+        mock_boto = mocker.patch("dataworkspace.apps.applications.utils.boto3.client")
         mock_boto.return_value.get_log_events.side_effect = botocore.exceptions.ClientError(
-            error_response={'Error': {'Code': 'ResourceNotFoundException'}},
-            operation_name='get_log_events',
+            error_response={"Error": {"Code": "ResourceNotFoundException"}},
+            operation_name="get_log_events",
         )
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
         user.user_permissions.add(develop_visualisations_permission)
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
         with _visualisation_ui_gitlab_mocks():
-            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+            response = client.get(reverse("visualisations:logs", args=(1, "xxx")))
             assert response.status_code == 200
-            assert response.content == b'No logs were found for this visualisation.'
+            assert response.content == b"No logs were found for this visualisation."
 
     @pytest.mark.django_db
     def test_with_events(self, mocker):
         application_template = factories.ApplicationTemplateFactory()
         factories.ApplicationInstanceFactory(
             application_template=application_template,
-            commit_id='xxx',
+            commit_id="xxx",
             spawner_application_template_options=json.dumps(
-                {'CONTAINER_NAME': 'user-defined-container'}
+                {"CONTAINER_NAME": "user-defined-container"}
             ),
-            spawner_application_instance_id=json.dumps(
-                {'task_arn': 'arn:test:vis/task-id/999'}
-            ),
+            spawner_application_instance_id=json.dumps({"task_arn": "arn:test:vis/task-id/999"}),
         )
         mock_get_application_template = mocker.patch(
-            'dataworkspace.apps.applications.views._application_template'
+            "dataworkspace.apps.applications.views._application_template"
         )
         mock_get_application_template.return_value = application_template
-        mock_boto = mocker.patch('dataworkspace.apps.applications.utils.boto3.client')
+        mock_boto = mocker.patch("dataworkspace.apps.applications.utils.boto3.client")
         mock_boto.return_value.get_log_events.side_effect = [
             {
-                'nextForwardToken': '12345',
-                'events': [{'timestamp': 1605891793796, 'message': 'log message 1'}],
+                "nextForwardToken": "12345",
+                "events": [{"timestamp": 1605891793796, "message": "log message 1"}],
             },
-            {'events': [{'timestamp': 1605891793797, 'message': 'log message 2'}]},
+            {"events": [{"timestamp": 1605891793797, "message": "log message 2"}]},
         ]
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username='visualisation.creator@test.com',
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
         user.user_permissions.add(develop_visualisations_permission)
 
         client = Client(**get_http_sso_data(user))
-        client.post(reverse('admin:index'), follow=True)
+        client.post(reverse("admin:index"), follow=True)
 
         with _visualisation_ui_gitlab_mocks():
-            response = client.get(reverse('visualisations:logs', args=(1, 'xxx')))
+            response = client.get(reverse("visualisations:logs", args=(1, "xxx")))
             assert response.status_code == 200
             assert response.content == (
-                b'2020-11-20 17:03:13.796000 - log message 1\n'
-                b'2020-11-20 17:03:13.797000 - log message 2\n'
+                b"2020-11-20 17:03:13.796000 - log message 1\n"
+                b"2020-11-20 17:03:13.797000 - log message 2\n"
             )

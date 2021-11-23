@@ -8,15 +8,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('explorer', '0004_querylog_duration'),
+        ("explorer", "0004_querylog_duration"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='query',
-            name='snapshot',
+            model_name="query",
+            name="snapshot",
             field=models.BooleanField(
-                default=False, help_text='Include in snapshot task (if enabled)'
+                default=False, help_text="Include in snapshot task (if enabled)"
             ),
         ),
     ]

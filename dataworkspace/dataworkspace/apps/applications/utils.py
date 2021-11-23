@@ -53,7 +53,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.cel import celery_app
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 class MetricsException(Exception):
@@ -86,7 +86,7 @@ def application_template_tag_user_commit_from_host(public_host):
     # the form <tool-name>-<user-id>, but I suspect is very unlikely
 
     # The value after the rightmost '--', if it's there, is the commit id
-    possible_host_basename, _, host_basename_or_commit_id = public_host.rpartition('--')
+    possible_host_basename, _, host_basename_or_commit_id = public_host.rpartition("--")
     if possible_host_basename and is_8_char_hex(host_basename_or_commit_id):
         host_basename = possible_host_basename
         commit_id = host_basename_or_commit_id
@@ -95,7 +95,7 @@ def application_template_tag_user_commit_from_host(public_host):
         commit_id = None
 
     # The value after the rightmost '-', if it's there, is the user id
-    possible_host_basename, _, host_basename_or_user = host_basename.rpartition('-')
+    possible_host_basename, _, host_basename_or_user = host_basename.rpartition("-")
     if possible_host_basename and is_8_char_hex(host_basename_or_user):
         host_basename = possible_host_basename
         user = host_basename_or_user
@@ -105,7 +105,7 @@ def application_template_tag_user_commit_from_host(public_host):
     matching_tools = (
         list(
             ApplicationTemplate.objects.filter(
-                application_type='TOOL', host_basename=host_basename
+                application_type="TOOL", host_basename=host_basename
             )
         )
         if user
@@ -115,7 +115,7 @@ def application_template_tag_user_commit_from_host(public_host):
     matching_visualisations = (
         list(
             ApplicationTemplate.objects.filter(
-                application_type='VISUALISATION', host_basename=host_basename
+                application_type="VISUALISATION", host_basename=host_basename
             )
         )
         if not user
@@ -131,7 +131,7 @@ def application_template_tag_user_commit_from_host(public_host):
     if not matching:
         raise ApplicationTemplate.DoesNotExist()
     if len(matching) > 1:
-        raise Exception('Too many ApplicatinTemplate matching host')
+        raise Exception("Too many ApplicatinTemplate matching host")
 
     return (matching[0], tag, user, commit_id)
 
@@ -148,9 +148,7 @@ def application_options(application_template):
 
 
 def api_application_dict(application_instance):
-    spawner_state = get_spawner(
-        application_instance.application_template.spawner
-    ).state(
+    spawner_state = get_spawner(application_instance.application_template.spawner).state(
         application_instance.spawner_application_template_options,
         application_instance.created_date.replace(tzinfo=None),
         application_instance.spawner_application_instance_id,
@@ -160,21 +158,19 @@ def api_application_dict(application_instance):
     # Only pass through the database state if the spawner is running,
     # Otherwise, we are in an error condition, and so return the spawner
     # state, so the client (i.e. the proxy) knows to take action
-    api_state = (
-        application_instance.state if spawner_state == 'RUNNING' else spawner_state
-    )
+    api_state = application_instance.state if spawner_state == "RUNNING" else spawner_state
 
     sso_id_hex_short = stable_identification_suffix(
         str(application_instance.owner.profile.sso_id), short=True
     )
 
     return {
-        'proxy_url': application_instance.proxy_url,
-        'state': api_state,
-        'user': sso_id_hex_short,
-        'wrap': application_instance.application_template.wrap,
+        "proxy_url": application_instance.proxy_url,
+        "state": api_state,
+        "user": sso_id_hex_short,
+        "wrap": application_instance.application_template.wrap,
         # Used by metrics to label the application
-        'name': application_instance.application_template.nice_name,
+        "name": application_instance.application_template.nice_name,
     }
 
 
@@ -184,7 +180,7 @@ def get_api_visible_application_instance_by_public_host(public_host):
     # it doesn't exist. 'STOPPING' an application is DELETEing it. This may
     # need to be changed in later versions for richer behaviour.
     return ApplicationInstance.objects.get(
-        public_host=public_host, state__in=['RUNNING', 'SPAWNING']
+        public_host=public_host, state__in=["RUNNING", "SPAWNING"]
     )
 
 
@@ -200,7 +196,7 @@ def application_api_is_allowed(request, public_host):
         return False
 
     visualisation_catalogue_item = None
-    if application_template.application_type == 'VISUALISATION':
+    if application_template.application_type == "VISUALISATION":
         visualisation_catalogue_item = VisualisationCatalogueItem.objects.get(
             visualisation_template=application_template
         )
@@ -212,9 +208,9 @@ def application_api_is_allowed(request, public_host):
 
     def is_tool_and_correct_user_and_allowed_to_start():
         return (
-            application_template.application_type == 'TOOL'
+            application_template.application_type == "TOOL"
             and host_user == request_sso_id_hex_short
-            and request.user.has_perm('applications.start_all_applications')
+            and request.user.has_perm("applications.start_all_applications")
         )
 
     def is_published_visualisation_and_requires_authentication():
@@ -242,9 +238,7 @@ def application_api_is_allowed(request, public_host):
         return (
             is_preview
             and visualisation_catalogue_item
-            and gitlab_has_developer_access(
-                request.user, application_template.gitlab_project_id
-            )
+            and gitlab_has_developer_access(request.user, application_template.gitlab_project_id)
         )
 
     return (
@@ -261,42 +255,38 @@ def stop_spawner_and_application(application_instance):
 
 
 def set_application_stopped(application_instance):
-    application_instance.state = 'STOPPED'
-    application_instance.single_running_or_spawning_integrity = str(
-        application_instance.id
-    )
-    application_instance.save(
-        update_fields=['state', 'single_running_or_spawning_integrity']
-    )
+    application_instance.state = "STOPPED"
+    application_instance.single_running_or_spawning_integrity = str(application_instance.id)
+    application_instance.save(update_fields=["state", "single_running_or_spawning_integrity"])
 
 
 def application_instance_max_cpu(application_instance):
     # If we don't have the proxy url yet, we can't have any metrics yet.
     # This is expected and should not be shown as an error
     if application_instance.proxy_url is None:
-        raise ExpectedMetricsException('Unknown')
+        raise ExpectedMetricsException("Unknown")
 
-    instance = urllib.parse.urlsplit(application_instance.proxy_url).hostname + ':8889'
-    url = f'https://{settings.PROMETHEUS_DOMAIN}/api/v1/query'
+    instance = urllib.parse.urlsplit(application_instance.proxy_url).hostname + ":8889"
+    url = f"https://{settings.PROMETHEUS_DOMAIN}/api/v1/query"
     params = {
-        'query': f'increase(precpu_stats__cpu_usage__total_usage{{instance="{instance}"}}[30s])[2h:30s]'
+        "query": f'increase(precpu_stats__cpu_usage__total_usage{{instance="{instance}"}}[30s])[2h:30s]'
     }
     try:
         response = requests.get(url, params)
     except requests.RequestException:
-        raise UnexpectedMetricsException('Error connecting to metrics server')
+        raise UnexpectedMetricsException("Error connecting to metrics server")
 
     response_dict = response.json()
-    if response_dict['status'] != 'success':
+    if response_dict["status"] != "success":
         raise UnexpectedMetricsException(
             f'Metrics server return value is {response_dict["status"]}'
         )
 
     try:
-        values = response_dict['data']['result'][0]['values']
+        values = response_dict["data"]["result"][0]["values"]
     except (IndexError, KeyError):
         # The server not having metrics yet should not be reported as an error
-        raise ExpectedMetricsException('Unknown')
+        raise ExpectedMetricsException("Unknown")
 
     max_cpu = 0.0
     ts_at_max = 0
@@ -312,35 +302,31 @@ def application_instance_max_cpu(application_instance):
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def kill_idle_fargate():
-    logger.info('kill_idle_fargate: Start')
+    logger.info("kill_idle_fargate: Start")
 
-    two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-        hours=-2
-    )
+    two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=-2)
     instances = ApplicationInstance.objects.filter(
-        spawner='FARGATE',
-        state__in=['RUNNING', 'SPAWNING'],
+        spawner="FARGATE",
+        state__in=["RUNNING", "SPAWNING"],
         created_date__lt=two_hours_ago,
     )
 
     for instance in instances:
-        if instance.state == 'SPAWNING':
+        if instance.state == "SPAWNING":
             stop_spawner_and_application(instance)
             continue
 
-        logger.info('kill_idle_fargate: Attempting to find CPU usage of %s', instance)
+        logger.info("kill_idle_fargate: Attempting to find CPU usage of %s", instance)
         try:
             max_cpu, _ = application_instance_max_cpu(instance)
         except ExpectedMetricsException:
-            logger.info('kill_idle_fargate: Unable to find CPU usage for %s', instance)
+            logger.info("kill_idle_fargate: Unable to find CPU usage for %s", instance)
             continue
         except Exception:  # pylint: disable=broad-except
-            logger.exception(
-                'kill_idle_fargate: Unable to find CPU usage for %s', instance
-            )
+            logger.exception("kill_idle_fargate: Unable to find CPU usage for %s", instance)
             continue
 
-        logger.info('kill_idle_fargate: CPU usage for %s is %s', instance, max_cpu)
+        logger.info("kill_idle_fargate: CPU usage for %s is %s", instance, max_cpu)
 
         if max_cpu >= 1.0:
             continue
@@ -348,17 +334,17 @@ def kill_idle_fargate():
         try:
             stop_spawner_and_application(instance)
         except Exception:  # pylint: disable=broad-except
-            logger.exception('kill_idle_fargate: Unable to stop %s', instance)
+            logger.exception("kill_idle_fargate: Unable to stop %s", instance)
 
-        logger.info('kill_idle_fargate: Stopped application %s', instance)
+        logger.info("kill_idle_fargate: Stopped application %s", instance)
 
-    logger.info('kill_idle_fargate: End')
+    logger.info("kill_idle_fargate: End")
 
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def populate_created_stopped_fargate():
-    logger.info('populate_created_stopped_fargate: Start')
+    logger.info("populate_created_stopped_fargate: Start")
 
     # This is used to populate spawner_created_at and spawner_stopped_at for
     # Fargate containers in two case:
@@ -389,22 +375,20 @@ def populate_created_stopped_fargate():
         end_of_range = now + datetime.timedelta(hours=-hours)
         instances = ApplicationInstance.objects.filter(
             Q(
-                spawner='FARGATE',
+                spawner="FARGATE",
                 created_date__gte=start_of_range,
                 created_date__lt=end_of_range,
             )
             & (Q(spawner_created_at__isnull=True) | Q(spawner_stopped_at__isnull=True))
-        ).order_by('-created_date')
+        ).order_by("-created_date")
 
         for instance in instances:
-            logger.info('populate_created_stopped_fargate checking: %s', instance)
+            logger.info("populate_created_stopped_fargate checking: %s", instance)
 
             try:
                 options = json.loads(instance.spawner_application_template_options)
-                cluster_name = options['CLUSTER_NAME']
-                task_arn = json.loads(instance.spawner_application_instance_id)[
-                    'task_arn'
-                ]
+                cluster_name = options["CLUSTER_NAME"]
+                task_arn = json.loads(instance.spawner_application_instance_id)["task_arn"]
             except (ValueError, KeyError):
                 continue
 
@@ -416,45 +400,43 @@ def populate_created_stopped_fargate():
             try:
                 task = _fargate_task_describe(cluster_name, task_arn)
             except Exception:  # pylint: disable=broad-except
-                logger.exception('populate_created_stopped_fargate %s', instance)
+                logger.exception("populate_created_stopped_fargate %s", instance)
                 gevent.sleep(10)
                 continue
 
             if not task:
                 logger.info(
-                    'populate_created_stopped_fargate no task found %s %s',
+                    "populate_created_stopped_fargate no task found %s %s",
                     instance,
                     task_arn,
                 )
                 continue
 
             update_fields = []
-            if 'createdAt' in task and instance.spawner_created_at is None:
-                instance.spawner_created_at = task['createdAt']
-                update_fields.append('spawner_created_at')
+            if "createdAt" in task and instance.spawner_created_at is None:
+                instance.spawner_created_at = task["createdAt"]
+                update_fields.append("spawner_created_at")
 
-            if 'stoppedAt' in task and instance.spawner_stopped_at is None:
-                instance.spawner_stopped_at = task['stoppedAt']
-                update_fields.append('spawner_stopped_at')
+            if "stoppedAt" in task and instance.spawner_stopped_at is None:
+                instance.spawner_stopped_at = task["stoppedAt"]
+                update_fields.append("spawner_stopped_at")
 
             if update_fields:
                 logger.info(
-                    'populate_created_stopped_fargate saving: %s %s',
+                    "populate_created_stopped_fargate saving: %s %s",
                     instance,
                     update_fields,
                 )
                 instance.save(update_fields=update_fields)
 
-    logger.info('populate_created_stopped_fargate: End')
+    logger.info("populate_created_stopped_fargate: End")
 
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def delete_unused_datasets_users():
     try:
-        with cache.lock(
-            "delete_unused_datasets_users", blocking_timeout=0, timeout=1800
-        ):
+        with cache.lock("delete_unused_datasets_users", blocking_timeout=0, timeout=1800):
             _do_delete_unused_datasets_users()
     except redis.exceptions.LockError:
         logger.info(
@@ -463,14 +445,14 @@ def delete_unused_datasets_users():
 
 
 def _do_delete_unused_datasets_users():
-    logger.info('delete_unused_datasets_users: Start')
+    logger.info("delete_unused_datasets_users: Start")
 
     for memorable_name, database_data in settings.DATABASES_DATA.items():
         database_obj = Database.objects.get(memorable_name=memorable_name)
-        database_name = database_data['NAME']
+        database_name = database_data["NAME"]
 
         with connect(database_dsn(database_data)) as conn, conn.cursor() as cur:
-            logger.info('delete_unused_datasets_users: finding database users')
+            logger.info("delete_unused_datasets_users: finding database users")
             cur.execute(
                 """
                 SELECT usename FROM pg_catalog.pg_user
@@ -499,9 +481,7 @@ def _do_delete_unused_datasets_users():
             )
             usenames = [result[0] for result in cur.fetchall()]
 
-        logger.info(
-            'delete_unused_datasets_users: waiting in case they were just created'
-        )
+        logger.info("delete_unused_datasets_users: waiting in case they were just created")
         gevent.sleep(15)
 
         # We want to be able to delete db users created, but then _not_ associated with an
@@ -511,14 +491,12 @@ def _do_delete_unused_datasets_users():
             ApplicationInstanceDbUsers.objects.filter(
                 db=database_obj,
                 db_username__in=usenames,
-                application_instance__state__in=['RUNNING', 'SPAWNING'],
-            ).values_list('db_username', flat=True)
+                application_instance__state__in=["RUNNING", "SPAWNING"],
+            ).values_list("db_username", flat=True)
         )
-        not_in_use_usernames = [
-            usename for usename in usenames if usename not in in_use_usenames
-        ]
+        not_in_use_usernames = [usename for usename in usenames if usename not in in_use_usenames]
         logger.info(
-            'delete_unused_datasets_users: not_in_use_usernames %s',
+            "delete_unused_datasets_users: not_in_use_usernames %s",
             not_in_use_usernames,
         )
 
@@ -528,17 +506,19 @@ def _do_delete_unused_datasets_users():
             db_user[0]: db_user[1]
             for db_user in set(
                 ApplicationInstanceDbUsers.objects.filter(
-                    db=database_obj, db_username__in=not_in_use_usernames,
-                ).values_list('db_username', 'db_persistent_role')
+                    db=database_obj,
+                    db_username__in=not_in_use_usernames,
+                ).values_list("db_username", "db_persistent_role")
             )
         }
         logger.info(
-            'delete_unused_datasets_users: db_persistent_roles %s', db_persistent_roles,
+            "delete_unused_datasets_users: db_persistent_roles %s",
+            db_persistent_roles,
         )
 
         # Multiple concurrent GRANT or REVOKE on the same object can result in
         # "tuple concurrently updated" errors
-        lock_name = 'database-grant-v1'
+        lock_name = "database-grant-v1"
         try:
             with cache.lock(lock_name, blocking_timeout=0, timeout=4), connect(
                 database_dsn(database_data)
@@ -548,30 +528,26 @@ def _do_delete_unused_datasets_users():
                     for usename in not_in_use_usernames:
                         try:
                             logger.info(
-                                'delete_unused_datasets_users: revoking credentials for %s',
+                                "delete_unused_datasets_users: revoking credentials for %s",
                                 usename,
                             )
 
                             cur.execute(
-                                sql.SQL(
-                                    'REVOKE CONNECT ON DATABASE {} FROM {};'
-                                ).format(
+                                sql.SQL("REVOKE CONNECT ON DATABASE {} FROM {};").format(
                                     sql.Identifier(database_name),
                                     sql.Identifier(usename),
                                 )
                             )
 
                             cur.execute(
-                                sql.SQL(
-                                    'REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};'
-                                ).format(
+                                sql.SQL("REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};").format(
                                     sql.Identifier(database_name),
                                     sql.Identifier(usename),
                                 )
                             )
 
                             logger.info(
-                                'delete_unused_datasets_users: dropping user %s',
+                                "delete_unused_datasets_users: dropping user %s",
                                 usename,
                             )
 
@@ -585,22 +561,22 @@ def _do_delete_unused_datasets_users():
                                 # REASSIGN OWNED requires privileges on both the source role(s) and
                                 # the target role so these are granted first.
                                 cur.execute(
-                                    sql.SQL('GRANT {} TO {};').format(
+                                    sql.SQL("GRANT {} TO {};").format(
                                         sql.Identifier(usename),
-                                        sql.Identifier(database_data['USER']),
+                                        sql.Identifier(database_data["USER"]),
                                     )
                                 )
                                 cur.execute(
-                                    sql.SQL('GRANT {} TO {};').format(
+                                    sql.SQL("GRANT {} TO {};").format(
                                         sql.Identifier(db_persistent_role),
-                                        sql.Identifier(database_data['USER']),
+                                        sql.Identifier(database_data["USER"]),
                                     )
                                 )
 
                                 # The REASSIGN OWNED BY means any objects like tables that were
                                 # owned by the temporary user get transferred to the permanent user
                                 cur.execute(
-                                    sql.SQL('REASSIGN OWNED BY {} TO {};').format(
+                                    sql.SQL("REASSIGN OWNED BY {} TO {};").format(
                                         sql.Identifier(usename),
                                         sql.Identifier(db_persistent_role),
                                     )
@@ -609,17 +585,13 @@ def _do_delete_unused_datasets_users():
                                 # remaining permissions by the temporary user, so it can then get
                                 # deleted below
                                 cur.execute(
-                                    sql.SQL('DROP OWNED BY {};').format(
-                                        sql.Identifier(usename)
-                                    )
+                                    sql.SQL("DROP OWNED BY {};").format(sql.Identifier(usename))
                                 )
 
-                            cur.execute(
-                                sql.SQL('DROP USER {};').format(sql.Identifier(usename))
-                            )
+                            cur.execute(sql.SQL("DROP USER {};").format(sql.Identifier(usename)))
                         except Exception:  # pylint: disable=broad-except
                             logger.exception(
-                                'delete_unused_datasets_users: Failed deleting %s',
+                                "delete_unused_datasets_users: Failed deleting %s",
                                 usename,
                             )
                         else:
@@ -627,45 +599,45 @@ def _do_delete_unused_datasets_users():
                                 deleted_date=datetime.datetime.now()
                             )
                             logger.info(
-                                'delete_unused_datasets_users: revoked credentials for and dropped %s',
+                                "delete_unused_datasets_users: revoked credentials for and dropped %s",
                                 usename,
                             )
 
         except redis.exceptions.LockError:
-            logger.exception('LOCK: Unable to acquire %s', lock_name)
+            logger.exception("LOCK: Unable to acquire %s", lock_name)
 
-    logger.info('delete_unused_datasets_users: End')
+    logger.info("delete_unused_datasets_users: End")
 
 
 def get_quicksight_dashboard_name_url(dashboard_id, user):
     user_region = settings.QUICKSIGHT_USER_REGION
     embed_role_arn = settings.QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN
-    embed_role_name = embed_role_arn.rsplit('/', 1)[1]
+    embed_role_name = embed_role_arn.rsplit("/", 1)[1]
 
-    sts = boto3.client('sts')
-    account_id = sts.get_caller_identity().get('Account')
+    sts = boto3.client("sts")
+    account_id = sts.get_caller_identity().get("Account")
 
-    role_credentials = sts.assume_role(
-        RoleArn=embed_role_arn, RoleSessionName=user.email
-    )['Credentials']
+    role_credentials = sts.assume_role(RoleArn=embed_role_arn, RoleSessionName=user.email)[
+        "Credentials"
+    ]
 
     session = boto3.Session(
-        aws_access_key_id=role_credentials['AccessKeyId'],
-        aws_secret_access_key=role_credentials['SecretAccessKey'],
-        aws_session_token=role_credentials['SessionToken'],
+        aws_access_key_id=role_credentials["AccessKeyId"],
+        aws_secret_access_key=role_credentials["SecretAccessKey"],
+        aws_session_token=role_credentials["SessionToken"],
     )
 
     # QuickSight manages users in a separate region to our data/dashboards.
-    qs_user_client = session.client('quicksight', region_name=user_region)
-    qs_dashboard_client = session.client('quicksight')
+    qs_user_client = session.client("quicksight", region_name=user_region)
+    qs_dashboard_client = session.client("quicksight")
 
     try:
         qs_user_client.register_user(
             AwsAccountId=account_id,
-            Namespace='default',
-            IdentityType='IAM',
+            Namespace="default",
+            IdentityType="IAM",
             IamArn=embed_role_arn,
-            UserRole='READER',
+            UserRole="READER",
             SessionName=user.email,
             Email=user.email,
         )
@@ -678,14 +650,14 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
         try:
             qs_user_client.create_group_membership(
                 AwsAccountId=account_id,
-                Namespace='default',
+                Namespace="default",
                 GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
-                MemberName=f'{embed_role_name}/{user.email}',
+                MemberName=f"{embed_role_name}/{user.email}",
             )
             break
 
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 if attempts > 0:
                     gevent.sleep(5 - attempts)
                 else:
@@ -694,14 +666,14 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
                 raise e
 
     dashboard_name = qs_dashboard_client.describe_dashboard(
-        AwsAccountId=account_id, DashboardId=dashboard_id, AliasName='$PUBLISHED'
-    )['Dashboard']['Name']
+        AwsAccountId=account_id, DashboardId=dashboard_id, AliasName="$PUBLISHED"
+    )["Dashboard"]["Name"]
     dashboard_url = qs_dashboard_client.get_dashboard_embed_url(
         AwsAccountId=account_id,
         DashboardId=dashboard_id,
-        IdentityType='QUICKSIGHT',
-        UserArn=f'arn:aws:quicksight:{user_region}:{account_id}:user/default/{embed_role_name}/{user.email}',
-    )['EmbedUrl']
+        IdentityType="QUICKSIGHT",
+        UserArn=f"arn:aws:quicksight:{user_region}:{account_id}:user/default/{embed_role_name}/{user.email}",
+    )["EmbedUrl"]
 
     return dashboard_name, dashboard_url
 
@@ -722,17 +694,17 @@ def create_update_delete_quicksight_user_data_sources(
 ):
     env = settings.ENVIRONMENT.lower()
     qs_datasource_perms = [
-        'quicksight:DescribeDataSource',
-        'quicksight:DescribeDataSourcePermissions',
-        'quicksight:PassDataSource',
+        "quicksight:DescribeDataSource",
+        "quicksight:DescribeDataSourcePermissions",
+        "quicksight:PassDataSource",
     ]
 
     authorized_data_source_ids = set()
 
     # Create/update any data sources the user has access to
     for cred in creds:
-        db_name = cred['memorable_name']
-        data_source_id = get_data_source_id(db_name, quicksight_user['Arn'])
+        db_name = cred["memorable_name"]
+        data_source_id = get_data_source_id(db_name, quicksight_user["Arn"])
         data_source_name = f"Data Workspace - {db_name}"
         if env != "production":
             data_source_name = f"{env.upper()} - {data_source_name}"
@@ -743,15 +715,15 @@ def create_update_delete_quicksight_user_data_sources(
             Name=data_source_name,
             DataSourceParameters={
                 "AuroraPostgreSqlParameters": {
-                    "Host": cred['db_host'],
-                    "Port": int(cred['db_port']),
-                    "Database": cred['db_name'],
+                    "Host": cred["db_host"],
+                    "Port": int(cred["db_port"]),
+                    "Database": cred["db_name"],
                 }
             },
             Credentials={
                 "CredentialPair": {
-                    "Username": cred['db_user'],
-                    "Password": cred['db_password'],
+                    "Username": cred["db_user"],
+                    "Password": cred["db_password"],
                 }
             },
             VpcConnectionProperties={"VpcConnectionArn": settings.QUICKSIGHT_VPC_ARN},
@@ -762,21 +734,19 @@ def create_update_delete_quicksight_user_data_sources(
         try:
             data_client.create_data_source(
                 **create_and_update_params,
-                Type='AURORA_POSTGRESQL',
+                Type="AURORA_POSTGRESQL",
                 Permissions=[
                     {
-                        'Principal': quicksight_user['Arn'],
-                        'Actions': qs_datasource_perms,
+                        "Principal": quicksight_user["Arn"],
+                        "Actions": qs_datasource_perms,
                     }
                 ],
             )
             logger.info("-> Created: %s", data_source_id)
 
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceExistsException':
-                logger.info(
-                    "-> Data source already exists: %s. Updating ...", data_source_id
-                )
+            if e.response["Error"]["Code"] == "ResourceExistsException":
+                logger.info("-> Data source already exists: %s. Updating ...", data_source_id)
                 data_client.update_data_source(**create_and_update_params)
                 logger.info("-> Updated data source: %s", data_source_id)
 
@@ -787,12 +757,11 @@ def create_update_delete_quicksight_user_data_sources(
 
     # Delete any data sources the user no longer has access to
     all_data_source_ids = {
-        get_data_source_id(db_name, quicksight_user['Arn'])
+        get_data_source_id(db_name, quicksight_user["Arn"])
         for db_name in settings.DATABASES_DATA.keys()
     }
     unauthorized_data_source_ids = all_data_source_ids - {
-        get_data_source_id(cred['memorable_name'], quicksight_user['Arn'])
-        for cred in creds
+        get_data_source_id(cred["memorable_name"], quicksight_user["Arn"]) for cred in creds
     }
     logger.info(all_data_source_ids)
     logger.info(unauthorized_data_source_ids)
@@ -803,7 +772,7 @@ def create_update_delete_quicksight_user_data_sources(
                 AwsAccountId=account_id, DataSourceId=unauthorized_data_source_id
             )
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 pass
 
             else:
@@ -812,10 +781,10 @@ def create_update_delete_quicksight_user_data_sources(
 
 def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_list):
     for quicksight_user in quicksight_user_list:
-        user_arn = quicksight_user['Arn']
-        user_email = quicksight_user['Email'].lower()
-        user_role = quicksight_user['Role']
-        user_username = quicksight_user['UserName']
+        user_arn = quicksight_user["Arn"]
+        user_email = quicksight_user["Email"].lower()
+        user_role = quicksight_user["Role"]
+        user_username = quicksight_user["UserName"]
 
         if user_role not in {"AUTHOR", "ADMIN"}:
             logger.info("Skipping %s with role %s.", user_email, user_role)
@@ -832,7 +801,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                     if user_role == "ADMIN":
                         user_client.update_user(
                             AwsAccountId=account_id,
-                            Namespace='default',
+                            Namespace="default",
                             Role=user_role,
                             UnapplyCustomPermissions=True,
                             UserName=user_username,
@@ -849,7 +818,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                         )
 
                 except botocore.exceptions.ClientError as e:
-                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                    if e.response["Error"]["Code"] == "ResourceNotFoundException":
                         continue  # Can be raised if the user has been deactivated/"deleted"
 
                     raise e
@@ -878,7 +847,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                 creds = new_private_database_credentials(
                     db_role_schema_suffix,
                     source_tables,
-                    postgres_user(user_email, suffix='qs'),
+                    postgres_user(user_email, suffix="qs"),
                     dw_user,
                     valid_for=datetime.timedelta(
                         days=7
@@ -890,32 +859,28 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                 )
 
         except redis.exceptions.LockError:
-            logger.exception(
-                "Unable to sync permissions for %s", quicksight_user['Arn']
-            )
+            logger.exception("Unable to sync permissions for %s", quicksight_user["Arn"])
 
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
-def sync_quicksight_permissions(
-    user_sso_ids_to_update=tuple(), poll_for_user_creation=False
-):
+def sync_quicksight_permissions(user_sso_ids_to_update=tuple(), poll_for_user_creation=False):
     logger.info(
-        'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) started',
+        "sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) started",
         user_sso_ids_to_update,
         poll_for_user_creation,
     )
 
     # QuickSight manages users in a single specific regions
     user_client = boto3.client(
-        'quicksight',
+        "quicksight",
         region_name=settings.QUICKSIGHT_USER_REGION,
-        config=Config(retries={'mode': 'standard', 'max_attempts': 10}),
+        config=Config(retries={"mode": "standard", "max_attempts": 10}),
     )
     # Data sources can be in other regions - so here we use the Data Workspace default from its env vars.
-    data_client = boto3.client('quicksight')
+    data_client = boto3.client("quicksight")
 
-    account_id = boto3.client('sts').get_caller_identity().get('Account')
+    account_id = boto3.client("sts").get_caller_identity().get("Account")
 
     quicksight_user_list: List[Dict[str, str]]
     max_retries = settings.MAX_QUICKSIGHT_THROTTLE_RETRIES
@@ -932,15 +897,15 @@ def sync_quicksight_permissions(
                     quicksight_user_list.append(
                         user_client.describe_user(
                             AwsAccountId=account_id,
-                            Namespace='default',
+                            Namespace="default",
                             # \/ This is the format of the user name created by DIT SSO \/
-                            UserName=f'quicksight_federation/{user_sso_id}',
-                        )['User']
+                            UserName=f"quicksight_federation/{user_sso_id}",
+                        )["User"]
                     )
                     break
 
                 except botocore.exceptions.ClientError as e:
-                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                    if e.response["Error"]["Code"] == "ResourceNotFoundException":
                         if attempts > 0:
                             gevent.sleep(1)
                         elif poll_for_user_creation:
@@ -948,11 +913,9 @@ def sync_quicksight_permissions(
                                 "Did not find user with sso id `%s` after 5 minutes",
                                 user_sso_id,
                             )
-                    elif e.response['Error']['Code'] == 'ThrottlingException':
+                    elif e.response["Error"]["Code"] == "ThrottlingException":
                         if attempts > 0:
-                            logger.info(
-                                'Requests throttled. Trying again in 1 second...'
-                            )
+                            logger.info("Requests throttled. Trying again in 1 second...")
                             gevent.sleep(1)
                         else:
                             logger.exception(
@@ -972,13 +935,13 @@ def sync_quicksight_permissions(
     else:
         next_token = None
         while True:
-            list_user_args = dict(AwsAccountId=account_id, Namespace='default')
+            list_user_args = dict(AwsAccountId=account_id, Namespace="default")
             if next_token:
-                list_user_args['NextToken'] = next_token
+                list_user_args["NextToken"] = next_token
 
             list_users_response = user_client.list_users(**list_user_args)
-            quicksight_user_list: List[Dict[str, str]] = list_users_response['UserList']
-            next_token = list_users_response.get('NextToken')
+            quicksight_user_list: List[Dict[str, str]] = list_users_response["UserList"]
+            next_token = list_users_response.get("NextToken")
 
             sync_quicksight_users(
                 data_client=data_client,
@@ -991,7 +954,7 @@ def sync_quicksight_permissions(
                 break
 
     logger.info(
-        'sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) finished',
+        "sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) finished",
         user_sso_ids_to_update,
         poll_for_user_creation,
     )
@@ -1000,7 +963,7 @@ def sync_quicksight_permissions(
 def _check_tools_access(user):
     if (
         user.user_permissions.filter(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
         and not user.profile.tools_access_role_arn
@@ -1022,7 +985,7 @@ def create_user_from_sso(
     except User.DoesNotExist:
         user, _ = User.objects.get_or_create(
             email__in=[primary_email] + other_emails,
-            defaults={'email': primary_email, 'username': primary_email},
+            defaults={"email": primary_email, "username": primary_email},
         )
 
         user.save()
@@ -1073,9 +1036,9 @@ def hawk_request(method, url, body):
     if not hawk_id or not hawk_key:
         raise HawkException("Hawk id or key not configured")
 
-    content_type = 'application/json'
+    content_type = "application/json"
     header = Sender(
-        {'id': hawk_id, 'key': hawk_key, 'algorithm': 'sha256'},
+        {"id": hawk_id, "key": hawk_key, "algorithm": "sha256"},
         url,
         method,
         content=body,
@@ -1086,7 +1049,7 @@ def hawk_request(method, url, body):
         method,
         url,
         data=body,
-        headers={'Authorization': header, 'Content-Type': content_type},
+        headers={"Authorization": header, "Content-Type": content_type},
     )
     return response.status_code, response.content
 
@@ -1095,7 +1058,9 @@ def hawk_request(method, url, body):
 @close_all_connections_if_not_in_atomic_block
 def create_tools_access_iam_role_task(user_id):
     with cache.lock(
-        "create_tools_access_iam_role_task", blocking_timeout=0, timeout=360,
+        "create_tools_access_iam_role_task",
+        blocking_timeout=0,
+        timeout=360,
     ):
         _do_create_tools_access_iam_role(user_id)
 
@@ -1105,7 +1070,7 @@ def _do_create_tools_access_iam_role(user_id):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        logger.exception('User id %d does not exist', user_id)
+        logger.exception("User id %d does not exist", user_id)
     else:
         create_tools_access_iam_role(
             user.email,
@@ -1118,18 +1083,16 @@ def _do_create_tools_access_iam_role(user_id):
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 @close_all_connections_if_not_in_atomic_block
 def sync_activity_stream_sso_users():
-    with cache.lock(
-        "activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800
-    ):
+    with cache.lock("activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800):
         _do_sync_activity_stream_sso_users()
 
 
 def _do_sync_activity_stream_sso_users():
     last_published = cache.get(
-        'activity_stream_sync_last_published', datetime.datetime.utcfromtimestamp(0)
+        "activity_stream_sync_last_published", datetime.datetime.utcfromtimestamp(0)
     )
 
-    endpoint = f'{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search'
+    endpoint = f"{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search"
     ten_seconds_before_last_published = last_published - datetime.timedelta(seconds=10)
 
     query = {
@@ -1153,60 +1116,62 @@ def _do_sync_activity_stream_sso_users():
 
     while True:
         try:
-            logger.info('Calling activity stream with query %s', json.dumps(query))
-            status_code, response = hawk_request('GET', endpoint, json.dumps(query),)
+            logger.info("Calling activity stream with query %s", json.dumps(query))
+            status_code, response = hawk_request(
+                "GET",
+                endpoint,
+                json.dumps(query),
+            )
         except HawkException as e:
-            logger.error('Failed to call activity stream with error %s', e)
+            logger.error("Failed to call activity stream with error %s", e)
             break
 
         if status_code != 200:
-            raise Exception(f'Failed to fetch SSO users: {response}')
+            raise Exception(f"Failed to fetch SSO users: {response}")
 
         response_json = json.loads(response)
 
-        if 'failures' in response_json['_shards']:
+        if "failures" in response_json["_shards"]:
             raise Exception(
                 f"Failed to fetch SSO users: {json.dumps(response_json['_shards']['failures'])}"
             )
 
-        records = response_json['hits']['hits']
+        records = response_json["hits"]["hits"]
 
         if not records:
             break
 
-        logger.info('Fetched %d record(s) from activity stream', len(records))
+        logger.info("Fetched %d record(s) from activity stream", len(records))
 
         for record in records:
-            obj = record['_source']['object']
+            obj = record["_source"]["object"]
 
-            user_id = obj['dit:StaffSSO:User:userId']
-            emails = obj['dit:emailAddress']
-            primary_email = obj['dit:StaffSSO:User:contactEmailAddress'] or emails[0]
+            user_id = obj["dit:StaffSSO:User:userId"]
+            emails = obj["dit:emailAddress"]
+            primary_email = obj["dit:StaffSSO:User:contactEmailAddress"] or emails[0]
 
             try:
                 create_user_from_sso(
                     user_id,
                     primary_email,
                     emails,
-                    obj['dit:firstName'],
-                    obj['dit:lastName'],
+                    obj["dit:firstName"],
+                    obj["dit:lastName"],
                     check_tools_access_if_user_exists=True,
                 )
             except IntegrityError:
-                logger.exception('Failed to create user record')
+                logger.exception("Failed to create user record")
 
-        last_published_str = records[-1]['_source']['published']
-        last_published = datetime.datetime.strptime(
-            last_published_str, '%Y-%m-%dT%H:%M:%S.%fZ'
-        )
+        last_published_str = records[-1]["_source"]["published"]
+        last_published = datetime.datetime.strptime(last_published_str, "%Y-%m-%dT%H:%M:%S.%fZ")
         # paginate to next batch of records
-        query['search_after'] = records[-1]['sort']
+        query["search_after"] = records[-1]["sort"]
 
-    cache.set('activity_stream_sync_last_published', last_published)
+    cache.set("activity_stream_sync_last_published", last_published)
 
 
 def fetch_visualisation_log_events(log_group, log_stream):
-    client = boto3.client('logs')
+    client = boto3.client("logs")
     events = []
     next_token = None
     while True:
@@ -1214,13 +1179,13 @@ def fetch_visualisation_log_events(log_group, log_stream):
             response = client.get_log_events(
                 logGroupName=log_group,
                 logStreamName=log_stream,
-                **{'nextToken': next_token} if next_token else {},
+                **{"nextToken": next_token} if next_token else {},
             )
         except ClientError:
             return []
-        next_token = response.get('nextForwardToken')
-        events += response.get('events', [])
-        if next_token is None or not response['events']:
+        next_token = response.get("nextForwardToken")
+        events += response.get("events", [])
+        if next_token is None or not response["events"]:
             break
     return events
 
@@ -1229,15 +1194,15 @@ def _parse_postgres_log(log_reader, from_date, to_date):
     valid_log_lines = []
     for log_line in log_reader:
         # Ignore non-audit logs
-        message = log_line.get('message')
-        if message is None or not message.startswith('AUDIT:'):
+        message = log_line.get("message")
+        if message is None or not message.startswith("AUDIT:"):
             continue
 
         # Read in the pgaudit log message
         log_line.update(
             next(
                 csv.DictReader(
-                    [','.join([log_line['message'][7:], log_line['connection_from']])],
+                    [",".join([log_line["message"][7:], log_line["connection_from"]])],
                     fieldnames=settings.PGAUDIT_LOG_HEADERS,
                 )
             )
@@ -1245,19 +1210,19 @@ def _parse_postgres_log(log_reader, from_date, to_date):
 
         # Some exceptions get through to the logs without a date. Ignore them
         try:
-            log_line['log_time'] = datetime.datetime.strptime(
-                log_line['log_time'], '%Y-%m-%d %H:%M:%S.%f UTC'
+            log_line["log_time"] = datetime.datetime.strptime(
+                log_line["log_time"], "%Y-%m-%d %H:%M:%S.%f UTC"
             ).replace(tzinfo=utc)
         except ValueError:
             continue
 
-        if log_line['log_time'] <= from_date or log_line['log_time'] > to_date:
+        if log_line["log_time"] <= from_date or log_line["log_time"] > to_date:
             continue
 
         # Ignore common noise generated by tools
         if re.match(
-            '|'.join(settings.PGAUDIT_IGNORE_STATEMENTS_RE),
-            ' '.join(log_line['statement'].split('\n')).rstrip().lstrip(),
+            "|".join(settings.PGAUDIT_IGNORE_STATEMENTS_RE),
+            " ".join(log_line["statement"].split("\n")).rstrip().lstrip(),
             re.I,
         ):
             continue
@@ -1268,49 +1233,45 @@ def _parse_postgres_log(log_reader, from_date, to_date):
 
 
 def _fetch_docker_pgaudit_logs(from_date, to_date):
-    log_dir = '/var/log/postgres'
+    log_dir = "/var/log/postgres"
     logs = []
     for filename in os.listdir(log_dir):
-        if not filename.endswith('.csv'):
+        if not filename.endswith(".csv"):
             continue
         path = os.path.join(log_dir, filename)
-        last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(path)).replace(
-            tzinfo=utc
-        )
+        last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(path)).replace(tzinfo=utc)
         if last_modified <= from_date or last_modified > to_date:
             continue
-        with open(path, 'r') as log_fh:
-            log_reader = csv.DictReader(
-                log_fh, fieldnames=settings.POSTGRES_LOG_HEADERS
-            )
+        with open(path, "r") as log_fh:
+            log_reader = csv.DictReader(log_fh, fieldnames=settings.POSTGRES_LOG_HEADERS)
             logs += _parse_postgres_log(log_reader, from_date, to_date)
     return logs
 
 
 def _fetch_rds_pgaudit_logs(from_date, to_date):
-    client = boto3.client('rds', region_name='eu-west-2')
+    client = boto3.client("rds", region_name="eu-west-2")
     logs = []
     for log_file in client.describe_db_log_files(
         DBInstanceIdentifier=settings.DATASETS_DB_INSTANCE_ID,
-        FilenameContains='csv',
+        FilenameContains="csv",
         FileLastWritten=int(from_date.timestamp() * 1000),
-    )['DescribeDBLogFiles']:
-        marker = '0'
+    )["DescribeDBLogFiles"]:
+        marker = "0"
         while True:
             resp = client.download_db_log_file_portion(
                 DBInstanceIdentifier=settings.DATASETS_DB_INSTANCE_ID,
-                LogFileName=log_file['LogFileName'],
+                LogFileName=log_file["LogFileName"],
                 NumberOfLines=1000,
                 Marker=marker,
             )
             reader = csv.DictReader(
-                resp['LogFileData'].split('\n'),
+                resp["LogFileData"].split("\n"),
                 fieldnames=settings.POSTGRES_LOG_HEADERS,
             )
             logs += _parse_postgres_log(reader, from_date, to_date)
 
-            marker = resp['Marker']
-            if not resp['AdditionalDataPending']:
+            marker = resp["Marker"]
+            if not resp["AdditionalDataPending"]:
                 break
 
     return logs
@@ -1319,43 +1280,39 @@ def _fetch_rds_pgaudit_logs(from_date, to_date):
 def _do_sync_tool_query_logs():
     csv.field_size_limit(2000000)
     from_date = cache.get(
-        'query_tool_logs_last_run',
+        "query_tool_logs_last_run",
         datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(minutes=5),
     )
     to_date = datetime.datetime.utcnow().replace(tzinfo=utc)
 
-    logger.info('Syncing pgaudit logs between %s and %s', from_date, to_date)
+    logger.info("Syncing pgaudit logs between %s and %s", from_date, to_date)
 
-    db_name_map = {v['NAME']: k for k, v in settings.DATABASES.items()}
+    db_name_map = {v["NAME"]: k for k, v in settings.DATABASES.items()}
     databases = Database.objects.all()
 
-    if settings.PGAUDIT_LOG_TYPE == 'docker':
+    if settings.PGAUDIT_LOG_TYPE == "docker":
         logs = _fetch_docker_pgaudit_logs(from_date, to_date)
     else:
         logs = _fetch_rds_pgaudit_logs(from_date, to_date)
 
     for log in logs:
         try:
-            database = databases.get(
-                memorable_name=db_name_map.get(log['database_name'])
-            )
+            database = databases.get(memorable_name=db_name_map.get(log["database_name"]))
         except Database.DoesNotExist:
             logger.info(
-                'Skipping log entry for user %s on db %s as the db is not configured',
-                log['user_name'],
-                log['database_name'],
+                "Skipping log entry for user %s on db %s as the db is not configured",
+                log["user_name"],
+                log["database_name"],
             )
             continue
 
-        db_user = DatabaseUser.objects.filter(
-            deleted_date=None, username=log['user_name']
-        ).first()
+        db_user = DatabaseUser.objects.filter(deleted_date=None, username=log["user_name"]).first()
         if not db_user:
             logger.info(
-                'Skipping log entry for user %s on db %s (%s) as no matching user could be found',
-                log['user_name'],
-                log['database_name'],
-                log['connection_from'],
+                "Skipping log entry for user %s on db %s (%s) as no matching user could be found",
+                log["user_name"],
+                log["database_name"],
+                log["connection_from"],
             )
             continue
 
@@ -1363,15 +1320,15 @@ def _do_sync_tool_query_logs():
             audit_log = ToolQueryAuditLog.objects.create(
                 user=db_user.owner,
                 database=database,
-                rolename=log['user_name'],
-                query_sql=log['statement'],
-                timestamp=log['log_time'],
-                connection_from=log['connection_from'].split(':')[0]
-                if log['connection_from'] is not None
+                rolename=log["user_name"],
+                query_sql=log["statement"],
+                timestamp=log["log_time"],
+                connection_from=log["connection_from"].split(":")[0]
+                if log["connection_from"] is not None
                 else None,
             )
         except IntegrityError:
-            logger.info('Skipping duplicate log record for %s', log['user_name'])
+            logger.info("Skipping duplicate log record for %s", log["user_name"])
             continue
 
         # Extract the queried tables
@@ -1379,52 +1336,51 @@ def _do_sync_tool_query_logs():
             try:
                 with transaction.atomic():
                     cursor.execute(
-                        f'''
+                        f"""
                         CREATE TEMPORARY VIEW get_audit_tables AS (
                             SELECT 1 FROM ({audit_log.query_sql.strip().rstrip(';')}) sq
                         )
-                        '''
+                        """
                     )
             except DatabaseError:
                 pass
             else:
                 cursor.execute(
-                    '''
+                    """
                     SELECT table_schema, table_name
                     FROM information_schema.view_table_usage
                     WHERE view_name = 'get_audit_tables'
-                    '''
+                    """
                 )
                 for table in cursor.fetchall():
                     audit_log.tables.create(schema=table[0], table=table[1])
-                cursor.execute('DROP VIEW get_audit_tables')
+                cursor.execute("DROP VIEW get_audit_tables")
 
         logger.info(
-            'Created log record for user %s in db %s',
-            log['user_name'],
-            log['database_name'],
+            "Created log record for user %s in db %s",
+            log["user_name"],
+            log["database_name"],
         )
 
-    cache.set('query_tool_logs_last_run', to_date)
+    cache.set("query_tool_logs_last_run", to_date)
 
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def sync_tool_query_logs():
-    if waffle.switch_is_active('enable_tool_query_log_sync'):
+    if waffle.switch_is_active("enable_tool_query_log_sync"):
         try:
-            with cache.lock(
-                'query_tool_logs_last_run_lock', blocking_timeout=0, timeout=1800
-            ):
+            with cache.lock("query_tool_logs_last_run_lock", blocking_timeout=0, timeout=1800):
                 _do_sync_tool_query_logs()
         except redis.exceptions.LockError:
-            logger.info('Unable to acquire lock to sync tool query logs')
+            logger.info("Unable to acquire lock to sync tool query logs")
 
 
 def _send_slack_message(text):
     if settings.SLACK_SENTRY_CHANNEL_WEBHOOK is not None:
         response = requests.post(
-            settings.SLACK_SENTRY_CHANNEL_WEBHOOK, json={'text': text},
+            settings.SLACK_SENTRY_CHANNEL_WEBHOOK,
+            json={"text": text},
         )
         response.raise_for_status()
 
@@ -1432,232 +1388,222 @@ def _send_slack_message(text):
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def long_running_query_alert():
-    if waffle.switch_is_active('enable_long_running_query_alerts'):
+    if waffle.switch_is_active("enable_long_running_query_alerts"):
         interval = settings.LONG_RUNNING_QUERY_ALERT_THRESHOLD
-        logger.info(
-            'Checking for queries running longer than %s on the datasets db.', interval
-        )
+        logger.info("Checking for queries running longer than %s on the datasets db.", interval)
         with connections[settings.EXPLORER_DEFAULT_CONNECTION].cursor() as cursor:
             cursor.execute(
-                '''
+                """
                 SELECT COUNT(*)
                 FROM pg_stat_activity
                 WHERE (now() - pg_stat_activity.query_start) > interval '{interval}'
                 AND state = 'active'
-                '''
+                """
             )
             query_count = int(cursor.fetchone()[0])
             if query_count > 0:
                 message = (
                     f':rotating_light: Found {query_count} SQL quer{"y" if query_count == 1 else "ies"}'
-                    f' running for longer than {interval} on the datasets db.'
+                    f" running for longer than {interval} on the datasets db."
                 )
                 logger.info(message)
                 _send_slack_message(message)
             else:
-                logger.info('No long running queries found.')
+                logger.info("No long running queries found.")
 
 
 @celery_app.task()
 def push_tool_monitoring_dashboard_datasets():
 
-    geckboard_api_key = os.environ['GECKOBOARD_API_KEY']
-    cluster = os.environ[
-        'APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME'
-    ]
-    task_role_prefix = os.environ[
-        'APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX'
-    ]
-    geckoboard_endpoint = f'https://api.geckoboard.com/datasets/data-workspace.{os.environ["ENVIRONMENT"]}.'
+    geckboard_api_key = os.environ["GECKOBOARD_API_KEY"]
+    cluster = os.environ["APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME"]
+    task_role_prefix = os.environ["APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX"]
+    geckoboard_endpoint = (
+        f'https://api.geckoboard.com/datasets/data-workspace.{os.environ["ENVIRONMENT"]}.'
+    )
 
     def report_running_tools(client, session):
 
-        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
-            'taskArns'
-        ]
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus="RUNNING")["taskArns"]
 
         pending_tasks = (
-            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
+            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)["tasks"]
             if pending_task_arns
             else []
         )
 
-        running_tasks = [t for t in pending_tasks if t['lastStatus'] == 'RUNNING']
+        running_tasks = [t for t in pending_tasks if t["lastStatus"] == "RUNNING"]
 
         # Create dataset
-        payload = {'fields': {'count': {'type': 'number', 'name': 'Count'}}}
+        payload = {"fields": {"count": {"type": "number", "name": "Count"}}}
         session.put(
-            geckoboard_endpoint + 'tools.running', json=payload,
+            geckoboard_endpoint + "tools.running",
+            json=payload,
         )
 
         # Add data
-        payload = {'data': [{'count': len(running_tasks)}]}
+        payload = {"data": [{"count": len(running_tasks)}]}
         session.put(
-            geckoboard_endpoint + 'tools.running/data', json=payload,
+            geckoboard_endpoint + "tools.running/data",
+            json=payload,
         )
 
     def report_failed_tools(client, session):
 
-        stopped_tasks_arns = client.list_tasks(
-            cluster=cluster, desiredStatus='STOPPED'
-        )['taskArns']
+        stopped_tasks_arns = client.list_tasks(cluster=cluster, desiredStatus="STOPPED")[
+            "taskArns"
+        ]
 
         stopped_tasks = (
-            client.describe_tasks(cluster=cluster, tasks=stopped_tasks_arns)['tasks']
+            client.describe_tasks(cluster=cluster, tasks=stopped_tasks_arns)["tasks"]
             if stopped_tasks_arns
             else []
         )
 
         # Create dataset
         payload = {
-            'fields': {
-                'user': {'type': 'string', 'name': 'User'},
-                'tool': {'type': 'string', 'name': 'Tool'},
-                'time_started': {'type': 'datetime', 'name': 'Time started'},
-                'stopped_reason': {'type': 'string', 'name': 'Reason'},
+            "fields": {
+                "user": {"type": "string", "name": "User"},
+                "tool": {"type": "string", "name": "Tool"},
+                "time_started": {"type": "datetime", "name": "Time started"},
+                "stopped_reason": {"type": "string", "name": "Reason"},
             }
         }
         session.put(
-            geckoboard_endpoint + 'tools.failed', json=payload,
+            geckoboard_endpoint + "tools.failed",
+            json=payload,
         )
 
         # Add data
         payload = {
-            'data': [
+            "data": [
                 {
-                    'user': t['overrides']['taskRoleArn'][31:].replace(
-                        task_role_prefix, ''
-                    ),
-                    'tool': t['group'].replace(
-                        f'family:{cluster.replace("-notebooks", "")}-', ''
-                    )[:-9],
-                    'time_started': t['createdAt'].isoformat(),
-                    'stopped_reason': t['stoppedReason'],
+                    "user": t["overrides"]["taskRoleArn"][31:].replace(task_role_prefix, ""),
+                    "tool": t["group"].replace(f'family:{cluster.replace("-notebooks", "")}-', "")[
+                        :-9
+                    ],
+                    "time_started": t["createdAt"].isoformat(),
+                    "stopped_reason": t["stoppedReason"],
                 }
                 for t in stopped_tasks
-                if t['stoppedReason'] != 'Task stopped by user'
+                if t["stoppedReason"] != "Task stopped by user"
             ]
         }
         session.put(
-            geckoboard_endpoint + 'tools.failed/data', json=payload,
+            geckoboard_endpoint + "tools.failed/data",
+            json=payload,
         )
 
     def report_tool_average_start_times(client, session):
 
-        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
-            'taskArns'
-        ]
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus="RUNNING")["taskArns"]
 
         pending_tasks = (
-            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
+            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)["tasks"]
             if pending_task_arns
             else []
         )
 
-        running_tasks = [t for t in pending_tasks if t['lastStatus'] == 'RUNNING']
+        running_tasks = [t for t in pending_tasks if t["lastStatus"] == "RUNNING"]
 
         # Create dataset
         payload = {
-            'fields': {
-                'time_taken': {
-                    'type': 'duration',
-                    'time_unit': 'seconds',
-                    'name': 'Time Taken',
+            "fields": {
+                "time_taken": {
+                    "type": "duration",
+                    "time_unit": "seconds",
+                    "name": "Time Taken",
                 },
-                'hour_of_day': {'type': 'string', 'name': 'Hour'},
+                "hour_of_day": {"type": "string", "name": "Hour"},
             }
         }
         session.put(
-            geckoboard_endpoint + 'tools.durations', json=payload,
+            geckoboard_endpoint + "tools.durations",
+            json=payload,
         )
 
         # Add data
         payload = {
-            'data': [
+            "data": [
                 {
-                    'time_taken': (t['startedAt'] - t['createdAt']).seconds,
-                    'hour_of_day': t['startedAt'].strftime('%H'),
+                    "time_taken": (t["startedAt"] - t["createdAt"]).seconds,
+                    "hour_of_day": t["startedAt"].strftime("%H"),
                 }
                 for t in running_tasks
             ]
         }
 
-        hours = {t['hour_of_day'] for t in payload['data']}
+        hours = {t["hour_of_day"] for t in payload["data"]}
 
         # Create a bucket for each hour
         for x in range(24):
             if str(x) not in hours:
-                payload['data'].append(
+                payload["data"].append(
                     {
-                        'time_taken': 0,
-                        'hour_of_day': datetime.datetime(2021, 1, 1, x, 0, 0).strftime(
-                            '%H'
-                        ),
+                        "time_taken": 0,
+                        "hour_of_day": datetime.datetime(2021, 1, 1, x, 0, 0).strftime("%H"),
                     }
                 )
 
         session.put(
-            geckoboard_endpoint + 'tools.durations/data', json=payload,
+            geckoboard_endpoint + "tools.durations/data",
+            json=payload,
         )
 
     def report_recent_tool_start_times(client, session):
 
-        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus='RUNNING')[
-            'taskArns'
-        ]
+        pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus="RUNNING")["taskArns"]
 
         pending_tasks = (
-            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)['tasks']
+            client.describe_tasks(cluster=cluster, tasks=pending_task_arns)["tasks"]
             if pending_task_arns
             else []
         )
 
-        running_tasks = [t for t in pending_tasks if t['lastStatus'] == 'RUNNING']
+        running_tasks = [t for t in pending_tasks if t["lastStatus"] == "RUNNING"]
 
         # Create dataset
         payload = {
-            'fields': {
-                'user': {'type': 'string', 'name': 'User'},
-                'tool': {'type': 'string', 'name': 'Tool'},
-                'time_started': {'type': 'datetime', 'name': 'Time started'},
-                'time_taken': {
-                    'type': 'duration',
-                    'time_unit': 'seconds',
-                    'name': 'Time Taken',
+            "fields": {
+                "user": {"type": "string", "name": "User"},
+                "tool": {"type": "string", "name": "Tool"},
+                "time_started": {"type": "datetime", "name": "Time started"},
+                "time_taken": {
+                    "type": "duration",
+                    "time_unit": "seconds",
+                    "name": "Time Taken",
                 },
             }
         }
         session.put(
-            geckoboard_endpoint + 'tools.recent', json=payload,
+            geckoboard_endpoint + "tools.recent",
+            json=payload,
         )
 
         # Add data
         payload = {
-            'data': [
+            "data": [
                 {
-                    'user': t['overrides']['taskRoleArn'][31:].replace(
-                        task_role_prefix, ''
-                    ),
-                    'tool': t['group'].replace(
-                        f'family:{cluster.replace("-notebooks", "")}-', ''
-                    )[:-9],
-                    'time_started': t['createdAt'].isoformat(),
-                    'time_taken': (t['startedAt'] - t['createdAt']).seconds,
+                    "user": t["overrides"]["taskRoleArn"][31:].replace(task_role_prefix, ""),
+                    "tool": t["group"].replace(f'family:{cluster.replace("-notebooks", "")}-', "")[
+                        :-9
+                    ],
+                    "time_started": t["createdAt"].isoformat(),
+                    "time_taken": (t["startedAt"] - t["createdAt"]).seconds,
                 }
-                for t in sorted(
-                    running_tasks, key=lambda x: x['startedAt'], reverse=True
-                )[:10]
+                for t in sorted(running_tasks, key=lambda x: x["startedAt"], reverse=True)[:10]
             ]
         }
 
         session.put(
-            geckoboard_endpoint + 'tools.recent/data', json=payload,
+            geckoboard_endpoint + "tools.recent/data",
+            json=payload,
         )
 
-    client = boto3.client('ecs')
+    client = boto3.client("ecs")
 
     session = requests.Session()
-    session.auth = (geckboard_api_key, '')
+    session.auth = (geckboard_api_key, "")
 
     report_running_tools(client, session)
     report_failed_tools(client, session)

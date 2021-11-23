@@ -31,50 +31,48 @@ class EventLog(models.Model):
     TYPE_TOOLS_ACCESS_REQUEST = 24
 
     _TYPE_CHOICES = (
-        (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, 'Dataset source link download'),
-        (TYPE_DATASET_SOURCE_TABLE_DOWNLOAD, 'Dataset source table download'),
-        (TYPE_REFERENCE_DATASET_DOWNLOAD, 'Reference dataset download'),
-        (TYPE_DATASET_TABLE_DATA_DOWNLOAD, 'Table data download'),
-        (TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD, 'SQL query download'),
-        (TYPE_DATASET_SOURCE_VIEW_DOWNLOAD, 'Dataset source view download'),
+        (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
+        (TYPE_DATASET_SOURCE_TABLE_DOWNLOAD, "Dataset source table download"),
+        (TYPE_REFERENCE_DATASET_DOWNLOAD, "Reference dataset download"),
+        (TYPE_DATASET_TABLE_DATA_DOWNLOAD, "Table data download"),
+        (TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD, "SQL query download"),
+        (TYPE_DATASET_SOURCE_VIEW_DOWNLOAD, "Dataset source view download"),
         (TYPE_VISUALISATION_APPROVED, "Visualisation approved"),
         (TYPE_VISUALISATION_UNAPPROVED, "Visualisation unapproved"),
-        (TYPE_DATASET_ACCESS_REQUEST, 'Dataset access request'),
-        (TYPE_GRANTED_DATASET_PERMISSION, 'Granted dataset permission'),
-        (TYPE_REVOKED_DATASET_PERMISSION, 'Revoked dataset permission'),
-        (TYPE_GRANTED_USER_PERMISSION, 'Granted user permission'),
-        (TYPE_REVOKED_USER_PERMISSION, 'Revoked user permission'),
-        (TYPE_GRANTED_VISUALISATION_PERMISSION, 'Granted visualisation permission'),
-        (TYPE_REVOKED_VISUALISATION_PERMISSION, 'Revoked visualisation permission'),
-        (TYPE_SET_DATASET_USER_ACCESS_TYPE, 'Set dataset user access type'),
-        (TYPE_VIEW_QUICKSIGHT_VISUALISATION, 'View AWS QuickSight visualisation'),
-        (TYPE_DATA_EXPLORER_SAVED_QUERY, 'Saved a query in Data Explorer'),
-        (TYPE_VIEW_SUPERSET_VISUALISATION, 'View Superset visualisation'),
-        (TYPE_VIEW_VISUALISATION_TEMPLATE, 'View visualisation'),
-        (TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE, 'SQL query download complete'),
+        (TYPE_DATASET_ACCESS_REQUEST, "Dataset access request"),
+        (TYPE_GRANTED_DATASET_PERMISSION, "Granted dataset permission"),
+        (TYPE_REVOKED_DATASET_PERMISSION, "Revoked dataset permission"),
+        (TYPE_GRANTED_USER_PERMISSION, "Granted user permission"),
+        (TYPE_REVOKED_USER_PERMISSION, "Revoked user permission"),
+        (TYPE_GRANTED_VISUALISATION_PERMISSION, "Granted visualisation permission"),
+        (TYPE_REVOKED_VISUALISATION_PERMISSION, "Revoked visualisation permission"),
+        (TYPE_SET_DATASET_USER_ACCESS_TYPE, "Set dataset user access type"),
+        (TYPE_VIEW_QUICKSIGHT_VISUALISATION, "View AWS QuickSight visualisation"),
+        (TYPE_DATA_EXPLORER_SAVED_QUERY, "Saved a query in Data Explorer"),
+        (TYPE_VIEW_SUPERSET_VISUALISATION, "View Superset visualisation"),
+        (TYPE_VIEW_VISUALISATION_TEMPLATE, "View visualisation"),
+        (TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE, "SQL query download complete"),
         (
             TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
-            'Changed dataset authorized email domains',
+            "Changed dataset authorized email domains",
         ),
-        (TYPE_TOOLS_ACCESS_REQUEST, 'Tools access request'),
+        (TYPE_TOOLS_ACCESS_REQUEST, "Tools access request"),
     )
-    user = models.ForeignKey(
-        get_user_model(), on_delete=models.DO_NOTHING, related_name='events'
-    )
+    user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)
     timestamp = models.DateTimeField(auto_now=True, db_index=True)
     event_type = models.IntegerField(choices=_TYPE_CHOICES)
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.SET_NULL)
     object_id = models.CharField(max_length=255, null=True)
-    related_object = GenericForeignKey('content_type', 'object_id')
+    related_object = GenericForeignKey("content_type", "object_id")
     extra = models.JSONField(null=True, encoder=DjangoJSONEncoder)
 
     class Meta:
-        ordering = ('-timestamp',)
-        get_latest_by = 'timestamp'
+        ordering = ("-timestamp",)
+        get_latest_by = "timestamp"
 
     def __str__(self):
-        return '{} – {} – {}'.format(
+        return "{} – {} – {}".format(
             self.timestamp,
             self.user.get_full_name(),  # pylint: disable=no-member
             self.get_event_type_display(),

@@ -6,18 +6,18 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0009_auto_20200610_1318'),
+        ("applications", "0009_auto_20200610_1318"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='applicationinstance',
+            name="applicationinstance",
             options={
-                'permissions': [
-                    ('start_all_applications', 'Can start all applications'),
-                    ('develop_visualisations', 'Can develop visualisations'),
-                    ('access_appstream', 'Can access appstream'),
-                    ('access_quicksight', 'Can access AWS QuickSight'),
+                "permissions": [
+                    ("start_all_applications", "Can start all applications"),
+                    ("develop_visualisations", "Can develop visualisations"),
+                    ("access_appstream", "Can access appstream"),
+                    ("access_quicksight", "Can access AWS QuickSight"),
                 ]
             },
         ),

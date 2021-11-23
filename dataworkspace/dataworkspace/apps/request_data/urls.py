@@ -15,50 +15,50 @@ from dataworkspace.apps.request_data.views import (
 )
 
 urlpatterns = [
-    path('', login_required(RequestData.as_view()), name='index'),
+    path("", login_required(RequestData.as_view()), name="index"),
     path(
-        '<int:pk>/who-are-you',
+        "<int:pk>/who-are-you",
         login_required(RequestDataWhoAreYou.as_view()),
-        name='who-are-you',
+        name="who-are-you",
     ),
     path(
-        '<int:pk>/description',
+        "<int:pk>/description",
         login_required(RequestDataDescription.as_view()),
-        name='describe-data',
+        name="describe-data",
     ),
     path(
-        '<int:pk>/purpose',
+        "<int:pk>/purpose",
         login_required(RequestDataPurpose.as_view()),
-        name='purpose-of-data',
+        name="purpose-of-data",
     ),
     path(
-        '<int:pk>/security-classification',
+        "<int:pk>/security-classification",
         login_required(RequestDataSecurityClassification.as_view()),
-        name='security-classification',
+        name="security-classification",
     ),
     path(
-        '<int:pk>/location',
+        "<int:pk>/location",
         login_required(RequestDataLocation.as_view()),
-        name='location-of-data',
+        name="location-of-data",
     ),
     path(
-        '<int:pk>/licence',
+        "<int:pk>/licence",
         login_required(RequestDataLicence.as_view()),
-        name='licence-of-data',
+        name="licence-of-data",
     ),
     path(
-        '<int:pk>/owner-or-manager',
+        "<int:pk>/owner-or-manager",
         login_required(RequestDataOwnerOrManager.as_view()),
-        name='owner-or-manager',
+        name="owner-or-manager",
     ),
     path(
-        '<int:pk>/check-answers',
+        "<int:pk>/check-answers",
         login_required(RequestDataCheckAnswers.as_view()),
-        name='check-answers',
+        name="check-answers",
     ),
     path(
-        '<int:pk>/confirmation',
+        "<int:pk>/confirmation",
         login_required(RequestDataConfirmationPage.as_view()),
-        name='confirmation-page',
+        name="confirmation-page",
     ),
 ]

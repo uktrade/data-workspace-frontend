@@ -13,42 +13,42 @@ UPGRADE_CHECK_ENABLED = False
 
 
 def normalise_environment(key_values):
-    ''' Converts denormalised dict of (string -> string) pairs, where the first string
-        is treated as a path into a nested list/dictionary structure
+    """Converts denormalised dict of (string -> string) pairs, where the first string
+    is treated as a path into a nested list/dictionary structure
 
-        {
-            "FOO__1__BAR": "setting-1",
-            "FOO__1__BAZ": "setting-2",
-            "FOO__2__FOO": "setting-3",
-            "FOO__2__BAR": "setting-4",
-            "FIZZ": "setting-5",
-        }
+    {
+        "FOO__1__BAR": "setting-1",
+        "FOO__1__BAZ": "setting-2",
+        "FOO__2__FOO": "setting-3",
+        "FOO__2__BAR": "setting-4",
+        "FIZZ": "setting-5",
+    }
 
-        to the nested structure that this represents
+    to the nested structure that this represents
 
-        {
-            "FOO": [{
-                "BAR": "setting-1",
-                "BAZ": "setting-2",
-            }, {
-                "BAR": "setting-3",
-                "BAZ": "setting-4",
-            }],
-            "FIZZ": "setting-5",
-        }
+    {
+        "FOO": [{
+            "BAR": "setting-1",
+            "BAZ": "setting-2",
+        }, {
+            "BAR": "setting-3",
+            "BAZ": "setting-4",
+        }],
+        "FIZZ": "setting-5",
+    }
 
-        If all the keys for that level parse as integers, then it's treated as a list
-        with the actual keys only used for sorting
+    If all the keys for that level parse as integers, then it's treated as a list
+    with the actual keys only used for sorting
 
-        This function is recursive, but it would be extremely difficult to hit a stack
-        limit, and this function would typically by called once at the start of a
-        program, so efficiency isn't too much of a concern.
-    '''
+    This function is recursive, but it would be extremely difficult to hit a stack
+    limit, and this function would typically by called once at the start of a
+    program, so efficiency isn't too much of a concern.
+    """
 
     # Separator is chosen to
     # - show the structure of variables fairly easily;
     # - avoid problems, since underscores are usual in environment variables
-    separator = '__'
+    separator = "__"
 
     def get_first_component(key):
         return key.split(separator)[0]
@@ -69,9 +69,7 @@ def normalise_environment(key_values):
             return get_first_component(item[0])
 
         # groupby requires the items to be sorted by the grouping key
-        return itertools.groupby(
-            sorted(items, key=by_first_component), by_first_component
-        )
+        return itertools.groupby(sorted(items, key=by_first_component), by_first_component)
 
     def items_with_first_component(items, first_component):
         return {
@@ -86,9 +84,7 @@ def normalise_environment(key_values):
             first_component: normalise_environment(
                 items_with_first_component(items, first_component)
             )
-            for first_component, items in grouped_by_first_component(
-                with_more_components.items()
-            )
+            for first_component, items in grouped_by_first_component(with_more_components.items())
         },
     }
 
@@ -117,32 +113,32 @@ env = normalise_environment(os.environ)
 
 servers = {}
 passwords = []
-passfile = '/pgadmin4/.pgpass'
+passfile = "/pgadmin4/.pgpass"
 
-for i, (name, dsn) in enumerate(env['DATABASE_DSN'].items()):
-    user = re.search(r'user=([a-z0-9_]+)', dsn).groups()[0]
-    password = re.search(r'password=([a-zA-Z0-9_]+)', dsn).groups()[0]
-    port = re.search(r'port=(\d+)', dsn).groups()[0]
-    dbname = re.search(r'dbname=([a-z0-9_\-]+)', dsn).groups()[0]
-    host = re.search(r'host=([a-z0-9_\-\.]+)', dsn).groups()[0]
+for i, (name, dsn) in enumerate(env["DATABASE_DSN"].items()):
+    user = re.search(r"user=([a-z0-9_]+)", dsn).groups()[0]
+    password = re.search(r"password=([a-zA-Z0-9_]+)", dsn).groups()[0]
+    port = re.search(r"port=(\d+)", dsn).groups()[0]
+    dbname = re.search(r"dbname=([a-z0-9_\-]+)", dsn).groups()[0]
+    host = re.search(r"host=([a-z0-9_\-\.]+)", dsn).groups()[0]
 
-    passwords.append(f'{host}:{port}:*:{user}:{password}')
+    passwords.append(f"{host}:{port}:*:{user}:{password}")
     servers[str(i)] = {
-        'Name': name,
-        'Group': 'Servers',
-        'Port': int(port),
-        'Username': user,
-        'Host': host,
-        'SSLMode': 'prefer',
-        'MaintenanceDB': 'postgres',
-        'PassFile': passfile,
+        "Name": name,
+        "Group": "Servers",
+        "Port": int(port),
+        "Username": user,
+        "Host": host,
+        "SSLMode": "prefer",
+        "MaintenanceDB": "postgres",
+        "PassFile": passfile,
     }
 
-with open(passfile, 'w') as f:
+with open(passfile, "w") as f:
     for password in passwords:
-        f.write(password + '\n')
+        f.write(password + "\n")
 
 os.chmod(passfile, 0o600)
 
-with open('/pgadmin4/servers.json', 'w') as f:
-    f.write(json.dumps({'Servers': servers}))
+with open("/pgadmin4/servers.json", "w") as f:
+    f.write(json.dumps({"Servers": servers}))

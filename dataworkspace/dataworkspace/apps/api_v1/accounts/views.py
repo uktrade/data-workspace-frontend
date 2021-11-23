@@ -6,7 +6,7 @@ from dataworkspace.apps.api_v1.accounts.serializers import UserSerializer
 
 
 class UserCursorPagination(CursorPagination):
-    ordering = ('id',)
+    ordering = ("id",)
 
 
 class UserViewSet(viewsets.ModelViewSet):

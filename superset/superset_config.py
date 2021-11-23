@@ -20,41 +20,41 @@ SQLALCHEMY_DATABASE_URI = (
     f'@{os.environ["DB_HOST"]}/{os.environ["DB_NAME"]}'
 )
 
-LANGUAGES = {'en': {'flag': 'gb', 'name': 'English'}}
-SESSION_COOKIE_NAME = 'superset_session'
+LANGUAGES = {"en": {"flag": "gb", "name": "English"}}
+SESSION_COOKIE_NAME = "superset_session"
 
-ADMIN_USERS = os.environ['ADMIN_USERS'].split(',')
-SECRET_KEY = 'secret'
-UPLOAD_FOLDER = '/tmp/superset-uploads/'
+ADMIN_USERS = os.environ["ADMIN_USERS"].split(",")
+SECRET_KEY = "secret"
+UPLOAD_FOLDER = "/tmp/superset-uploads/"
 
 base_role_names = {
-    'superset': 'Public',
-    'superset-edit': 'Editor',
-    'superset-admin': 'Admin',
+    "superset": "Public",
+    "superset-edit": "Editor",
+    "superset-admin": "Admin",
 }
 
 PUBLIC_ROLE_PERMISSIONS = [
-    ('can_csrf_token', 'Superset'),
-    ('can_dashboard', 'Superset'),
-    ('can_explore_json', 'Superset'),
-    ('can_favstar', 'Superset'),
-    ('can_log', 'Superset'),
-    ('can_read', 'Annotation'),
-    ('can_read', 'Chart'),
-    ('can_read', 'CssTemplate'),
-    ('can_read', 'Dashboard'),
-    ('can_warm_up_cache', 'Superset'),
+    ("can_csrf_token", "Superset"),
+    ("can_dashboard", "Superset"),
+    ("can_explore_json", "Superset"),
+    ("can_favstar", "Superset"),
+    ("can_log", "Superset"),
+    ("can_read", "Annotation"),
+    ("can_read", "Chart"),
+    ("can_read", "CssTemplate"),
+    ("can_read", "Dashboard"),
+    ("can_warm_up_cache", "Superset"),
 ]
 
 
 class DataWorkspaceRemoteUserView(AuthView):
-    @expose('/login/')
+    @expose("/login/")
     def login(self):
-        role_name = base_role_names[request.host.split('.')[0]]
+        role_name = base_role_names[request.host.split(".")[0]]
         username = f'{request.environ["HTTP_SSO_PROFILE_USER_ID"]}--{role_name}'
-        email_parts = request.environ["HTTP_SSO_PROFILE_EMAIL"].split('@')
-        email_parts[0] += f'+{role_name.lower()}'
-        email = '@'.join(email_parts)
+        email_parts = request.environ["HTTP_SSO_PROFILE_EMAIL"].split("@")
+        email_parts[0] += f"+{role_name.lower()}"
+        email = "@".join(email_parts)
 
         # If user already logged in, redirect to index...
         if g.user is not None and g.user.is_authenticated:
@@ -62,8 +62,8 @@ class DataWorkspaceRemoteUserView(AuthView):
 
         app = self.appbuilder.get_app
 
-        if role_name == 'Admin':
-            is_admin = request.headers["Sso-Profile-Email"] in app.config['ADMIN_USERS']
+        if role_name == "Admin":
+            is_admin = request.headers["Sso-Profile-Email"] in app.config["ADMIN_USERS"]
             if not is_admin:
                 return make_response({}, 401)
 
@@ -87,9 +87,7 @@ class DataWorkspaceRemoteUserView(AuthView):
         )
 
         if not user:
-            return make_response(
-                f'Unable to find or create a user with role {role_name}', 500
-            )
+            return make_response(f"Unable to find or create a user with role {role_name}", 500)
 
         login_user(user)
         return redirect(self.appbuilder.get_url_for_index)
@@ -117,14 +115,14 @@ def apply_public_role_permissions(sm, user, role_name):
 
     # Add permissions for datasources in dashboards that the user has access to
     datasource_perms = []
-    for dashboard_id in request.headers['Dashboards'].split(','):
+    for dashboard_id in request.headers["Dashboards"].split(","):
         if not dashboard_id:
             continue
         dashboard = db.session.query(Dashboard).get(dashboard_id)
         if dashboard is not None:
             for datasource in dashboard.slices:
                 permission_view_menu = sm.add_permission_view_menu(
-                    'datasource_access', datasource.perm
+                    "datasource_access", datasource.perm
                 )
                 if permission_view_menu not in role.permissions:
                     sm.add_permission_role(role, permission_view_menu)
@@ -132,7 +130,7 @@ def apply_public_role_permissions(sm, user, role_name):
 
     # Remove any permissions for dashboards that were not passed in via headers
     for perm in role.permissions:
-        if perm.permission.name == 'datasource_access' and perm not in datasource_perms:
+        if perm.permission.name == "datasource_access" and perm not in datasource_perms:
             sm.del_permission_role(role, perm)
 
     user.roles.append(role)
@@ -143,15 +141,13 @@ def apply_datasource_perm(sm, role, datasource):
     """
     Give the specified role access to the specified datasource
     """
-    permission_view_menu = sm.add_permission_view_menu(
-        'datasource_access', datasource.perm
-    )
+    permission_view_menu = sm.add_permission_view_menu("datasource_access", datasource.perm)
     sm.add_permission_role(role, permission_view_menu)
 
 
 def delete_datasource_perms(sm, role):
     for perm in role.permissions:
-        if perm.permission.name == 'datasource_access':
+        if perm.permission.name == "datasource_access":
             sm.del_permission_role(role, perm)
 
 
@@ -182,9 +178,7 @@ def apply_editor_role_permissions(sm, user, role_name):
 
     # Give users access to any datasets they are owners of
     for table in db.session.query(SqlaTable).filter(
-        SqlaTable.owners.any(  # pylint: disable=no-member
-            sm.user_model.id.in_([user.get_id()])
-        )
+        SqlaTable.owners.any(sm.user_model.id.in_([user.get_id()]))  # pylint: disable=no-member
     ):
         apply_datasource_perm(sm, role, table)
 
@@ -212,7 +206,7 @@ def app_mutator(app):
     class FilterRelatedOwners(filters.FilterRelatedOwners):
         def apply(self, query, value):
             user_model = security_manager.user_model
-            query = query.filter(user_model.username.ilike('%editor%'))
+            query = query.filter(user_model.username.ilike("%editor%"))
             return super().apply(query, value)
 
     filters.FilterRelatedOwners = FilterRelatedOwners
@@ -225,8 +219,10 @@ def app_mutator(app):
         def _get_related_filter(self, datamodel, column_name, value):
             filter_field = self.related_field_filters.get(column_name)
             if isinstance(filter_field, str):
-                filter_field = base_api.RelatedFieldFilter(  # pylint: disable=self-assigning-variable
-                    str(filter_field), FilterStartsWith
+                filter_field = (
+                    base_api.RelatedFieldFilter(  # pylint: disable=self-assigning-variable
+                        str(filter_field), FilterStartsWith
+                    )
                 )
             search_columns = [filter_field.field_name] if filter_field else None
             filters = datamodel.get_filters(search_columns)
@@ -241,12 +237,14 @@ def app_mutator(app):
                     filters.add_filter(
                         filter_field.field_name,
                         filter_field.filter_class,
-                        value if value else '',
+                        value if value else "",
                     )
                 # Any non-related-owner filters are handled as usual
                 elif value:
                     filters.add_filter(
-                        filter_field.field_name, filter_field.filter_class, value,
+                        filter_field.field_name,
+                        filter_field.filter_class,
+                        value,
                     )
 
             return filters
@@ -265,15 +263,11 @@ def app_mutator(app):
     @app.before_request
     def before_request():  # pylint: disable=unused-variable
         if g.user is not None and g.user.is_authenticated:
-            role_name = base_role_names[request.host.split('.')[0]]
-            if role_name == 'Public':
-                apply_public_role_permissions(
-                    security_manager, g.user, f'{g.user.username}-Role'
-                )
-            elif role_name == 'Editor':
-                apply_editor_role_permissions(
-                    security_manager, g.user, f'{g.user.username}-Role'
-                )
+            role_name = base_role_names[request.host.split(".")[0]]
+            if role_name == "Public":
+                apply_public_role_permissions(security_manager, g.user, f"{g.user.username}-Role")
+            elif role_name == "Editor":
+                apply_editor_role_permissions(security_manager, g.user, f"{g.user.username}-Role")
 
 
 class DataWorkspaceSecurityManager(SupersetSecurityManager):
@@ -283,12 +277,12 @@ class DataWorkspaceSecurityManager(SupersetSecurityManager):
 
 
 def DB_CONNECTION_MUTATOR(uri, params, username, security_manager, source):
-    if 'Credentials-Db-Host' in request.headers:
-        uri.host = request.headers['Credentials-Db-Host']
-        uri.username = request.headers['Credentials-Db-User']
-        uri.database = request.headers['Credentials-Db-Name']
-        uri.password = request.headers['Credentials-Db-Password']
-        uri.port = request.headers['Credentials-Db-Port']
+    if "Credentials-Db-Host" in request.headers:
+        uri.host = request.headers["Credentials-Db-Host"]
+        uri.username = request.headers["Credentials-Db-User"]
+        uri.database = request.headers["Credentials-Db-Name"]
+        uri.password = request.headers["Credentials-Db-Password"]
+        uri.port = request.headers["Credentials-Db-Port"]
     return uri, params
 
 
@@ -297,4 +291,4 @@ CUSTOM_SECURITY_MANAGER = DataWorkspaceSecurityManager
 AUTH_TYPE = AUTH_REMOTE_USER
 ADDITIONAL_MIDDLEWARE = [lambda app: ProxyFix(app, x_proto=1)]
 
-FEATURE_FLAGS = {'SQLLAB_BACKEND_PERSISTENCE': True}
+FEATURE_FLAGS = {"SQLLAB_BACKEND_PERSISTENCE": True}

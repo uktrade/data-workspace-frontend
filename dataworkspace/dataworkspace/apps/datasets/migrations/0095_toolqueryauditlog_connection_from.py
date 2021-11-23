@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0094_merge_20211026_0948'),
+        ("datasets", "0094_merge_20211026_0948"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='toolqueryauditlog',
-            name='connection_from',
+            model_name="toolqueryauditlog",
+            name="connection_from",
             field=models.GenericIPAddressField(null=True),
         ),
     ]

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('explorer', '0013_auto_20201222_1538'),
+        ("explorer", "0013_auto_20201222_1538"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='querylog',
-            name='error',
+            model_name="querylog",
+            name="error",
             field=models.TextField(blank=True, null=True),
         ),
     ]

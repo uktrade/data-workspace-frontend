@@ -41,9 +41,7 @@ class Command(BaseCommand):
         dataset_type_text = options["type"].upper()
 
         if dataset_type_text not in DataSetType.__members__:
-            self.stderr.write(
-                self.style.ERROR(f"{options['type']} is not a valid DataSetType")
-            )
+            self.stderr.write(self.style.ERROR(f"{options['type']} is not a valid DataSetType"))
             self.print_help("manage.py", "create_fake_dataset")
             sys.exit(1)
 

@@ -16,7 +16,7 @@ class EventLogDatasetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataSet
-        fields = ('id', 'type', 'name')
+        fields = ("id", "type", "name")
 
     def get_type(self, obj):
         return obj.get_type_display()
@@ -27,7 +27,7 @@ class EventLogReferenceDatasetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReferenceDataset
-        fields = ('id', 'type', 'name')
+        fields = ("id", "type", "name")
 
     def get_type(self, obj):
         return obj.get_type_display()
@@ -39,10 +39,10 @@ class EventLogVisualisationApprovalSerialiser(serializers.ModelSerializer):
 
     class Meta:
         model = VisualisationApproval
-        fields = ('id', 'type', 'name')
+        fields = ("id", "type", "name")
 
     def get_type(self, obj):
-        return 'VisualisationApproval'
+        return "VisualisationApproval"
 
     def get_name(self, obj):
         return obj.visualisation.name
@@ -54,7 +54,7 @@ class EventLogVisualisationLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VisualisationLink
-        fields = ('id', 'type', 'name')
+        fields = ("id", "type", "name")
 
     def get_type(self, obj):
         return obj.visualisation_type
@@ -68,7 +68,7 @@ class EventLogDataExplorerQuerySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Query
-        fields = ('id', 'name')
+        fields = ("id", "name")
 
     def get_name(self, obj):
         return obj.title
@@ -80,19 +80,17 @@ class EventLogDataUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'type', 'name')
+        fields = ("id", "type", "name")
 
     def get_type(self, obj):
-        return 'User'
+        return "User"
 
     def get_name(self, obj):
         return obj.get_full_name()
 
 
 class EventLogRelatedObjectField(serializers.RelatedField):
-    def to_representation(  # pylint: disable=inconsistent-return-statements
-        self, value
-    ):
+    def to_representation(self, value):  # pylint: disable=inconsistent-return-statements
         if isinstance(value, DataSet):
             return EventLogDatasetSerializer(value).data
         if isinstance(value, ReferenceDataset):
@@ -113,7 +111,7 @@ class EventLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventLog
-        fields = ('id', 'timestamp', 'event_type', 'user_id', 'related_object', 'extra')
+        fields = ("id", "timestamp", "event_type", "user_id", "related_object", "extra")
 
     def get_event_type(self, obj):
         return obj.get_event_type_display()

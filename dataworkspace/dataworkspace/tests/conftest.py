@@ -15,25 +15,25 @@ from dataworkspace.cel import celery_app
 @pytest.fixture
 def staff_user(db):
     staff_user = get_user_model().objects.create(
-        username='bob.testerson@test.com',
-        email='bob.testerson@test.com',
+        username="bob.testerson@test.com",
+        email="bob.testerson@test.com",
         is_staff=True,
         is_superuser=True,
-        first_name='Bob',
+        first_name="Bob",
     )
-    staff_user.profile.sso_id = 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68'
+    staff_user.profile.sso_id = "aae8901a-082f-4f12-8c6c-fdf4aeba2d68"
     staff_user.profile.save()
     return staff_user
 
 
 def get_staff_user_data(db, staff_user):
     return {
-        'HTTP_SSO_PROFILE_EMAIL': staff_user.email,
-        'HTTP_SSO_PROFILE_CONTACT_EMAIL': staff_user.email,
-        'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
-        'HTTP_SSO_PROFILE_USER_ID': staff_user.profile.sso_id,
-        'HTTP_SSO_PROFILE_LAST_NAME': 'Testerson',
-        'HTTP_SSO_PROFILE_FIRST_NAME': 'Bob',
+        "HTTP_SSO_PROFILE_EMAIL": staff_user.email,
+        "HTTP_SSO_PROFILE_CONTACT_EMAIL": staff_user.email,
+        "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
+        "HTTP_SSO_PROFILE_USER_ID": staff_user.profile.sso_id,
+        "HTTP_SSO_PROFILE_LAST_NAME": "Testerson",
+        "HTTP_SSO_PROFILE_FIRST_NAME": "Bob",
     }
 
 
@@ -54,11 +54,11 @@ def staff_client(staff_user_data):
 @pytest.fixture
 def user(db):
     user = get_user_model().objects.create(
-        username='frank.exampleson@test.com',
+        username="frank.exampleson@test.com",
         is_staff=False,
         is_superuser=False,
-        email='frank.exampleson@test.com',
-        first_name='Frank',
+        email="frank.exampleson@test.com",
+        first_name="Frank",
     )
 
     return user
@@ -68,12 +68,12 @@ def user(db):
 def user_data(db, user):
 
     return {
-        'HTTP_SSO_PROFILE_EMAIL': user.email,
-        'HTTP_SSO_PROFILE_CONTACT_EMAIL': user.email,
-        'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
-        'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d69',
-        'HTTP_SSO_PROFILE_LAST_NAME': 'Exampleson',
-        'HTTP_SSO_PROFILE_FIRST_NAME': 'Frank',
+        "HTTP_SSO_PROFILE_EMAIL": user.email,
+        "HTTP_SSO_PROFILE_CONTACT_EMAIL": user.email,
+        "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
+        "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d69",
+        "HTTP_SSO_PROFILE_LAST_NAME": "Exampleson",
+        "HTTP_SSO_PROFILE_FIRST_NAME": "Frank",
     }
 
 
@@ -86,8 +86,8 @@ def client(user_data):
 def sme_user(db):
     sme_group = Group.objects.get(name="Subject Matter Experts")
     user = get_user_model().objects.create(
-        username='jane.sampledóttir@test.com',
-        email='jane.sampledóttir@test.com',
+        username="jane.sampledóttir@test.com",
+        email="jane.sampledóttir@test.com",
         is_staff=True,
         is_superuser=False,
     )
@@ -100,12 +100,12 @@ def sme_user(db):
 @pytest.fixture
 def sme_user_data(db, sme_user):
     return {
-        'HTTP_SSO_PROFILE_EMAIL': sme_user.email,
-        'HTTP_SSO_PROFILE_CONTACT_EMAIL': sme_user.email,
-        'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
-        'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d70',
-        'HTTP_SSO_PROFILE_LAST_NAME': 'Sampledóttir',
-        'HTTP_SSO_PROFILE_FIRST_NAME': 'Jane',
+        "HTTP_SSO_PROFILE_EMAIL": sme_user.email,
+        "HTTP_SSO_PROFILE_CONTACT_EMAIL": sme_user.email,
+        "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
+        "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d70",
+        "HTTP_SSO_PROFILE_LAST_NAME": "Sampledóttir",
+        "HTTP_SSO_PROFILE_FIRST_NAME": "Jane",
     }
 
 
@@ -129,19 +129,19 @@ def request_client(request):
     return request.getfixturevalue(request.param)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def test_case():
-    return TestCase('run')
+    return TestCase("run")
 
 
 @pytest.fixture
 def metadata_db(db):
-    database = factories.DatabaseFactory(memorable_name='my_database')
+    database = factories.DatabaseFactory(memorable_name="my_database")
     with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA['my_database'])
+        database_dsn(settings.DATABASES_DATA["my_database"])
     ) as conn, conn.cursor() as cursor:
         cursor.execute(
-            '''
+            """
             CREATE SCHEMA IF NOT EXISTS dataflow;
             CREATE TABLE IF NOT EXISTS dataflow.metadata (
                 id SERIAL,
@@ -160,7 +160,7 @@ def metadata_db(db):
                 ('public', 'table2', '2020-09-01 00:01:00.0', NULL, 1),
                 ('public', 'table1', '2020-01-01 00:01:00.0', NULL, 1),
                 ('public', 'table4', NULL, NULL, 1);
-            '''
+            """
         )
         conn.commit()
     return database
@@ -169,7 +169,7 @@ def metadata_db(db):
 @pytest.fixture
 def test_dataset(db):
     with psycopg2.connect(
-        database_dsn(settings.DATABASES_DATA['my_database'])
+        database_dsn(settings.DATABASES_DATA["my_database"])
     ) as conn, conn.cursor() as cursor:
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS foo AS SELECT a,b FROM (VALUES ('test',30)) AS temp_table(a,b);"
@@ -194,10 +194,10 @@ def test_dataset(db):
             """
         )
         conn.commit()
-    return ('public', 'foo')
+    return ("public", "foo")
 
 
-@pytest.fixture(autouse=True, scope='session')
+@pytest.fixture(autouse=True, scope="session")
 def change_staticfiles_storage():
     """
     Slightly strange, but Django recommends not using the manifest
@@ -208,22 +208,22 @@ def change_staticfiles_storage():
     https://docs.djangoproject.com/en/3.1/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
     """
     with override_settings(
-        STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage'
+        STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage"
     ):
         yield
 
 
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def make_celery_eager():
     celery_app.conf.task_always_eager = True
 
 
 @pytest.fixture
 def dataset_db(metadata_db):
-    database = factories.DatabaseFactory(memorable_name='my_database')
-    with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
+    database = factories.DatabaseFactory(memorable_name="my_database")
+    with psycopg2.connect(database_dsn(settings.DATABASES_DATA["my_database"])) as conn:
         conn.cursor().execute(
-            '''
+            """
             CREATE TABLE IF NOT EXISTS dataset_test (
                 id INT,
                 name VARCHAR(255),
@@ -236,7 +236,7 @@ def dataset_db(metadata_db):
             );
 
             CREATE OR REPLACE VIEW dataset_view AS (SELECT * FROM dataset_test);
-            '''
+            """
         )
 
     return database
@@ -244,10 +244,10 @@ def dataset_db(metadata_db):
 
 @pytest.fixture
 def dataset_finder_db(metadata_db):
-    database = factories.DatabaseFactory(memorable_name='my_database')
-    with psycopg2.connect(database_dsn(settings.DATABASES_DATA['my_database'])) as conn:
+    database = factories.DatabaseFactory(memorable_name="my_database")
+    with psycopg2.connect(database_dsn(settings.DATABASES_DATA["my_database"])) as conn:
         conn.cursor().execute(
-            '''
+            """
             CREATE TABLE IF NOT EXISTS dataworkspace__source_tables (
                 id INT,
                 name VARCHAR(255),
@@ -285,7 +285,7 @@ def dataset_finder_db(metadata_db):
                 driving NUMERIC,
                 country VARCHAR(255)
             );
-            '''
+            """
         )
 
     return database

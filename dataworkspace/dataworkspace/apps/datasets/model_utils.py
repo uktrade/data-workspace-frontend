@@ -12,7 +12,7 @@ def external_model_class(model_class):
     """
 
     def clean_fields(fields):
-        return [field for field in fields if field.name != 'reference_dataset']
+        return [field for field in fields if field.name != "reference_dataset"]
 
     local_fields = model_class._meta.local_fields
     model_class._meta.local_fields = clean_fields(local_fields)

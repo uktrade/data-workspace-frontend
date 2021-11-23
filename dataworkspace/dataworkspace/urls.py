@@ -25,130 +25,124 @@ from dataworkspace.apps.appstream.views import (
     appstream_fleetstatus,
 )
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 admin.autodiscover()
-admin.site.site_header = 'Data Workspace'
+admin.site.site_header = "Data Workspace"
 admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
-    path('', login_required(find_datasets), name='root'),
-    path('about/', login_required(about_page_view), name='about'),
-    path('error_403', public_error_403_html_view),
-    path('error_404', public_error_404_html_view),
-    path('error_500', public_error_500_html_view),
-    path('appstream/', login_required(appstream_view), name='appstream'),
+    path("", login_required(find_datasets), name="root"),
+    path("about/", login_required(about_page_view), name="about"),
+    path("error_403", public_error_403_html_view),
+    path("error_404", public_error_404_html_view),
+    path("error_500", public_error_500_html_view),
+    path("appstream/", login_required(appstream_view), name="appstream"),
+    path("appstream-admin/", login_required(appstream_admin_view), name="appstream_admin"),
     path(
-        'appstream-admin/', login_required(appstream_admin_view), name='appstream_admin'
-    ),
-    path(
-        'appstream-restart/',
+        "appstream-restart/",
         login_required(appstream_restart),
-        name='appstream_restart',
+        name="appstream_restart",
     ),
     path(
-        'appstream-admin/fleetstatus',
+        "appstream-admin/fleetstatus",
         appstream_fleetstatus,
-        name='appstream_fleetstatus',
+        name="appstream_fleetstatus",
     ),
     path(
-        'tools/',
+        "tools/",
         include(
-            ('dataworkspace.apps.applications.urls', 'applications'),
-            namespace='applications',
+            ("dataworkspace.apps.applications.urls", "applications"),
+            namespace="applications",
         ),
     ),
     path(
-        'visualisations/',
+        "visualisations/",
         include(
-            ('dataworkspace.apps.applications.urls_visualisations', 'visualisations'),
-            namespace='visualisations',
+            ("dataworkspace.apps.applications.urls_visualisations", "visualisations"),
+            namespace="visualisations",
         ),
     ),
     path(
-        'catalogue/',
+        "catalogue/",
+        include(("dataworkspace.apps.catalogue.urls", "catalogue"), namespace="catalogue"),
+    ),
+    path(
+        "datasets/",
+        include(("dataworkspace.apps.datasets.urls", "datasets"), namespace="datasets"),
+    ),
+    path(
+        "data-explorer/",
+        include(("dataworkspace.apps.explorer.urls", "explorer"), namespace="explorer"),
+    ),
+    path(
+        "request-data/",
         include(
-            ('dataworkspace.apps.catalogue.urls', 'catalogue'), namespace='catalogue'
+            ("dataworkspace.apps.request_data.urls", "request_data"),
+            namespace="request-data",
         ),
     ),
     path(
-        'datasets/',
-        include(('dataworkspace.apps.datasets.urls', 'datasets'), namespace='datasets'),
-    ),
-    path(
-        'data-explorer/',
-        include(('dataworkspace.apps.explorer.urls', 'explorer'), namespace='explorer'),
-    ),
-    path(
-        'request-data/',
+        "request-access/",
         include(
-            ('dataworkspace.apps.request_data.urls', 'request_data'),
-            namespace='request-data',
+            ("dataworkspace.apps.request_access.urls", "request_access"),
+            namespace="request-access",
         ),
     ),
     path(
-        'request-access/',
+        "files/",
         include(
-            ('dataworkspace.apps.request_access.urls', 'request_access'),
-            namespace='request-access',
+            ("dataworkspace.apps.your_files.urls", "your_files"),
+            namespace="your-files",
         ),
     ),
     path(
-        'files/',
-        include(
-            ('dataworkspace.apps.your_files.urls', 'your_files'),
-            namespace='your-files',
-        ),
+        "finder/",
+        include(("dataworkspace.apps.finder.urls", "finder"), namespace="finder"),
     ),
+    path("healthcheck", healthcheck_view),  # No authentication
+    path("support-and-feedback/", login_required(SupportView.as_view()), name="support"),
     path(
-        'finder/',
-        include(('dataworkspace.apps.finder.urls', 'finder'), namespace='finder'),
-    ),
-    path('healthcheck', healthcheck_view),  # No authentication
-    path(
-        'support-and-feedback/', login_required(SupportView.as_view()), name='support'
-    ),
-    path(
-        'support/success/<str:ticket_id>',
+        "support/success/<str:ticket_id>",
         login_required(SupportView.as_view()),
-        name='support-success',
+        name="support-success",
     ),
     path(
-        'support/technical/',
+        "support/technical/",
         login_required(TechnicalSupportView.as_view()),
-        name='technical-support',
+        name="technical-support",
     ),
     path(
-        'feedback/',
+        "feedback/",
         login_required(UserSatisfactionSurveyView.as_view()),
-        name='feedback',
+        name="feedback",
     ),
     path(
-        'case-studies/',
+        "case-studies/",
         include(
-            ('dataworkspace.apps.case_studies.urls', 'case_studies'),
-            namespace='case-studies',
+            ("dataworkspace.apps.case_studies.urls", "case_studies"),
+            namespace="case-studies",
         ),
     ),
     path(
-        'media',
+        "media",
         login_required(ServeS3UploadedFileView.as_view()),
-        name='uploaded-media',
+        name="uploaded-media",
     ),
     path(
-        'table_data/<str:database>/<str:schema>/<str:table>',
+        "table_data/<str:database>/<str:schema>/<str:table>",
         login_required(table_data_view),
-        name='table_data',
+        name="table_data",
     ),
     path(
-        'api/v1/',
-        include(('dataworkspace.apps.api_v1.urls', 'api_v1'), namespace='api-v1'),
+        "api/v1/",
+        include(("dataworkspace.apps.api_v1.urls", "api_v1"), namespace="api-v1"),
     ),
     path(
-        'admin/',
-        include(('dataworkspace.apps.dw_admin.urls', 'dw_admin'), namespace='dw-admin'),
+        "admin/",
+        include(("dataworkspace.apps.dw_admin.urls", "dw_admin"), namespace="dw-admin"),
     ),
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
 ]
 
 if settings.DEBUG:
@@ -160,7 +154,7 @@ if settings.DEBUG:
 
     import debug_toolbar
 
-    urlpatterns.append(path('__debug__/', include(debug_toolbar.urls)))
+    urlpatterns.append(path("__debug__/", include(debug_toolbar.urls)))
 
 handler403 = public_error_403_html_view
 handler404 = public_error_404_html_view

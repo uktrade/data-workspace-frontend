@@ -49,13 +49,9 @@ class TestDeleteUnusedDatasetsUsers:
             pass
 
     @pytest.mark.timeout(2)
-    @mock.patch(
-        'dataworkspace.apps.applications.utils._do_delete_unused_datasets_users'
-    )
+    @mock.patch("dataworkspace.apps.applications.utils._do_delete_unused_datasets_users")
     def test_dies_immediately_if_already_locked(self, do_delete_mock):
-        do_delete_mock.side_effect = Exception(
-            "I will be raised if the lock is available"
-        )
+        do_delete_mock.side_effect = Exception("I will be raised if the lock is available")
 
         # Make sure we actually acquire the lock, else the test is flawed
         assert self.lock.acquire() is True
@@ -70,12 +66,12 @@ class TestDeleteUnusedDatasetsUsers:
 
 class TestSyncQuickSightPermissions:
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
-    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
-    @mock.patch('dataworkspace.apps.applications.utils.cache')
+    @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
+    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_create_new_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        UserFactory.create(username='fake@email.com')
+        UserFactory.create(username="fake@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -109,11 +105,11 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                Role='AUTHOR',
-                CustomPermissionsName='author-custom-permissions',
-                UserName='user/fake@email.com',
-                Email='fake@email.com',
+                Namespace="default",
+                Role="AUTHOR",
+                CustomPermissionsName="author-custom-permissions",
+                UserName="user/fake@email.com",
+                Email="fake@email.com",
             )
         ]
         assert mock_data_client.create_data_source.call_args_list == [
@@ -122,24 +118,22 @@ class TestSyncQuickSightPermissions:
                 DataSourceId=mock.ANY,
                 Name=mock.ANY,
                 DataSourceParameters={
-                    'AuroraPostgreSqlParameters': {
-                        'Host': mock.ANY,
-                        'Port': mock.ANY,
-                        'Database': mock.ANY,
+                    "AuroraPostgreSqlParameters": {
+                        "Host": mock.ANY,
+                        "Port": mock.ANY,
+                        "Database": mock.ANY,
                     }
                 },
-                Credentials={
-                    'CredentialPair': {'Username': mock.ANY, 'Password': mock.ANY}
-                },
-                VpcConnectionProperties={'VpcConnectionArn': mock.ANY},
-                Type='AURORA_POSTGRESQL',
+                Credentials={"CredentialPair": {"Username": mock.ANY, "Password": mock.ANY}},
+                VpcConnectionProperties={"VpcConnectionArn": mock.ANY},
+                Type="AURORA_POSTGRESQL",
                 Permissions=[
                     {
-                        'Principal': 'Arn',
-                        'Actions': [
-                            'quicksight:DescribeDataSource',
-                            'quicksight:DescribeDataSourcePermissions',
-                            'quicksight:PassDataSource',
+                        "Principal": "Arn",
+                        "Actions": [
+                            "quicksight:DescribeDataSource",
+                            "quicksight:DescribeDataSourcePermissions",
+                            "quicksight:PassDataSource",
                         ],
                     }
                 ],
@@ -148,26 +142,26 @@ class TestSyncQuickSightPermissions:
         assert mock_data_client.update_data_source.call_args_list == []
         assert sorted(
             mock_data_client.delete_data_source.call_args_list,
-            key=lambda x: x.kwargs['DataSourceId'],
+            key=lambda x: x.kwargs["DataSourceId"],
         ) == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                DataSourceId='data-workspace-dev-my_database-88f3887d',
+                DataSourceId="data-workspace-dev-my_database-88f3887d",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
-                DataSourceId='data-workspace-dev-test_external_db2-88f3887d',
+                DataSourceId="data-workspace-dev-test_external_db2-88f3887d",
             ),
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
-    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
-    @mock.patch('dataworkspace.apps.applications.utils.cache')
+    @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
+    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_list_user_pagination(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        UserFactory.create(username='fake@email.com')
-        UserFactory.create(username='fake2@email.com')
+        UserFactory.create(username="fake@email.com")
+        UserFactory.create(username="fake2@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -214,31 +208,29 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                Role='AUTHOR',
-                CustomPermissionsName='author-custom-permissions',
-                UserName='user/fake@email.com',
-                Email='fake@email.com',
+                Namespace="default",
+                Role="AUTHOR",
+                CustomPermissionsName="author-custom-permissions",
+                UserName="user/fake@email.com",
+                Email="fake@email.com",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                Role='AUTHOR',
-                CustomPermissionsName='author-custom-permissions',
-                UserName='user/fake2@email.com',
-                Email='fake2@email.com',
+                Namespace="default",
+                Role="AUTHOR",
+                CustomPermissionsName="author-custom-permissions",
+                UserName="user/fake2@email.com",
+                Email="fake2@email.com",
             ),
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
-    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
-    @mock.patch('dataworkspace.apps.applications.utils.cache')
-    def test_update_existing_data_source(
-        self, mock_cache, mock_boto3_client, mock_creds
-    ):
+    @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
+    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.applications.utils.cache")
+    def test_update_existing_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        UserFactory.create(username='fake@email.com')
+        UserFactory.create(username="fake@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -265,7 +257,7 @@ class TestSyncQuickSightPermissions:
                         "Message": "Data source already exists",
                     }
                 },
-                'CreateDataSource',
+                "CreateDataSource",
             )
         ]
         mock_sts_client = mock.Mock()
@@ -282,11 +274,11 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                Role='AUTHOR',
-                CustomPermissionsName='author-custom-permissions',
-                UserName='user/fake@email.com',
-                Email='fake@email.com',
+                Namespace="default",
+                Role="AUTHOR",
+                CustomPermissionsName="author-custom-permissions",
+                UserName="user/fake@email.com",
+                Email="fake@email.com",
             )
         ]
         assert mock_data_client.create_data_source.call_args_list == [
@@ -295,24 +287,22 @@ class TestSyncQuickSightPermissions:
                 DataSourceId=mock.ANY,
                 Name=mock.ANY,
                 DataSourceParameters={
-                    'AuroraPostgreSqlParameters': {
-                        'Host': mock.ANY,
-                        'Port': mock.ANY,
-                        'Database': mock.ANY,
+                    "AuroraPostgreSqlParameters": {
+                        "Host": mock.ANY,
+                        "Port": mock.ANY,
+                        "Database": mock.ANY,
                     }
                 },
-                Credentials={
-                    'CredentialPair': {'Username': mock.ANY, 'Password': mock.ANY}
-                },
-                VpcConnectionProperties={'VpcConnectionArn': mock.ANY},
-                Type='AURORA_POSTGRESQL',
+                Credentials={"CredentialPair": {"Username": mock.ANY, "Password": mock.ANY}},
+                VpcConnectionProperties={"VpcConnectionArn": mock.ANY},
+                Type="AURORA_POSTGRESQL",
                 Permissions=[
                     {
-                        'Principal': 'Arn',
-                        'Actions': [
-                            'quicksight:DescribeDataSource',
-                            'quicksight:DescribeDataSourcePermissions',
-                            'quicksight:PassDataSource',
+                        "Principal": "Arn",
+                        "Actions": [
+                            "quicksight:DescribeDataSource",
+                            "quicksight:DescribeDataSourcePermissions",
+                            "quicksight:PassDataSource",
                         ],
                     }
                 ],
@@ -324,43 +314,39 @@ class TestSyncQuickSightPermissions:
                 DataSourceId=mock.ANY,
                 Name=mock.ANY,
                 DataSourceParameters={
-                    'AuroraPostgreSqlParameters': {
-                        'Host': mock.ANY,
-                        'Port': mock.ANY,
-                        'Database': mock.ANY,
+                    "AuroraPostgreSqlParameters": {
+                        "Host": mock.ANY,
+                        "Port": mock.ANY,
+                        "Database": mock.ANY,
                     }
                 },
-                Credentials={
-                    'CredentialPair': {'Username': mock.ANY, 'Password': mock.ANY}
-                },
-                VpcConnectionProperties={'VpcConnectionArn': mock.ANY},
+                Credentials={"CredentialPair": {"Username": mock.ANY, "Password": mock.ANY}},
+                VpcConnectionProperties={"VpcConnectionArn": mock.ANY},
             )
         ]
         assert sorted(
             mock_data_client.delete_data_source.call_args_list,
-            key=lambda x: x.kwargs['DataSourceId'],
+            key=lambda x: x.kwargs["DataSourceId"],
         ) == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                DataSourceId='data-workspace-dev-my_database-88f3887d',
+                DataSourceId="data-workspace-dev-my_database-88f3887d",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
-                DataSourceId='data-workspace-dev-test_external_db2-88f3887d',
+                DataSourceId="data-workspace-dev-test_external_db2-88f3887d",
             ),
         ]
 
     @pytest.mark.django_db
     @override_settings(MAX_QUICKSIGHT_THROTTLE_RETRIES=1)
-    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
-    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
-    @mock.patch('dataworkspace.apps.applications.utils.cache')
-    def test_missing_user_handled_gracefully(
-        self, mock_cache, mock_boto3_client, mock_creds
-    ):
+    @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
+    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.applications.utils.cache")
+    def test_missing_user_handled_gracefully(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        user = UserFactory.create(username='fake@email.com')
-        user2 = UserFactory.create(username='fake2@email.com')
+        user = UserFactory.create(username="fake@email.com")
+        user2 = UserFactory.create(username="fake2@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -376,7 +362,7 @@ class TestSyncQuickSightPermissions:
                         "Message": "User not found",
                     }
                 },
-                'DescribeUser',
+                "DescribeUser",
             ),
             {
                 "User": {
@@ -388,7 +374,7 @@ class TestSyncQuickSightPermissions:
             },
             botocore.exceptions.ClientError(
                 {"Error": {"Code": "ThrottlingException", "Message": "Hold up"}},
-                'DescribeUser',
+                "DescribeUser",
             ),
         ]
         mock_data_client = mock.Mock()
@@ -408,35 +394,35 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                Role='ADMIN',
+                Namespace="default",
+                Role="ADMIN",
                 UnapplyCustomPermissions=True,
-                UserName='user/fake2@email.com',
-                Email='fake2@email.com',
+                UserName="user/fake2@email.com",
+                Email="fake2@email.com",
             )
         ]
         assert mock_user_client.describe_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                UserName=f'quicksight_federation/{user.profile.sso_id}',
+                Namespace="default",
+                UserName=f"quicksight_federation/{user.profile.sso_id}",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                UserName=f'quicksight_federation/{user2.profile.sso_id}',
+                Namespace="default",
+                UserName=f"quicksight_federation/{user2.profile.sso_id}",
             ),
         ]
         assert len(mock_data_client.create_data_source.call_args_list) == 1
         assert len(mock_data_client.update_data_source.call_args_list) == 0
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.core.utils.new_private_database_credentials')
-    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
-    @mock.patch('dataworkspace.apps.applications.utils.cache')
+    @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
+    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_poll_until_user_created(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        user = UserFactory.create(username='fake@email.com')
+        user = UserFactory.create(username="fake@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -452,7 +438,7 @@ class TestSyncQuickSightPermissions:
                         "Message": "User not found",
                     }
                 },
-                'DescribeUser',
+                "DescribeUser",
             ),
         ] * 10 + [
             {
@@ -473,7 +459,7 @@ class TestSyncQuickSightPermissions:
         ]
 
         # Act
-        with mock.patch('dataworkspace.apps.applications.utils.gevent.sleep'):
+        with mock.patch("dataworkspace.apps.applications.utils.gevent.sleep"):
             sync_quicksight_permissions(
                 user_sso_ids_to_update=[str(user.profile.sso_id)],
                 poll_for_user_creation=True,
@@ -483,11 +469,11 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace='default',
-                Role='AUTHOR',
-                CustomPermissionsName='author-custom-permissions',
-                UserName='user/fake@email.com',
-                Email='fake@email.com',
+                Namespace="default",
+                Role="AUTHOR",
+                CustomPermissionsName="author-custom-permissions",
+                UserName="user/fake@email.com",
+                Email="fake@email.com",
             )
         ]
         assert (
@@ -495,8 +481,8 @@ class TestSyncQuickSightPermissions:
             == [
                 mock.call(
                     AwsAccountId=mock.ANY,
-                    Namespace='default',
-                    UserName=f'quicksight_federation/{user.profile.sso_id}',
+                    Namespace="default",
+                    UserName=f"quicksight_federation/{user.profile.sso_id}",
                 ),
             ]
             * 11
@@ -507,18 +493,18 @@ class TestSyncQuickSightPermissions:
 
 class TestSyncActivityStreamSSOUsers:
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
-    @override_settings(ACTIVITY_STREAM_BASE_URL='http://activity.stream')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
+    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_calls_activity_stream(self, mock_hawk_request):
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -527,20 +513,24 @@ class TestSyncActivityStreamSSOUsers:
         _do_sync_activity_stream_sso_users()
 
         assert mock_hawk_request.call_args_list == [
-            mock.call('GET', 'http://activity.stream/v3/activities/_search', mock.ANY,)
+            mock.call(
+                "GET",
+                "http://activity.stream/v3/activities/_search",
+                mock.ANY,
+            )
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
-    @override_settings(ACTIVITY_STREAM_BASE_URL='http://activity.stream')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
+    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
     def test_sync_first_time(self, mock_hawk_request):
-        cache.delete('activity_stream_sync_last_published')
+        cache.delete("activity_stream_sync_last_published")
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -550,8 +540,8 @@ class TestSyncActivityStreamSSOUsers:
 
         assert mock_hawk_request.call_args_list == [
             mock.call(
-                'GET',
-                'http://activity.stream/v3/activities/_search',
+                "GET",
+                "http://activity.stream/v3/activities/_search",
                 json.dumps(
                     {
                         "size": 1000,
@@ -559,11 +549,7 @@ class TestSyncActivityStreamSSOUsers:
                             "bool": {
                                 "filter": [
                                     {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {
-                                        "range": {
-                                            "published": {"gte": "1969-12-31T23:59:50"}
-                                        }
-                                    },
+                                    {"range": {"published": {"gte": "1969-12-31T23:59:50"}}},
                                 ]
                             }
                         },
@@ -574,18 +560,16 @@ class TestSyncActivityStreamSSOUsers:
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
-    @override_settings(ACTIVITY_STREAM_BASE_URL='http://activity.stream')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
+    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
     def test_sync_with_cache_set(self, mock_hawk_request):
-        cache.set(
-            'activity_stream_sync_last_published', datetime.datetime(2020, 1, 1, 12)
-        )
+        cache.set("activity_stream_sync_last_published", datetime.datetime(2020, 1, 1, 12))
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -595,8 +579,8 @@ class TestSyncActivityStreamSSOUsers:
 
         assert mock_hawk_request.call_args_list == [
             mock.call(
-                'GET',
-                'http://activity.stream/v3/activities/_search',
+                "GET",
+                "http://activity.stream/v3/activities/_search",
                 json.dumps(
                     {
                         "size": 1000,
@@ -604,11 +588,7 @@ class TestSyncActivityStreamSSOUsers:
                             "bool": {
                                 "filter": [
                                     {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {
-                                        "range": {
-                                            "published": {"gte": "2020-01-01T11:59:50"}
-                                        }
-                                    },
+                                    {"range": {"published": {"gte": "2020-01-01T11:59:50"}}},
                                 ]
                             }
                         },
@@ -619,25 +599,25 @@ class TestSyncActivityStreamSSOUsers:
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
-    @override_settings(ACTIVITY_STREAM_BASE_URL='http://activity.stream')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
+    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
     def test_sync_pagination(self, mock_hawk_request):
-        cache.delete('activity_stream_sync_last_published')
+        cache.delete("activity_stream_sync_last_published")
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith.json',
+                "test_fixture_activity_stream_sso_john_smith.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -647,8 +627,8 @@ class TestSyncActivityStreamSSOUsers:
 
         assert mock_hawk_request.call_args_list == [
             mock.call(
-                'GET',
-                'http://activity.stream/v3/activities/_search',
+                "GET",
+                "http://activity.stream/v3/activities/_search",
                 json.dumps(
                     {
                         "size": 1000,
@@ -656,11 +636,7 @@ class TestSyncActivityStreamSSOUsers:
                             "bool": {
                                 "filter": [
                                     {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {
-                                        "range": {
-                                            "published": {"gte": "1969-12-31T23:59:50"}
-                                        }
-                                    },
+                                    {"range": {"published": {"gte": "1969-12-31T23:59:50"}}},
                                 ]
                             }
                         },
@@ -669,8 +645,8 @@ class TestSyncActivityStreamSSOUsers:
                 ),
             ),
             mock.call(
-                'GET',
-                'http://activity.stream/v3/activities/_search',
+                "GET",
+                "http://activity.stream/v3/activities/_search",
                 json.dumps(
                     {
                         "size": 1000,
@@ -678,11 +654,7 @@ class TestSyncActivityStreamSSOUsers:
                             "bool": {
                                 "filter": [
                                     {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {
-                                        "range": {
-                                            "published": {"gte": "1969-12-31T23:59:50"}
-                                        }
-                                    },
+                                    {"range": {"published": {"gte": "1969-12-31T23:59:50"}}},
                                 ]
                             }
                         },
@@ -696,31 +668,31 @@ class TestSyncActivityStreamSSOUsers:
             ),
         ]
 
-        assert cache.get('activity_stream_sync_last_published') == datetime.datetime(
+        assert cache.get("activity_stream_sync_last_published") == datetime.datetime(
             2020, 1, 1, 12
         )
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_creates_user(self, mock_hawk_request):
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith.json',
+                "test_fixture_activity_stream_sso_john_smith.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -732,41 +704,39 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert (
-            str(all_users[0].profile.sso_id) == '00000000-0000-0000-0000-000000000000'
-        )
-        assert all_users[0].email == 'john.smith@trade.gov.uk'
-        assert all_users[0].username == 'john.smith@trade.gov.uk'
-        assert all_users[0].first_name == 'John'
-        assert all_users[0].last_name == 'Smith'
+        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
+        assert all_users[0].email == "john.smith@trade.gov.uk"
+        assert all_users[0].username == "john.smith@trade.gov.uk"
+        assert all_users[0].first_name == "John"
+        assert all_users[0].last_name == "Smith"
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_updates_existing_users_sso_id(self, mock_hawk_request):
-        user = UserFactory.create(email='john.smith@trade.gov.uk')
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
         # set the sso id to something different to what the activity stream
         # will return to test that it gets updated
-        user.profile.sso_id = '00000000-0000-0000-0000-111111111111'
+        user.profile.sso_id = "00000000-0000-0000-0000-111111111111"
         user.save()
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith.json',
+                "test_fixture_activity_stream_sso_john_smith.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -778,37 +748,35 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert (
-            str(all_users[0].profile.sso_id) == '00000000-0000-0000-0000-000000000000'
-        )
+        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_updates_existing_users_email(self, mock_hawk_request):
         # set the email to something different to what the activity stream
         # will return to test that it gets updated
-        user = UserFactory.create(email='john.smith@gmail.com')
-        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
+        user = UserFactory.create(email="john.smith@gmail.com")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
         user.save()
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith.json',
+                "test_fixture_activity_stream_sso_john_smith.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -820,37 +788,37 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert str(all_users[0].email) == 'john.smith@trade.gov.uk'
+        assert str(all_users[0].email) == "john.smith@trade.gov.uk"
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_updates_existing_users_sso_id_and_email(self, mock_hawk_request):
         # set the sso id to something different to what the activity stream
         # will return and set the email to the third email in the list that
         # the activity stream will return to test that it is able to look up
         # the user and update both their email and sso id
-        user = UserFactory.create(email='john@trade.gov.uk')
-        user.profile.sso_id = '00000000-0000-0000-0000-111111111111'
+        user = UserFactory.create(email="john@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-111111111111"
         user.save()
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith_multiple_emails.json',
+                "test_fixture_activity_stream_sso_john_smith_multiple_emails.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -862,46 +830,42 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert (
-            str(all_users[0].profile.sso_id) == '00000000-0000-0000-0000-000000000000'
-        )
-        assert str(all_users[0].email) == 'john.smith@digital.trade.gov.uk'
+        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
+        assert str(all_users[0].email) == "john.smith@digital.trade.gov.uk"
 
     @pytest.mark.django_db
-    @mock.patch(
-        'dataworkspace.apps.applications.utils.create_tools_access_iam_role_task'
-    )
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_creates_role_if_user_can_access_tools(
         self, mock_hawk_request, create_tools_access_iam_role_task
     ):
         can_access_tools_permission = Permission.objects.get(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(email='john.smith@trade.gov.uk')
-        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
         user.save()
         user.user_permissions.add(can_access_tools_permission)
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith.json',
+                "test_fixture_activity_stream_sso_john_smith.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -914,39 +878,39 @@ class TestSyncActivityStreamSSOUsers:
 
         assert len(all_users) == 1
         assert create_tools_access_iam_role_task.delay.call_args_list == [
-            mock.call(user.id,)
+            mock.call(
+                user.id,
+            )
         ]
 
     @pytest.mark.django_db
-    @mock.patch(
-        'dataworkspace.apps.applications.utils.create_tools_access_iam_role_task'
-    )
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_doesnt_create_role_if_user_cant_access_tools(
         self, mock_hawk_request, create_tools_access_iam_role_task
     ):
-        user = UserFactory.create(email='john.smith@trade.gov.uk')
-        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
         user.save()
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith.json',
+                "test_fixture_activity_stream_sso_john_smith.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -961,41 +925,39 @@ class TestSyncActivityStreamSSOUsers:
         assert not create_tools_access_iam_role_task.delay.called
 
     @pytest.mark.django_db
-    @mock.patch(
-        'dataworkspace.apps.applications.utils.create_tools_access_iam_role_task'
-    )
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_doesnt_create_role_if_user_already_has_role(
         self, mock_hawk_request, create_tools_access_iam_role_task
     ):
         can_access_tools_permission = Permission.objects.get(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(email='john.smith@trade.gov.uk')
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
         user.user_permissions.add(can_access_tools_permission)
-        user.profile.sso_id = '00000000-0000-0000-0000-000000000000'
-        user.profile.tools_access_role_arn = 'some-arn'
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user.profile.tools_access_role_arn = "some-arn"
         user.save()
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_john_smith.json',
+                "test_fixture_activity_stream_sso_john_smith.json",
             ),
-            'r',
+            "r",
         ) as file:
             user_john_smith = (200, file.read())
 
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_empty.json',
+                "test_fixture_activity_stream_sso_empty.json",
             ),
-            'r',
+            "r",
         ) as file:
             empty_result = (200, file.read())
 
@@ -1010,32 +972,32 @@ class TestSyncActivityStreamSSOUsers:
         assert not create_tools_access_iam_role_task.delay.called
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_hawk_request_fails(self, mock_hawk_request):
         mock_hawk_request.return_value = 500, "Unable to reach shard"
 
         with pytest.raises(Exception) as e:
             _do_sync_activity_stream_sso_users()
-            assert str(e.value) == 'Failed to fetch SSO users: Unable to reach shard'
+            assert str(e.value) == "Failed to fetch SSO users: Unable to reach shard"
 
         User = get_user_model()
         assert not User.objects.all()
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.hawk_request')
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     def test_sync_failures_in_response(self, mock_hawk_request):
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                'test_fixture_activity_stream_sso_failures.json',
+                "test_fixture_activity_stream_sso_failures.json",
             ),
-            'r',
+            "r",
         ) as file:
             failure_response = (200, file.read())
 
@@ -1043,7 +1005,7 @@ class TestSyncActivityStreamSSOUsers:
 
         with pytest.raises(Exception) as e:
             _do_sync_activity_stream_sso_users()
-            assert str(e.value) == 'Failed to fetch SSO users: An error occured'
+            assert str(e.value) == "Failed to fetch SSO users: An error occured"
 
         User = get_user_model()
         assert not User.objects.all()
@@ -1051,32 +1013,30 @@ class TestSyncActivityStreamSSOUsers:
 
 class TestCreateToolsAccessIAMRoleTask:
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.create_tools_access_iam_role')
+    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role")
     def test_task_creates_iam_role(self, mock_create_tools_access_iam_role):
 
-        user = UserFactory.create(username='john.smith@trade.gov.uk')
-        user.profile.sso_id = '00000000-0000-0000-0000-000000000001'
-        user.profile.home_directory_efs_access_point_id = 'some-access-point-id'
+        user = UserFactory.create(username="john.smith@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000001"
+        user.profile.home_directory_efs_access_point_id = "some-access-point-id"
         user.save()
 
         _do_create_tools_access_iam_role(user.id)
 
         assert mock_create_tools_access_iam_role.call_args_list == [
             mock.call(
-                'john.smith@trade.gov.uk',
-                '00000000-0000-0000-0000-000000000001',
-                'some-access-point-id',
+                "john.smith@trade.gov.uk",
+                "00000000-0000-0000-0000-000000000001",
+                "some-access-point-id",
             )
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.applications.utils.create_tools_access_iam_role')
-    @mock.patch('logging.Logger.exception')
-    def test_task_fails_non_existent_user(
-        self, mock_logger, mock_create_tools_access_iam_role
-    ):
+    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role")
+    @mock.patch("logging.Logger.exception")
+    def test_task_fails_non_existent_user(self, mock_logger, mock_create_tools_access_iam_role):
         _do_create_tools_access_iam_role(2)
-        assert mock_logger.call_args_list == [mock.call('User id %d does not exist', 2)]
+        assert mock_logger.call_args_list == [mock.call("User id %d does not exist", 2)]
 
 
 class TestSyncToolQueryLogs:
@@ -1108,7 +1068,7 @@ class TestSyncToolQueryLogs:
         '"AUDIT: SESSION,19047,1,READ,SELECT,,,""INSERT INTO dataset_test VALUES(2);"",<not logged>"'
         ',,,,,,,,,""\n',
         # No timestamp
-        'An exception occurred...\n',
+        "An exception occurred...\n",
         # Duplicate record
         '2020-12-08 18:00:00.400 UTC,"auser","test_datasets",114,"172.19.0.4:53462",'
         '5fcfc36b.72,19047,"SELECT",2020-12-08 18:18:19 UTC,9/19040,0,LOG,00000,'
@@ -1126,30 +1086,30 @@ class TestSyncToolQueryLogs:
     ]
 
     @pytest.mark.django_db(transaction=True)
-    @freeze_time('2020-12-08 18:04:00')
-    @mock.patch('dataworkspace.apps.applications.utils.boto3.client')
+    @freeze_time("2020-12-08 18:04:00")
+    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
     @override_settings(
-        PGAUDIT_LOG_TYPE='rds',
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}},
+        PGAUDIT_LOG_TYPE="rds",
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     )
     def test_rds_sync(self, mock_client, dataset_db):
-        cache.delete('q' 'uery_tool_logs_last_run')
+        cache.delete("q" "uery_tool_logs_last_run")
         log_count = ToolQueryAuditLog.objects.count()
         table_count = ToolQueryAuditLogTable.objects.count()
-        factories.DatabaseFactory(memorable_name='my_database')
-        factories.DatabaseUserFactory.create(username='auser')
-        factories.SourceTableFactory.create(schema='public', table='test_dataset')
+        factories.DatabaseFactory(memorable_name="my_database")
+        factories.DatabaseUserFactory.create(username="auser")
+        factories.SourceTableFactory.create(schema="public", table="test_dataset")
         mock_client.return_value.describe_db_log_files.return_value = {
-            'DescribeDBLogFiles': [
-                {'LogFileName': '/file/1.csv'},
-                {'LogFileName': '/file/2.csv'},
+            "DescribeDBLogFiles": [
+                {"LogFileName": "/file/1.csv"},
+                {"LogFileName": "/file/2.csv"},
             ]
         }
         mock_client.return_value.download_db_log_file_portion.side_effect = [
             {
-                'Marker': '1',
-                'AdditionalDataPending': True,
-                'LogFileData': (
+                "Marker": "1",
+                "AdditionalDataPending": True,
+                "LogFileData": (
                     # Valid user and db select statement
                     self.log_data[0]
                     # Non-pgaudit log
@@ -1157,9 +1117,9 @@ class TestSyncToolQueryLogs:
                 ),
             },
             {
-                'Marker': None,
-                'AdditionalDataPending': False,
-                'LogFileData': (
+                "Marker": None,
+                "AdditionalDataPending": False,
+                "LogFileData": (
                     # Unrecognised user
                     self.log_data[2]
                     # Unrecognised database
@@ -1167,9 +1127,9 @@ class TestSyncToolQueryLogs:
                 ),
             },
             {
-                'Marker': None,
-                'AdditionalDataPending': False,
-                'LogFileData': (
+                "Marker": None,
+                "AdditionalDataPending": False,
+                "LogFileData": (
                     # Valid username and db insert statement
                     self.log_data[4]
                     # Timestamp out of range
@@ -1186,29 +1146,29 @@ class TestSyncToolQueryLogs:
         tables = ToolQueryAuditLogTable.objects.all()
         assert queries.count() == log_count + 2
         assert tables.count() == table_count + 1
-        assert list(queries)[-2].query_sql == 'SELECT * FROM dataset_test'
-        assert list(queries)[-2].connection_from == '172.19.0.4'
-        assert list(queries)[-1].query_sql == 'INSERT INTO dataset_test VALUES(1);'
-        assert list(queries)[-1].connection_from == '172.19.0.5'
+        assert list(queries)[-2].query_sql == "SELECT * FROM dataset_test"
+        assert list(queries)[-2].connection_from == "172.19.0.4"
+        assert list(queries)[-1].query_sql == "INSERT INTO dataset_test VALUES(1);"
+        assert list(queries)[-1].connection_from == "172.19.0.5"
 
     @pytest.mark.django_db(transaction=True)
-    @freeze_time('2020-12-08 18:04:00')
-    @mock.patch('dataworkspace.apps.applications.utils.os')
-    @mock.patch("builtins.open", mock.mock_open(read_data=''.join(log_data)))
+    @freeze_time("2020-12-08 18:04:00")
+    @mock.patch("dataworkspace.apps.applications.utils.os")
+    @mock.patch("builtins.open", mock.mock_open(read_data="".join(log_data)))
     @override_settings(
-        PGAUDIT_LOG_TYPE='docker',
-        CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}},
+        PGAUDIT_LOG_TYPE="docker",
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     )
     def test_docker_sync(self, mock_os, dataset_db):
-        cache.delete('query_tool_logs_last_run')
+        cache.delete("query_tool_logs_last_run")
         table_count = ToolQueryAuditLogTable.objects.count()
         log_count = ToolQueryAuditLog.objects.count()
-        factories.DatabaseFactory(memorable_name='my_database')
-        factories.DatabaseUserFactory.create(username='auser')
-        factories.SourceTableFactory.create(schema='public', table='test_dataset')
+        factories.DatabaseFactory(memorable_name="my_database")
+        factories.DatabaseUserFactory.create(username="auser")
+        factories.SourceTableFactory.create(schema="public", table="test_dataset")
         mock_os.listdir.return_value = [
-            'file1.csv',
-            'file2.log',
+            "file1.csv",
+            "file2.log",
         ]
         mock_os.path.getmtime.return_value = datetime.datetime.now().timestamp()
         _do_sync_tool_query_logs()
@@ -1216,15 +1176,15 @@ class TestSyncToolQueryLogs:
         tables = ToolQueryAuditLogTable.objects.all()
         assert queries.count() == log_count + 2
         assert tables.count() == table_count + 1
-        assert list(queries)[-2].query_sql == 'SELECT * FROM dataset_test'
-        assert list(queries)[-1].query_sql == 'INSERT INTO dataset_test VALUES(1);'
+        assert list(queries)[-2].query_sql == "SELECT * FROM dataset_test"
+        assert list(queries)[-1].query_sql == "INSERT INTO dataset_test VALUES(1);"
 
 
 class TestLongRunningQueryAlerts:
     @pytest.mark.django_db
-    @override_switch('enable_long_running_query_alerts', active=True)
-    @mock.patch('dataworkspace.apps.applications.utils.connections')
-    @mock.patch('dataworkspace.apps.applications.utils._send_slack_message')
+    @override_switch("enable_long_running_query_alerts", active=True)
+    @mock.patch("dataworkspace.apps.applications.utils.connections")
+    @mock.patch("dataworkspace.apps.applications.utils._send_slack_message")
     def test_no_long_running_queries(self, mock_send_slack_message, mock_connections):
         mock_cursor = mock.Mock()
         mock_cursor.fetchone.return_value = [0]
@@ -1237,10 +1197,10 @@ class TestLongRunningQueryAlerts:
         mock_send_slack_message.assert_not_called()
 
     @pytest.mark.django_db
-    @override_switch('enable_long_running_query_alerts', active=True)
-    @override_settings(SLACK_SENTRY_CHANNEL_WEBHOOK='http://test.com')
-    @mock.patch('dataworkspace.apps.applications.utils.connections')
-    @mock.patch('dataworkspace.apps.applications.utils._send_slack_message')
+    @override_switch("enable_long_running_query_alerts", active=True)
+    @override_settings(SLACK_SENTRY_CHANNEL_WEBHOOK="http://test.com")
+    @mock.patch("dataworkspace.apps.applications.utils.connections")
+    @mock.patch("dataworkspace.apps.applications.utils._send_slack_message")
     def test_long_running_queries(self, mock_send_slack_message, mock_connections):
         mock_cursor = mock.Mock()
         mock_cursor.fetchone.return_value = [1]
@@ -1251,6 +1211,6 @@ class TestLongRunningQueryAlerts:
         mock_connections.__getitem__.return_value = mock_connection
         long_running_query_alert()
         mock_send_slack_message.assert_called_once_with(
-            ':rotating_light: Found 1 SQL query running for longer than 15 minutes '
-            'on the datasets db.'
+            ":rotating_light: Found 1 SQL query running for longer than 15 minutes "
+            "on the datasets db."
         )

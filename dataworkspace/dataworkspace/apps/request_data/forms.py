@@ -17,26 +17,24 @@ from dataworkspace.forms import (
 class RequestDataWhoAreYouForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataRequest
-        fields = ['requester_role']
+        fields = ["requester_role"]
 
     requester_role = GOVUKDesignSystemRadioField(
         label="Are you the information asset owner or manager for the data?",
         choices=[(t.value, t.label) for t in RoleType],
         widget=GOVUKDesignSystemRadiosWidget,
-        error_messages={
-            "required": "You must declare your role in this request for data."
-        },
+        error_messages={"required": "You must declare your role in this request for data."},
     )
 
 
 class RequestDataDescriptionForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataRequest
-        fields = ['data_description']
+        fields = ["data_description"]
 
     data_description = GOVUKDesignSystemTextareaField(
         label="Describe the data you want to add",
-        help_html=render_to_string('request_data/data-description-hint.html'),
+        help_html=render_to_string("request_data/data-description-hint.html"),
         error_messages={"required": "Enter a description of the data."},
     )
 
@@ -44,7 +42,7 @@ class RequestDataDescriptionForm(GOVUKDesignSystemModelForm):
 class RequestDataPurposeForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataRequest
-        fields = ['data_purpose']
+        fields = ["data_purpose"]
 
     data_purpose = GOVUKDesignSystemTextareaField(
         label="What will the data be used for?",
@@ -61,27 +59,25 @@ class RequestDataPurposeForm(GOVUKDesignSystemModelForm):
 class RequestDataSecurityClassificationForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataRequest
-        fields = ['security_classification']
+        fields = ["security_classification"]
 
     security_classification = GOVUKDesignSystemRadioField(
         label="What is the security classification of this data?",
-        help_html=render_to_string('request_data/security-classification-hint.html'),
+        help_html=render_to_string("request_data/security-classification-hint.html"),
         choices=[(t.value, t.label) for t in SecurityClassificationType],
         widget=GOVUKDesignSystemRadiosWidget,
-        error_messages={
-            "required": "You must declare the security classification of the data."
-        },
+        error_messages={"required": "You must declare the security classification of the data."},
     )
 
 
 class RequestDataLocationForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataRequest
-        fields = ['data_location']
+        fields = ["data_location"]
 
     data_location = GOVUKDesignSystemTextareaField(
         label="Where is the data currently held?",
-        help_html=render_to_string('request_data/data-location-hint.html'),
+        help_html=render_to_string("request_data/data-location-hint.html"),
         required=False,
     )
 
@@ -89,7 +85,7 @@ class RequestDataLocationForm(GOVUKDesignSystemModelForm):
 class RequestDataOwnerOrManagerForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataRequest
-        fields = ['name_of_owner_or_manager']
+        fields = ["name_of_owner_or_manager"]
 
     name_of_owner_or_manager = GOVUKDesignSystemCharField(
         label="Name of information asset owner or manager",
@@ -104,7 +100,7 @@ class RequestDataOwnerOrManagerForm(GOVUKDesignSystemModelForm):
 class RequestDataLicenceForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataRequest
-        fields = ['data_licence']
+        fields = ["data_licence"]
 
     data_licence = GOVUKDesignSystemTextareaField(
         label="How is the data licensed?",

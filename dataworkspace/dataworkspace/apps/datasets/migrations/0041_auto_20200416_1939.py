@@ -5,16 +5,16 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0040_visualisationcatalogueitem')]
+    dependencies = [("datasets", "0040_visualisationcatalogueitem")]
 
     operations = [
         migrations.AlterModelOptions(
-            name='visualisationcatalogueitem',
+            name="visualisationcatalogueitem",
             options={
-                'permissions': [
+                "permissions": [
                     (
-                        'manage_unpublished_visualisations',
-                        'Manage (create, view, edit) unpublished visualisations',
+                        "manage_unpublished_visualisations",
+                        "Manage (create, view, edit) unpublished visualisations",
                     )
                 ]
             },

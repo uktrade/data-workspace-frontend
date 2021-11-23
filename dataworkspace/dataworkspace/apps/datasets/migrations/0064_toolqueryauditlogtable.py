@@ -8,51 +8,51 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0063_tool_query_audit_log_constraints'),
+        ("datasets", "0063_tool_query_audit_log_constraints"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ToolQueryAuditLogTable',
+            name="ToolQueryAuditLogTable",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'schema',
+                    "schema",
                     models.CharField(
-                        default='public',
+                        default="public",
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'table',
+                    "table",
                     models.CharField(
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'audit_log',
+                    "audit_log",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='tables',
-                        to='datasets.ToolQueryAuditLog',
+                        related_name="tables",
+                        to="datasets.ToolQueryAuditLog",
                     ),
                 ),
             ],

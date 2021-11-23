@@ -6,8 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0096_alter_referencedatasetfield_data_type'),
-        ('datasets', '0096_datasetsubscription'),
+        ("datasets", "0096_alter_referencedatasetfield_data_type"),
+        ("datasets", "0096_datasetsubscription"),
     ]
 
     operations = []

@@ -7,31 +7,31 @@ from dataworkspace.apps.core.models import (  # pylint: disable=import-error
 
 
 class RoleType(models.TextChoices):
-    IAO = 'IAO', 'Yes, I am the Information Asset Owner'
-    IAM = 'IAM', 'Yes, I am the Information Asset Manager'
-    other = 'other', 'No, I am someone else'
+    IAO = "IAO", "Yes, I am the Information Asset Owner"
+    IAM = "IAM", "Yes, I am the Information Asset Manager"
+    other = "other", "No, I am someone else"
 
 
 class SecurityClassificationType(models.TextChoices):
-    official = 'official', 'Official (includes public data)'
-    commercial = 'commercially-sensitive', 'Official-Sensitive Commercial'
-    personal = 'personal', 'Official-Sensitive Personal'
-    locsen = 'locsen', 'Official-Sensitive LocSen (location sensitive)'
-    secret = 'secret', 'Secret'
-    top_secret = 'top-secret', 'Top secret'
-    unknown = 'unknown', 'I don’t know'
+    official = "official", "Official (includes public data)"
+    commercial = "commercially-sensitive", "Official-Sensitive Commercial"
+    personal = "personal", "Official-Sensitive Personal"
+    locsen = "locsen", "Official-Sensitive LocSen (location sensitive)"
+    secret = "secret", "Secret"
+    top_secret = "top-secret", "Top secret"
+    unknown = "unknown", "I don’t know"
 
 
 class DataRequestStatus(models.TextChoices):
-    draft = 'draft'
-    submitted = 'submitted'
+    draft = "draft"
+    submitted = "submitted"
 
 
 class DataRequest(TimeStampedModel):
     requester = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='data_requests',
+        related_name="data_requests",
     )
     requester_role = models.CharField(max_length=256, choices=RoleType.choices)
     name_of_owner_or_manager = models.CharField(max_length=256, blank=True)

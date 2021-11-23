@@ -6,12 +6,12 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0024_auto_20191118_1349')]
+    dependencies = [("datasets", "0024_auto_20191118_1349")]
 
     operations = [
         migrations.AlterField(
-            model_name='referencedataset',
-            name='description',
+            model_name="referencedataset",
+            name="description",
             field=ckeditor.fields.RichTextField(blank=True, null=True),
         )
     ]
