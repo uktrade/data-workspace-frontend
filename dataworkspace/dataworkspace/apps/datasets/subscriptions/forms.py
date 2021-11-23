@@ -8,7 +8,7 @@ from dataworkspace.forms import (
 class DataSetSubscriptionForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = DataSetSubscription
-        fields = ['notify_on_schema_change', 'notify_on_data_change']
+        fields = ["notify_on_schema_change", "notify_on_data_change"]
 
     notify_on_schema_change = GOVUKDesignSystemBooleanField(
         label="Each time columns are added, removed or renamed", required=False,
