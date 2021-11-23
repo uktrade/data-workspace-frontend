@@ -6,25 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0012_auto_20201015_0738'),
+        ("applications", "0012_auto_20201015_0738"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='default_cpu',
+            model_name="applicationtemplate",
+            name="default_cpu",
             field=models.CharField(
-                default='1024',
-                help_text='The default amount of CPU allocated, where 1024 is 1 CPU',
+                default="1024",
+                help_text="The default amount of CPU allocated, where 1024 is 1 CPU",
                 max_length=16,
             ),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='default_memory',
+            model_name="applicationtemplate",
+            name="default_memory",
             field=models.CharField(
-                default='8192',
-                help_text='The default amount of memory allocated in MBs',
+                default="8192",
+                help_text="The default amount of memory allocated in MBs",
                 max_length=16,
             ),
         ),

@@ -10,15 +10,15 @@ from dataworkspace.apps.catalogue.views import (
 
 urlpatterns = [
     # Old redirect URLs
-    path('<str:slug>', login_required(datagroup_item_view), name='datagroup_item'),
+    path("<str:slug>", login_required(datagroup_item_view), name="datagroup_item"),
     path(
-        '<str:group_slug>/<str:set_slug>',
+        "<str:group_slug>/<str:set_slug>",
         login_required(dataset_full_path_view),
-        name='dataset_fullpath',
+        name="dataset_fullpath",
     ),
     path(
-        '<str:group_slug>/reference/<str:reference_slug>',
+        "<str:group_slug>/reference/<str:reference_slug>",
         login_required(ReferenceDatasetDetailView.as_view()),
-        name='reference_dataset',
+        name="reference_dataset",
     ),
 ]

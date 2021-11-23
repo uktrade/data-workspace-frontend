@@ -6,4 +6,4 @@ from dataworkspace.apps.core.models import UserSatisfactionSurvey
 class UserSatisfactionSurveySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSatisfactionSurvey
-        fields = '__all__'
+        fields = "__all__"

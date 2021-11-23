@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0055_update_linked_reference_datasets'),
+        ("datasets", "0055_update_linked_reference_datasets"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='published_at',
+            model_name="dataset",
+            name="published_at",
             field=models.DateField(blank=True, null=True),
         ),
     ]

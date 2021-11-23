@@ -15,16 +15,16 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='DatasetFinderQueryLog',
+            name="DatasetFinderQueryLog",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('query', models.CharField(max_length=255)),
-                ('timestamp', models.DateTimeField(auto_now=True, db_index=True)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("query", models.CharField(max_length=255)),
+                ("timestamp", models.DateTimeField(auto_now=True, db_index=True)),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.DO_NOTHING,
-                        related_name='finder_searches',
+                        related_name="finder_searches",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),

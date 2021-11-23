@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('eventlog', '0009_auto_20210511_1614'),
+        ("eventlog", "0009_auto_20210511_1614"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='eventlog',
-            name='extra',
+            model_name="eventlog",
+            name="extra",
             field=models.JSONField(
                 encoder=django.core.serializers.json.DjangoJSONEncoder, null=True
             ),

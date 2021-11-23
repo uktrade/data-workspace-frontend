@@ -6,25 +6,25 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0035_migrate_group_asset_manager_data')]
+    dependencies = [("datasets", "0035_migrate_group_asset_manager_data")]
 
     operations = [
         migrations.AlterField(
-            model_name='dataset',
-            name='grouping',
+            model_name="dataset",
+            name="grouping",
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to='datasets.DataGrouping',
+                to="datasets.DataGrouping",
             ),
         ),
         migrations.AlterField(
-            model_name='referencedataset',
-            name='group',
+            model_name="referencedataset",
+            name="group",
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to='datasets.DataGrouping',
+                to="datasets.DataGrouping",
             ),
         ),
     ]

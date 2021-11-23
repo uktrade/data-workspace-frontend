@@ -35,10 +35,10 @@ class BulletListSplitArrayWidget(SplitArrayWidget):
     def get_context(self, name, value, attrs=None):
         context = super().get_context(name, value, attrs)
 
-        context['widget']['label'] = self.label
+        context["widget"]["label"] = self.label
 
-        for i, _ in enumerate(context['widget']['subwidgets']):
-            context['widget']['subwidgets'][i]['label'] = f"{self.input_prefix} #{i+1}"
+        for i, _ in enumerate(context["widget"]["subwidgets"]):
+            context["widget"]["subwidgets"][i]["label"] = f"{self.input_prefix} #{i+1}"
         return context
 
 
@@ -48,7 +48,7 @@ class DWSplitArrayField(SplitArrayField):
         # errors if there are blank values in between two non-blank values, and we don't care about that. Just get
         # rid of them and collapse down.
         value = list(filter(lambda x: x, value))
-        value.extend([''] * (self.size - len(value)))
+        value.extend([""] * (self.size - len(value)))
         return super().clean(value)
 
 
@@ -62,7 +62,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
     enquiries_contact = GOVUKDesignSystemEmailValidationModelChoiceField(
         label="Enquiries contact",
         queryset=get_user_model().objects.all(),
-        to_field_name='email',
+        to_field_name="email",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
@@ -73,7 +73,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
     secondary_enquiries_contact = GOVUKDesignSystemEmailValidationModelChoiceField(
         label="Secondary enquiries contact",
         queryset=get_user_model().objects.all(),
-        to_field_name='email',
+        to_field_name="email",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
@@ -84,7 +84,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
     information_asset_manager = GOVUKDesignSystemEmailValidationModelChoiceField(
         label="Information asset manager",
         queryset=get_user_model().objects.all(),
-        to_field_name='email',
+        to_field_name="email",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
@@ -95,7 +95,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
     information_asset_owner = GOVUKDesignSystemEmailValidationModelChoiceField(
         label="Information asset owner",
         queryset=get_user_model().objects.all(),
-        to_field_name='email',
+        to_field_name="email",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         required=False,
         error_messages={
@@ -124,10 +124,12 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
     )
     user_access_type = GOVUKDesignSystemChoiceField(
-        label='Open to all Data Workspace users',
+        label="Open to all Data Workspace users",
         initial=UserAccessType.REQUIRES_AUTHORIZATION,
         choices=UserAccessType.choices,
-        widget=GOVUKDesignSystemSelectWidget(label_is_heading=False,),
+        widget=GOVUKDesignSystemSelectWidget(
+            label_is_heading=False,
+        ),
     )
     eligibility_criteria = DWSplitArrayField(
         CharField(required=False),
@@ -135,7 +137,8 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             label="Eligibility criteria",
             input_prefix="Eligibility criterion",
             widget=GOVUKDesignSystemTextWidget(
-                label_is_heading=False, extra_label_classes='govuk-visually-hidden',
+                label_is_heading=False,
+                extra_label_classes="govuk-visually-hidden",
             ),
             size=5,
         ),
@@ -148,31 +151,31 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = VisualisationCatalogueItem
         fields = [
-            'short_description',
-            'description',
-            'enquiries_contact',
-            'secondary_enquiries_contact',
-            'information_asset_manager',
-            'information_asset_owner',
-            'licence',
-            'retention_policy',
-            'personal_data',
-            'restrictions_on_usage',
-            'user_access_type',
-            'eligibility_criteria',
+            "short_description",
+            "description",
+            "enquiries_contact",
+            "secondary_enquiries_contact",
+            "information_asset_manager",
+            "information_asset_owner",
+            "licence",
+            "retention_policy",
+            "personal_data",
+            "restrictions_on_usage",
+            "user_access_type",
+            "eligibility_criteria",
         ]
         widgets = {"retention_policy": Textarea, "restrictions_on_usage": Textarea}
         labels = {"description": "Description"}
 
     def __init__(self, *args, **kwargs):
-        kwargs['initial'] = kwargs.get("initial", {})
+        kwargs["initial"] = kwargs.get("initial", {})
         super().__init__(*args, **kwargs)
 
         self._email_fields = [
-            'enquiries_contact',
-            'secondary_enquiries_contact',
-            'information_asset_manager',
-            'information_asset_owner',
+            "enquiries_contact",
+            "secondary_enquiries_contact",
+            "information_asset_manager",
+            "information_asset_owner",
         ]
 
         # Set the form field data for email fields to the actual user email address - by default it's the User ID.
@@ -184,7 +187,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
 class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = VisualisationApproval
-        fields = ['approved', 'visualisation', 'approver']
+        fields = ["approved", "visualisation", "approver"]
         widgets = {
             "visualisation": HiddenInput,
             "approver": HiddenInput,
@@ -200,28 +203,26 @@ class VisualisationApprovalForm(GOVUKDesignSystemModelForm):
 
     def __init__(self, *args, **kwargs):
         # If the visualisation has already been approved, we want to render a form that allows the user to unapprove it.
-        if kwargs.get('instance') and kwargs.get('instance').approved:
+        if kwargs.get("instance") and kwargs.get("instance").approved:
             self._initial_approved = True
-            kwargs['initial']['approved'] = False
+            kwargs["initial"]["approved"] = False
         else:
             self._initial_approved = False
 
         super().__init__(*args, **kwargs)
 
         if self._initial_approved:
-            self.fields['approved'].required = False
+            self.fields["approved"].required = False
 
     def clean_approved(self):
-        if not self._initial_approved and not self.cleaned_data['approved']:
-            raise ValidationError(
-                "You must confirm that you have reviewed this visualisation"
-            )
-        return self.cleaned_data['approved']
+        if not self._initial_approved and not self.cleaned_data["approved"]:
+            raise ValidationError("You must confirm that you have reviewed this visualisation")
+        return self.cleaned_data["approved"]
 
     def clean(self):
         cleaned_data = super().clean()
 
-        if self.data['action'] == 'unapprove':
-            cleaned_data['approved'] = False
+        if self.data["action"] == "unapprove":
+            cleaned_data["approved"] = False
 
         return cleaned_data

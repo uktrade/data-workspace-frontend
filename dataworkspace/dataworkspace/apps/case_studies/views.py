@@ -14,9 +14,9 @@ class CaseStudyListView(WaffleFlagMixin, ListView):
 class CaseStudyDetailView(WaffleFlagMixin, DetailView):
     waffle_flag = settings.CASE_STUDIES_FLAG
     queryset = CaseStudy.objects.filter(published=True)
-    context_object_name = 'case_study'
+    context_object_name = "case_study"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['other_case_studies'] = self.queryset.exclude(id=self.object.id)[:3]
+        ctx["other_case_studies"] = self.queryset.exclude(id=self.object.id)[:3]
         return ctx

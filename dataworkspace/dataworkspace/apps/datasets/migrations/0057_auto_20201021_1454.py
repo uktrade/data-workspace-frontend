@@ -4,7 +4,7 @@ from django.db import migrations
 
 
 def set_published_at_dates(apps, schema_editor):
-    Dataset = apps.get_model('datasets', 'dataset')
+    Dataset = apps.get_model("datasets", "dataset")
     for dataset in Dataset.objects.filter(published=True, published_at__isnull=True):
         dataset.published_at = dataset.created_date
         dataset.save()
@@ -13,7 +13,7 @@ def set_published_at_dates(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0056_dataset_published_at'),
+        ("datasets", "0056_dataset_published_at"),
     ]
 
     operations = [

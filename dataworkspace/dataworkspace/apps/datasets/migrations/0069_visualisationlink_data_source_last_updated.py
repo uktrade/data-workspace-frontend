@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0068_remove_google_data_studio'),
+        ("datasets", "0068_remove_google_data_studio"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='visualisationlink',
-            name='data_source_last_updated',
+            model_name="visualisationlink",
+            name="data_source_last_updated",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

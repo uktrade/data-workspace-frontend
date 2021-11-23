@@ -9,20 +9,20 @@ from dataworkspace.apps.core import storage
 
 class AccessRequest(TimeStampedModel):
 
-    JOURNEY_TOOLS_ACCESS = 'tools_access_only'
-    JOURNEY_DATASET_ACCESS = 'dataset_access_only'
-    JOURNEY_DATASET_AND_TOOLS_ACCESS = 'dataset_and_tools_access'
+    JOURNEY_TOOLS_ACCESS = "tools_access_only"
+    JOURNEY_DATASET_ACCESS = "dataset_access_only"
+    JOURNEY_DATASET_AND_TOOLS_ACCESS = "dataset_and_tools_access"
 
     requester = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='access_requests',
+        related_name="access_requests",
     )
     catalogue_item_id = models.UUIDField(null=True)
     contact_email = models.CharField(max_length=256, null=True, blank=False)
     reason_for_access = models.TextField(null=True, blank=False)
     training_screenshot = models.FileField(
-        storage=storage.S3FileStorage(location='training_screenshots'),
+        storage=storage.S3FileStorage(location="training_screenshots"),
         null=True,
         blank=True,
     )
@@ -32,7 +32,7 @@ class AccessRequest(TimeStampedModel):
     zendesk_reference_number = models.CharField(max_length=256, null=True)
 
     def __str__(self):
-        return f'{self.requester} - Zendesk reference number: {self.zendesk_reference_number}'
+        return f"{self.requester} - Zendesk reference number: {self.zendesk_reference_number}"
 
     @property
     def journey(self):
@@ -47,7 +47,7 @@ class AccessRequest(TimeStampedModel):
     @property
     def human_readable_journey(self):
         return {
-            self.JOURNEY_TOOLS_ACCESS: 'Tools access',
-            self.JOURNEY_DATASET_ACCESS: 'Dataset access',
-            self.JOURNEY_DATASET_AND_TOOLS_ACCESS: 'Both dataset and tools access',
-        }.get(self.journey, 'None')
+            self.JOURNEY_TOOLS_ACCESS: "Tools access",
+            self.JOURNEY_DATASET_ACCESS: "Dataset access",
+            self.JOURNEY_DATASET_AND_TOOLS_ACCESS: "Both dataset and tools access",
+        }.get(self.journey, "None")

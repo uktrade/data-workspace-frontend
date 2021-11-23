@@ -32,9 +32,9 @@ from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
-USER_SCHEMA_STEM = '_user_'
+USER_SCHEMA_STEM = "_user_"
 
 
 def database_dsn(database_data):
@@ -45,7 +45,7 @@ def database_dsn(database_data):
     )
 
 
-def postgres_user(stem, suffix=''):
+def postgres_user(stem, suffix=""):
     if len(suffix) > 10:
         raise ValueError(
             "The user suffix should be no more than 10 characters to ensure that the stem "
@@ -53,8 +53,8 @@ def postgres_user(stem, suffix=''):
         )
 
     user_alphabet = string.ascii_lowercase + string.digits
-    unique_enough = ''.join(secrets.choice(user_alphabet) for i in range(5))
-    suffix = f'_{suffix}' if suffix else ''
+    unique_enough = "".join(secrets.choice(user_alphabet) for i in range(5))
+    suffix = f"_{suffix}" if suffix else ""
 
     # Postgres identifiers can be up to 63 characters.
     # Between `user_`, `_`, and `unique_enough` we use 11 of these characters.
@@ -63,9 +63,9 @@ def postgres_user(stem, suffix=''):
     max_email_length = 52 - len(suffix)
 
     return (
-        'user_'
-        + re.sub('[^a-z0-9]', '_', stem.lower())[:max_email_length]
-        + '_'
+        "user_"
+        + re.sub("[^a-z0-9]", "_", stem.lower())[:max_email_length]
+        + "_"
         + unique_enough
         + suffix
     )
@@ -76,7 +76,7 @@ def db_role_schema_suffix_for_user(user):
 
 
 def db_role_schema_suffix_for_app(application_template):
-    return 'app_' + application_template.host_basename
+    return "app_" + application_template.host_basename
 
 
 def new_private_database_credentials(
@@ -98,7 +98,7 @@ def new_private_database_credentials(
     password_alphabet = string.ascii_letters + string.digits
 
     def postgres_password():
-        return ''.join(secrets.choice(password_alphabet) for i in range(64))
+        return "".join(secrets.choice(password_alphabet) for i in range(64))
 
     def get_new_credentials(database_obj, tables):
         # Each real-world user is given
@@ -107,16 +107,14 @@ def new_private_database_credentials(
         # - temporary database users, each of which are GRANTed the role
 
         db_password = postgres_password()
-        db_role = f'{USER_SCHEMA_STEM}{db_role_and_schema_suffix}'
-        db_schema = f'{USER_SCHEMA_STEM}{db_role_and_schema_suffix}'
+        db_role = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
+        db_schema = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
 
         database_data = settings.DATABASES_DATA[database_obj.memorable_name]
         valid_until = (datetime.datetime.now() + valid_for).isoformat()
 
         with connections[database_obj.memorable_name].cursor() as cur:
-            existing_tables_and_views_set = set(
-                tables_and_views_that_exist(cur, tables)
-            )
+            existing_tables_and_views_set = set(tables_and_views_that_exist(cur, tables))
 
             allowed_tables_that_exist = [
                 (schema, table)
@@ -133,7 +131,7 @@ def new_private_database_credentials(
             def ensure_db_role(db_role_name):
                 cur.execute(
                     sql.SQL(
-                        '''
+                        """
                     DO $$
                     BEGIN
                       CREATE ROLE {role};
@@ -141,7 +139,7 @@ def new_private_database_credentials(
                       RAISE DEBUG 'Role {role} already exists';
                     END
                     $$;
-                '''
+                """
                     ).format(role=sql.Identifier(db_role_name))
                 )
 
@@ -155,7 +153,7 @@ def new_private_database_credentials(
             # we need to do it first
             cur.execute(
                 sql.SQL(
-                    '''
+                    """
                 SELECT
                     rolname
                 FROM
@@ -167,20 +165,21 @@ def new_private_database_credentials(
                         rolname LIKE '\\_team\\_%'
                     )
                     AND NOT pg_has_role(rolname, 'member');
-            '''
+            """
                 )
             )
             missing_db_roles = [role for (role,) in cur.fetchall()]
 
         if missing_db_roles:
             with cache.lock(
-                'database-grant-v1', blocking_timeout=15, timeout=60,
+                "database-grant-v1",
+                blocking_timeout=15,
+                timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
                 cur.execute(
-                    sql.SQL('GRANT {} TO {};').format(
-                        sql.SQL(',').join(
-                            sql.Identifier(missing_db_role)
-                            for missing_db_role in missing_db_roles
+                    sql.SQL("GRANT {} TO {};").format(
+                        sql.SQL(",").join(
+                            sql.Identifier(missing_db_role) for missing_db_role in missing_db_roles
                         ),
                         sql.Identifier(database_data["USER"]),
                     )
@@ -190,7 +189,7 @@ def new_private_database_credentials(
             # Find existing permissions
             cur.execute(
                 sql.SQL(
-                    '''
+                    """
                 SELECT
                     schemaname AS schema,
                     tablename as name
@@ -230,7 +229,7 @@ def new_private_database_credentials(
                     AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
                         quote_ident(matviewname), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
                 ORDER BY schema, name;
-            '''
+            """
                 ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
             )
             tables_with_existing_privs = cur.fetchall()
@@ -238,7 +237,7 @@ def new_private_database_credentials(
 
             cur.execute(
                 sql.SQL(
-                    '''
+                    """
                 SELECT
                     nspname AS name
                 FROM
@@ -249,7 +248,7 @@ def new_private_database_credentials(
                     AND nspname NOT LIKE 'pg_toast_temp_%'
                     AND has_schema_privilege({role}, nspname, 'CREATE, USAGE')
                 ORDER BY nspname;
-            '''
+            """
                 ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
             )
             schemas_with_existing_privs = [row[0] for row in cur.fetchall()]
@@ -258,7 +257,7 @@ def new_private_database_credentials(
             # Existing granted team roles to permanant user role
             cur.execute(
                 sql.SQL(
-                    '''
+                    """
                 SELECT
                     rolname
                 FROM
@@ -268,7 +267,7 @@ def new_private_database_credentials(
                         rolname LIKE '\\_team\\_'
                     )
                     AND pg_has_role({db_role}, rolname, 'member');
-            '''
+            """
                 ).format(db_role=sql.Literal(db_role))
             )
             db_team_roles_previously_granted = [role for (role,) in cur.fetchall()]
@@ -312,7 +311,7 @@ def new_private_database_credentials(
             # the database, i.e. it really is more of a "group".
             cur.execute(
                 sql.SQL(
-                    'CREATE USER {user} WITH PASSWORD {password} VALID UNTIL {valid_until}'
+                    "CREATE USER {user} WITH PASSWORD {password} VALID UNTIL {valid_until}"
                 ).format(
                     user=sql.Identifier(db_user),
                     password=sql.Literal(db_password),
@@ -325,8 +324,9 @@ def new_private_database_credentials(
                 (db_role, db_schema)
             ]:
                 cur.execute(
-                    sql.SQL('CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};').format(
-                        sql.Identifier(_db_schema), sql.Identifier(_db_role),
+                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};").format(
+                        sql.Identifier(_db_schema),
+                        sql.Identifier(_db_role),
                     )
                 )
 
@@ -358,84 +358,78 @@ def new_private_database_credentials(
 
         # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
         with cache.lock(
-            'database-grant-v1', blocking_timeout=15, timeout=180,
+            "database-grant-v1",
+            blocking_timeout=15,
+            timeout=180,
         ), connections[database_obj.memorable_name].cursor() as cur:
             logger.info(
-                'Revoking permissions ON %s %s from %s',
+                "Revoking permissions ON %s %s from %s",
                 database_obj.memorable_name,
                 schemas_to_revoke,
                 db_role,
             )
             if schemas_to_revoke:
                 cur.execute(
-                    sql.SQL('REVOKE ALL PRIVILEGES ON SCHEMA {} FROM {};').format(
-                        sql.SQL(',').join(
-                            sql.Identifier(schema) for schema in schemas_to_revoke
-                        ),
+                    sql.SQL("REVOKE ALL PRIVILEGES ON SCHEMA {} FROM {};").format(
+                        sql.SQL(",").join(sql.Identifier(schema) for schema in schemas_to_revoke),
                         sql.Identifier(db_role),
                     )
                 )
 
             logger.info(
-                'Revoking permissions ON %s %s from %s',
+                "Revoking permissions ON %s %s from %s",
                 database_obj.memorable_name,
                 tables_to_revoke,
                 db_role,
             )
             if tables_to_revoke:
                 cur.execute(
-                    sql.SQL('REVOKE ALL PRIVILEGES ON {} FROM {};').format(
-                        sql.SQL(',').join(
-                            [
-                                sql.Identifier(schema, table)
-                                for schema, table in tables_to_revoke
-                            ]
+                    sql.SQL("REVOKE ALL PRIVILEGES ON {} FROM {};").format(
+                        sql.SQL(",").join(
+                            [sql.Identifier(schema, table) for schema, table in tables_to_revoke]
                         ),
                         sql.Identifier(db_role),
                     )
                 )
 
             logger.info(
-                'Granting permissions ON %s %s from %s',
+                "Granting permissions ON %s %s from %s",
                 database_obj.memorable_name,
                 schemas_to_grant,
                 db_role,
             )
             if schemas_to_grant:
                 cur.execute(
-                    sql.SQL('GRANT USAGE ON SCHEMA {} TO {};').format(
-                        sql.SQL(',').join(
-                            [sql.Identifier(schema) for schema in schemas_to_grant]
-                        ),
+                    sql.SQL("GRANT USAGE ON SCHEMA {} TO {};").format(
+                        sql.SQL(",").join([sql.Identifier(schema) for schema in schemas_to_grant]),
                         sql.Identifier(db_role),
                     )
                 )
             logger.info(
-                'Granting SELECT ON %s %s from %s',
+                "Granting SELECT ON %s %s from %s",
                 database_obj.memorable_name,
                 tables_to_grant,
                 db_role,
             )
             if tables_to_grant:
                 cur.execute(
-                    sql.SQL('GRANT SELECT ON {} TO {};').format(
-                        sql.SQL(',').join(
-                            [
-                                sql.Identifier(schema, table)
-                                for schema, table in tables_to_grant
-                            ]
+                    sql.SQL("GRANT SELECT ON {} TO {};").format(
+                        sql.SQL(",").join(
+                            [sql.Identifier(schema, table) for schema, table in tables_to_grant]
                         ),
                         sql.Identifier(db_role),
                     )
                 )
 
             logger.info(
-                'Revoking %s from %s', db_team_roles_to_revoke, db_role,
+                "Revoking %s from %s",
+                db_team_roles_to_revoke,
+                db_role,
             )
             if db_team_roles_to_revoke:
                 cur.execute(
-                    sql.SQL('REVOKE {} FROM {};').format(
-                        sql.SQL(',').join(
+                    sql.SQL("REVOKE {} FROM {};").format(
+                        sql.SQL(",").join(
                             [
                                 sql.Identifier(db_team_role)
                                 for db_team_role in db_team_roles_to_revoke
@@ -445,12 +439,14 @@ def new_private_database_credentials(
                     )
                 )
             logger.info(
-                'Granting %s to %s', db_team_roles_to_grant, db_role,
+                "Granting %s to %s",
+                db_team_roles_to_grant,
+                db_role,
             )
             if db_team_roles_to_grant:
                 cur.execute(
-                    sql.SQL('GRANT {} TO {};').format(
-                        sql.SQL(',').join(
+                    sql.SQL("GRANT {} TO {};").format(
+                        sql.SQL(",").join(
                             [
                                 sql.Identifier(db_team_role)
                                 for db_team_role in db_team_roles_to_grant
@@ -461,42 +457,40 @@ def new_private_database_credentials(
                 )
 
             cur.execute(
-                sql.SQL('GRANT CONNECT ON DATABASE {} TO {};').format(
-                    sql.Identifier(database_data['NAME']), sql.Identifier(db_role)
+                sql.SQL("GRANT CONNECT ON DATABASE {} TO {};").format(
+                    sql.Identifier(database_data["NAME"]), sql.Identifier(db_role)
                 )
             )
             cur.execute(
-                sql.SQL('GRANT {} TO {};').format(
-                    sql.Identifier(db_role), sql.Identifier(db_user)
-                )
+                sql.SQL("GRANT {} TO {};").format(sql.Identifier(db_role), sql.Identifier(db_user))
             )
 
         # Make it so by default, objects created by the user are owned by the role
         with connections[database_obj.memorable_name].cursor() as cur:
             cur.execute(
-                sql.SQL('ALTER USER {} SET ROLE {};').format(
+                sql.SQL("ALTER USER {} SET ROLE {};").format(
                     sql.Identifier(db_user), sql.Identifier(db_role)
                 )
             )
 
         return {
-            'memorable_name': database_obj.memorable_name,
-            'db_id': database_obj.id,
-            'db_name': database_data['NAME'],
-            'db_host': database_data['HOST'],
-            'db_port': database_data['PORT'],
-            'db_user': db_user,
-            'db_persistent_role': db_role,
-            'db_password': db_password,
+            "memorable_name": database_obj.memorable_name,
+            "db_id": database_obj.id,
+            "db_name": database_data["NAME"],
+            "db_host": database_data["HOST"],
+            "db_port": database_data["PORT"],
+            "db_user": db_user,
+            "db_persistent_role": db_role,
+            "db_password": db_password,
         }
 
     database_to_tables = {
         database_obj: [
-            (source_table['schema'], source_table['table'])
+            (source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
         for database_obj, source_tables_for_database in itertools.groupby(
-            source_tables, lambda source_table: source_table['database']
+            source_tables, lambda source_table: source_table["database"]
         )
     }
 
@@ -519,17 +513,17 @@ def new_private_database_credentials(
 
 
 def write_credentials_to_bucket(user, creds):
-    logger.info('settings.NOTEBOOKS_BUCKET %s', settings.NOTEBOOKS_BUCKET)
+    logger.info("settings.NOTEBOOKS_BUCKET %s", settings.NOTEBOOKS_BUCKET)
     if settings.NOTEBOOKS_BUCKET is not None:
         bucket = settings.NOTEBOOKS_BUCKET
-        s3_client = boto3.client('s3')
+        s3_client = boto3.client("s3")
         s3_prefix = (
-            'user/federated/'
+            "user/federated/"
             + stable_identification_suffix(str(user.profile.sso_id), short=False)
-            + '/'
+            + "/"
         )
 
-        logger.info('Saving creds for %s to %s %s', user, bucket, s3_prefix)
+        logger.info("Saving creds for %s to %s %s", user, bucket, s3_prefix)
         for cred in creds:
             key = f'{s3_prefix}.credentials/db_credentials_{cred["db_name"]}'
             object_contents = (
@@ -541,10 +535,10 @@ def write_credentials_to_bucket(user, creds):
                 f'dbmemorablename {cred["memorable_name"]}\n'
             )
             s3_client.put_object(
-                Body=object_contents.encode('utf-8'),
+                Body=object_contents.encode("utf-8"),
                 Bucket=bucket,
                 Key=key,
-                ACL='bucket-owner-full-control',
+                ACL="bucket-owner-full-control",
             )
 
 
@@ -575,7 +569,7 @@ def can_access_schema_table(user, database, schema, table):
 
 def get_team_schemas_for_user(user):
     teams = Team.objects.filter(member=user)
-    teams = [{'name': team.name, 'schema_name': team.schema_name} for team in teams]
+    teams = [{"name": team.name, "schema_name": team.schema_name} for team in teams]
 
     return teams
 
@@ -585,7 +579,7 @@ def is_user_in_teams(user):
 
 
 def source_tables_for_user(user):
-    user_email_domain = user.email.split('@')[1]
+    user_email_domain = user.email.split("@")[1]
 
     req_authentication_tables = SourceTable.objects.filter(
         Q(
@@ -595,28 +589,28 @@ def source_tables_for_user(user):
             ]
         ),
         dataset__deleted=False,
-        **{'dataset__published': True} if not user.is_superuser else {},
+        **{"dataset__published": True} if not user.is_superuser else {},
     )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__deleted=False,
         dataset__datasetuserpermission__user=user,
-        **{'dataset__published': True} if not user.is_superuser else {},
+        **{"dataset__published": True} if not user.is_superuser else {},
     )
     automatically_authorized_tables = SourceTable.objects.filter(
         dataset__deleted=False,
         dataset__authorized_email_domains__contains=[user_email_domain],
-        **{'dataset__published': True} if not user.is_superuser else {},
+        **{"dataset__published": True} if not user.is_superuser else {},
     )
     source_tables = [
         {
-            'database': x.database,
-            'schema': x.schema,
-            'table': x.table,
-            'dataset': {
-                'id': x.dataset.id,
-                'name': x.dataset.name,
-                'user_access_type': x.dataset.user_access_type,
+            "database": x.database,
+            "schema": x.schema,
+            "table": x.table,
+            "dataset": {
+                "id": x.dataset.id,
+                "name": x.dataset.name,
+                "user_access_type": x.dataset.user_access_type,
             },
         }
         for x in req_authentication_tables.union(
@@ -625,17 +619,17 @@ def source_tables_for_user(user):
     ]
     reference_dataset_tables = [
         {
-            'database': x.external_database,
-            'schema': 'public',
-            'table': x.table_name,
-            'dataset': {
-                'id': x.uuid,
-                'name': x.name,
-                'user_access_type': UserAccessType.REQUIRES_AUTHENTICATION,
+            "database": x.external_database,
+            "schema": "public",
+            "table": x.table_name,
+            "dataset": {
+                "id": x.uuid,
+                "name": x.name,
+                "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
         for x in ReferenceDataset.objects.live()
-        .filter(deleted=False, **{'published': True} if not user.is_superuser else {})
+        .filter(deleted=False, **{"published": True} if not user.is_superuser else {})
         .exclude(external_database=None)
     ]
     return source_tables + reference_dataset_tables
@@ -660,26 +654,26 @@ def source_tables_for_app(application_template):
     )
     source_tables = [
         {
-            'database': x.database,
-            'schema': x.schema,
-            'table': x.table,
-            'dataset': {
-                'id': x.dataset.id,
-                'name': x.dataset.name,
-                'user_access_type': x.dataset.user_access_type,
+            "database": x.database,
+            "schema": x.schema,
+            "table": x.table,
+            "dataset": {
+                "id": x.dataset.id,
+                "name": x.dataset.name,
+                "user_access_type": x.dataset.user_access_type,
             },
         }
         for x in req_authentication_tables.union(req_authorization_tables)
     ]
     reference_dataset_tables = [
         {
-            'database': x.external_database,
-            'schema': 'public',
-            'table': x.table_name,
-            'dataset': {
-                'id': x.uuid,
-                'name': x.name,
-                'user_access_type': UserAccessType.REQUIRES_AUTHENTICATION,
+            "database": x.external_database,
+            "schema": "public",
+            "table": x.table_name,
+            "dataset": {
+                "id": x.uuid,
+                "name": x.name,
+                "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
         for x in ReferenceDataset.objects.live()
@@ -690,9 +684,7 @@ def source_tables_for_app(application_template):
 
 
 def view_exists(database, schema, view):
-    with connect(
-        database_dsn(settings.DATABASES_DATA[database])
-    ) as conn, conn.cursor() as cur:
+    with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor() as cur:
         return _view_exists(cur, schema, view)
 
 
@@ -709,15 +701,13 @@ def _view_exists(cur, schema, view):
         WHERE schemaname = %(schema)s
         AND matviewname = %(view)s
     """,
-        {'schema': schema, 'view': view},
+        {"schema": schema, "view": view},
     )
     return bool(cur.fetchone())
 
 
 def table_exists(database, schema, table):
-    with connect(
-        database_dsn(settings.DATABASES_DATA[database])
-    ) as conn, conn.cursor() as cur:
+    with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor() as cur:
         return _table_exists(cur, schema, table)
 
 
@@ -766,14 +756,14 @@ def tables_and_views_that_exist(cur, schema_tables):
              (schemaname, matviewname) IN ({existing})
     """
         ).format(
-            existing=sql.SQL(',').join(
+            existing=sql.SQL(",").join(
                 [
                     (
-                        sql.SQL('(')
+                        sql.SQL("(")
                         + sql.Literal(schema)
-                        + sql.SQL(',')
+                        + sql.SQL(",")
                         + sql.Literal(table)
-                        + sql.SQL(')')
+                        + sql.SQL(")")
                     )
                     for (schema, table) in schema_tables
                 ]
@@ -792,7 +782,7 @@ def streaming_query_response(
     query_params=None,
     unfiltered_query=None,
     query_metrics_callback=None,
-    cursor_name='data_download',
+    cursor_name="data_download",
 ):
     """
     Returns a streaming http response containing a csv file for download
@@ -811,12 +801,12 @@ def streaming_query_response(
     @param cursor_name: optional name for the cursor - helps with debugging locks
     @return: Customised DjangoStreamingResponse
     """
-    logger.info('streaming_query_response start: %s %s %s', user_email, database, query)
+    logger.info("streaming_query_response start: %s %s %s", user_email, database, query)
 
     if unfiltered_query and not query_metrics_callback:
         logger.warning("Missing value for query_metrics_callback.")
 
-    logger.debug('query_params %s', query_params)
+    logger.debug("query_params %s", query_params)
 
     batch_size = 1000
     query_timeout = 300 * 1000
@@ -862,27 +852,23 @@ def streaming_query_response(
 
                 if i == 0:
                     # Column names are not populated until the first row fetched
-                    filtered_columns = [
-                        column_desc[0] for column_desc in cur.description
-                    ]
+                    filtered_columns = [column_desc[0] for column_desc in cur.description]
                     # don't block this q.put call as it is the first thing to be pushed
                     q.put(csv_writer.writerow(filtered_columns))
 
                 if not rows:
                     break
 
-                bytes_fetched = ''.join(
-                    csv_writer.writerow(row) for row in rows
-                ).encode('utf-8')
+                bytes_fetched = "".join(csv_writer.writerow(row) for row in rows).encode("utf-8")
 
                 i += len(rows)
                 total_bytes += len(bytes_fetched)
 
-                logger.debug('fetched %s rows', len(rows))
-                logger.debug('total bytes %s', total_bytes)
+                logger.debug("fetched %s rows", len(rows))
+                logger.debug("total bytes %s", total_bytes)
                 q.put(bytes_fetched, block=True, timeout=query_timeout)
 
-            q.put(csv_writer.writerow(['Number of rows: ' + str(i)]))
+            q.put(csv_writer.writerow(["Number of rows: " + str(i)]))
 
         q.put(done)
         end = timer()
@@ -890,8 +876,8 @@ def streaming_query_response(
         return filtered_columns, i, total_bytes, end - start
 
     def get_all_columns_from_unfiltered(conn):
-        logger.debug('get_all_columns_from_unfiltered')
-        columns_query = sql.SQL('SELECT * FROM ({query}) as data LIMIT 1').format(
+        logger.debug("get_all_columns_from_unfiltered")
+        columns_query = sql.SQL("SELECT * FROM ({query}) as data LIMIT 1").format(
             query=unfiltered_query
         )
         with conn.cursor() as cur:
@@ -901,8 +887,8 @@ def streaming_query_response(
         return columns
 
     def get_row_count_from_unfiltered(conn):
-        logger.debug('get_row_count_from_unfiltered')
-        total_query = sql.SQL('SELECT COUNT(*) from ({query}) as data;').format(
+        logger.debug("get_row_count_from_unfiltered")
+        total_query = sql.SQL("SELECT COUNT(*) from ({query}) as data;").format(
             query=unfiltered_query,
         )
 
@@ -918,8 +904,8 @@ def streaming_query_response(
         with connect(
             database_dsn(settings.DATABASES_DATA[database]),
             options=(
-                f'-c idle_in_transaction_session_timeout={idle_in_transaction_timeout} '
-                f'-c statement_timeout={query_timeout}'
+                f"-c idle_in_transaction_session_timeout={idle_in_transaction_timeout} "
+                f"-c statement_timeout={query_timeout}"
             ),
         ) as conn:
             conn.set_session(readonly=True)
@@ -928,7 +914,7 @@ def streaming_query_response(
                 # set statements can't be issued in the server-side cursor,
                 # used by stream_query_as_csv_to_queue so we create a separate
                 # one to set a timeout on the current connection
-                _cur.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
+                _cur.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
 
             (
                 filtered_columns,
@@ -946,12 +932,12 @@ def streaming_query_response(
 
         if should_run_query_metrics:
             metrics = {
-                'bytes_downloaded': total_bytes,
-                'column_count': len(all_columns),
-                'column_count_filtered': len(filtered_columns),
-                'download_time_in_seconds': seconds_elapsed,
-                'row_count': all_rows_count,
-                'row_count_filtered': filtered_rows_count,
+                "bytes_downloaded": total_bytes,
+                "column_count": len(all_columns),
+                "column_count_filtered": len(filtered_columns),
+                "download_time_in_seconds": seconds_elapsed,
+                "row_count": all_rows_count,
+                "row_count_filtered": filtered_rows_count,
             }
 
             query_metrics_callback(metrics)
@@ -988,11 +974,12 @@ def streaming_query_response(
     g.link_exception(exception_callback)
 
     response = StreamingHttpResponseWithoutDjangoDbConnection(
-        csv_iterator(), content_type='text/csv',
+        csv_iterator(),
+        content_type="text/csv",
     )
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
-    logger.info('streaming_query_response end: %s %s %s', user_email, database, query)
+    logger.info("streaming_query_response end: %s %s %s", user_email, database, query)
 
     return response
 
@@ -1003,7 +990,7 @@ def get_random_data_sample(database, query, sample_size):
     minimize_nulls_sample_size = sample_size * 2  # sample size before minimizing nulls
 
     with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor(
-        name='data_preview'
+        name="data_preview"
     ) as cur:  # Named cursor => server-side cursor
 
         conn.set_session(readonly=True)
@@ -1012,7 +999,7 @@ def get_random_data_sample(database, query, sample_size):
         # need to create a separate one to set a timeout on the current
         # connection
         with conn.cursor() as _cur:
-            _cur.execute('SET statement_timeout={0}'.format(query_timeout))
+            _cur.execute("SET statement_timeout={0}".format(query_timeout))
 
             try:
                 cur.execute(query)
@@ -1022,9 +1009,7 @@ def get_random_data_sample(database, query, sample_size):
 
         rows = cur.fetchmany(batch_size)
         sample = random.sample(rows, min(minimize_nulls_sample_size, len(rows)))
-        sample.sort(
-            key=lambda row: sum(value is not None for value in row), reverse=True
-        )
+        sample.sort(key=lambda row: sum(value is not None for value in row), reverse=True)
         sample = sample[:sample_size]
         random.shuffle(sample)
 
@@ -1035,18 +1020,14 @@ def table_data(user_email, database, schema, table, filename=None):
     # There is no ordering here. We just want a full dump.
     # Also, there are not likely to be updates, so a long-running
     # query shouldn't cause problems with concurrency/locking
-    query = sql.SQL('SELECT * FROM {}.{}').format(
-        sql.Identifier(schema), sql.Identifier(table)
-    )
+    query = sql.SQL("SELECT * FROM {}.{}").format(sql.Identifier(schema), sql.Identifier(table))
     if filename is None:
-        filename = F'{schema}_{table}.csv'
+        filename = f"{schema}_{table}.csv"
     return streaming_query_response(user_email, database, query, filename)
 
 
 def get_s3_prefix(user_sso_id):
-    return (
-        'user/federated/' + stable_identification_suffix(user_sso_id, short=False) + '/'
-    )
+    return "user/federated/" + stable_identification_suffix(user_sso_id, short=False) + "/"
 
 
 def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_id):
@@ -1056,7 +1037,7 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
     if user.profile.tools_access_role_arn:
         return user.profile.tools_access_role_arn, s3_prefix
 
-    iam_client = boto3.client('iam')
+    iam_client = boto3.client("iam")
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
     policy_name = settings.S3_POLICY_NAME
@@ -1070,7 +1051,7 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
     try:
         iam_client.create_role(
             RoleName=role_name,
-            Path='/',
+            Path="/",
             AssumeRolePolicyDocument=assume_role_policy_document,
             PermissionsBoundary=permissions_boundary_arn,
         )
@@ -1091,10 +1072,8 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
 
     for i in range(0, max_attempts):
         try:
-            role_arn = iam_client.get_role(RoleName=role_name)['Role']['Arn']
-            logger.info(
-                'User (%s) set up AWS role... done (%s)', user_email_address, role_arn
-            )
+            role_arn = iam_client.get_role(RoleName=role_name)["Role"]["Arn"]
+            logger.info("User (%s) set up AWS role... done (%s)", user_email_address, role_arn)
         except iam_client.exceptions.NoSuchEntityException:
             if i == max_attempts - 1:
                 raise
@@ -1108,8 +1087,8 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
                 RoleName=role_name,
                 PolicyName=policy_name,
                 PolicyDocument=policy_document_template.replace(
-                    '__S3_PREFIX__', s3_prefix
-                ).replace('__ACCESS_POINT_ID__', access_point_id or ''),
+                    "__S3_PREFIX__", s3_prefix
+                ).replace("__ACCESS_POINT_ID__", access_point_id or ""),
             )
         except iam_client.exceptions.NoSuchEntityException:
             if i == max_attempts - 1:
@@ -1144,7 +1123,7 @@ class StreamingHttpResponseWithoutDjangoDbConnection(StreamingHttpResponse):
 
 
 def stable_identification_suffix(identifier, short):
-    digest = hashlib.sha256(identifier.encode('utf-8')).hexdigest()
+    digest = hashlib.sha256(identifier.encode("utf-8")).hexdigest()
     if short:
         return digest[:8]
     return digest

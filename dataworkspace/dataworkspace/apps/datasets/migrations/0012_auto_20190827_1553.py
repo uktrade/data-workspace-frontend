@@ -6,41 +6,41 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0011_merge_20190821_0558')]
+    dependencies = [("datasets", "0011_merge_20190821_0558")]
 
     operations = [
         migrations.AddField(
-            model_name='referencedatasetfield',
-            name='is_display_name',
+            model_name="referencedatasetfield",
+            name="is_display_name",
             field=models.BooleanField(
                 default=False,
-                help_text='This field is the name that will be displayed when referenced by other datasets',
+                help_text="This field is the name that will be displayed when referenced by other datasets",
             ),
         ),
         migrations.AddField(
-            model_name='referencedatasetfield',
-            name='linked_reference_dataset',
+            model_name="referencedatasetfield",
+            name="linked_reference_dataset",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
-                related_name='linked_fields',
-                to='datasets.ReferenceDataset',
+                related_name="linked_fields",
+                to="datasets.ReferenceDataset",
             ),
         ),
         migrations.AlterField(
-            model_name='referencedatasetfield',
-            name='data_type',
+            model_name="referencedatasetfield",
+            name="data_type",
             field=models.IntegerField(
                 choices=[
-                    (1, 'Character field'),
-                    (2, 'Integer field'),
-                    (3, 'Float field'),
-                    (4, 'Date field'),
-                    (5, 'Time field'),
-                    (6, 'Datetime field'),
-                    (7, 'Boolean field'),
-                    (8, 'Linked Reference Dataset'),
+                    (1, "Character field"),
+                    (2, "Integer field"),
+                    (3, "Float field"),
+                    (4, "Date field"),
+                    (5, "Time field"),
+                    (6, "Datetime field"),
+                    (7, "Boolean field"),
+                    (8, "Linked Reference Dataset"),
                 ]
             ),
         ),

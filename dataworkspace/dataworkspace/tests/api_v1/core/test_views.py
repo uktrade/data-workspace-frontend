@@ -14,9 +14,9 @@ from dataworkspace.tests import factories
 @pytest.mark.django_db
 class TestGetSupersetCredentialsAPIView:
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.api_v1.core.views.cache')
-    @mock.patch('dataworkspace.apps.api_v1.core.views.source_tables_for_user')
-    @mock.patch('dataworkspace.apps.api_v1.core.views.new_private_database_credentials')
+    @mock.patch("dataworkspace.apps.api_v1.core.views.cache")
+    @mock.patch("dataworkspace.apps.api_v1.core.views.source_tables_for_user")
+    @mock.patch("dataworkspace.apps.api_v1.core.views.new_private_database_credentials")
     def test_first_time_user_with_tools_access_succeeds(
         self,
         mock_new_credentials,
@@ -25,7 +25,7 @@ class TestGetSupersetCredentialsAPIView:
         unauthenticated_client,
         dataset_db,
     ):
-        credentials = [{'db_user': 'foo', 'db_password': 'bar'}]
+        credentials = [{"db_user": "foo", "db_password": "bar"}]
         mock_cache.get.side_effect = [
             1,  # cache.get(credentials_version_key, None)
             None,  # cache.get(cache_key, None)
@@ -34,36 +34,36 @@ class TestGetSupersetCredentialsAPIView:
 
         user = factories.UserFactory()
         tools_permission = Permission.objects.get(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user.user_permissions.add(tools_permission)
 
         headers = {
-            'HTTP_SSO_PROFILE_USER_ID': user.profile.sso_id,
-            'HTTP_HOST': f'superset-edit.{settings.APPLICATION_ROOT_DOMAIN}',
+            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_HOST": f"superset-edit.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
-            reverse('api-v1:core:get-superset-role-credentials'), **headers
+            reverse("api-v1:core:get-superset-role-credentials"), **headers
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['credentials'] == credentials[0]
-        assert response.json()['dashboards'] == []
+        assert response.json()["credentials"] == credentials[0]
+        assert response.json()["dashboards"] == []
 
         assert mock_new_credentials.called
         assert mock_cache.set.call_args_list == [
-            mock.call('superset_credentials_version', 1, nx=True, timeout=None),
+            mock.call("superset_credentials_version", 1, nx=True, timeout=None),
             mock.call(
-                f'superset_credentials_1_edit_{user.profile.sso_id}',
-                {'credentials': credentials[0], 'dashboards': []},
+                f"superset_credentials_1_edit_{user.profile.sso_id}",
+                {"credentials": credentials[0], "dashboards": []},
                 timeout=mock.ANY,
             ),
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.api_v1.core.views.cache')
-    @mock.patch('dataworkspace.apps.api_v1.core.views.source_tables_for_user')
-    @mock.patch('dataworkspace.apps.api_v1.core.views.new_private_database_credentials')
+    @mock.patch("dataworkspace.apps.api_v1.core.views.cache")
+    @mock.patch("dataworkspace.apps.api_v1.core.views.source_tables_for_user")
+    @mock.patch("dataworkspace.apps.api_v1.core.views.new_private_database_credentials")
     def test_first_time_user_without_tools_access_fails(
         self,
         mock_new_credentials,
@@ -72,7 +72,7 @@ class TestGetSupersetCredentialsAPIView:
         unauthenticated_client,
         dataset_db,
     ):
-        credentials = [{'db_user': 'foo', 'db_password': 'bar'}]
+        credentials = [{"db_user": "foo", "db_password": "bar"}]
         mock_cache.get.side_effect = [
             1,  # cache.get(credentials_version_key, None)
             None,  # cache.get(cache_key, None)
@@ -82,22 +82,22 @@ class TestGetSupersetCredentialsAPIView:
         user = factories.UserFactory()
 
         header = {
-            'HTTP_SSO_PROFILE_USER_ID': user.profile.sso_id,
-            'HTTP_HOST': f'superset-edit.{settings.APPLICATION_ROOT_DOMAIN}',
+            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_HOST": f"superset-edit.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
-            reverse('api-v1:core:get-superset-role-credentials'), **header
+            reverse("api-v1:core:get-superset-role-credentials"), **header
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert not mock_new_credentials.called
         assert mock_cache.set.call_args_list == [
-            mock.call('superset_credentials_version', 1, nx=True, timeout=None),
+            mock.call("superset_credentials_version", 1, nx=True, timeout=None),
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.api_v1.core.views.cache')
-    @mock.patch('dataworkspace.apps.api_v1.core.views.source_tables_for_user')
-    @mock.patch('dataworkspace.apps.api_v1.core.views.new_private_database_credentials')
+    @mock.patch("dataworkspace.apps.api_v1.core.views.cache")
+    @mock.patch("dataworkspace.apps.api_v1.core.views.source_tables_for_user")
+    @mock.patch("dataworkspace.apps.api_v1.core.views.new_private_database_credentials")
     def test_returning_user_succeeds(
         self,
         mock_new_credentials,
@@ -106,12 +106,12 @@ class TestGetSupersetCredentialsAPIView:
         unauthenticated_client,
         dataset_db,
     ):
-        credentials = [{'db_user': 'foo', 'db_password': 'bar'}]
+        credentials = [{"db_user": "foo", "db_password": "bar"}]
         mock_cache.get.side_effect = [
             1,  # cache.get(credentials_version_key, None)
             {
-                'credentials': credentials[0],
-                'dashboards': [],
+                "credentials": credentials[0],
+                "dashboards": [],
             },  # cache.get(cache_key, None)
         ]
         mock_new_credentials.return_value = credentials
@@ -119,37 +119,35 @@ class TestGetSupersetCredentialsAPIView:
         user = factories.UserFactory()
 
         header = {
-            'HTTP_SSO_PROFILE_USER_ID': user.profile.sso_id,
-            'HTTP_HOST': f'superset-edit.{settings.APPLICATION_ROOT_DOMAIN}',
+            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_HOST": f"superset-edit.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
-            reverse('api-v1:core:get-superset-role-credentials'), **header
+            reverse("api-v1:core:get-superset-role-credentials"), **header
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['credentials'] == credentials[0]
-        assert response.json()['dashboards'] == []
+        assert response.json()["credentials"] == credentials[0]
+        assert response.json()["dashboards"] == []
 
         assert not mock_new_credentials.called
         assert mock_cache.set.call_args_list == [
-            mock.call('superset_credentials_version', 1, nx=True, timeout=None),
+            mock.call("superset_credentials_version", 1, nx=True, timeout=None),
         ]
 
     @pytest.mark.django_db
-    @mock.patch('dataworkspace.apps.api_v1.core.views.cache')
-    def test_public_user_gets_db_access(
-        self, mock_cache, unauthenticated_client, dataset_db
-    ):
+    @mock.patch("dataworkspace.apps.api_v1.core.views.cache")
+    def test_public_user_gets_db_access(self, mock_cache, unauthenticated_client, dataset_db):
         visualisation = factories.VisualisationLinkFactory(
-            visualisation_type='SUPERSET',
+            visualisation_type="SUPERSET",
             visualisation_catalogue_item__user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
         )
         credentials = {
-            'memorable_name': 'my_database',
-            'db_name': 'test_datasets',
-            'db_host': 'data-workspace-postgres',
-            'db_port': '5432',
-            'db_user': 'postgres',
-            'db_password': 'postgres',
+            "memorable_name": "my_database",
+            "db_name": "test_datasets",
+            "db_host": "data-workspace-postgres",
+            "db_port": "5432",
+            "db_user": "postgres",
+            "db_password": "postgres",
         }
         mock_cache.get.side_effect = [
             1,  # cache.get(credentials_version_key, None)
@@ -158,27 +156,27 @@ class TestGetSupersetCredentialsAPIView:
 
         user = factories.UserFactory()
         tools_permission = Permission.objects.get(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user.user_permissions.add(tools_permission)
 
         headers = {
-            'HTTP_SSO_PROFILE_USER_ID': user.profile.sso_id,
-            'HTTP_HOST': f'superset.{settings.APPLICATION_ROOT_DOMAIN}',
+            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_HOST": f"superset.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
-            reverse('api-v1:core:get-superset-role-credentials'), **headers
+            reverse("api-v1:core:get-superset-role-credentials"), **headers
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['credentials'] == credentials
-        assert response.json()['dashboards'] == [visualisation.identifier]
+        assert response.json()["credentials"] == credentials
+        assert response.json()["dashboards"] == [visualisation.identifier]
 
         assert mock_cache.set.call_args_list == [
-            mock.call('superset_credentials_version', 1, nx=True, timeout=None),
+            mock.call("superset_credentials_version", 1, nx=True, timeout=None),
             mock.call(
-                f'superset_credentials_1_view_{user.profile.sso_id}',
-                {'credentials': credentials, 'dashboards': [visualisation.identifier]},
+                f"superset_credentials_1_view_{user.profile.sso_id}",
+                {"credentials": credentials, "dashboards": [visualisation.identifier]},
                 timeout=mock.ANY,
             ),
         ]

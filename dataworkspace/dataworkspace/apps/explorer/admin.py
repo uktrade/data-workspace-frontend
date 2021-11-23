@@ -20,9 +20,7 @@ def clear_tool_cached_credentials(modeladmin, request, queryset):
         )
 
 
-clear_tool_cached_credentials.description = (
-    "Reset Data Explorer and Superset credentials"
-)
+clear_tool_cached_credentials.description = "Reset Data Explorer and Superset credentials"
 
 
 UserAdmin.actions += [clear_tool_cached_credentials]

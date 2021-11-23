@@ -9,51 +9,51 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('datasets', '0033_datasetapplicationtemplatepermission'),
+        ("datasets", "0033_datasetapplicationtemplatepermission"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='information_asset_manager',
+            model_name="dataset",
+            name="information_asset_manager",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='info_asset_managed_datasets',
+                related_name="info_asset_managed_datasets",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(
-            model_name='dataset',
-            name='information_asset_owner',
+            model_name="dataset",
+            name="information_asset_owner",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='info_asset_owned_datasets',
+                related_name="info_asset_owned_datasets",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='information_asset_manager',
+            model_name="referencedataset",
+            name="information_asset_manager",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='info_asset_managed_reference_datasets',
+                related_name="info_asset_managed_reference_datasets",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='information_asset_owner',
+            model_name="referencedataset",
+            name="information_asset_owner",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='info_asset_owned_reference_datasets',
+                related_name="info_asset_owned_reference_datasets",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),

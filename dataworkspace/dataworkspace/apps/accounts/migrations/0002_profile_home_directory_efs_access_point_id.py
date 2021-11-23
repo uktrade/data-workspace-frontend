@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0001_initial'),
+        ("accounts", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='home_directory_efs_access_point_id',
+            model_name="profile",
+            name="home_directory_efs_access_point_id",
             field=models.CharField(max_length=128, null=True, unique=True),
         ),
     ]

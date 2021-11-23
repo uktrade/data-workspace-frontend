@@ -10,7 +10,7 @@ from django.contrib.auth import (
 from django.contrib.sessions.backends.base import CreateError
 from django.http import HttpResponseForbidden
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 def login_required(func):
@@ -18,7 +18,7 @@ def login_required(func):
     def _login_required(request, *args, **kwargs):
         user = authenticate(request)
         if user is None:
-            logger.error('Unauthenticated %s', request)
+            logger.error("Unauthenticated %s", request)
             return HttpResponseForbidden()
 
         request.user = user

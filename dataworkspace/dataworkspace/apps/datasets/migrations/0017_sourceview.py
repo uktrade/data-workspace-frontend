@@ -8,16 +8,16 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [('core', '0001_initial'), ('datasets', '0016_auto_20191009_1341')]
+    dependencies = [("core", "0001_initial"), ("datasets", "0016_auto_20191009_1341")]
 
     operations = [
         migrations.CreateModel(
-            name='SourceView',
+            name="SourceView",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -26,51 +26,51 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'name',
+                    "name",
                     models.CharField(
-                        help_text='Used as the displayed text in the download link',
+                        help_text="Used as the displayed text in the download link",
                         max_length=1024,
                     ),
                 ),
                 (
-                    'schema',
+                    "schema",
                     models.CharField(
-                        default='public',
+                        default="public",
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'view',
+                    "view",
                     models.CharField(
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'database',
+                    "database",
                     models.ForeignKey(
                         default=None,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='core.Database',
+                        to="core.Database",
                     ),
                 ),
                 (
-                    'dataset',
+                    "dataset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.DataSet',
+                        to="datasets.DataSet",
                     ),
                 ),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         )
     ]

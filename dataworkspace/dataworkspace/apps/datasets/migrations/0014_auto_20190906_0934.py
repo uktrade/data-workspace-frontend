@@ -5,7 +5,7 @@ import django.db.models.deletion
 
 
 def reorder(apps, _):
-    ReferenceDataset = apps.get_model('datasets', 'ReferenceDataset')
+    ReferenceDataset = apps.get_model("datasets", "ReferenceDataset")
     for reference_dataset in ReferenceDataset.objects.all():
         for index, field in enumerate(reference_dataset.fields.all()):
             field.sort_order = index + 1
@@ -14,40 +14,36 @@ def reorder(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('datasets', '0013_referencedatasetuploadlog_referencedatasetuploadlogrecord')
-    ]
+    dependencies = [("datasets", "0013_referencedatasetuploadlog_referencedatasetuploadlogrecord")]
 
     operations = [
         migrations.AlterModelOptions(
-            name='referencedatasetfield',
+            name="referencedatasetfield",
             options={
-                'ordering': ('sort_order',),
-                'verbose_name': 'Reference dataset field',
+                "ordering": ("sort_order",),
+                "verbose_name": "Reference dataset field",
             },
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='sort_direction',
-            field=models.IntegerField(
-                choices=[(1, 'Ascending'), (2, 'Descending')], default=1
-            ),
+            model_name="referencedataset",
+            name="sort_direction",
+            field=models.IntegerField(choices=[(1, "Ascending"), (2, "Descending")], default=1),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='sort_field',
+            model_name="referencedataset",
+            name="sort_field",
             field=models.ForeignKey(
                 blank=True,
-                help_text='The field to order records by in any outputs. If not set '
-                'records will be sorted by last updated date.',
+                help_text="The field to order records by in any outputs. If not set "
+                "records will be sorted by last updated date.",
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                to='datasets.ReferenceDatasetField',
+                to="datasets.ReferenceDatasetField",
             ),
         ),
         migrations.AddField(
-            model_name='referencedatasetfield',
-            name='sort_order',
+            model_name="referencedatasetfield",
+            name="sort_order",
             field=models.PositiveIntegerField(default=0),
         ),
         migrations.RunPython(reorder, reverse_code=migrations.RunPython.noop),

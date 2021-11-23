@@ -32,7 +32,7 @@ from dataworkspace.apps.api_v1.datasets.serializers import (
 
 
 def _get_dataset_columns(connection, source_table):
-    sql = psycopg2.sql.SQL('SELECT * from {}.{} LIMIT 0').format(
+    sql = psycopg2.sql.SQL("SELECT * from {}.{} LIMIT 0").format(
         psycopg2.sql.Identifier(source_table.schema),
         psycopg2.sql.Identifier(source_table.table),
     )
@@ -43,7 +43,7 @@ def _get_dataset_columns(connection, source_table):
 
 def _get_dataset_rows(connection, sql, query_args=None, cursor_itersize=1000):
     query_args = [] if query_args is None else query_args
-    with connection.cursor(name='api_v1.datasets.views.get-rows') as cursor:
+    with connection.cursor(name="api_v1.datasets.views.get-rows") as cursor:
         cursor.itersize = cursor_itersize
         cursor.arraysize = cursor_itersize
         cursor.execute(sql, query_args)
@@ -58,7 +58,7 @@ def _get_dataset_rows(connection, sql, query_args=None, cursor_itersize=1000):
 
 def _get_dataset_primary_key(connection, schema, table):
     check_is_table = psycopg2.sql.SQL(
-        '''
+        """
         SELECT
             CASE
                 WHEN pg_class.relkind = 'r' THEN 'table'::text
@@ -69,10 +69,10 @@ def _get_dataset_primary_key(connection, schema, table):
                  INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
         WHERE pg_namespace.nspname = %s
           AND pg_class.relname = %s;
-        '''
+        """
     )
     sql = psycopg2.sql.SQL(
-        '''
+        """
         SELECT
             pg_attribute.attname AS column_name
         FROM
@@ -91,7 +91,7 @@ def _get_dataset_primary_key(connection, schema, table):
             AND pg_index.indisprimary
         ORDER BY
             pg_attribute.attnum
-        '''
+        """
     )
 
     with connection.cursor() as cursor:
@@ -100,7 +100,7 @@ def _get_dataset_primary_key(connection, schema, table):
 
         if len(result) == 0:
             raise ValueError(f"Table does not exist: `{schema}`.`{table}`")
-        if result[0][0] != 'table':
+        if result[0][0] != "table":
             raise ValueError(
                 f"Cannot get primary keys from something other than an ordinary table. "
                 f"`{schema}`.`{table}` is a: {result[0][0]}"
@@ -111,7 +111,7 @@ def _get_dataset_primary_key(connection, schema, table):
 
 
 def _len_chunk_header(num_chunk_bytes):
-    return len('%X\r\n' % num_chunk_bytes)
+    return len("%X\r\n" % num_chunk_bytes)
 
 
 def _get_streaming_http_response(streaming_class, request, primary_key, columns, rows):
@@ -132,38 +132,32 @@ def _get_streaming_http_response(streaming_class, request, primary_key, columns,
         num_bytes_queued += len(row_bytes)
         num_bytes_sent_and_queued += len(row_bytes)
         while num_bytes_queued >= chunk_size:
-            to_send_bytes = b''.join(queue)
+            to_send_bytes = b"".join(queue)
             chunk, to_send_bytes = (
                 to_send_bytes[:chunk_size],
                 to_send_bytes[chunk_size:],
             )
             queue = [to_send_bytes] if to_send_bytes else []
             num_bytes_queued = len(to_send_bytes)
-            num_bytes_sent += (
-                len(chunk) + _len_chunk_header(len(chunk)) + len_chunk_footer
-            )
+            num_bytes_sent += len(chunk) + _len_chunk_header(len(chunk)) + len_chunk_footer
             yield chunk
 
     def yield_data(columns, rows, base_url):
         yield from yield_chunks(b'{"headers": ')
-        yield from yield_chunks(json.dumps(columns).encode('utf-8'))
+        yield from yield_chunks(json.dumps(columns).encode("utf-8"))
         yield from yield_chunks(b', "values": [')
         for i, row in enumerate(rows):
-            row_bytes = json.dumps(row, default=str).encode('utf-8')
+            row_bytes = json.dumps(row, default=str).encode("utf-8")
             if i > 0:
-                row_bytes = b',' + row_bytes
+                row_bytes = b"," + row_bytes
             yield from yield_chunks(row_bytes)
 
             if num_bytes_sent_and_queued > num_bytes_max:
                 search_after = [columns.index(k) for k in primary_key]
                 search_after = [row[i] for i in search_after]
-                search_after = '&'.join(
-                    ['$searchAfter={}'.format(k) for k in search_after]
-                )
-                next_url = '{}?{}'.format(base_url, search_after)
-                yield from yield_chunks(
-                    b'], "next": "' + next_url.encode('utf-8') + b'"}'
-                )
+                search_after = "&".join(["$searchAfter={}".format(k) for k in search_after])
+                next_url = "{}?{}".format(base_url, search_after)
+                yield from yield_chunks(b'], "next": "' + next_url.encode("utf-8") + b'"}')
                 break
         else:
             yield from yield_chunks(b'], "next": null}')
@@ -171,19 +165,19 @@ def _get_streaming_http_response(streaming_class, request, primary_key, columns,
 
     def yield_remaining():
         if queue:
-            yield b''.join(queue)
+            yield b"".join(queue)
 
     num_bytes_max = 49_990_000
-    len_chunk_footer = len('\r\n')
+    len_chunk_footer = len("\r\n")
     chunk_size = 16384
     queue = []
     num_bytes_queued = 0
     num_bytes_sent = 0
     num_bytes_sent_and_queued = 0
 
-    base_url = request.build_absolute_uri().split('?')[0]
+    base_url = request.build_absolute_uri().split("?")[0]
     return streaming_class(
-        yield_data(columns, rows, base_url), content_type='application/json', status=200
+        yield_data(columns, rows, base_url), content_type="application/json", status=200
     )
 
 
@@ -193,14 +187,12 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
         SourceTable, id=source_table_id, dataset__id=dataset_id, dataset__deleted=False
     )
 
-    search_after = request.GET.getlist('$searchAfter')
+    search_after = request.GET.getlist("$searchAfter")
 
     with psycopg2.connect(
         database_dsn(settings.DATABASES_DATA[source_table.database.memorable_name])
     ) as connection:
-        primary_key = _get_dataset_primary_key(
-            connection, source_table.schema, source_table.table
-        )
+        primary_key = _get_dataset_primary_key(connection, source_table.schema, source_table.table)
 
         if not primary_key:
             raise ValueError(
@@ -210,34 +202,32 @@ def dataset_api_view_GET(request, dataset_id, source_table_id):
 
         if search_after == []:
             sql = psycopg2.sql.SQL(
-                '''
+                """
                     select
                         *
                     from {}.{}
                     order by {}
-                '''
+                """
             ).format(
                 psycopg2.sql.Identifier(source_table.schema),
                 psycopg2.sql.Identifier(source_table.table),
-                psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
+                psycopg2.sql.SQL(",").join(map(psycopg2.sql.Identifier, primary_key)),
             )
         else:
             sql = psycopg2.sql.SQL(
-                '''
+                """
                     select
                         *
                     from {}.{}
                     where ({}) > ({})
                     order by {}
-                '''
+                """
             ).format(
                 psycopg2.sql.Identifier(source_table.schema),
                 psycopg2.sql.Identifier(source_table.table),
-                psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
-                psycopg2.sql.SQL(',').join(
-                    psycopg2.sql.Placeholder() * len(search_after)
-                ),
-                psycopg2.sql.SQL(',').join(map(psycopg2.sql.Identifier, primary_key)),
+                psycopg2.sql.SQL(",").join(map(psycopg2.sql.Identifier, primary_key)),
+                psycopg2.sql.SQL(",").join(psycopg2.sql.Placeholder() * len(search_after)),
+                psycopg2.sql.SQL(",").join(map(psycopg2.sql.Identifier, primary_key)),
             )
 
         columns = _get_dataset_columns(connection, source_table)
@@ -260,7 +250,7 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
         slug=reference_slug,
     )
     primary_key = ref_dataset._meta.pk
-    search_after = (request.GET.getlist('$searchAfter') or [0])[
+    search_after = (request.GET.getlist("$searchAfter") or [0])[
         0
     ]  # only one primary key is used for reference datasets
 
@@ -268,7 +258,7 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
         query_set = (
             ref_dataset.get_record_model_class()
             .objects.filter(reference_dataset=ref_dataset)
-            .filter(**{f'{primary_key.name}__gt': search_after})
+            .filter(**{f"{primary_key.name}__gt": search_after})
             .order_by(primary_key.name)
         )
         for record in query_set:
@@ -285,9 +275,7 @@ def reference_dataset_api_view_GET(request, group_slug, reference_slug):
                         else None
                     )
                 else:
-                    values[field_names.index(field.name)] = getattr(
-                        record, field.column_name
-                    )
+                    values[field_names.index(field.name)] = getattr(record, field.column_name)
             yield values
 
     field_names = ref_dataset.export_field_names
@@ -316,30 +304,32 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
     """
 
     fields = [
-        'id',
-        'name',
-        'short_description',
-        'description',
-        'published',
-        'created_date',
-        'published_at',
-        'information_asset_owner',
-        'information_asset_manager',
-        'enquiries_contact',
-        'licence',
-        'slug',
-        'purpose',
-        'source_tags',
-        'personal_data',
-        'retention_policy',
-        'eligibility_criteria',
+        "id",
+        "name",
+        "short_description",
+        "description",
+        "published",
+        "created_date",
+        "published_at",
+        "information_asset_owner",
+        "information_asset_manager",
+        "enquiries_contact",
+        "licence",
+        "slug",
+        "purpose",
+        "source_tags",
+        "personal_data",
+        "retention_policy",
+        "eligibility_criteria",
     ]
     queryset = (
         DataSet.objects.live()
-        .annotate(purpose=models.F('type'))
+        .annotate(purpose=models.F("type"))
         .annotate(
             source_tags=ArrayAgg(
-                'tags__name', filter=models.Q(tags__type=TagType.SOURCE), distinct=True,
+                "tags__name",
+                filter=models.Q(tags__type=TagType.SOURCE),
+                distinct=True,
             )
         )
         .values(*fields)
@@ -351,26 +341,26 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             .annotate(purpose=_static_int(DataSetType.REFERENCE))
             .annotate(
                 source_tags=ArrayAgg(
-                    'tags__name',
+                    "tags__name",
                     filter=models.Q(tags__type=TagType.SOURCE),
                     distinct=True,
                 )
             )
-            .values(*_replace(fields, 'id', 'uuid'))
+            .values(*_replace(fields, "id", "uuid"))
         )
         .union(
             VisualisationCatalogueItem.objects.live()
             .annotate(purpose=_static_int(DataSetType.VISUALISATION))
             .annotate(
                 source_tags=ArrayAgg(
-                    'tags__name',
+                    "tags__name",
                     filter=models.Q(tags__type=TagType.SOURCE),
                     distinct=True,
                 )
             )
             .values(*fields)
         )
-    ).order_by('created_date')
+    ).order_by("created_date")
 
     serializer_class = CatalogueItemSerializer
     # PageNumberPagination is used instead of CursorPagination
@@ -386,13 +376,13 @@ class ToolQueryAuditLogViewSet(viewsets.ModelViewSet):
     # Due to there being a few queries in the logs with > 1 million chars
     # we truncate the query at the db level before it gets to the serializer
     queryset = (
-        ToolQueryAuditLog.objects.defer('query_sql')
+        ToolQueryAuditLog.objects.defer("query_sql")
         .annotate(
             truncated_query_sql=Substr(
-                'query_sql', 1, settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
+                "query_sql", 1, settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
             )
         )
-        .prefetch_related('tables')
+        .prefetch_related("tables")
     )
     serializer_class = ToolQueryAuditLogSerializer
     pagination_class = TimestampCursorPagination

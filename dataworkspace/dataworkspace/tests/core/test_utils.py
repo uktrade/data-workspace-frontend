@@ -34,12 +34,10 @@ from dataworkspace.tests.factories import (
 class TestGetRandomSample:
     @pytest.fixture
     def test_db(self, db):
-        database = factories.DatabaseFactory(memorable_name='my_database')
-        with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA['my_database'])
-        ) as conn:
+        database = factories.DatabaseFactory(memorable_name="my_database")
+        with psycopg2.connect(database_dsn(settings.DATABASES_DATA["my_database"])) as conn:
             conn.cursor().execute(
-                '''
+                """
             CREATE TABLE IF NOT EXISTS test_sample AS (
                 with data (x, y, z) as (values
                     (NULL, NULL, NULL),
@@ -49,25 +47,25 @@ class TestGetRandomSample:
                 )
                 SELECT * from data
             );
-            '''
+            """
             )
             conn.commit()
             yield database.memorable_name
-            conn.cursor().execute('DROP TABLE test_sample')
+            conn.cursor().execute("DROP TABLE test_sample")
 
     def test_get_sample_prefers_less_none(self, test_db):
-        query = 'select * from test_sample'
+        query = "select * from test_sample"
         sample = get_random_data_sample(test_db, query, sample_size=2)
-        assert ('a', 'b', 'c') in sample
-        assert ('a', 'b', None) in sample
+        assert ("a", "b", "c") in sample
+        assert ("a", "b", None) in sample
         assert len(sample) == 2
 
     def test_get_sample_bigger_then_dataset(self, test_db):
-        query = 'select * from test_sample'
+        query = "select * from test_sample"
         sample = get_random_data_sample(test_db, query, sample_size=20)
-        assert ('a', 'b', 'c') in sample
-        assert ('a', 'b', None) in sample
-        assert ('a', None, None) in sample
+        assert ("a", "b", "c") in sample
+        assert ("a", "b", None) in sample
+        assert ("a", None, None) in sample
         assert (None, None, None) in sample
         assert len(sample) == 4
 
@@ -76,24 +74,24 @@ class TestPostgresUser:
     def test_very_long_suffix_raises_value_error(self):
         with pytest.raises(ValueError):
             postgres_user(
-                'short@email.com',
-                suffix='my-very-long-suffix-that-uses-too-many-characters',
+                "short@email.com",
+                suffix="my-very-long-suffix-that-uses-too-many-characters",
             )
 
     @pytest.mark.parametrize(
-        'email, suffix, expected_match, expected_length',
+        "email, suffix, expected_match, expected_length",
         (
-            ('short@email.com', '', r'^user_short_email_com_[a-z0-9]{5}$', 26),
+            ("short@email.com", "", r"^user_short_email_com_[a-z0-9]{5}$", 26),
             (
-                'a.silly.super.unnecessarily_very.long-email@my.subdomain.domain.com',
-                '',
-                r'^user_a_silly_super_unnecessarily_very_long_email_my_subdo_[a-z0-9]{5}$',
+                "a.silly.super.unnecessarily_very.long-email@my.subdomain.domain.com",
+                "",
+                r"^user_a_silly_super_unnecessarily_very_long_email_my_subdo_[a-z0-9]{5}$",
                 63,
             ),
             (
-                'a.silly.super.unnecessarily_very.long-email@my.subdomain.domain.com',
-                'suffix',
-                r'^user_a_silly_super_unnecessarily_very_long_email_m_[a-z0-9]{5}_suffix$',
+                "a.silly.super.unnecessarily_very.long-email@my.subdomain.domain.com",
+                "suffix",
+                r"^user_a_silly_super_unnecessarily_very_long_email_m_[a-z0-9]{5}_suffix$",
                 63,
             ),
         ),
@@ -124,11 +122,11 @@ class TestPostgresUser:
 
 class TestNewPrivateDatabaseCredentials:
     @pytest.mark.django_db(transaction=True)
-    @override_settings(PGAUDIT_LOG_SCOPES='ALL')
+    @override_settings(PGAUDIT_LOG_SCOPES="ALL")
     def test_new_credentials_have_pgaudit_configuration(self):
         ensure_databases_configured().handle()
 
-        user = UserFactory(email='test@foo.bar')
+        user = UserFactory(email="test@foo.bar")
         st = SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -145,16 +143,16 @@ class TestNewPrivateDatabaseCredentials:
             valid_for=datetime.timedelta(days=1),
         )
 
-        connections[st.database.memorable_name].cursor().execute('COMMIT')
+        connections[st.database.memorable_name].cursor().execute("COMMIT")
 
-        rolename = user_creds_to_drop[0]['db_user']
+        rolename = user_creds_to_drop[0]["db_user"]
         query = f"SELECT rolname, rolconfig FROM pg_roles WHERE rolname = '{rolename}';"
 
         with connections[st.database.memorable_name].cursor() as cursor:
             cursor.execute(query)
             results = cursor.fetchall()
-            assert 'pgaudit.log=ALL' in results[0][1]
-            assert 'pgaudit.log_catalog=off' in results[0][1]
+            assert "pgaudit.log=ALL" in results[0][1]
+            assert "pgaudit.log_catalog=off" in results[0][1]
 
 
 class TestDeleteUnusedDatasetsUsers:
@@ -162,11 +160,9 @@ class TestDeleteUnusedDatasetsUsers:
     def test_deletes_expired_and_unused_users(self):
         ensure_databases_configured().handle()
 
-        user = UserFactory(email='test@foo.bar')
+        user = UserFactory(email="test@foo.bar")
         st = SourceTableFactory(
-            dataset=MasterDataSetFactory.create(
-                user_access_type='REQUIRES_AUTHENTICATION'
-            )
+            dataset=MasterDataSetFactory.create(user_access_type="REQUIRES_AUTHENTICATION")
         )
 
         source_tables = source_tables_for_user(user)
@@ -181,24 +177,24 @@ class TestDeleteUnusedDatasetsUsers:
         qs_creds_to_drop = new_private_database_credentials(
             db_role_schema_suffix,
             source_tables,
-            postgres_user(user.email, suffix='qs'),
+            postgres_user(user.email, suffix="qs"),
             user,
             valid_for=datetime.timedelta(seconds=0),
         )
         qs_creds_to_keep = new_private_database_credentials(
             db_role_schema_suffix,
             source_tables,
-            postgres_user(user.email, suffix='qs'),
+            postgres_user(user.email, suffix="qs"),
             user,
             valid_for=datetime.timedelta(minutes=1),
         )
 
-        connections[st.database.memorable_name].cursor().execute('COMMIT')
+        connections[st.database.memorable_name].cursor().execute("COMMIT")
 
         # Make sure that `qs_creds_to_drop` has definitely expired
         time.sleep(1)
 
-        with mock.patch('dataworkspace.apps.applications.utils.gevent.sleep'):
+        with mock.patch("dataworkspace.apps.applications.utils.gevent.sleep"):
             delete_unused_datasets_users()
 
         with connections[st.database.memorable_name].cursor() as cursor:
@@ -206,10 +202,10 @@ class TestDeleteUnusedDatasetsUsers:
                 "SELECT usename FROM pg_catalog.pg_user WHERE usename IN %s",
                 [
                     (
-                        user_creds_to_drop[0]['db_user'],
-                        qs_creds_to_drop[0]['db_user'],
-                        qs_creds_to_keep[0]['db_user'],
+                        user_creds_to_drop[0]["db_user"],
+                        qs_creds_to_drop[0]["db_user"],
+                        qs_creds_to_keep[0]["db_user"],
                     )
                 ],
             )
-            assert cursor.fetchall() == [(qs_creds_to_keep[0]['db_user'],)]
+            assert cursor.fetchall() == [(qs_creds_to_keep[0]["db_user"],)]

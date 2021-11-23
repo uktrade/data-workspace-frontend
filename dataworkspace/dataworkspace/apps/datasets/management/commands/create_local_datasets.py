@@ -5,7 +5,7 @@ import time
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-logger = logging.getLogger('multirunner')
+logger = logging.getLogger("multirunner")
 
 
 class CommandRunner(threading.Thread):
@@ -19,7 +19,7 @@ class CommandRunner(threading.Thread):
         while not self.stop_command.is_set():
             try:
                 call_command(self.command, *self.args)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 logging.error(e)
             time.sleep(1)
 
@@ -44,15 +44,13 @@ class MultiTask:
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        self.stdout.write(
-            "Continuously creates dummy datasets. Ctrl+C once you are done."
-        )
+        self.stdout.write("Continuously creates dummy datasets. Ctrl+C once you are done.")
 
         tasks = [
-            ('create_master_dataset', []),
-            ('create_datacut_dataset', []),
-            ('create_reference_dataset', []),
-            ('create_visualisation_dataset', []),
+            ("create_master_dataset", []),
+            ("create_datacut_dataset", []),
+            ("create_reference_dataset", []),
+            ("create_visualisation_dataset", []),
         ]
         mt = MultiTask(tasks)
         mt.start()

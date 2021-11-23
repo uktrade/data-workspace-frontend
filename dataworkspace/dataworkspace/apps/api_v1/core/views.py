@@ -31,7 +31,7 @@ class UserSatisfactionSurveyViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
 
-credentials_version_key = 'superset_credentials_version'
+credentials_version_key = "superset_credentials_version"
 
 
 def get_cached_credentials_key(user_profile_sso_id, endpoint):
@@ -40,48 +40,46 @@ def get_cached_credentials_key(user_profile_sso_id, endpoint):
     # or gains access to a dashboard
     cache.set(credentials_version_key, 1, nx=True, timeout=None)
     credentials_version = cache.get(credentials_version_key, None)
-    return (
-        f"superset_credentials_{credentials_version}_{endpoint}_{user_profile_sso_id}"
-    )
+    return f"superset_credentials_{credentials_version}_{endpoint}_{user_profile_sso_id}"
 
 
 def get_superset_credentials(request):
     superset_endpoint = {
         urlparse(url).netloc: name for name, url in settings.SUPERSET_DOMAINS.items()
-    }[request.headers['host']]
+    }[request.headers["host"]]
 
     cache_key = get_cached_credentials_key(
-        request.headers['sso-profile-user-id'], superset_endpoint
+        request.headers["sso-profile-user-id"], superset_endpoint
     )
     response = cache.get(cache_key, None)
     if not response:
         dw_user = get_user_model().objects.get(
-            profile__sso_id=request.headers['sso-profile-user-id']
+            profile__sso_id=request.headers["sso-profile-user-id"]
         )
         if not dw_user.user_permissions.filter(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists():
-            return HttpResponse('Unauthorized', status=401)
+            return HttpResponse("Unauthorized", status=401)
 
         duration = timedelta(hours=24)
         cache_duration = (duration - timedelta(minutes=15)).total_seconds()
 
         # Give "public" users full db credentials
-        if superset_endpoint == 'view':
+        if superset_endpoint == "view":
             dashboards_user_can_access = [
                 d.identifier
-                for d in VisualisationLink.objects.filter(visualisation_type='SUPERSET')
+                for d in VisualisationLink.objects.filter(visualisation_type="SUPERSET")
                 if d.visualisation_catalogue_item.user_has_access(dw_user)
             ]
             credentials = [
                 {
-                    'memorable_name': alias,
-                    'db_name': data['NAME'],
-                    'db_host': data['HOST'],
-                    'db_port': data['PORT'],
-                    'db_user': data['USER'],
-                    'db_password': data['PASSWORD'],
+                    "memorable_name": alias,
+                    "db_name": data["NAME"],
+                    "db_host": data["HOST"],
+                    "db_port": data["PORT"],
+                    "db_user": data["USER"],
+                    "db_password": data["PASSWORD"],
                 }
                 for alias, data in settings.DATABASES_DATA.items()
             ]
@@ -96,14 +94,14 @@ def get_superset_credentials(request):
             credentials = new_private_database_credentials(
                 db_role_schema_suffix,
                 source_tables,
-                postgres_user(dw_user.email, suffix='superset'),
+                postgres_user(dw_user.email, suffix="superset"),
                 dw_user,
                 valid_for=duration,
             )
 
         response = {
-            'credentials': credentials[0],
-            'dashboards': dashboards_user_can_access,
+            "credentials": credentials[0],
+            "dashboards": dashboards_user_can_access,
         }
 
         cache.set(cache_key, response, timeout=cache_duration)

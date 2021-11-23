@@ -6,15 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0014_usertoolconfiguration'),
+        ("applications", "0014_usertoolconfiguration"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='usertoolconfiguration',
-            name='size',
+            model_name="usertoolconfiguration",
+            name="size",
             field=models.IntegerField(
-                choices=[(1, 'Small'), (2, 'Medium'), (3, 'Large'), (4, 'Extra Large')],
+                choices=[(1, "Small"), (2, "Medium"), (3, "Large"), (4, "Extra Large")],
                 default=2,
             ),
         ),

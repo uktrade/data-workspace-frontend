@@ -6,38 +6,38 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0049_auto_20200610_1007'),
+        ("datasets", "0049_auto_20200610_1007"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='sourcetable',
-            name='frequency',
+            model_name="sourcetable",
+            name="frequency",
             field=models.IntegerField(
                 choices=[
-                    (1, 'Daily'),
-                    (2, 'Weekly'),
-                    (3, 'Monthly'),
-                    (4, 'Quarterly'),
-                    (6, '6-monthly'),
-                    (5, 'Annually'),
-                    (7, 'Ad hoc'),
+                    (1, "Daily"),
+                    (2, "Weekly"),
+                    (3, "Monthly"),
+                    (4, "Quarterly"),
+                    (6, "6-monthly"),
+                    (5, "Annually"),
+                    (7, "Ad hoc"),
                 ],
                 default=1,
             ),
         ),
         migrations.AlterField(
-            model_name='sourceview',
-            name='frequency',
+            model_name="sourceview",
+            name="frequency",
             field=models.IntegerField(
                 choices=[
-                    (1, 'Daily'),
-                    (2, 'Weekly'),
-                    (3, 'Monthly'),
-                    (4, 'Quarterly'),
-                    (6, '6-monthly'),
-                    (5, 'Annually'),
-                    (7, 'Ad hoc'),
+                    (1, "Daily"),
+                    (2, "Weekly"),
+                    (3, "Monthly"),
+                    (4, "Quarterly"),
+                    (6, "6-monthly"),
+                    (5, "Annually"),
+                    (7, "Ad hoc"),
                 ],
                 default=1,
             ),
