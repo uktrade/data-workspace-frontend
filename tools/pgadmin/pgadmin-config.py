@@ -13,36 +13,36 @@ UPGRADE_CHECK_ENABLED = False
 
 
 def normalise_environment(key_values):
-    ''' Converts denormalised dict of (string -> string) pairs, where the first string
-        is treated as a path into a nested list/dictionary structure
+    '''Converts denormalised dict of (string -> string) pairs, where the first string
+    is treated as a path into a nested list/dictionary structure
 
-        {
-            "FOO__1__BAR": "setting-1",
-            "FOO__1__BAZ": "setting-2",
-            "FOO__2__FOO": "setting-3",
-            "FOO__2__BAR": "setting-4",
-            "FIZZ": "setting-5",
-        }
+    {
+        "FOO__1__BAR": "setting-1",
+        "FOO__1__BAZ": "setting-2",
+        "FOO__2__FOO": "setting-3",
+        "FOO__2__BAR": "setting-4",
+        "FIZZ": "setting-5",
+    }
 
-        to the nested structure that this represents
+    to the nested structure that this represents
 
-        {
-            "FOO": [{
-                "BAR": "setting-1",
-                "BAZ": "setting-2",
-            }, {
-                "BAR": "setting-3",
-                "BAZ": "setting-4",
-            }],
-            "FIZZ": "setting-5",
-        }
+    {
+        "FOO": [{
+            "BAR": "setting-1",
+            "BAZ": "setting-2",
+        }, {
+            "BAR": "setting-3",
+            "BAZ": "setting-4",
+        }],
+        "FIZZ": "setting-5",
+    }
 
-        If all the keys for that level parse as integers, then it's treated as a list
-        with the actual keys only used for sorting
+    If all the keys for that level parse as integers, then it's treated as a list
+    with the actual keys only used for sorting
 
-        This function is recursive, but it would be extremely difficult to hit a stack
-        limit, and this function would typically by called once at the start of a
-        program, so efficiency isn't too much of a concern.
+    This function is recursive, but it would be extremely difficult to hit a stack
+    limit, and this function would typically by called once at the start of a
+    program, so efficiency isn't too much of a concern.
     '''
 
     # Separator is chosen to

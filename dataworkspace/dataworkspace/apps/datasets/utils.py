@@ -442,7 +442,10 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
 
     datacuts = list(
         CustomDatasetQueryTable.objects.filter(
-            reduce(operator.or_, ([Q(schema=t[0], table=t[1]) for t in tables]),)
+            reduce(
+                operator.or_,
+                ([Q(schema=t[0], table=t[1]) for t in tables]),
+            )
         )
         .distinct()
         .values_list('query__dataset__id', flat=True)
@@ -641,13 +644,15 @@ def send_notification_emails():
             if created:
                 dataset = table.dataset
                 logger.info(
-                    'Processing notifications for dataset %s', dataset.name,
+                    'Processing notifications for dataset %s',
+                    dataset.name,
                 )
                 for subscription in dataset.subscriptions.filter(
                     notify_on_schema_change=True
                 ):
                     UserNotification.objects.create(
-                        notification=notification, subscription=subscription,
+                        notification=notification,
+                        subscription=subscription,
                     )
 
     def send_notifications():
@@ -658,8 +663,10 @@ def send_notification_emails():
         for user_notification_id in user_notification_ids:
             try:
                 with transaction.atomic():
-                    user_notification = UserNotification.objects.select_for_update().get(
-                        id=user_notification_id
+                    user_notification = (
+                        UserNotification.objects.select_for_update().get(
+                            id=user_notification_id
+                        )
                     )
                     user_notification.refresh_from_db()
                     if user_notification.email_id is not None:

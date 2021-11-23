@@ -91,12 +91,14 @@ class ShareQueryForm(GOVUKDesignSystemForm):
         label='Message',
         required=True,
         widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, attrs={"rows": 20},
+            label_is_heading=False,
+            attrs={"rows": 20},
         ),
     )
     query = CharField(required=True, widget=HiddenInput())
     copy_sender = GOVUKDesignSystemBooleanField(
-        label='Send me a copy of the email', required=False,
+        label='Send me a copy of the email',
+        required=False,
     )
 
     def clean(self):

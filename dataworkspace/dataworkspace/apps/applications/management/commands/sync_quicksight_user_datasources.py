@@ -5,8 +5,7 @@ from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 
 
 class Command(BaseCommand):
-    '''Sync master datasets and user permissions from Data Workspace to AWS QuickSight.
-    '''
+    '''Sync master datasets and user permissions from Data Workspace to AWS QuickSight.'''
 
     help = 'Sync master datasets and user permissions from Data Workspace to AWS QuickSight.'
 

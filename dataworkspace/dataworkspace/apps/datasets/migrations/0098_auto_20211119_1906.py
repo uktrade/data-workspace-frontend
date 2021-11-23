@@ -42,7 +42,8 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AlterUniqueTogether(
-            name='datasetsubscription', unique_together={('user', 'dataset')},
+            name='datasetsubscription',
+            unique_together={('user', 'dataset')},
         ),
         migrations.CreateModel(
             name='UserNotification',

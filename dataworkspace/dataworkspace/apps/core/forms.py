@@ -48,17 +48,22 @@ class SupportForm(GOVUKDesignSystemForm):
         required=False,
         label='Tell us how we can help you',
         widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, attrs={"rows": 5},
+            label_is_heading=False,
+            attrs={"rows": 5},
         ),
     )
 
     def clean(self):
         cleaned = super().clean()
 
-        if cleaned['support_type'] in [
-            self.SupportTypes.TECH_SUPPORT,
-            self.SupportTypes.OTHER,
-        ] and not cleaned.get('email'):
+        if (
+            cleaned['support_type']
+            in [
+                self.SupportTypes.TECH_SUPPORT,
+                self.SupportTypes.OTHER,
+            ]
+            and not cleaned.get('email')
+        ):
             raise forms.ValidationError({'email': 'Please enter your email address'})
 
         if (
@@ -109,14 +114,16 @@ class TechnicalSupportForm(GOVUKDesignSystemForm):
         required=False,
         label='What happened?',
         widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, attrs={"rows": 5},
+            label_is_heading=False,
+            attrs={"rows": 5},
         ),
     )
     what_should_have_happened = GOVUKDesignSystemTextareaField(
         required=False,
         label='What should have happened?',
         widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, attrs={"rows": 5},
+            label_is_heading=False,
+            attrs={"rows": 5},
         ),
     )
 

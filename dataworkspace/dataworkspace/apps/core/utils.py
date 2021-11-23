@@ -174,7 +174,9 @@ def new_private_database_credentials(
 
         if missing_db_roles:
             with cache.lock(
-                'database-grant-v1', blocking_timeout=15, timeout=60,
+                'database-grant-v1',
+                blocking_timeout=15,
+                timeout=60,
             ), connections[database_obj.memorable_name].cursor() as cur:
                 cur.execute(
                     sql.SQL('GRANT {} TO {};').format(
@@ -326,7 +328,8 @@ def new_private_database_credentials(
             ]:
                 cur.execute(
                     sql.SQL('CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};').format(
-                        sql.Identifier(_db_schema), sql.Identifier(_db_role),
+                        sql.Identifier(_db_schema),
+                        sql.Identifier(_db_role),
                     )
                 )
 
@@ -358,7 +361,9 @@ def new_private_database_credentials(
 
         # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
         with cache.lock(
-            'database-grant-v1', blocking_timeout=15, timeout=180,
+            'database-grant-v1',
+            blocking_timeout=15,
+            timeout=180,
         ), connections[database_obj.memorable_name].cursor() as cur:
             logger.info(
                 'Revoking permissions ON %s %s from %s',
@@ -430,7 +435,9 @@ def new_private_database_credentials(
                 )
 
             logger.info(
-                'Revoking %s from %s', db_team_roles_to_revoke, db_role,
+                'Revoking %s from %s',
+                db_team_roles_to_revoke,
+                db_role,
             )
             if db_team_roles_to_revoke:
                 cur.execute(
@@ -445,7 +452,9 @@ def new_private_database_credentials(
                     )
                 )
             logger.info(
-                'Granting %s to %s', db_team_roles_to_grant, db_role,
+                'Granting %s to %s',
+                db_team_roles_to_grant,
+                db_role,
             )
             if db_team_roles_to_grant:
                 cur.execute(
@@ -988,7 +997,8 @@ def streaming_query_response(
     g.link_exception(exception_callback)
 
     response = StreamingHttpResponseWithoutDjangoDbConnection(
-        csv_iterator(), content_type='text/csv',
+        csv_iterator(),
+        content_type='text/csv',
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 

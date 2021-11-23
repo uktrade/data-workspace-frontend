@@ -339,7 +339,9 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         .annotate(purpose=models.F('type'))
         .annotate(
             source_tags=ArrayAgg(
-                'tags__name', filter=models.Q(tags__type=TagType.SOURCE), distinct=True,
+                'tags__name',
+                filter=models.Q(tags__type=TagType.SOURCE),
+                distinct=True,
             )
         )
         .values(*fields)

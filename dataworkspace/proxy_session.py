@@ -84,8 +84,10 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
             if to_set:
                 with await redis_pool as conn:
                     for key, value in to_set.items():
-                        redis_key = f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode(
-                            'ascii'
+                        redis_key = (
+                            f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode(
+                                'ascii'
+                            )
                         )
                         redis_value = value.encode('ascii')
                         await conn.execute(

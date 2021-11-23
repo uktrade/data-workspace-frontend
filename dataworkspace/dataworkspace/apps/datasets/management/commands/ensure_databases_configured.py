@@ -8,7 +8,7 @@ from dataworkspace.apps.core.utils import database_dsn
 
 
 class Command(BaseCommand):
-    ''' Ensures that the databases are configured.
+    '''Ensures that the databases are configured.
 
     Specifically, revoking the default public schema permissions that allows
     tables to be created

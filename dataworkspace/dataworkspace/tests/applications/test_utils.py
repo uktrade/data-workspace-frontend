@@ -527,7 +527,11 @@ class TestSyncActivityStreamSSOUsers:
         _do_sync_activity_stream_sso_users()
 
         assert mock_hawk_request.call_args_list == [
-            mock.call('GET', 'http://activity.stream/v3/activities/_search', mock.ANY,)
+            mock.call(
+                'GET',
+                'http://activity.stream/v3/activities/_search',
+                mock.ANY,
+            )
         ]
 
     @pytest.mark.django_db
@@ -914,7 +918,9 @@ class TestSyncActivityStreamSSOUsers:
 
         assert len(all_users) == 1
         assert create_tools_access_iam_role_task.delay.call_args_list == [
-            mock.call(user.id,)
+            mock.call(
+                user.id,
+            )
         ]
 
     @pytest.mark.django_db

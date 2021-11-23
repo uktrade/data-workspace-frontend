@@ -246,7 +246,9 @@ def app_mutator(app):
                 # Any non-related-owner filters are handled as usual
                 elif value:
                     filters.add_filter(
-                        filter_field.field_name, filter_field.filter_class, value,
+                        filter_field.field_name,
+                        filter_field.filter_class,
+                        value,
                     )
 
             return filters

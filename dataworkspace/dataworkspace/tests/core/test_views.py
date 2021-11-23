@@ -256,7 +256,11 @@ def test_footer_links(request_client):
     "has_tools_access, expected_href, expected_text",
     (
         (False, "/request-access/", "Request access to GitLab"),
-        (True, "https://gitlab", "Open GitLab",),
+        (
+            True,
+            "https://gitlab",
+            "Open GitLab",
+        ),
     ),
 )
 @override_settings(GITLAB_URL_FOR_TOOLS='https://gitlab')
@@ -280,7 +284,11 @@ def test_gitlab_access(has_tools_access, expected_href, expected_text):
     "has_quicksight_access, expected_href, expected_text",
     (
         (True, "/tools/quicksight/redirect", "Open Amazon QuickSight"),
-        (False, "/request-access/", "Request access to Amazon QuickSight",),
+        (
+            False,
+            "/request-access/",
+            "Request access to Amazon QuickSight",
+        ),
     ),
 )
 @override_settings(QUICKSIGHT_SSO_URL='https://quicksight')
@@ -306,7 +314,11 @@ def test_quicksight_link_only_shown_to_user_with_permission(
     "has_appstream_update, expected_href, expected_text",
     (
         (True, "https://appstream", "Open SPSS / STATA"),
-        (False, "/request-access/", "Request access to SPSS / STATA",),
+        (
+            False,
+            "/request-access/",
+            "Request access to SPSS / STATA",
+        ),
     ),
 )
 @override_settings(APPSTREAM_URL='https://appstream')

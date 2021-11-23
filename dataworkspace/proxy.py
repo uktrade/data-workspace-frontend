@@ -1009,8 +1009,10 @@ async def async_main():
                 )
 
             # Get profile from Redis cache to avoid calling SSO on every request
-            redis_profile_key = f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode(
-                'ascii'
+            redis_profile_key = (
+                f'{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}'.encode(
+                    'ascii'
+                )
             )
             with await redis_pool as conn:
                 me_profile_raw = await conn.execute('GET', redis_profile_key)

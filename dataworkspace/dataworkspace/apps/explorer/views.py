@@ -308,7 +308,8 @@ class PlayQueryView(View):
 
             if existing_query_id:
                 redirect_url = reverse(
-                    'explorer:query_detail', kwargs={"query_id": existing_query_id},
+                    'explorer:query_detail',
+                    kwargs={"query_id": existing_query_id},
                 )
             else:
                 redirect_url = reverse('explorer:query_create')
@@ -653,7 +654,8 @@ class ShareQueryView(FormView):
             )
         return HttpResponseRedirect(
             reverse(
-                'explorer:share_query_confirmation', args=(form_data['to_user'].id,),
+                'explorer:share_query_confirmation',
+                args=(form_data['to_user'].id,),
             )
             + f'?{urlencode(self.request.GET)}'
         )

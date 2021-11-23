@@ -23,7 +23,9 @@ class S3FileStorage(FileSystemStorage):
 
         try:
             client.put_object(
-                Body=content, Bucket=self.bucket, Key=key,
+                Body=content,
+                Bucket=self.bucket,
+                Key=key,
             )
         except ClientError as ex:
             raise Exception(

@@ -26,13 +26,15 @@ class Migration(migrations.Migration):
                 (
                     'dataset',
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to='datasets.DataSet',
+                        on_delete=models.deletion.CASCADE,
+                        to='datasets.DataSet',
                     ),
                 ),
                 (
                     'user',
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to=settings.AUTH_USER_MODEL,
+                        on_delete=models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
@@ -63,7 +65,8 @@ class Migration(migrations.Migration):
                 (
                     'user',
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to=settings.AUTH_USER_MODEL,
+                        on_delete=models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
@@ -94,7 +97,8 @@ class Migration(migrations.Migration):
                 (
                     'user',
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to=settings.AUTH_USER_MODEL,
+                        on_delete=models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],

@@ -398,11 +398,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         # field 1 error
         self.assertContains(
-            response, 'This field type must have a column name',
+            response,
+            'This field type must have a column name',
         )
         # field 2 error
         self.assertContains(
-            response, 'This field type cannot have a column name',
+            response,
+            'This field type cannot have a column name',
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
@@ -434,11 +436,13 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         )
         # field 1 error
         self.assertContains(
-            response, 'This field type must have a relationship name',
+            response,
+            'This field type must have a relationship name',
         )
         # field 2 error
         self.assertContains(
-            response, 'This field type cannot have a relationship name',
+            response,
+            'This field type cannot have a relationship name',
         )
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
@@ -1807,12 +1811,16 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         assert len(ref_ds.get_records()) == 2
 
         response = self._authenticated_post(
-            reverse('dw-admin:reference-dataset-record-delete-all', args=(ref_ds.id,),),
+            reverse(
+                'dw-admin:reference-dataset-record-delete-all',
+                args=(ref_ds.id,),
+            ),
         )
 
         assert len(ref_ds.get_records()) == 0
         self.assertContains(
-            response, 'Reference dataset records deleted successfully',
+            response,
+            'Reference dataset records deleted successfully',
         )
 
     def test_delete_all_fails_with_linked_reference_dataset_records(self):
@@ -1863,7 +1871,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
 
         response = self._authenticated_post(
             reverse(
-                'dw-admin:reference-dataset-record-delete-all', args=(ref_ds2.id,),
+                'dw-admin:reference-dataset-record-delete-all',
+                args=(ref_ds2.id,),
             ),
         )
 
@@ -3236,7 +3245,9 @@ class TestDatasetAdminPytest:
         )
 
         source_table = factories.SourceTableFactory(
-            name='my-source', table='my_table', dataset=dataset,
+            name='my-source',
+            table='my_table',
+            dataset=dataset,
         )
 
         # Login to admin site
@@ -3286,7 +3297,9 @@ class TestDatasetAdminPytest:
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         source_table = factories.SourceTableFactory(
-            name='my-source', table='my_table', dataset=dataset,
+            name='my-source',
+            table='my_table',
+            dataset=dataset,
         )
 
         # Login to admin site
@@ -3347,7 +3360,9 @@ class TestDatasetAdminPytest:
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         source_table = factories.SourceTableFactory(
-            name='my-source', table='my_table', dataset=dataset,
+            name='my-source',
+            table='my_table',
+            dataset=dataset,
         )
 
         # Login to admin site
@@ -3403,7 +3418,9 @@ class TestDatasetAdminPytest:
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
         source_table = factories.SourceTableFactory(
-            name='my-source', table='my_table', dataset=dataset,
+            name='my-source',
+            table='my_table',
+            dataset=dataset,
         )
 
         # Login to admin site

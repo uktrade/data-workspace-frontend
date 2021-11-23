@@ -841,7 +841,9 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
     def clone_quicksight_dataset(self, obj):
         if obj.visualisation_type != 'QUICKSIGHT':
             return '-'
-        url = reverse("admin:datasets_visualisationlink_changelist",)
+        url = reverse(
+            "admin:datasets_visualisationlink_changelist",
+        )
         return f'<a href="{url}clone_quicksight_dataset/{obj.identifier}">Clone dataset</a>'
 
     clone_quicksight_dataset.allow_tags = True

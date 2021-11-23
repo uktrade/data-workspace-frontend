@@ -207,11 +207,15 @@ class TestExecuteQuery:
 
     def test_cant_query_with_unregistered_connection(self):
         query = QueryLogFactory(
-            sql="select '$$foo:bar$$', '$$qux$$';", connection='not_registered',
+            sql="select '$$foo:bar$$', '$$qux$$';",
+            connection='not_registered',
         )
         with pytest.raises(InvalidExplorerConnectionException):
             _run_querylog_query(
-                query.id, 1, 100, 10000,
+                query.id,
+                1,
+                100,
+                10000,
             )
 
     @patch('dataworkspace.apps.explorer.tasks.get_user_explorer_connection_settings')

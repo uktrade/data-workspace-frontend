@@ -36,8 +36,7 @@ def async_test(func):
 
 
 class TestApplication(unittest.TestCase):
-    '''Tests the behaviour of the application, including Proxy
-    '''
+    '''Tests the behaviour of the application, including Proxy'''
 
     def add_async_cleanup(self, coroutine):
         loop = asyncio.get_event_loop()
@@ -1099,7 +1098,8 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/',
+            'GET',
+            'http://testapplication-23b40dd9.dataworkspace.test:8000/',
         ) as response:
             application_content_1 = await response.text()
 
@@ -2555,12 +2555,14 @@ class TestApplication(unittest.TestCase):
 
         # Hit Data Workspace to create user
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/',
+            'GET',
+            'http://dataworkspace.test:8000/',
         ) as response:
             content = await response.text()
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/finder',
+            'GET',
+            'http://dataworkspace.test:8000/finder',
         ) as response:
             content = await response.text()
 
@@ -2583,7 +2585,8 @@ class TestApplication(unittest.TestCase):
 
         # Dataset not discoverable because IAO/IAM hasn't opted in
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/finder?q=data',
+            'GET',
+            'http://dataworkspace.test:8000/finder?q=data',
         ) as response:
             content = await response.text()
 
@@ -2599,7 +2602,8 @@ class TestApplication(unittest.TestCase):
 
         # Users can now see results for the dataset even if they don't have access
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/finder?q=data',
+            'GET',
+            'http://dataworkspace.test:8000/finder?q=data',
         ) as response:
             content = await response.text()
 
@@ -2624,7 +2628,8 @@ class TestApplication(unittest.TestCase):
         # Users can still see results for the dataset even if the IAO/IAM hasn't opted in - because they have explicit
         # access
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/finder?q=data',
+            'GET',
+            'http://dataworkspace.test:8000/finder?q=data',
         ) as response:
             content = await response.text()
 
@@ -2636,7 +2641,8 @@ class TestApplication(unittest.TestCase):
         # Users shouldn't be able to see results for indexes that aren't covered by the correct alias (e.g. new indexes
         # currently being written to by data-flow).
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/finder?q=new',
+            'GET',
+            'http://dataworkspace.test:8000/finder?q=new',
         ) as response:
             content = await response.text()
         self.assertIn('There are no matches for the phrase “new”.', content)

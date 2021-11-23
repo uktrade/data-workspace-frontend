@@ -189,12 +189,18 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                 isinstance(catalogue_item, VisualisationCatalogueItem)
                 and catalogue_item.visualisation_template is not None
             ):
-                access_request.zendesk_reference_number = zendesk.notify_visualisation_access_request(
-                    request, access_request, catalogue_item,
+                access_request.zendesk_reference_number = (
+                    zendesk.notify_visualisation_access_request(
+                        request,
+                        access_request,
+                        catalogue_item,
+                    )
                 )
             else:
                 access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
-                    request, access_request, catalogue_item,
+                    request,
+                    access_request,
+                    catalogue_item,
                 )
             access_request.save()
 

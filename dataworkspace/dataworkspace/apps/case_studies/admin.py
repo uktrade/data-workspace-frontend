@@ -23,7 +23,10 @@ class CaseStudyAdmin(CSPRichTextEditorMixin, TimeStampedUserAdmin):
             'Overview',
             {'fields': ['department_name', 'service_name', 'outcome', 'image']},
         ),
-        ('Details', {'fields': ['background', 'solution', 'impact']},),
+        (
+            'Details',
+            {'fields': ['background', 'solution', 'impact']},
+        ),
         (
             'Quote',
             {

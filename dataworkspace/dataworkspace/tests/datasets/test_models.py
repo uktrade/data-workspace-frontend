@@ -189,7 +189,9 @@ def test_custom_query_data_last_updated(metadata_db):
 
     # Ensure a single table returns the last update date
     query = factories.CustomDatasetQueryFactory(
-        dataset=dataset, database=metadata_db, query='select * from table1',
+        dataset=dataset,
+        database=metadata_db,
+        query='select * from table1',
     )
     factories.CustomDatasetQueryTableFactory(
         query=query, schema='public', table='table1'
@@ -200,13 +202,17 @@ def test_custom_query_data_last_updated(metadata_db):
 
     # Ensure None is returned if we don't have any metadata for the tables
     query = factories.CustomDatasetQueryFactory(
-        dataset=dataset, database=metadata_db, query='select * from table3',
+        dataset=dataset,
+        database=metadata_db,
+        query='select * from table3',
     )
     assert query.get_data_last_updated_date() is None
 
     # Ensure None is returned if the last updated date is null
     query = factories.CustomDatasetQueryFactory(
-        dataset=dataset, database=metadata_db, query='select * from table4',
+        dataset=dataset,
+        database=metadata_db,
+        query='select * from table4',
     )
     assert query.get_data_last_updated_date() is None
 

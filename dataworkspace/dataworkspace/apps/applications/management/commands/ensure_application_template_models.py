@@ -9,7 +9,7 @@ from dataworkspace.apps.applications.models import ApplicationTemplate
 
 
 class Command(BaseCommand):
-    ''' The application template models are populated by environment variables,
+    '''The application template models are populated by environment variables,
     They can do with being in the database so ApplicationInstance models have
     some sort of foreign key, and tests don't have to worry about fixtures or
     editing the database.

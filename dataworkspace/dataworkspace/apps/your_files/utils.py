@@ -141,8 +141,17 @@ def get_dataflow_dag_status(execution_date):
         'key': config['DATAFLOW_HAWK_KEY'],
         'algorithm': 'sha256',
     }
-    header = Sender(hawk_creds, url, 'get', content='', content_type='',).request_header
-    response = requests.get(url, headers={'Authorization': header, 'Content-Type': ''},)
+    header = Sender(
+        hawk_creds,
+        url,
+        'get',
+        content='',
+        content_type='',
+    ).request_header
+    response = requests.get(
+        url,
+        headers={'Authorization': header, 'Content-Type': ''},
+    )
     response.raise_for_status()
     return response.json()
 

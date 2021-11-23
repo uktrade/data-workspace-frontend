@@ -9,7 +9,12 @@ from dataworkspace.apps.datasets.forms import FilterWidget
 class TestFilterWidget:
     @pytest.mark.parametrize(
         "num_choices, limit_options, expect_show_more_button, expect_hidden_choices",
-        ((5, 0, False, 0), (5, 2, True, 3), (5, 5, False, 0), (5, 10, False, 0),),
+        (
+            (5, 0, False, 0),
+            (5, 2, True, 3),
+            (5, 5, False, 0),
+            (5, 10, False, 0),
+        ),
     )
     def test_limit_initial_choices(
         self, num_choices, limit_options, expect_show_more_button, expect_hidden_choices

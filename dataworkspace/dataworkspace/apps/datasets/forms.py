@@ -68,7 +68,10 @@ class SortSelectWidget(forms.widgets.Select):
     option_template_name = 'datasets/select_option.html'
 
     def __init__(
-        self, label, *args, **kwargs,  # pylint: disable=keyword-arg-before-vararg
+        self,
+        label,
+        *args,
+        **kwargs,  # pylint: disable=keyword-arg-before-vararg
     ):
         super().__init__(*args, **kwargs)
         self._label = label

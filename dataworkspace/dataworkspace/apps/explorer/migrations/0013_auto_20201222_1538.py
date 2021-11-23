@@ -11,7 +11,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='querylog', name='page', field=models.IntegerField(default=1),
+            model_name='querylog',
+            name='page',
+            field=models.IntegerField(default=1),
         ),
         migrations.AddField(
             model_name='querylog',

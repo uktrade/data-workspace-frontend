@@ -63,19 +63,19 @@ class TableName(namedtuple("TableName", ['schema', 'name'])):
 
 def build_schema_info(user, connection_alias):
     """
-        Construct schema information via engine-specific queries of the tables in the DB.
+    Construct schema information via engine-specific queries of the tables in the DB.
 
-        :return: Schema information of the following form.
-            [
-                (("db_schema_name", "db_table_name"),
-                    [
-                        ("db_column_name", "DbFieldType"),
-                        (...),
-                    ]
-                )
-            ]
+    :return: Schema information of the following form.
+        [
+            (("db_schema_name", "db_table_name"),
+                [
+                    ("db_column_name", "DbFieldType"),
+                    (...),
+                ]
+            )
+        ]
 
-        """
+    """
 
     connection = get_user_explorer_connection_settings(user, connection_alias)
     with psycopg2.connect(

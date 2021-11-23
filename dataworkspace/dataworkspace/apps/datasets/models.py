@@ -731,7 +731,8 @@ class SourceTable(BaseSource):
 
     def get_column_details_url(self):
         return reverse(
-            'datasets:source_table_column_details', args=(self.dataset_id, self.id),
+            'datasets:source_table_column_details',
+            args=(self.dataset_id, self.id),
         )
 
     def get_changelog(self):
@@ -989,7 +990,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
         if columns:
             rows = get_random_data_sample(
-                self.database.memorable_name, sql.SQL(self.query), sample_size,
+                self.database.memorable_name,
+                sql.SQL(self.query),
+                sample_size,
             )
             for row in rows:
                 record_data = {}
@@ -1017,7 +1020,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         """
         col_defs = []
         for column in datasets_db.get_columns(
-            self.database.memorable_name, query=self.cleaned_query, include_types=True,
+            self.database.memorable_name,
+            query=self.cleaned_query,
+            include_types=True,
         ):
             col_defs.append(
                 {
@@ -1039,7 +1044,8 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_column_details_url(self):
         return reverse(
-            'datasets:custom_query_column_details', args=(self.dataset_id, self.id),
+            'datasets:custom_query_column_details',
+            args=(self.dataset_id, self.id),
         )
 
     def get_changelog(self):
@@ -2319,7 +2325,10 @@ class VisualisationLink(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_type = models.CharField(
         max_length=64,
-        choices=(('QUICKSIGHT', 'AWS QuickSight'), ('SUPERSET', 'Superset'),),
+        choices=(
+            ('QUICKSIGHT', 'AWS QuickSight'),
+            ('SUPERSET', 'Superset'),
+        ),
         null=False,
         blank=False,
     )
@@ -2330,7 +2339,8 @@ class VisualisationLink(TimeStampedModel):
         help_text='Used as the displayed text in the download link',
     )
     identifier = models.CharField(
-        max_length=256, help_text='For QuickSight, the dashboard ID.',
+        max_length=256,
+        help_text='For QuickSight, the dashboard ID.',
     )
     visualisation_catalogue_item = models.ForeignKey(
         VisualisationCatalogueItem, on_delete=models.CASCADE
@@ -2381,7 +2391,8 @@ class ToolQueryAuditLogTable(models.Model):
         default='public',
     )
     table = models.CharField(
-        max_length=63, validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        max_length=63,
+        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
     )
 
 

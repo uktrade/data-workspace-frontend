@@ -10,7 +10,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name='dataset', name='source_tags',),
-        migrations.RemoveField(model_name='referencedataset', name='source_tags',),
-        migrations.DeleteModel(name='SourceTag',),
+        migrations.RemoveField(
+            model_name='dataset',
+            name='source_tags',
+        ),
+        migrations.RemoveField(
+            model_name='referencedataset',
+            name='source_tags',
+        ),
+        migrations.DeleteModel(
+            name='SourceTag',
+        ),
     ]

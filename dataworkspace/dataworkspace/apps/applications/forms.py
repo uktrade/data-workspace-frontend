@@ -127,7 +127,9 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         label='Open to all Data Workspace users',
         initial=UserAccessType.REQUIRES_AUTHORIZATION,
         choices=UserAccessType.choices,
-        widget=GOVUKDesignSystemSelectWidget(label_is_heading=False,),
+        widget=GOVUKDesignSystemSelectWidget(
+            label_is_heading=False,
+        ),
     )
     eligibility_criteria = DWSplitArrayField(
         CharField(required=False),
@@ -135,7 +137,8 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             label="Eligibility criteria",
             input_prefix="Eligibility criterion",
             widget=GOVUKDesignSystemTextWidget(
-                label_is_heading=False, extra_label_classes='govuk-visually-hidden',
+                label_is_heading=False,
+                extra_label_classes='govuk-visually-hidden',
             ),
             size=5,
         ),

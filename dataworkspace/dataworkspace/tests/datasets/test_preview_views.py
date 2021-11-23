@@ -25,7 +25,9 @@ class TestCustomQueryPreviewView:
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         )
         query = factories.CustomDatasetQueryFactory(
-            dataset=dataset, database=test_db, query='SELECT * FROM a_table',
+            dataset=dataset,
+            database=test_db,
+            query='SELECT * FROM a_table',
         )
         response = client.get(
             reverse(
@@ -40,10 +42,13 @@ class TestCustomQueryPreviewView:
     )
     def test_preview_invalid_datacut(self, access_type, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.DATACUT, user_access_type=access_type,
+            type=DataSetType.DATACUT,
+            user_access_type=access_type,
         )
         query = factories.CustomDatasetQueryFactory(
-            dataset=dataset, database=test_db, query='SELECT * FROM invalid_table',
+            dataset=dataset,
+            database=test_db,
+            query='SELECT * FROM invalid_table',
         )
         response = client.get(
             reverse(
@@ -62,12 +67,15 @@ class TestCustomQueryPreviewView:
     )
     def test_preview_valid_datacut(self, access_type, client, test_db):
         dataset = factories.DataSetFactory(
-            type=DataSetType.DATACUT, user_access_type=access_type,
+            type=DataSetType.DATACUT,
+            user_access_type=access_type,
         )
 
         # Check if sample data shown correctly
         query1 = factories.CustomDatasetQueryFactory(
-            dataset=dataset, database=test_db, query='SELECT 1 as a, 2 as b',
+            dataset=dataset,
+            database=test_db,
+            query='SELECT 1 as a, 2 as b',
         )
         response = client.get(
             reverse(

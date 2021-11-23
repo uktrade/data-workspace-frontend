@@ -322,7 +322,9 @@ def test_find_datasets_filters_by_query(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(ds, purpose=ds.type, has_access=False),
         expected_search_result(
-            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE,
+            rds,
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
         ),
         expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
@@ -362,7 +364,9 @@ def test_find_datasets_filters_visualisations_by_use(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(ds, has_access=False),
         expected_search_result(
-            rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE,
+            rds,
+            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.REFERENCE,
         ),
         expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
@@ -645,7 +649,9 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     masters = [
         factories.DataSetFactory(
-            type=DataSetType.MASTER, published=True, user_access_type=access_type,
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type=access_type,
         )
         for _ in range(random.randint(10, 50))
     ]
@@ -657,7 +663,9 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     datacuts = [
         factories.DataSetFactory(
-            type=DataSetType.DATACUT, published=True, user_access_type=access_type,
+            type=DataSetType.DATACUT,
+            published=True,
+            user_access_type=access_type,
         )
         for _ in range(random.randint(10, 50))
     ]
@@ -719,7 +727,8 @@ def test_finding_datasets_doesnt_query_database_excessively(
 
     with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(
-            reverse('datasets:find_datasets'), {"purpose": str(DataSetType.MASTER)},
+            reverse('datasets:find_datasets'),
+            {"purpose": str(DataSetType.MASTER)},
         )
         assert response.status_code == 200
 
@@ -850,7 +859,9 @@ def test_find_datasets_filters_by_bookmark_reference(access_type):
     )
 
     factories.VisualisationCatalogueItemFactory.create(
-        published=True, name='Visualisation - public', user_access_type=access_type,
+        published=True,
+        name='Visualisation - public',
+        user_access_type=access_type,
     )
 
     response = client.get(reverse('datasets:find_datasets'), {'bookmarked': ['yes']})
@@ -903,7 +914,9 @@ def test_find_datasets_filters_by_bookmark_visualisation(access_type):
     factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
 
     public_vis = factories.VisualisationCatalogueItemFactory.create(
-        published=True, name='Visualisation - public', user_access_type=access_type,
+        published=True,
+        name='Visualisation - public',
+        user_access_type=access_type,
     )
     factories.VisualisationBookmarkFactory.create(user=user, visualisation=public_vis)
 
@@ -956,7 +969,9 @@ def test_find_datasets_filters_by_bookmark_datacut(access_type):
     factories.ReferenceDatasetFactory.create(published=True, name='Reference - public')
 
     factories.VisualisationCatalogueItemFactory.create(
-        published=True, name='Visualisation - public', user_access_type=access_type,
+        published=True,
+        name='Visualisation - public',
+        user_access_type=access_type,
     )
 
     # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
@@ -1167,7 +1182,10 @@ class DatasetsCommon:
             user_access_type=user_access_type,
         )
         factories.SourceTableFactory.create(
-            dataset=master, schema=schema, table=table, database=self._get_database(),
+            dataset=master,
+            schema=schema,
+            table=table,
+            database=self._get_database(),
         )
 
         return master
@@ -1227,7 +1245,9 @@ class TestDatasetVisualisations:
         self, access_type, staff_client
     ):
         master_dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, published=True, user_access_type=access_type,
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type=access_type,
         )
         for _ in range(4):
             factories.VisualisationDatasetFactory.create(dataset=master_dataset)
@@ -1243,7 +1263,9 @@ class TestDatasetVisualisations:
     @pytest.mark.django_db
     def test_prototype_label_is_visible(self, access_type, staff_client):
         master_dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, published=True, user_access_type=access_type,
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type=access_type,
         )
         expected_gds_phase_name = factory.fuzzy.FuzzyText().fuzz()
         factories.VisualisationDatasetFactory.create(
@@ -1399,7 +1421,9 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         group = factories.DataGroupingFactory.create()
         external_db = factories.DatabaseFactory.create(memorable_name='my_database')
         rds = factories.ReferenceDatasetFactory.create(
-            published=published, group=group, external_database=external_db,
+            published=published,
+            group=group,
+            external_database=external_db,
         )
         field1 = factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=rds,
@@ -1646,7 +1670,8 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
     user = get_user_model().objects.create(email='test@example.com', is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     st = source_factory.create(
-        dataset=ds, database=factories.DatabaseFactory(memorable_name='my_database'),
+        dataset=ds,
+        database=factories.DatabaseFactory(memorable_name='my_database'),
     )
     get_columns_mock.return_value = [(f'column_{i}', 'integer') for i in range(20)]
 
@@ -2006,7 +2031,10 @@ def test_find_datasets_matches_both_full_description(client):
     assert response.status_code == 200
     assert len(list(response.context["datasets"])) == 1
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, has_access=False,)
+        expected_search_result(
+            ds1,
+            has_access=False,
+        )
     ]
 
 
@@ -2042,7 +2070,9 @@ class TestCustomQueryRelatedDataView:
             user_access_type=access_type,
         )
         query = factories.CustomDatasetQueryFactory(
-            dataset=datacut, database=self._get_database(), query=sql,
+            dataset=datacut,
+            database=self._get_database(),
+            query=sql,
         )
         factories.CustomDatasetQueryTableFactory(
             query=query, schema='public', table='test_dataset'
@@ -2666,7 +2696,8 @@ class TestMasterDatasetUsageHistory:
     @pytest.mark.django_db
     def test_one_event_by_one_user_on_the_same_day(self, access_type, staff_client):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type=access_type,
+            type=DataSetType.MASTER,
+            user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         user = factories.UserFactory(email='test-user@example.com')
@@ -2696,7 +2727,8 @@ class TestMasterDatasetUsageHistory:
         self, access_type, staff_client
     ):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type=access_type,
+            type=DataSetType.MASTER,
+            user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -2743,7 +2775,8 @@ class TestMasterDatasetUsageHistory:
         self, access_type, staff_client
     ):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type=access_type,
+            type=DataSetType.MASTER,
+            user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -2804,7 +2837,8 @@ class TestMasterDatasetUsageHistory:
         self, access_type, staff_client
     ):
         dataset = factories.DataSetFactory.create(
-            type=DataSetType.MASTER, user_access_type=access_type,
+            type=DataSetType.MASTER,
+            user_access_type=access_type,
         )
         table = factories.SourceTableFactory.create(dataset=dataset, table='test_table')
         table_2 = factories.SourceTableFactory.create(
@@ -3432,7 +3466,9 @@ def test_filter_datasets_by_access_search_v2(access_type):
     )
 
     factories.VisualisationCatalogueItemFactory.create(
-        published=True, name='Visualisation - public', user_access_type=access_type,
+        published=True,
+        name='Visualisation - public',
+        user_access_type=access_type,
     )
 
     # No access filter set
@@ -3520,10 +3556,14 @@ def test_filter_data_type_datasets_search_v2(access_type):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
     factories.MasterDataSetFactory.create(
-        published=True, name='Master', user_access_type=access_type,
+        published=True,
+        name='Master',
+        user_access_type=access_type,
     )
     factories.DatacutDataSetFactory.create(
-        published=True, name='Datacut', user_access_type=access_type,
+        published=True,
+        name='Datacut',
+        user_access_type=access_type,
     )
     factories.ReferenceDatasetFactory.create(published=True, name='Reference')
     response = client.get(

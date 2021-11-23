@@ -451,7 +451,8 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             table_name='linked_to'
         )
         factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_to_dataset, is_identifier=True,
+            reference_dataset=linked_to_dataset,
+            is_identifier=True,
         )
 
         # Create a linked from dataset and id, link fields
@@ -459,7 +460,8 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             table_name='linked_from'
         )
         factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_from_dataset, is_identifier=True,
+            reference_dataset=linked_from_dataset,
+            is_identifier=True,
         )
         factories.ReferenceDatasetFieldFactory.create(
             reference_dataset=linked_from_dataset,

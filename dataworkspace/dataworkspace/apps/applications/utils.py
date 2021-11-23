@@ -528,12 +528,14 @@ def _do_delete_unused_datasets_users():
             db_user[0]: db_user[1]
             for db_user in set(
                 ApplicationInstanceDbUsers.objects.filter(
-                    db=database_obj, db_username__in=not_in_use_usernames,
+                    db=database_obj,
+                    db_username__in=not_in_use_usernames,
                 ).values_list('db_username', 'db_persistent_role')
             )
         }
         logger.info(
-            'delete_unused_datasets_users: db_persistent_roles %s', db_persistent_roles,
+            'delete_unused_datasets_users: db_persistent_roles %s',
+            db_persistent_roles,
         )
 
         # Multiple concurrent GRANT or REVOKE on the same object can result in
@@ -1095,7 +1097,9 @@ def hawk_request(method, url, body):
 @close_all_connections_if_not_in_atomic_block
 def create_tools_access_iam_role_task(user_id):
     with cache.lock(
-        "create_tools_access_iam_role_task", blocking_timeout=0, timeout=360,
+        "create_tools_access_iam_role_task",
+        blocking_timeout=0,
+        timeout=360,
     ):
         _do_create_tools_access_iam_role(user_id)
 
@@ -1154,7 +1158,11 @@ def _do_sync_activity_stream_sso_users():
     while True:
         try:
             logger.info('Calling activity stream with query %s', json.dumps(query))
-            status_code, response = hawk_request('GET', endpoint, json.dumps(query),)
+            status_code, response = hawk_request(
+                'GET',
+                endpoint,
+                json.dumps(query),
+            )
         except HawkException as e:
             logger.error('Failed to call activity stream with error %s', e)
             break
@@ -1424,7 +1432,8 @@ def sync_tool_query_logs():
 def _send_slack_message(text):
     if settings.SLACK_SENTRY_CHANNEL_WEBHOOK is not None:
         response = requests.post(
-            settings.SLACK_SENTRY_CHANNEL_WEBHOOK, json={'text': text},
+            settings.SLACK_SENTRY_CHANNEL_WEBHOOK,
+            json={'text': text},
         )
         response.raise_for_status()
 
@@ -1487,13 +1496,15 @@ def push_tool_monitoring_dashboard_datasets():
         # Create dataset
         payload = {'fields': {'count': {'type': 'number', 'name': 'Count'}}}
         session.put(
-            geckoboard_endpoint + 'tools.running', json=payload,
+            geckoboard_endpoint + 'tools.running',
+            json=payload,
         )
 
         # Add data
         payload = {'data': [{'count': len(running_tasks)}]}
         session.put(
-            geckoboard_endpoint + 'tools.running/data', json=payload,
+            geckoboard_endpoint + 'tools.running/data',
+            json=payload,
         )
 
     def report_failed_tools(client, session):
@@ -1518,7 +1529,8 @@ def push_tool_monitoring_dashboard_datasets():
             }
         }
         session.put(
-            geckoboard_endpoint + 'tools.failed', json=payload,
+            geckoboard_endpoint + 'tools.failed',
+            json=payload,
         )
 
         # Add data
@@ -1539,7 +1551,8 @@ def push_tool_monitoring_dashboard_datasets():
             ]
         }
         session.put(
-            geckoboard_endpoint + 'tools.failed/data', json=payload,
+            geckoboard_endpoint + 'tools.failed/data',
+            json=payload,
         )
 
     def report_tool_average_start_times(client, session):
@@ -1568,7 +1581,8 @@ def push_tool_monitoring_dashboard_datasets():
             }
         }
         session.put(
-            geckoboard_endpoint + 'tools.durations', json=payload,
+            geckoboard_endpoint + 'tools.durations',
+            json=payload,
         )
 
         # Add data
@@ -1597,7 +1611,8 @@ def push_tool_monitoring_dashboard_datasets():
                 )
 
         session.put(
-            geckoboard_endpoint + 'tools.durations/data', json=payload,
+            geckoboard_endpoint + 'tools.durations/data',
+            json=payload,
         )
 
     def report_recent_tool_start_times(client, session):
@@ -1628,7 +1643,8 @@ def push_tool_monitoring_dashboard_datasets():
             }
         }
         session.put(
-            geckoboard_endpoint + 'tools.recent', json=payload,
+            geckoboard_endpoint + 'tools.recent',
+            json=payload,
         )
 
         # Add data
@@ -1651,7 +1667,8 @@ def push_tool_monitoring_dashboard_datasets():
         }
 
         session.put(
-            geckoboard_endpoint + 'tools.recent/data', json=payload,
+            geckoboard_endpoint + 'tools.recent/data',
+            json=payload,
         )
 
     client = boto3.client('ecs')

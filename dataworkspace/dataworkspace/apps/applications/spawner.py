@@ -51,7 +51,11 @@ def get_spawner(name):
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def spawn(
-    name, user_id, tag, application_instance_id, spawner_options,
+    name,
+    user_id,
+    tag,
+    application_instance_id,
+    spawner_options,
 ):
     user = get_user_model().objects.get(pk=user_id)
     application_instance = ApplicationInstance.objects.get(id=application_instance_id)
@@ -85,7 +89,12 @@ def spawn(
     app_schema = f'{USER_SCHEMA_STEM}{db_role_schema_suffix}'
 
     get_spawner(name).spawn(
-        user, tag, application_instance, spawner_options, credentials, app_schema,
+        user,
+        tag,
+        application_instance,
+        spawner_options,
+        credentials,
+        app_schema,
     )
 
 
@@ -96,7 +105,7 @@ def stop(name, application_instance_id):
 
 
 class ProcessSpawner:
-    ''' A slightly overcomplicated and slow local-process spawner, but it is
+    '''A slightly overcomplicated and slow local-process spawner, but it is
     designed to simulate multi-stage spawners that call remote APIs. Only
     safe when the cluster is of size 1, and only handles a single running
     process, which must listen on port 8888
@@ -104,7 +113,12 @@ class ProcessSpawner:
 
     @staticmethod
     def spawn(
-        _, __, application_instance, spawner_options, credentials, ___,
+        _,
+        __,
+        application_instance,
+        spawner_options,
+        credentials,
+        ___,
     ):
 
         try:
@@ -190,7 +204,7 @@ class ProcessSpawner:
 
 
 class FargateSpawner:
-    ''' Spawning is not HA: if the current server goes down after the
+    '''Spawning is not HA: if the current server goes down after the
     ApplicationInstance is called, but before the ECS task is created, and has
     an IP address, from the point of view of the client, spawning won't
     continue and it will eventually be show to the client as an error.
@@ -206,7 +220,12 @@ class FargateSpawner:
 
     @staticmethod
     def spawn(
-        user, tag, application_instance, spawner_options, credentials, app_schema,
+        user,
+        tag,
+        application_instance,
+        spawner_options,
+        credentials,
+        app_schema,
     ):
         try:
             pipeline_id = None

@@ -407,7 +407,8 @@ class TestSQLDownloadViews:
 
         url = (
             reverse(
-                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id),
+                "explorer:download_querylog",
+                kwargs=dict(querylog_id=my_querylog.id),
             )
             + '?format=csv'
         )
@@ -425,7 +426,8 @@ class TestSQLDownloadViews:
 
         url = (
             reverse(
-                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id),
+                "explorer:download_querylog",
+                kwargs=dict(querylog_id=my_querylog.id),
             )
             + '?format=csv&delim=|'
         )
@@ -444,7 +446,8 @@ class TestSQLDownloadViews:
 
         url = (
             reverse(
-                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id),
+                "explorer:download_querylog",
+                kwargs=dict(querylog_id=my_querylog.id),
             )
             + '?format=csv&delim=tab'
         )
@@ -463,7 +466,8 @@ class TestSQLDownloadViews:
 
         url = (
             reverse(
-                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id),
+                "explorer:download_querylog",
+                kwargs=dict(querylog_id=my_querylog.id),
             )
             + '?format=csv&delim=foo'
         )
@@ -480,7 +484,8 @@ class TestSQLDownloadViews:
 
         url = (
             reverse(
-                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id),
+                "explorer:download_querylog",
+                kwargs=dict(querylog_id=my_querylog.id),
             )
             + '?format=json'
         )
@@ -497,7 +502,8 @@ class TestSQLDownloadViews:
 
         url = (
             reverse(
-                "explorer:download_querylog", kwargs=dict(querylog_id=my_querylog.id),
+                "explorer:download_querylog",
+                kwargs=dict(querylog_id=my_querylog.id),
             )
             + '?format=json'
         )
@@ -546,7 +552,9 @@ class TestQueryLog:
         assert QueryLog.objects.count() == 0
 
     def test_query_saves_to_log(
-        self, staff_user, staff_client,
+        self,
+        staff_user,
+        staff_client,
     ):
         query = SimpleQueryFactory(created_by_user=staff_user)
         data = model_to_dict(query)
@@ -678,7 +686,12 @@ class TestShareQuery:
     )
     @mock.patch('dataworkspace.apps.explorer.views.send_email')
     def test_share_query_too_long(
-        self, mock_send_email, query_param, query_factory, client, user,
+        self,
+        mock_send_email,
+        query_param,
+        query_factory,
+        client,
+        user,
     ):
         query_obj = query_factory.create(created_by_user=user)
         response = client.post(

@@ -301,8 +301,10 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             # Do not allow users to change the data type of a column
             # if that column has existing data.
             if new_data_type != orig_data_type:
-                matching_records = self.instance.reference_dataset.get_records().exclude(
-                    **{self.instance.column_name: None}
+                matching_records = (
+                    self.instance.reference_dataset.get_records().exclude(
+                        **{self.instance.column_name: None}
+                    )
                 )
                 if matching_records.exists():
                     raise forms.ValidationError(

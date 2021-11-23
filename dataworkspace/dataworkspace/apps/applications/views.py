@@ -1553,7 +1553,9 @@ class UserToolSizeConfigurationView(SuccessMessageMixin, UpdateView):
         return reverse('applications:tools')
 
     def get_success_message(self, cleaned_data):
-        return self.success_message % dict(tool_template=self.object.tool_template,)
+        return self.success_message % dict(
+            tool_template=self.object.tool_template,
+        )
 
 
 def _download_log(filename, events):

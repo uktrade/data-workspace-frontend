@@ -500,9 +500,11 @@ class TestVisualisationLogs:
         )
         mock_get_application_template.return_value = application_template
         mock_boto = mocker.patch('dataworkspace.apps.applications.utils.boto3.client')
-        mock_boto.return_value.get_log_events.side_effect = botocore.exceptions.ClientError(
-            error_response={'Error': {'Code': 'ResourceNotFoundException'}},
-            operation_name='get_log_events',
+        mock_boto.return_value.get_log_events.side_effect = (
+            botocore.exceptions.ClientError(
+                error_response={'Error': {'Code': 'ResourceNotFoundException'}},
+                operation_name='get_log_events',
+            )
         )
         develop_visualisations_permission = Permission.objects.get(
             codename='develop_visualisations',

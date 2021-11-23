@@ -12,7 +12,11 @@ from dataworkspace.apps.request_access.views import (
 )
 
 urlpatterns = [
-    path('', login_required(DatasetAccessRequest.as_view()), name='index',),
+    path(
+        '',
+        login_required(DatasetAccessRequest.as_view()),
+        name='index',
+    ),
     path(
         '<uuid:dataset_uuid>',
         login_required(DatasetAccessRequest.as_view()),

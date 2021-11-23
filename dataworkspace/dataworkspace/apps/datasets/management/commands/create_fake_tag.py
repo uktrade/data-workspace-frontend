@@ -13,7 +13,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "type", type=str, help="Which type of tag to create - [SOURCE, TOPIC]",
+            "type",
+            type=str,
+            help="Which type of tag to create - [SOURCE, TOPIC]",
         )
 
         parser.add_argument(

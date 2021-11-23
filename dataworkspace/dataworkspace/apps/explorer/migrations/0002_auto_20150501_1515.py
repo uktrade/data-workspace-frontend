@@ -11,7 +11,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name='querylog', name='is_playground',),
+        migrations.RemoveField(
+            model_name='querylog',
+            name='is_playground',
+        ),
         migrations.AlterField(
             model_name='querylog',
             name='sql',

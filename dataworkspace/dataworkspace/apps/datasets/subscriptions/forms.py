@@ -11,7 +11,8 @@ class DataSetSubscriptionForm(GOVUKDesignSystemModelForm):
         fields = ["notify_on_schema_change", "notify_on_data_change"]
 
     notify_on_schema_change = GOVUKDesignSystemBooleanField(
-        label="Each time columns are added, removed or renamed", required=False,
+        label="Each time columns are added, removed or renamed",
+        required=False,
     )
 
     notify_on_data_change = GOVUKDesignSystemBooleanField(

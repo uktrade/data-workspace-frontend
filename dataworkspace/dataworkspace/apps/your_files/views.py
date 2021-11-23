@@ -244,7 +244,11 @@ class CreateTableConfirmDataTypesView(FormView):
         duration = timedelta(hours=24)
 
         new_private_database_credentials(
-            db_role_schema_suffix, source_tables, db_user, user, duration,
+            db_role_schema_suffix,
+            source_tables,
+            db_user,
+            user,
+            duration,
         )
 
         cleaned = form.cleaned_data

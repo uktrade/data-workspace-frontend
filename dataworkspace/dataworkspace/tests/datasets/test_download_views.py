@@ -20,7 +20,9 @@ from dataworkspace.tests import factories
 )
 def test_master_dataset_with_access_preview(access_type, client, dataset_db):
     ds = factories.DataSetFactory.create(
-        type=DataSetType.MASTER, user_access_type=access_type, published=True,
+        type=DataSetType.MASTER,
+        user_access_type=access_type,
+        published=True,
     )
     source_table = factories.SourceTableFactory(
         dataset=ds,
@@ -68,7 +70,10 @@ def test_master_dataset_no_access_preview(client, dataset_db):
     'access_type', (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
 )
 def test_query_data_cut_preview_staff_user(access_type, staff_client, dataset_db):
-    ds = factories.DataSetFactory.create(user_access_type=access_type, published=True,)
+    ds = factories.DataSetFactory.create(
+        user_access_type=access_type,
+        published=True,
+    )
     cut = factories.CustomDatasetQueryFactory(
         dataset=ds,
         database=dataset_db,
@@ -86,7 +91,8 @@ def test_query_data_cut_preview_staff_user(access_type, staff_client, dataset_db
 
 def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
     ds = factories.DataSetFactory.create(
-        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION, published=True,
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+        published=True,
     )
     cut = factories.CustomDatasetQueryFactory(
         dataset=ds,
@@ -186,7 +192,10 @@ class TestDatasetViews:
             column_name='extid',
         )
         linked_field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=linked_rds, name='name', data_type=1, column_name='name',
+            reference_dataset=linked_rds,
+            name='name',
+            data_type=1,
+            column_name='name',
         )
         rds = factories.ReferenceDatasetFactory.create()
         field1 = factories.ReferenceDatasetFieldFactory.create(

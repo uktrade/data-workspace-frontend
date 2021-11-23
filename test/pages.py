@@ -49,6 +49,7 @@ class HomePage(_BasePage):
             )
         )[0]
         await asyncio.gather(
-            self._page.waitForNavigation(), element.click(),
+            self._page.waitForNavigation(),
+            element.click(),
         )
         return self

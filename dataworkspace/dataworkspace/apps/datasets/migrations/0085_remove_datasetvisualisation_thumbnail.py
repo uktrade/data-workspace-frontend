@@ -10,5 +10,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name='datasetvisualisation', name='thumbnail',),
+        migrations.RemoveField(
+            model_name='datasetvisualisation',
+            name='thumbnail',
+        ),
     ]

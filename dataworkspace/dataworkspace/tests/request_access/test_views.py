@@ -474,7 +474,8 @@ class TestEditAccessRequest:
         )
         resp = client.post(
             reverse(
-                'datasets:eligibility_criteria', kwargs={"dataset_uuid": dataset.id},
+                'datasets:eligibility_criteria',
+                kwargs={"dataset_uuid": dataset.id},
             )
             + f'?access_request={access_request.id}',
             {'meet_criteria': 'yes'},
