@@ -675,13 +675,15 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
     def test_data_grid_column_config(self):
         ds = factories.ReferenceDatasetFactory.create()
         field1 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_CHAR
+            reference_dataset=ds,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            sort_order=1,
         )
         field2 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_INT
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_INT, sort_order=2
         )
         field3 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_DATE
+            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_DATE, sort_order=3
         )
         linked_to_dataset = self._create_reference_dataset(table_name="linked_to_external_dataset")
         ReferenceDatasetField.objects.create(
@@ -696,11 +698,18 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
             relationship_name="link",
             linked_reference_dataset_field=linked_to_dataset.fields.get(is_identifier=True),
+            sort_order=4,
         )
         assert ds.get_column_config() == [
             {
-                "headerName": field4.name,
-                "field": field4.linked_reference_dataset_field.column_name,
+                "headerName": field1.name,
+                "field": field1.column_name,
+                "sortable": True,
+                "filter": "agTextColumnFilter",
+            },
+            {
+                "headerName": field2.name,
+                "field": field2.column_name,
                 "sortable": True,
                 "filter": "agNumberColumnFilter",
             },
@@ -711,16 +720,10 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 "filter": "agDateColumnFilter",
             },
             {
-                "headerName": field2.name,
-                "field": field2.column_name,
+                "headerName": field4.name,
+                "field": field4.linked_reference_dataset_field.column_name,
                 "sortable": True,
                 "filter": "agNumberColumnFilter",
-            },
-            {
-                "headerName": field1.name,
-                "field": field1.column_name,
-                "sortable": True,
-                "filter": "agTextColumnFilter",
             },
         ]
 
